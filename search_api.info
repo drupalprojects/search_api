@@ -1,0 +1,9 @@
+; $Id$
+
+name = Search API
+description = "Provides a generic API for modules offering search capabilites."
+core = 7.x
+package = Search
+files[] = search_api.module
+files[] = search_api.install
+configure = admin/config/search_api
