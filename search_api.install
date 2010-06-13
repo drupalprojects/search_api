@@ -85,12 +85,6 @@ function search_api_schema() {
         'length' => 50,
         'not null' => TRUE,
       ),
-      'cron_limit' => array(
-        'description' => 'Maximum number of items to be indexed in one cron run for this index.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 50,
-      ),
       'options' => array(
         'description' => 'An array of additional arguments to be passed to schema functions for ' .
             'this index.',
