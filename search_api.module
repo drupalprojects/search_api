@@ -1,3 +1,239 @@
 <?php
 // $Id$
 
+/**
+ * Default number of items indexed at each cron run for each enabled index.
+ */
+define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
+
+/**
+ * Implements hook_cron().
+ *
+ * Will index $options['cron-limit'] items for each enabled index.
+ */
+function search_api_cron() {
+  foreach (search_api_list_indexes() as $index) {
+    $limit = isset($index->options['cron_limit'])
+        ? $index->options['cron_limit']
+        : SEARCH_API_DEFAULT_CRON_LIMIT;
+    if ($limit) {
+      search_api_index_items($index, $limit);
+    }
+  }
+}
+
+/**
+ * Indexes items for the specified index. Only items marked as changed are
+ * indexed, in their order of change (if known).
+ *
+ * @param $index The index on which items should be indexed.
+ * @param $limit The number of items which should be indexed at most.
+ *
+ * @return Number of successfully indexed items, or FALSE if an error occurred.
+ */
+function search_api_index_items($index, $limit) {
+  // Safety check if entity type is known (prevent failing of whole cron run)
+  if (!entity_get_info($index->entity_type)) {
+    watchdog('search_api', t("Couldn't index values for '!name' index " .
+        "(unknown entity type '!type')", array('!name' => $index->name,
+        '!type' => $index->entity_type)), NULL, WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  $backend = search_api_backend_load($index->backend);
+  if (!$backend) {
+    watchdog('search_api', t("Couldn't index values for '!name' index " .
+        '(backend could not be retrieved)', array('!name' => $index->name)),
+        NULL, WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  foreach (search_api_get_items_to_index($index, $limit) as $id) {
+    // @todo Implement
+  }
+}
+
+/**
+ * Returns a list of ids of at most $limit items that need to be indexed for the
+ * specified index.
+ *
+ * @param $index The index for which items should be retrieved.
+ * @param $limit The maximum number of items to retrieve. -1 means no limit.
+ *
+ * @return An array of items (entities) that need to be indexed.
+ */
+function search_api_get_items_to_index($index, $limit = -1) {
+  if ($limit == 0) {
+    return array();
+  }
+  $select = db_select('search_api_item', 'i');
+  $select->addField('i', 'id');
+  $select->condition('index_id', $index->id);
+  $select->condition('changed', 0, '<>');
+  $select->orderBy('changed', 'ASC');
+  if ($limit > 0) {
+    $select->range(0, $limit);
+  }
+
+  $ids = $select->execute()->fetchCol();
+  // @todo Maybe abstract loading process
+  return entity_load($index->entity_type, $ids);
+}
+
+/**
+ * Returns either a list of all available backend classes, or a specific one.
+ *
+ * @param $id The id of the backend class to retrieve.
+ *
+ * @return If $id was not specified, an array of all available backend classes.
+ *   Otherwise, either the backend class with the specified id (if it exists),
+ *   or NULL.
+ */
+function search_api_get_backend_class($id = NULL) {
+  $backends = &drupal_static(__FUNCTION__);
+
+  if (!isset($backends)) {
+    $backends = module_invoke_all('search_api_backends');
+
+    // Initialization of optional entries with default values
+    foreach ($backends as $id => $backend) {
+      if (!isset($backend['class'])) {
+        $backends[$id]['class'] = $id;
+      }
+      if (!isset($backend['init args'])) {
+        $backends[$id]['init args'] = array();
+      }
+    }
+  }
+
+  if (isset($id)) {
+    return isset($backends[$id]) ? $backends[$id] : NULL;
+  }
+  return $backends;
+}
+
+/**
+ * Returns a list of all (enabled) search backends.
+ *
+ * @param $enabled Whether to retrieve only enabled backends.
+ *
+ * @return An array of objects representing all (or, if $enabled is TRUE, only
+ *   enabled) search backends.
+ */
+function search_api_list_backends($enabled = TRUE) {
+  $backends = &drupal_static(__FUNCTION__);
+
+  $enabled = (int) $enabled;
+  if (!isset($backends[$enabled])) {
+    $select = db_select('search_api_backend', 's')->fields('s');
+    if ($enabled) {
+      $select->condition('s.enabled', 1);
+    }
+
+    $results = $select->execute();
+    $backends[$enabled] = array();
+    foreach ($results as $row) {
+      $row->options = unserialize($row->options);
+      $backends[$enabled][$row->id] = $row;
+    }
+  }
+
+  return $backends[$enabled];
+}
+
+/**
+ * Load the search backend with the specified id.
+ *
+ * @param $id The search backend's id.
+ *
+ * @return The loaded and initialized SearchApiBackend object representing the
+ *   backend with the specified id.
+ */
+function search_api_backend_load($id) {
+  $backends = &drupal_static(__FUNCTION__);
+
+  if (!isset($backends[$id])) {
+    //@todo This won't work if backend classes needn't have the class name as id
+    $ret = db_query('SELECT class, id, name, description, options, enabled ' .
+        'FROM {search_api_backend} WHERE id = :id', array(':id' => (int) $id))
+        ->fetch(PDO::FETCH_CLASS | PDO::FETCH_CLASSTYPE);
+    if (!$ret) {
+      watchdog('search_api', t('Unknown search backend with id @id',
+          array('@id' => $id)), NULL, WATCHDOG_WARNING);
+      $ret = FALSE;
+    }
+    else if (!($ret instanceof SearchApiBackend)) {
+      // @todo Add link to backend configuration once admin pages are implemented
+      watchdog('search_api',
+          t('Backend with id @id specifies illegal backend class @class',
+          array('@id' => $id, '@class' => $ret->class)), NULL, WATCHDOG_ERROR);
+      $ret = FALSE;
+    }
+    else {
+      $ret->options = unserialize($ret->options);
+      $ret->init($ret->options);
+    }
+
+    $backends[$id] = $ret;
+  }
+
+  return $backends[$id] ? $backends[$id] : NULL;
+}
+
+/**
+ * Returns a list of search indexes.
+ *
+ * @param $options An associative array of conditions on the returned indexes.
+ *   - enabled: Unless set to FALSE, only enabled indexes will be returned.
+ *   - backend: Return only indexes on the backend with the specified id.
+ *
+ * @return An array of objects representing the search indexes that meet the
+ *   specified criteria.
+ */
+function search_api_list_indexes(array $options = array()) {
+  $indexes = &drupal_static(__FUNCTION__);
+
+  $enabled = isset($options['enabled']) && !$options['enabled'] ? 0 : 1;
+  $backend = empty($options['backend']) ? NULL : $options['backend'];
+  if (!isset($indexes[$enabled])) {
+    $select = db_select('search_api_index', 'i')->fields('i');
+    if ($enabled) {
+      $select->condition('i.enabled', 1);
+    }
+    if (!empty($backend)) {
+      $select->condition('i.backend', $backend);
+      $indexes = array(); // This result should not be cached
+    }
+
+    $results = $select->execute();
+    $indexes[$enabled] = array();
+    foreach ($results as $row) {
+      $row->options = unserialize($row->options);
+      $indexes[$enabled][$row->id] = $row;
+    }
+  }
+  else if (!empty($backend)) {
+    $ret = array();
+    foreach ($indexes as $id => $index) {
+      if ($index->backend == $backend) {
+        $ret[$id] = $index;
+      }
+    }
+    return $ret;
+  }
+
+  return $indexes[$enabled];
+}
+
+
+function search_api_index_load($id) {
+  $result = db_query('SELECT * FROM {search_api_index} WHERE id = :id',
+      array(':id' => (int) $id))->fetchObject();
+  if (!$result) {
+    watchdog('search_api', t('Unknown search index with id @id',
+        array('@id' => $id)), NULL, WATCHDOG_WARNING);
+    return NULL;
+  }
+
+  return $result;
+}
