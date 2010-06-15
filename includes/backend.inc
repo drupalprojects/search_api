@@ -9,17 +9,25 @@ interface SearchApiBackend {
   /**
    * Initializes a backend object.
    *
-   * @param $user_options
+   * @param $options
    *   An array of options set by the user through the configuration form.
-   * @param $hook_options
-   *   An array of options defined by the hook advertising this backend.
    */
-  public function init(array $user_options, array $hook_options);
+  public function init(array $options);
 
   /**
-   * Returns a render array for setting this backend's user options.
+   * Returns a render array for setting backend-specific options.
    */
   public function configuration_form();
+
+  /**
+   * Index the specified items.
+   *
+   * @param $index The search index for which items should be indexed.
+   * @param $items An array of objects containing the item data to be indexed.
+   *
+   * @return An array of the ids of all items that were successfully indexed.
+   */
+  function index($index, $items);
 
 }
 
@@ -29,37 +37,23 @@ interface SearchApiBackend {
 abstract class SearchApiAbstractBackend implements SearchApiBackend {
 
   /** Array holding the user-specified options. */
-  private $user_options = array();
-
-  /** Array holding the hook-specified options. */
-  private $hook_options = array();
+  private $options = array();
 
   /**
    * Initializes a backend object.
    *
-   * @param $user_options
+   * @param $options
    *   An array of options set by the user through the configuration form.
-   * @param $hook_options
-   *   An array of options defined by the hook advertising this backend.
    */
-  public function init(array $user_options, array $hook_options) {
-    $this->user_options = $user_options + $this->default_user_options();
-    $this->hook_options = $hook_options + $this->default_hook_options();
+  public function init(array $options) {
+    $this->options = $options + $this->default_values();
   }
 
   /**
    * @return
-   *   An array of default values for this backend's user-specified options.
+   *   An array of default values for this backend's options.
    */
-  protected function default_user_options() {
-    return array();
-  }
-
-  /**
-   * @return
-   *   An array of default values for this backend's hook-specified options.
-   */
-  protected function default_hook_options() {
+  protected function default_values() {
     return array();
   }
 

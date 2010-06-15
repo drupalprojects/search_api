@@ -106,8 +106,9 @@ function search_api_schema() {
       ),
     ),
     'indexes' => array(
-      'enabled' => array('enabled'),
+      'entity_type' => array('entity_type'),
       'backend' => array('backend'),
+      'enabled' => array('enabled'),
     ),
     'primary key' => array('id'),
   );
@@ -116,10 +117,10 @@ function search_api_schema() {
     'description' => 'Stores the items which should be indexed for each ' .
         'index, and their status.',
     'fields' => array(
-      'id' => array(
+      'item_id' => array(
         'description' => "The item's entity id (e.g. {node}.nid for nodes).",
-        'type' => 'varchar',
-        'length' => 255,
+        'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'index_id' => array(
@@ -138,9 +139,9 @@ function search_api_schema() {
       ),
     ),
     'indexes' => array(
-      'index_id' => array('index_id'),
+      'indexing' => array('index_id', 'changed'),
     ),
-    'primary key' => array('id', 'index_id'),
+    'primary key' => array('item_id', 'index_id'),
   );
 
   return $schema;

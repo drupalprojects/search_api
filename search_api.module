@@ -17,9 +17,66 @@ function search_api_cron() {
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
     if ($limit) {
-      search_api_index_items($index, $limit);
+      $num = search_api_index_items($index, $limit);
+      if ($num) {
+        watchdog('search_api', t('Indexed !num items for index !name',
+            array('!num' => $num, '!name' => $index->name)), NULL,
+            WATCHDOG_INFO);
+      }
     }
   }
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * Marks the new item as to-index for all indexes on entities of the specified
+ * type.
+ */
+function search_api_entity_insert($entity, $type) {
+  $id = entity_get_info($type);
+  foreach (search_api_list_indexes(array('entity_type' => $type)) as $index) {
+    db_insert('search_api_item')
+      ->fields(array(
+        'item_id' => $entity->$id,
+        'index_id' => $index->id,
+        'changed' => 1,// Set always to 1 to index new items before changed ones
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Marks the item as changed for all indexes on entities of the specified type.
+ */
+function search_api_entity_update($entity, $type) {
+  $id = entity_get_info($type);
+  foreach (search_api_list_indexes(array('entity_type' => $type)) as $index) {
+    db_update('search_api_item')
+      ->fields(array(
+        'changed' => REQUEST_TIME,
+      ))
+      ->condition('item_id', $entity->$id)
+      ->condition('index_id', $index->id)
+      ->condition('changed', 0)
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_search_api_register_alter_callback().
+ */
+function search_api_search_api_register_alter_callback() {
+  $callbacks['search_api_alter_prepare_view'] = array(
+    'name' => t('Call hook'),
+    'description' =>
+        t('Calls the standard entity_prepare_view() function for all items.'),
+    'weight' => -10,
+  );
+
+  return $callbacks;
 }
 
 /**
@@ -32,8 +89,9 @@ function search_api_cron() {
  * @return Number of successfully indexed items, or FALSE if an error occurred.
  */
 function search_api_index_items($index, $limit) {
+  $entity_info = entity_get_info($index->entity_type);
   // Safety check if entity type is known (prevent failing of whole cron run)
-  if (!entity_get_info($index->entity_type)) {
+  if (!$entity_info) {
     watchdog('search_api', t("Couldn't index values for '!name' index " .
         "(unknown entity type '!type')", array('!name' => $index->name,
         '!type' => $index->entity_type)), NULL, WATCHDOG_ERROR);
@@ -48,13 +106,26 @@ function search_api_index_items($index, $limit) {
     return FALSE;
   }
 
-  foreach (search_api_get_items_to_index($index, $limit) as $id) {
-    // @todo Implement
+  $items = search_api_get_items_to_index($index, $limit);
+  if (!$items) {
+    return 0;
   }
+  search_api_item_data_alter('index', $index, $items);
+  if (!$items) {
+    return 0;
+  }
+  search_api_item_preprocess('index', $index, $items);
+  $indexed = $backend->index($index, $items);
+
+  if (!empty($indexed)) {
+    search_api_set_items_indexed($index, $indexed);
+  }
+
+  return count($indexed);
 }
 
 /**
- * Returns a list of ids of at most $limit items that need to be indexed for the
+ * Returns a list of at most $limit items that need to be indexed for the
  * specified index.
  *
  * @param $index The index for which items should be retrieved.
@@ -67,7 +138,7 @@ function search_api_get_items_to_index($index, $limit = -1) {
     return array();
   }
   $select = db_select('search_api_item', 'i');
-  $select->addField('i', 'id');
+  $select->addField('i', 'item_id');
   $select->condition('index_id', $index->id);
   $select->condition('changed', 0, '<>');
   $select->orderBy('changed', 'ASC');
@@ -76,8 +147,84 @@ function search_api_get_items_to_index($index, $limit = -1) {
   }
 
   $ids = $select->execute()->fetchCol();
-  // @todo Maybe abstract loading process
   return entity_load($index->entity_type, $ids);
+}
+
+/**
+ * Calls data alteration hooks for a set of items, according to the index
+ * options.
+ *
+ * @param $phase The phase in which this call occurs. Either 'index' or
+ *   'search'.
+ * @param $index The index on which the items are indexed.
+ * @param $items An array of items to be altered.
+ */
+function search_api_item_data_alter($phase, $index, &$items) {
+  if (empty($index['options']['data_alter_callbacks'])) {
+    return;
+  }
+
+  foreach ($index['options']['data_alter_callbacks'] as $func) {
+    $func($phase, $index, &$items);
+    if (empty($items)) {
+      return;
+    }
+  }
+}
+
+/**
+ * Runs all preprocessors that are activated for the specified index on the
+ * given items.
+ *
+ * @param $phase The phase in which this call occurs. Either 'index' or
+ *   'search'.
+ * @param $index The index on which the items are indexed.
+ * @param $items An array of items to be preprocessed.
+ */
+function search_api_item_preprocess($phase, $index, &$items) {
+  // @todo
+}
+
+/**
+ * Runs all postprocessors that are activated for the specified index on the
+ * given items.
+ *
+ * @param $index The index on which the items are indexed.
+ * @param $items An array of items to be postprocessed.
+ */
+function search_api_item_postprocess($index, &$items) {
+  // @todo
+}
+
+/**
+ * Marks the items as successfully indexed for the specified index.
+ *
+ * @param $index The index on which items were indexed.
+ * @param $ids The ids of the indexed items.
+ *
+ * @return The number of index entries changed.
+ */
+function search_api_set_items_indexed($index, $ids) {
+  return db_update('search_api_item')
+      ->fields(array(
+        'changed' => 0,
+      ))
+      ->condition('index_id', $index->id)
+      ->condition('item_id', $ids, 'IN')
+      ->execute();
+}
+
+/**
+ * Search API data alteration callback that calls entity_prepare_view() for all
+ * items.
+ *
+ * @param $phase The phase in which this call occurs. Either 'index' or
+ *   'search'.
+ * @param $index The index on which the items are indexed.
+ * @param $items An array of objects containing the entity data.
+ */
+function search_api_alter_prepare_view($phase, $index, &$items) {
+  entity_prepare_view($index->entity_type, $items);
 }
 
 /**
@@ -191,38 +338,29 @@ function search_api_backend_load($id) {
  *   specified criteria.
  */
 function search_api_list_indexes(array $options = array()) {
-  $indexes = &drupal_static(__FUNCTION__);
-
   $enabled = isset($options['enabled']) && !$options['enabled'] ? 0 : 1;
   $backend = empty($options['backend']) ? NULL : $options['backend'];
-  if (!isset($indexes[$enabled])) {
-    $select = db_select('search_api_index', 'i')->fields('i');
-    if ($enabled) {
-      $select->condition('i.enabled', 1);
-    }
-    if (!empty($backend)) {
-      $select->condition('i.backend', $backend);
-      $indexes = array(); // This result should not be cached
-    }
+  $type = empty($options['entity_type']) ? NULL : $options['entity_type'];
 
-    $results = $select->execute();
-    $indexes[$enabled] = array();
-    foreach ($results as $row) {
-      $row->options = unserialize($row->options);
-      $indexes[$enabled][$row->id] = $row;
-    }
+  $select = db_select('search_api_index', 'i')->fields('i');
+  if ($enabled) {
+    $select->condition('i.enabled', 1);
   }
-  else if (!empty($backend)) {
-    $ret = array();
-    foreach ($indexes as $id => $index) {
-      if ($index->backend == $backend) {
-        $ret[$id] = $index;
-      }
-    }
-    return $ret;
+  if (!empty($backend)) {
+    $select->condition('i.backend', $backend);
+  }
+  if (!empty($type)) {
+    $select->condition('i.entity_type', $type);
   }
 
-  return $indexes[$enabled];
+  $results = $select->execute();
+  $indexes = array();
+  foreach ($results as $row) {
+    $row->options = unserialize($row->options);
+    $indexes[$row->id] = $row;
+  }
+
+  return $indexes;
 }
 
 
@@ -234,6 +372,7 @@ function search_api_index_load($id) {
         array('@id' => $id)), NULL, WATCHDOG_WARNING);
     return NULL;
   }
+  $result->options = unserialize($result->options);
 
   return $result;
 }
