@@ -79,13 +79,11 @@ function hook_search_api_register_alter_callback() {
 /**
  * Search API data alteration callback that randomly changes item data.
  *
- * @param $phase The phase in which this call occurs. Either 'index' or
- *   'search'.
  * @param $index The index on which the items are indexed.
  * @param $items An array of objects containing the entity data.
  */
-function example_random_alter($phase, $index, &$items) {
-  if ($phase == 'index' && $index->id % 2) {
+function example_random_alter($index, &$items) {
+  if ($index->id % 2) {
     foreach ($items as $id => $item) {
       srand($id);
       if (rand() % 5) {

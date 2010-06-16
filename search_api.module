@@ -99,7 +99,7 @@ function search_api_index_items($index, $limit) {
   }
 
   $backend = search_api_backend_load($index->backend);
-  if (!$backend) {
+  if (!$backend || !($backend instanceof SearchApiBackend)) {
     watchdog('search_api', t("Couldn't index values for '!name' index " .
         '(backend could not be retrieved)', array('!name' => $index->name)),
         NULL, WATCHDOG_ERROR);
@@ -154,18 +154,22 @@ function search_api_get_items_to_index($index, $limit = -1) {
  * Calls data alteration hooks for a set of items, according to the index
  * options.
  *
- * @param $phase The phase in which this call occurs. Either 'index' or
- *   'search'.
- * @param $index The index on which the items are indexed.
+ * @param $index The index on which the items will be indexed.
  * @param $items An array of items to be altered.
  */
-function search_api_item_data_alter($phase, $index, &$items) {
-  if (empty($index['options']['data_alter_callbacks'])) {
+function search_api_item_data_alter($index, &$items) {
+  if (empty($index->options['data_alter_callbacks'])) {
     return;
   }
 
-  foreach ($index['options']['data_alter_callbacks'] as $func) {
-    $func($phase, $index, &$items);
+  foreach ($index->options['data_alter_callbacks'] as $func) {
+    if (!function_exists($func)) {
+      watchdog('search_api', t('Undefined data alter callback function ' .
+          '!function() specified in index !name', array('!function' => $func,
+          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+    $func($index, &$items);
     if (empty($items)) {
       return;
     }
@@ -173,27 +177,88 @@ function search_api_item_data_alter($phase, $index, &$items) {
 }
 
 /**
- * Runs all preprocessors that are activated for the specified index on the
- * given items.
+ * Runs all preprocessors that are active for the specified index on the given
+ * items.
  *
  * @param $phase The phase in which this call occurs. Either 'index' or
  *   'search'.
  * @param $index The index on which the items are indexed.
- * @param $items An array of items to be preprocessed.
+ * @param $data An array of items to be preprocessed at index time, or a
+ *   SearchApiQuery object at search time.
  */
-function search_api_item_preprocess($phase, $index, &$items) {
-  // @todo
+function search_api_item_preprocess($phase, $index, &$data) {
+  if (empty($index->options['preprocessors'])) {
+    return;
+  }
+
+  $processors = &drupal_static(__FUNCTION__);
+
+  foreach ($index->options['preprocessors'] as $class) {
+    if (!class_exists($class)) {
+      watchdog('search_api', t('Undefined preprocessor class !class ' .
+          'specified in index !name', array('!class' => $class,
+          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+    if (empty($processors[$class])) {
+      $processors[$class] = new $class;
+    }
+    if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
+      watchdog('search_api', t('Undefined preprocessor class !class ' .
+          'specified in index !name', array('!class' => $class,
+          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+
+    switch ($phase) {
+      case 'index':
+        $processors[$class]->preprocessIndexItems($index, &$data);
+        break;
+      case 'search':
+        $processors[$class]->preprocessSearchQuery($index, &$data);
+        break;
+      default:
+        watchdog('search_api', t('!function() called with unknown phase !phase',
+            array('!function' => __FUNCTION__, '!phase' => $phase)), NULL,
+            WATCHDOG_WARNING);
+        return;
+    }
+  }
 }
 
 /**
- * Runs all postprocessors that are activated for the specified index on the
- * given items.
+ * Runs all postprocessors that are active for the specified index on the given
+ * search results.
  *
  * @param $index The index on which the items are indexed.
- * @param $items An array of items to be postprocessed.
+ * @param $results An array of search results.
  */
-function search_api_item_postprocess($index, &$items) {
-  // @todo
+function search_api_item_postprocess($index, &$results) {
+  if (empty($index->options['postprocessors'])) {
+    return;
+  }
+
+  // Use the same processors as in preprocessing,if possible
+  $processors = &drupal_static('search_api_item_preprocess');
+
+  foreach ($index->options['postprocessors'] as $class) {
+    if (!class_exists($class)) {
+      watchdog('search_api', t('Undefined postprocessor class !class ' .
+          'specified in index !name', array('!class' => $class,
+          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+    if (empty($processors[$class])) {
+      $processors[$class] = new $class;
+    }
+    if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
+      watchdog('search_api', t('Undefined postprocessor class !class ' .
+          'specified in index !name', array('!class' => $class,
+          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+    $processors[$class]->postprocessSearchResults($index, &$results);
+  }
 }
 
 /**
@@ -251,6 +316,9 @@ function search_api_get_backend_class($id = NULL) {
         $backends[$id]['init args'] = array();
       }
     }
+
+    // Allow other modules to alter definitions
+    drupal_alter('search_api_backends', $backends);
   }
 
   if (isset($id)) {
