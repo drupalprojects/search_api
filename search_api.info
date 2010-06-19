@@ -7,6 +7,8 @@ package = Search
 
 files[] = search_api.module
 files[] = search_api.install
-files[] = includes/backend.inc
+files[] = includes/processor.inc
+files[] = includes/query.inc
+files[] = includes/service.inc
 
 configure = admin/config/search_api

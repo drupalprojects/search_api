@@ -12,35 +12,49 @@
  */
 
 /**
- * Defines one or more search backend classes a module offers.
+ * Defines one or more search service classes a module offers.
  *
- * @return An associative array of search backend classes, keyed by a unique
- *   identifier (usually the class name) and containing associative arrays with
- *   the following keys:
- *   - name: The backend class' translated name.
+ * @return An associative array of search service classes, keyed by a unique
+ *   identifier and containing associative arrays with the following keys:
+ *   - name: The service class' translated name.
  *   - description: A translated string to be shown to administrators when
- *     selecting a backend class.
- *   - class: (optional) The backend class, which has to implement the
- *     SearchApiBackend interface. Defaults to the identifier used as the array
- *     key.
- *   - 'init args': (optional) Array of arguments to be passed to the backend
+ *     selecting a service class.
+ *   - class: The service class, which has to implement the
+ *     SearchApiServiceInterface interface.
+ *   - 'init args': (optional) Array of arguments to be passed to the service
  *     object's init() method after its creation. Empty by default.
  */
-function hook_search_api_backend_classes() {
-  $backends['SomeBackendClass1'] = array(
-    'name' => t('Some Backend'),
-    'description' => t('Backend for some search engine.'),
-    'class' => 'SomeBackendClass',
+function hook_search_api_service_info() {
+  $services['example_some'] = array(
+    'name' => t('Some Service'),
+    'description' => t('Service for some search engine.'),
+    'class' => 'SomeServiceClass',
     'init args' => array('foo' => 'Foo', 'bar' => 42),
   );
-  $backends['OtherBackendClass'] = array(
-    'name' => t('Other Backend'),
-    'description' => t('Backend for another search engine.'),
-    // 'class' => 'OtherBackendClass', // implicit
+  $services['example_other'] = array(
+    'name' => t('Other Service'),
+    'description' => t('Service for another search engine.'),
+    'class' => 'OtherServiceClass',
     // 'init args' => array(), // implicit
   );
 
-  return $backends;
+  return $services;
+}
+
+/**
+ * Alter the Search API service info.
+ *
+ * Modules may implement this hook to alter the information that defines Search
+ * API service. All properties that are available in
+ * hook_search_api_service_info() can be altered here.
+ *
+ * @see hook_search_api_service_info()
+ *
+ * @param $service_info
+ *   The Search API service info array, keyed by service id.
+ */
+function hook_search_api_service_info_alter(&$service_info) {
+
 }
 
 /**
@@ -77,6 +91,10 @@ function hook_search_api_register_alter_callback() {
 }
 
 /**
+ * @} End of "addtogroup hooks".
+ */
+
+/**
  * Search API data alteration callback that randomly changes item data.
  *
  * @param $index The index on which the items are indexed.
@@ -97,7 +115,3 @@ function example_random_alter($index, &$items) {
     }
   }
 }
-
-/**
- * @} End of "addtogroup hooks".
- */

@@ -9,16 +9,20 @@ interface SearchApiProcessorInterface {
   /**
    * Preprocess data items for indexing.
    *
-   * @param $index The index on which the items will be indexed.
-   * @param $items An array of entities to be indexed.
+   * @param $index
+   *   The index on which the items will be indexed.
+   * @param $items
+   *   An array of entities to be indexed.
    */
   function preprocessIndexItems($index, &$items);
 
   /**
    * Preprocess a search query.
    *
-   * @param $index The index on which the query will be executed.
-   * @param $query The SearchApiQuery object representing the query.
+   * @param $index
+   *   The index on which the query will be executed.
+   * @param $query
+   *   The SearchApiQuery object representing the query.
    */
   function preprocessSearchQuery($index, $query);
 
@@ -28,7 +32,9 @@ interface SearchApiProcessorInterface {
    * same object will be used for both calls.
    *
    * @param $index
+   *  The index on which the search was executed.
    * @param $results
+   *   An array of entities that matched the search query.
    */
   function postprocessSearchResults($index, &$results);
 
