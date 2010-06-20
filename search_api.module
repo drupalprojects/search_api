@@ -27,14 +27,22 @@ function search_api_cron() {
   }
 }
 
+// @todo Implement hook_entity_info() for indexes and servers?
+
 /**
  * Implements hook_entity_insert().
  *
  * Marks the new item as to-index for all indexes on entities of the specified
  * type.
+ *
+ * @param $entity
+ *   The new entity.
+ * @param $type
+ *   The entity's type.
  */
 function search_api_entity_insert($entity, $type) {
-  $id = entity_get_info($type);
+  $info = entity_get_info($type);
+  $id = $info['entity keys']['id'];
   foreach (search_api_list_indexes(array('entity_type' => $type)) as $index) {
     db_insert('search_api_item')
       ->fields(array(
@@ -50,9 +58,15 @@ function search_api_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  *
  * Marks the item as changed for all indexes on entities of the specified type.
+ *
+ * @param $entity
+ *   The updated entity.
+ * @param $type
+ *   The entity's type.
  */
 function search_api_entity_update($entity, $type) {
-  $id = entity_get_info($type);
+  $info = entity_get_info($type);
+  $id = $info['entity keys']['id'];
   foreach (search_api_list_indexes(array('entity_type' => $type)) as $index) {
     db_update('search_api_item')
       ->fields(array(
@@ -66,15 +80,17 @@ function search_api_entity_update($entity, $type) {
 }
 
 /**
- * Implements hook_search_api_register_alter_callback().
+ * Implements hook_search_api_alter_callback_info().
  */
-function search_api_search_api_register_alter_callback() {
+function search_api_search_api_alter_callback_info() {
   $callbacks['search_api_alter_prepare_view'] = array(
     'name' => t('Call hook'),
     'description' =>
         t('Calls the standard entity_prepare_view() function for all items.'),
     'weight' => -10,
   );
+  // @todo Add heavy-weight callback that aggregates string fields into a
+  // search_api_fulltext field at index time
 
   return $callbacks;
 }
@@ -83,10 +99,13 @@ function search_api_search_api_register_alter_callback() {
  * Indexes items for the specified index. Only items marked as changed are
  * indexed, in their order of change (if known).
  *
- * @param $index The index on which items should be indexed.
- * @param $limit The number of items which should be indexed at most.
+ * @param $index
+ *   The index on which items should be indexed.
+ * @param $limit
+ *   The number of items which should be indexed at most. -1 means no limit.
  *
- * @return Number of successfully indexed items, or FALSE if an error occurred.
+ * @return
+ *   Number of successfully indexed items, or FALSE if an error occurred.
  */
 function search_api_index_items($index, $limit) {
   $entity_info = entity_get_info($index->entity_type);
@@ -99,7 +118,7 @@ function search_api_index_items($index, $limit) {
   }
 
   $server = search_api_server_load($index->server);
-  if (!$server || !($server instanceof SearchApiServiceInterface)) {
+  if (!($server && $server instanceof SearchApiServiceInterface)) {
     watchdog('search_api', t("Couldn't index values for '!name' index " .
         '(server info could not be retrieved)', array('!name' => $index->name)),
         NULL, WATCHDOG_ERROR);
@@ -128,10 +147,13 @@ function search_api_index_items($index, $limit) {
  * Returns a list of at most $limit items that need to be indexed for the
  * specified index.
  *
- * @param $index The index for which items should be retrieved.
- * @param $limit The maximum number of items to retrieve. -1 means no limit.
+ * @param $index
+ *   The index for which items should be retrieved.
+ * @param $limit
+ *   The maximum number of items to retrieve. -1 means no limit.
  *
- * @return An array of items (entities) that need to be indexed.
+ * @return
+ *   An array of items (entities) that need to be indexed.
  */
 function search_api_get_items_to_index($index, $limit = -1) {
   if ($limit == 0) {
@@ -154,8 +176,10 @@ function search_api_get_items_to_index($index, $limit = -1) {
  * Calls data alteration hooks for a set of items, according to the index
  * options.
  *
- * @param $index The index on which the items will be indexed.
- * @param $items An array of items to be altered.
+ * @param $index
+ *   The index on which the items will be indexed.
+ * @param $items
+ *   An array of items to be altered.
  */
 function search_api_item_data_alter($index, &$items) {
   if (empty($index->options['data_alter_callbacks'])) {
@@ -180,11 +204,13 @@ function search_api_item_data_alter($index, &$items) {
  * Runs all preprocessors that are active for the specified index on the given
  * items.
  *
- * @param $phase The phase in which this call occurs. Either 'index' or
- *   'search'.
- * @param $index The index on which the items are indexed.
- * @param $data An array of items to be preprocessed at index time, or a
- *   SearchApiQuery object at search time.
+ * @param $phase
+ *   The phase in which this call occurs. Either 'index' or 'search'.
+ * @param $index
+ *   The index on which the items are indexed.
+ * @param $data
+ *   An array of items to be preprocessed at index time, or a SearchApiQuery
+ *   object at search time.
  */
 function search_api_item_preprocess($phase, $index, &$data) {
   if (empty($index->options['preprocessors'])) {
@@ -230,10 +256,14 @@ function search_api_item_preprocess($phase, $index, &$data) {
  * Runs all postprocessors that are active for the specified index on the given
  * search results.
  *
- * @param $index The index on which the items are indexed.
- * @param $results An array of search results.
+ * @param $index
+ *   The index on which the items are indexed.
+ * @param $query
+ *   The SearchApiQuery object representing the executed query.
+ * @param $results
+ *   An array of search results.
  */
-function search_api_item_postprocess($index, &$results) {
+function search_api_item_postprocess($index, $query, &$results) {
   if (empty($index->options['postprocessors'])) {
     return;
   }
@@ -257,17 +287,20 @@ function search_api_item_postprocess($index, &$results) {
           '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
-    $processors[$class]->postprocessSearchResults($index, &$results);
+    $processors[$class]->postprocessSearchResults($index, $query, &$results);
   }
 }
 
 /**
  * Marks the items as successfully indexed for the specified index.
  *
- * @param $index The index on which items were indexed.
- * @param $ids The ids of the indexed items.
+ * @param $index
+ *   The index on which items were indexed.
+ * @param $ids
+ *   The ids of the indexed items.
  *
- * @return The number of index entries changed.
+ * @return
+ *   The number of index entries changed.
  */
 function search_api_set_items_indexed($index, $ids) {
   return db_update('search_api_item')
@@ -283,25 +316,134 @@ function search_api_set_items_indexed($index, $ids) {
  * Search API data alteration callback that calls entity_prepare_view() for all
  * items.
  *
- * @param $phase The phase in which this call occurs. Either 'index' or
+ * @param $phase
+ *   The phase in which this call occurs. Either 'index' or
  *   'search'.
- * @param $index The index on which the items are indexed.
- * @param $items An array of objects containing the entity data.
+ * @param $index
+ *   The index on which the items are indexed.
+ * @param $items
+ *   An array of objects containing the entity data.
  */
 function search_api_alter_prepare_view($phase, $index, &$items) {
   entity_prepare_view($index->entity_type, $items);
 }
 
 /**
- * Returns either a list of all available service classes, or a specific one.
+ * Execute a search on a search index.
  *
- * @param $id The id of the service class to retrieve.
+ * @param $index
+ *   The index to execute the search on.
+ * @param $keys
+ *   Fulltext keys to search for. May be NULL to do a filter search.
+ * @param $options
+ *   An associative array of options. The following are recognized:
+ *   - filters: Either a SearchApiQueryFilter object or an array of filters used
+ *     to filter the search.
+ *   - sort: An array of sort directives of the form $field => $order, where
+ *     $order is either 'ASC' or 'DESC'.
+ *   - offset: The position of the first returned search results relative to the
+ *     whole result in the index.
+ *   - limit: The maximum number of search results to return. -1 means no limit.
+ *   - 'query class': The query class to use. Must be a subtype of
+ *     SearchApiQuery.
+ *   - conjunction: The type of conjunction to use for this query - either
+ *     'AND' or 'OR'. 'AND' by default.
+ *   - 'parse mode': The mode with which to parse the $keys variable, if it
+ *     is set and not already an array. See SearchApiQuery::parseModes() for
+ *     parse modes recognized by the SearchApiQuery class. Subclasses might
+ *     define additional modes.
+ * @return
+ *   An associative array containing the search results. For its exact contents,
+ *   see SearchApiServiceInterface->search().
+ */
+function search_api_search($index, $keys = NULL, array $options = array()) {
+  $server = search_api_server_load($index->server);
+  if (!($server && $server instanceof SearchApiServiceInterface)) {
+    watchdog('search_api', t("Couldn't search values for '!name' index " .
+        '(server info could not be retrieved)', array('!name' => $index->name)),
+        NULL, WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  // Set option defaults
+  $options += array('filters' => array(), 'sort' => array(), 'offset' => 0,
+      'limit' => -1, 'query class' => 'SearchApiQuery', 'conjunction' => 'AND',
+      'parse mode' => 'terms');
+
+  // Create query object
+  $query_options = array('conjunction' => $options['conjunction'],
+      'parse mode' => $options['parse mode']);
+  $query = new $options['query class']($keys, $query_options);
+
+  if (!($query instanceof SearchApiQuery)) {
+    watchdog('search api', t('Illegal query class !class specified for search.',
+        array('!class' => $options['query class'])), NULL, WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  // Add filters and sorts
+  $filters = $options['filters'];
+  $sorts   = $options['sorts'];
+  if ($filters) {
+    if (is_array($filters)) {
+      $ref1 = &$query->filter();
+      $ref2 = &$ref1->filters();
+      $ref2 = $filters;
+    }
+    else if ($filters instanceof SearchApiQueryFilter) {
+      $query->addFilter($filters);
+    }
+    else {
+      watchdog('search api', t('Illegal filter value specified for search: ' .
+          '!value', array('!value' => print_r($filters, TRUE))), NULL,
+          WATCHDOG_WARNING);
+    }
+  }
+  if ($sort && is_array($sort)) {
+    foreach ($sort as $field => $order) {
+      $query->addSort($field, $order);
+    }
+  }
+
+  // Preprocess query
+  search_api_item_preprocess('search', $index, $query);
+
+  // Let modules alter the query
+  drupal_alter($query, $index);
+
+  // Cache query (e.g. for facets)
+  $query_cache = &drupal_static(__FUNCTION__ . '_query');
+  $query_cache[] = $query;
+
+  // Execute query
+  $search_options = array('offset' => $options['offset'],
+      'limit' => $options['limit']);
+  $result = $server->search($index, $query, $search_options);
+
+  // Postprocess results
+  search_api_item_postprocess($index, $results);
+
+  // Cache results
+  $result_cache = &drupal_static(__FUNCTION__ . '_results');
+  $result_cache[] = $results;
+
+  return $results;
+}
+
+/**
+ * Returns either a list of all available service infos, or a specific one.
  *
- * @return If $id was not specified, an array of all available service classes.
- *   Otherwise, either the service class with the specified id (if it exists),
+ * @see hook_search_api_service_info()
+ *
+ * @param $id
+ *   The id of the service info to retrieve.
+ *
+ * @return
+ *   If $id was not specified, an array of all available service classes.
+ *   Otherwise, either the service info with the specified id (if it exists),
  *   or NULL.
  */
-function search_api_get_service_class($id = NULL) {
+function search_api_get_service_info($id = NULL) {
   $services = &drupal_static(__FUNCTION__);
 
   if (!isset($services)) {
@@ -322,6 +464,57 @@ function search_api_get_service_class($id = NULL) {
     return isset($services[$id]) ? $services[$id] : NULL;
   }
   return $services;
+}
+
+/**
+ * Returns a list of all available data alter callbacks.
+ *
+ * @see hook_search_api_alter_callback_info()
+ *
+ * @return
+ *   An array of all available data alter callbacks, keyed by function name.
+ */
+function search_api_get_alter_callbacks() {
+  $callbacks = &drupal_static(__FUNCTION__);
+
+  if (!isset($callbacks)) {
+    $callbacks = module_invoke_all('search_api_alter_callback_info');
+
+    // Initialization of optional entries with default values
+    foreach ($callbacks as $id => $callback) {
+      $callbacks[$id] += array('enabled' => TRUE, 'weight' => 0);
+    }
+
+    // @todo drupal_alter('search_api_alter_callback_info', $callbacks)?
+  }
+
+  return $callbacks;
+}
+
+/**
+ * Returns a list of all available pre- and post-processors.
+ *
+ * @see hook_search_api_processor_info()
+ *
+ * @return
+ *   An array of all available processors, keyed by id.
+ */
+function search_api_get_processors() {
+  $processors = &drupal_static(__FUNCTION__);
+
+  if (!isset($processors)) {
+    $processors = module_invoke_all('search_api_processor_info');
+
+    // Initialization of optional entries with default values
+    foreach ($processors as $id => $processor) {
+      $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE,
+          'weight' => 0);
+    }
+
+    // @todo drupal_alter('search_api_processor_info', $processors)?
+  }
+
+  return $processors;
 }
 
 /**
@@ -358,9 +551,11 @@ function search_api_list_servers($enabled = TRUE) {
 /**
  * Load the search server with the specified id.
  *
- * @param $id The search server's id.
+ * @param $id
+ *   The search server's id.
  *
- * @return The loaded and initialized SearchApiServiceInterface object
+ * @return
+ *   The loaded and initialized SearchApiServiceInterface object
  *   representing the server with the specified id.
  */
 function search_api_server_load($id) {
@@ -379,7 +574,7 @@ function search_api_server_load($id) {
 
     // Load corresponding service class
     $obj = NULL;
-    $service = search_api_get_service_class($server->class);
+    $service = search_api_get_service_info($server->class);
     if ($service && class_exists($service['class'])) {
       $obj = new $service['class'];
     }
@@ -411,11 +606,13 @@ function search_api_server_load($id) {
 /**
  * Returns a list of search indexes.
  *
- * @param $options An associative array of conditions on the returned indexes.
+ * @param $options
+ *   An associative array of conditions on the returned indexes.
  *   - enabled: Unless set to FALSE, only enabled indexes will be returned.
  *   - server: Return only indexes on the server with the specified id.
  *
- * @return An array of objects representing the search indexes that meet the
+ * @return
+ *   An array of objects representing the search indexes that meet the
  *   specified criteria.
  */
 function search_api_list_indexes(array $options = array()) {
@@ -444,7 +641,15 @@ function search_api_list_indexes(array $options = array()) {
   return $indexes;
 }
 
-
+/**
+ * Loads the Search API index with the specified id.
+ *
+ * @param $id
+ *   The index' id.
+ *
+ * @return
+ *   A completely loaded index object, or NULL if no such index exists.
+ */
 function search_api_index_load($id) {
   $result = db_query('SELECT * FROM {search_api_index} WHERE id = :id',
       array(':id' => (int) $id))->fetchObject();

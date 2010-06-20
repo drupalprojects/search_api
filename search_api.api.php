@@ -14,6 +14,8 @@
 /**
  * Defines one or more search service classes a module offers.
  *
+ * @see hook_search_api_service_info_alter()
+ *
  * @return An associative array of search service classes, keyed by a unique
  *   identifier and containing associative arrays with the following keys:
  *   - name: The service class' translated name.
@@ -54,7 +56,14 @@ function hook_search_api_service_info() {
  *   The Search API service info array, keyed by service id.
  */
 function hook_search_api_service_info_alter(&$service_info) {
-
+  foreach ($service_info as $id => $info) {
+    $init_args = isset($info['init args']) ? $info['init args'] : array();
+    $service_info[$id]['init args'] = array(
+      'class' => $info['class'],
+      'init args' => $init_args,
+    );
+    $service_info[$id]['class'] = 'MyProxyServiceClass';
+  }
 }
 
 /**
@@ -64,18 +73,18 @@ function hook_search_api_service_info_alter(&$service_info) {
  *
  * For the required signature of callbacks, see example_random_alter().
  *
+ * @see example_random_alter()
+ *
  * @return An associative array keyed by the function names and containing
  *   arrays with the following keys:
  *   - name: The name to display for this callback.
  *   - description: A short description of what the callback does.
- *   - enabled: (optional) Whether this callback should be enabled by default.
- *     Defaults to TRUE.
+ *   - enabled: (optional) Whether this callback should be enabled by default in
+ *     newly created indexes. Defaults to TRUE.
  *   - weight: (optional) Defines the order in which callbacks are displayed
  *     (and, therefore, invoked) by default. Defaults to 0.
- *
- * @see example_random_alter
  */
-function hook_search_api_register_alter_callback() {
+function hook_search_api_alter_callback_info() {
   $callbacks['example_random_alter'] = array(
     'name' => t('Random alteration'),
     'description' => t('Alters all passed item data completely randomly.'),
@@ -88,6 +97,59 @@ function hook_search_api_register_alter_callback() {
   );
 
   return $callbacks;
+}
+
+/**
+ * Registers one or more processors. These are classes implementing the
+ * SearchApiProcessorInterface interface which can be used at index and search
+ * time to pre-process item data or the search query, and at search time to
+ * post-process the returned search results.
+ *
+ * @see SearchApiProcessorInterface
+ *
+ * @return An associative array keyed by the processor id and containing arrays
+ *   with the following keys:
+ *   - name: The name to display for this processor.
+ *   - description: A short description of what the processor does at each
+ *     phase.
+ *   - class: The processor class, which has to implement the
+ *     SearchApiProcessorInterface interface.
+ *   - 'enabled pre': (optional) Whether this callback should be enabled by
+ *     default in newly created indexes as a preprocessor. Defaults to TRUE.
+ *   - 'enabled post': (optional) Whether this callback should be enabled by
+ *     default in newly created indexes as a postprocessor. Defaults to TRUE.
+ *   - weight: (optional) Defines the order in which processors are displayed
+ *     (and, therefore, invoked) by default. Defaults to 0.
+ */
+function hook_search_api_processor_info() {
+  $callbacks['example_processor'] = array(
+    'name' => t('Example processor'),
+    'description' => t('Pre- and post-processes data in really cool ways.'),
+    'class' => 'ExampleSearchApiProcessor',
+    'enabled pre' => FALSE,
+    'enabled post' => FALSE,
+    'weight' => -1,
+  );
+  $callbacks['example_processor_minimal'] = array(
+    'name' => t('Example processor 2'),
+    'description' => t('Processor with minimal description.'),
+    'class' => 'ExampleSearchApiProcessor2',
+  );
+
+  return $callbacks;
+}
+
+/**
+ * Lets modules alter a search query before executing it.
+ *
+ * @param $query
+ *   The SearchApiQuery object representing the search query.
+ * @param $index
+ *   The index the search will be executed on. Should not be altered.
+ */
+function hook_search_api_query_alter(SearchApiQuery $query, $index) {
+  $info = entity_get_info($index['entity_type']);
+  $query->addCondition($info['entity keys']['id'], 0, '!=');
 }
 
 /**

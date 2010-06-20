@@ -37,7 +37,27 @@ interface SearchApiServiceInterface {
    * @return
    *   An array of the ids of all items that were successfully indexed.
    */
-  function index($index, $items);
+  public function index($index, $items);
+
+  /**
+   * Executes a search on the server represented by this object.
+   *
+   * @param $index
+   *   The index to search items on.
+   * @param $query
+   *   The SearchApiQuery to execute.
+   * @param $options
+   *   An associative array of search options. The following are recognized:
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
+   *
+   * @return
+   *   An associative array containing the search results.
+   *   @todo Specify this in a more detailled way.
+   */
+  public function search($index, $query, array $options = array());
 
 }
 
