@@ -36,8 +36,9 @@ class SearchApiQuery {
    *     recognized parse modes.
    */
   public function __construct($keys = NULL, $options = array()) {
-    $this->options += array('conjunction' => 'AND', 'parse mode' => 'terms');
-    $this->keys = $keys;
+    $this->options = $options + array('conjunction' => 'AND',
+        'parse mode' => 'terms');
+    $this->keys = self::parseKeys($keys, $this->options['parse mode']);
     $this->filter = new SearchApiQueryFilter($this->options['conjunction']);
     $this->sort = array();
   }
@@ -47,17 +48,83 @@ class SearchApiQuery {
    *   An array of parse modes recognized by objects of this class.
    */
   public static function parseModes() {
-    // @todo Implement (direct, single, terms)
+    $modes['direct'] = array(
+      'name' => t('Direct query'),
+      'description' => t("Don't parse the query, just hand it to the search " .
+          'server unaltered. Might fail if the query contains syntax errors ' .
+          "in regard to the specific server's query syntax."),
+    );
+    $modes['single'] = array(
+      'name' => t('Single term'),
+      'description' => t('The query is interpreted as a single keyword, ' .
+          'maybe containing spaces or special characters.'),
+    );
+    $modes['terms'] = array(
+      'name' => t('Multiple terms'),
+      'description' => t('The query is interpreted as multiple keywords ' .
+          'seperated by spaces. Keywords containing spaces may be "quoted". ' .
+          'Quoted keywords must still be seperated by spaces.'),
+    );
+    // @todo Add fourth mode for complicated expr., e.g.:
+    // "vanilla ice" (love OR NOT hate)
+    return $modes;
   }
 
   /**
    * Parses the keys string according to the $mode parameter.
+   *
+   * @return
+   *   The parsed keys. Either a string or an array.
    */
   private static function parseKeys($keys, $mode) {
     if ($keys == NULL || is_array($keys)) {
       return $keys;
     }
-    // @todo Implement
+    $keys = '' . $keys;
+    switch ($mode) {
+      case 'direct':
+        return $keys;
+
+      case 'single':
+        return array($keys);
+
+      case 'terms':
+        $ret = explode(' ', $keys);
+        $quoted = FALSE;
+        $str = '';
+        foreach ($ret as $k => $v) {
+          if (!$v) {
+            continue;
+          }
+          if ($quoted) {
+            if ($v[strlen($v)-1] == '"') {
+              $v = substr($v, 0, -1);
+              $str .= ' ' . $v;
+              $ret[$k] = $str;
+              $quoted = FALSE;
+            }
+            else {
+              $str .= ' ' . $v;
+              unset($ret[$k]);
+            }
+          }
+          else if ($v[0] == '"') {
+            $len = strlen($v);
+            if ($len > 1 && $v[$len-1] == '"') {
+              $ret[$k] = substr($v, 1, -1);
+            }
+            else {
+              $str = substr($v, 1);
+              $quoted = TRUE;
+              unset($ret[$k]);
+            }
+          }
+        }
+        if ($quoted) {
+          $ret[] = $str;
+        }
+        return array_filter($ret);
+    }
   }
 
   /**
