@@ -7,6 +7,92 @@
 define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
 
 /**
+ * Implements hook_menu().
+ */
+function search_api_menu() {
+  $pre = 'admin/config/search/search_api';
+  $items[$pre] = array(
+    'title' => 'Search API',
+    'description' => 'Create and configure searches.',
+    'page callback' => 'search_api_admin_overview',
+    'access arguments' => array('administer search_api'),
+    'file' => 'search_api.admin.inc',
+  );
+  $items[$pre . '/overview'] = array(
+    'title' => 'Overview',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items[$pre . '/add_server'] = array(
+    'title' => 'Add search server',
+    'description' => 'Create a new search server.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_admin_add_server'),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/add_index'] = array(
+    'title' => 'Add search index',
+    'description' => 'Create a new search index.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_admin_add_index'),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/server/%search_api_server'] = array(
+    'title' => 'View server',
+    'description' => 'View server details.',
+    'page callback' => 'search_api_admin_server_view',
+    'page arguments' => array(5),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items[$pre . '/server/%search_api_server/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items[$pre . '/server/%search_api_server/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit server details.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_admin_server_edit', 5),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/server/%search_api_server/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete server.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' =>
+        array('search_api_admin_confirm', 'server', 'delete', 5),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function search_api_permission() {
+  return array(
+    'administer search_api' => array(
+      'title' => t('Administer Search API'),
+      'description' =>
+          t('Create and configure Search API servers and indexes.'),
+    ),
+    // @todo Do we need this?
+    /*'access search_api' => array(
+      'title' => t('Access Search API searches'),
+      'description' => t('Gives users access to searches created with the ' .
+          'Search API.'),
+    ),*/
+  );
+}
+
+/**
  * Implements hook_cron().
  *
  * Will index $options['cron-limit'] items for each enabled index.
@@ -373,7 +459,10 @@ function search_api_search($index, $keys = NULL, array $options = array()) {
   // Create query object
   $query_options = array('conjunction' => $options['conjunction'],
       'parse mode' => $options['parse mode']);
-  $query = new $options['query class']($keys, $query_options);
+  $query = NULL;
+  if (class_exists($options['query class'])) {
+    $query = new $options['query class']($keys, $query_options);
+  }
 
   if (!($query instanceof SearchApiQuery)) {
     watchdog('search api', t('Illegal query class !class specified for search.',
