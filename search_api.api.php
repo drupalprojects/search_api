@@ -14,6 +14,8 @@
 /**
  * Defines one or more search service classes a module offers.
  *
+ * Note: The ids should be valid PHP identifiers.
+ *
  * @see hook_search_api_service_info_alter()
  *
  * @return An associative array of search service classes, keyed by a unique

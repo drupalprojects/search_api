@@ -580,9 +580,9 @@ function search_api_get_service_info($id = NULL) {
     $services = module_invoke_all('search_api_service_info');
 
     // Initialization of optional entries with default values
-    foreach ($services as $id => $service) {
+    foreach ($services as $key => $service) {
       if (!isset($service['init args'])) {
-        $services[$id]['init args'] = array();
+        $services[$key]['init args'] = array();
       }
     }
 
@@ -590,7 +590,7 @@ function search_api_get_service_info($id = NULL) {
     drupal_alter('search_api_service_info', $services);
   }
 
-  if (isset($id)) {
+  if (!empty($id)) {
     return isset($services[$id]) ? $services[$id] : NULL;
   }
   return $services;
@@ -718,7 +718,8 @@ function search_api_server_load($id) {
       // @todo Add link to server configuration once admin pages are implemented
       watchdog('search_api',
           t('Server with id !id specifies illegal service class !class',
-          array('!id' => $id, '!class' => $server->class)), NULL, WATCHDOG_ERROR);
+          array('!id' => $id, '!class' => $server->class)), NULL,
+          WATCHDOG_ERROR);
       $servers[$id] = FALSE;
       return NULL;
     }
@@ -736,6 +737,29 @@ function search_api_server_load($id) {
   }
 
   return $servers[$id] ? $servers[$id] : NULL;
+}
+
+/**
+ * Inserts a new search server into the database.
+ *
+ * @param stdClass $values
+ *   An object containing the values to be inserted.
+ *
+ * @return
+ *   The newly inserted server's id.
+ */
+function search_api_server_insert(stdClass $values) {
+  $v = array(
+    'name' => $values->name,
+    'description' => $values->description,
+    'enabled' => empty($values->enabled) ? 0 : 1,
+    'class' => $values->class,
+    'options' => serialize($values->options),
+  );
+  if (!empty($values->id)) {
+    $v['id'] = $values->id;
+  }new InsertQuery;
+  return db_insert('search_api_server')->fields($v)->execute();
 }
 
 /**
