@@ -24,18 +24,21 @@ function search_api_menu() {
     'weight' => -10,
   );
   $items[$pre . '/add_server'] = array(
-    'title' => 'Add search server',
+    'title' => 'Add server',
     'description' => 'Create a new search server.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_add_server'),
+    'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
+    'weight' => -1,
     'type' => MENU_LOCAL_TASK,
   );
   $items[$pre . '/add_index'] = array(
-    'title' => 'Add search index',
+    'title' => 'Add index',
     'description' => 'Create a new search index.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_add_index'),
+    'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -44,6 +47,7 @@ function search_api_menu() {
     'description' => 'View server details.',
     'page callback' => 'search_api_admin_server_view',
     'page arguments' => array(5),
+    'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'type' => MENU_CALLBACK,
   );
@@ -57,7 +61,9 @@ function search_api_menu() {
     'description' => 'Edit server details.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_server_edit', 5),
+    'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
+    'weight' => -1,
     'type' => MENU_LOCAL_TASK,
   );
   $items[$pre . '/server/%search_api_server/delete'] = array(
@@ -66,6 +72,41 @@ function search_api_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' =>
         array('search_api_admin_confirm', 'server', 'delete', 5),
+    'access arguments' => array('administer search_api'),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/index/%search_api_index'] = array(
+    'title' => 'View index',
+    'description' => 'View index details.',
+    'page callback' => 'search_api_admin_index_view',
+    'page arguments' => array(5),
+    'access arguments' => array('administer search_api'),
+    'file' => 'search_api.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items[$pre . '/index/%search_api_index/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items[$pre . '/index/%search_api_index/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit index details.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_admin_index_edit', 5),
+    'access arguments' => array('administer search_api'),
+    'file' => 'search_api.admin.inc',
+    'weight' => -1,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/index/%search_api_index/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete index.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' =>
+        array('search_api_admin_confirm', 'index', 'delete', 5),
+    'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -279,7 +320,7 @@ function search_api_item_data_alter($index, &$items) {
           '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
-    $func($index, &$items);
+    $func($index, $items);
     if (empty($items)) {
       return;
     }
@@ -324,10 +365,10 @@ function search_api_item_preprocess($phase, $index, &$data) {
 
     switch ($phase) {
       case 'index':
-        $processors[$class]->preprocessIndexItems($index, &$data);
+        $processors[$class]->preprocessIndexItems($index, $data);
         break;
       case 'search':
-        $processors[$class]->preprocessSearchQuery($index, &$data);
+        $processors[$class]->preprocessSearchQuery($index, $data);
         break;
       default:
         watchdog('search_api', t('!function() called with unknown phase !phase',
@@ -373,7 +414,7 @@ function search_api_item_postprocess($index, $query, &$results) {
           '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
-    $processors[$class]->postprocessSearchResults($index, $query, &$results);
+    $processors[$class]->postprocessSearchResults($index, $query, $results);
   }
 }
 
@@ -609,21 +650,26 @@ function search_api_get_processors() {
 /**
  * Returns a list of all (enabled) search servers.
  *
- * @param $enabled
+ * @param $only_enabled
  *   Whether to retrieve only enabled servers.
+ * @param $header
+ *   A table header to sort by.
  *
  * @return
  *   An array of objects representing all (or, if $enabled is TRUE, only
  *   enabled) search servers.
  */
-function search_api_list_servers($enabled = TRUE) {
+function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
   $servers = &drupal_static(__FUNCTION__);
 
-  $enabled = (int) $enabled;
+  $enabled = (int) $only_enabled;
   if (!isset($servers[$enabled])) {
     $select = db_select('search_api_server', 's')->fields('s');
     if ($enabled) {
       $select->condition('s.enabled', 1);
+    }
+    if (!empty($header)) {
+      $select = $select->extend('TableSort')->orderByHeader($header);
     }
 
     $results = $select->execute();
@@ -697,15 +743,19 @@ function search_api_server_load($id) {
  *
  * @param $options
  *   An associative array of conditions on the returned indexes.
- *   - enabled: Unless set to FALSE, only enabled indexes will be returned.
+ *   - only_enabled: Unless set to FALSE, only enabled indexes will be returned.
  *   - server: Return only indexes on the server with the specified id.
+ *   - entity_type: Return only indexes on the specified entity type.
+ * @param $header
+ *   A table header to sort by.
  *
  * @return
  *   An array of objects representing the search indexes that meet the
  *   specified criteria.
  */
-function search_api_list_indexes(array $options = array()) {
-  $enabled = isset($options['enabled']) && !$options['enabled'] ? 0 : 1;
+function search_api_list_indexes(array $options = array(), $header = NULL) {
+  $enabled = isset($options['only_enabled']) && !$options['only_enabled']
+      ? 0 : 1;
   $server = empty($options['server']) ? NULL : $options['server'];
   $type = empty($options['entity_type']) ? NULL : $options['entity_type'];
 
@@ -718,6 +768,9 @@ function search_api_list_indexes(array $options = array()) {
   }
   if (!empty($type)) {
     $select->condition('i.entity_type', $type);
+  }
+  if (!empty($header)) {
+    $select = $select->extend('TableSort')->orderByHeader($header);
   }
 
   $results = $select->execute();
