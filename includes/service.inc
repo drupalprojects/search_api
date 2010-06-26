@@ -22,9 +22,13 @@ interface SearchApiServiceInterface {
   public function init(array $options, array $init_args);
 
   /**
-   * Returns a render array for setting service-specific options.
+   * Form callback. Might be called on an uninitialized object - in this case,
+   * the form is for configuring a newly created server.
+   *
+   * @return
+   *   A form array for setting service-specific options.
    */
-  public function configuration_form();
+  public function configurationForm();
 
   /**
    * Index the specified items.
@@ -67,10 +71,10 @@ interface SearchApiServiceInterface {
 abstract class SearchApiAbstractService implements SearchApiServiceInterface {
 
   /** Array holding the user-specified options. */
-  private $user_options = array();
+  protected $user_options = array();
 
   /** Array holding the hook-specified init args. */
-  private $init_args = array();
+  protected $init_args = array();
 
   /** Database values that will be set when object is loaded: */
   public $id = 0;
