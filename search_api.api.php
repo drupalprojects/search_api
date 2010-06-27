@@ -54,10 +54,10 @@ function hook_search_api_service_info() {
  *
  * @see hook_search_api_service_info()
  *
- * @param $service_info
+ * @param array $service_info
  *   The Search API service info array, keyed by service id.
  */
-function hook_search_api_service_info_alter(&$service_info) {
+function hook_search_api_service_info_alter(array &$service_info) {
   foreach ($service_info as $id => $info) {
     $init_args = isset($info['init args']) ? $info['init args'] : array();
     $service_info[$id]['init args'] = array(
@@ -144,14 +144,153 @@ function hook_search_api_processor_info() {
 /**
  * Lets modules alter a search query before executing it.
  *
- * @param $query
+ * @param SearchApiQuery $query
  *   The SearchApiQuery object representing the search query.
- * @param $index
+ * @param stdClass $index
  *   The index the search will be executed on. Should not be altered.
  */
-function hook_search_api_query_alter(SearchApiQuery $query, $index) {
-  $info = entity_get_info($index['entity_type']);
+function hook_search_api_query_alter(SearchApiQuery $query, stdClass $index) {
+  $info = entity_get_info($index->entity_type);
   $query->addCondition($info['entity keys']['id'], 0, '!=');
+}
+
+/**
+ * Act on search servers when they are loaded.
+ *
+ * @param array $servers
+ *   The loaded servers.
+ */
+function hook_search_api_server_load(array $servers) {
+  foreach ($servers as $server) {
+    db_insert('example_search_server_access')
+      ->fields(array(
+        'server' => $server->id,
+        'access_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A new search server was created.
+ *
+ * @param SearchApiServiceInterface $server
+ *   The new server.
+ */
+function hook_search_api_server_insert(SearchApiServiceInterface $server) {
+  db_insert('example_search_server')
+    ->fields(array(
+      'server' => $server->id,
+      'insert_time' => REQUEST_TIME,
+    ))
+    ->execute();
+}
+
+/**
+ * A search server was edited, enabled or disabled.
+ *
+ * @param SearchApiServiceInterface $server
+ *   The edited server.
+ * @param $op
+ *   A hint as to how the server was updated. Either 'enable', 'disable' or
+ *   'edit'.
+ */
+function hook_search_api_server_update(SearchApiServiceInterface $server, $op) {
+  db_insert('example_search_server_update')
+    ->fields(array(
+      'server' => $server->id,
+      'update_time' => REQUEST_TIME,
+    ))
+    ->execute();
+}
+
+/**
+ * A search server was deleted.
+ *
+ * @param SearchApiServiceInterface $server
+ *   The deleted server.
+ */
+function hook_search_api_server_delete(SearchApiServiceInterface $server) {
+  db_insert('example_search_server_update')
+    ->fields(array(
+      'server' => $server->id,
+      'update_time' => REQUEST_TIME,
+    ))
+    ->execute();
+  db_delete('example_search_server')
+    ->condition('server', $server->id)
+    ->execute();
+}
+
+/**
+ * Act on search indexes when they are loaded.
+ *
+ * @param array $indexes
+ *   The loaded indexes.
+ */
+function hook_search_api_index_load(array $indexes) {
+  foreach ($indexes as $index) {
+    db_insert('example_search_index_access')
+      ->fields(array(
+        'index' => $index->id,
+        'access_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A new search index was created.
+ *
+ * @param stdClass $index
+ *   The new index.
+ */
+function hook_search_api_index_insert(stdClass $index) {
+  db_insert('example_search_index')
+    ->fields(array(
+      'index' => $index->id,
+      'insert_time' => REQUEST_TIME,
+    ))
+    ->execute();
+}
+
+/**
+ * A search index was edited in any way.
+ *
+ * This includes being edited, enabled or disabled, as well as the index being
+ * cleared or scheduled for re-indexing.
+ *
+ * @param stdClass $index
+ *   The edited index.
+ * @param $op
+ *   A hint as to how the index was updated. Either 'enable', 'disable', 'edit',
+ *   'reindex' or 'clear'.
+ */
+function hook_search_api_index_update(stdClass $index, $op) {
+  db_insert('example_search_index_update')
+    ->fields(array(
+      'index' => $index->id,
+      'update_time' => REQUEST_TIME,
+    ))
+    ->execute();
+}
+
+/**
+ * A search index was deleted.
+ *
+ * @param stdClass $index
+ *   The deleted index.
+ */
+function hook_search_api_index_delete(stdClass $index) {
+  db_insert('example_search_index_update')
+    ->fields(array(
+      'index' => $index->id,
+      'update_time' => REQUEST_TIME,
+    ))
+    ->execute();
+  db_delete('example_search_index')
+    ->condition('index', $index->id)
+    ->execute();
 }
 
 /**
@@ -161,10 +300,12 @@ function hook_search_api_query_alter(SearchApiQuery $query, $index) {
 /**
  * Search API data alteration callback that randomly changes item data.
  *
- * @param $index The index on which the items are indexed.
- * @param $items An array of objects containing the entity data.
+ * @param stdClass $index
+ *   The index on which the items are indexed.
+ * @param array $items
+ *   An array of objects containing the entity data.
  */
-function example_random_alter($index, &$items) {
+function example_random_alter(stdClass $index, array &$items) {
   if ($index->id % 2) {
     foreach ($items as $id => $item) {
       srand($id);
