@@ -337,8 +337,8 @@ function search_api_item_data_alter(stdClass $index, array &$items) {
  * @param stdClass $index
  *   The index on which the items are indexed.
  * @param array $data
- *   An array of items to be preprocessed at index time, or a SearchApiQuery
- *   object at search time.
+ *   An array of items to be preprocessed at index time, or a
+ *   SearchApiQueryInterface object at search time.
  */
 function search_api_item_preprocess($phase, stdClass $index, &$data) {
   if (empty($index->options['preprocessors'])) {
@@ -386,13 +386,13 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
  *
  * @param stdClass $index
  *   The index on which the items are indexed.
- * @param SearchApiQuery $query
- *   The SearchApiQuery object representing the executed query.
+ * @param SearchApiQueryInterface $query
+ *   The SearchApiQueryInterface object representing the executed query.
  * @param array $results
  *   An array of search results.
  */
-function search_api_item_postprocess(stdClass $index, SearchApiQuery $query,
-    array &$results) {
+function search_api_item_postprocess(stdClass $index,
+    SearchApiQueryInterface $query, array &$results) {
   if (empty($index->options['postprocessors'])) {
     return;
   }
@@ -463,21 +463,21 @@ function search_api_alter_prepare_view(stdClass $index, array &$items) {
  *   Fulltext keys to search for. May be NULL to do a filter search.
  * @param $options
  *   An associative array of options. The following are recognized:
- *   - filters: Either a SearchApiQueryFilter object or an array of filters used
- *     to filter the search.
+ *   - filters: Either a SearchApiQueryFilterInterface object or an array of
+ *     filters used to filter the search.
  *   - sort: An array of sort directives of the form $field => $order, where
  *     $order is either 'ASC' or 'DESC'.
  *   - offset: The position of the first returned search results relative to the
  *     whole result in the index.
  *   - limit: The maximum number of search results to return. -1 means no limit.
  *   - 'query class': The query class to use. Must be a subtype of
- *     SearchApiQuery.
+ *     SearchApiQueryInterface.
  *   - conjunction: The type of conjunction to use for this query - either
  *     'AND' or 'OR'. 'AND' by default.
  *   - 'parse mode': The mode with which to parse the $keys variable, if it
  *     is set and not already an array. See SearchApiQuery::parseModes() for
- *     parse modes recognized by the SearchApiQuery class. Subclasses might
- *     define additional modes.
+ *     parse modes recognized by the SearchApiQuery class.
+ *     Subclasses might define additional modes.
  *
  * @return
  *   An associative array containing the search results. For its exact contents,
@@ -515,7 +515,7 @@ function search_api_search(stdClass $index, $keys = NULL,
     $query = new $options['query class']($keys, $query_options);
   }
 
-  if (!($query instanceof SearchApiQuery)) {
+  if (!($query instanceof SearchApiQueryInterface)) {
     watchdog('search api', t('Illegal query class !class specified for search.',
         array('!class' => $options['query class'])), NULL, WATCHDOG_ERROR);
     return FALSE;
@@ -530,7 +530,7 @@ function search_api_search(stdClass $index, $keys = NULL,
       $ref2 = &$ref1->filters();
       $ref2 = $filters;
     }
-    else if ($filters instanceof SearchApiQueryFilter) {
+    else if ($filters instanceof SearchApiQueryFilterInterface) {
       $query->addFilter($filters);
     }
     else {
