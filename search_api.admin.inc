@@ -7,8 +7,7 @@
 function search_api_admin_overview() {
   $header = array(
     array('data' => t('Type'), 'colspan' => 2),
-    array('data' => t('Name'), 'field' => 'name', 'sort' => 'asc'),
-    // @todo Fix table sort so table is sorted by descending status by default
+    array('data' => t('Name'), 'field' => 'name'),
     array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
@@ -71,26 +70,24 @@ function search_api_admin_overview() {
     }
   }
 
-  return theme_table(array(
+  return array(
     '#theme' => 'table',
-    'header' => $header,
-    'rows' => $rows,
-    'attributes' => array(),
-    'caption' => '',
-    'colgroups' => array(),
-    'sticky' => TRUE,
-    'empty' => t('There are no search servers defined yet.'),
-  ));
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array(),
+    '#caption' => '',
+    '#colgroups' => array(),
+    '#sticky' => TRUE,
+    '#empty' => t('There are no search servers defined yet.'),
+  );
 }
 
 /**
  * Form callback showing a form for adding a server.
  */
 function search_api_admin_add_server($form, &$form_state) {
-  $submit = !empty($form_state['input']);
-  $form['#attached']['js'] = array(
-    drupal_get_path('module', 'search_api') . '/search_api.admin.js',
-  );
+  $class = empty($form_state['values']['class']) ? ''
+      : $form_state['values']['class'];
 
   $form['enabled'] = array(
     '#type' => 'checkbox',
@@ -116,14 +113,21 @@ function search_api_admin_add_server($form, &$form_state) {
     '#title' => t('Service class'),
     '#description' => t('Choose a service class to use for this server.'),
     '#options' => array('' => '< '. t('Choose a service class') .' >'),
-    '#attributes' => array('class' => array('search_api-service-select')),
     '#required' => TRUE,
+    '#default_value' => $class,
+    '#ajax' => array(
+      'callback' => 'search_api_admin_add_server_ajax_callback',
+      'wrapper' => 'search-api-class-options',
+    ),
   );
 
   foreach (search_api_get_service_info() as $id => $info) {
-    if ($submit && $form_state['input']['class'] != $id) {
+    $form['class']['#options'][$id] = $info['name'];
+
+    if (!$class || $class != $id) {
       continue;
     }
+
     $service = NULL;
     if (class_exists($info['class'])) {
       $service = new $info['class'];
@@ -135,20 +139,16 @@ function search_api_admin_add_server($form, &$form_state) {
           WATCHDOG_ERROR);
       continue;
     }
-    $form['class']['#options'][$id] = $info['name'];
-    $key = 'class-' . $id;
-    $form[$key] = $service->configurationForm();
-    $form[$key]['#type'] = 'fieldset';
-    $form[$key]['#tree'] = TRUE;
-    $form[$key]['#collapsible'] = TRUE;
-    $form[$key]['#title'] = $info['name'];
-    $form[$key]['#description'] = $info['description'];
-    $form[$key]['#attributes'] = array('class' => array(
-        'search_api-service-settings',
-        'search_api-service-' . $id,
-      ),
-    );
+    $form['options'] = $service->configurationForm();
+    $form['options']['#type'] = 'fieldset';
+    $form['options']['#tree'] = TRUE;
+    $form['options']['#collapsible'] = TRUE;
+    $form['options']['#title'] = $info['name'];
+    $form['options']['#description'] = $info['description'];
   }
+  $form['options']['#prefix'] = '<div id="search-api-class-options">';
+  $form['options']['#suffix'] = '</div>';
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Create server'),
@@ -158,12 +158,18 @@ function search_api_admin_add_server($form, &$form_state) {
 }
 
 /**
+ * AJAX callback that just returns the "options" array of the already built form
+ * array.
+ */
+function search_api_admin_add_server_ajax_callback($form, &$form_state) {
+  return $form['options'];
+}
+
+/**
  * Form submit callback for adding a server.
  */
 function search_api_admin_add_server_submit($form, &$form_state) {
-  $values = $form_state['values'];
-  $values['options'] = $values['class-' . $values['class']];
-  $id = search_api_server_insert((object) $values);
+  $id = search_api_server_insert((object) $form_state['values']);
   if ($id) {
     $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
   }
