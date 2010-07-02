@@ -14,12 +14,10 @@ interface SearchApiServiceInterface {
   /**
    * Initializes a service object.
    *
-   * @param $options
-   *   An array of options set by the user through the configuration form.
    * @param $init_args
    *   An array of init arguments specified by the defining hook.
    */
-  public function init(array $options, array $init_args);
+  public function init(array $init_args);
 
   /**
    * Form callback. Might be called on an uninitialized object - in this case,
@@ -70,9 +68,6 @@ interface SearchApiServiceInterface {
  */
 abstract class SearchApiAbstractService implements SearchApiServiceInterface {
 
-  /** Array holding the user-specified options. */
-  protected $user_options = array();
-
   /** Array holding the hook-specified init args. */
   protected $init_args = array();
 
@@ -92,17 +87,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @param $init_args
    *   An array of init arguments specified by the defining hook.
    */
-  public function init(array $user_options, array $init_args) {
-    $this->user_options = $user_options + $this->default_user_option_values();
+  public function init(array $init_args) {
     $this->init_args = $init_args + $this->default_init_args();
-  }
-
-  /**
-   * @return
-   *   An array of default values for this service's user-defined options.
-   */
-  protected function default_user_option_values() {
-    return array();
   }
 
   /**
