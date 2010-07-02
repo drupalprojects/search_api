@@ -5,10 +5,11 @@ description = "Provides a generic API for modules offering search capabilites."
 core = 7.x
 package = Search
 
-files[] = search_api.module
+files[] = search_api.admin.inc
 files[] = search_api.install
+files[] = search_api.module
 files[] = includes/processor.inc
 files[] = includes/query.inc
 files[] = includes/service.inc
 
-configure = admin/config/search_api
+configure = admin/config/search/search_api
