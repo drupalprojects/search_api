@@ -62,7 +62,8 @@ function search_api_admin_overview() {
           $link,
           $index->enabled ? $t_enabled : $t_disabled,
           $index->enabled ? l($t_disable, $url . $disable)
-              : l($t_enable, $url . $enable),
+              : ($server->enabled ? l($t_enable, $url . $enable)
+                  : '<del>' . $t_enable . '</del>'),
           l($t_edit, $url . $edit),
           l($t_delete, $url . $delete),
         );
@@ -74,9 +75,6 @@ function search_api_admin_overview() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#attributes' => array(),
-    '#caption' => '',
-    '#colgroups' => array(),
     '#sticky' => TRUE,
     '#empty' => t('There are no search servers defined yet.'),
   );
@@ -86,43 +84,51 @@ function search_api_admin_overview() {
  * Form callback showing a form for adding a server.
  */
 function search_api_admin_add_server($form, &$form_state) {
+  $form = array();
   $class = empty($form_state['values']['class']) ? ''
       : $form_state['values']['class'];
 
-  $form['enabled'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enabled'),
-    '#description' =>
-        t('Select if the new server will be enabled after creation.'),
-    '#default_value' => TRUE,
-  );
-  $form['name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Server name'),
-    '#description' => t('Enter a display for the new server.'),
-    '#maxlength' => 50,
-    '#required' => TRUE,
-  );
-  $form['description'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Server description'),
-    '#description' => t('Enter a description for the new server.'),
-  );
-  $form['class'] = array(
-    '#type' => 'select',
-    '#title' => t('Service class'),
-    '#description' => t('Choose a service class to use for this server.'),
-    '#options' => array('' => '< '. t('Choose a service class') .' >'),
-    '#required' => TRUE,
-    '#default_value' => $class,
-    '#ajax' => array(
-      'callback' => 'search_api_admin_add_server_ajax_callback',
-      'wrapper' => 'search-api-class-options',
-    ),
-  );
+  if (empty($form_state['storage']['step_one'])) {
+    $form['enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enabled'),
+      '#description' =>
+          t('Select if the new server will be enabled after creation.'),
+      '#default_value' => TRUE,
+    );
+    $form['name'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Server name'),
+      '#description' => t('Enter the displayed name for the new server.'),
+      '#maxlength' => 50,
+      '#required' => TRUE,
+    );
+    $form['description'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Server description'),
+      '#description' => t('Enter a description for the new server.'),
+    );
+    $form['class'] = array(
+      '#type' => 'select',
+      '#title' => t('Service class'),
+      '#description' => t('Choose a service class to use for this server.'),
+      '#options' => array('' => '< '. t('Choose a service class') .' >'),
+      '#required' => TRUE,
+      '#default_value' => $class,
+      '#ajax' => array(
+        'callback' => 'search_api_admin_add_server_ajax_callback',
+        'wrapper' => 'search-api-class-options',
+      ),
+    );
+  }
+  else if (!$class) {
+    $class = $form_state['storage']['step_one']['class'];
+  }
 
   foreach (search_api_get_service_info() as $id => $info) {
-    $form['class']['#options'][$id] = $info['name'];
+    if (empty($form_state['storage']['step_one'])) {
+      $form['class']['#options'][$id] = $info['name'];
+    }
 
     if (!$class || $class != $id) {
       continue;
@@ -139,7 +145,9 @@ function search_api_admin_add_server($form, &$form_state) {
           WATCHDOG_ERROR);
       continue;
     }
-    $form['options'] = $service->configurationForm();
+    $form['options']['form'] = $service->configurationForm();
+    $form['options']['class']['#type'] = 'value';
+    $form['options']['class']['#value'] = $class;
     $form['options']['#type'] = 'fieldset';
     $form['options']['#tree'] = TRUE;
     $form['options']['#collapsible'] = TRUE;
@@ -169,7 +177,23 @@ function search_api_admin_add_server_ajax_callback($form, &$form_state) {
  * Form submit callback for adding a server.
  */
 function search_api_admin_add_server_submit($form, &$form_state) {
-  $id = search_api_server_insert((object) $form_state['values']);
+  $values = $form_state['values'];
+
+  if (empty($values['options']) || $values['class'] != $values['options']['class']) {
+    unset($values['options']);
+    $form_state['storage']['step_one'] = $values;
+    drupal_set_message(t('Please configure the used service.'));
+    return;
+  }
+
+  if (!empty($form_state['storage']['step_one'])) {
+    $values += $form_state['storage']['step_one'];
+    unset($form_state['storage']);
+  }
+
+  $values['options'] = $values['options']['form'];
+  $obj = (object) $values;
+  $id = search_api_server_insert($obj);
   if ($id) {
     $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
   }
@@ -189,9 +213,15 @@ function search_api_admin_add_server_submit($form, &$form_state) {
  */
 function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
     $action = NULL) {
-  if (!empty($action)) {
+  if (!empty($action) && !empty($server)) {
     if ($action == 'enable') {
-      search_api_server_enable($server);
+      if (search_api_server_enable($server)) {
+        drupal_set_message(t('The server was successfully enabled.'));
+      }
+      else {
+        drupal_set_message(t('The server could not be enabled. ' .
+            'Check the logs for details.'), 'error');
+      }
       drupal_goto('admin/config/search/search_api/server/' . $server->id);
     }
     else {
@@ -202,8 +232,11 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
       return $ret;
     }
   }
+  if (empty($server)) {
+    return MENU_NOT_FOUND;
+  }
 
-  return array();
+  return '<pre>' . check_plain(print_r($server, TRUE)) . '</pre>';
 }
 
 /**

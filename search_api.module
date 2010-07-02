@@ -756,10 +756,20 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
  *   An object containing the values to be inserted.
  *
  * @return
- *   The newly inserted server's id.
+ *   The newly inserted server's id, or FALSE on error.
  */
 function search_api_server_insert(stdClass $values) {
-  $v = array(
+  foreach (array('name', 'class', 'options') as $var) {
+    if (empty($values->$var)) {
+      watchdog('search_api', t('Field !field has to be set on new server!',
+          array('!field' => $var)), NULL, WATCHDOG_ERROR);
+      return FALSE;
+    }
+  }
+  if (empty($values->description)) {
+    $values->description = NULL;
+  }
+  $fields = array(
     'name' => $values->name,
     'description' => $values->description,
     'enabled' => empty($values->enabled) ? 0 : 1,
@@ -767,10 +777,10 @@ function search_api_server_insert(stdClass $values) {
     'options' => serialize($values->options),
   );
   if (!empty($values->id)) {
-    $v['id'] = $values->id;
+    $fields['id'] = $values->id;
   }
 
-  $id = db_insert('search_api_server')->fields($v)->execute();
+  $id = db_insert('search_api_server')->fields($fields)->execute();
   if (!is_int($id)) {
     return $id;
   }
