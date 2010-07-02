@@ -7,8 +7,9 @@
 function search_api_admin_overview() {
   $header = array(
     array('data' => t('Type'), 'colspan' => 2),
-    array('data' => t('Name'), 'field' => 'name'),
-    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
+    array('data' => t('Name'), 'field' => 'name', 'first sort' => 'asc'),
+    array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc',
+        'sort' => 'desc'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
@@ -75,7 +76,6 @@ function search_api_admin_overview() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#sticky' => TRUE,
     '#empty' => t('There are no search servers defined yet.'),
   );
 }
@@ -179,16 +179,18 @@ function search_api_admin_add_server_ajax_callback($form, &$form_state) {
 function search_api_admin_add_server_submit($form, &$form_state) {
   $values = $form_state['values'];
 
-  if (empty($values['options']) || $values['class'] != $values['options']['class']) {
-    unset($values['options']);
-    $form_state['storage']['step_one'] = $values;
-    drupal_set_message(t('Please configure the used service.'));
-    return;
-  }
-
   if (!empty($form_state['storage']['step_one'])) {
     $values += $form_state['storage']['step_one'];
     unset($form_state['storage']);
+  }
+
+  if (empty($values['options'])
+      || ($values['class'] != $values['options']['class'])) {
+    unset($values['options']);
+    $form_state['storage']['step_one'] = $values;
+    $form_state['rebuild'] = TRUE;
+    drupal_set_message(t('Please configure the used service.'));
+    return;
   }
 
   $values['options'] = $values['options']['form'];

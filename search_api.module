@@ -740,7 +740,7 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
 
   // Initialize service object
   $obj->options = unserialize($obj->options);
-  $obj->init($obj->options, $service['init args']);
+  $obj->init($service['init args']);
 
   if ($invoke_hook) {
     module_invoke_all('search_api_server_load', array($obj));
