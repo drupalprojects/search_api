@@ -29,6 +29,59 @@ interface SearchApiServiceInterface {
   public function configurationForm();
 
   /**
+   * Called once, when the server is first created. Allows it to set up its
+   * necessary infrastructure.
+   */
+  public function create();
+
+  /**
+   * Notifies this server that its fields are about to be updated. Fields set on
+   * this object will still show the old values to allow comparison.
+   *
+   * @param array $fields
+   *   The fields that are about to change.
+   */
+  public function update(array $fields);
+
+  /**
+   * Notifies this server that it has been re-enabled and allows the object to
+   * react appropriately.
+   */
+  public function enable();
+
+  /**
+   * Notifies this server that it has been disabled and allows the object to
+   * react appropriately.
+   */
+  public function disable();
+
+  /**
+   * Notifies this server that it is about to be deleted from the database and
+   * should therefore clean up, if appropriate.
+   */
+  public function delete();
+
+  /**
+   * Add a new index to this server.
+   *
+   * @param stdClass $index
+   *   The index to add.
+   */
+  public function addIndex(stdClass $index);
+
+  /**
+   * Remove an index from this server.
+   *
+   * This might mean that the index has been deleted, or reassigned to a
+   * different server. If you need to distinguish between these cases, inspect
+   * $index->server.
+   *
+   * @param stdClass $index
+   *   The index to remove.
+   */
+  public function removeIndex(stdClass $index);
+
+  /**
    * Index the specified items.
    *
    * @param $index
@@ -40,6 +93,23 @@ interface SearchApiServiceInterface {
    *   An array of the ids of all items that were successfully indexed.
    */
   public function index($index, $items);
+
+  /**
+   * Delete items from an index on this server.
+   *
+   * Might be either used to delete some items (given by their ids) from a
+   * specified index, or all items from that index, or all items from all
+   * indexes on this server.
+   *
+   * @param $ids
+   *   Either an array containing the ids of the items that should be deleted,
+   *   or 'all' if all items should be deleted. Other formats might be
+   *   recognized by implementing classes, but these are not standardized.
+   * @param stdClass $index
+   *   The index from which items should be deleted, or NULL if all indexes on
+   *   this server should be cleared (then, $ids has to be 'all').
+   */
+  public function deleteItems($ids, stdClass $index = NULL);
 
   /**
    * Executes a search on the server represented by this object.
@@ -97,6 +167,90 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    */
   protected function default_init_args() {
     return array();
+  }
+
+  /**
+   * Called once, when the server is first created. Allows it to set up its
+   * necessary infrastructure.
+   *
+   * Does nothing, by default.
+   */
+  public function create() {
+    return;
+  }
+
+  /**
+   * Notifies this server that its fields are about to be updated. Fields set on
+   * this object will still show the old values to allow comparison.
+   *
+   * Does nothing, by default.
+   *
+   * @param array $fields
+   *   The fields that are about to change.
+   */
+  public function update(array $fields) {
+    return;
+  }
+
+  /**
+   * Notifies this server that it has been re-enabled and allows the object to
+   * react appropriately.
+   *
+   * Does nothing, by default.
+   */
+  public function enable() {
+    return;
+  }
+
+  /**
+   * Notifies this server that it has been disabled and allows the object to
+   * react appropriately.
+   *
+   * Does nothing, by default.
+   */
+  public function disable() {
+    return;
+  }
+
+  /**
+   * Notifies this server that it is about to be deleted from the database and
+   * should therefore clean up, if appropriate.
+   *
+   * By default, deletes all indexes from this server.
+   */
+  public function delete() {
+    $indexes = search_api_list_indexes(array('server' => $this->id));
+    foreach ($indexes as $index) {
+      $this->deleteIndex($index);
+    }
+  }
+
+  /**
+   * Add a new index to this server.
+   *
+   * Does nothing, by default.
+   *
+   * @param stdClass $index
+   *   The index to add.
+   */
+  public function addIndex(stdClass $index) {
+    return;
+  }
+
+  /**
+   * Remove an index from this server.
+   *
+   * This might mean that the index has been deleted, or reassigned to a
+   * different server. If you need to distinguish between these cases, inspect
+   * $index->server.
+   *
+   * By default, removes all items from that index.
+   *
+   * @param stdClass $index
+   *   The index to remove.
+   */
+  public function removeIndex(stdClass $index) {
+    $this->removeItems('all', $index);
   }
 
 }
