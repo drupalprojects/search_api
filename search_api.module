@@ -116,6 +116,20 @@ function search_api_menu() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function search_api_theme() {
+  $themes['search_api_server'] = array(
+    'variables' => array('id' => NULL, 'name' => '', 'description' => NULL,
+        'enabled' => NULL, 'class_name' => NULL, 'class_description' => NULL,
+        'options' => array(), 'option_names' => array()),
+    'file' => 'search_api.admin.inc',
+  );
+
+  return $themes;
+}
+
+/**
  * Implements hook_permission().
  */
 function search_api_permission() {

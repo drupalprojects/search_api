@@ -215,7 +215,11 @@ function search_api_admin_add_server_submit($form, &$form_state) {
  */
 function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
     $action = NULL) {
-  if (!empty($action) && !empty($server)) {
+  if (empty($server)) {
+    return MENU_NOT_FOUND;
+  }
+
+  if (!empty($action)) {
     if ($action == 'enable') {
       if (search_api_server_enable($server)) {
         drupal_set_message(t('The server was successfully enabled.'));
@@ -234,11 +238,98 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
       return $ret;
     }
   }
-  if (empty($server)) {
-    return MENU_NOT_FOUND;
+
+  $class = search_api_get_service_info($server->class);
+  $option_form = $server->configurationForm();
+  $option_names = array();
+  foreach ($option_form as $key => $element) {
+    if (isset($element['#title'])) {
+      $option_names[$key] = $element['#title'];
+    }
+  }
+  return array(
+    '#theme' => 'search_api_server',
+    '#id' => $server->id,
+    '#name' => $server->name,
+    '#description' => $server->description,
+    '#enabled' => $server->enabled,
+    '#class_name' => $class['name'],
+    '#class_description' => $class['description'],
+    '#options' => $server->options,
+    '#option_names' => $option_names,
+  );
+}
+
+/**
+ * Theme function for displaying a server or index.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - id: The server's id.
+ *   - name: The server's name.
+ *   - description: The server's description.
+ *   - enabled: Boolean indicating whether the server is enabled.
+ *   - class_name: The used service class' display name.
+ *   - class_description: The used service class' description.
+ *   - options: The service-specific user options as an array, keyed by field
+ *     name.
+ *   - option_names: The names of those options, as determined by the service
+ *     configuration form.
+ */
+// @todo There may be some room for improvement here, in almost every respect.
+function theme_search_api_server($variables) {
+  extract($variables);
+  $output = '';
+
+  $output .= '<h3>' . check_plain($name) . '</h3>' . "\n";
+
+  $output .= '<dl>' . "\n";
+
+  $output .= '<dt>' . t('Status') . '</dt>' . "\n";
+  $output .= '<dd>';
+  if ($enabled) {
+    $output .= t('enabled (!disable_link)',
+        array('!disable_link' => l(t('click to disable'),
+        'admin/config/search/search_api/server/' . $id . '/disable')));
+  }
+  else {
+    $output .= t('disabled (!enable_link)',
+        array('!enable_link' => l(t('click to enable'),
+        'admin/config/search/search_api/server/' . $id . '/enable')));
+  }
+  $output .= '</dd>' . "\n";
+
+  if (!empty($description)) {
+    $output .= '<dt>' . t('Description') . '</dt>' . "\n";
+    $output .= '<dd>' . nl2br(check_plain($description)) . '</dd>' .
+        "\n";
   }
 
-  return '<pre>' . check_plain(print_r($server, TRUE)) . '</pre>';
+  if (!empty($class_name)) {
+    $output .= '<dt>' . t('Service class') . '</dt>' . "\n";
+    $output .= '<dd>' . check_plain($class_name);
+    if (!empty($class_description)) {
+      $output .= '<p class="description">' .
+          nl2br(check_plain($class_description)) . '</p>';
+    }
+    $output .= '</dd>' . "\n";
+  }
+
+  if (!empty($options)) {
+    $output .= '<dt>' . t('Service options') . '</dt>' . "\n";
+    $output .= '<dd><dl>' . "\n";
+    foreach ($options as $key => $value) {
+      $name = isset($option_names[$key]) ? $option_names[$key] : $key;
+      $output .= '<dt>' . check_plain($name) . '</dt>' . "\n";
+      $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' .
+          "\n";
+    }
+    $output .= '</dl></dd>' . "\n";
+  }
+
+  $output .= '</dl>';
+
+  return $output;
 }
 
 /**
