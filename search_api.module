@@ -276,7 +276,7 @@ function search_api_index_items(stdClass $index, $limit = -1) {
     return 0;
   }
   search_api_item_preprocess('index', $index, $items);
-  $indexed = $server->index($index, $items);
+  $indexed = $server->indexItems($index, $items);
 
   if (!empty($indexed)) {
     search_api_set_items_indexed($index, $indexed);
@@ -411,7 +411,7 @@ function search_api_item_postprocess(stdClass $index,
     return;
   }
 
-  // Use the same processors as in preprocessing,if possible
+  // Use the same processors as in preprocessing, if possible
   $processors = &drupal_static('search_api_item_preprocess');
 
   foreach ($index->options['postprocessors'] as $class) {
@@ -775,7 +775,7 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
 function search_api_server_insert(stdClass $values) {
   foreach (array('name', 'class', 'options') as $var) {
     if (empty($values->$var)) {
-      watchdog('search_api', t('Field !field has to be set on new server!',
+      watchdog('search_api', t('Field !field has to be set for new server!',
           array('!field' => $var)), NULL, WATCHDOG_ERROR);
       return FALSE;
     }
@@ -800,9 +800,56 @@ function search_api_server_insert(stdClass $values) {
   }
 
   $server = search_api_server_load($id, FALSE);
+  $server->create();
   module_invoke_all('search_api_server_insert', $server);
 
   return $id;
+}
+
+/**
+ * Changes a server's settings.
+ *
+ * @param SearchApiServiceInterface $server
+ *   The server whose fields should be changed.
+ * @param array $fields
+ *   The new field values to set.
+ *
+ * @return
+ *   1 if fields were changed, 0 if the fields already had the desired values.
+ *   FALSE on failure.
+ */
+function search_api_server_edit(SearchApiServiceInterface $server,
+    array $fields) {
+  foreach ($fields as $field => $value) {
+    if (!isset($server->$field) || $value === $server->$field) {
+      unset($fields[$field]);
+    }
+  }
+  // If there are no new values, just return 0.
+  if (empty($fields)) {
+    return 0;
+  }
+
+  // Notify server of changed values.
+  $server->update($fields);
+
+  if (isset($fields['options'])) {
+    $fields['options'] = serialize($fields['options']);
+  }
+  $ret = db_update('search_api_server')
+    ->fields($fields)
+    ->condition('id', $server->id)
+    ->execute();
+
+  if (!$ret) {
+    return $ret;
+  }
+
+  $server = search_api_server_load($server->id);
+
+  module_invoke_all('search_api_server_update', $server, 'edit');
+
+  return $ret;
 }
 
 /**
@@ -816,10 +863,15 @@ function search_api_server_insert(stdClass $values) {
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_server_enable(SearchApiServiceInterface $server) {
-  $id = $server->id;
+  if ($server->enabled) {
+    return 0;
+  }
+
+  $server->enable();
+
   $ret = db_update('search_api_server')
     ->fields(array('enabled' => 1))
-    ->condition('id', $id)
+    ->condition('id', $server->id)
     ->execute();
   if (!$ret) {
     return $ret;
@@ -843,11 +895,21 @@ function search_api_server_enable(SearchApiServiceInterface $server) {
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_server_disable(SearchApiServiceInterface $server) {
+  if (!$server->enabled) {
+    return 0;
+  }
+
+  $server->disable();
+
   $id = $server->id;
-  db_update('search_api_index')
-    ->fields(array('enabled' => 0))
+  $result = db_select('search_api_index', 'i')
+    ->fields('i')
     ->condition('server', $id)
+    ->condition('enabled', 1)
     ->execute();
+  foreach ($result as $index) {
+    search_api_index_disable($index);
+  }
   $ret = db_update('search_api_server')
     ->fields(array('enabled' => 0))
     ->condition('id', $id)
@@ -872,11 +934,18 @@ function search_api_server_disable(SearchApiServiceInterface $server) {
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_server_delete(SearchApiServiceInterface $server) {
-  $id = is_object($server) ? $server->id : $server;
-  db_update('search_api_index')
-    ->fields(array('enabled' => 0))
+  // Call hook method before doing anything.
+  $server->delete();
+
+  $id = $server->id;
+  $result = db_select('search_api_index', 'i')
+    ->fields('i')
     ->condition('server', $id)
+    ->condition('enabled', 1)
     ->execute();
+  foreach ($result as $index) {
+    search_api_index_disable($index);
+  }
   $ret = db_delete('search_api_server')
     ->condition('id', $id)
     ->execute();
@@ -960,4 +1029,262 @@ function search_api_index_load($id) {
   return $index;
 }
 
-// @todo search_api_index_[insert/enable/disable/reindex/clear/delete]()
+
+/**
+ * Inserts a new search index into the database.
+ *
+ * @param stdClass $values
+ *   An object containing the values to be inserted.
+ *
+ * @return
+ *   The newly inserted index' id, or FALSE on error.
+ */
+function search_api_index_insert(stdClass $values) {
+  foreach (array('name', 'server', 'entity_type', 'options') as $var) {
+    if (empty($values->$var)) {
+      watchdog('search_api', t('Field !field has to be set for new index!',
+          array('!field' => $var)), NULL, WATCHDOG_ERROR);
+      return FALSE;
+    }
+  }
+  if (empty($values->description)) {
+    $values->description = NULL;
+  }
+
+  $server = search_api_server_load($values->server);
+  if (!$server) {
+    watchdog('search_api', t('Unknown server specified for new index (id !id)!',
+        array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
+    return FALSE;
+  }
+  if (!$server->enabled) {
+    // Indexes on a disabled server cannot be enabled.
+    $values->enabled = 0;
+  }
+  else {
+    $values->enabled = (isset($values->enabled) && !$values->enabled) ? 0 : 1;
+  }
+
+  $fields = array(
+    'name' => $values->name,
+    'description' => $values->description,
+    'enabled' => $values->enabled,
+    'server' => $values->server,
+    'entity_type' => $values->entity_type,
+    'options' => serialize($values->options),
+  );
+  if (!empty($values->id)) {
+    $fields['id'] = $values->id;
+  }
+
+  $id = db_insert('search_api_index')->fields($fields)->execute();
+  if (!is_int($id)) {
+    return $id;
+  }
+
+  $values->id = $id;
+  if ($server->enabled) {
+    $server->addIndex($values);
+  }
+  else {
+    $tasks = variable_get('search_api_tasks', array());
+    $tasks[$server->id][$index->id][] = 'add';
+    variable_set('search_api_tasks', $tasks);
+  }
+  module_invoke_all('search_api_index_insert', $values);
+
+  return $id;
+}
+
+/**
+ * Changes an index' settings.
+ *
+ * @param stdClass $index
+ *   The server whose fields should be changed.
+ * @param array $fields
+ *   The new field values to set.
+ *
+ * @return
+ *   1 if fields were changed, 0 if the fields already had the desired values.
+ *   FALSE on failure.
+ */
+function search_api_index_edit(stdClass $index, array $fields) {
+  foreach ($fields as $field => $value) {
+    if (!isset($index->$field) || $value === $index->$field) {
+      unset($fields[$field]);
+    }
+  }
+  // If there are no new values, just return 0.
+  if (empty($fields)) {
+    return 0;
+  }
+
+  $ret = db_update('search_api_index')
+    ->fields($fields)
+    ->condition('id', $index->id)
+    ->execute();
+
+  if (!$ret) {
+    return $ret;
+  }
+
+  $new_index = search_api_index_load($index->id);
+
+  if ($index->server != $new_index->server) {
+    // Server changed - inform old and new ones.
+    $old_server = search_api_server_load($index->server);
+    $new_server = search_api_server_load($new_index->server);
+    $old_server->removeIndex($index);
+    if ($old_server->enabled) {
+      $old_server->removeIndex($new_index);
+    }
+    else {
+      $tasks = variable_get('search_api_tasks', array());
+      // If we are removing the index, we can savely ignore all other tasks.
+      $tasks[$old_server->id][$index->id] = array('remove');
+      variable_set('search_api_tasks', $tasks);
+    }
+    if ($new_server->enabled) {
+      $new_server->addIndex($new_index);
+    }
+    else {
+      $tasks = variable_get('search_api_tasks', array());
+      // This is complicated: If there is also a task already telling the server
+      // to REMOVE the index we are now adding again, we want to keep that task
+      // to maintain some continuity.
+      $tasks[$new_server->id][$index->id] =
+          !empty($tasks[$new_server->id][$index->id])
+              && array_search('remove', $tasks[$new_server->id][$index->id])
+                  !== FALSE ?
+          array('remove', 'add') : array('add');
+      variable_set('search_api_tasks', $tasks);
+    }
+  }
+
+  module_invoke_all('search_api_index_update', $new_index, 'edit');
+
+  return $ret;
+}
+
+/**
+ * Enables a search index.
+ *
+ * @param stdClass $index
+ *   The index to enable.
+ *
+ * @return
+ *   1 on success, 0 or FALSE on failure.
+ */
+function search_api_index_enable(stdClass $index) {
+  $ret = db_update('search_api_index')
+    ->fields(array('enabled' => 1))
+    ->condition('id', $index->id)
+    ->execute();
+  if (!$ret) {
+    return $ret;
+  }
+
+  $index->enabled = 1;
+  module_invoke_all('search_api_index_update', $index, 'enable');
+
+  return $ret;
+}
+
+/**
+ * Disables a search index.
+ *
+ * @param stdClass $index
+ *   The index to disable.
+ *
+ * @return
+ *   1 on success, 0 or FALSE on failure.
+ */
+function search_api_index_disable(stdClass $index) {
+  $ret = db_update('search_api_index')
+    ->fields(array('enabled' => 0))
+    ->condition('id', $index->id)
+    ->execute();
+  if (!$ret) {
+    return $ret;
+  }
+
+  $index->enabled = 0;
+  module_invoke_all('search_api_index_update', $index, 'disable');
+
+  return $ret;
+}
+
+/**
+ * Schedules a search index for re-indexing.
+ *
+ * @param stdClass $index
+ *   The index to re-index.
+ *
+ * @return
+ *   1 on success, 0 or FALSE on failure.
+ */
+function search_api_index_reindex(stdClass $index) {
+  $ret = db_update('search_api_index')
+    ->fields('changed', REQUEST_TIME)
+    ->condition('changed', 0)
+    ->condition('index_id', $index->id)
+    ->execute();
+
+  if(!$ret) {
+    // If there just were no unchanged items, we don't want to report failure
+    return is_int($ret) ? 1 : FALSE;
+  }
+
+  module_invoke_all('search_api_index_update', $index, 'reindex');
+
+  return $ret;
+}
+
+/**
+ * Clears a search index and schedules all of its items for re-indexing.
+ *
+ * @param stdClass $index
+ *   The index to clear.
+ *
+ * @return
+ *   TRUE on success, FALSE on failure.
+ */
+function search_api_index_clear(stdClass $index) {
+  $server = search_api_server_load($index->server);
+  if ($server->enabled) {
+    $server->deleteItems('all', $index);
+  }
+  else {
+    $tasks = variable_get('search_api_tasks', array());
+    $tasks[$server->id][$index->id][] = 'clear';
+    variable_set('search_api_tasks', $tasks);
+  }
+
+  $ret = db_update('search_api_index')
+    ->fields('changed', REQUEST_TIME)
+    ->condition('changed', 0)
+    ->condition('index_id', $index->id)
+    ->execute();
+
+  if(!$ret) {
+    // If there just were no unchanged items, we don't want to report failure.
+    return is_int($ret) ? TRUE : FALSE;
+  }
+
+  module_invoke_all('search_api_index_update', $index, 'clear');
+
+  return TRUE;
+}
+
+/**
+ * Deletes a search index.
+ *
+ * @param stdClass $index
+ *   The index to delete.
+ *
+ * @return
+ *   1 on success, 0 or FALSE on failure.
+ */
+function search_api_index_delete(stdClass $index) {
+  // @todo Implement
+}

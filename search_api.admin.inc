@@ -340,7 +340,71 @@ function theme_search_api_server($variables) {
  */
 function search_api_admin_server_edit($form, &$form_state,
     SearchApiServiceInterface $server) {
-  return array();
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Server name'),
+    '#description' => t('Enter the displayed name for the  server.'),
+    '#maxlength' => 50,
+    '#default_value' => $server->name,
+    '#required' => TRUE,
+  );
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Server description'),
+    '#description' => t('Enter a description for the new server.'),
+    '#default_value' => $server->description,
+  );
+
+  $class = search_api_get_service_info($server->class);
+
+  $form['options']['form'] = $service->configurationForm();
+  $form['options']['#type'] = 'fieldset';
+  $form['options']['#tree'] = TRUE;
+  $form['options']['#collapsible'] = TRUE;
+  $form['options']['#title'] = $class['name'];
+  $form['options']['#description'] = $class['description'];
+
+  $form['id'] = array(
+    '#type' => 'value',
+    '#value' => $server->id,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create server'),
+  );
+
+  return $form;
+}
+
+/**
+ * Submit function for search_api_admin_server_edit.
+ */
+function search_api_admin_server_edit_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  $server = search_api_server_load($values['id']);
+
+  unset($values['id']);
+  unset($values['op']);
+
+  $values['options'] = $values['options']['form'];
+
+  $ret = search_api_server_edit($server, $values);
+  if ($ret) {
+    drupal_set_message(t('The search server was successfully edited.'));
+    $form_state['redirect'] = 'admin/config/search/search_api/server/' .
+        $server->id;
+    return;
+  }
+  if ($ret === 0) {
+    drupal_set_message(t('No values were changed.'));
+    $form_state['redirect'] = 'admin/config/search/search_api/server/' .
+        $server->id;
+    return;
+  }
+  drupal_set_message(t('An error occurred while saving the changes. ' .
+      'Check the logs for details.'));
+  return;
 }
 
 /**
@@ -499,7 +563,7 @@ function search_api_admin_confirm_submit($form, &$form_state) {
   }
   else {
     drupal_set_message(t('An error has occurred while performing the ' .
-      'desired action. For details, see the logs.'), 'error');
+      'desired action. Check the logs for details.'), 'error');
   }
 
   $form_state['redirect'] = $action == 'delete'
