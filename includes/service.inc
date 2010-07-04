@@ -84,15 +84,15 @@ interface SearchApiServiceInterface {
   /**
    * Index the specified items.
    *
-   * @param $index
+   * @param stdClass $index
    *   The search index for which items should be indexed.
-   * @param $items
+   * @param array $items
    *   An array of objects containing the item data to be indexed.
    *
    * @return
    *   An array of the ids of all items that were successfully indexed.
    */
-  public function index($index, $items);
+  public function indexItems(stdClass $index, array $items);
 
   /**
    * Delete items from an index on this server.
@@ -117,7 +117,7 @@ interface SearchApiServiceInterface {
    * @param $index
    *   The index to search items on.
    * @param $query
-   *   The SearchApiQuery to execute.
+   *   The SearchApiQueryInterface object to execute.
    * @param $options
    *   An associative array of search options. The following are recognized:
    *   - offset: The position of the first returned search results relative to
@@ -129,7 +129,8 @@ interface SearchApiServiceInterface {
    *   An associative array containing the search results.
    *   @todo Specify this in a more detailled way.
    */
-  public function search($index, $query, array $options = array());
+  public function search(stdClass $index, SearchApiQueryInterface $query,
+      array $options = array());
 
 }
 
