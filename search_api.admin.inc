@@ -411,7 +411,109 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
  * Form callback showing a form for adding an index.
  */
 function search_api_admin_add_index($form, &$form_state) {
-  return array();
+  $form = array();
+  $form['entity_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Entity type'),
+    '#description' => t('Select the type of entity that will be indexed in ' .
+            'this index. <strong>This setting cannot be changed afterwards!' .
+            '</strong>'),
+    '#default_value' => '',
+    '#options' => array('' => t('- Select one -')),
+    '#required' => TRUE,
+  );
+  foreach (entity_get_info() as $name => $entity) {
+    $form['entity_type']['#options'][$name] = $entity['label'];
+  }
+  $form['enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled'),
+    '#description' => t('Select if the new index will be enabled after ' .
+        'creation. This will only take effect if the selected server is also ' .
+        'enabled.'),
+    '#default_value' => TRUE,
+  );
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Index name'),
+    '#description' => t('Enter the displayed name for the new index.'),
+    '#maxlength' => 50,
+    '#required' => TRUE,
+  );
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Index description'),
+    '#description' => t('Enter a description for the new index.'),
+  );
+  $form['server'] = array(
+    '#type' => 'select',
+    '#title' => t('Server'),
+    '#description' =>
+        t('Select the server this index will initially reside on.'),
+    '#default_value' => '',
+    '#options' => array('' => t('< No server >'))
+  );
+  $servers = search_api_list_servers(FALSE);
+  // List enabled servers first.
+  foreach ($servers as $server) {
+    if ($server->enabled) {
+      $form['server']['#options'][$server->id] = $server->name;
+    }
+  }
+  foreach ($servers as $server) {
+    if (!$server->enabled) {
+      $form['server']['#options'][$server->id] = $server->name . ' (' .
+          t('disabled') . ')';
+    }
+  }
+  $form['cron_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cron limit'),
+    '#description' => t('Set how many items will be indexed at most during ' .
+        'each run of cron. "0" means that no items will be indexed by cron ' .
+        'for this index, "-1" means that cron should index all items at once.'),
+    '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create server'),
+  );
+
+  return $form;
+}
+
+/**
+ * Validation callback for search_api_admin_add_index.
+ */
+function search_api_admin_add_index_validate($form, &$form_state) {
+  $cron_limit = $form_state['values']['cron_limit'];
+  if ($cron_limit != '' . ((int) $cron_limit)) {
+    // We don't enforce stricter rules and treat all negative values as -1.
+    form_set_error('cron_limit', t('The cron limit must be a number.'));
+  }
+}
+
+/**
+ * Submit callback for search_api_admin_add_index.
+ */
+function search_api_admin_add_index_submit($form, &$form_state) {
+  $values = (object) $form_state['values'];
+  $values->options = array('cron_limit' => $values->cron_limit);
+  unset($values->cron_limit);
+  unset($values->op);
+
+  // Trying to create an enabled index on a disabled server is handled elsewhere
+  $id = search_api_index_insert($values);
+
+  if ($id) {
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id .
+        '/workflow';
+  }
+  else {
+    drupal_set_message(t('An error occurred while trying to save the new ' .
+        'index. Check the logs for details.'), 'error');
+  }
 }
 
 /**
@@ -431,7 +533,16 @@ function search_api_admin_index_view(stdClass $index = NULL) {
  *   The index to edit.
  */
 function search_api_admin_index_edit($form, &$form_state, stdClass $index) {
-  // @todo If associated server was changed, also move/execute remembered tasks.
+  return array();
+}
+
+/**
+ * Edit an index' workflow (data alter callbacks, pre-/postprocessors.
+ *
+ * @param stdClass $index
+ *   The index to edit.
+ */
+function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   return array();
 }
 
