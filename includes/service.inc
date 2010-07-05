@@ -64,6 +64,9 @@ interface SearchApiServiceInterface {
   /**
    * Add a new index to this server.
    *
+   * If the index was already added to the server, the object should treat this
+   * as if removeIndex() and then addIndex() were called.
+   *
    * @param stdClass $index
    *   The index to add.
    */
@@ -75,6 +78,8 @@ interface SearchApiServiceInterface {
    * This might mean that the index has been deleted, or reassigned to a
    * different server. If you need to distinguish between these cases, inspect
    * $index->server.
+   *
+   * If the index wasn't added to the server, the method call should be ignored.
    *
    * @param stdClass $index
    *   The index to remove.
