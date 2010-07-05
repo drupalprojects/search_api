@@ -1097,18 +1097,24 @@ function search_api_index_insert(stdClass $values) {
     $values->server = NULL;
   }
 
-  $server = search_api_server_load($values->server);
-  if (!$server) {
-    watchdog('search_api', t('Unknown server specified for new index (id !id)!',
-        array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
-    return FALSE;
-  }
-  if (!$server->enabled) {
-    // Indexes on a disabled server cannot be enabled.
-    $values->enabled = 0;
+  if ($values->server) {
+    $server = search_api_server_load($values->server);
+    if (!$server) {
+      watchdog('search_api', t('Unknown server specified for new index (id ' .
+          '!id)!', array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
+      return FALSE;
+    }
+    if (!$server->enabled) {
+      // Indexes on a disabled server cannot be enabled.
+      $values->enabled = 0;
+    }
+    else {
+      $values->enabled = (isset($values->enabled) && !$values->enabled) ? 0 : 1;
+    }
   }
   else {
-    $values->enabled = (isset($values->enabled) && !$values->enabled) ? 0 : 1;
+    // Indexes with no server cannot be enabled.
+    $values->enabled = 0;
   }
 
   // @todo Insert default preprocessors, etc., into options?
