@@ -82,7 +82,7 @@ function search_api_schema() {
             'be indexed.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
+        'not null' => FALSE,
       ),
       'entity_type' => array(
         'description' => 'The entity type of items stored in this index.',
