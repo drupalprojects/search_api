@@ -1137,13 +1137,15 @@ function search_api_index_insert(stdClass $values) {
   }
 
   $values->id = $id;
-  if ($server->enabled) {
-    $server->addIndex($values);
-  }
-  else {
-    $tasks = variable_get('search_api_tasks', array());
-    $tasks[$server->id][$index->id][] = 'add';
-    variable_set('search_api_tasks', $tasks);
+  if ($values->server) {
+    if ($server->enabled) {
+      $server->addIndex($values);
+    }
+    else {
+      $tasks = variable_get('search_api_tasks', array());
+      $tasks[$server->id][$index->id][] = 'add';
+      variable_set('search_api_tasks', $tasks);
+    }
   }
   module_invoke_all('search_api_index_insert', $values);
 
