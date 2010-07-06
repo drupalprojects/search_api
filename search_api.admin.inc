@@ -4,6 +4,7 @@
 /**
  * Page callback that shows an overview of defined servers and indexes.
  */
+// @todo Fix, indexes don't show up
 function search_api_admin_overview() {
   $header = array(
     array('data' => t('Type'), 'colspan' => 2),
@@ -14,9 +15,9 @@ function search_api_admin_overview() {
   );
 
   $servers = search_api_list_servers(FALSE, $header);
-  $all_indexes = search_api_list_indexes(array('enabled' => FALSE));
+  $all_indexes = search_api_list_indexes(array('only_enabled' => FALSE));
   $indexes = array();
-  foreach ($indexes as $index) {
+  foreach ($all_indexes as $index) {
     $indexes[$index->server][$index->id] = $index;
   }
 
@@ -69,6 +70,23 @@ function search_api_admin_overview() {
           l($t_delete, $url . $delete),
         );
       }
+    }
+  }
+  if (!empty($indexes[''])) {
+    foreach ($indexes[''] as $index) {
+      $url = $pre_index . $index->id;
+      $link = l($index->name, $url);
+      if ($index->enabled) {
+        $link = '<strong>' . $link . '</strong>';
+      }
+      $rows[] = array(
+        array('data' => $t_index, 'colspan' => 2),
+        $link,
+        $t_disabled,
+        '<del>' . $t_enable . '</del>',
+        l($t_edit, $url . $edit),
+        l($t_delete, $url . $delete),
+      );
     }
   }
 
@@ -522,8 +540,32 @@ function search_api_admin_add_index_submit($form, &$form_state) {
  * @param stdClass $index
  *   The index to display.
  */
-function search_api_admin_index_view(stdClass $index = NULL) {
-  return array();
+function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
+  if (empty($index)) {
+    return MENU_NOT_FOUND;
+  }
+
+  if (!empty($action)) {
+    if ($action == 'enable') {
+      if (search_api_index_enable($index)) {
+        drupal_set_message(t('The index was successfully enabled.'));
+      }
+      else {
+        drupal_set_message(t('The index could not be enabled. ' .
+            'Check the logs for details.'), 'error');
+      }
+      drupal_goto('admin/config/search/search_api/index/' . $index->id);
+    }
+    else {
+      $ret = drupal_get_form('search_api_admin_confirm', 'index', $action,
+          $index);
+    }
+    if ($ret) {
+      return $ret;
+    }
+  }
+
+  return '<pre>' . print_r($index, TRUE) . '</pre>';
 }
 
 /**
