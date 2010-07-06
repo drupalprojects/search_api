@@ -134,8 +134,7 @@ interface SearchApiServiceInterface {
    *   An associative array containing the search results.
    *   @todo Specify this in a more detailled way.
    */
-  public function search(stdClass $index, SearchApiQueryInterface $query,
-      array $options = array());
+  public function search(stdClass $index, SearchApiQueryInterface $query, array $options = array());
 
 }
 

@@ -31,7 +31,7 @@ function search_api_menu() {
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'weight' => -1,
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_ACTION,
   );
   $items[$pre . '/add_index'] = array(
     'title' => 'Add index',
@@ -40,7 +40,7 @@ function search_api_menu() {
     'page arguments' => array('search_api_admin_add_index'),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_ACTION,
   );
   $items[$pre . '/server/%search_api_server'] = array(
     'title' => 'View server',
@@ -70,8 +70,7 @@ function search_api_menu() {
     'title' => 'Delete',
     'description' => 'Delete server.',
     'page callback' => 'drupal_get_form',
-    'page arguments' =>
-        array('search_api_admin_confirm', 'server', 'delete', 5),
+    'page arguments' => array('search_api_admin_confirm', 'server', 'delete', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
@@ -91,13 +90,13 @@ function search_api_menu() {
     'weight' => -10,
   );
   $items[$pre . '/index/%search_api_index/edit'] = array(
-    'title' => 'Edit',
-    'description' => 'Edit index details.',
+    'title' => 'Settings',
+    'description' => 'Edit index settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_index_edit', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
-    'weight' => -2,
+    'weight' => -6,
     'type' => MENU_LOCAL_TASK,
   );
   $items[$pre . '/index/%search_api_index/workflow'] = array(
@@ -107,15 +106,24 @@ function search_api_menu() {
     'page arguments' => array('search_api_admin_index_workflow', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
-    'weight' => -1,
+    'weight' => -4,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items[$pre . '/index/%search_api_index/fields'] = array(
+    'title' => 'Fields',
+    'description' => 'Select indexed fields.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_admin_index_fields', 5),
+    'access arguments' => array('administer search_api'),
+    'file' => 'search_api.admin.inc',
+    'weight' => -2,
     'type' => MENU_LOCAL_TASK,
   );
   $items[$pre . '/index/%search_api_index/delete'] = array(
     'title' => 'Delete',
     'description' => 'Delete index.',
     'page callback' => 'drupal_get_form',
-    'page arguments' =>
-        array('search_api_admin_confirm', 'index', 'delete', 5),
+    'page arguments' => array('search_api_admin_confirm', 'index', 'delete', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
@@ -129,9 +137,16 @@ function search_api_menu() {
  */
 function search_api_theme() {
   $themes['search_api_server'] = array(
-    'variables' => array('id' => NULL, 'name' => '', 'description' => NULL,
-        'enabled' => NULL, 'class_name' => NULL, 'class_description' => NULL,
-        'options' => array(), 'option_names' => array()),
+    'variables' => array(
+      'id' => NULL,
+      'name' => '',
+      'description' => NULL,
+      'enabled' => NULL,
+      'class_name' => NULL,
+      'class_description' => NULL,
+      'options' => array(),
+      'option_names' => array()
+    ),
     'file' => 'search_api.admin.inc',
   );
 
@@ -145,14 +160,12 @@ function search_api_permission() {
   return array(
     'administer search_api' => array(
       'title' => t('Administer Search API'),
-      'description' =>
-          t('Create and configure Search API servers and indexes.'),
+      'description' => t('Create and configure Search API servers and indexes.'),
     ),
     // @todo Do we need this?
     /*'access search_api' => array(
       'title' => t('Access Search API searches'),
-      'description' => t('Gives users access to searches created with the ' .
-          'Search API.'),
+      'description' => t('Gives users access to searches created with the Search API.'),
     ),*/
   );
 }
@@ -170,9 +183,7 @@ function search_api_cron() {
     if ($limit) {
       $num = search_api_index_items($index, $limit);
       if ($num) {
-        watchdog('search_api', t('Indexed !num items for index !name',
-            array('!num' => $num, '!name' => $index->name)), NULL,
-            WATCHDOG_INFO);
+        watchdog('search_api', t('Indexed !num items for index !name', array('!num' => $num, '!name' => $index->name)), NULL, WATCHDOG_INFO);
       }
     }
   }
@@ -236,13 +247,11 @@ function search_api_entity_update(stdClass $entity, $type) {
 function search_api_search_api_alter_callback_info() {
   $callbacks['search_api_alter_prepare_view'] = array(
     'name' => t('Call hook'),
-    'description' =>
-        t('Calls the standard entity_prepare_view() function for all items.'),
+    'description' => t('Calls the standard entity_prepare_view() function for all items.'),
     'weight' => -10,
   );
   // @todo Add callback that adds a search_api_uri field
-  // @todo Add heavy-weight callback that aggregates string fields into a
-  // search_api_fulltext field at index time
+  // @todo Add heavy-weight callback that aggregates string fields into a search_api_fulltext field at index time
 
   return $callbacks;
 }
@@ -263,17 +272,13 @@ function search_api_index_items(stdClass $index, $limit = -1) {
   $entity_info = entity_get_info($index->entity_type);
   // Safety check if entity type is known (prevent failing of whole cron run)
   if (!$entity_info) {
-    watchdog('search_api', t("Couldn't index values for '!name' index " .
-        "(unknown entity type '!type')", array('!name' => $index->name,
-        '!type' => $index->entity_type)), NULL, WATCHDOG_ERROR);
+    watchdog('search_api', t("Couldn't index values for '!name' index (unknown entity type '!type')", array('!name' => $index->name, '!type' => $index->entity_type)), NULL, WATCHDOG_ERROR);
     return FALSE;
   }
 
   $server = search_api_server_load($index->server);
   if (!($server && $server instanceof SearchApiServiceInterface)) {
-    watchdog('search_api', t("Couldn't index values for '!name' index " .
-        '(server info could not be retrieved)', array('!name' => $index->name)),
-        NULL, WATCHDOG_ERROR);
+    watchdog('search_api', t("Couldn't index values for '!name' index (server info could not be retrieved)", array('!name' => $index->name)), NULL, WATCHDOG_ERROR);
     return FALSE;
   }
 
@@ -340,9 +345,7 @@ function search_api_item_data_alter(stdClass $index, array &$items) {
 
   foreach ($index->options['data_alter_callbacks'] as $func) {
     if (!function_exists($func)) {
-      watchdog('search_api', t('Undefined data alter callback function ' .
-          '!function() specified in index !name', array('!function' => $func,
-          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Undefined data alter callback function  !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
     $func($index, $items);
@@ -373,18 +376,14 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
 
   foreach ($index->options['preprocessors'] as $class) {
     if (!class_exists($class)) {
-      watchdog('search_api', t('Undefined preprocessor class !class ' .
-          'specified in index !name', array('!class' => $class,
-          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
     if (empty($processors[$class])) {
       $processors[$class] = new $class;
     }
     if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
-      watchdog('search_api', t('Undefined preprocessor class !class ' .
-          'specified in index !name', array('!class' => $class,
-          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
 
@@ -396,9 +395,7 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
         $processors[$class]->preprocessSearchQuery($index, $data);
         break;
       default:
-        watchdog('search_api', t('!function() called with unknown phase !phase',
-            array('!function' => __FUNCTION__, '!phase' => $phase)), NULL,
-            WATCHDOG_WARNING);
+        watchdog('search_api', t('!function() called with unknown phase !phase', array('!function' => __FUNCTION__, '!phase' => $phase)), NULL, WATCHDOG_WARNING);
         return;
     }
   }
@@ -415,8 +412,7 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
  * @param array $results
  *   An array of search results.
  */
-function search_api_item_postprocess(stdClass $index,
-    SearchApiQueryInterface $query, array &$results) {
+function search_api_item_postprocess(stdClass $index, SearchApiQueryInterface $query, array &$results) {
   if (empty($index->options['postprocessors'])) {
     return;
   }
@@ -426,18 +422,14 @@ function search_api_item_postprocess(stdClass $index,
 
   foreach ($index->options['postprocessors'] as $class) {
     if (!class_exists($class)) {
-      watchdog('search_api', t('Undefined postprocessor class !class ' .
-          'specified in index !name', array('!class' => $class,
-          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
     if (empty($processors[$class])) {
       $processors[$class] = new $class;
     }
     if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
-      watchdog('search_api', t('Undefined postprocessor class !class ' .
-          'specified in index !name', array('!class' => $class,
-          '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
     $processors[$class]->postprocessSearchResults($index, $query, $results);
@@ -508,40 +500,41 @@ function search_api_alter_prepare_view(stdClass $index, array &$items) {
  *   see SearchApiServiceInterface->search().
  *   On error, FALSE is returned and the cause logged.
  */
-function search_api_search(stdClass $index, $keys = NULL,
-    array $options = array()) {
+function search_api_search(stdClass $index, $keys = NULL, array $options = array()) {
   if (!$index->enabled) {
-    watchdog('search_api', t("Couldn't search values for '!name' index " .
-        '(index is disabled)', array('!name' => $index->name)),
-        NULL, WATCHDOG_ERROR, l(t('view'),
-        'admin/config/search/search_api/index/' . $index->id));
+    watchdog('search_api', t("Couldn't search values for '!name' index (index is disabled)", array('!name' => $index->name)), NULL, WATCHDOG_ERROR, l(t('view'), 'admin/config/search/search_api/index/' . $index->id));
     return FALSE;
   }
 
   $server = search_api_server_load($index->server);
   if (!($server && $server instanceof SearchApiServiceInterface)) {
-    watchdog('search_api', t("Couldn't search values for '!name' index " .
-        '(server info could not be retrieved)', array('!name' => $index->name)),
-        NULL, WATCHDOG_ERROR);
+    watchdog('search_api', t("Couldn't search values for '!name' index (server info could not be retrieved)", array('!name' => $index->name)), NULL, WATCHDOG_ERROR);
     return FALSE;
   }
 
   // Set option defaults
-  $options += array('filters' => array(), 'sort' => array(), 'offset' => 0,
-      'limit' => -1, 'query class' => 'SearchApiQuery', 'conjunction' => 'AND',
-      'parse mode' => 'terms');
+  $options += array(
+    'filters' => array(),
+    'sort' => array(),
+    'offset' => 0,
+    'limit' => -1,
+    'query class' => 'SearchApiQuery',
+    'conjunction' => 'AND',
+    'parse mode' => 'terms',
+  );
 
   // Create query object
-  $query_options = array('conjunction' => $options['conjunction'],
-      'parse mode' => $options['parse mode']);
+  $query_options = array(
+    'conjunction' => $options['conjunction'],
+    'parse mode' => $options['parse mode'],
+  );
   $query = NULL;
   if (class_exists($options['query class'])) {
     $query = new $options['query class']($keys, $query_options);
   }
 
   if (!($query instanceof SearchApiQueryInterface)) {
-    watchdog('search api', t('Illegal query class !class specified for search.',
-        array('!class' => $options['query class'])), NULL, WATCHDOG_ERROR);
+    watchdog('search api', t('Illegal query class !class specified for search.', array('!class' => $options['query class'])), NULL, WATCHDOG_ERROR);
     return FALSE;
   }
 
@@ -554,13 +547,11 @@ function search_api_search(stdClass $index, $keys = NULL,
       $ref2 = &$ref1->filters();
       $ref2 = $filters;
     }
-    else if ($filters instanceof SearchApiQueryFilterInterface) {
+    elseif ($filters instanceof SearchApiQueryFilterInterface) {
       $query->addFilter($filters);
     }
     else {
-      watchdog('search api', t('Illegal filter value specified for search: ' .
-          '!value', array('!value' => print_r($filters, TRUE))), NULL,
-          WATCHDOG_WARNING);
+      watchdog('search api', t('Illegal filter value specified for search: !value', array('!value' => print_r($filters, TRUE))), NULL, WATCHDOG_WARNING);
     }
   }
   if ($sort && is_array($sort)) {
@@ -580,8 +571,10 @@ function search_api_search(stdClass $index, $keys = NULL,
   $query_cache[] = $query;
 
   // Execute query
-  $search_options = array('offset' => $options['offset'],
-      'limit' => $options['limit']);
+  $search_options = array(
+    'offset' => $options['offset'],
+    'limit' => $options['limit'],
+  );
   $result = $server->search($index, $query, $search_options);
 
   // Postprocess results
@@ -671,8 +664,7 @@ function search_api_get_processors() {
 
     // Initialization of optional entries with default values
     foreach ($processors as $id => $processor) {
-      $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE,
-          'weight' => 0);
+      $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE, 'weight' => 0);
     }
 
     // @todo drupal_alter('search_api_processor_info', $processors)?
@@ -732,12 +724,10 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
  *   representing the server with the specified id.
  */
 function search_api_server_load($id, $invoke_hook = TRUE) {
-  $server = db_query('SELECT * FROM {search_api_server} WHERE id = :id',
-      array(':id' => (int) $id))->fetch();
+  $server = db_query('SELECT * FROM {search_api_server} WHERE id = :id', array(':id' => (int) $id))->fetch();
 
   if (!$server) {
-    watchdog('search_api', t('Unknown search server with id !id',
-        array('!id' => $id)), NULL, WATCHDOG_WARNING);
+    watchdog('search_api', t('Unknown search server with id !id', array('!id' => $id)), NULL, WATCHDOG_WARNING);
     return FALSE;
   }
 
@@ -749,11 +739,7 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
   }
 
   if (!($obj instanceof SearchApiServiceInterface)) {
-    watchdog('search_api',
-        t('Server with id !id specifies illegal service class !class',
-        array('!id' => $id, '!class' => $server->class)), NULL,
-        WATCHDOG_ERROR, l(t('view'),
-        'admin/config/search/search_api/server/' . $id));
+    watchdog('search_api', t('Server with id !id specifies illegal service class !class', array('!id' => $id, '!class' => $server->class)), NULL, WATCHDOG_ERROR, l(t('view'), 'admin/config/search/search_api/server/' . $id));
     return FALSE;
   }
 
@@ -785,8 +771,7 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
 function search_api_server_insert(stdClass $values) {
   foreach (array('name', 'class', 'options') as $var) {
     if (empty($values->$var)) {
-      watchdog('search_api', t('Field !field has to be set for new server!',
-          array('!field' => $var)), NULL, WATCHDOG_ERROR);
+      watchdog('search_api', t('Field !field has to be set for new server!', array('!field' => $var)), NULL, WATCHDOG_ERROR);
       return FALSE;
     }
   }
@@ -828,10 +813,10 @@ function search_api_server_insert(stdClass $values) {
  *   1 if fields were changed, 0 if the fields already had the desired values.
  *   FALSE on failure.
  */
-function search_api_server_edit(SearchApiServiceInterface $server,
-    array $fields) {
+function search_api_server_edit(SearchApiServiceInterface $server, array $fields) {
   foreach ($fields as $field => $value) {
     if (!isset($server->$field) || $value === $server->$field) {
+      // @todo Bug: fields that are NULL can't be changed.
       unset($fields[$field]);
     }
   }
@@ -907,9 +892,7 @@ function search_api_server_enable(SearchApiServiceInterface $server) {
             $server->removeIndex($index);
             break;
           default:
-            watchdog('search_api', t('Unknown task "!task" for server "!name".',
-                array('!task' => $task, '!server' => $server->name)), NULL,
-                'warning');
+            watchdog('search_api', t('Unknown task "!task" for server "!name".', array('!task' => $task, '!server' => $server->name)), NULL, 'warning');
         }
       }
     }
@@ -1017,8 +1000,7 @@ function search_api_server_delete(SearchApiServiceInterface $server) {
  *   specified criteria.
  */
 function search_api_list_indexes(array $options = array(), $header = NULL) {
-  $enabled = isset($options['only_enabled']) && !$options['only_enabled']
-      ? 0 : 1;
+  $enabled = isset($options['only_enabled']) && !$options['only_enabled'] ? 0 : 1;
   $server = empty($options['server']) ? NULL : $options['server'];
   $type = empty($options['entity_type']) ? NULL : $options['entity_type'];
 
@@ -1058,11 +1040,9 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  *   A completely loaded index object, or NULL if no such index exists.
  */
 function search_api_index_load($id) {
-  $index = db_query('SELECT * FROM {search_api_index} WHERE id = :id',
-      array(':id' => (int) $id))->fetchObject();
+  $index = db_query('SELECT * FROM {search_api_index} WHERE id = :id', array(':id' => (int) $id))->fetchObject();
   if (!$index) {
-    watchdog('search_api', t('Unknown search index with id !id',
-        array('!id' => $id)), NULL, WATCHDOG_WARNING);
+    watchdog('search_api', t('Unknown search index with id !id', array('!id' => $id)), NULL, WATCHDOG_WARNING);
     return FALSE;
   }
   $index->options = unserialize($index->options);
@@ -1085,8 +1065,7 @@ function search_api_index_load($id) {
 function search_api_index_insert(stdClass $values) {
   foreach (array('name', 'entity_type', 'options') as $var) {
     if (empty($values->$var)) {
-      watchdog('search_api', t('Field !field has to be set for new index!',
-          array('!field' => $var)), NULL, WATCHDOG_ERROR);
+      watchdog('search_api', t('Field !field has to be set for new index!', array('!field' => $var)), NULL, WATCHDOG_ERROR);
       return FALSE;
     }
   }
@@ -1100,8 +1079,7 @@ function search_api_index_insert(stdClass $values) {
   if ($values->server) {
     $server = search_api_server_load($values->server);
     if (!$server) {
-      watchdog('search_api', t('Unknown server specified for new index (id ' .
-          '!id)!', array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
+      watchdog('search_api', t('Unknown server specified for new index (id !id)!', array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
       return FALSE;
     }
     if (!$server->enabled) {
@@ -1167,6 +1145,7 @@ function search_api_index_insert(stdClass $values) {
 function search_api_index_edit(stdClass $index, array $fields) {
   foreach ($fields as $field => $value) {
     if (!isset($index->$field) || $value === $index->$field) {
+      // @todo Bug: fields that are NULL can't be changed.
       unset($fields[$field]);
     }
   }
@@ -1316,8 +1295,7 @@ function search_api_index_clear(stdClass $index) {
       $tasks = variable_get('search_api_tasks', array());
       // If the index was newly added since the server was last enabled, we
       // we don't need to do anything.
-      if (!isset($tasks[$server->id][$index->id])
-          || array_search('add', $tasks[$server->id][$index->id]) === FALSE) {
+      if (!isset($tasks[$server->id][$index->id]) || array_search('add', $tasks[$server->id][$index->id]) === FALSE) {
         $tasks[$server->id][$index->id][] = 'clear';
         variable_set('search_api_tasks', $tasks);
       }

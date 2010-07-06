@@ -4,18 +4,16 @@
 /**
  * Page callback that shows an overview of defined servers and indexes.
  */
-// @todo Fix, indexes don't show up
 function search_api_admin_overview() {
   $header = array(
     array('data' => t('Type'), 'colspan' => 2),
     array('data' => t('Name'), 'field' => 'name', 'first sort' => 'asc'),
-    array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc',
-        'sort' => 'desc'),
+    array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc', 'sort' => 'desc'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
   $servers = search_api_list_servers(FALSE, $header);
-  $all_indexes = search_api_list_indexes(array('only_enabled' => FALSE));
+  $all_indexes = search_api_list_indexes(array('only_enabled' => FALSE), $header);
   $indexes = array();
   foreach ($all_indexes as $index) {
     $indexes[$index->server][$index->id] = $index;
@@ -46,8 +44,7 @@ function search_api_admin_overview() {
       $t_server,
       $link,
       $server->enabled ? $t_enabled : $t_disabled,
-      $server->enabled ? l($t_disable, $url . $disable)
-          : l($t_enable, $url . $enable),
+      $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable),
       l($t_edit, $url . $edit),
       l($t_delete, $url . $delete),
     );
@@ -63,9 +60,9 @@ function search_api_admin_overview() {
           $t_index,
           $link,
           $index->enabled ? $t_enabled : $t_disabled,
-          $index->enabled ? l($t_disable, $url . $disable)
-              : ($server->enabled ? l($t_enable, $url . $enable)
-                  : '<del>' . $t_enable . '</del>'),
+          $index->enabled
+              ? l($t_disable, $url . $disable)
+              : ($server->enabled ? l($t_enable, $url . $enable) : '<del>' . $t_enable . '</del>'),
           l($t_edit, $url . $edit),
           l($t_delete, $url . $delete),
         );
@@ -103,15 +100,13 @@ function search_api_admin_overview() {
  */
 function search_api_admin_add_server($form, &$form_state) {
   $form = array();
-  $class = empty($form_state['values']['class']) ? ''
-      : $form_state['values']['class'];
+  $class = empty($form_state['values']['class']) ? '' : $form_state['values']['class'];
 
   if (empty($form_state['storage']['step_one'])) {
     $form['enabled'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enabled'),
-      '#description' =>
-          t('Select if the new server will be enabled after creation.'),
+      '#description' => t('Select if the new server will be enabled after creation.'),
       '#default_value' => TRUE,
     );
     $form['name'] = array(
@@ -139,7 +134,7 @@ function search_api_admin_add_server($form, &$form_state) {
       ),
     );
   }
-  else if (!$class) {
+  elseif (!$class) {
     $class = $form_state['storage']['step_one']['class'];
   }
 
@@ -157,10 +152,7 @@ function search_api_admin_add_server($form, &$form_state) {
       $service = new $info['class'];
     }
     if (!($service instanceof SearchApiServiceInterface)) {
-      watchdog('search_api',
-          t('Service class !id specifies an illegal class: !class',
-          array('!id' => $id, '!class' => $info['class'])), NULL,
-          WATCHDOG_ERROR);
+      watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
       continue;
     }
     $form['options']['form'] = $service->configurationForm();
@@ -202,8 +194,7 @@ function search_api_admin_add_server_submit($form, &$form_state) {
     unset($form_state['storage']);
   }
 
-  if (empty($values['options'])
-      || ($values['class'] != $values['options']['class'])) {
+  if (empty($values['options']) || ($values['class'] != $values['options']['class'])) {
     unset($values['options']);
     $form_state['storage']['step_one'] = $values;
     $form_state['rebuild'] = TRUE;
@@ -218,8 +209,7 @@ function search_api_admin_add_server_submit($form, &$form_state) {
     $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
   }
   else {
-    drupal_set_message(t('An error occurred while trying to save the new ' .
-        'server. Check the logs for details.'), 'error');
+    drupal_set_message(t('An error occurred while trying to save the new server. Check the logs for details.'), 'error');
   }
 }
 
@@ -231,8 +221,7 @@ function search_api_admin_add_server_submit($form, &$form_state) {
  * @param $action
  *   One of 'enable', 'disable', 'delete'; or NULL if the server is only viewed.
  */
-function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
-    $action = NULL) {
+function search_api_admin_server_view(SearchApiServiceInterface $server = NULL, $action = NULL) {
   if (empty($server)) {
     return MENU_NOT_FOUND;
   }
@@ -243,14 +232,12 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL,
         drupal_set_message(t('The server was successfully enabled.'));
       }
       else {
-        drupal_set_message(t('The server could not be enabled. ' .
-            'Check the logs for details.'), 'error');
+        drupal_set_message(t('The server could not be enabled. Check the logs for details.'), 'error');
       }
       drupal_goto('admin/config/search/search_api/server/' . $server->id);
     }
     else {
-      $ret = drupal_get_form('search_api_admin_confirm', 'server', $action,
-          $server);
+      $ret = drupal_get_form('search_api_admin_confirm', 'server', $action, $server);
     }
     if ($ret) {
       return $ret;
@@ -306,29 +293,23 @@ function theme_search_api_server($variables) {
   $output .= '<dt>' . t('Status') . '</dt>' . "\n";
   $output .= '<dd>';
   if ($enabled) {
-    $output .= t('enabled (!disable_link)',
-        array('!disable_link' => l(t('click to disable'),
-        'admin/config/search/search_api/server/' . $id . '/disable')));
+    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('click to disable'), 'admin/config/search/search_api/server/' . $id . '/disable')));
   }
   else {
-    $output .= t('disabled (!enable_link)',
-        array('!enable_link' => l(t('click to enable'),
-        'admin/config/search/search_api/server/' . $id . '/enable')));
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('click to enable'), 'admin/config/search/search_api/server/' . $id . '/enable')));
   }
   $output .= '</dd>' . "\n";
 
   if (!empty($description)) {
     $output .= '<dt>' . t('Description') . '</dt>' . "\n";
-    $output .= '<dd>' . nl2br(check_plain($description)) . '</dd>' .
-        "\n";
+    $output .= '<dd>' . nl2br(check_plain($description)) . '</dd>' . "\n";
   }
 
   if (!empty($class_name)) {
     $output .= '<dt>' . t('Service class') . '</dt>' . "\n";
     $output .= '<dd>' . check_plain($class_name);
     if (!empty($class_description)) {
-      $output .= '<p class="description">' .
-          nl2br(check_plain($class_description)) . '</p>';
+      $output .= '<p class="description">' . nl2br(check_plain($class_description)) . '</p>';
     }
     $output .= '</dd>' . "\n";
   }
@@ -339,8 +320,7 @@ function theme_search_api_server($variables) {
     foreach ($options as $key => $value) {
       $name = isset($option_names[$key]) ? $option_names[$key] : $key;
       $output .= '<dt>' . check_plain($name) . '</dt>' . "\n";
-      $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' .
-          "\n";
+      $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' . "\n";
     }
     $output .= '</dl></dd>' . "\n";
   }
@@ -356,8 +336,7 @@ function theme_search_api_server($variables) {
  * @param SearchApiServiceInterface $server
  *   The server to edit.
  */
-function search_api_admin_server_edit($form, &$form_state,
-    SearchApiServiceInterface $server) {
+function search_api_admin_server_edit($form, &$form_state, SearchApiServiceInterface $server) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Server name'),
@@ -375,7 +354,7 @@ function search_api_admin_server_edit($form, &$form_state,
 
   $class = search_api_get_service_info($server->class);
 
-  $form['options']['form'] = $service->configurationForm();
+  $form['options']['form'] = $server->configurationForm();
   $form['options']['#type'] = 'fieldset';
   $form['options']['#tree'] = TRUE;
   $form['options']['#collapsible'] = TRUE;
@@ -410,18 +389,15 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   $ret = search_api_server_edit($server, $values);
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
-    $form_state['redirect'] = 'admin/config/search/search_api/server/' .
-        $server->id;
+    $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
     return;
   }
   if ($ret === 0) {
     drupal_set_message(t('No values were changed.'));
-    $form_state['redirect'] = 'admin/config/search/search_api/server/' .
-        $server->id;
+    $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
     return;
   }
-  drupal_set_message(t('An error occurred while saving the changes. ' .
-      'Check the logs for details.'));
+    drupal_set_message(t('An error occurred while saving the changes. Check the logs for details.'));
   return;
 }
 
@@ -433,9 +409,8 @@ function search_api_admin_add_index($form, &$form_state) {
   $form['entity_type'] = array(
     '#type' => 'select',
     '#title' => t('Entity type'),
-    '#description' => t('Select the type of entity that will be indexed in ' .
-            'this index. <strong>This setting cannot be changed afterwards!' .
-            '</strong>'),
+    '#description' => t('Select the type of entity that will be indexed in this index. ' .
+        '<strong>This setting cannot be changed afterwards!</strong>'),
     '#default_value' => '',
     '#options' => array('' => t('- Select one -')),
     '#required' => TRUE,
@@ -446,9 +421,8 @@ function search_api_admin_add_index($form, &$form_state) {
   $form['enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enabled'),
-    '#description' => t('Select if the new index will be enabled after ' .
-        'creation. This will only take effect if the selected server is also ' .
-        'enabled.'),
+    '#description' => t('Select if the new index will be enabled after creation. ' .
+        'This will only take effect if the selected server is also enabled.'),
     '#default_value' => TRUE,
   );
   $form['name'] = array(
@@ -466,8 +440,7 @@ function search_api_admin_add_index($form, &$form_state) {
   $form['server'] = array(
     '#type' => 'select',
     '#title' => t('Server'),
-    '#description' =>
-        t('Select the server this index will initially reside on.'),
+    '#description' => t('Select the server this index will initially reside on.'),
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
@@ -480,16 +453,14 @@ function search_api_admin_add_index($form, &$form_state) {
   }
   foreach ($servers as $server) {
     if (!$server->enabled) {
-      $form['server']['#options'][$server->id] = $server->name . ' (' .
-          t('disabled') . ')';
+      $form['server']['#options'][$server->id] = $server->name . ' (' . t('disabled') . ')';
     }
   }
   $form['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
-    '#description' => t('Set how many items will be indexed at most during ' .
-        'each run of cron. "0" means that no items will be indexed by cron ' .
-        'for this index, "-1" means that cron should index all items at once.'),
+    '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
+        '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
     '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
   );
 
@@ -525,12 +496,10 @@ function search_api_admin_add_index_submit($form, &$form_state) {
   $id = search_api_index_insert($values);
 
   if ($id) {
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id .
-        '/workflow';
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id . '/workflow';
   }
   else {
-    drupal_set_message(t('An error occurred while trying to save the new ' .
-        'index. Check the logs for details.'), 'error');
+    drupal_set_message(t('An error occurred while trying to save the new index. Check the logs for details.'), 'error');
   }
 }
 
@@ -551,14 +520,12 @@ function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
         drupal_set_message(t('The index was successfully enabled.'));
       }
       else {
-        drupal_set_message(t('The index could not be enabled. ' .
-            'Check the logs for details.'), 'error');
+        drupal_set_message(t('The index could not be enabled. Check the logs for details.'), 'error');
       }
       drupal_goto('admin/config/search/search_api/index/' . $index->id);
     }
     else {
-      $ret = drupal_get_form('search_api_admin_confirm', 'index', $action,
-          $index);
+      $ret = drupal_get_form('search_api_admin_confirm', 'index', $action, $index);
     }
     if ($ret) {
       return $ret;
@@ -588,6 +555,16 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   return array();
 }
 
+/**
+ * Select the indexed fields.
+ *
+ * @param stdClass $index
+ *   The index to edit.
+ */
+function search_api_admin_index_fields($form, &$form_state, stdClass $index) {
+  return array();
+}
+
 
 /**
  * Helper function for displaying a generic confirmation form.
@@ -605,8 +582,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
             t('Disable server !name', array('!name' => $info->name)),
             t('Do you really want to disable this server?'),
             t('This will disable both the server and all associated indexes. ' .
-                "Searches on these indexes won't be available until they are " .
-                're-enabled.'),
+                "Searches on these indexes won't be available until they are re-enabled."),
             t('The server and its indexes were successfully disabled.'),
           );
           break;
@@ -615,9 +591,8 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
             t('Delete server !name', array('!name' => $info->name)),
             t('Do you really want to delete this server?'),
             t('This will delete the server and disable all associated indexes. ' .
-                "Searches on these indexes won't be available until they are " .
-                'moved to another server and re-enabled.<br />' .
-                '<strong>Use with extreme care!</strong>'),
+                "Searches on these indexes won't be available until they are moved to another server and re-enabled.<br />" .
+                '<strong>Use with care!</strong>'),
             t('The server was successfully deleted.'),
           );
           break;
@@ -639,8 +614,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
           $text = array(
             t('Rebuild index !name', array('!name' => $info->name)),
             t('Do you really want to re-index the items in this index?'),
-            t('This will add all items to the index again (overwriting the ' .
-                'index), but existing items in the index will remain searchable.'),
+            t('This will add all items to the index again (overwriting the index), but existing items in the index will remain searchable.'),
             t('The index was successfully scheduled for re-indexing.'),
           );
           break;
@@ -648,11 +622,9 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
           $text = array(
             t('Clear index !name', array('!name' => $info->name)),
             t('Do you really want to clear this index?'),
-            t('All items will be deleted from the index and have to be ' .
-                'inserted again by normally indexing them. Until all items ' .
-                'are re-indexed, searches on this index will return ' .
-                'incomplete results.<br />Use with care, in most cases ' .
-                'rebuilding the index might be enough.'),
+            t('All items will be deleted from the index and have to be inserted again by normally indexing them. ' .
+                'Until all items are re-indexed, searches on this index will return incomplete results.<br />' .
+                'Use with care, in most cases rebuilding the index might be enough.'),
             t('The index was successfully cleared.'),
           );
           break;
@@ -660,8 +632,8 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
           $text = array(
             t('Delete index !name', array('!name' => $info->name)),
             t('Do you really want to delete this index?'),
-            t('This will remove the index from the server and delete all ' .
-                'settings. All data on this index will be lost.<br />' .
+            t('This will remove the index from the server and delete all settings. ' .
+                'All data on this index will be lost.<br />' .
                 '<strong>Use with care!</strong>'),
             t('The index has been successfully deleted.'),
           );
@@ -693,9 +665,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
     ),
   );
   $desc = "<h3>{$text[1]}</h3><p>{$text[2]}</p>";
-  return confirm_form($form, $text[0],
-      "admin/config/search/search_api/$type/{$info->id}", $desc, t('Confirm'),
-      t('Cancel'));
+  return confirm_form($form, $text[0], "admin/config/search/search_api/$type/{$info->id}", $desc);
 }
 
 /**
@@ -715,8 +685,7 @@ function search_api_admin_confirm_submit($form, &$form_state) {
     drupal_set_message($values['message']);
   }
   else {
-    drupal_set_message(t('An error has occurred while performing the ' .
-      'desired action. Check the logs for details.'), 'error');
+    drupal_set_message(t('An error has occurred while performing the desired action. Check the logs for details.'), 'error');
   }
 
   $form_state['redirect'] = $action == 'delete'

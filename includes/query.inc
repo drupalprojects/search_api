@@ -131,8 +131,11 @@ class SearchApiQuery {
    *     should be used for filters in this query.
    */
   public function __construct($keys = NULL, $options = array()) {
-    $this->options = $options + array('conjunction' => 'AND',
-        'parse mode' => 'terms', 'filter class' => 'SearchApiQueryFilter');
+    $this->options = $options + array(
+      'conjunction' => 'AND',
+      'parse mode' => 'terms',
+      'filter class' => 'SearchApiQueryFilter',
+    );
     $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     $this->filter = $this->createFilter($this->options['conjunction']);
     $this->sort = array();
@@ -149,23 +152,19 @@ class SearchApiQuery {
   public function parseModes() {
     $modes['direct'] = array(
       'name' => t('Direct query'),
-      'description' => t("Don't parse the query, just hand it to the search " .
-          'server unaltered. Might fail if the query contains syntax errors ' .
-          "in regard to the specific server's query syntax."),
+      'description' => t("Don't parse the query, just hand it to the search server unaltered. " .
+          "Might fail if the query contains syntax errors in regard to the specific server's query syntax."),
     );
     $modes['single'] = array(
       'name' => t('Single term'),
-      'description' => t('The query is interpreted as a single keyword, ' .
-          'maybe containing spaces or special characters.'),
+      'description' => t('The query is interpreted as a single keyword, maybe containing spaces or special characters.'),
     );
     $modes['terms'] = array(
       'name' => t('Multiple terms'),
-      'description' => t('The query is interpreted as multiple keywords ' .
-          'seperated by spaces. Keywords containing spaces may be "quoted". ' .
-          'Quoted keywords must still be seperated by spaces.'),
+      'description' => t('The query is interpreted as multiple keywords seperated by spaces. ' .
+          'Keywords containing spaces may be "quoted". Quoted keywords must still be seperated by spaces.'),
     );
-    // @todo Add fourth mode for complicated expr., e.g.:
-    // "vanilla ice" (love OR NOT hate)
+    // @todo Add fourth mode for complicated expr., e.g.: "vanilla ice" (love OR NOT hate)
     return $modes;
   }
 
@@ -207,7 +206,7 @@ class SearchApiQuery {
               unset($ret[$k]);
             }
           }
-          else if ($v[0] == '"') {
+          elseif ($v[0] == '"') {
             $len = strlen($v);
             if ($len > 1 && $v[$len-1] == '"') {
               $ret[$k] = substr($v, 1, -1);

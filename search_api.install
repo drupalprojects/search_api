@@ -11,8 +11,7 @@
  */
 function search_api_schema() {
   $schema['search_api_server'] = array(
-    'description' => 'Stores all search servers created through the Search ' .
-        'API.',
+    'description' => 'Stores all search servers created through the Search API.',
     'fields' => array(
       'id' => array(
         'description' => 'The primary identifier for a server.',
@@ -78,8 +77,7 @@ function search_api_schema() {
         'not null' => FALSE,
       ),
       'server' => array(
-        'description' => 'The {search_api_server}.id with which data should ' .
-            'be indexed.',
+        'description' => 'The {search_api_server}.id with which data should be indexed.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => FALSE,
@@ -91,8 +89,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'options' => array(
-        'description' => 'An array of additional arguments configuring this ' .
-            'index.',
+        'description' => 'An array of additional arguments configuring this index.',
         'type' => 'text',
         'serialize' => TRUE,
         'not null' => TRUE,
@@ -114,8 +111,7 @@ function search_api_schema() {
   );
 
   $schema['search_api_item'] = array(
-    'description' => 'Stores the items which should be indexed for each ' .
-        'index, and their status.',
+    'description' => 'Stores the items which should be indexed for each index, and their status.',
     'fields' => array(
       'item_id' => array(
         'description' => "The item's entity id (e.g. {node}.nid for nodes).",
@@ -130,8 +126,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'changed' => array(
-        'description' => 'Either a flag or a timestamp to indicate if or ' .
-            'when the item was changed since it was last indexed.',
+        'description' => 'Either a flag or a timestamp to indicate if or when the item was changed since it was last indexed.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
