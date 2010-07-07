@@ -81,8 +81,6 @@ function hook_search_api_service_info_alter(array &$service_info) {
  *   arrays with the following keys:
  *   - name: The name to display for this callback.
  *   - description: A short description of what the callback does.
- *   - enabled: (optional) Whether this callback should be enabled by default in
- *     newly created indexes. Defaults to TRUE.
  *   - weight: (optional) Defines the order in which callbacks are displayed
  *     (and, therefore, invoked) by default. Defaults to 0.
  */
@@ -90,7 +88,6 @@ function hook_search_api_alter_callback_info() {
   $callbacks['example_random_alter'] = array(
     'name' => t('Random alteration'),
     'description' => t('Alters all passed item data completely randomly.'),
-    'enabled' => FALSE,
     'weight' => 100,
   );
   $callbacks['example_add_comments'] = array(
@@ -116,10 +113,6 @@ function hook_search_api_alter_callback_info() {
  *     phase.
  *   - class: The processor class, which has to implement the
  *     SearchApiProcessorInterface interface.
- *   - 'enabled pre': (optional) Whether this callback should be enabled by
- *     default in newly created indexes as a preprocessor. Defaults to TRUE.
- *   - 'enabled post': (optional) Whether this callback should be enabled by
- *     default in newly created indexes as a postprocessor. Defaults to TRUE.
  *   - weight: (optional) Defines the order in which processors are displayed
  *     (and, therefore, invoked) by default. Defaults to 0.
  */
@@ -128,8 +121,6 @@ function hook_search_api_processor_info() {
     'name' => t('Example processor'),
     'description' => t('Pre- and post-processes data in really cool ways.'),
     'class' => 'ExampleSearchApiProcessor',
-    'enabled pre' => FALSE,
-    'enabled post' => FALSE,
     'weight' => -1,
   );
   $callbacks['example_processor_minimal'] = array(

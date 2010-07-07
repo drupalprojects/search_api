@@ -13,6 +13,23 @@
 interface SearchApiProcessorInterface {
 
   /**
+   * Construct a processor.
+   *
+   * @param array $options
+   *   The processor options set for this index.
+   */
+  public function __construct(array $options = array());
+
+  /**
+   * Display a form for configuring this processor.
+   *
+   * @return
+   *   A form array for configuring this processor, or FALSE if no configuration
+   *   is possible.
+   */
+  public function configurationForm();
+
+  /**
    * Preprocess data items for indexing. Data added by data alter callbacks will
    * be available on the items.
    *

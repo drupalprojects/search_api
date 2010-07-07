@@ -99,7 +99,6 @@ function search_api_admin_overview() {
  * Form callback showing a form for adding a server.
  */
 function search_api_admin_add_server($form, &$form_state) {
-  $form = array();
   $class = empty($form_state['values']['class']) ? '' : $form_state['values']['class'];
 
   if (empty($form_state['storage']['step_one'])) {
@@ -149,7 +148,7 @@ function search_api_admin_add_server($form, &$form_state) {
 
     $service = NULL;
     if (class_exists($info['class'])) {
-      $service = new $info['class'];
+      $service = new $info['class']();
     }
     if (!($service instanceof SearchApiServiceInterface)) {
       watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
@@ -187,6 +186,7 @@ function search_api_admin_add_server_ajax_callback($form, &$form_state) {
  * Form submit callback for adding a server.
  */
 function search_api_admin_add_server_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
   $values = $form_state['values'];
 
   if (!empty($form_state['storage']['step_one'])) {
@@ -266,7 +266,7 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL, 
 }
 
 /**
- * Theme function for displaying a server or index.
+ * Theme function for displaying a server.
  *
  * @param $variables
  *   An associative array containing:
@@ -368,7 +368,7 @@ function search_api_admin_server_edit($form, &$form_state, SearchApiServiceInter
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Create server'),
+    '#value' => t('Save settings'),
   );
 
   return $form;
@@ -378,11 +378,11 @@ function search_api_admin_server_edit($form, &$form_state, SearchApiServiceInter
  * Submit function for search_api_admin_server_edit.
  */
 function search_api_admin_server_edit_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+
   $values = $form_state['values'];
   $server = search_api_server_load($values['id']);
-
   unset($values['id']);
-  unset($values['op']);
 
   $values['options'] = $values['options']['form'];
 
@@ -390,22 +390,21 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
     $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
-    return;
   }
-  if ($ret === 0) {
+  elseif ($ret === 0) {
     drupal_set_message(t('No values were changed.'));
     $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
-    return;
   }
+  else {
     drupal_set_message(t('An error occurred while saving the changes. Check the logs for details.'));
-  return;
+    $form_state['rebuild'] = TRUE;
+  }
 }
 
 /**
  * Form callback showing a form for adding an index.
  */
 function search_api_admin_add_index($form, &$form_state) {
-  $form = array();
   $form['entity_type'] = array(
     '#type' => 'select',
     '#title' => t('Entity type'),
@@ -428,19 +427,19 @@ function search_api_admin_add_index($form, &$form_state) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
-    '#description' => t('Enter the displayed name for the new index.'),
+    '#description' => t('Enter the displayed name for the index.'),
     '#maxlength' => 50,
     '#required' => TRUE,
   );
   $form['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Index description'),
-    '#description' => t('Enter a description for the new index.'),
+    '#description' => t('Enter a description for the index.'),
   );
   $form['server'] = array(
     '#type' => 'select',
     '#title' => t('Server'),
-    '#description' => t('Select the server this index will initially reside on.'),
+    '#description' => t('Select the server this index should reside on.'),
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
@@ -487,10 +486,11 @@ function search_api_admin_add_index_validate($form, &$form_state) {
  * Submit callback for search_api_admin_add_index.
  */
 function search_api_admin_add_index_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+
   $values = (object) $form_state['values'];
   $values->options = array('cron_limit' => $values->cron_limit);
   unset($values->cron_limit);
-  unset($values->op);
 
   // Trying to create an enabled index on a disabled server is handled elsewhere
   $id = search_api_index_insert($values);
@@ -532,7 +532,91 @@ function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
     }
   }
 
-  return '<pre>' . print_r($index, TRUE) . '</pre>';
+  $ret = array(
+    '#theme' => 'search_api_index',
+    '#id' => $index->id,
+    '#name' => $index->name,
+    '#description' => $index->description,
+    '#enabled' => $index->enabled,
+    '#server' => $index->server ? search_api_server_load($index->server) : NULL,
+    '#options' => $index->options,
+  );
+
+  return $ret;
+}
+
+/**
+ * Theme function for displaying an index.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - id: The index's id.
+ *   - name: The index' name.
+ *   - description: The index' description.
+ *   - enabled: Boolean indicating whether the index is enabled.
+ *   - class_name: The used service class' display name.
+ *   - class_description: The used service class' description.
+ *   - options: The service-specific user options as an array, keyed by field
+ *     name.
+ *   - option_names: The names of those options, as determined by the service
+ *     configuration form.
+ */
+// @todo There may be some room for improvement here, in almost every respect.
+function theme_search_api_index($variables) {
+  extract($variables);
+  $output = '';
+
+  $output .= '<h3>' . check_plain($name) . '</h3>' . "\n";
+
+  $output .= '<dl>' . "\n";
+
+  $output .= '<dt>' . t('Status') . '</dt>' . "\n";
+  $output .= '<dd>';
+  if ($enabled) {
+    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('click to disable'), 'admin/config/search/search_api/index/' . $id . '/disable')));
+  }
+  elseif ($server && $server->enabled) {
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('click to enable'), 'admin/config/search/search_api/index/' . $id . '/enable')));
+  }
+  else {
+    $output .= t('disabled');
+  }
+  $output .= '</dd>' . "\n";
+
+  if (!empty($description)) {
+    $output .= '<dt>' . t('Description') . '</dt>' . "\n";
+    $output .= '<dd>' . nl2br(check_plain($description)) . '</dd>' . "\n";
+  }
+
+  if (!empty($server)) {
+    $output .= '<dt>' . t('Server') . '</dt>' . "\n";
+    $output .= '<dd>' . l(check_plain($server->name), 'admin/config/search/search_api/server/' . $server->id);
+    if (!empty($server->description)) {
+      $output .= '<p class="description">' . nl2br(check_plain($server->description)) . '</p>';
+    }
+    $output .= '</dd>' . "\n";
+  }
+
+  if (!empty($options)) {
+    $output .= '<dt>' . t('Index options') . '</dt>' . "\n";
+    $output .= '<dd><dl>' . "\n";
+    $output .= '<dt>' . t('Cron limit') . '</dt>' . "\n";
+    if (empty($options['cron_limit'])) {
+      $output .= '<dd>' . t("Don't index during cron runs") . '</dd>' . "\n";
+    }
+    elseif ($options['cron_limit'] < 0) {
+      $output .= '<dd>' . t('Unlimited') . '</dd>' . "\n";
+    }
+    else {
+      $output .= '<dd>' . format_plural($options['cron_limit'], '1 item per cron run.', '@count items per cron run.') . '</dd>' . "\n";
+    }
+    // @todo List indexed fields, etc.?
+    $output .= '</dl></dd>' . "\n";
+  }
+
+  $output .= '</dl>';
+
+  return $output;
 }
 
 /**
@@ -542,17 +626,209 @@ function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
  *   The index to edit.
  */
 function search_api_admin_index_edit($form, &$form_state, stdClass $index) {
-  return array();
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Index name'),
+    '#description' => t('Enter the displayed name for the index.'),
+    '#maxlength' => 50,
+    '#default_value' => $index->name,
+    '#required' => TRUE,
+  );
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Index description'),
+    '#description' => t('Enter a description for the index.'),
+    '#default_value' => $index->description,
+  );
+  $form['server'] = array(
+    '#type' => 'select',
+    '#title' => t('Server'),
+    '#description' => t('Select the server this index should reside on.'),
+    '#default_value' => $index->server,
+    '#options' => array('' => t('< No server >'))
+  );
+  $servers = search_api_list_servers(FALSE);
+  // List enabled servers first.
+  foreach ($servers as $server) {
+    if ($server->enabled) {
+      $form['server']['#options'][$server->id] = $server->name;
+    }
+  }
+  foreach ($servers as $server) {
+    if (!$server->enabled) {
+      $form['server']['#options'][$server->id] =  t('@server_name (disabled)', array('@server_name' => $server->name));
+    }
+  }
+  $form['cron_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cron limit'),
+    '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
+        '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
+    '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
+  );
+
+  $form['id'] = array(
+    '#type' => 'value',
+    '#value' => $index->id,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save settings'),
+  );
+
+  return $form;
 }
 
 /**
- * Edit an index' workflow (data alter callbacks, pre-/postprocessors.
+ * Validation callback for search_api_admin_index_edit.
+ */
+function search_api_admin_index_edit_validate($form, &$form_state) {
+  $cron_limit = $form_state['values']['cron_limit'];
+  if ($cron_limit != '' . ((int) $cron_limit)) {
+    // We don't enforce stricter rules and treat all negative values as -1.
+    form_set_error('cron_limit', t('The cron limit must be a number.'));
+  }
+}
+
+/**
+ * Submit callback for search_api_admin_index_edit.
+ */
+function search_api_admin_index_edit_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+
+  $values = $form_state['values'];
+  $index = search_api_index_load($values['id']);
+  $values['options'] = array('cron_limit' => $values['cron_limit']);
+  unset($values['cron_limit']);
+  unset($values['id']);
+
+  $ret = search_api_index_edit($index, $values);
+  if ($ret) {
+    drupal_set_message(t('The search index was successfully edited.'));
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+  }
+  elseif ($ret === 0) {
+    drupal_set_message(t('No values were changed.'));
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+  }
+  else {
+    drupal_set_message(t('An error occurred while saving the changes. Check the logs for details.'));
+    $form_state['rebuild'] = TRUE;
+  }
+}
+
+/**
+ * Edit an index' workflow (data alter callbacks, pre-/postprocessors, and their
+ * order).
  *
  * @param stdClass $index
  *   The index to edit.
  */
+// Copied from filter_admin_format_form
 function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
-  return array();
+  $callback_info = search_api_get_alter_callbacks();
+  $processor_info = search_api_get_processors();
+
+  $form['#tree'] = TRUE;
+  $form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
+  //$form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+
+  $callbacks = array();
+
+  foreach ($callback_info as $name => $callback) {
+    if (!isset($callbacks[$name])) {
+      $callbacks[$name]['enabled'] = 0;
+      $callbacks[$name]['#weight'] = $callback['weight'];
+    }
+  }
+  $form['#callbacks'] = $callbacks;
+  $form['callbacks'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Callbacks'),
+    '#collapsible' => TRUE,
+  );
+
+  // Callback status.
+  $form['callbacks']['status'] = array(
+    '#type' => 'item',
+    '#title' => t('Enabled callbacks'),
+    '#prefix' => '<div class="search-api-status-wrapper">',
+    '#suffix' => '</div>',
+  );
+  foreach ($callback_info as $name => $callback) {
+    $form['callbacks']['status'][$name] = array(
+      '#type' => 'checkbox',
+      '#title' => $callback['name'],
+      '#default_value' => $callbacks[$name]['enabled'],
+      '#parents' => array('callbacks', $name, 'status'),
+      '#description' => $callback['description'],
+      '#weight' => $callback['weight'],
+    );
+  }
+
+  // Callback order (tabledrag).
+  $form['callbacks']['order'] = array(
+    '#type' => 'item',
+    '#title' => t('Callback processing order'),
+    '#theme' => 'search_api_item_order',
+    '#table_id' => 'search-api-callbacks-order-table',
+  );
+  foreach ($callback_info as $name => $callback) {
+    $form['callbacks']['order'][$name]['item'] = array(
+      '#markup' => $callback['name'],
+    );
+    $form['callbacks']['order'][$name]['weight'] = array(
+      '#type' => 'weight',
+      '#delta' => 50,
+      '#default_value' => $callbacks[$name]['#weight'],
+      '#parents' => array('callbacks', $name, 'weight'),
+    );
+    $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['#weight'];
+  }
+
+  $form['id'] = array('#type' => 'value', '#value' => $index->id);
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+
+  return $form;
+}
+
+/**
+ * Returns HTML for an processor/callback order form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form.
+ */
+function theme_search_api_item_order($variables) {
+  $element = $variables['element'];
+
+  $rows = array();
+  foreach (element_children($element, TRUE) as $name) {
+    $element[$name]['weight']['#attributes']['class'][] = 'search-api-order-weight';
+    $rows[] = array(
+      'data' => array(
+        drupal_render($element[$name]['item']),
+        drupal_render($element[$name]['weight']),
+      ),
+      'class' => array('draggable'),
+    );
+  }
+  $output = drupal_render_children($element);
+  $output .= theme('table', array('rows' => $rows, 'attributes' => array('id' => $element['#table_id'])));
+  drupal_add_tabledrag($element['#table_id'], 'order', 'sibling', 'search-api-order-weight', NULL, NULL, TRUE);
+
+  return $output;
+}
+
+/**
+ * Submit callback for search_api_admin_index_workflow.
+ */
+function search_api_admin_index_workflow_submit($form, &$form_state) {
+  form_state_values_clean($form_state);
+
+  debug_var($form_state['values']);
 }
 
 /**

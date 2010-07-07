@@ -149,6 +149,21 @@ function search_api_theme() {
     ),
     'file' => 'search_api.admin.inc',
   );
+  $themes['search_api_index'] = array(
+    'variables' => array(
+      'id' => NULL,
+      'name' => '',
+      'description' => NULL,
+      'enabled' => NULL,
+      'server' => NULL,
+      'options' => array(),
+    ),
+    'file' => 'search_api.admin.inc',
+  );
+  $themes['search_api_item_order'] = array(
+    'render element' => 'element',
+    'file' => 'search_api.admin.inc',
+  );
 
   return $themes;
 }
@@ -343,7 +358,10 @@ function search_api_item_data_alter(stdClass $index, array &$items) {
     return;
   }
 
-  foreach ($index->options['data_alter_callbacks'] as $func) {
+  foreach ($index->options['data_alter_callbacks'] as $func => $settings) {
+    if (empty($settings['enabled'])) {
+      continue;
+    }
     if (!function_exists($func)) {
       watchdog('search_api', t('Undefined data alter callback function  !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
@@ -373,26 +391,31 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
   }
 
   $processors = &drupal_static(__FUNCTION__);
+  $infos = search_api_get_processors();
 
-  foreach ($index->options['preprocessors'] as $class) {
-    if (!class_exists($class)) {
+  foreach ($index->options['preprocessors'] as $id => $settings) {
+    if (empty($settings['enabled'])) {
+      continue;
+    }
+    if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
       watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
-    if (empty($processors[$class])) {
-      $processors[$class] = new $class;
+    $class = $infos[$id]['class'];
+    if (empty($processors[$id])) {
+      $processors[$id] = new $class($settings['options']);
     }
-    if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
+    if (!($processors[$id] instanceof SearchApiProcessorInterface)) {
       watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
 
     switch ($phase) {
       case 'index':
-        $processors[$class]->preprocessIndexItems($index, $data);
+        $processors[$id]->preprocessIndexItems($index, $data);
         break;
       case 'search':
-        $processors[$class]->preprocessSearchQuery($index, $data);
+        $processors[$id]->preprocessSearchQuery($index, $data);
         break;
       default:
         watchdog('search_api', t('!function() called with unknown phase !phase', array('!function' => __FUNCTION__, '!phase' => $phase)), NULL, WATCHDOG_WARNING);
@@ -419,20 +442,25 @@ function search_api_item_postprocess(stdClass $index, SearchApiQueryInterface $q
 
   // Use the same processors as in preprocessing, if possible
   $processors = &drupal_static('search_api_item_preprocess');
+  $infos = search_api_get_processors();
 
-  foreach ($index->options['postprocessors'] as $class) {
-    if (!class_exists($class)) {
+  foreach ($index->options['postprocessors'] as $id => $settings) {
+    if (empty($settings['enabled'])) {
+      continue;
+    }
+    if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
+      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+            continue;
+    }
+    $class = $infos[$id]['class'];
+    if (empty($processors[$id])) {
+      $processors[$id] = new $class($settings['options']);
+    }
+    if (!($processors[$id] instanceof SearchApiProcessorInterface)) {
       watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
       continue;
     }
-    if (empty($processors[$class])) {
-      $processors[$class] = new $class;
-    }
-    if (!($processors[$class] instanceof SearchApiProcessorInterface)) {
-      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-    $processors[$class]->postprocessSearchResults($index, $query, $results);
+    $processors[$id]->postprocessSearchResults($index, $query, $results);
   }
 }
 
@@ -735,7 +763,7 @@ function search_api_server_load($id, $invoke_hook = TRUE) {
   $obj = NULL;
   $service = search_api_get_service_info($server->class);
   if ($service && class_exists($service['class'])) {
-    $obj = new $service['class'];
+    $obj = new $service['class']();
   }
 
   if (!($obj instanceof SearchApiServiceInterface)) {
@@ -814,9 +842,9 @@ function search_api_server_insert(stdClass $values) {
  *   FALSE on failure.
  */
 function search_api_server_edit(SearchApiServiceInterface $server, array $fields) {
+  $server_values = (array) $server;
   foreach ($fields as $field => $value) {
-    if (!isset($server->$field) || $value === $server->$field) {
-      // @todo Bug: fields that are NULL can't be changed.
+    if (!array_key_exists($field, $server_values) || $value === $server->$field) {
       unset($fields[$field]);
     }
   }
@@ -1143,9 +1171,9 @@ function search_api_index_insert(stdClass $values) {
  *   FALSE on failure.
  */
 function search_api_index_edit(stdClass $index, array $fields) {
+  $index_values = (array) $index;
   foreach ($fields as $field => $value) {
-    if (!isset($index->$field) || $value === $index->$field) {
-      // @todo Bug: fields that are NULL can't be changed.
+    if (!array_key_exists($field, $index_values) || $value === $index->$field) {
       unset($fields[$field]);
     }
   }
