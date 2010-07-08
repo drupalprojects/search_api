@@ -359,7 +359,7 @@ function search_api_item_data_alter(stdClass $index, array &$items) {
   }
 
   foreach ($index->options['data_alter_callbacks'] as $func => $settings) {
-    if (empty($settings['enabled'])) {
+    if (empty($settings['status'])) {
       continue;
     }
     if (!function_exists($func)) {
@@ -394,7 +394,7 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
   $infos = search_api_get_processors();
 
   foreach ($index->options['preprocessors'] as $id => $settings) {
-    if (empty($settings['enabled'])) {
+    if (empty($settings['status'])) {
       continue;
     }
     if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
@@ -445,7 +445,7 @@ function search_api_item_postprocess(stdClass $index, SearchApiQueryInterface $q
   $infos = search_api_get_processors();
 
   foreach ($index->options['postprocessors'] as $id => $settings) {
-    if (empty($settings['enabled'])) {
+    if (empty($settings['status'])) {
       continue;
     }
     if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
@@ -1182,7 +1182,10 @@ function search_api_index_edit(stdClass $index, array $fields) {
     return 0;
   }
 
-  $fields['options'] = serialize($fields['options']);
+  if (isset($fields['options'])) {
+    $fields['options'] = serialize($fields['options']);
+  }
+
   $ret = db_update('search_api_index')
     ->fields($fields)
     ->condition('id', $index->id)

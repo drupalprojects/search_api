@@ -729,30 +729,32 @@ function search_api_admin_index_edit_submit($form, &$form_state) {
 function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   $callback_info = search_api_get_alter_callbacks();
   $processor_info = search_api_get_processors();
+  $options = empty($index->options) ? array() : $index->options;
 
   $form['#tree'] = TRUE;
   $form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
-  //$form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
-  $callbacks = array();
+  // Callbacks
 
+  $callbacks = empty($options['data_alter_callbacks']) ? array() : $options['data_alter_callbacks'];
   foreach ($callback_info as $name => $callback) {
     if (!isset($callbacks[$name])) {
-      $callbacks[$name]['enabled'] = 0;
-      $callbacks[$name]['#weight'] = $callback['weight'];
+      $callbacks[$name]['status'] = 0;
+      $callbacks[$name]['weight'] = $callback['weight'];
     }
   }
   $form['#callbacks'] = $callbacks;
   $form['callbacks'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Callbacks'),
+    '#title' => t('Data-alter callbacks'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
   // Callback status.
   $form['callbacks']['status'] = array(
     '#type' => 'item',
-    '#title' => t('Enabled callbacks'),
+    '#title' => t('Enabled data-alter callbacks'),
     '#prefix' => '<div class="search-api-status-wrapper">',
     '#suffix' => '</div>',
   );
@@ -760,7 +762,7 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
     $form['callbacks']['status'][$name] = array(
       '#type' => 'checkbox',
       '#title' => $callback['name'],
-      '#default_value' => $callbacks[$name]['enabled'],
+      '#default_value' => $callbacks[$name]['status'],
       '#parents' => array('callbacks', $name, 'status'),
       '#description' => $callback['description'],
       '#weight' => $callback['weight'],
@@ -770,7 +772,7 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   // Callback order (tabledrag).
   $form['callbacks']['order'] = array(
     '#type' => 'item',
-    '#title' => t('Callback processing order'),
+    '#title' => t('Data-alter callback processing order'),
     '#theme' => 'search_api_item_order',
     '#table_id' => 'search-api-callbacks-order-table',
   );
@@ -781,10 +783,181 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
     $form['callbacks']['order'][$name]['weight'] = array(
       '#type' => 'weight',
       '#delta' => 50,
-      '#default_value' => $callbacks[$name]['#weight'],
+      '#default_value' => $callbacks[$name]['weight'],
       '#parents' => array('callbacks', $name, 'weight'),
     );
-    $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['#weight'];
+    $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['weight'];
+  }
+
+  // Preprocessors
+
+  $preprocessors = empty($options['preprocessors']) ? array() : $options['preprocessors'];
+  $preprocessor_objects = array();
+  foreach ($processor_info as $name => $processor) {
+    if (!isset($preprocessors[$name])) {
+      $preprocessors[$name]['status'] = 0;
+      $preprocessors[$name]['weight'] = $processor['weight'];
+    }
+    $settings = empty($preprocessors[$name]['settings']) ? array() : $preprocessors[$name]['settings'];
+    if (class_exists($processor['class'])) {
+      $preprocessor_objects[$name] = new $processor['class']($settings);
+    }
+    if (!(class_exists($processor['class']) && $preprocessor_objects[$name] instanceof SearchApiProcessorInterface)) {
+      watchdog('search api', t('Processor !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processor['class'])), NULL, WATCHDOG_WARNING);
+      unset($processor_info[$name]);
+      unset($preprocessors[$name]);
+      unset($preprocessor_objects[$name]);
+      continue;
+    }
+  }
+  $form['#preprocessors'] = $preprocessors;
+  $form['preprocessors'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Preprocessors'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Preprocessor status.
+  $form['preprocessors']['status'] = array(
+    '#type' => 'item',
+    '#title' => t('Enabled preprocessors'),
+    '#prefix' => '<div class="search-api-status-wrapper">',
+    '#suffix' => '</div>',
+  );
+  foreach ($processor_info as $name => $processor) {
+    $form['preprocessors']['status'][$name] = array(
+      '#type' => 'checkbox',
+      '#title' => $processor['name'],
+      '#default_value' => $preprocessors[$name]['status'],
+      '#parents' => array('preprocessors', $name, 'status'),
+      '#description' => $processor['description'],
+      '#weight' => $processor['weight'],
+    );
+  }
+
+  // Preprocessor order (tabledrag).
+  $form['preprocessors']['order'] = array(
+    '#type' => 'item',
+    '#title' => t('Preprocessor processing order'),
+    '#theme' => 'search_api_item_order',
+    '#table_id' => 'search-api-preprocessors-order-table',
+  );
+  foreach ($processor_info as $name => $processor) {
+    $form['preprocessors']['order'][$name]['item'] = array(
+      '#markup' => $processor['name'],
+    );
+    $form['preprocessors']['order'][$name]['weight'] = array(
+      '#type' => 'weight',
+      '#delta' => 50,
+      '#default_value' => $preprocessors[$name]['weight'],
+      '#parents' => array('preprocessors', $name, 'weight'),
+    );
+    $form['preprocessors']['order'][$name]['#weight'] = $preprocessors[$name]['weight'];
+  }
+
+  // Preprocessor settings.
+  $form['preprocessors']['settings_title'] = array(
+    '#type' => 'item',
+    '#title' => t('Preprocessor settings'),
+  );
+  $form['preprocessors']['settings'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  foreach ($processor_info as $name => $processor) {
+    $settings_form = $preprocessor_objects[$name]->configurationForm();
+    if (!empty($settings_form)) {
+      $form['preprocessors']['settings'][$name] = array(
+        '#type' => 'fieldset',
+        '#title' => $processor['name'],
+        '#parents' => array('preprocessors', $name, 'settings'),
+        '#weight' => $processor['weight'],
+        '#group' => 'preprocessors_settings',
+      );
+      $form['preprocessors']['settings'][$name] += $settings_form;
+    }
+  }
+
+  // Postprocessors
+
+  $postprocessors = empty($options['postprocessors']) ? array() : $options['postprocessors'];
+  $postprocessor_objects = array();
+  foreach ($processor_info as $name => $processor) {
+    if (!isset($postprocessors[$name])) {
+      $postprocessors[$name]['status'] = 0;
+      $postprocessors[$name]['weight'] = $processor['weight'];
+    }
+    $settings = empty($postprocessors[$name]['settings']) ? array() : $postprocessors[$name]['settings'];
+    $postprocessor_objects[$name] = new $processor['class']($settings);
+  }
+  $form['#postprocessors'] = $postprocessors;
+  $form['postprocessors'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Postprocessors'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  // Postprocessor status.
+  $form['postprocessors']['status'] = array(
+    '#type' => 'item',
+    '#title' => t('Enabled postprocessors'),
+    '#prefix' => '<div class="search-api-status-wrapper">',
+    '#suffix' => '</div>',
+  );
+  foreach ($processor_info as $name => $processor) {
+    $form['postprocessors']['status'][$name] = array(
+      '#type' => 'checkbox',
+      '#title' => $processor['name'],
+      '#default_value' => $postprocessors[$name]['status'],
+      '#parents' => array('postprocessors', $name, 'status'),
+      '#description' => $processor['description'],
+      '#weight' => $processor['weight'],
+    );
+  }
+
+  // Postprocessor order (tabledrag).
+  $form['postprocessors']['order'] = array(
+    '#type' => 'item',
+    '#title' => t('Postprocessor processing order'),
+    '#theme' => 'search_api_item_order',
+    '#table_id' => 'search-api-postprocessors-order-table',
+  );
+  foreach ($processor_info as $name => $processor) {
+    $form['postprocessors']['order'][$name]['item'] = array(
+      '#markup' => $processor['name'],
+    );
+    $form['postprocessors']['order'][$name]['weight'] = array(
+      '#type' => 'weight',
+      '#delta' => 50,
+      '#default_value' => $postprocessors[$name]['weight'],
+      '#parents' => array('postprocessors', $name, 'weight'),
+    );
+    $form['postprocessors']['order'][$name]['#weight'] = $postprocessors[$name]['weight'];
+  }
+
+  // Postprocessor settings.
+  $form['postprocessors']['settings_title'] = array(
+    '#type' => 'item',
+    '#title' => t('Postprocessor settings'),
+  );
+  $form['postprocessors']['settings'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  foreach ($processor_info as $name => $processor) {
+    $settings_form = $postprocessor_objects[$name]->configurationForm();
+    if (!empty($settings_form)) {
+      $form['postprocessors']['settings'][$name] = array(
+        '#type' => 'fieldset',
+        '#title' => $processor['name'],
+        '#parents' => array('postprocessors', $name, 'settings'),
+        '#weight' => $processor['weight'],
+        '#group' => 'postprocessors_settings',
+      );
+      $form['postprocessors']['settings'][$name] += $settings_form;
+    }
   }
 
   $form['id'] = array('#type' => 'value', '#value' => $index->id);
@@ -826,10 +999,51 @@ function theme_search_api_item_order($variables) {
  * Submit callback for search_api_admin_index_workflow.
  */
 function search_api_admin_index_workflow_submit($form, &$form_state) {
-  form_state_values_clean($form_state);
+  $values = $form_state['values'];
+  $index = search_api_index_load($values['id']);
 
-  debug_var($form_state['values']);
+  $options = empty($index->options) ? array() : $index->options;
+  $options['data_alter_callbacks'] = $values['callbacks'];
+  $options['preprocessors'] = $values['preprocessors'];
+  $options['postprocessors'] = $values['postprocessors'];
+
+  // Save the already sorted arrays to avoid having to sort them at each use.
+  uasort($options['data_alter_callbacks'], 'search_api_admin_element_compare');
+  uasort($options['preprocessors'], 'search_api_admin_element_compare');
+  uasort($options['postprocessors'], 'search_api_admin_element_compare');
+
+  $ret = search_api_index_edit($index, array('options' => $options));
+  if ($ret) {
+    drupal_set_message(t("The search index' workflow was successfully edited."));
+  }
+  elseif ($ret === 0) {
+    drupal_set_message(t('No values were changed.'));
+  }
+  else {
+    drupal_set_message(t('An error occurred while saving the changes. Check the logs for details.'));
+    $form_state['rebuild'] = TRUE;
+    return;
+  }
+  if (empty($options['fields'])) {
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id . '/fields';
+  }
+  else {
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+  }
 }
+
+/**
+ * Sort callback sorting array elements by their "weight" key, if present.
+ *
+ * @see element_sort
+ */
+function search_api_admin_element_compare($a, $b) {
+  $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+  $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
+  if ($a_weight == $b_weight) {
+    return 0;
+  }
+  return ($a_weight < $b_weight) ? -1 : 1;}
 
 /**
  * Select the indexed fields.
