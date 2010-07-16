@@ -255,7 +255,7 @@ function hook_search_api_index_insert(stdClass $index) {
  *   The edited index.
  * @param $op
  *   A hint as to how the index was updated. Either 'enable', 'disable', 'edit',
- *   'reindex' or 'clear'.
+ *   'reindex', 'clear' or 'fields'.
  */
 function hook_search_api_index_update(stdClass $index, $op) {
   db_insert('example_search_index_update')

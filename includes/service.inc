@@ -73,6 +73,21 @@ interface SearchApiServiceInterface {
   public function addIndex(stdClass $index);
 
   /**
+   * Notify the server that the indexed field settings for the index have
+   * changed.
+   * If any user action is necessary as a result of this, the method should
+   * use drupal_set_message() to notify the user.
+   *
+   * @param stdClass $index
+   *   The updated index.
+   *
+   * @return
+   *   TRUE, if this change affected the server in any way that forces it to
+   *   re-index the content. FALSE otherwise.
+   */
+  public function fieldsUpdated(stdClass $index);
+
+  /**
    * Remove an index from this server.
    *
    * This might mean that the index has been deleted, or reassigned to a
@@ -81,10 +96,11 @@ interface SearchApiServiceInterface {
    *
    * If the index wasn't added to the server, the method call should be ignored.
    *
-   * @param stdClass $index
-   *   The index to remove.
+   * @param $index
+   *   Either an object representing the index to remove, or its id (if the
+   *   index was completely deleted).
    */
-  public function removeIndex(stdClass $index);
+  public function removeIndex($index);
 
   /**
    * Index the specified items.
@@ -221,12 +237,13 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * Notifies this server that it is about to be deleted from the database and
    * should therefore clean up, if appropriate.
    *
+   *
    * By default, deletes all indexes from this server.
    */
   public function delete() {
     $indexes = search_api_list_indexes(array('server' => $this->id));
     foreach ($indexes as $index) {
-      $this->deleteIndex($index);
+      $this->removeIndex($index);
     }
   }
 
@@ -251,11 +268,12 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *
    * By default, removes all items from that index.
    *
-   * @param stdClass $index
-   *   The index to remove.
+   * @param $index
+   *   Either an object representing the index to remove, or its id (if the
+   *   index was completely deleted).
    */
-  public function removeIndex(stdClass $index) {
-    $this->removeItems('all', $index);
+  public function removeIndex($index) {
+    $this->deleteItems('all', $index);
   }
 
 }

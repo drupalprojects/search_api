@@ -7,8 +7,10 @@
 function search_api_admin_overview() {
   $header = array(
     array('data' => t('Type'), 'colspan' => 2),
-    array('data' => t('Name'), 'field' => 'name', 'first sort' => 'asc'),
-    array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc', 'sort' => 'desc'),
+    array('data' => t('Name'), 'field' => 'name'),
+    // @todo Wait for http://drupal.org/node/109493
+//  array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc', 'sort' => 'desc'),
+    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
@@ -36,13 +38,9 @@ function search_api_admin_overview() {
   $delete = '/delete';
   foreach ($servers as $server) {
     $url = $pre . $server->id;
-    $link = l($server->name, $url);
-    if ($server->enabled) {
-      $link = '<strong>' . $link . '</strong>';
-    }
     $rows[] = array(
       $t_server,
-      $link,
+      l($server->name, $url),
       $server->enabled ? $t_enabled : $t_disabled,
       $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable),
       l($t_edit, $url . $edit),
@@ -51,14 +49,10 @@ function search_api_admin_overview() {
     if (!empty($indexes[$server->id])) {
       foreach ($indexes[$server->id] as $index) {
         $url = $pre_index . $index->id;
-        $link = l($index->name, $url);
-        if ($index->enabled) {
-          $link = '<strong>' . $link . '</strong>';
-        }
         $rows[] = array(
           '–',
           $t_index,
-          $link,
+          l($index->name, $url),
           $index->enabled ? $t_enabled : $t_disabled,
           $index->enabled
               ? l($t_disable, $url . $disable)
@@ -214,6 +208,13 @@ function search_api_admin_add_server_submit($form, &$form_state) {
 }
 
 /**
+ * Title callback for viewing or editing a server or index.
+ */
+function search_api_admin_item_title($object) {
+  return check_plain($object->name);
+}
+
+/**
  * Displays a server's details.
  *
  * @param SearchApiServiceInterface $server
@@ -268,7 +269,7 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL, 
 /**
  * Theme function for displaying a server.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - id: The server's id.
  *   - name: The server's name.
@@ -282,7 +283,7 @@ function search_api_admin_server_view(SearchApiServiceInterface $server = NULL, 
  *     configuration form.
  */
 // @todo There may be some room for improvement here, in almost every respect.
-function theme_search_api_server($variables) {
+function theme_search_api_server(array $variables) {
   extract($variables);
   $output = '';
 
@@ -409,7 +410,7 @@ function search_api_admin_add_index($form, &$form_state) {
     '#type' => 'select',
     '#title' => t('Entity type'),
     '#description' => t('Select the type of entity that will be indexed in this index. ' .
-        '<strong>This setting cannot be changed afterwards!</strong>'),
+        'This setting cannot be changed afterwards!'),
     '#default_value' => '',
     '#options' => array('' => t('- Select one -')),
     '#required' => TRUE,
@@ -496,6 +497,7 @@ function search_api_admin_add_index_submit($form, &$form_state) {
   $id = search_api_index_insert($values);
 
   if ($id) {
+    drupal_set_message(t('The index was successfully created. Please set up its workflow now.'));
     $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id . '/workflow';
   }
   else {
@@ -532,14 +534,19 @@ function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
     }
   }
 
+  $status = search_api_index_status($index);
+
   $ret = array(
     '#theme' => 'search_api_index',
     '#id' => $index->id,
     '#name' => $index->name,
     '#description' => $index->description,
+    '#entity_type' => $index->entity_type,
     '#enabled' => $index->enabled,
     '#server' => $index->server ? search_api_server_load($index->server) : NULL,
     '#options' => $index->options,
+    '#indexed_items' => $status['indexed'],
+    '#total_items' => $status['total'],
   );
 
   return $ret;
@@ -548,40 +555,35 @@ function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
 /**
  * Theme function for displaying an index.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - id: The index's id.
  *   - name: The index' name.
  *   - description: The index' description.
+ *   - entity_type: The type of entities stored in this index.
  *   - enabled: Boolean indicating whether the index is enabled.
- *   - class_name: The used service class' display name.
- *   - class_description: The used service class' description.
- *   - options: The service-specific user options as an array, keyed by field
- *     name.
- *   - option_names: The names of those options, as determined by the service
- *     configuration form.
+ *   - server: The server this index currently rests on, if any.
+ *   - options: The index' options, like cron limit.
+ *   - indexed_items: The number of items already indexed in their latest
+ *     version on this index.
+ *   - total_items: The total number of items that have to be indexed for this
+ *     index.
  */
 // @todo There may be some room for improvement here, in almost every respect.
-function theme_search_api_index($variables) {
+function theme_search_api_index(array $variables) {
   extract($variables);
   $output = '';
 
   $output .= '<h3>' . check_plain($name) . '</h3>' . "\n";
 
+  $output .= render(drupal_get_form('search_api_admin_index_status_form', $variables));
+
   $output .= '<dl>' . "\n";
 
-  $output .= '<dt>' . t('Status') . '</dt>' . "\n";
-  $output .= '<dd>';
-  if ($enabled) {
-    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('click to disable'), 'admin/config/search/search_api/index/' . $id . '/disable')));
-  }
-  elseif ($server && $server->enabled) {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('click to enable'), 'admin/config/search/search_api/index/' . $id . '/enable')));
-  }
-  else {
-    $output .= t('disabled');
-  }
-  $output .= '</dd>' . "\n";
+  $output .= '<dt>' . t('Entity type') . '</dt>' . "\n";
+  $type = entity_get_info($variables['entity_type']);
+  $type = $type['label'];
+  $output .= '<dd>' . check_plain($type) . '</dd>' . "\n";
 
   if (!empty($description)) {
     $output .= '<dt>' . t('Description') . '</dt>' . "\n";
@@ -617,6 +619,162 @@ function theme_search_api_index($variables) {
   $output .= '</dl>';
 
   return $output;
+}
+
+/**
+ * Form function for displaying an index status form.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - id: The index's id.
+ *   - name: The index' name.
+ *   - description: The index' description.
+ *   - entity_type: The type of entities stored in this index.
+ *   - enabled: Boolean indicating whether the index is enabled.
+ *   - server: The server this index currently rests on, if any.
+ *   - options: The index' options, like cron limit.
+ *   - indexed_items: The number of items already indexed in their latest
+ *     version on this index.
+ *   - total_items: The total number of items that have to be indexed for this
+ *     index.
+ */
+function search_api_admin_index_status_form($form, &$form_state, array $variables) {
+  $enabled = !empty($variables['enabled']);
+  $form = array(
+    '#type' => 'fieldset',
+    '#title' => t('Status'),
+    '#description' => $enabled
+        ? t('This index is currently enabled.')
+        : t('This index is currently disabled.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  if (!empty($variables['server']->enabled)) {
+    $form['status'] = array(
+      '#type' => 'submit',
+      '#value' => $enabled ? t('Disable') : t('Enable'),
+    );
+  }
+  $form['progress'] = array(
+    '#type' => 'item',
+    '#title' => t('Progress'),
+  );
+  $all = $variables['indexed_items'] == $variables['total_items'];
+  if ($all) {
+    $form['progress']['#description'] = t('All items have been indexed. (@indexed / @total)',
+        array('@indexed' => $variables['indexed_items'], '@total' => $variables['total_items']));
+  }
+  elseif (!$variables['indexed_items']) {
+    $form['progress']['#description'] = t('No items have been indexed yet. (@total total)',
+        array('@total' => $variables['total_items']));
+  }
+  else {
+    $percentage = (int) (100 * $variables['indexed_items'] / $variables['total_items']);
+    $form['progress']['#description'] = t('About @percentage% of all items have been indexed. (@indexed / @total)',
+        array('@indexed' => $variables['indexed_items'], '@total' => $variables['total_items'], '@percentage' =>$percentage));
+  }
+
+  if ($enabled && !$all) {
+    $form['index'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Index now'),
+      '#attributes' => array('class' => array('container-inline')),
+    );
+    $form['index']['limit'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of items'),
+      '#default_value' => empty($variables['options']['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $variables['options']['cron_limit'],
+    );
+    $form['index']['button'] = array(
+      '#type' => 'submit',
+      '#value' => t('Index now'),
+    );
+    $form['index']['total'] = array(
+      '#type' => 'value',
+      '#value' => $variables['total_items'],
+    );
+  }
+
+  $form['id'] = array(
+    '#type' => 'value',
+    '#value' => $variables['id'],
+  );
+
+  $form['reindex'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Re-indexing'),
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  if ($variables['indexed_items'] > 0) {
+    $form['reindex']['reindex'] = array(
+      '#type' => 'submit',
+      '#value' => t('Re-index'),
+    );
+  }
+  $form['reindex']['clear'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear'),
+  );
+
+  return array('status' => $form);
+}
+
+/**
+ * Validation function for search_api_admin_index_status_form.
+ */
+function search_api_admin_index_status_form_validate($form, &$form_state) {
+  if ($form_state['values']['op'] == t('Index now') && $form_state['values']['limit'] == 0) {
+    form_set_error('number', t('You have to set the number of items to index. Set to -1 for indexing all items.'));
+  }
+}
+
+/**
+ * Submit function for search_api_admin_index_status_form.
+ */
+function search_api_admin_index_status_form_submit($form, &$form_state) {
+  $redirect = &$form_state['redirect'];
+  $values = $form_state['values'];
+  $id = $values['id'];
+  $base = 'admin/config/search/search_api';
+  $pre = $base . '/index/' . $id;
+  switch ($values['op']) {
+    case t('Enable'):
+      $redirect = $pre . '/enable';
+      break;
+    case t('Disable'):
+      $redirect = $pre . '/disable';
+      break;
+    case t('Index now'):
+      $index = search_api_index_load($id);
+      if ($index) {
+        $limit = $values['limit'];
+        $ret = search_api_index_items($index, $limit);
+        if ($ret) {
+          drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
+          if ($limit > 0 && $ret < min(array($limit, $values['total']))) {
+            drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
+          }
+        }
+        else {
+          drupal_set_message(t("Couldn't index items. Check the logs for details."), 'error');
+        }
+        $redirect = $pre;
+      }
+      else {
+        drupal_set_message(t('This index does not exist.'), 'warning');
+        $redirect = $base;
+      }
+      break;
+    case t('Re-index'):
+      $redirect = $pre . '/reindex';
+      break;
+    case t('Clear'):
+      $redirect = $pre . '/clear';
+      break;
+
+    default:
+      throw new SearchApiException(t('Unknown action.'));
+  }
 }
 
 /**
@@ -747,8 +905,8 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   $form['callbacks'] = array(
     '#type' => 'fieldset',
     '#title' => t('Data-alter callbacks'),
+    '#description' => t('Select the callbacks that will be executed on indexed items, and their order.'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
   );
 
   // Callback status.
@@ -773,7 +931,7 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
   $form['callbacks']['order'] = array(
     '#type' => 'item',
     '#title' => t('Data-alter callback processing order'),
-    '#theme' => 'search_api_item_order',
+    '#theme' => 'search_api_admin_item_order',
     '#table_id' => 'search-api-callbacks-order-table',
   );
   foreach ($callback_info as $name => $callback) {
@@ -789,174 +947,95 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
     $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['weight'];
   }
 
-  // Preprocessors
+  // Processors
 
-  $preprocessors = empty($options['preprocessors']) ? array() : $options['preprocessors'];
-  $preprocessor_objects = array();
+  $processors = empty($options['processors']) ? array() : $options['processors'];
+  $processor_objects = array();
   foreach ($processor_info as $name => $processor) {
-    if (!isset($preprocessors[$name])) {
-      $preprocessors[$name]['status'] = 0;
-      $preprocessors[$name]['weight'] = $processor['weight'];
+    if (!isset($processors[$name])) {
+      $processors[$name]['status'] = 0;
+      $processors[$name]['weight'] = $processor['weight'];
     }
-    $settings = empty($preprocessors[$name]['settings']) ? array() : $preprocessors[$name]['settings'];
+    $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
     if (class_exists($processor['class'])) {
-      $preprocessor_objects[$name] = new $processor['class']($settings);
+      $processor_objects[$name] = new $processor['class']($settings);
     }
-    if (!(class_exists($processor['class']) && $preprocessor_objects[$name] instanceof SearchApiProcessorInterface)) {
+    if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof SearchApiProcessorInterface)) {
       watchdog('search api', t('Processor !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processor['class'])), NULL, WATCHDOG_WARNING);
       unset($processor_info[$name]);
-      unset($preprocessors[$name]);
-      unset($preprocessor_objects[$name]);
+      unset($processors[$name]);
+      unset($processor_objects[$name]);
       continue;
     }
   }
-  $form['#preprocessors'] = $preprocessors;
-  $form['preprocessors'] = array(
+  $form['#processors'] = $processors;
+  $form['processors'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Preprocessors'),
+    '#title' => t('Processors'),
+    '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order.'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
   );
 
-  // Preprocessor status.
-  $form['preprocessors']['status'] = array(
+  // Processor status.
+  $form['processors']['status'] = array(
     '#type' => 'item',
-    '#title' => t('Enabled preprocessors'),
+    '#title' => t('Enabled processors'),
     '#prefix' => '<div class="search-api-status-wrapper">',
     '#suffix' => '</div>',
   );
   foreach ($processor_info as $name => $processor) {
-    $form['preprocessors']['status'][$name] = array(
+    $form['processors']['status'][$name] = array(
       '#type' => 'checkbox',
       '#title' => $processor['name'],
-      '#default_value' => $preprocessors[$name]['status'],
-      '#parents' => array('preprocessors', $name, 'status'),
+      '#default_value' => $processors[$name]['status'],
+      '#parents' => array('processors', $name, 'status'),
       '#description' => $processor['description'],
       '#weight' => $processor['weight'],
     );
   }
 
-  // Preprocessor order (tabledrag).
-  $form['preprocessors']['order'] = array(
+  // Processor order (tabledrag).
+  $form['processors']['order'] = array(
     '#type' => 'item',
-    '#title' => t('Preprocessor processing order'),
-    '#theme' => 'search_api_item_order',
-    '#table_id' => 'search-api-preprocessors-order-table',
+    '#title' => t('Processor processing order'),
+    '#description' => t('Set the order in which preprocessing will be done at index and search time. ' .
+        'Postprocessing of search results will be in the exact opposite direction.'),
+    '#theme' => 'search_api_admin_item_order',
+    '#table_id' => 'search-api-processors-order-table',
   );
   foreach ($processor_info as $name => $processor) {
-    $form['preprocessors']['order'][$name]['item'] = array(
+    $form['processors']['order'][$name]['item'] = array(
       '#markup' => $processor['name'],
     );
-    $form['preprocessors']['order'][$name]['weight'] = array(
+    $form['processors']['order'][$name]['weight'] = array(
       '#type' => 'weight',
       '#delta' => 50,
-      '#default_value' => $preprocessors[$name]['weight'],
-      '#parents' => array('preprocessors', $name, 'weight'),
+      '#default_value' => $processors[$name]['weight'],
+      '#parents' => array('processors', $name, 'weight'),
     );
-    $form['preprocessors']['order'][$name]['#weight'] = $preprocessors[$name]['weight'];
+    $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
   }
 
-  // Preprocessor settings.
-  $form['preprocessors']['settings_title'] = array(
+  // Processor settings.
+  $form['processors']['settings_title'] = array(
     '#type' => 'item',
-    '#title' => t('Preprocessor settings'),
+    '#title' => t('Processor settings'),
   );
-  $form['preprocessors']['settings'] = array(
+  $form['processors']['settings'] = array(
     '#type' => 'vertical_tabs',
   );
 
   foreach ($processor_info as $name => $processor) {
-    $settings_form = $preprocessor_objects[$name]->configurationForm();
+    $settings_form = $processor_objects[$name]->configurationForm();
     if (!empty($settings_form)) {
-      $form['preprocessors']['settings'][$name] = array(
+      $form['processors']['settings'][$name] = array(
         '#type' => 'fieldset',
         '#title' => $processor['name'],
-        '#parents' => array('preprocessors', $name, 'settings'),
+        '#parents' => array('processors', $name, 'settings'),
         '#weight' => $processor['weight'],
-        '#group' => 'preprocessors_settings',
+        '#group' => 'processors_settings',
       );
-      $form['preprocessors']['settings'][$name] += $settings_form;
-    }
-  }
-
-  // Postprocessors
-
-  $postprocessors = empty($options['postprocessors']) ? array() : $options['postprocessors'];
-  $postprocessor_objects = array();
-  foreach ($processor_info as $name => $processor) {
-    if (!isset($postprocessors[$name])) {
-      $postprocessors[$name]['status'] = 0;
-      $postprocessors[$name]['weight'] = $processor['weight'];
-    }
-    $settings = empty($postprocessors[$name]['settings']) ? array() : $postprocessors[$name]['settings'];
-    $postprocessor_objects[$name] = new $processor['class']($settings);
-  }
-  $form['#postprocessors'] = $postprocessors;
-  $form['postprocessors'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Postprocessors'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  // Postprocessor status.
-  $form['postprocessors']['status'] = array(
-    '#type' => 'item',
-    '#title' => t('Enabled postprocessors'),
-    '#prefix' => '<div class="search-api-status-wrapper">',
-    '#suffix' => '</div>',
-  );
-  foreach ($processor_info as $name => $processor) {
-    $form['postprocessors']['status'][$name] = array(
-      '#type' => 'checkbox',
-      '#title' => $processor['name'],
-      '#default_value' => $postprocessors[$name]['status'],
-      '#parents' => array('postprocessors', $name, 'status'),
-      '#description' => $processor['description'],
-      '#weight' => $processor['weight'],
-    );
-  }
-
-  // Postprocessor order (tabledrag).
-  $form['postprocessors']['order'] = array(
-    '#type' => 'item',
-    '#title' => t('Postprocessor processing order'),
-    '#theme' => 'search_api_item_order',
-    '#table_id' => 'search-api-postprocessors-order-table',
-  );
-  foreach ($processor_info as $name => $processor) {
-    $form['postprocessors']['order'][$name]['item'] = array(
-      '#markup' => $processor['name'],
-    );
-    $form['postprocessors']['order'][$name]['weight'] = array(
-      '#type' => 'weight',
-      '#delta' => 50,
-      '#default_value' => $postprocessors[$name]['weight'],
-      '#parents' => array('postprocessors', $name, 'weight'),
-    );
-    $form['postprocessors']['order'][$name]['#weight'] = $postprocessors[$name]['weight'];
-  }
-
-  // Postprocessor settings.
-  $form['postprocessors']['settings_title'] = array(
-    '#type' => 'item',
-    '#title' => t('Postprocessor settings'),
-  );
-  $form['postprocessors']['settings'] = array(
-    '#type' => 'vertical_tabs',
-  );
-
-  foreach ($processor_info as $name => $processor) {
-    $settings_form = $postprocessor_objects[$name]->configurationForm();
-    if (!empty($settings_form)) {
-      $form['postprocessors']['settings'][$name] = array(
-        '#type' => 'fieldset',
-        '#title' => $processor['name'],
-        '#parents' => array('postprocessors', $name, 'settings'),
-        '#weight' => $processor['weight'],
-        '#group' => 'postprocessors_settings',
-      );
-      $form['postprocessors']['settings'][$name] += $settings_form;
+      $form['processors']['settings'][$name] += $settings_form;
     }
   }
 
@@ -970,11 +1049,11 @@ function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
 /**
  * Returns HTML for an processor/callback order form.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - element: A render element representing the form.
  */
-function theme_search_api_item_order($variables) {
+function theme_search_api_admin_item_order(array $variables) {
   $element = $variables['element'];
 
   $rows = array();
@@ -1004,13 +1083,11 @@ function search_api_admin_index_workflow_submit($form, &$form_state) {
 
   $options = empty($index->options) ? array() : $index->options;
   $options['data_alter_callbacks'] = $values['callbacks'];
-  $options['preprocessors'] = $values['preprocessors'];
-  $options['postprocessors'] = $values['postprocessors'];
+  $options['processors'] = $values['processors'];
 
   // Save the already sorted arrays to avoid having to sort them at each use.
   uasort($options['data_alter_callbacks'], 'search_api_admin_element_compare');
-  uasort($options['preprocessors'], 'search_api_admin_element_compare');
-  uasort($options['postprocessors'], 'search_api_admin_element_compare');
+  uasort($options['processors'], 'search_api_admin_element_compare');
 
   $ret = search_api_index_edit($index, array('options' => $options));
   if ($ret) {
@@ -1043,7 +1120,8 @@ function search_api_admin_element_compare($a, $b) {
   if ($a_weight == $b_weight) {
     return 0;
   }
-  return ($a_weight < $b_weight) ? -1 : 1;}
+  return ($a_weight < $b_weight) ? -1 : 1;
+}
 
 /**
  * Select the indexed fields.
@@ -1052,7 +1130,117 @@ function search_api_admin_element_compare($a, $b) {
  *   The index to edit.
  */
 function search_api_admin_index_fields($form, &$form_state, stdClass $index) {
-  return array();
+  // @todo Retrieve entity fields with entity_metadata
+  // Current approach is buggy and only works for database entities
+  $entity_info = entity_get_info($index->entity_type);
+  $entity_fields = drupal_get_schema($entity_info['base table']);
+  $entity_fields = $entity_fields['fields'];
+
+  $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
+
+  $types = array(
+    'int'    => t('Integer'),
+    'float'  => t('Float'),
+    'string' => t('String'),
+    'text'   => t('Text', array(), array('context' => 'search_api field type')),
+    'date'   => t('Timestamp'),
+  );
+  $type_map = array(
+    'serial'   => 'int',
+    'int'      => 'int',
+    'float'    => 'float',
+    'numeric'  => 'float',
+    'varchar'  => 'string',
+    'char'     => 'string',
+    'text'     => 'text',
+    'blob'     => 'text',
+    'datetime' => 'date',
+  );
+
+  $form['#theme'] = 'search_api_admin_fields_table';
+  $form['#tree'] = TRUE;
+  $form['description'] = array(
+    '#type' => 'item',
+    '#title' => t('Select fields to index'),
+    '#description' => t('Some service classes of servers might not support all, or any, datatypes. ' .
+        'However, fields of type "Text" will always be fulltext-searchable.'),
+  );
+  foreach ($entity_fields as $field_name => $entity_field_info) {
+    $field_info = isset($fields[$field_name])
+        ? $fields[$field_name]
+        : array('type' => $type_map[$entity_field_info['type']], 'indexed' => TRUE);
+    $form['fields'][$field_name]['name']['#markup'] = check_plain($field_name);
+    $form['fields'][$field_name]['type'] = array(
+      '#type' => 'select',
+      '#options' => $types,
+      '#default_value' => $field_info['type'],
+    );
+    $form['fields'][$field_name]['indexed'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => $field_info['indexed'],
+    );
+  }
+
+  $form['id'] = array(
+    '#type' => 'value',
+    '#value' => $index->id,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save changes'),
+  );
+
+  return $form;
+}
+
+/**
+ * Returns HTML for a field list form.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form.
+ */
+function theme_search_api_admin_fields_table($variables) {
+  $form = $variables['element'];
+  $header = array(t('Field'), t('Type'), t('Indexed'));
+
+  $rows = array();
+  foreach (element_children($form['fields']) as $name) {
+    $row = array();
+    foreach (element_children($form['fields'][$name]) as $field) {
+      $row[] = render($form['fields'][$name][$field]);
+    }
+    $rows[] = $row;
+  }
+
+  $submit = $form['submit'];
+  unset($form['submit']);
+  $output = drupal_render_children($form);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= render($submit);
+
+  return $output;
+}
+
+/**
+ * Submit function for search_api_admin_index_fields.
+ */
+function search_api_admin_index_fields_submit($form, &$form_state) {
+  $index = search_api_index_load($form_state['values']['id']);
+  $ret = search_api_index_edit_fields($index, $form_state['values']['fields']);
+
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+  if ($ret) {
+    drupal_set_message(t('The indexed fields were successfully changed.'));
+  }
+  elseif (is_int($ret)) {
+    drupal_set_message(t('No values were changed.'));
+  }
+  else {
+    drupal_set_message(t('An error occurred while saving the changes. Check the logs for details.'));
+    $form_state['rebuild'] = TRUE;
+  }
 }
 
 
@@ -1081,8 +1269,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
             t('Delete server !name', array('!name' => $info->name)),
             t('Do you really want to delete this server?'),
             t('This will delete the server and disable all associated indexes. ' .
-                "Searches on these indexes won't be available until they are moved to another server and re-enabled.<br />" .
-                '<strong>Use with care!</strong>'),
+                "Searches on these indexes won't be available until they are moved to another server and re-enabled."),
             t('The server was successfully deleted.'),
           );
           break;
@@ -1123,8 +1310,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
             t('Delete index !name', array('!name' => $info->name)),
             t('Do you really want to delete this index?'),
             t('This will remove the index from the server and delete all settings. ' .
-                'All data on this index will be lost.<br />' .
-                '<strong>Use with care!</strong>'),
+                'All data on this index will be lost.'),
             t('The index has been successfully deleted.'),
           );
           break;

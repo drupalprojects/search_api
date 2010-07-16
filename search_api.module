@@ -44,6 +44,8 @@ function search_api_menu() {
   );
   $items[$pre . '/server/%search_api_server'] = array(
     'title' => 'View server',
+    'title callback' => 'search_api_admin_item_title',
+    'title arguments' => array(5, 6),
     'description' => 'View server details.',
     'page callback' => 'search_api_admin_server_view',
     'page arguments' => array(5),
@@ -77,6 +79,8 @@ function search_api_menu() {
   );
   $items[$pre . '/index/%search_api_index'] = array(
     'title' => 'View index',
+    'title callback' => 'search_api_admin_item_title',
+    'title arguments' => array(5, 6),
     'description' => 'View index details.',
     'page callback' => 'search_api_admin_index_view',
     'page arguments' => array(5),
@@ -154,13 +158,20 @@ function search_api_theme() {
       'id' => NULL,
       'name' => '',
       'description' => NULL,
+      'entity_type' => NULL,
       'enabled' => NULL,
       'server' => NULL,
       'options' => array(),
+      'indexed_items' => 0,
+      'total_items' => 0,
     ),
     'file' => 'search_api.admin.inc',
   );
-  $themes['search_api_item_order'] = array(
+  $themes['search_api_admin_item_order'] = array(
+    'render element' => 'element',
+    'file' => 'search_api.admin.inc',
+  );
+  $themes['search_api_admin_fields_table'] = array(
     'render element' => 'element',
     'file' => 'search_api.admin.inc',
   );
@@ -301,11 +312,11 @@ function search_api_index_items(stdClass $index, $limit = -1) {
   if (!$items) {
     return 0;
   }
-  search_api_item_data_alter('index', $index, $items);
+  search_api_item_data_alter($index, $items);
   if (!$items) {
     return 0;
   }
-  search_api_item_preprocess('index', $index, $items);
+  search_api_item_process('pre-index', $index, $items);
   $indexed = $server->indexItems($index, $items);
 
   if (!empty($indexed)) {
@@ -374,26 +385,39 @@ function search_api_item_data_alter(stdClass $index, array &$items) {
 }
 
 /**
- * Runs all preprocessors that are active for the specified index on the given
+ * Runs all processors that are active for the specified index on the given
  * items.
  *
  * @param $phase
- *   The phase in which this call occurs. Either 'index' or 'search'.
+ *   The phase in which this call occurs. Either 'pre-index', 'pre-search' or
+ *   'post-search'.
  * @param stdClass $index
  *   The index on which the items are indexed.
  * @param array $data
- *   An array of items to be preprocessed at index time, or a
- *   SearchApiQueryInterface object at search time.
+ *   An array of items to be preprocessed at pre-index time, a
+ *   SearchApiQueryInterface object at pre-search time, or an array of search
+ *   results at post-search time.
+ * @param SearchApiQueryInterface $query
+ *   For the "post-search" phase, the SearchApiQueryInterface object
+ *   representing the executed query.
  */
-function search_api_item_preprocess($phase, stdClass $index, &$data) {
-  if (empty($index->options['preprocessors'])) {
+function search_api_item_process($phase, stdClass $index, &$data, SearchApiQueryInterface $query = NULL) {
+  if (empty($index->options['processors'])) {
     return;
   }
 
+  $processor_settings = $index->options['processors'];
   $processors = &drupal_static(__FUNCTION__);
   $infos = search_api_get_processors();
 
-  foreach ($index->options['preprocessors'] as $id => $settings) {
+  if ($phase == 'post-search') {
+    if (!$query) {
+      throw new SearchApiException(t('No query given for postprocessing search results.'));
+    }
+    $processor_settings = array_reverse($processor_settings, TRUE);
+  }
+
+  foreach ($processor_settings as $id => $settings) {
     if (empty($settings['status'])) {
       continue;
     }
@@ -403,7 +427,7 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
     }
     $class = $infos[$id]['class'];
     if (empty($processors[$id])) {
-      $processors[$id] = new $class($settings['options']);
+      $processors[$id] = new $class(isset($settings['options']) ? $settings['options'] : array());
     }
     if (!($processors[$id] instanceof SearchApiProcessorInterface)) {
       watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
@@ -411,56 +435,18 @@ function search_api_item_preprocess($phase, stdClass $index, &$data) {
     }
 
     switch ($phase) {
-      case 'index':
+      case 'pre-index':
         $processors[$id]->preprocessIndexItems($index, $data);
         break;
-      case 'search':
+      case 'pre-search':
         $processors[$id]->preprocessSearchQuery($index, $data);
         break;
+      case 'post-search':
+        $processors[$id]->postprocessSearchResults($index, $query, $data);
+        break;
       default:
-        watchdog('search_api', t('!function() called with unknown phase !phase', array('!function' => __FUNCTION__, '!phase' => $phase)), NULL, WATCHDOG_WARNING);
-        return;
+        throw new SearchApiException('search_api', t('!function() called with unknown phase !phase', array('!function' => __FUNCTION__, '!phase' => $phase)));
     }
-  }
-}
-
-/**
- * Runs all postprocessors that are active for the specified index on the given
- * search results.
- *
- * @param stdClass $index
- *   The index on which the items are indexed.
- * @param SearchApiQueryInterface $query
- *   The SearchApiQueryInterface object representing the executed query.
- * @param array $results
- *   An array of search results.
- */
-function search_api_item_postprocess(stdClass $index, SearchApiQueryInterface $query, array &$results) {
-  if (empty($index->options['postprocessors'])) {
-    return;
-  }
-
-  // Use the same processors as in preprocessing, if possible
-  $processors = &drupal_static('search_api_item_preprocess');
-  $infos = search_api_get_processors();
-
-  foreach ($index->options['postprocessors'] as $id => $settings) {
-    if (empty($settings['status'])) {
-      continue;
-    }
-    if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
-      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-            continue;
-    }
-    $class = $infos[$id]['class'];
-    if (empty($processors[$id])) {
-      $processors[$id] = new $class($settings['options']);
-    }
-    if (!($processors[$id] instanceof SearchApiProcessorInterface)) {
-      watchdog('search_api', t('Undefined postprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-    $processors[$id]->postprocessSearchResults($index, $query, $results);
   }
 }
 
@@ -589,10 +575,10 @@ function search_api_search(stdClass $index, $keys = NULL, array $options = array
   }
 
   // Preprocess query
-  search_api_item_preprocess('search', $index, $query);
+  search_api_item_process('pre-search', $index, $query);
 
   // Let modules alter the query
-  drupal_alter($query, $index);
+  drupal_alter('search_api_query', $query, $index);
 
   // Cache query (e.g. for facets)
   $query_cache = &drupal_static(__FUNCTION__ . '_query');
@@ -606,7 +592,7 @@ function search_api_search(stdClass $index, $keys = NULL, array $options = array
   $result = $server->search($index, $query, $search_options);
 
   // Postprocess results
-  search_api_item_postprocess($index, $results);
+  search_api_item_process('post-search', $index, $results, $query);
 
   // Cache results
   $result_cache = &drupal_static(__FUNCTION__ . '_results');
@@ -916,8 +902,13 @@ function search_api_server_enable(SearchApiServiceInterface $server) {
           case 'clear':
             $server->deleteItems('all', $index);
             break;
+          case 'fields':
+            if ($server->fieldsUpdated($index)) {
+              _search_api_index_reindex($index);
+            }
+            break;
           case 'remove':
-            $server->removeIndex($index);
+            $server->removeIndex($index ? $index : $index_id);
             break;
           default:
             watchdog('search_api', t('Unknown task "!task" for server "!name".', array('!task' => $task, '!server' => $server->name)), NULL, 'warning');
@@ -1065,7 +1056,7 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  *   The index' id.
  *
  * @return
- *   A completely loaded index object, or NULL if no such index exists.
+ *   A completely loaded index object, or FALSE if no such index exists.
  */
 function search_api_index_load($id) {
   $index = db_query('SELECT * FROM {search_api_index} WHERE id = :id', array(':id' => (int) $id))->fetchObject();
@@ -1078,6 +1069,33 @@ function search_api_index_load($id) {
   module_invoke_all('search_api_index_load', array($index));
 
   return $index;
+}
+
+/**
+ * Determines a search index' indexing status.
+ *
+ * @param $index
+ *   Either an index object, or the index' id.
+ *
+ * @return
+ *   An associative array containing two keys (in this order):
+ *   - indexed: The number of items already indexed in their latest version.
+ *   - total: The total number of items that have to be indexed for this index.
+ */
+function search_api_index_status($index) {
+  $id = is_object($index) ? $index->id : $index;
+  $indexed = db_select('search_api_item', 'i')
+    ->condition('index_id', $id)
+    ->condition('changed', 0)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  $total = db_select('search_api_item', 'i')
+    ->condition('index_id', $id)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  return array('indexed' => $indexed, 'total' => $total);
 }
 
 
@@ -1100,11 +1118,11 @@ function search_api_index_insert(stdClass $values) {
   if (empty($values->description)) {
     $values->description = NULL;
   }
-  if (empty($values->server)) {
+  if ($values->server === '') {
     $values->server = NULL;
   }
 
-  if ($values->server) {
+  if (isset($values->server)) {
     $server = search_api_server_load($values->server);
     if (!$server) {
       watchdog('search_api', t('Unknown server specified for new index (id !id)!', array('!id' => $values->server)), NULL, WATCHDOG_ERROR);
@@ -1123,8 +1141,6 @@ function search_api_index_insert(stdClass $values) {
     $values->enabled = 0;
   }
 
-  // @todo Insert default preprocessors, etc., into options?
-
   $fields = array(
     'name' => $values->name,
     'description' => $values->description,
@@ -1138,10 +1154,20 @@ function search_api_index_insert(stdClass $values) {
   }
 
   $id = db_insert('search_api_index')->fields($fields)->execute();
-  if (!is_int($id)) {
-    return $id;
-  }
 
+  // Remember items to index
+  // @todo This only works for entities that are stored in the database.
+  $entity_info = entity_get_info($values->entity_type);
+  $id_field = $entity_info['entity keys']['id'];
+  $table = $entity_info['base table'];
+  $query = db_select($table, 't');
+  $query->addField('t', $id_field, 'item_id');
+  $query->addExpression(':index_id', 'index_id', array(':index_id' => $id));
+  $query->addExpression('1', 'changed');
+
+  db_insert('search_api_item')->from($query)->execute();
+
+  // Call hooks
   $values->id = $id;
   if ($values->server) {
     if ($server->enabled) {
@@ -1149,7 +1175,8 @@ function search_api_index_insert(stdClass $values) {
     }
     else {
       $tasks = variable_get('search_api_tasks', array());
-      $tasks[$server->id][$index->id][] = 'add';
+      // When we add or remove an index, we can ignore all other tasks.
+      $tasks[$server->id][$id] = array('add');
       variable_set('search_api_tasks', $tasks);
     }
   }
@@ -1171,6 +1198,9 @@ function search_api_index_insert(stdClass $values) {
  *   FALSE on failure.
  */
 function search_api_index_edit(stdClass $index, array $fields) {
+  if (isset($fields['server']) && $fields['server'] === '') {
+    $fields['server'] = NULL;
+  }
   $index_values = (array) $index;
   foreach ($fields as $field => $value) {
     if (!array_key_exists($field, $index_values) || $value === $index->$field) {
@@ -1206,7 +1236,7 @@ function search_api_index_edit(stdClass $index, array $fields) {
       }
       else {
         $tasks = variable_get('search_api_tasks', array());
-        // If we are removing the index, we can savely ignore all other tasks.
+        // When we add or remove an index, we can ignore all other tasks.
         $tasks[$old_server->id][$index->id] = array('remove');
         variable_set('search_api_tasks', $tasks);
       }
@@ -1219,6 +1249,7 @@ function search_api_index_edit(stdClass $index, array $fields) {
       }
       else {
         $tasks = variable_get('search_api_tasks', array());
+        // When we add or remove an index, we can ignore all other tasks.
         $tasks[$new_server->id][$index->id] = array('add');
         variable_set('search_api_tasks', $tasks);
       }
@@ -1229,6 +1260,62 @@ function search_api_index_edit(stdClass $index, array $fields) {
   }
 
   module_invoke_all('search_api_index_update', $new_index, 'edit');
+
+  return $ret;
+}
+
+/**
+ * Changes an index' indexed field settings.
+ *
+ * @param stdClass $index
+ *   The server whose fields should be changed.
+ * @param array $fields
+ *   The new indexed field settings.
+ *
+ * @return
+ *   1 if the field settings were changed, 0 if they already had the desired
+ *   values. FALSE on failure.
+ */
+function search_api_index_edit_fields(stdClass $index, array $fields) {
+  // If there are no new values, just return 0.
+  $options = $index->options + array('fields' => array());
+  if ($fields == $options['fields']) {
+    return 0;
+  }
+  $options['fields'] = $fields;
+
+  $ret = db_update('search_api_index')
+    ->fields(array('options' => serialize($options)))
+    ->condition('id', $index->id)
+    ->execute();
+
+  if (!$ret) {
+    return $ret;
+  }
+
+  $index = search_api_index_load($index->id);
+
+  if ($index->server) {
+    $server = search_api_server_load($index->server);
+    if ($server->enabled) {
+      if ($server->fieldsUpdated($index)) {
+        _search_api_index_reindex($index);
+      }
+    }
+    else {
+      $tasks = variable_get('search_api_tasks', array());
+      if (!isset($tasks[$server->id][$index->id])
+              // We don't need to notify the server twice of field changes.
+          || (array_search('fields', $tasks[$server->id][$index->id]) === FALSE
+              // Adding a server also re-examines the field settings.
+              && array_search('add', $tasks[$server->id][$index->id]) === FALSE)) {
+        $tasks[$server->id][$index->id][] = 'fields';
+        variable_set('search_api_tasks', $tasks);
+      }
+    }
+  }
+
+  module_invoke_all('search_api_index_update', $index, 'fields');
 
   return $ret;
 }
@@ -1291,20 +1378,33 @@ function search_api_index_disable(stdClass $index) {
  *   TRUE on success, FALSE on failure.
  */
 function search_api_index_reindex(stdClass $index) {
-  $ret = db_update('search_api_index')
-    ->fields('changed', REQUEST_TIME)
-    ->condition('changed', 0)
-    ->condition('index_id', $index->id)
-    ->execute();
+  $ret = _search_api_index_reindex($index);
 
   if(!$ret) {
     // If there just were no unchanged items, we don't want to report failure
-    return is_int($ret) ? TRUE : FALSE;
+    return (is_int($ret) || $ret === '0') ? TRUE : FALSE;
   }
 
   module_invoke_all('search_api_index_update', $index, 'reindex');
 
   return TRUE;
+}
+
+/**
+ * Helper method for marking all items on an index as needing re-indexing.
+ *
+ * @param stdClass $index
+ *   The index to re-index.
+ *
+ * @return
+ *   The number of items affected.
+ */
+function _search_api_index_reindex(stdClass $index) {
+  return db_update('search_api_item')
+    ->fields(array('changed' => REQUEST_TIME))
+    ->condition('changed', 0)
+    ->condition('index_id', $index->id)
+    ->execute();
 }
 
 /**
@@ -1324,24 +1424,21 @@ function search_api_index_clear(stdClass $index) {
     }
     else {
       $tasks = variable_get('search_api_tasks', array());
-      // If the index was newly added since the server was last enabled, we
-      // we don't need to do anything.
-      if (!isset($tasks[$server->id][$index->id]) || array_search('add', $tasks[$server->id][$index->id]) === FALSE) {
+      // If the index was cleared or newly added since the server was last enabled, we don't need to do anything.
+      if (!isset($tasks[$server->id][$index->id])
+          || (array_search('add', $tasks[$server->id][$index->id]) === FALSE
+              && array_search('clear', $tasks[$server->id][$index->id]) === FALSE)) {
         $tasks[$server->id][$index->id][] = 'clear';
         variable_set('search_api_tasks', $tasks);
       }
     }
   }
 
-  $ret = db_update('search_api_index')
-    ->fields('changed', REQUEST_TIME)
-    ->condition('changed', 0)
-    ->condition('index_id', $index->id)
-    ->execute();
+  $ret = _search_api_index_reindex($index);
 
   if(!$ret) {
     // If there just were no unchanged items, we don't want to report failure.
-    return is_int($ret) ? TRUE : FALSE;
+    return (is_int($ret) || $ret === '0') ? TRUE : FALSE;
   }
 
   module_invoke_all('search_api_index_update', $index, 'clear');
