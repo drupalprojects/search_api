@@ -67,10 +67,10 @@ interface SearchApiServiceInterface {
    * If the index was already added to the server, the object should treat this
    * as if removeIndex() and then addIndex() were called.
    *
-   * @param stdClass $index
+   * @param SearchApiIndex $index
    *   The index to add.
    */
-  public function addIndex(stdClass $index);
+  public function addIndex(SearchApiIndex $index);
 
   /**
    * Notify the server that the indexed field settings for the index have
@@ -78,14 +78,14 @@ interface SearchApiServiceInterface {
    * If any user action is necessary as a result of this, the method should
    * use drupal_set_message() to notify the user.
    *
-   * @param stdClass $index
+   * @param SearchApiIndex $index
    *   The updated index.
    *
    * @return
    *   TRUE, if this change affected the server in any way that forces it to
    *   re-index the content. FALSE otherwise.
    */
-  public function fieldsUpdated(stdClass $index);
+  public function fieldsUpdated(SearchApiIndex $index);
 
   /**
    * Remove an index from this server.
@@ -105,7 +105,7 @@ interface SearchApiServiceInterface {
   /**
    * Index the specified items.
    *
-   * @param stdClass $index
+   * @param SearchApiIndex $index
    *   The search index for which items should be indexed.
    * @param array $items
    *   An array of objects containing the item data to be indexed.
@@ -113,7 +113,7 @@ interface SearchApiServiceInterface {
    * @return
    *   An array of the ids of all items that were successfully indexed.
    */
-  public function indexItems(stdClass $index, array $items);
+  public function indexItems(SearchApiIndex $index, array $items);
 
   /**
    * Delete items from an index on this server.
@@ -126,31 +126,50 @@ interface SearchApiServiceInterface {
    *   Either an array containing the ids of the items that should be deleted,
    *   or 'all' if all items should be deleted. Other formats might be
    *   recognized by implementing classes, but these are not standardized.
-   * @param stdClass $index
+   * @param SearchApiIndex $index
    *   The index from which items should be deleted, or NULL if all indexes on
    *   this server should be cleared (then, $ids has to be 'all').
    */
-  public function deleteItems($ids, stdClass $index = NULL);
+  public function deleteItems($ids, SearchApiIndex $index = NULL);
 
   /**
-   * Executes a search on the server represented by this object.
+   * Create a query object for searching on an index lying on this server.
    *
-   * @param $index
-   *   The index to search items on.
-   * @param $query
-   *   The SearchApiQueryInterface object to execute.
+   * @param SearchApiIndex $index
+   *   The index to search on.
    * @param $options
-   *   An associative array of search options. The following are recognized:
+   *   Associative array of options configuring this query. Recognized options
+   *   are:
+   *   - conjunction: The type of conjunction to use for this query - either
+   *     'AND' or 'OR'. 'AND' by default.
+   *   - 'parse mode': The mode with which to parse the $keys variable, if it
+   *     is set and not already an array. See SearchApiQuery::parseModes() for
+   *     recognized parse modes.
+   *   - languages: The languages to search for.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
    *
+   * @throws SearchApiException
+   *   If the server is currently disabled.
+   *
    * @return
-   *   An associative array containing the search results.
-   *   @todo Specify this in a more detailled way.
+   *   A SearchApiQueryInterface object for searching the given index.
    */
-  public function search(stdClass $index, SearchApiQueryInterface $query, array $options = array());
+  public function query(SearchApiIndex $index);
+
+  /**
+   * Executes a search on the server represented by this object.
+   *
+   * @param $query
+   *   The SearchApiQueryInterface object to execute.
+   *
+   * @return
+   *   An associative array containing the search results, as required by
+   *   SearchApiQueryInterface::execute().
+   */
+  public function search(SearchApiQueryInterface $query);
 
 }
 
@@ -252,10 +271,10 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *
    * Does nothing, by default.
    *
-   * @param stdClass $index
+   * @param SearchApiIndex $index
    *   The index to add.
    */
-  public function addIndex(stdClass $index) {
+  public function addIndex(SearchApiIndex $index) {
     return;
   }
 
@@ -274,6 +293,35 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    */
   public function removeIndex($index) {
     $this->deleteItems('all', $index);
+  }
+
+  /**
+   * Create a query object for searching on an index lying on this server.
+   *
+   * @param SearchApiIndex $index
+   *   The index to search on.
+   * @param $options
+   *   Associative array of options configuring this query. Recognized options
+   *   are:
+   *   - conjunction: The type of conjunction to use for this query - either
+   *     'AND' or 'OR'. 'AND' by default.
+   *   - 'parse mode': The mode with which to parse the $keys variable, if it
+   *     is set and not already an array. See SearchApiQuery::parseModes() for
+   *     recognized parse modes.
+   *   - languages: The languages to search for.
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
+   *
+   * @throws SearchApiException
+   *   If the server is currently disabled.
+   *
+   * @return
+   *   A SearchApiQueryInterface object for searching the given index.
+   */
+  public function query(SearchApiIndex $index, $options = array()) {
+    return new SearchApiQuery($index, $options);
   }
 
 }

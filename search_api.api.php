@@ -136,11 +136,9 @@ function hook_search_api_processor_info() {
  * Lets modules alter a search query before executing it.
  *
  * @param SearchApiQuery $query
- *   The SearchApiQuery object representing the search query.
- * @param stdClass $index
- *   The index the search will be executed on. Should not be altered.
+ *   The SearchApiQueryInterface object representing the search query.
  */
-function hook_search_api_query_alter(SearchApiQuery $query, stdClass $index) {
+function hook_search_api_query_alter(SearchApiQueryInterface $query) {
   $info = entity_get_info($index->entity_type);
   $query->addCondition($info['entity keys']['id'], 0, '!=');
 }
@@ -165,10 +163,10 @@ function hook_search_api_server_load(array $servers) {
 /**
  * A new search server was created.
  *
- * @param SearchApiServiceInterface $server
+ * @param SearchApiServer $server
  *   The new server.
  */
-function hook_search_api_server_insert(SearchApiServiceInterface $server) {
+function hook_search_api_server_insert(SearchApiServer $server) {
   db_insert('example_search_server')
     ->fields(array(
       'server' => $server->id,
@@ -180,13 +178,13 @@ function hook_search_api_server_insert(SearchApiServiceInterface $server) {
 /**
  * A search server was edited, enabled or disabled.
  *
- * @param SearchApiServiceInterface $server
+ * @param SearchApiServer $server
  *   The edited server.
  * @param $op
  *   A hint as to how the server was updated. Either 'enable', 'disable' or
  *   'edit'.
  */
-function hook_search_api_server_update(SearchApiServiceInterface $server, $op) {
+function hook_search_api_server_update(SearchApiServer $server, $op) {
   db_insert('example_search_server_update')
     ->fields(array(
       'server' => $server->id,
@@ -198,10 +196,10 @@ function hook_search_api_server_update(SearchApiServiceInterface $server, $op) {
 /**
  * A search server was deleted.
  *
- * @param SearchApiServiceInterface $server
+ * @param SearchApiServer $server
  *   The deleted server.
  */
-function hook_search_api_server_delete(SearchApiServiceInterface $server) {
+function hook_search_api_server_delete(SearchApiServer $server) {
   db_insert('example_search_server_update')
     ->fields(array(
       'server' => $server->id,
@@ -233,10 +231,10 @@ function hook_search_api_index_load(array $indexes) {
 /**
  * A new search index was created.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The new index.
  */
-function hook_search_api_index_insert(stdClass $index) {
+function hook_search_api_index_insert(SearchApiIndex $index) {
   db_insert('example_search_index')
     ->fields(array(
       'index' => $index->id,
@@ -251,13 +249,13 @@ function hook_search_api_index_insert(stdClass $index) {
  * This includes being edited, enabled or disabled, as well as the index being
  * cleared or scheduled for re-indexing.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The edited index.
  * @param $op
  *   A hint as to how the index was updated. Either 'enable', 'disable', 'edit',
  *   'reindex', 'clear' or 'fields'.
  */
-function hook_search_api_index_update(stdClass $index, $op) {
+function hook_search_api_index_update(SearchApiIndex $index, $op) {
   db_insert('example_search_index_update')
     ->fields(array(
       'index' => $index->id,
@@ -269,10 +267,10 @@ function hook_search_api_index_update(stdClass $index, $op) {
 /**
  * A search index was deleted.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The deleted index.
  */
-function hook_search_api_index_delete(stdClass $index) {
+function hook_search_api_index_delete(SearchApiIndex $index) {
   db_insert('example_search_index_update')
     ->fields(array(
       'index' => $index->id,
@@ -291,12 +289,12 @@ function hook_search_api_index_delete(stdClass $index) {
 /**
  * Search API data alteration callback that randomly changes item data.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index on which the items are indexed.
  * @param array $items
  *   An array of objects containing the entity data.
  */
-function example_random_alter(stdClass $index, array &$items) {
+function example_random_alter(SearchApiIndex $index, array &$items) {
   if ($index->id % 2) {
     foreach ($items as $id => $item) {
       srand($id);

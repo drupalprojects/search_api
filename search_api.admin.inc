@@ -74,7 +74,7 @@ function search_api_admin_overview() {
         array('data' => $t_index, 'colspan' => 2),
         $link,
         $t_disabled,
-        '<del>' . $t_enable . '</del>',
+        '',
         l($t_edit, $url . $edit),
         l($t_delete, $url . $delete),
       );
@@ -213,12 +213,12 @@ function search_api_admin_item_title($object) {
 /**
  * Displays a server's details.
  *
- * @param SearchApiServiceInterface $server
+ * @param SearchApiServer $server
  *   The server to display.
  * @param $action
  *   One of 'enable', 'disable', 'delete'; or NULL if the server is only viewed.
  */
-function search_api_admin_server_view(SearchApiServiceInterface $server = NULL, $action = NULL) {
+function search_api_admin_server_view(SearchApiServer $server = NULL, $action = NULL) {
   if (empty($server)) {
     return MENU_NOT_FOUND;
   }
@@ -331,10 +331,10 @@ function theme_search_api_server(array $variables) {
 /**
  * Edit a server's settings.
  *
- * @param SearchApiServiceInterface $server
+ * @param SearchApiServer $server
  *   The server to edit.
  */
-function search_api_admin_server_edit($form, &$form_state, SearchApiServiceInterface $server) {
+function search_api_admin_server_edit($form, &$form_state, SearchApiServer $server) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Server name'),
@@ -494,10 +494,10 @@ function search_api_admin_add_index_submit($form, &$form_state) {
 /**
  * Displays an index' details.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index to display.
  */
-function search_api_admin_index_view(stdClass $index = NULL, $action = NULL) {
+function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NULL) {
   if (empty($index)) {
     return MENU_NOT_FOUND;
   }
@@ -614,10 +614,10 @@ function theme_search_api_index(array $variables) {
 /**
  * Form function for displaying an index status form.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index whose status should be displayed.
  */
-function search_api_admin_index_status_form($form, &$form_state, stdClass $index) {
+function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex $index) {
   $enabled = !empty($index->enabled);
   $status = search_api_index_status($index);
   $server = $index->server ? search_api_server_load($index->server) : NULL;
@@ -629,6 +629,7 @@ function search_api_admin_index_status_form($form, &$form_state, stdClass $index
 
   $form['status_message'] = array(
     '#type' => 'item',
+    '#title' => t('Status'),
     '#description' => $enabled ? t('The index is currently enabled.') : t('The index is currently disabled.'),
   );
   if (!empty($server->enabled)) {
@@ -796,10 +797,10 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
 /**
  * Edit an index' settings.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index to edit.
  */
-function search_api_admin_index_edit($form, &$form_state, stdClass $index) {
+function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
@@ -889,11 +890,11 @@ function search_api_admin_index_edit_submit($form, &$form_state) {
  * Edit an index' workflow (data alter callbacks, pre-/postprocessors, and their
  * order).
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index to edit.
  */
 // Copied from filter_admin_format_form
-function search_api_admin_index_workflow($form, &$form_state, stdClass $index) {
+function search_api_admin_index_workflow($form, &$form_state, SearchApiIndex $index) {
   $callback_info = search_api_get_alter_callbacks();
   $processor_info = search_api_get_processors();
   $options = empty($index->options) ? array() : $index->options;
@@ -1132,10 +1133,10 @@ function search_api_admin_element_compare($a, $b) {
 /**
  * Select the indexed fields.
  *
- * @param stdClass $index
+ * @param SearchApiIndex $index
  *   The index to edit.
  */
-function search_api_admin_index_fields($form, &$form_state, stdClass $index) {
+function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $index) {
   // @todo Retrieve entity fields with entity_metadata
   // Current approach is buggy and only works for database entities
   $entity_info = entity_get_info($index->entity_type);

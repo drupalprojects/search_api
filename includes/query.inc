@@ -10,10 +10,10 @@
 interface SearchApiQueryInterface {
 
   /**
-   * Constructor used for SearchApiQueryInterface objects.
+   * Constructor used when creating SearchApiQueryInterface objects.
    *
-   * @param $keys
-   *   The search keys.
+   * @param SearchApiIndex $index
+   *   The index the query should be executed on.
    * @param $options
    *   Associative array of options configuring this query. Recognized options
    *   are:
@@ -22,8 +22,13 @@ interface SearchApiQueryInterface {
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
+   *   - languages: The languages to search for.
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
    */
-  public function __construct($keys = NULL, $options = array());
+  public function __construct(SearchApiIndex $index, $options = array());
 
   /**
    * @return
@@ -36,12 +41,21 @@ interface SearchApiQueryInterface {
   public function parseModes();
 
   /**
+   * Sets the keys to search for. If this method is not called on the query
+   * before execution, this will be a filter-only query.
+   *
+   * @param $keys
+   *   A string with the unparsed search keys, or NULL to use no search keys.
+   */
+  public function keys($keys = NULL);
+
+  /**
    * Adds a subfilter to this query's filter.
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    */
-  public function addFilter($filter);
+  public function filter($filter);
 
   /**
    * Add a new ($field $operator $value) condition filter.
@@ -53,7 +67,7 @@ interface SearchApiQueryInterface {
    * @param $operator
    *   The operator to use for checking the constraint, e.g. '=' or '<'.
    */
-  public function addCondition($field, $value, $operator = '=');
+  public function condition($field, $value, $operator = '=');
 
   /**
    * Add a sort directive to this search query.
@@ -64,7 +78,22 @@ interface SearchApiQueryInterface {
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    */
-  public function addSort($field, $order = 'ASC');
+  public function sort($field, $order = 'ASC');
+
+  /**
+   * Executes this search query.
+   *
+   * @return
+   *   An associative array containing the search results and some metadata.
+   */
+  //@todo Specify this in a more detailled way.
+  public function execute();
+
+  /**
+   * @return
+   *   The search index this query should be executed on.
+   */
+  public function getIndex();
 
   /**
    * @return
@@ -73,13 +102,13 @@ interface SearchApiQueryInterface {
    *   An array will contain a '#conjunction' key specifying the conjunction
    *   type, and search strings or nested expression arrays at numeric keys.
    */
-  public function &keys();
+  public function &getKeys();
 
   /**
    * @return
    *   This object's associated SearchApiQueryFilter object.
    */
-  public function &filter();
+  public function &getFilter();
 
   /**
    * @return
@@ -87,13 +116,13 @@ interface SearchApiQueryInterface {
    *   field names in order of importance, the values are the respective order
    *   in which to sort the results according to the field.
    */
-  public function &sort();
+  public function &getSort();
 
   /**
    * @return
    *   An associative array of query options.
    */
-  public function &options();
+  public function &getOptions();
 
 }
 
@@ -101,6 +130,9 @@ interface SearchApiQueryInterface {
  * Standard implementation of SearchApiQueryInterface.
  */
 class SearchApiQuery {
+
+  /** The index. */
+  protected $index;
 
   /** The search keys. If NULL, this will be a filter-only search. */
   protected $keys;
@@ -115,10 +147,10 @@ class SearchApiQuery {
   protected $options;
 
   /**
-   * Constructor for a SearchApiQuery object.
+   * Constructor for SearchApiQuery objects.
    *
-   * @param $keys
-   *   The search keys.
+   * @param SearchApiIndex $index
+   *   The index the query should be executed on.
    * @param $options
    *   Associative array of options configuring this query. Recognized options
    *   are:
@@ -127,16 +159,19 @@ class SearchApiQuery {
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
-   *   - 'filter class': A class implementing SearchApiQueryFilterInterface that
-   *     should be used for filters in this query.
+   *   - languages: The languages to search for.
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
    */
-  public function __construct($keys = NULL, $options = array()) {
+  public function __construct(SearchApiIndex $index, $options = array()) {
+    $this->index = $index;
     $this->options = $options + array(
       'conjunction' => 'AND',
       'parse mode' => 'terms',
       'filter class' => 'SearchApiQueryFilter',
     );
-    $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     $this->filter = $this->createFilter($this->options['conjunction']);
     $this->sort = array();
   }
@@ -239,13 +274,29 @@ class SearchApiQuery {
   }
 
   /**
+   * Sets the keys to search for. If this method is not called on the query
+   * before execution, this will be a filter-only query.
+   *
+   * @param $keys
+   *   A string with the unparsed search keys, or NULL to use no search keys.
+   */
+  public function keys($keys = NULL) {
+    if (isset($keys)) {
+      $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
+    }
+    else {
+      $this->keys = NULL;
+    }
+  }
+
+  /**
    * Adds a subfilter to this query's filter.
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    */
-  public function addFilter($filter) {
-    $this->filter->addFilter($filter);
+  public function filter($filter) {
+    $this->filter->filter($filter);
     return $this;
   }
 
@@ -259,8 +310,8 @@ class SearchApiQuery {
    * @param $operator
    *   The operator to use for checking the constraint, e.g. '=' or '<'.
    */
-  public function addCondition($field, $value, $operator = '=') {
-    $this->filter->addCondition($field, $value, $operator);
+  public function condition($field, $value, $operator = '=') {
+    $this->filter->condition($field, $value, $operator);
     return $this;
   }
 
@@ -273,10 +324,68 @@ class SearchApiQuery {
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    */
-  public function addSort($field, $order = 'ASC') {
+  public function sort($field, $order = 'ASC') {
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
     $this->sort[$field] = $order;
     return $this;
+  }
+
+  /**
+   * Executes this search query.
+   *
+   * Since this method takes care of important hook invocations, caching, etc.,
+   * it must not be overridden. Override the provided hooks preExecute() and
+   * postExecute() if you have to add/modify behaviour.
+   */
+  public final function execute() {
+    // Call pre-execute hook.
+    $this->preExecute();
+
+    // Preprocess query
+    search_api_item_process('pre-search', $this->index, $this);
+
+    // Let modules alter the query
+    drupal_alter('search_api_query', $this);
+
+    // Cache query (e.g. for facets)
+    $query_cache = &drupal_static('search_api_search_query');
+    $query_cache[] = $this;
+
+    // Execute query
+    $results = $server->search($this);
+
+    // Call post-execute hook.
+    $this->postExecute($results);
+
+    // Postprocess results
+    search_api_item_process('post-search', $this->index, $results, $this);
+
+    // Cache results
+    $result_cache = &drupal_static('search_api_search_results');
+    $result_cache[] = $results;
+
+    return $results;
+  }
+
+  /**
+   * Pre-execute hook for modifying search behaviour.
+   */
+  protected function preExecute() {}
+
+  /**
+   * Post-execute hook for modifying search behaviour.
+   *
+   * @param array $results
+   *   The results returned by the server, which may be altered.
+   */
+  protected function postExecute(array &$results) {}
+
+  /**
+   * @return
+   *   The search index this query should be executed on.
+   */
+  public function getIndex() {
+    return $this->index;
   }
 
   /**
@@ -286,7 +395,7 @@ class SearchApiQuery {
    *   An array will contain a '#conjunction' key specifying the conjunction
    *   type, and search strings or nested expression arrays at numeric keys.
    */
-  public function &keys() {
+  public function &getKeys() {
     return $this->keys;
   }
 
@@ -294,7 +403,7 @@ class SearchApiQuery {
    * @return
    *   This object's associated SearchApiQueryFilter object.
    */
-  public function &filter() {
+  public function &getFilter() {
     return $this->filter;
   }
 
@@ -304,7 +413,7 @@ class SearchApiQuery {
    *   field names in order of importance, the values are the respective order
    *   in which to sort the results according to the field.
    */
-  public function &sort() {
+  public function &getSort() {
     return $this->sort;
   }
 
@@ -312,7 +421,7 @@ class SearchApiQuery {
    * @return
    *   An associative array of query options.
    */
-  public function &options() {
+  public function &getOptions() {
     return $this->options;
   }
 
@@ -336,12 +445,20 @@ interface SearchApiQueryFilterInterface {
   public function __construct($conjunction = 'AND');
 
   /**
+   * Sets this filter's conjunction.
+   *
+   * @param $conjunction
+   *   The conjunction to use for this filter - either 'AND' or 'OR'.
+   */
+  public function setConjunction($conjunction);
+
+  /**
    * Adds a subfilter.
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    */
-  public function addFilter(SearchApiQueryFilter $filter);
+  public function filter(SearchApiQueryFilter $filter);
 
   /**
    * Add a new ($field $operator $value) condition.
@@ -353,31 +470,22 @@ interface SearchApiQueryFilterInterface {
    * @param $operator
    *   The operator to use for checking the constraint, e.g. '=' or '<'.
    */
-  public function addCondition($field, $value, $operator = '=');
-
-  /**
-   * Sets this filter's conjunction.
-   *
-   * @param $conjunction
-   *   The conjunction to use for this filter - either 'AND' or 'OR'.
-   */
-  public function setConjunction($conjunction);
+  public function condition($field, $value, $operator = '=');
 
   /**
    * @return
    *   The conjunction used by this filter - either 'AND' or 'OR'.
    */
-  public function conjunction();
+  public function getConjunction();
 
   /**
    * @return
    *   An array containing this filter's subfilters. Each of these is either an
    *   array (field, value, operator), or another SearchApiFilter object.
    */
-  public function &filters();
+  public function &getFilters();
 
 }
-
 
 /**
  * Standard implementation of SearchApiQueryFilterInterface.
@@ -405,12 +513,23 @@ class SearchApiQueryFilter {
   }
 
   /**
+   * Sets this filter's conjunction.
+   *
+   * @param $conjunction
+   *   The conjunction to use for this filter - either 'AND' or 'OR'.
+   */
+  public function setConjunction($conjunction) {
+    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
+    return $this;
+  }
+
+  /**
    * Adds a subfilter.
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    */
-  public function addFilter(SearchApiQueryFilter $filter) {
+  public function filter(SearchApiQueryFilter $filter) {
     $this->filters[] = $filter;
     return $this;
   }
@@ -425,19 +544,8 @@ class SearchApiQueryFilter {
    * @param $operator
    *   The operator to use for checking the constraint, e.g. '=' or '<'.
    */
-  public function addCondition($field, $value, $operator = '=') {
+  public function condition($field, $value, $operator = '=') {
     $this->filters[] = array($field, $value, $operator);
-    return $this;
-  }
-
-  /**
-   * Sets this filter's conjunction.
-   *
-   * @param $conjunction
-   *   The conjunction to use for this filter - either 'AND' or 'OR'.
-   */
-  public function setConjunction($conjunction) {
-    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
     return $this;
   }
 
@@ -445,7 +553,7 @@ class SearchApiQueryFilter {
    * @return
    *   The conjunction used by this filter - either 'AND' or 'OR'.
    */
-  public function conjunction() {
+  public function getConjunction() {
     return $this->conjunction;
   }
 
@@ -454,7 +562,7 @@ class SearchApiQueryFilter {
    *   An array containing this filter's subfilters. Each of these is either an
    *   array (field, value, operator), or another SearchApiFilter object.
    */
-  public function &filters() {
+  public function &getFilters() {
     return $this->filters;
   }
 
