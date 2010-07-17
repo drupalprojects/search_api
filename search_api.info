@@ -2,6 +2,7 @@
 
 name = Search API
 description = "Provides a generic API for modules offering search capabilites."
+dependencies[] = entity
 dependencies[] = entity_metadata
 core = 7.x
 package = Search
@@ -9,6 +10,8 @@ package = Search
 files[] = search_api.admin.inc
 files[] = search_api.install
 files[] = search_api.module
+files[] = includes/entiy.inc
+files[] = includes/exception.inc
 files[] = includes/processor.inc
 files[] = includes/query.inc
 files[] = includes/service.inc
