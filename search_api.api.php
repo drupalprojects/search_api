@@ -25,21 +25,19 @@
  *     selecting a service class.
  *   - class: The service class, which has to implement the
  *     SearchApiServiceInterface interface.
- *   - 'init args': (optional) Array of arguments to be passed to the service
- *     object's init() method after its creation. Empty by default.
  */
 function hook_search_api_service_info() {
   $services['example_some'] = array(
     'name' => t('Some Service'),
     'description' => t('Service for some search engine.'),
     'class' => 'SomeServiceClass',
+    // Unknown keys can later be read by the object for additional information.
     'init args' => array('foo' => 'Foo', 'bar' => 42),
   );
   $services['example_other'] = array(
     'name' => t('Other Service'),
     'description' => t('Service for another search engine.'),
     'class' => 'OtherServiceClass',
-    // 'init args' => array(), // implicit
   );
 
   return $services;
@@ -59,12 +57,8 @@ function hook_search_api_service_info() {
  */
 function hook_search_api_service_info_alter(array &$service_info) {
   foreach ($service_info as $id => $info) {
-    $init_args = isset($info['init args']) ? $info['init args'] : array();
-    $service_info[$id]['init args'] = array(
-      'class' => $info['class'],
-      'init args' => $init_args,
-    );
     $service_info[$id]['class'] = 'MyProxyServiceClass';
+    $service_info[$id]['example_original_class'] = $info['class'];
   }
 }
 

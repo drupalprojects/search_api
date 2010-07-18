@@ -24,76 +24,91 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     parent::__construct($values, 'search_api_server');
   }
 
-  // Proxy methods
-
-  public function init(array $init_args) {
-    // When init() is called, we initalize the proxy.
-    $class = search_api_get_service_info($this->class);
-    if ($class && class_exists($class['class'])) {
-      $this->proxy = new $class['class']();
+  public function ensureProxy() {
+    if (!isset($this->proxy)) {
+      $class = search_api_get_service_info($this->class);
+      if ($class && class_exists($class['class'])) {
+        $this->proxy = new $class['class']();
+      }
+      if (!($this->proxy instanceof SearchApiServiceInterface)) {
+        throw new SearchApiException(t('Search server with id !id specifies illegal service class !class.', array('!id' => $this->id, '!class' => $this->class)));
+      }
+      $this->proxy->id = $this->id;
+      $this->proxy->name = $this->name;
+      $this->proxy->description = $this->description;
+      $this->proxy->class = $this->class;
+      $this->proxy->options = $this->options;
+      $this->proxy->enabled = $this->enabled;
     }
-    if (!($this->proxy instanceof SearchApiServiceInterface)) {
-      throw new SearchApiException(t('Search server with id !id specifies illegal service class !class.', array('!id' => $this->id, '!class' => $this->class)));
-    }
-    $this->proxy->id = $this->id;
-    $this->proxy->name = $this->name;
-    $this->proxy->description = $this->description;
-    $this->proxy->class = $this->class;
-    $this->proxy->options = $this->options;
-    $this->proxy->enabled = $this->enabled;
-
-    return $this->proxy->init($init_args);
   }
 
+  // Proxy methods
+
+  // Since we are implementing the interface, we can't just use the __call() magic method.
+  // @todo Is having an interface (and defined methods) a bigger advantage than clarity and shortness of code?
+
   public function configurationForm() {
+    $this->ensureProxy();
     return $this->proxy->configurationForm();
   }
 
-  public function create() {
-    return $this->proxy->create();
+  public function postCreate() {
+    $this->ensureProxy();
+    return $this->proxy->postCreate();
   }
 
-  public function update(array $fields) {
-    return $this->proxy->update($fields);
+  public function postUpdate(array $fields) {
+    $this->ensureProxy();
+    return $this->proxy->postUpdate($fields);
   }
 
-  public function enable() {
-    return $this->proxy->enable();
+  public function postEnable() {
+    $this->ensureProxy();
+    return $this->proxy->postEnable();
   }
 
-  public function disable() {
-    return $this->proxy->disable();
+  public function postDisable() {
+    $this->ensureProxy();
+    return $this->proxy->postDisable();
   }
 
-  public function delete() {
-    return $this->proxy->delete();
+  public function preDelete() {
+    $this->ensureProxy();
+    return $this->proxy->preDelete();
   }
 
   public function addIndex(SearchApiIndex $index) {
+    $this->ensureProxy();
     return $this->proxy->addIndex($index);
   }
 
   public function fieldsUpdated(SearchApiIndex $index) {
+    $this->ensureProxy();
     return $this->proxy->fieldsUpdated($index);
   }
 
   public function removeIndex($index) {
+    $this->ensureProxy();
     return $this->proxy->removeIndex($index);
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {
+    $this->ensureProxy();
     return $this->proxy->indexItems($index, $items);
   }
 
   public function deleteItems($ids, SearchApiIndex $index = NULL) {
+    $this->ensureProxy();
     return $this->proxy->deleteItems($ids, $index);
   }
 
   public function query(SearchApiIndex $index, $options = array()) {
+    $this->ensureProxy();
     return $this->proxy->query($index);
   }
 
   public function search(SearchApiQueryInterface $query) {
+    $this->ensureProxy();
     return $this->proxy->search($query);
   }
 

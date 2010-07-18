@@ -545,8 +545,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     '#description' => $index->description,
     '#entity_type' => $index->entity_type,
     '#enabled' => $index->enabled,
-    // @todo Replace with $index->server() everywhere.
-    '#server' => $index->server ? search_api_server_load($index->server) : NULL,
+    '#server' => $index->server(),
     '#options' => $index->options,
   );
 
@@ -584,8 +583,11 @@ function theme_search_api_index(array $variables) {
   if ($enabled) {
     $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $id . '/disable')));
   }
-  else {
+  elseif ($server && $server->enabled) {
     $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $id . '/enable')));
+  }
+  else {
+    $output .= t('disabled');
   }
   $output .= '</dd>' . "\n";
 
@@ -639,7 +641,7 @@ function theme_search_api_index(array $variables) {
 function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex $index) {
   $enabled = !empty($index->enabled);
   $status = search_api_index_status($index);
-  $server = $index->server ? search_api_server_load($index->server) : NULL;
+  $server = $index->server();
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['id'] = array(
@@ -700,9 +702,9 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
       '#type' => 'value',
       '#value' => $status['total'],
     );
-    $form['index']['indexed'] = array(
+    $form['index']['remaining'] = array(
       '#type' => 'value',
-      '#value' => $status['indexed'],
+      '#value' => $status['total'] - $status['indexed'],
     );
   }
 
@@ -774,8 +776,8 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
         $ret = search_api_index_items($index, $limit);
         if ($ret) {
           drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
-          if (($limit > 0 && $ret < min(array($limit, $values['total'])))
-              || ($limit < 0 && $ret < ($values['total']- $values['indexed']))) {
+          if (($limit > 0 && $ret < min(array($limit, $values['remaining'])))
+              || ($limit < 0 && $ret < $values['remaining'])) {
             drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
           }
         }
@@ -1264,7 +1266,8 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
 
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
   if ($ret) {
-    drupal_set_message(t('The indexed fields were successfully changed.'));
+    drupal_set_message(t('The indexed fields were successfully changed. ' .
+        'The index was cleared and will have to be re-indexed with the new settings.'));
   }
   else {
     drupal_set_message(t('No values were changed.'));

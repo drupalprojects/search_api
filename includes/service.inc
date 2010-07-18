@@ -5,19 +5,9 @@
  * Interface defining the methods search services have to implement.
  *
  * Before a service object is used, the corresponding server's data will be read
- * from the database (see search_api_schema() for a list of fields) and the
- * init() method will be called with the values set by the user and the defining
- * hook.
+ * from the database (see SearchApiAbstractService for a list of fields).
  */
 interface SearchApiServiceInterface {
-
-  /**
-   * Initializes a service object.
-   *
-   * @param $init_args
-   *   An array of init arguments specified by the defining hook.
-   */
-  public function init(array $init_args);
 
   /**
    * Form callback. Might be called on an uninitialized object - in this case,
@@ -32,7 +22,7 @@ interface SearchApiServiceInterface {
    * Called once, when the server is first created. Allows it to set up its
    * necessary infrastructure.
    */
-  public function create();
+  public function postCreate();
 
   /**
    * Notifies this server that its fields are about to be updated. Fields set on
@@ -41,25 +31,25 @@ interface SearchApiServiceInterface {
    * @param array $fields
    *   The fields that are about to change.
    */
-  public function update(array $fields);
+  public function postUpdate(array $fields);
 
   /**
    * Notifies this server that it has been re-enabled and allows the object to
    * react appropriately.
    */
-  public function enable();
+  public function postEnable();
 
   /**
    * Notifies this server that it has been disabled and allows the object to
    * react appropriately.
    */
-  public function disable();
+  public function postDisable();
 
   /**
    * Notifies this server that it is about to be deleted from the database and
    * should therefore clean up, if appropriate.
    */
-  public function delete();
+  public function preDelete();
 
   /**
    * Add a new index to this server.
@@ -178,9 +168,6 @@ interface SearchApiServiceInterface {
  */
 abstract class SearchApiAbstractService implements SearchApiServiceInterface {
 
-  /** Array holding the hook-specified init args. */
-  protected $init_args = array();
-
   /** Database values that will be set when object is loaded: */
   public $id = 0;
   public $name = '';
@@ -190,32 +177,12 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   public $enabled = 1;
 
   /**
-   * Initializes a service object.
-   *
-   * @param $user_options
-   *   An array of options set by the user through the configuration form.
-   * @param $init_args
-   *   An array of init arguments specified by the defining hook.
-   */
-  public function init(array $init_args) {
-    $this->init_args = $init_args + $this->default_init_args();
-  }
-
-  /**
-   * @return
-   *   An array of default values for this service's init args.
-   */
-  protected function default_init_args() {
-    return array();
-  }
-
-  /**
    * Called once, when the server is first created. Allows it to set up its
    * necessary infrastructure.
    *
    * Does nothing, by default.
    */
-  public function create() {
+  public function postCreate() {
     return;
   }
 
@@ -228,7 +195,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @param array $fields
    *   The fields that are about to change.
    */
-  public function update(array $fields) {
+  public function postUpdate(array $fields) {
     return;
   }
 
@@ -238,7 +205,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *
    * Does nothing, by default.
    */
-  public function enable() {
+  public function postEnable() {
     return;
   }
 
@@ -248,7 +215,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *
    * Does nothing, by default.
    */
-  public function disable() {
+  public function postDisable() {
     return;
   }
 
@@ -259,7 +226,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *
    * By default, deletes all indexes from this server.
    */
-  public function delete() {
+  public function preDelete() {
     $indexes = search_api_list_indexes(array('server' => $this->id));
     foreach ($indexes as $index) {
       $this->removeIndex($index);

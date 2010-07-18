@@ -207,7 +207,7 @@ function search_api_permission() {
  * Will index $options['cron-limit'] items for each enabled index.
  */
 function search_api_cron() {
-  foreach (search_api_list_indexes() as $index) {
+  foreach (search_api_list_indexes(array('enabled' => TRUE)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
@@ -241,7 +241,7 @@ function search_api_entity_info() {
     ),
   );
   $info['search_api_index'] = array(
-    'label' => t('Search server'),
+    'label' => t('Search index'),
     'controller class' => 'EntityAPIController',
     'entity class' => 'SearchApiIndex',
     'base table' => 'search_api_index',
@@ -249,6 +249,82 @@ function search_api_entity_info() {
     'uri callback' => 'search_api_index_url',
     'entity keys' => array(
       'id' => 'id',
+    ),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_entity_property_info().
+ */
+function search_api_entity_property_info() {
+  $info['search_api_server']['properties'] = array(
+    'id' => array(
+      'label' => t('ID'),
+      'type' => 'integer',
+      'description' => t('The primary identifier for a server.'),
+    ),
+    'name' => array(
+      'label' => t('Name'),
+      'type' => 'text',
+      'description' => t('The displayed name for a server.'),
+      'required' => TRUE,
+    ),
+    'description' => array(
+      'label' => t('Description'),
+      'type' => 'text',
+      'description' => t('The displayed description for a server.'),
+      'sanitize' => 'filter_xss',
+    ),
+    'class' => array(
+      'label' => t('Service class'),
+      'type' => 'text',
+      'description' => t('The id of the service class to use for this server.'),
+      'required' => TRUE,
+    ),
+    // @todo Specify options
+    'enabled' => array(
+      'label' => t('Enabled'),
+      'type' => 'boolean',
+      'description' => t('A flag indicating whether the server is enabled.'),
+    ),
+  );
+  $info['search_api_index']['properties'] = array(
+    'id' => array(
+      'label' => t('ID'),
+      'type' => 'integer',
+      'description' => t('An integer identifying the index.'),
+    ),
+    'name' => array(
+      'label' => t('Name'),
+      'type' => 'text',
+      'description' => t('A name to be displayed for the index.'),
+      'required' => TRUE,
+    ),
+    'description' => array(
+      'label' => t('Description'),
+      'type' => 'text',
+      'description' => t("A string describing the index' use to users."),
+      'sanitize' => 'filter_xss',
+    ),
+    'server-entity' => array(
+      'label' => t('Server'),
+      'type' => 'search_api_server',
+      'description' => t('The search_api_server with which data should be indexed.'),
+      'getter callback' => 'search_api_index_get_server',
+    ),
+    'entity-type' => array(
+      'label' => t('Entity type'),
+      'type' => 'text',
+      'description' => t('The entity type of items stored in this index.'),
+      'required' => TRUE,
+    ),
+    // @todo Specify options
+    'enabled' => array(
+      'label' => t('Enabled'),
+      'type' => 'boolean',
+      'description' => t('A flag indicating whether the index is enabled.'),
     ),
   );
 
@@ -271,7 +347,7 @@ function search_api_entity_insert($entity, $type) {
   $id = $info['entity keys']['id'];
 
   $query = db_select('search_api_index', 'i');
-  $query->addField('id', 'index_id');
+  $query->addField('i', 'id', 'index_id');
   $query->addExpression(':item_id', 'item_id', array(':item_id' => $entity->$id));
   $query->addExpression('1', 'changed');
   $query->condition('entity_type', $type);
@@ -279,10 +355,6 @@ function search_api_entity_insert($entity, $type) {
   db_insert('search_api_item')
     ->from($query)
     ->execute();
-
-  if ($type == 'search_api_server' || $type == 'search_api_index') {
-    module_invoke_all($type . '_insert', $entity);
-  }
 }
 
 /**
@@ -311,10 +383,6 @@ function search_api_entity_update($entity, $type) {
     ->condition('index_id', $query, 'IN')
     ->condition('changed', 0)
     ->execute();
-
-  if ($type == 'search_api_server' || $type == 'search_api_index') {
-    module_invoke_all($type . '_update', $entity, 'edit');
-  }
 }
 
 /**
@@ -331,13 +399,13 @@ function search_api_entity_delete($entity, $type) {
   $info = entity_get_info($type);
   $id_field = $info['entity keys']['id'];
   $id = $entity->$id_field;
-  foreach (search_api_list_indexes(array('entity_type' => $type, 'only_enabled' => FALSE)) as $index) {
+  foreach (search_api_list_indexes(array('entity_type' => $type)) as $index) {
     db_delete('search_api_item')
       ->condition('item_id', $id)
       ->condition('index_id', $index->id)
       ->execute();
     if ($index->server) {
-      $server = search_api_server_load($index->server);
+      $server = $index->server();
       if ($server->enabled) {
         $server->deleteItems(array($id), $index);
       }
@@ -347,10 +415,6 @@ function search_api_entity_delete($entity, $type) {
         variable_set('search_api_tasks', $tasks);
       }
     }
-  }
-
-  if ($type == 'search_api_server' || $type == 'search_api_index') {
-    module_invoke_all($type . '_delete', $entity);
   }
 }
 
@@ -388,7 +452,7 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
     throw new SearchApiException(t("Couldn't index values for '!name' index (unknown entity type '!type')", array('!name' => $index->name, '!type' => $index->entity_type)));
   }
 
-  $server = search_api_server_load($index->server);
+  $server = $index->server();
   if (!$server) {
     throw new SearchApiException(t("Couldn't index values for '!name' index (server info could not be retrieved)", array('!name' => $index->name)));
   }
@@ -618,13 +682,6 @@ function search_api_get_service_info($id = NULL) {
   if (!isset($services)) {
     $services = module_invoke_all('search_api_service_info');
 
-    // Initialization of optional entries with default values
-    foreach ($services as $key => $service) {
-      if (!isset($service['init args'])) {
-        $services[$key]['init args'] = array();
-      }
-    }
-
     // Allow other modules to alter definitions
     drupal_alter('search_api_service_info', $services);
   }
@@ -718,6 +775,7 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
     }
 
     module_invoke_all('search_api_server_load', $servers[$enabled]);
+    module_invoke_all('entity_load', $servers[$enabled], 'search_api_server');
   }
 
   return $servers[$enabled];
@@ -735,17 +793,7 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
  */
 function search_api_server_load($id) {
   $ret = entity_load('search_api_server', array($id));
-  return $ret ? array_shift($ret) : FALSE;
-}
-
-/**
- * Implements hook_search_api_server_load().
- */
-function search_api_search_api_server_load($servers) {
-  $services = search_api_get_service_info();
-  foreach ($servers as $server) {
-    $server->init($services[$server->class]['init args']);
-  }
+  return $ret ? array_shift($ret) : NULL;
 }
 
 /**
@@ -788,9 +836,15 @@ function search_api_server_insert(array $values) {
 
   $id = db_insert('search_api_server')->fields($fields)->execute();
 
-  $server = search_api_server_load($id);
-  $server->create();
+  if (!isset($fields['id'])) {
+    $fields['id'] = $id;
+  }
+
+  $server = new SearchApiServer($fields);
+
+  $server->postCreate();
   module_invoke_all('search_api_server_insert', $server);
+  module_invoke_all('entity_insert', $server, 'search_api_server');
 
   return $id;
 }
@@ -820,7 +874,7 @@ function search_api_server_edit(SearchApiServer $server, array $fields) {
   }
 
   // Notify server of changed values.
-  $server->update($fields);
+  $server->postUpdate($fields);
 
   if (isset($fields['options'])) {
     $fields['options'] = serialize($fields['options']);
@@ -837,6 +891,7 @@ function search_api_server_edit(SearchApiServer $server, array $fields) {
   $server = search_api_server_load($server->id);
 
   module_invoke_all('search_api_server_update', $server, 'edit');
+  module_invoke_all('entity_update', $server, 'search_api_server');
 
   return $ret;
 }
@@ -856,7 +911,7 @@ function search_api_server_enable(SearchApiServer $server) {
     return 0;
   }
 
-  $server->enable();
+  $server->postEnable();
 
   $ret = db_update('search_api_server')
     ->fields(array('enabled' => 1))
@@ -868,6 +923,7 @@ function search_api_server_enable(SearchApiServer $server) {
 
   $server->enabled = 1;
   module_invoke_all('search_api_server_update', $server, 'enable');
+  module_invoke_all('entity_update', $server, 'search_api_server');
 
   // Were there any changes in the server's indexes while it was disabled?
   $tasks = variable_get('search_api_tasks', array());
@@ -922,15 +978,11 @@ function search_api_server_disable(SearchApiServer $server) {
     return 0;
   }
 
-  $server->disable();
+  $server->postDisable();
 
   $id = $server->id;
-  $result = db_select('search_api_index', 'i')
-    ->fields('i')
-    ->condition('server', $id)
-    ->condition('enabled', 1)
-    ->execute();
-  foreach ($result as $index) {
+  $indexes = search_api_list_indexes(array('server' => $id));
+  foreach ($indexes as $index) {
     search_api_index_disable($index);
   }
   $ret = db_update('search_api_server')
@@ -943,6 +995,7 @@ function search_api_server_disable(SearchApiServer $server) {
 
   $server->enabled = 0;
   module_invoke_all('search_api_server_update', $server, 'disable');
+  module_invoke_all('entity_update', $server, 'search_api_server');
 
   return $ret;
 }
@@ -958,16 +1011,13 @@ function search_api_server_disable(SearchApiServer $server) {
  */
 function search_api_server_delete(SearchApiServer $server) {
   // Call hook method before doing anything.
-  $server->delete();
+  $server->preDelete();
 
   $id = $server->id;
-  $result = db_select('search_api_index', 'i')
-    ->fields('i')
-    ->condition('server', $id)
-    ->condition('enabled', 1)
-    ->execute();
-  foreach ($result as $index) {
+  $indexes = search_api_list_indexes(array('server' => $id));
+  foreach ($indexes as $index) {
     search_api_index_disable($index);
+    search_api_index_reindex($index);
   }
   db_update('search_api_index')
     ->fields(array('server' => NULL))
@@ -985,6 +1035,7 @@ function search_api_server_delete(SearchApiServer $server) {
   variable_set('search_api_tasks', $tasks);
 
   module_invoke_all('search_api_server_delete', $server);
+  module_invoke_all('entity_delete', $server, 'search_api_server');
 
   return $ret;
 }
@@ -994,7 +1045,7 @@ function search_api_server_delete(SearchApiServer $server) {
  *
  * @param $options
  *   An associative array of conditions on the returned indexes.
- *   - only_enabled: Unless set to FALSE, only enabled indexes will be returned.
+ *   - enabled: When set to TRUE, only enabled indexes will be returned.
  *   - server: Return only indexes on the server with the specified id.
  *   - entity_type: Return only indexes on the specified entity type.
  * @param $header
@@ -1005,12 +1056,11 @@ function search_api_server_delete(SearchApiServer $server) {
  *   specified criteria.
  */
 function search_api_list_indexes(array $options = array(), $header = NULL) {
-  $enabled = isset($options['only_enabled']) && !$options['only_enabled'] ? 0 : 1;
   $server = empty($options['server']) ? NULL : $options['server'];
   $type = empty($options['entity_type']) ? NULL : $options['entity_type'];
 
-  $select = db_select('search_api_index', 'i', array('fetch' => 'SearchApiServer'))->fields('i');
-  if ($enabled) {
+  $select = db_select('search_api_index', 'i', array('fetch' => 'SearchApiIndex'))->fields('i');
+  if (!empty($options['enabled'])) {
     $select->condition('i.enabled', 1);
   }
   if (!empty($server)) {
@@ -1031,6 +1081,7 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
   }
 
   module_invoke_all('search_api_index_load', $indexes);
+  module_invoke_all('entity_load', $indexes, 'search_api_index');
 
   return $indexes;
 }
@@ -1042,11 +1093,11 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  *   The index' id.
  *
  * @return
- *   A completely loaded index object, or FALSE if no such index exists.
+ *   A completely loaded index object, or NULL if no such index exists.
  */
 function search_api_index_load($id) {
   $ret = entity_load('search_api_index', array($id));
-  return $ret ? array_shift($ret) : FALSE;
+  return $ret ? array_shift($ret) : NULL;
 }
 
 /**
@@ -1083,6 +1134,17 @@ function search_api_index_url(SearchApiIndex $index) {
   return array(
     'path' => 'admin/config/search/search_api/index/' . $index->id,
   );
+}
+
+/**
+ * Property callback.
+ *
+ * @return
+ *   The SearchApiServer this index currently resides on, or NULL if the index
+ *   is currently unassigned.
+ */
+function search_api_index_get_server(SearchApiIndex $index) {
+  return $index->server();
 }
 
 /**
@@ -1169,8 +1231,10 @@ function search_api_index_insert(array $values) {
   }
 
   // Call hooks
-  $values['id'] = $id;
-  $index = new SearchApiIndex($values);
+  if (!isset($fields['id'])) {
+    $fields['id'] = $id;
+  }
+  $index = new SearchApiIndex($fields);
   if ($index->server) {
     if ($server->enabled) {
       $server->addIndex($index);
@@ -1183,6 +1247,7 @@ function search_api_index_insert(array $values) {
     }
   }
   module_invoke_all('search_api_index_insert', $index);
+  module_invoke_all('entity_insert', $index, 'search_api_index');
 
   return $id;
 }
@@ -1232,7 +1297,7 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
   if ($index->server != $new_index->server) {
     // Server changed - inform old and new ones.
     if ($index->server) {
-      $old_server = search_api_server_load($index->server);
+      $old_server = $index->server();
       if ($old_server->enabled) {
         $old_server->removeIndex($new_index);
       }
@@ -1245,7 +1310,7 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
     }
 
     if ($new_index->server) {
-      $new_server = search_api_server_load($new_index->server);
+      $new_server = $new_index->server();
       if ($new_server->enabled) {
         $new_server->addIndex($new_index);
       }
@@ -1258,10 +1323,11 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
     }
 
     // We also have to re-index all content
-    search_api_index_reindex($index);
+    _search_api_index_reindex($index);
   }
 
   module_invoke_all('search_api_index_update', $new_index, 'edit');
+  module_invoke_all('entity_update', $new_index, 'search_api_index');
 
   return $ret;
 }
@@ -1298,7 +1364,7 @@ function search_api_index_edit_fields(SearchApiIndex $index, array $fields) {
   $index = search_api_index_load($index->id);
 
   if ($index->server) {
-    $server = search_api_server_load($index->server);
+    $server = $index->server();
     if ($server->enabled) {
       if ($server->fieldsUpdated($index)) {
         _search_api_index_reindex($index);
@@ -1318,6 +1384,7 @@ function search_api_index_edit_fields(SearchApiIndex $index, array $fields) {
   }
 
   module_invoke_all('search_api_index_update', $index, 'fields');
+  module_invoke_all('entity_update', $index, 'search_api_index');
 
   return $ret;
 }
@@ -1332,6 +1399,10 @@ function search_api_index_edit_fields(SearchApiIndex $index, array $fields) {
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_index_enable(SearchApiIndex $index) {
+  $server = $index->server();
+  if (!$server || !$server->enabled) {
+    throw new SearchApiException(t("Attempt to enable index #!id which isn't on an enabled server.", array('!id' => $index->id)));
+  }
   $ret = db_update('search_api_index')
     ->fields(array('enabled' => 1))
     ->condition('id', $index->id)
@@ -1342,6 +1413,7 @@ function search_api_index_enable(SearchApiIndex $index) {
 
   $index->enabled = 1;
   module_invoke_all('search_api_index_update', $index, 'enable');
+  module_invoke_all('entity_update', $index, 'search_api_index');
 
   return $ret;
 }
@@ -1366,6 +1438,7 @@ function search_api_index_disable(SearchApiIndex $index) {
 
   $index->enabled = 0;
   module_invoke_all('search_api_index_update', $index, 'disable');
+  module_invoke_all('entity_update', $index, 'search_api_index');
 
   return $ret;
 }
@@ -1420,7 +1493,7 @@ function _search_api_index_reindex(SearchApiIndex $index) {
  */
 function search_api_index_clear(SearchApiIndex $index) {
   if ($index->server) {
-    $server = search_api_server_load($index->server);
+    $server = $index->server();
     if ($server->enabled) {
       $server->deleteItems('all', $index);
     }
@@ -1459,7 +1532,7 @@ function search_api_index_clear(SearchApiIndex $index) {
  */
 function search_api_index_delete(SearchApiIndex $index) {
   if ($index->server) {
-    $server = search_api_server_load($index->server);
+    $server = $index->server();
     if ($server->enabled) {
       $server->removeIndex($index);
     }
@@ -1483,6 +1556,7 @@ function search_api_index_delete(SearchApiIndex $index) {
     ->execute();
 
   module_invoke_all('search_api_index_delete', $index);
+  module_invoke_all('entity_delete', $index, 'search_api_index');
 
   return TRUE;
 }
