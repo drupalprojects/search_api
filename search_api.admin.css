@@ -1,0 +1,9 @@
+/* $Id$ */
+
+td.search-api-status {
+  text-align: center;
+}
+
+input.search-api-cron-limit {
+  text-align: right;
+}

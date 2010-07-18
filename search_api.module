@@ -269,14 +269,19 @@ function search_api_entity_info() {
 function search_api_entity_insert($entity, $type) {
   $info = entity_get_info($type);
   $id = $info['entity keys']['id'];
-  foreach (search_api_list_indexes(array('entity_type' => $type, 'only_enabled' => FALSE)) as $index) {
-    db_insert('search_api_item')
-      ->fields(array(
-        'item_id' => $entity->$id,
-        'index_id' => $index->id,
-        'changed' => 1,// Set always to 1 to index new items before changed ones
-      ))
-      ->execute();
+
+  $query = db_select('search_api_index', 'i');
+  $query->addField('id', 'index_id');
+  $query->addExpression(':item_id', 'item_id', array(':item_id' => $entity->$id));
+  $query->addExpression('1', 'changed');
+  $query->condition('entity_type', $type);
+
+  db_insert('search_api_item')
+    ->from($query)
+    ->execute();
+
+  if ($type == 'search_api_server' || $type == 'search_api_index') {
+    module_invoke_all($type . '_insert', $entity);
   }
 }
 
@@ -293,9 +298,11 @@ function search_api_entity_insert($entity, $type) {
 function search_api_entity_update($entity, $type) {
   $info = entity_get_info($type);
   $id = $info['entity keys']['id'];
+
   $query = db_select('search_api_index', 'ind')
     ->fields('ind', array('id'))
     ->condition('entity_type', $type);
+
   db_update('search_api_item')
     ->fields(array(
       'changed' => REQUEST_TIME,
@@ -304,6 +311,10 @@ function search_api_entity_update($entity, $type) {
     ->condition('index_id', $query, 'IN')
     ->condition('changed', 0)
     ->execute();
+
+  if ($type == 'search_api_server' || $type == 'search_api_index') {
+    module_invoke_all($type . '_update', $entity, 'edit');
+  }
 }
 
 /**
@@ -336,6 +347,10 @@ function search_api_entity_delete($entity, $type) {
         variable_set('search_api_tasks', $tasks);
       }
     }
+  }
+
+  if ($type == 'search_api_server' || $type == 'search_api_index') {
+    module_invoke_all($type . '_delete', $entity);
   }
 }
 
@@ -687,7 +702,7 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
 
   $enabled = (int) $only_enabled;
   if (!isset($servers[$enabled])) {
-    $select = db_select('search_api_server', 's')->fields('s');
+    $select = db_select('search_api_server', 's', array('fetch' => 'SearchApiServer'))->fields('s');
     if ($enabled) {
       $select->condition('s.enabled', 1);
     }
@@ -994,7 +1009,7 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
   $server = empty($options['server']) ? NULL : $options['server'];
   $type = empty($options['entity_type']) ? NULL : $options['entity_type'];
 
-  $select = db_select('search_api_index', 'i')->fields('i');
+  $select = db_select('search_api_index', 'i', array('fetch' => 'SearchApiServer'))->fields('i');
   if ($enabled) {
     $select->condition('i.enabled', 1);
   }
@@ -1098,7 +1113,7 @@ function search_api_index_insert(array $values) {
     if (!$server) {
       throw new SearchApiException(t('Unknown server specified for new index (id !id)!', array('!id' => $values['server'])));
     }
-    if (!$server[enabled]) {
+    if (!$server->enabled) {
       // Indexes on a disabled server cannot be enabled.
       $values['enabled'] = 0;
     }
@@ -1126,20 +1141,36 @@ function search_api_index_insert(array $values) {
   $id = db_insert('search_api_index')->fields($fields)->execute();
 
   // Remember items to index
-  // @todo This only works for entities that are stored in the database.
   $entity_info = entity_get_info($values['entity_type']);
-  $id_field = $entity_info['entity keys']['id'];
-  $table = $entity_info['base table'];
-  $query = db_select($table, 't');
-  $query->addField('t', $id_field, 'item_id');
-  $query->addExpression(':index_id', 'index_id', array(':index_id' => $id));
-  $query->addExpression('1', 'changed');
+  if (!empty($entity_info['base table'])) {
+    // Use a subselect, which will probably be much faster than entity_load().
+    // @todo Can we assume this always works when 'base table' is set?
+    $id_field = $entity_info['entity keys']['id'];
+    $table = $entity_info['base table'];
+    $query = db_select($table, 't');
+    $query->addField('t', $id_field, 'item_id');
+    $query->addExpression(':index_id', 'index_id', array(':index_id' => $id));
+    $query->addExpression('1', 'changed');
 
-  db_insert('search_api_item')->from($query)->execute();
+    db_insert('search_api_item')->from($query)->execute();
+  }
+  else {
+    // We have to use the slow entity_load().
+    $entities = entity_load($values['entity_type'], FALSE);
+    $query = db_insert('search_api_item')->fields('item_id', 'index_id', 'changed');
+    foreach ($entities as $item_id => $entity) {
+      $query->values(array(
+        'item_id' => $item_id,
+        'index_id' => $id,
+        'changed' => 1,
+      ));
+    }
+    $query->execute();
+  }
 
   // Call hooks
-  $index = (object) $values;
-  $index->id = $id;
+  $values['id'] = $id;
+  $index = new SearchApiIndex($values);
   if ($index->server) {
     if ($server->enabled) {
       $server->addIndex($index);

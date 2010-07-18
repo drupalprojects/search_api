@@ -5,12 +5,15 @@
  * Page callback that shows an overview of defined servers and indexes.
  */
 function search_api_admin_overview() {
+  $base_path = drupal_get_path('module', 'search_api') . '/';
+  drupal_add_css($base_path . 'search_api.admin.css');
+
   $header = array(
+    // @todo Wait for http://drupal.org/node/109493
+  array('data' => t('Status'), 'field' => 'enabled', 'descending' => TRUE, 'sort' => 'desc'),
+//    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
     array('data' => t('Type'), 'colspan' => 2),
     array('data' => t('Name'), 'field' => 'name'),
-    // @todo Wait for http://drupal.org/node/109493
-//  array('data' => t('Status'), 'field' => 'enabled', 'first sort' => 'desc', 'sort' => 'desc'),
-    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
@@ -24,8 +27,20 @@ function search_api_admin_overview() {
   $rows = array();
   $t_server = array('data' => t('Server'), 'colspan' => 2);
   $t_index = t('Index');
-  $t_enabled = t('enabled');
-  $t_disabled = t('disabled');
+  $t_enabled['data'] = array(
+    '#theme' => 'image',
+    '#path' => $base_path . 'enabled.png',
+    '#alt' => t('enabled'),
+    '#title' => t('enabled'),
+  );
+  $t_enabled['class'] = array('search-api-status');
+  $t_disabled['data'] = array(
+    '#theme' => 'image',
+    '#path' => $base_path . 'disabled.png',
+    '#alt' => t('disabled'),
+    '#title' => t('disabled'),
+  );
+  $t_disabled['class'] = array('search-api-status');
   $t_enable = t('enable');
   $t_disable = t('disable');
   $t_edit = t('edit');
@@ -39,9 +54,9 @@ function search_api_admin_overview() {
   foreach ($servers as $server) {
     $url = $pre . $server->id;
     $rows[] = array(
+      $server->enabled ? $t_enabled : $t_disabled,
       $t_server,
       l($server->name, $url),
-      $server->enabled ? $t_enabled : $t_disabled,
       $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable),
       l($t_edit, $url . $edit),
       l($t_delete, $url . $delete),
@@ -50,13 +65,13 @@ function search_api_admin_overview() {
       foreach ($indexes[$server->id] as $index) {
         $url = $pre_index . $index->id;
         $rows[] = array(
+          $index->enabled ? $t_enabled : $t_disabled,
           '',
           $t_index,
           l($index->name, $url),
-          $index->enabled ? $t_enabled : $t_disabled,
           $index->enabled
               ? l($t_disable, $url . $disable)
-              : ($server->enabled ? l($t_enable, $url . $enable) : '<del>' . $t_enable . '</del>'),
+              : ($server->enabled ? l($t_enable, $url . $enable) : ''),
           l($t_edit, $url . $edit),
           l($t_delete, $url . $delete),
         );
@@ -71,9 +86,9 @@ function search_api_admin_overview() {
         $link = '<strong>' . $link . '</strong>';
       }
       $rows[] = array(
+        $t_disabled,
         array('data' => $t_index, 'colspan' => 2),
         $link,
-        $t_disabled,
         '',
         l($t_edit, $url . $edit),
         l($t_delete, $url . $delete),
@@ -305,7 +320,7 @@ function theme_search_api_server(array $variables) {
 
   if (!empty($class_name)) {
     $output .= '<dt>' . t('Service class') . '</dt>' . "\n";
-    $output .= '<dd>' . check_plain($class_name);
+    $output .= '<dd><em>' . check_plain($class_name) . '</em>';
     if (!empty($class_description)) {
       $output .= '<p class="description">' . nl2br(check_plain($class_description)) . '</p>';
     }
@@ -400,6 +415,7 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
 function search_api_admin_add_index($form, &$form_state) {
   drupal_set_title(t('Add index'));
 
+  $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
@@ -453,6 +469,8 @@ function search_api_admin_add_index($form, &$form_state) {
     '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
         '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
     '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
+    '#size' => 4,
+    '#attributes' => array('class' => array('search-api-cron-limit')),
   );
 
   $form['submit'] = array(
@@ -527,6 +545,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     '#description' => $index->description,
     '#entity_type' => $index->entity_type,
     '#enabled' => $index->enabled,
+    // @todo Replace with $index->server() everywhere.
     '#server' => $index->server ? search_api_server_load($index->server) : NULL,
     '#options' => $index->options,
   );
@@ -622,6 +641,7 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
   $status = search_api_index_status($index);
   $server = $index->server ? search_api_server_load($index->server) : NULL;
 
+  $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['id'] = array(
     '#type' => 'value',
     '#value' => $index->id,
@@ -649,12 +669,12 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
         array('@indexed' => $status['indexed'], '@total' => $status['total']));
   }
   elseif (!$status['indexed']) {
-    $form['progress']['#description'] = t('No items have been indexed yet (@total total).',
+    $form['progress']['#description'] = t('All items still need to be indexed (@total total).',
         array('@total' => $status['total']));
   }
   else {
     $percentage = (int) (100 * $status['indexed'] / $status['total']);
-    $form['progress']['#description'] = t('About @percentage% of all items have been indexed (@indexed / @total).',
+    $form['progress']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
         array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' =>$percentage));
   }
 
@@ -670,7 +690,7 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
       '#title' => t('Number of items:'),
       '#default_value' => empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'],
       '#size' => 4,
-      '#attributes' => array('style' => 'text-align: right;'),
+      '#attributes' => array('class' => array('search-api-cron-limit')),
     );
     $form['index']['button'] = array(
       '#type' => 'submit',
@@ -750,6 +770,7 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
       $index = search_api_index_load($id);
       if ($index) {
         $limit = $values['limit'];
+        // @todo Batch API?
         $ret = search_api_index_items($index, $limit);
         if ($ret) {
           drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
@@ -801,6 +822,7 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
  *   The index to edit.
  */
 function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index) {
+  $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
@@ -838,6 +860,8 @@ function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index)
     '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
         '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
     '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
+    '#size' => 4,
+    '#attributes' => array('class' => array('search-api-cron-limit')),
   );
 
   $form['id'] = array(
@@ -1169,7 +1193,8 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
   $form['description'] = array(
     '#type' => 'item',
     '#title' => t('Select fields to index'),
-    '#description' => t('Some service classes of servers might not support all, or any, datatypes. ' .
+    '#description' => t('Whether detailled field types are supported depends on the type of server this index resides on. ' .
+        "Check the server's service class' documentation for details. " .
         'However, fields of type "Text" will always be fulltext-searchable.'),
   );
   foreach ($entity_fields as $field_name => $entity_field_info) {

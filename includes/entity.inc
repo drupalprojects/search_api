@@ -17,13 +17,20 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
   public $options = array();
   public $enabled;
 
+  /**
+   * Constructor as a helper to the parent constructor.
+   */
+  public function __construct(array $values = array()) {
+    parent::__construct($values, 'search_api_server');
+  }
+
   // Proxy methods
 
   public function init(array $init_args) {
     // When init() is called, we initalize the proxy.
     $class = search_api_get_service_info($this->class);
-    if ($class && class_exists($class)) {
-      $this->proxy = new $class();
+    if ($class && class_exists($class['class'])) {
+      $this->proxy = new $class['class']();
     }
     if (!($this->proxy instanceof SearchApiServiceInterface)) {
       throw new SearchApiException(t('Search server with id !id specifies illegal service class !class.', array('!id' => $this->id, '!class' => $this->class)));
@@ -35,55 +42,59 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     $this->proxy->options = $this->options;
     $this->proxy->enabled = $this->enabled;
 
-    return $proxy->init($init_args);
+    return $this->proxy->init($init_args);
   }
 
   public function configurationForm() {
-    return $proxy->configurationForm();
+    return $this->proxy->configurationForm();
   }
 
   public function create() {
-    return $proxy->create();
+    return $this->proxy->create();
   }
 
   public function update(array $fields) {
-    return $proxy->update($fields);
+    return $this->proxy->update($fields);
   }
 
   public function enable() {
-    return $proxy->enable();
+    return $this->proxy->enable();
   }
 
   public function disable() {
-    return $proxy->disable();
+    return $this->proxy->disable();
   }
 
   public function delete() {
-    return $proxy->delete();
+    return $this->proxy->delete();
   }
 
   public function addIndex(SearchApiIndex $index) {
-    return $proxy->addIndex($index);
+    return $this->proxy->addIndex($index);
   }
 
   public function fieldsUpdated(SearchApiIndex $index) {
-    return $proxy->fieldsUpdated($index);
+    return $this->proxy->fieldsUpdated($index);
   }
 
   public function removeIndex($index) {
-    return $proxy->removeIndex($index);
+    return $this->proxy->removeIndex($index);
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {
-    return $proxy->indexItems($index, $items);
+    return $this->proxy->indexItems($index, $items);
   }
 
   public function deleteItems($ids, SearchApiIndex $index = NULL) {
-    return $proxy->deleteItems($ids, $index);
+    return $this->proxy->deleteItems($ids, $index);
   }
 
-  public function search(SearchApiIndex $index, SearchApiQueryInterface $query, array $options = array()) {
-    return $proxy->search($index, $query, $options);
+  public function query(SearchApiIndex $index, $options = array()) {
+    return $this->proxy->query($index);
+  }
+
+  public function search(SearchApiQueryInterface $query) {
+    return $this->proxy->search($query);
   }
 
 }
@@ -104,6 +115,13 @@ class SearchApiIndex extends EntityDBExtendable {
   public $entity_type;
   public $options;
   public $enabled;
+
+  /**
+   * Constructor as a helper to the parent constructor.
+   */
+  public function __construct(array $values = array()) {
+    parent::__construct($values, 'search_api_index');
+  }
 
   /**
    * @return

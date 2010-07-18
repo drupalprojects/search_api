@@ -157,7 +157,7 @@ interface SearchApiServiceInterface {
    * @return
    *   A SearchApiQueryInterface object for searching the given index.
    */
-  public function query(SearchApiIndex $index);
+  public function query(SearchApiIndex $index, $options = array());
 
   /**
    * Executes a search on the server represented by this object.
