@@ -664,6 +664,26 @@ function search_api_query(SearchApiIndex $index, array $options = array()) {
 }
 
 /**
+ * Returns all field types recognized by the Search API framework.
+ *
+ * @return
+ *   An associative array with all recognized types as keys, mapped to their
+ *   translated display names.
+ */
+function search_api_field_types() {
+  return array(
+    'text' => t('Fulltext'),
+    'string' => t('String'),
+    'integer' => t('Integer'),
+    'decimal' => t('Decimal'),
+    'date' => t('Date'),
+    'duration' => t('Duration'),
+    'boolean' => t('Boolean'),
+    'uri' => t('URI'),
+  );
+}
+
+/**
  * Returns either a list of all available service infos, or a specific one.
  *
  * @see hook_search_api_service_info()

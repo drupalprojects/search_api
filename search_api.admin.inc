@@ -1127,7 +1127,9 @@ function search_api_admin_index_workflow_submit($form, &$form_state) {
 
   $ret = search_api_index_edit($index, array('options' => $options));
   if ($ret) {
-    drupal_set_message(t("The search index' workflow was successfully edited."));
+    search_api_index_reindex($index);
+    drupal_set_message(t("The search index' workflow was successfully edited. " .
+        'All content was scheduled for re-indexing so the new settings can take effect.'));
   }
   else {
     drupal_set_message(t('No values were changed.'));
@@ -1163,32 +1165,17 @@ function search_api_admin_element_compare($a, $b) {
  *   The index to edit.
  */
 function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $index) {
-  // @todo Retrieve entity fields with entity_metadata
-  // Current approach is buggy and only works for database entities
-  $entity_info = entity_get_info($index->entity_type);
-  $entity_fields = drupal_get_schema($entity_info['base table']);
-  $entity_fields = $entity_fields['fields'];
+  $wrapper = entity_metadata_wrapper($index->entity_type);
 
-  $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
+  $options = _search_api_admin_get_fields($index, $wrapper);
+  $fields = $options['fields'];
+  $additional = $options['additional fields'];
 
-  $types = array(
-    'int'    => t('Integer'),
-    'float'  => t('Float'),
-    'string' => t('String'),
-    'text'   => t('Text', array(), array('context' => 'search_api field type')),
-    'date'   => t('Timestamp'),
-  );
-  $type_map = array(
-    'serial'   => 'int',
-    'int'      => 'int',
-    'float'    => 'float',
-    'numeric'  => 'float',
-    'varchar'  => 'string',
-    'char'     => 'string',
-    'text'     => 'text',
-    'blob'     => 'text',
-    'datetime' => 'date',
-  );
+  $types = search_api_field_types();
+  $list_types = array();
+  foreach ($types as $type => $name) {
+    $list_types["list<$type>"] = $name;
+  }
 
   $form['#theme'] = 'search_api_admin_fields_table';
   $form['#tree'] = TRUE;
@@ -1197,21 +1184,18 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
     '#title' => t('Select fields to index'),
     '#description' => t('Whether detailled field types are supported depends on the type of server this index resides on. ' .
         "Check the server's service class' documentation for details. " .
-        'However, fields of type "Text" will always be fulltext-searchable.'),
+        'However, fields of type "Fulltext" will always be fulltext-searchable.'),
   );
-  foreach ($entity_fields as $field_name => $entity_field_info) {
-    $field_info = isset($fields[$field_name])
-        ? $fields[$field_name]
-        : array('type' => $type_map[$entity_field_info['type']], 'indexed' => TRUE);
-    $form['fields'][$field_name]['name']['#markup'] = check_plain($field_name);
-    $form['fields'][$field_name]['type'] = array(
+  foreach ($fields as $key => $info) {
+    $form['fields'][$key]['name']['#markup'] = check_plain($info['name']);
+    $form['fields'][$key]['type'] = array(
       '#type' => 'select',
-      '#options' => $types,
-      '#default_value' => $field_info['type'],
+      '#options' => strpos($info['type'], 'list<') === 0 ? $list_types : $types,
+      '#default_value' => $info['type'],
     );
-    $form['fields'][$field_name]['indexed'] = array(
+    $form['fields'][$key]['indexed'] = array(
       '#type' => 'checkbox',
-      '#default_value' => $field_info['indexed'],
+      '#default_value' => $info['indexed'],
     );
   }
 
@@ -1225,7 +1209,117 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
     '#value' => t('Save changes'),
   );
 
+  if ($additional) {
+    $form['additional'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Add related entity'),
+      '#description' => t('There are entities related to entities of this type. ' .
+          'You can add their fields to the list below so they can be indexed too.'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#attributes' => array('class' => array('container-inline')),
+      'field' => array(
+        '#type' => 'select',
+        '#options' => $additional,
+      ),
+      'add' => array(
+        '#type' => 'submit',
+        '#value' => t('Add fields'),
+      )
+    );
+  }
+
+  // @todo Provide a way to remove a related entity's fields again?
+
   return $form;
+}
+
+/**
+ * Helper function for building the field list for an index.
+ */
+function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapper $wrapper) {
+  if (empty($index->options['fields'])) {
+    if (empty($index->options)) {
+      $index->options = array();
+    }
+    $index->options['fields'] = array();
+  }
+
+  // First, we build a multi-level array of fields, instead of encoding it with "parent:child".
+  $fields = array();
+  foreach($index->options['fields'] as $field => $settings) {
+    if ($pos = strpos($field, ':')) {
+      $tmp = &$fields;
+      do {
+        list($key, $field) = explode(':', $field, 2);
+        $tmp = &$tmp[$key];
+      } while ($pos = strpos($field, ':'));
+      $tmp[$field] = $settings;
+    }
+    elseif (isset($wrapper->$field)) {
+      $fields[$field] = $settings;
+    }
+  }
+  $additional = array();
+
+  // Then we walk through all properties and look if they are already contained in one of the arrays.
+  // Since this uses an iterative instead of a recursive approach, it is a bit complicated,
+  // with three arrays tracking the current depth.
+
+  // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
+  $wrappers = array('' => $wrapper);
+  // The portion of the fields array that corresponds to this prefix, e.g. ('user:' => $fields['user'])
+  $fields_array = array('' => $fields);
+  // Display names for the prefixes
+  $prefix_names = array('' => '');
+
+  $types = search_api_field_types();
+  $flat = array(); // The array that really becomes options['fields']
+  while ($wrappers) {
+    foreach ($wrappers as $prefix => $wrapper) {
+      $fields = $fields_array[$prefix];
+      $prefix_name = $prefix_names[$prefix];
+      foreach ($wrapper as $property => $value) {
+        $info = $value->info();
+        $type = $info['type'];
+        if ($pos = strpos($type, 'list<') === 0) {
+          // We hide the complexity of multi-valued types from the user here
+          $type = substr($type, 5, -1);
+        }
+        if (isset($types[$type])) {
+          if (isset($fields[$property])) {
+            $fields[$property]['name'] = $prefix_name . $info['label'];
+            $flat[$prefix . $property] = $fields[$property];
+          }
+          else {
+            $flat[$prefix . $property] = array(
+              'name'    => $prefix_name . $info['label'],
+              'type'    => $info['type'],
+              'indexed' => 0,
+            );
+          }
+        }
+        else {
+          $key = $prefix . $property . ':';
+          if (isset($fields[$property])) {
+            // Visit this entity/struct in a later iteration.
+            $wrappers[$key] = $value;
+            $fields_array[$key] = $fields[$property];
+            $prefix_names[$key] = $prefix_name . $info['label'] . ' » ';
+          }
+          else {
+            $additional[$key] = $prefix_name . $info['label'];
+          }
+        }
+      }
+      unset($wrappers[$prefix]);
+    }
+  }
+
+  $options = array();
+  $options['fields'] = $flat;
+  $options['additional fields'] = $additional;
+  return $options;
 }
 
 /**
@@ -1249,10 +1343,14 @@ function theme_search_api_admin_fields_table($variables) {
   }
 
   $submit = $form['submit'];
-  unset($form['submit']);
+  $additional = isset($form['additional']) ? $form['additional'] : FALSE;
+  unset($form['submit'], $form['additional']);
   $output = drupal_render_children($form);
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
   $output .= render($submit);
+  if ($additional) {
+    $output .= render($additional);
+  }
 
   return $output;
 }
@@ -1261,6 +1359,7 @@ function theme_search_api_admin_fields_table($variables) {
  * Submit function for search_api_admin_index_fields.
  */
 function search_api_admin_index_fields_submit($form, &$form_state) {
+  // @todo Handle 'Add fields' case
   $index = search_api_index_load($form_state['values']['id']);
   $ret = search_api_index_edit_fields($index, $form_state['values']['fields']);
 
