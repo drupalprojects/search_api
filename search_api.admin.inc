@@ -1214,7 +1214,7 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
       '#type' => 'fieldset',
       '#title' => t('Add related entity'),
       '#description' => t('There are entities related to entities of this type. ' .
-          'You can add their fields to the list below so they can be indexed too.'),
+          'You can add their fields to the list above so they can be indexed too.') . '<br />',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#attributes' => array('class' => array('container-inline')),
@@ -1359,14 +1359,62 @@ function theme_search_api_admin_fields_table($variables) {
  * Submit function for search_api_admin_index_fields.
  */
 function search_api_admin_index_fields_submit($form, &$form_state) {
-  // @todo Handle 'Add fields' case
   $index = search_api_index_load($form_state['values']['id']);
-  $ret = search_api_index_edit_fields($index, $form_state['values']['fields']);
+  if ($form_state['values']['op'] == t('Save changes')) {
+    $ret = search_api_index_edit_fields($index, $form_state['values']['fields']);
 
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+    if ($ret) {
+      drupal_set_message(t('The indexed fields were successfully changed. ' .
+          'The index was cleared and will have to be re-indexed with the new settings.'));
+    }
+    else {
+      drupal_set_message(t('No values were changed.'));
+    }
+    return;
+  }
+  // Adding a related entity's fields
+  $form_state['rebuild'] = TRUE;
+
+  $wrapper = entity_metadata_wrapper($index->entity_type);
+  $prefix = $form_state['values']['additional']['field'];
+  $types = search_api_field_types();
+
+  foreach (explode(':', substr($prefix, 0, -1)) as $element) {
+    if (!isset($wrapper->$element)) {
+      $wrapper = NULL;
+      break;
+    }
+    $wrapper = $wrapper->$element;
+  }
+  if (!$wrapper) {
+    drupal_set_message(t("An error occurred while trying to add the related entity's fields."), 'error');
+    return;
+  }
+
+  if (isset($index->options['fields'])) {
+    $fields = $index->options['fields'];
+  }
+  else {
+    $fields = _search_api_admin_get_fields($index, $wrapper);
+    $fields = $fields['fields'];
+  }
+
+  foreach ($wrapper as $field => $value) {
+    $info = $value->info();
+    $key = $prefix . $field;
+    if (isset($types[$info['type']]) && empty($fields[$key])) {
+      $fields[$key] = array('type' => $info['type'], 'indexed' => 0);
+    }
+  }
+  $options = $index->options;
+  $options['fields'] = $fields;
+
+  $ret = search_api_index_edit($index, array('options' => $options));
+  $index->options = $options;
+
   if ($ret) {
-    drupal_set_message(t('The indexed fields were successfully changed. ' .
-        'The index was cleared and will have to be re-indexed with the new settings.'));
+    drupal_set_message(t('The available fields were successfully changed.'));
   }
   else {
     drupal_set_message(t('No values were changed.'));
