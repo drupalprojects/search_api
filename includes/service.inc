@@ -98,7 +98,8 @@ interface SearchApiServiceInterface {
    * @param SearchApiIndex $index
    *   The search index for which items should be indexed.
    * @param array $items
-   *   An array of objects containing the item data to be indexed.
+   *   An array of EntityMetadataWrapper objects containing the data to be
+   *   indexed, keyed by their id.
    *
    * @return
    *   An array of the ids of all items that were successfully indexed.

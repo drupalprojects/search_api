@@ -342,7 +342,7 @@ class SearchApiQuery {
     $this->preExecute();
 
     // Preprocess query
-    search_api_item_process('pre-search', $this->index, $this);
+    $this->index->preprocessSearchQuery($this);
 
     // Let modules alter the query
     drupal_alter('search_api_query', $this);
@@ -358,7 +358,7 @@ class SearchApiQuery {
     $this->postExecute($results);
 
     // Postprocess results
-    search_api_item_process('post-search', $this->index, $results, $this);
+    $this->index->postprocessSearchResults($results, $this);
 
     // Cache results
     $result_cache = &drupal_static('search_api_search_results');

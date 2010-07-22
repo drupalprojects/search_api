@@ -287,19 +287,35 @@ function hook_search_api_index_delete(SearchApiIndex $index) {
  *   The index on which the items are indexed.
  * @param array $items
  *   An array of objects containing the entity data.
+ *
+ * @return
+ *   An array of property infos for all added properties, as required by
+ *   hook_entity_property_info().
  */
 function example_random_alter(SearchApiIndex $index, array &$items) {
   if ($index->id % 2) {
     foreach ($items as $id => $item) {
       srand($id);
-      if (rand() % 5) {
+      if (rand(0, 4)) {
         unset($items[$id]);
         continue;
       }
       foreach ($item as $k => $v) {
         srand(strlen($v) + count($v));
-        $item->$k = rand();
+        $item->$k = rand(1, 100);
       }
     }
   }
+
+  foreach ($items as $id => $item) {
+    $item->example_id_plus_rand = "$id-" . rand(1, 500);
+  }
+
+  return array(
+    'example-id-plus-rand' => array(
+      'label' => t('Useless field'),
+      'description' => t('A really, really useless field, consisting of the entity ID and a random number.'),
+      'type' => 'text',
+    )
+  );
 }

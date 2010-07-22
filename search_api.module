@@ -428,7 +428,7 @@ function search_api_search_api_alter_callback_info() {
     'weight' => -10,
   );
   // @todo Add callback that adds a search_api_uri field
-  // @todo Add heavy-weight callback that aggregates string fields into a search_api_fulltext field at index time
+  // @todo Add heavy-weight callback that aggregates text fields into a search_api_fulltext field
 
   return $callbacks;
 }
@@ -446,32 +446,21 @@ function search_api_search_api_alter_callback_info() {
  *   Number of successfully indexed items.
  */
 function search_api_index_items(SearchApiIndex $index, $limit = -1) {
-  $entity_info = entity_get_info($index->entity_type);
-  // Safety check if entity type is known (prevent failing of whole cron run)
-  if (!$entity_info) {
+  // Safety check if entity type is known (prevent failing of whole cron run/page request)
+  if (!entity_get_info($index->entity_type)) {
     throw new SearchApiException(t("Couldn't index values for '!name' index (unknown entity type '!type')", array('!name' => $index->name, '!type' => $index->entity_type)));
-  }
-
-  $server = $index->server();
-  if (!$server) {
-    throw new SearchApiException(t("Couldn't index values for '!name' index (server info could not be retrieved)", array('!name' => $index->name)));
   }
 
   $items = search_api_get_items_to_index($index, $limit);
   if (!$items) {
     return 0;
   }
-  search_api_item_data_alter($index, $items);
-  if (!$items) {
-    return 0;
-  }
-  search_api_item_process('pre-index', $index, $items);
-  $indexed = $server->indexItems($index, $items);
+
+  $indexed = $index->index($items);
 
   if (!empty($indexed)) {
     search_api_set_items_indexed($index, $indexed);
   }
-
   return count($indexed);
 }
 
@@ -505,101 +494,6 @@ function search_api_get_items_to_index(SearchApiIndex $index, $limit = -1) {
 }
 
 /**
- * Calls data alteration hooks for a set of items, according to the index
- * options.
- *
- * @param SearchApiIndex $index
- *   The index on which the items will be indexed.
- * @param array $items
- *   An array of items to be altered.
- */
-function search_api_item_data_alter(SearchApiIndex $index, array &$items) {
-  if (empty($index->options['data_alter_callbacks'])) {
-    return;
-  }
-
-  foreach ($index->options['data_alter_callbacks'] as $func => $settings) {
-    if (empty($settings['status'])) {
-      continue;
-    }
-    if (!function_exists($func)) {
-      watchdog('search_api', t('Undefined data alter callback function  !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-    $func($index, $items);
-    if (empty($items)) {
-      return;
-    }
-  }
-}
-
-/**
- * Runs all processors that are active for the specified index on the given
- * items.
- *
- * @param $phase
- *   The phase in which this call occurs. Either 'pre-index', 'pre-search' or
- *   'post-search'.
- * @param SearchApiIndex $index
- *   The index on which the items are indexed.
- * @param array $data
- *   An array of items to be preprocessed at pre-index time, a
- *   SearchApiQueryInterface object at pre-search time, or an array of search
- *   results at post-search time.
- * @param SearchApiQueryInterface $query
- *   For the "post-search" phase, the SearchApiQueryInterface object
- *   representing the executed query.
- */
-function search_api_item_process($phase, SearchApiIndex $index, &$data, SearchApiQueryInterface $query = NULL) {
-  if (empty($index->options['processors'])) {
-    return;
-  }
-
-  $processor_settings = $index->options['processors'];
-  $processors = &drupal_static(__FUNCTION__);
-  $infos = search_api_get_processors();
-
-  if ($phase == 'post-search') {
-    if (!$query) {
-      throw new SearchApiException(t('No query given for postprocessing search results.'));
-    }
-    $processor_settings = array_reverse($processor_settings, TRUE);
-  }
-
-  foreach ($processor_settings as $id => $settings) {
-    if (empty($settings['status'])) {
-      continue;
-    }
-    if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
-      watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-    $class = $infos[$id]['class'];
-    if (empty($processors[$id])) {
-      $processors[$id] = new $class(isset($settings['options']) ? $settings['options'] : array());
-    }
-    if (!($processors[$id] instanceof SearchApiProcessorInterface)) {
-      watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-
-    switch ($phase) {
-      case 'pre-index':
-        $processors[$id]->preprocessIndexItems($index, $data);
-        break;
-      case 'pre-search':
-        $processors[$id]->preprocessSearchQuery($index, $data);
-        break;
-      case 'post-search':
-        $processors[$id]->postprocessSearchResults($index, $query, $data);
-        break;
-      default:
-        throw new SearchApiException('search_api', t('!function() called with unknown phase !phase', array('!function' => __FUNCTION__, '!phase' => $phase)));
-    }
-  }
-}
-
-/**
  * Marks the items as successfully indexed for the specified index.
  *
  * @param SearchApiIndex $index
@@ -626,11 +520,12 @@ function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
  *
  * @param SearchApiIndex $index
  *   The index on which the items are indexed.
- * @param $items
+ * @param array $items
  *   An array of objects containing the entity data.
  */
 function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
   entity_prepare_view($index->entity_type, $items);
+  return array();
 }
 
 /**

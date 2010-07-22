@@ -120,6 +120,8 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
 class SearchApiIndex extends EntityDBExtendable {
 
   private $server_object = NULL;
+  private $added_properties = array();
+  private $processors = array();
 
   // Database values that will be set when object is loaded
 
@@ -178,6 +180,170 @@ class SearchApiIndex extends EntityDBExtendable {
       throw new SearchApiException(t('Cannot search on a disabled index.'));
     }
     return $this->server()->query($this, $options);
+  }
+
+
+  /**
+   * Indexes items for the specified index. Only items marked as changed are
+   * indexed, in their order of change (if known).
+   *
+   * @param array $items
+   *   An array of entities to index.
+   *
+   * @return
+   *   An array of the ids of all items that were successfully indexed.
+   */
+  public function index(array $items) {
+    if (!$this->enabled) {
+      throw new SearchApiException(t("Couldn't index values on '!name' index (index is disablued)", array('!name' => $this->name)));
+    }
+
+    $this->dataAlter($items);
+    if (!$items) {
+      return 0;
+    }
+    $wrappers = array();
+    foreach ($items as $id => $item) {
+      // @todo Bring entity_metadata_wrapper to call propertyInfoAlter()
+      $wrappers[$id] = entity_metadata_wrapper($this->entity_type, $item);
+    }
+    $this->preprocessIndexItems($wrappers);
+
+    return $this->server()->indexItems($index, $wrappers);
+  }
+
+  /**
+   * Calls data alteration hooks for a set of items, according to the index
+   * options.
+   *
+   * @param SearchApiIndex $index
+   *   The index on which the items will be indexed.
+   * @param array $items
+   *   An array of items to be altered.
+   */
+  public function dataAlter(array &$items) {
+    if (empty($this->options['data_alter_callbacks'])) {
+      return;
+    }
+
+    foreach ($this->options['data_alter_callbacks'] as $func => $settings) {
+      if (empty($settings['status'])) {
+        continue;
+      }
+      if (!function_exists($func)) {
+        watchdog('search_api', t('Undefined data alter callback function  !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+      $this->added_properties += $func($this, $items);
+      if (empty($items)) {
+        return;
+      }
+    }
+  }
+
+  /**
+   * Property info alter callback that adds the infos of the properties added by
+   * data alter callbacks.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped data.
+   * @param $property_info
+   *   The original property info.
+   *
+   * @return
+   *   The altered property info.
+   */
+  public function propertyInfoAlter(EntityMetadataWrapper $wrapper, $property_info) {
+    if ($this->added_properties) {
+      $property_info += $this->added_properties;
+    }
+    return $property_info;
+  }
+
+  /**
+   * Fills the $processors array for use by the pre-/postprocessing functions.
+   */
+  private function prepareProcessors() {
+    if (empty($index->options['processors'])) {
+      return;
+    }
+
+    $processor_settings = $index->options['processors'];
+    $infos = search_api_get_processors();
+
+    foreach ($processor_settings as $id => $settings) {
+      if (empty($settings['status'])) {
+        continue;
+      }
+      if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
+        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+      $class = $infos[$id]['class'];
+      $processor = new $class($this, isset($settings['options']) ? $settings['options'] : array());
+      if (!($processor instanceof SearchApiProcessorInterface)) {
+        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+
+      $this->processors[$id] = $processor;
+    }
+  }
+
+  /**
+   * Preprocess data items for indexing. Data added by data alter callbacks will
+   * be available on the items.
+   *
+   * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
+   * n-grams, word splitting, stripping stop words, etc.) only on the items'
+   * search_api_fulltext fields, if set. Other fields should usually be left
+   * untouched.
+   *
+   * @param array $items
+   *   An array of EntityMetadataWrapper objects to be preprocessed for
+   *   indexing.
+   */
+  function preprocessIndexItems(array $items) {
+    foreach ($this->processors as $processor) {
+      $processor->preprocessIndexItems($this, $items);
+    }
+  }
+
+
+  /**
+   * Preprocess a search query.
+   *
+   * The same applies as when preprocessing indexed items: typically, only the
+   * fulltext search keys should be processed, queries on specific fields should
+   * usually not be altered.
+   *
+   * @param SearchApiQuery $query
+   *   The object representing the query to be executed.
+   */
+  public function preprocessSearchQuery(SearchApiQuery $query) {
+    foreach ($this->processors as $processor) {
+      $processor->preprocessSearchQuery($this, $query);
+    }
+  }
+
+  /**
+   * Postprocess search results before display.
+   *
+   * If a class is used for both pre- and post-processing a search query, the
+   * same object will be used for both calls (so preserving some data or state
+   * locally is possible).
+   *
+   * @param array $results
+   *   An array containing the search results. See
+   *   SearchApiServiceInterface->search() for the detailled format.
+   * @param SearchApiQuery $query
+   *   The object representing the executed query.
+   */
+  public function postprocessSearchResults(array &$results, SearchApiQuery $query) {
+    // Postprocessing is done in exactly the opposite direction than preprocessing.
+    foreach (array_reverse($this->processors) as $processor) {
+      $processor->preprocessSearchQuery($results, $query);
+    }
   }
 
 }

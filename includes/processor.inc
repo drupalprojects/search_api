@@ -15,10 +15,12 @@ interface SearchApiProcessorInterface {
   /**
    * Construct a processor.
    *
+   * @param SearchApiIndex $index
+   *   The index for which processing is done.
    * @param array $options
    *   The processor options set for this index.
    */
-  public function __construct(array $options = array());
+  public function __construct(SearchApiIndex $index, array $options = array());
 
   /**
    * Display a form for configuring this processor.
@@ -40,12 +42,11 @@ interface SearchApiProcessorInterface {
    * search_api_fulltext fields, if set. Other fields should usually be left
    * untouched.
    *
-   * @param $index
-   *   The index on which the items will be indexed.
-   * @param $items
-   *   An array of entities to be indexed.
+   * @param array $items
+   *   An array of EntityMetadataWrapper objects to be preprocessed for
+   *   indexing.
    */
-  public function preprocessIndexItems($index, &$items);
+  public function preprocessIndexItems(array &$items);
 
   /**
    * Preprocess a search query.
@@ -54,12 +55,10 @@ interface SearchApiProcessorInterface {
    * fulltext search keys should be processed, queries on specific fields should
    * usually not be altered.
    *
-   * @param $index
-   *   The index on which the query will be executed.
-   * @param $query
-   *   The SearchApiQuery object representing the query.
+   * @param SearchApiQuery $query
+   *   The object representing the query to be executed.
    */
-  public function preprocessSearchQuery($index, $query);
+  public function preprocessSearchQuery(SearchApiQuery $query);
 
   /**
    * Postprocess search results before display.
@@ -68,14 +67,12 @@ interface SearchApiProcessorInterface {
    * same object will be used for both calls (so preserving some data or state
    * locally is possible).
    *
-   * @param $index
-   *  The index on which the search was executed.
-   * @param $query
-   *   The SearchApiQuery object representing the executed query.
-   * @param $results
+   * @param array $results
    *   An array containing the search results. See
    *   SearchApiServiceInterface->search() for the detailled format.
+   * @param SearchApiQuery $query
+   *   The object representing the executed query.
    */
-  public function postprocessSearchResults($index, $query, &$results);
+  public function postprocessSearchResults(array &$results, SearchApiQuery $query);
 
 }
