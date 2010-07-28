@@ -994,7 +994,7 @@ function search_api_admin_index_workflow($form, &$form_state, SearchApiIndex $in
     }
     $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
     if (class_exists($processor['class'])) {
-      $processor_objects[$name] = new $processor['class']($settings);
+      $processor_objects[$name] = new $processor['class']($index, $settings);
     }
     if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof SearchApiProcessorInterface)) {
       watchdog('search api', t('Processor !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processor['class'])), NULL, WATCHDOG_WARNING);
@@ -1165,7 +1165,9 @@ function search_api_admin_element_compare($a, $b) {
  *   The index to edit.
  */
 function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $index) {
-  $wrapper = entity_metadata_wrapper($index->entity_type);
+  $array = array();
+  $index->dataAlter($array);
+  $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
 
   $options = _search_api_admin_get_fields($index, $wrapper);
   $fields = $options['fields'];
@@ -1184,10 +1186,16 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
     '#title' => t('Select fields to index'),
     '#description' => t('Whether detailled field types are supported depends on the type of server this index resides on. ' .
         "Check the server's service class' documentation for details. " .
-        'However, fields of type "Fulltext" will always be fulltext-searchable.'),
+        'In any case, fields of type "Fulltext" will always be fulltext-searchable.'),
   );
   foreach ($fields as $key => $info) {
     $form['fields'][$key]['name']['#markup'] = check_plain($info['name']);
+    if (isset($info['description'])) {
+      $form['fields'][$key]['description'] = array(
+        '#type' => 'value',
+        '#value' => $info['description'],
+      );
+    }
     $form['fields'][$key]['type'] = array(
       '#type' => 'select',
       '#options' => strpos($info['type'], 'list<') === 0 ? $list_types : $types,
@@ -1289,11 +1297,13 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         if (isset($types[$type])) {
           if (isset($fields[$property])) {
             $fields[$property]['name'] = $prefix_name . $info['label'];
+            $fields[$property]['description'] = empty($info['description']) ? NULL : $info['description'];
             $flat[$prefix . $property] = $fields[$property];
           }
           else {
             $flat[$prefix . $property] = array(
               'name'    => $prefix_name . $info['label'],
+              'description' => empty($info['description']) ? NULL : $info['description'],
               'type'    => $info['type'],
               'indexed' => 0,
             );
@@ -1341,9 +1351,19 @@ function theme_search_api_admin_fields_table($variables) {
   foreach (element_children($form['fields']) as $name) {
     $row = array();
     foreach (element_children($form['fields'][$name]) as $field) {
-      $row[] = render($form['fields'][$name][$field]);
+      if ($cell = render($form['fields'][$name][$field])) {
+        $row[] = $cell;
+      }
     }
-    $rows[] = $row;
+    if (empty($form['fields'][$name]['description']['#value'])) {
+      $rows[] = $row;
+    }
+    else {
+      $rows[] = array(
+        'data' => $row,
+        'title' => $form['fields'][$name]['description']['#value'],
+      );
+    }
   }
 
   $submit = $form['submit'];

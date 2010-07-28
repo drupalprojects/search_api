@@ -283,7 +283,6 @@ function search_api_entity_property_info() {
       'description' => t('The id of the service class to use for this server.'),
       'required' => TRUE,
     ),
-    // @todo Specify options
     'enabled' => array(
       'label' => t('Enabled'),
       'type' => 'boolean',
@@ -320,7 +319,6 @@ function search_api_entity_property_info() {
       'description' => t('The entity type of items stored in this index.'),
       'required' => TRUE,
     ),
-    // @todo Specify options
     'enabled' => array(
       'label' => t('Enabled'),
       'type' => 'boolean',
@@ -427,8 +425,14 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Calls the standard entity_prepare_view() function for all items.'),
     'weight' => -10,
   );
-  // @todo Add callback that adds a search_api_uri field
-  // @todo Add heavy-weight callback that aggregates text fields into a search_api_fulltext field
+  $callbacks['search_api_alter_add_url'] = array(
+    'name' => t('URL field'),
+    'description' => t("Adds the item's URL to the indexed data."),
+  );
+  $callbacks['search_api_alter_add_fulltext'] = array(
+    'name' => t('Fulltext field'),
+    'description' => t("Adds a fulltext summary field to the data, incorporating all of the item's fulltext data."),
+  );
 
   return $callbacks;
 }
@@ -526,6 +530,95 @@ function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
 function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
   entity_prepare_view($index->entity_type, $items);
   return array();
+}
+
+/**
+ * Search API data alteration callback that adds an URL field for all items.
+ *
+ * @param SearchApiIndex $index
+ *   The index on which the items are indexed.
+ * @param array $items
+ *   An array of objects containing the entity data.
+ */
+function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
+  $info = entity_get_info($index->entity_type);
+  if (empty($info['uri callback'])) {
+    return FALSE;
+  }
+  $uri_callback = $info['uri callback'];
+  foreach ($items as $id => &$item) {
+    $url = $uri_callback($item) + array('path' => NULL, 'options' => array());
+    $item->search_api_url = url($url['path'], $url['options']);
+  }
+  return array(
+    'search-api-url' => array(
+      'label' => t('URI'),
+      'description' => t('An URI where the item can be accessed.'),
+      'type' => 'uri',
+    ),
+  );
+}
+
+/**
+ * Search API data alteration callback that adds an aggregated fulltext field
+ * for all items.
+ *
+ * @param SearchApiIndex $index
+ *   The index on which the items are indexed.
+ * @param array $items
+ *   An array of objects containing the entity data.
+ */
+function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
+  if (empty($index->options['fields'])) {
+    $fields = FALSE;
+  }
+  else {
+    $fields = $index->options['fields'];
+    foreach ($fields as $field => $info) {
+      if ($info['type'] != 'text') {
+        unset($fields[$field]);
+      }
+    }
+    if (empty($fields)) {
+      return;
+    }
+  }
+  foreach ($items as $id => &$item) {
+    $wrapper = entity_metadata_wrapper($index->entity_type, $item);
+    $text = '';
+    if ($fields) {
+      foreach (array_keys($fields) as $field) {
+        $tmp = $wrapper;
+        foreach (explode(':', $field) as $property) {
+          if (!isset($tmp->$property)) {
+            // This can especially happen for fields added by data alter callbacks - e.g., this one.
+            $tmp = FALSE;
+            break;
+          }
+          $tmp = $tmp->$property;
+        }
+        if ($tmp) {
+          $text .= $tmp->value() . "\n\n";
+        }
+      }
+    }
+    else {
+      foreach ($wrapper as $key => $field) {
+        $info = $field->info();
+        if ($info['type'] == 'text') {
+          $text .= $field->value() . "\n\n";
+        }
+      }
+    }
+    $item->search_api_fulltext = $text;
+  }
+  return array(
+    'search-api-fulltext' => array(
+      'label' => t('Fulltext'),
+      'description' => t('The aggregated content of all indexed fulltext fields.'),
+      'type' => 'text',
+    ),
+  );
 }
 
 /**

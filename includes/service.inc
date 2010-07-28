@@ -98,8 +98,13 @@ interface SearchApiServiceInterface {
    * @param SearchApiIndex $index
    *   The search index for which items should be indexed.
    * @param array $items
-   *   An array of EntityMetadataWrapper objects containing the data to be
-   *   indexed, keyed by their id.
+   *   An array of items to be indexed, keyed by their id. The values are
+   *   associative arrays of the fields to be stored, where each field is an
+   *   array with the following keys:
+   *   - type: One of the data types recognized by the Search API.
+   *   - value: The value to index.
+   *   The special field "search_api_language" contains the item's language and
+   *   should always be indexed.
    *
    * @return
    *   An array of the ids of all items that were successfully indexed.

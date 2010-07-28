@@ -120,8 +120,8 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
 class SearchApiIndex extends EntityDBExtendable {
 
   private $server_object = NULL;
-  private $added_properties = array();
   private $processors = array();
+  private $added_properties = array();
 
   // Database values that will be set when object is loaded
 
@@ -195,7 +195,21 @@ class SearchApiIndex extends EntityDBExtendable {
    */
   public function index(array $items) {
     if (!$this->enabled) {
-      throw new SearchApiException(t("Couldn't index values on '!name' index (index is disablued)", array('!name' => $this->name)));
+      throw new SearchApiException(t("Couldn't index values on '!name' index (index is disabled)", array('!name' => $this->name)));
+    }
+    if (empty($this->options['fields'])) {
+      throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
+    }
+
+    $fields = $this->options['fields'];
+    foreach ($fields as $field => $info) {
+      if (!$info['indexed']) {
+        unset($fields[$field]);
+      }
+      unset($fields[$field]['indexed']);
+    }
+    if (empty($fields)) {
+      throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
     }
 
     $this->dataAlter($items);
@@ -204,24 +218,46 @@ class SearchApiIndex extends EntityDBExtendable {
     }
     $wrappers = array();
     foreach ($items as $id => $item) {
-      // @todo Bring entity_metadata_wrapper to call propertyInfoAlter()
-      $wrappers[$id] = entity_metadata_wrapper($this->entity_type, $item);
+      $wrappers[$id] = entity_metadata_wrapper($this->entity_type, $item, array('property info alter' => array($this, 'propertyInfoAlter')));
     }
     $this->preprocessIndexItems($wrappers);
 
-    return $this->server()->indexItems($index, $wrappers);
+    $items = array();
+    foreach ($wrappers as $id => $wrapper) {
+      $item = array();
+      foreach ($fields as $field => $info) {
+        $tmp = $wrapper;
+        foreach (explode(':', $field) as $property) {
+          $tmp = $tmp->$property;
+        }
+        $item[$field] = $info;
+        $item[$field]['value'] = $tmp->value();
+      }
+      $items[$id] = $item;
+    }
+
+    return $this->server()->indexItems($this, $items);
   }
 
   /**
    * Calls data alteration hooks for a set of items, according to the index
    * options.
    *
-   * @param SearchApiIndex $index
-   *   The index on which the items will be indexed.
    * @param array $items
    *   An array of items to be altered.
    */
   public function dataAlter(array &$items) {
+    $this->added_properties = array(
+      'search-api-language' => array(
+        'label' => t('Item language'),
+        'description' => t("A field added by the search framework to let components determine an item's language."),
+        'type' => 'string',
+      ),
+    );
+    foreach ($items as &$item) {
+      $item->search_api_language = isset($item->language) ? $item->language : LANGUAGE_NONE;
+    }
+
     if (empty($this->options['data_alter_callbacks'])) {
       return;
     }
@@ -230,13 +266,13 @@ class SearchApiIndex extends EntityDBExtendable {
       if (empty($settings['status'])) {
         continue;
       }
-      if (!function_exists($func)) {
-        watchdog('search_api', t('Undefined data alter callback function  !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+      if (!is_callable($func)) {
+        watchdog('search_api', t('Undefined data alter callback function !function() specified in index !name', array('!function' => $func, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
         continue;
       }
-      $this->added_properties += $func($this, $items);
-      if (empty($items)) {
-        return;
+      $ret = $func($this, $items);
+      if (is_array($ret)) {
+        $this->added_properties += $ret;
       }
     }
   }
@@ -253,9 +289,9 @@ class SearchApiIndex extends EntityDBExtendable {
    * @return
    *   The altered property info.
    */
-  public function propertyInfoAlter(EntityMetadataWrapper $wrapper, $property_info) {
+  public function propertyInfoAlter(EntityMetadataWrapper $wrapper, array $property_info) {
     if ($this->added_properties) {
-      $property_info += $this->added_properties;
+      $property_info['properties'] += $this->added_properties;
     }
     return $property_info;
   }
@@ -264,11 +300,11 @@ class SearchApiIndex extends EntityDBExtendable {
    * Fills the $processors array for use by the pre-/postprocessing functions.
    */
   private function prepareProcessors() {
-    if (empty($index->options['processors'])) {
+    if (empty($this->options['processors'])) {
       return;
     }
 
-    $processor_settings = $index->options['processors'];
+    $processor_settings = $this->options['processors'];
     $infos = search_api_get_processors();
 
     foreach ($processor_settings as $id => $settings) {
@@ -276,13 +312,13 @@ class SearchApiIndex extends EntityDBExtendable {
         continue;
       }
       if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
-        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
         continue;
       }
       $class = $infos[$id]['class'];
       $processor = new $class($this, isset($settings['options']) ? $settings['options'] : array());
       if (!($processor instanceof SearchApiProcessorInterface)) {
-        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
         continue;
       }
 
