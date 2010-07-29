@@ -220,7 +220,6 @@ class SearchApiIndex extends EntityDBExtendable {
     foreach ($items as $id => $item) {
       $wrappers[$id] = entity_metadata_wrapper($this->entity_type, $item, array('property info alter' => array($this, 'propertyInfoAlter')));
     }
-    $this->preprocessIndexItems($wrappers);
 
     $items = array();
     foreach ($wrappers as $id => $wrapper) {
@@ -235,6 +234,8 @@ class SearchApiIndex extends EntityDBExtendable {
       }
       $items[$id] = $item;
     }
+
+    $this->preprocessIndexItems($items);
 
     return $this->server()->indexItems($this, $items);
   }
@@ -300,7 +301,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * Fills the $processors array for use by the pre-/postprocessing functions.
    */
   private function prepareProcessors() {
-    if (empty($this->options['processors'])) {
+    if (empty($this->options['processors']) || !empty($this->processors)) {
       return;
     }
 
@@ -316,7 +317,7 @@ class SearchApiIndex extends EntityDBExtendable {
         continue;
       }
       $class = $infos[$id]['class'];
-      $processor = new $class($this, isset($settings['options']) ? $settings['options'] : array());
+      $processor = new $class($this, isset($settings['settings']) ? $settings['settings'] : array());
       if (!($processor instanceof SearchApiProcessorInterface)) {
         watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
         continue;
@@ -336,12 +337,12 @@ class SearchApiIndex extends EntityDBExtendable {
    * untouched.
    *
    * @param array $items
-   *   An array of EntityMetadataWrapper objects to be preprocessed for
-   *   indexing.
+   *   An array of items to be preprocessed for indexing.
    */
   function preprocessIndexItems(array $items) {
+    $this->prepareProcessors();
     foreach ($this->processors as $processor) {
-      $processor->preprocessIndexItems($this, $items);
+      $processor->preprocessIndexItems($items);
     }
   }
 
@@ -357,8 +358,9 @@ class SearchApiIndex extends EntityDBExtendable {
    *   The object representing the query to be executed.
    */
   public function preprocessSearchQuery(SearchApiQuery $query) {
+    $this->prepareProcessors();
     foreach ($this->processors as $processor) {
-      $processor->preprocessSearchQuery($this, $query);
+      $processor->preprocessSearchQuery($query);
     }
   }
 
@@ -376,6 +378,7 @@ class SearchApiIndex extends EntityDBExtendable {
    *   The object representing the executed query.
    */
   public function postprocessSearchResults(array &$results, SearchApiQuery $query) {
+    $this->prepareProcessors();
     // Postprocessing is done in exactly the opposite direction than preprocessing.
     foreach (array_reverse($this->processors) as $processor) {
       $processor->preprocessSearchQuery($results, $query);
