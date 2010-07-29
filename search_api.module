@@ -441,12 +441,6 @@ function search_api_search_api_alter_callback_info() {
  * Implements hook_search_api_processor_info().
  */
 function search_api_search_api_processor_info() {
-  $processors['search_api_tokenizer'] = array(
-    'name' => t('Tokenizer'),
-    'description' => t('Tokenizes fulltext data by stripping non-letters.'),
-    'class' => 'SearchApiTokenizer',
-    'weight' => 5,
-  );
   $processors['search_api_case_ignore'] = array(
     'name' => t('Ignore case'),
     'description' => t('A processor that makes searches case-independent.'),
@@ -456,6 +450,13 @@ function search_api_search_api_processor_info() {
     'name' => t('HTML filter'),
     'description' => t('Strips HTML tags from fulltext fields.'),
     'class' => 'SearchApiHtmlFilter',
+    'weight' => 5,
+  );
+  $processors['search_api_tokenizer'] = array(
+    'name' => t('Tokenizer'),
+    'description' => t('Tokenizes fulltext data by stripping non-letters.'),
+    'class' => 'SearchApiTokenizer',
+    'weight' => 20,
   );
 
   return $processors;

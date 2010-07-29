@@ -24,7 +24,10 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     parent::__construct($values, 'search_api_server');
   }
 
-  public function ensureProxy() {
+  /**
+   * Helper method for ensuring the proxy object is set up.
+   */
+  private function ensureProxy() {
     if (!isset($this->proxy)) {
       $class = search_api_get_service_info($this->class);
       if ($class && class_exists($class['class'])) {
@@ -203,7 +206,7 @@ class SearchApiIndex extends EntityDBExtendable {
 
     $fields = $this->options['fields'];
     foreach ($fields as $field => $info) {
-      if (!$info['indexed']) {
+      if (!$info['indexed'] && $field != 'search-api-language') {
         unset($fields[$field]);
       }
       unset($fields[$field]['indexed']);

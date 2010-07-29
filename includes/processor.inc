@@ -34,8 +34,7 @@ interface SearchApiProcessorInterface {
   public function configurationForm();
 
   /**
-   * Preprocess data items for indexing. Data added by data alter callbacks will
-   * be available on the items.
+   * Preprocess data items for indexing.
    *
    * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
    * n-grams, word splitting, stripping stop words, etc.) only on the items'
@@ -260,7 +259,7 @@ class SearchApiIgnoreCase extends SearchApiAbstractFulltextProcessor {
   }
 
   protected function process(&$value) {
-    $value = strtolower($value);
+    $value = drupal_strtolower($value);
   }
 
 }
