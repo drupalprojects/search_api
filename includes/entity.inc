@@ -313,13 +313,13 @@ class SearchApiIndex extends EntityDBExtendable {
         continue;
       }
       if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
-        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
+        watchdog('search_api', t('Undefined processor !class specified in index !name', array('!class' => $id, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
         continue;
       }
       $class = $infos[$id]['class'];
       $processor = new $class($this, isset($settings['settings']) ? $settings['settings'] : array());
       if (!($processor instanceof SearchApiProcessorInterface)) {
-        watchdog('search_api', t('Undefined preprocessor class !class specified in index !name', array('!class' => $class, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
+        watchdog('search_api', t('Unknown processor class !class specified for processor !name', array('!class' => $class, '!name' => $id)), NULL, WATCHDOG_WARNING);
         continue;
       }
 
@@ -333,13 +333,12 @@ class SearchApiIndex extends EntityDBExtendable {
    *
    * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
    * n-grams, word splitting, stripping stop words, etc.) only on the items'
-   * search_api_fulltext fields, if set. Other fields should usually be left
-   * untouched.
+   * fulltext fields. Other fields should usually be left untouched.
    *
    * @param array $items
    *   An array of items to be preprocessed for indexing.
    */
-  function preprocessIndexItems(array $items) {
+  function preprocessIndexItems(array &$items) {
     $this->prepareProcessors();
     foreach ($this->processors as $processor) {
       $processor->preprocessIndexItems($items);

@@ -129,7 +129,7 @@ interface SearchApiQueryInterface {
 /**
  * Standard implementation of SearchApiQueryInterface.
  */
-class SearchApiQuery {
+class SearchApiQuery implements SearchApiQueryInterface {
 
   /** The index. */
   protected $index;
@@ -490,7 +490,7 @@ interface SearchApiQueryFilterInterface {
 /**
  * Standard implementation of SearchApiQueryFilterInterface.
  */
-class SearchApiQueryFilter {
+class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
 
   /**
    * Array containing subfilters. Each of these is either an array
