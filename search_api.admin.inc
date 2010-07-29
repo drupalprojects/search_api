@@ -898,7 +898,8 @@ function search_api_admin_index_edit_submit($form, &$form_state) {
 
   $values = $form_state['values'];
   $index = search_api_index_load($values['id']);
-  $values['options'] = array('cron_limit' => $values['cron_limit']);
+  $values['options'] = $index->options;
+  $values['options']['cron_limit'] = $values['cron_limit'];
   unset($values['cron_limit']);
   unset($values['id']);
 
@@ -1115,6 +1116,7 @@ function theme_search_api_admin_item_order(array $variables) {
  */
 function search_api_admin_index_workflow_submit($form, &$form_state) {
   $values = $form_state['values'];
+  unset($values['processors']['settings']);
   $index = search_api_index_load($values['id']);
 
   $options = empty($index->options) ? array() : $index->options;
