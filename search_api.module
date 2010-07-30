@@ -779,14 +779,19 @@ function search_api_get_processors() {
  * Utility method for determining whether a field of the given type contains
  * text data.
  *
+ * @param $type
+ *   A string containing the type to check.
+ * @param array $allowed
+ *   Optionally, an array of allowed types.
+ *
  * @return
  *   TRUE iff $type is either "text", or a list of a text type.
  */
-function search_api_is_text_type($type) {
+function search_api_is_text_type($type, array $allowed = array('text')) {
   if (substr($type, 0, 5) == 'list<') {
-    return search_api_is_text_type(substr($type, 5, -1));
+    return search_api_is_text_type(substr($type, 5, -1), $allowed);
   }
-  return $type == 'text';
+  return array_search($type, $allowed) !== FALSE;
 }
 
 /**

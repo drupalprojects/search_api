@@ -254,7 +254,7 @@ class SearchApiIndex extends EntityDBExtendable {
    *   The called object.
    */
   public function dataAlter(array &$items) {
-    if (empty($this->added_properties)) {
+    if (!empty($this->added_properties)) {
       return $this;
     }
     $this->added_properties = array(

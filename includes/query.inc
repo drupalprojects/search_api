@@ -27,6 +27,8 @@ interface SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   * @throws SearchApiException
+   *   If a search on that index (or with those options) won't be possible.
    */
   public function __construct(SearchApiIndex $index, $options = array());
 
@@ -55,6 +57,9 @@ interface SearchApiQueryInterface {
    *
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
+   *
+   * @throws SearchApiException
+   *   If one of the fields isn't of type "text".
    */
   public function fields(array $fields);
 
@@ -183,8 +188,19 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   * @throws SearchApiException
+   *   If a search on that index (or with those options) won't be possible.
    */
   public function __construct(SearchApiIndex $index, $options = array()) {
+    if (empty($index->options['fields'])) {
+      throw new SearchApiException(t("Can't search an index which hasn't got any fields defined."));
+    }
+    if (isset($options['parse mode'])) {
+      $modes = $this->parseModes();
+      if (!isset($modes[$options['parse mode']])) {
+        throw new SearchApiException(t('Unknown parse mode: @mode.', array('@mode' => $options['parse mode'])));
+      }
+    }
     $this->index = $index;
     $this->options = $options + array(
       'conjunction' => 'AND',
@@ -319,6 +335,12 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   An array containing fulltext fields that should be searched.
    */
   public function fields(array $fields) {
+    $index_fields = $index->options['fields'];
+    foreach ($fields as $field) {
+      if (!isset($index_fields[$field]['type']) || !search_api_is_text_type($index_fields[$field]['type'])) {
+        throw new SearchApiException(t('Trying to search on field @field which is no fulltext field.', array('@field' => $field)));
+      }
+    }
     $this->fields = $fields;
     return $this;
   }
