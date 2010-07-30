@@ -197,6 +197,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
     if (empty($index->options['fields'])) {
       throw new SearchApiException(t("Can't search an index which hasn't got any fields defined."));
     }
+    if (empty($index->enabled)) {
+      throw new SearchApiException(t("Can't search a disabled index."));
+    }
     if (isset($options['parse mode'])) {
       $modes = $this->parseModes();
       if (!isset($modes[$options['parse mode']])) {
