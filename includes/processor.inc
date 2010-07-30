@@ -297,7 +297,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
  * Processor for tokenizing fulltext data by replacing (configurable)
  * non-letters with spaces.
  */
-class SearchApiTokenizer extends SearchApiAbstractFulltextProcessor {
+class SearchApiTokenizer extends SearchApiAbstractProcessor {
 
   protected $letters;
   protected $ignorable;
@@ -367,7 +367,7 @@ class SearchApiTokenizer extends SearchApiAbstractFulltextProcessor {
 /**
  * Processor for making searches case-independent.
  */
-class SearchApiIgnoreCase extends SearchApiAbstractFulltextProcessor {
+class SearchApiIgnoreCase extends SearchApiAbstractProcessor {
 
   public function configurationForm() {
     $form = array(
@@ -403,7 +403,7 @@ class SearchApiIgnoreCase extends SearchApiAbstractFulltextProcessor {
  * Processor for ignoring the case of fulltext (and possibly string) fields.
  */
 // @todo Implement
-class SearchApiHtmlFilter extends SearchApiAbstractFulltextProcessor {
+class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
 
   public function configurationForm() {
 
