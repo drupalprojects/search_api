@@ -1,0 +1,14 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_search_api_service_info().
+ */
+function search_api_db_search_api_service_info() {
+  $services['search_api_db_service'] = array(
+    'name' => t('Database service'),
+    'description' => t('Index items using multiple database tables, for simple searches.'),
+    'class' => 'SearchApiDbService',
+  );
+  return $services;
+}

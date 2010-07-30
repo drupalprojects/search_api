@@ -1,0 +1,11 @@
+; $Id$
+
+name = Database search
+description = "Offers an implementation of the Search API that uses database tables for indexing content."
+dependencies[] = search_api
+core = 7.x
+package = Search
+
+files[] = search_api_db.install
+files[] = search_api_db.module
+files[] = service.inc

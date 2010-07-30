@@ -1,0 +1,12 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_uninstall().
+ */
+function search_api_db_uninstall() {
+  $servers = entity_load('search_api_server', FALSE, array('class' => 'search_api_db_service'));
+  foreach ($servers as $server) {
+    search_api_server_delete($server);
+  }
+}
