@@ -79,7 +79,9 @@ interface SearchApiQueryInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'.
+   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
+   *   $field is a fulltext field, $operator is ignored and a fulltext search
+   *   performed in any case.
    */
   public function condition($field, $value, $operator = '=');
 
@@ -367,7 +369,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'.
+   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
+   *   $field is a fulltext field, $operator is ignored and a fulltext search
+   *   performed in any case.
    *
    * @return
    *   The called object.
@@ -542,7 +546,9 @@ interface SearchApiQueryFilterInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'.
+   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
+   *   $field is a fulltext field, $operator is ignored and a fulltext search
+   *   performed in any case.
    */
   public function condition($field, $value, $operator = '=');
 
@@ -616,7 +622,9 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'.
+   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
+   *   $field is a fulltext field, $operator is ignored and a fulltext search
+   *   performed in any case.
    */
   public function condition($field, $value, $operator = '=') {
     $this->filters[] = array($field, $value, $operator);

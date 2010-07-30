@@ -131,6 +131,8 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   }
 
   /**
+   * Method for preprocessing field data.
+   *
    * Calls process() either for the whole text, or each token, depending on the
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
@@ -203,11 +205,20 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   }
 
   /**
-   * Method for preprocessing query filters. By default does nothing, since
-   * filter values are usually unprocessed literals.
+   * Method for preprocessing query filters.
    */
   protected function processFilters(array &$filters) {
-
+    foreach ($filters as &$f) {
+      if (is_array($f)) {
+        if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
+          $this->processFilterValue($f[1]);
+        }
+      }
+      else {
+        $child_filters = &$f->getFilters();
+        $this->processFilters($child_filters);
+      }
+    }
   }
 
   /**
@@ -258,13 +269,23 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   }
 
   /**
+   * Called for processing a single filter value. The default implementation
+   * just calls process().
+   *
+   * $value has to remain a string.
+   */
+  protected function processFilterValue(&$value) {
+    $this->process($value);
+  }
+
+  /**
    * Function that is ultimately called for all text by the standard
    * implementation, and does nothing by default.
    *
    * @param $value
    *   The value to preprocess as a string. Can be manipulated directly, nothing
-   *   has to be returned. Since this can be called for fields and search keys,
-   *   $value should be left a string.
+   *   has to be returned. Since this can be called for all value types, $value
+   *   has to remain a string.
    */
   protected function process(&$value) {
 
@@ -324,7 +345,7 @@ class SearchApiTokenizer extends SearchApiAbstractFulltextProcessor {
     }
   }
 
-  protected function processKey(&$value) {
+  protected function process(&$value) {
     $this->prepare();
     if ($this->ignorable) {
       $value = preg_replace('/[' . $this->ignorable . ']+/u', '', $value);
