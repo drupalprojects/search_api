@@ -50,6 +50,15 @@ interface SearchApiQueryInterface {
   public function keys($keys = NULL);
 
   /**
+   * Sets the fields that will be searched for the search keys. If this is not
+   * called, all fulltext fields should be searched.
+   *
+   * @param array $fields
+   *   An array containing fulltext fields that should be searched.
+   */
+  public function fields(array $fields);
+
+  /**
    * Adds a subfilter to this query's filter.
    *
    * @param $filter
@@ -106,6 +115,13 @@ interface SearchApiQueryInterface {
 
   /**
    * @return
+   *   An array containing the fields that should be searched for the search
+   *   keys. If this is NULL, all fulltext fields should be searched.
+   */
+  public function &getFields();
+
+  /**
+   * @return
    *   This object's associated SearchApiQueryFilter object.
    */
   public function &getFilter();
@@ -136,6 +152,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
   /** The search keys. If NULL, this will be a filter-only search. */
   protected $keys;
+
+  /** The fields that will be searched for the keys. */
+  protected $fields;
 
   /** The search filter associated with this query. */
   protected $filter;
@@ -288,8 +307,19 @@ class SearchApiQuery implements SearchApiQueryInterface {
       $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     }
     else {
-      $this->keys = NULL;SelectQuery::a;
+      $this->keys = NULL;
     }
+    return $this;
+  }
+
+  /**
+   * Sets the fields that will be searched for the search keys.
+   *
+   * @param array $fields
+   *   An array containing fulltext fields that should be searched.
+   */
+  public function fields(array $fields) {
+    $this->fields = $fields;
     return $this;
   }
 
@@ -410,6 +440,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   public function &getKeys() {
     return $this->keys;
+  }
+
+  /**
+   * @return
+   *   An array containing the fields that should be searched for the search
+   *   keys.
+   */
+  public function &getFields() {
+    return $this->fields;
   }
 
   /**
