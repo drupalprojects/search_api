@@ -776,6 +776,20 @@ function search_api_get_processors() {
 }
 
 /**
+ * Utility method for determining whether a field of the given type contains
+ * text data.
+ *
+ * @return
+ *   TRUE iff $type is either "text", or a list of a text type.
+ */
+function search_api_is_text_type($type) {
+  if (substr($type, 0, 5) == 'list<') {
+    return search_api_is_text_type(substr($type, 5, -1));
+  }
+  return $type == 'text';
+}
+
+/**
  * Returns a list of all (enabled) search servers.
  *
  * @param $only_enabled
@@ -895,6 +909,7 @@ function search_api_server_insert(array $values) {
  *   FALSE on failure.
  */
 function search_api_server_edit(SearchApiServer $server, array $fields) {
+  $server = search_api_server_load($server->id);
   $server_values = (array) $server;
   foreach ($fields as $field => $value) {
     if (!array_key_exists($field, $server_values) || $value === $server->$field) {
@@ -1302,6 +1317,7 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
   if (isset($fields['server']) && $fields['server'] === '') {
     $fields['server'] = NULL;
   }
+  $index = search_api_index_load($index->id);
   $index_values = (array) $index;
   foreach ($fields as $field => $value) {
     if (!array_key_exists($field, $index_values) || $value === $index->$field) {
