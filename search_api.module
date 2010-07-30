@@ -446,12 +446,7 @@ function search_api_search_api_processor_info() {
     'description' => t('A processor that makes searches case-independent.'),
     'class' => 'SearchApiIgnoreCase',
   );
-  $processors['search_api_html_filter'] = array(
-    'name' => t('HTML filter'),
-    'description' => t('Strips HTML tags from fulltext fields.'),
-    'class' => 'SearchApiHtmlFilter',
-    'weight' => 5,
-  );
+  // @todo Add HTML filter.
   $processors['search_api_tokenizer'] = array(
     'name' => t('Tokenizer'),
     'description' => t('Tokenizes fulltext data by stripping non-letters.'),

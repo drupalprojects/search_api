@@ -398,19 +398,3 @@ class SearchApiIgnoreCase extends SearchApiAbstractProcessor {
   }
 
 }
-
-/**
- * Processor for ignoring the case of fulltext (and possibly string) fields.
- */
-// @todo Implement
-class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
-
-  public function configurationForm() {
-
-  }
-
-  protected function process(&$value) {
-
-  }
-
-}
