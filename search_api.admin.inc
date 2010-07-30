@@ -260,8 +260,9 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
   $class = search_api_get_service_info($server->class);
   $option_form = $server->configurationForm();
   $option_names = array();
+  $options = $server->options;
   foreach ($option_form as $key => $element) {
-    if (isset($element['#title'])) {
+    if (isset($element['#title']) && isset($options[$key])) {
       $option_names[$key] = $element['#title'];
     }
   }
@@ -273,7 +274,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
     '#enabled' => $server->enabled,
     '#class_name' => $class['name'],
     '#class_description' => $class['description'],
-    '#options' => $server->options,
+    '#options' => $options,
     '#option_names' => $option_names,
   );
 }
@@ -327,11 +328,11 @@ function theme_search_api_server(array $variables) {
     $output .= '</dd>' . "\n";
   }
 
-  if (!empty($options)) {
+  if (!empty($option_names)) {
     $output .= '<dt>' . t('Service options') . '</dt>' . "\n";
     $output .= '<dd><dl>' . "\n";
-    foreach ($options as $key => $value) {
-      $name = isset($option_names[$key]) ? $option_names[$key] : $key;
+    foreach ($option_names as $key => $name) {
+      $value = $options[$key];
       $output .= '<dt>' . check_plain($name) . '</dt>' . "\n";
       $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' . "\n";
     }
@@ -397,7 +398,9 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   $server = search_api_server_load($values['id']);
   unset($values['id']);
 
-  $values['options'] = $values['options']['form'];
+  if (isset($values['options'])) {
+    $values['options'] = $values['options']['form'];
+  }
 
   $ret = search_api_server_edit($server, $values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;

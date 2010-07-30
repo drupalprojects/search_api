@@ -252,6 +252,23 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   }
 
   /**
+   * Notify the server that the indexed field settings for the index have
+   * changed.
+   * If any user action is necessary as a result of this, the method should
+   * use drupal_set_message() to notify the user.
+   *
+   * @param SearchApiIndex $index
+   *   The updated index.
+   *
+   * @return
+   *   TRUE, if this change affected the server in any way that forces it to
+   *   re-index the content. FALSE otherwise.
+   */
+  public function fieldsUpdated(SearchApiIndex $index) {
+    return FALSE;
+  }
+
+  /**
    * Remove an index from this server.
    *
    * This might mean that the index has been deleted, or reassigned to a

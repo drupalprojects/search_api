@@ -77,10 +77,10 @@ interface SearchApiProcessorInterface {
 }
 
 /**
- * Abstract processor implementation that can be used for processors that work
- * on fulltext data.
+ * Abstract processor implementation that provides an easy framework for only
+ * processing specific fields.
  */
-abstract class SearchApiAbstractFulltextProcessor implements SearchApiProcessorInterface {
+abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface {
 
   protected $index;
   protected $options;
@@ -97,12 +97,25 @@ abstract class SearchApiAbstractFulltextProcessor implements SearchApiProcessorI
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
-      foreach ($item as &$field) {
-        if ($this->testType($field['type'])) {
+      foreach ($item as $name => &$field) {
+        if ($this->testField($name, $field)) {
           $this->processAll($field['value']);
         }
       }
     }
+  }
+
+  /**
+   * @param $name
+   *   The field's machine name.
+   * @param array $field
+   *   The field's information.
+   *
+   * @return
+   *   TRUE, iff the field should be processed.
+   */
+  protected function testField($name, array $field) {
+    return $this->testType($field['type']);
   }
 
   /**
@@ -129,7 +142,7 @@ abstract class SearchApiAbstractFulltextProcessor implements SearchApiProcessorI
   protected function processFilters(&$filters, $fields) {
     foreach ($filters as &$f) {
       if (is_array($f)) {
-        if (isset($fields[$f[0]]['type']) && $this->testType($fields[$f[0]]['type'])) {
+        if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
           $this->processAll($f[1]);
         }
       }

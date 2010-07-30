@@ -4,8 +4,8 @@
 /**
  * Interface representing a search query on an Search API index.
  *
- * Methods not noting otherwise will return the object itself, so calls can be
- * chained.
+ * Methods not returning something else will return the object itself, so calls
+ * can be chained.
  */
 interface SearchApiQueryInterface {
 
@@ -279,14 +279,18 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param $keys
    *   A string with the unparsed search keys, or NULL to use no search keys.
+   *
+   * @return
+   *   The called object.
    */
   public function keys($keys = NULL) {
     if (isset($keys)) {
       $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     }
     else {
-      $this->keys = NULL;
+      $this->keys = NULL;SelectQuery::a;
     }
+    return $this;
   }
 
   /**
@@ -294,6 +298,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *
+   * @return
+   *   The called object.
    */
   public function filter($filter) {
     $this->filter->filter($filter);
@@ -309,6 +316,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The value the field should have (or be related to by the operator).
    * @param $operator
    *   The operator to use for checking the constraint, e.g. '=' or '<'.
+   *
+   * @return
+   *   The called object.
    */
   public function condition($field, $value, $operator = '=') {
     $this->filter->condition($field, $value, $operator);
@@ -323,6 +333,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   used to sort by relevance.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
+   *
+   * @return
+   *   The called object.
    */
   public function sort($field, $order = 'ASC') {
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
@@ -382,7 +395,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
   /**
    * @return
-   *   The search index this query should be executed on.
+   *   The search index this query will be executed on.
    */
   public function getIndex() {
     return $this->index;
