@@ -206,7 +206,7 @@ class SearchApiIndex extends EntityDBExtendable {
 
     $fields = $this->options['fields'];
     foreach ($fields as $field => $info) {
-      if (!$info['indexed'] && $field != 'search-api-language') {
+      if (!$info['indexed']) {
         unset($fields[$field]);
       }
       unset($fields[$field]['indexed']);
@@ -260,7 +260,7 @@ class SearchApiIndex extends EntityDBExtendable {
     $this->added_properties = array(
       'search-api-language' => array(
         'label' => t('Item language'),
-        'description' => t("A field added by the search framework to let components determine an item's language."),
+        'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
         'type' => 'string',
       ),
     );

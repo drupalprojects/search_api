@@ -1215,6 +1215,15 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
       '#type' => 'checkbox',
       '#default_value' => $info['indexed'],
     );
+    if ($key == 'search-api-language') {
+      // Is treated specially to always index the language.
+      $form['fields'][$key]['type']['#default_value'] = 'string';
+      $form['fields'][$key]['type']['#disabled'] = TRUE;
+      $form['fields'][$key]['boost']['#default_value'] = '1.0';
+      $form['fields'][$key]['boost']['#disabled'] = TRUE;
+      $form['fields'][$key]['indexed']['#default_value'] = 1;
+      $form['fields'][$key]['indexed']['#disabled'] = TRUE;
+    }
   }
 
   $form['id'] = array(
