@@ -392,14 +392,14 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
-  $server = search_api_server_load($values['id']);
+  $id = $values['id'];
   unset($values['id']);
 
   if (isset($values['options'])) {
     $values['options'] = $values['options']['form'];
   }
 
-  $ret = search_api_server_edit($server, $values);
+  $ret = search_api_server_edit($id, $values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
@@ -903,7 +903,7 @@ function search_api_admin_index_edit_submit($form, &$form_state) {
   unset($values['cron_limit']);
   unset($values['id']);
 
-  $ret = search_api_index_edit($index, $values);
+  $ret = search_api_index_edit($index->id, $values);
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
   if ($ret) {
     drupal_set_message(t('The search index was successfully edited.'));
@@ -1127,7 +1127,7 @@ function search_api_admin_index_workflow_submit($form, &$form_state) {
   uasort($options['data_alter_callbacks'], 'search_api_admin_element_compare');
   uasort($options['processors'], 'search_api_admin_element_compare');
 
-  $ret = search_api_index_edit($index, array('options' => $options));
+  $ret = search_api_index_edit($index->id, array('options' => $options));
   if ($ret) {
     search_api_index_reindex($index);
     drupal_set_message(t("The search index' workflow was successfully edited. " .
@@ -1188,7 +1188,7 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
     '#type' => 'item',
     '#title' => t('Select fields to index'),
     '#description' => t('<p>The datatype of fields determines, how they can be searched or filtered upon. ' .
-        'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
+        'The boost is used to give additional weight to certain fields, e.g. titles or tags. It only takes effect for fulltext fields.</p>' .
         '<p>Whether detailled field types are supported depends on the type of server this index resides on. ' .
         "Check the server's service class' documentation for details.<br />" .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
@@ -1443,7 +1443,7 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
     }
   }
   $index->options['fields'] = $fields;
-  $ret = search_api_index_edit($index, array('options' => $index->options));
+  $ret = search_api_index_edit($index->id, array('options' => $index->options));
 
   if ($ret) {
     drupal_set_message(t('The available fields were successfully changed.'));
