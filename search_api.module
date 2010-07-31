@@ -1338,12 +1338,12 @@ function search_api_index_edit($id, array $fields) {
     $fields['options'] = serialize($fields['options']);
   }
 
-  if (isset($fields['server'])) {
+  if (array_key_exists('server', $fields)) {
     // Server changed - inform old and new ones.
     if ($index->server) {
       $old_server = $index->server();
       if ($old_server->enabled) {
-        $old_server->removeIndex($new_index);
+        $old_server->removeIndex($index);
       }
       else {
         $tasks = variable_get('search_api_tasks', array());
