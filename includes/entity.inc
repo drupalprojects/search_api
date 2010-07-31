@@ -234,6 +234,8 @@ class SearchApiIndex extends EntityDBExtendable {
         }
         $item[$field] = $info;
         $item[$field]['value'] = $tmp->value();
+        $property_info = $tmp->info();
+        $item[$field]['original_type'] = $property_info['type'];
       }
       $items[$id] = $item;
     }
