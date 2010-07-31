@@ -203,7 +203,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     if (isset($options['parse mode'])) {
       $modes = $this->parseModes();
       if (!isset($modes[$options['parse mode']])) {
-        throw new SearchApiException(t('Unknown parse mode: @mode.', array('@mode' => $options['parse mode'])));
+        throw new SearchApiException(t('Unknown parse mode: !mode.', array('!mode' => $options['parse mode'])));
       }
     }
     $this->index = $index;
@@ -343,7 +343,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     $index_fields = $index->options['fields'];
     foreach ($fields as $field) {
       if (!isset($index_fields[$field]['type']) || !search_api_is_text_type($index_fields[$field]['type'])) {
-        throw new SearchApiException(t('Trying to search on field @field which is no fulltext field.', array('@field' => $field)));
+        throw new SearchApiException(t('Trying to search on field !field which is no fulltext field.', array('!field' => $field)));
       }
     }
     $this->fields = $fields;

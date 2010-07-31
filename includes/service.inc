@@ -101,10 +101,15 @@ interface SearchApiServiceInterface {
    *   An array of items to be indexed, keyed by their id. The values are
    *   associative arrays of the fields to be stored, where each field is an
    *   array with the following keys:
-   *   - type: One of the data types recognized by the Search API.
+   *   - type: One of the data types recognized by the Search API, or the
+   *     special type "tokens" for fulltext fields.
    *   - value: The value to index.
-   *   The special field "search_api_language" contains the item's language and
+   *   The special field "search-api-language" contains the item's language and
    *   should always be indexed.
+   *   The value of fields with the "tokens" type is an array of tokens. Each
+   *   token is an array containingthe following keys:
+   *   - value: The word that the token represents.
+   *   - score: A score for the importance of that word.
    *
    * @return
    *   An array of the ids of all items that were successfully indexed.
