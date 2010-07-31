@@ -82,9 +82,6 @@ function search_api_admin_overview() {
     foreach ($indexes[''] as $index) {
       $url = $pre_index . $index->id;
       $link = l($index->name, $url);
-      if ($index->enabled) {
-        $link = '<strong>' . $link . '</strong>';
-      }
       $rows[] = array(
         $t_disabled,
         array('data' => $t_index, 'colspan' => 2),
@@ -1183,15 +1180,18 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
   foreach ($types as $type => $name) {
     $list_types["list<$type>"] = $name;
   }
+  $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
   $form['#theme'] = 'search_api_admin_fields_table';
   $form['#tree'] = TRUE;
   $form['description'] = array(
     '#type' => 'item',
     '#title' => t('Select fields to index'),
-    '#description' => t('Whether detailled field types are supported depends on the type of server this index resides on. ' .
-        "Check the server's service class' documentation for details. " .
-        'In any case, fields of type "Fulltext" will always be fulltext-searchable.'),
+    '#description' => t('<p>The datatype of fields determines, how they can be searched or filtered upon. ' .
+        'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
+        '<p>Whether detailled field types are supported depends on the type of server this index resides on. ' .
+        "Check the server's service class' documentation for details.<br />" .
+        'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
   );
   foreach ($fields as $key => $info) {
     $form['fields'][$key]['name']['#markup'] = check_plain($info['name']);
@@ -1205,6 +1205,11 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
       '#type' => 'select',
       '#options' => strpos($info['type'], 'list<') === 0 ? $list_types : $types,
       '#default_value' => $info['type'],
+    );
+    $form['fields'][$key]['boost'] = array(
+      '#type' => 'select',
+      '#options' => $boosts,
+      '#default_value' => $info['boost'],
     );
     $form['fields'][$key]['indexed'] = array(
       '#type' => 'checkbox',
@@ -1310,6 +1315,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
               'name'    => $prefix_name . $info['label'],
               'description' => empty($info['description']) ? NULL : $info['description'],
               'type'    => $info['type'],
+              'boost' => '1.0',
               'indexed' => 0,
             );
           }
@@ -1350,7 +1356,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
-  $header = array(t('Field'), t('Type'), t('Indexed'));
+  $header = array(t('Field'), t('Type'), t('Boost'), t('Indexed'));
 
   $rows = array();
   foreach (element_children($form['fields']) as $name) {
@@ -1433,14 +1439,11 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
     $info = $value->info();
     $key = $prefix . $field;
     if (isset($types[$info['type']]) && empty($fields[$key])) {
-      $fields[$key] = array('type' => $info['type'], 'indexed' => 0);
+      $fields[$key] = array('type' => $info['type'], 'boost' => '1.0', 'indexed' => 0);
     }
   }
-  $options = $index->options;
-  $options['fields'] = $fields;
-
-  $ret = search_api_index_edit($index, array('options' => $options));
-  $index->options = $options;
+  $index->options['fields'] = $fields;
+  $ret = search_api_index_edit($index, array('options' => $index->options));
 
   if ($ret) {
     drupal_set_message(t('The available fields were successfully changed.'));

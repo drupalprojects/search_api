@@ -453,6 +453,7 @@ function search_api_search_api_processor_info() {
     'class' => 'SearchApiTokenizer',
     'weight' => 20,
   );
+  // @todo Add a "Score corrector", normalizing scores a bit?
 
   return $processors;
 }
@@ -1333,18 +1334,7 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
     $fields['options'] = serialize($fields['options']);
   }
 
-  $ret = db_update('search_api_index')
-    ->fields($fields)
-    ->condition('id', $index->id)
-    ->execute();
-
-  if (!$ret) {
-    return $ret;
-  }
-
-  $new_index = search_api_index_load($index->id);
-
-  if ($index->server != $new_index->server) {
+  if (isset($fields['server'])) {
     // Server changed - inform old and new ones.
     if ($index->server) {
       $old_server = $index->server();
@@ -1359,25 +1349,46 @@ function search_api_index_edit(SearchApiIndex $index, array $fields) {
       }
     }
 
-    if ($new_index->server) {
-      $new_server = $new_index->server();
-      if ($new_server->enabled) {
-        $new_server->addIndex($new_index);
-      }
-      else {
+    if ($fields['server']) {
+      $new_server = search_api_server_load($fields['server']);
+      if (!$new_server->enabled) {
+        if ($index->enabled) {
+          $fields['enabled'] = 0;
+        }
         $tasks = variable_get('search_api_tasks', array());
         // When we add or remove an index, we can ignore all other tasks.
         $tasks[$new_server->id][$index->id] = array('add');
         variable_set('search_api_tasks', $tasks);
+        unset($new_server);
       }
+    }
+    elseif ($index->enabled) {
+      $fields['enabled'] = 0;
     }
 
     // We also have to re-index all content
     _search_api_index_reindex($index);
   }
 
-  module_invoke_all('search_api_index_update', $new_index, 'edit');
-  module_invoke_all('entity_update', $new_index, 'search_api_index');
+  $ret = db_update('search_api_index')
+    ->fields($fields)
+    ->condition('id', $index->id)
+    ->execute();
+
+  if (!$ret) {
+    return $ret;
+  }
+
+  $index = search_api_index_load($index->id);
+
+  if (isset($new_server)) {
+    $new_server->addIndex($index);
+  }
+  module_invoke_all('search_api_index_update', $index, 'edit');
+  if (isset($fields['enabled'])) {
+    module_invoke_all('search_api_index_update', $index, $fields['enabled'] ? 'enable' : 'disable');
+  }
+  module_invoke_all('entity_update', $index, 'search_api_index');
 
   return $ret;
 }
