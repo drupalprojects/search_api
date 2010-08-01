@@ -237,7 +237,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
 
   if (!empty($action)) {
     if ($action == 'enable') {
-      if (search_api_server_enable($server)) {
+      if (search_api_server_enable($server->id)) {
         drupal_set_message(t('The server was successfully enabled.'));
       }
       else {
@@ -522,7 +522,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
 
   if (!empty($action)) {
     if ($action == 'enable') {
-      if (search_api_index_enable($index)) {
+      if (search_api_index_enable($index->id)) {
         drupal_set_message(t('The index was successfully enabled.'));
       }
       else {
@@ -792,8 +792,7 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
       }
       break;
     case t('Re-index content'):
-      $index = search_api_index_load($id);
-      if (search_api_index_reindex($index)) {
+      if (search_api_index_reindex($id)) {
         drupal_set_message(t('The index was successfully scheduled for re-indexing.'));
       }
       else {
@@ -802,8 +801,7 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
       $redirect = $pre . '/status';
       break;
     case t('Clear index'):
-      $index = search_api_index_load($id);
-      if (search_api_index_clear($index)) {
+      if (search_api_index_clear($id)) {
         drupal_set_message(t('The index was successfully cleared.'));
       }
       else {
@@ -1556,9 +1554,7 @@ function search_api_admin_confirm_submit($form, &$form_state) {
   $id = $values['id'];
 
   $function = "search_api_{$type}_{$action}";
-  $load_function = "search_api_{$type}_load";
-  $obj = $load_function($id);
-  if ($obj && $function($obj)) {
+  if ($function($id)) {
     drupal_set_message($values['message']);
   }
   else {

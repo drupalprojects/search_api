@@ -7,15 +7,7 @@
 class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInterface {
 
   private $proxy;
-
-  // Database values that will be set when object is loaded
-
-  public $id;
-  public $name;
-  public $description;
-  public $class;
-  public $options = array();
-  public $enabled;
+  private $values = array();
 
   /**
    * Constructor as a helper to the parent constructor.
@@ -36,19 +28,45 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
       if (!($this->proxy instanceof SearchApiServiceInterface)) {
         throw new SearchApiException(t('Search server with id !id specifies illegal service class !class.', array('!id' => $this->id, '!class' => $this->class)));
       }
-      $this->proxy->id = $this->id;
-      $this->proxy->name = $this->name;
-      $this->proxy->description = $this->description;
-      $this->proxy->class = $this->class;
-      $this->proxy->options = $this->options;
-      $this->proxy->enabled = $this->enabled;
+      foreach ($this->values as $key => $value) {
+        $this->proxy->$key = $value;
+      }
     }
+  }
+
+  // Magic methods for property magic
+
+  public function __get($name) {
+    if (isset($this->proxy)) {
+      return $this->proxy->$name;
+    }
+    return $this->values[$name];
+  }
+
+  public function __set($name, $value) {
+    if (isset($this->proxy)) {
+      $this->proxy->$name = $value;
+    }
+    $this->values[$name] = $value;
+  }
+
+  public function __isset($name) {
+    if (isset($this->proxy)) {
+      return isset($this->proxy->$name);
+    }
+    return isset($this->values[$name]);
+  }
+
+  public function __unset($name) {
+    if (isset($this->proxy)) {
+      unset($this->proxy->$name);
+    }
+    unset($this->values[$name]);
   }
 
   // Proxy methods
 
   // Since we are implementing the interface, we can't just use the __call() magic method.
-  // @todo Is having an interface (and defined methods) a bigger advantage than clarity and shortness of code?
 
   public function configurationForm() {
     $this->ensureProxy();
