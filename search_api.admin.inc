@@ -400,7 +400,7 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   }
 
   $ret = search_api_server_edit($id, $values);
-  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
+  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
   }
