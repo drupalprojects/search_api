@@ -304,7 +304,7 @@ function example_random_alter(SearchApiIndex $index, array &$items) {
         continue;
       }
       foreach ($item as $k => $v) {
-        srand(strlen($v) + count($v));
+        srand(drupal_strlen($v) + count($v));
         $item->$k = rand(1, 100);
       }
     }

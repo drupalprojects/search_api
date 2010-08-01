@@ -287,7 +287,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
             continue;
           }
           if ($quoted) {
-            if ($v[strlen($v)-1] == '"') {
+            if ($v[drupal_strlen($v)-1] == '"') {
               $v = substr($v, 0, -1);
               $str .= ' ' . $v;
               $ret[$k] = $str;
@@ -299,7 +299,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
             }
           }
           elseif ($v[0] == '"') {
-            $len = strlen($v);
+            $len = drupal_strlen($v);
             if ($len > 1 && $v[$len-1] == '"') {
               $ret[$k] = substr($v, 1, -1);
             }
