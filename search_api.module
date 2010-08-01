@@ -772,7 +772,7 @@ function search_api_get_processors() {
 }
 
 /**
- * Utility method for determining whether a field of the given type contains
+ * Utility function for determining whether a field of the given type contains
  * text data.
  *
  * @param $type
@@ -784,10 +784,39 @@ function search_api_get_processors() {
  *   TRUE iff $type is either "text", or a list of a text type.
  */
 function search_api_is_text_type($type, array $allowed = array('text')) {
-  if (substr($type, 0, 5) == 'list<') {
-    return search_api_is_text_type(substr($type, 5, -1), $allowed);
+  return array_search(search_api_extract_inner_type($type), $allowed) !== FALSE;
+}
+
+/**
+ * Utility function for determining whether a field of the given type contains
+ * a list of any kind.
+ *
+ * @param $type
+ *   A string containing the type to check.
+ *
+ * @return
+ *   TRUE iff $type is a list type ("list<*>").
+ */
+function search_api_is_list_type($type) {
+  return substr($type, 0, 5) == 'list<';
+}
+
+/**
+ * Utility method for extracting the contained primitive type of a list type.
+ *
+ * @param $type
+ *   A string containing the list type to process.
+ *
+ * @return
+ *   A string containing the primitive type contained within the list, e.g.
+ *   "text" for "list<text>" (or for "list<list<text>>"). If $type is no list
+ *   type, it is returned unchanged.
+ */
+function search_api_extract_inner_type($type) {
+  while (search_api_is_list_type($type)) {
+    $type = substr($type, 5, -1);
   }
-  return array_search($type, $allowed) !== FALSE;
+  return $type;
 }
 
 /**

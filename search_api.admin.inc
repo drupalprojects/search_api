@@ -1203,7 +1203,7 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
     }
     $form['fields'][$key]['type'] = array(
       '#type' => 'select',
-      '#options' => strpos($info['type'], 'list<') === 0 ? $list_types : $types,
+      '#options' => search_api_is_list_type($info['type']) ? $list_types : $types,
       '#default_value' => $info['type'],
     );
     $form['fields'][$key]['boost'] = array(
@@ -1309,10 +1309,8 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
       foreach ($wrapper as $property => $value) {
         $info = $value->info();
         $type = $info['type'];
-        if ($pos = strpos($type, 'list<') === 0) {
-          // We hide the complexity of multi-valued types from the user here
-          $type = substr($type, 5, -1);
-        }
+        // We hide the complexity of multi-valued types from the user here
+        $type = search_api_extract_inner_type($type);
         if (isset($types[$type])) {
           if (isset($fields[$property])) {
             $fields[$property]['name'] = $prefix_name . $info['label'];
@@ -1337,7 +1335,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             $fields_array[$key] = $fields[$property];
             $prefix_names[$key] = $prefix_name . $info['label'] . ' » ';
           }
-          elseif (strpos($type, 'list<') !== 0) {
+          elseif (!search_api_is_list_type($type)) {
             // @todo Make this work with lists, too - this won't be easy:
             // -> Obtain wrapper for listed type (may even be a struct!)
             // -> When adding fields, change all types to lists
