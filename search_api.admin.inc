@@ -708,37 +708,39 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
     );
   }
 
-  if ($status['indexed'] > 0) {
-    $form['reindex'] = array(
+  if ($server) {
+    if ($status['indexed'] > 0) {
+      $form['reindex'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Re-indexing'),
+        '#collapsible' => TRUE,
+      );
+      $form['reindex']['message'] = array(
+        '#type' => 'item',
+        '#description' => t('This will add all items to the index again (overwriting the index), but existing items in the index will remain searchable.'),
+      );
+      $form['reindex']['button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Re-index content'),
+      );
+    }
+
+    $form['clear'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Re-indexing'),
+      '#title' => t('Clear index'),
       '#collapsible' => TRUE,
     );
-    $form['reindex']['message'] = array(
+    $form['clear']['message'] = array(
       '#type' => 'item',
-      '#description' => t('This will add all items to the index again (overwriting the index), but existing items in the index will remain searchable.'),
+      '#description' => t('All items will be deleted from the index and have to be inserted again by normally indexing them. ' .
+          'Until all items are re-indexed, searches on this index will return incomplete results.<br />' .
+          'Use with care, in most cases rebuilding the index might be enough.'),
     );
-    $form['reindex']['button'] = array(
+    $form['clear']['button'] = array(
       '#type' => 'submit',
-      '#value' => t('Re-index content'),
+      '#value' => t('Clear index'),
     );
   }
-
-  $form['clear'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Clear index'),
-    '#collapsible' => TRUE,
-  );
-  $form['clear']['message'] = array(
-    '#type' => 'item',
-    '#description' => t('All items will be deleted from the index and have to be inserted again by normally indexing them. ' .
-        'Until all items are re-indexed, searches on this index will return incomplete results.<br />' .
-        'Use with care, in most cases rebuilding the index might be enough.'),
-  );
-  $form['clear']['button'] = array(
-    '#type' => 'submit',
-    '#value' => t('Clear index'),
-  );
 
   return $form;
 }
@@ -859,7 +861,7 @@ function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index)
     '#title' => t('Cron limit'),
     '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
         '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
-    '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
+    '#default_value' => isset($index->options['cron_limit']) ? $index->options['cron_limit'] : SEARCH_API_DEFAULT_CRON_LIMIT,
     '#size' => 4,
     '#attributes' => array('class' => array('search-api-cron-limit')),
   );

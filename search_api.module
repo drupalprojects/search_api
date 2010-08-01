@@ -912,9 +912,9 @@ function search_api_server_insert(array $values) {
  */
 function search_api_server_edit($id, array $fields) {
   $server = search_api_server_load($id, TRUE);
-  $server_values = (array) $server;
+  $defined = array('id' => 1, 'name' => 1, 'description' => 1, 'class' => 1, 'options' => 1, 'enabled' => 1);
   foreach ($fields as $field => $value) {
-    if (!array_key_exists($field, $server_values) || $value === $server->$field) {
+    if (!isset($defined[$field]) || $value === $server->$field) {
       unset($fields[$field]);
     }
   }
@@ -928,7 +928,7 @@ function search_api_server_edit($id, array $fields) {
   }
   $ret = db_update('search_api_server')
     ->fields($fields)
-    ->condition('id', $server->id)
+    ->condition('id', $id)
     ->execute();
 
   if (!$ret) {
@@ -936,7 +936,9 @@ function search_api_server_edit($id, array $fields) {
   }
 
   // Notify server of changed values.
+  if (isset($fields['options'])) {
     $fields['options'] = unserialize($fields['options']);
+  }
   $server->postUpdate($fields);
 
   $server = search_api_server_load($server->id, TRUE);
@@ -1373,7 +1375,7 @@ function search_api_index_edit($id, array $fields) {
     }
 
     // We also have to re-index all content
-    _search_api_index_reindex($index);
+    _search_api_index_reindex($index->id);
   }
 
   $ret = db_update('search_api_index')
@@ -1385,7 +1387,7 @@ function search_api_index_edit($id, array $fields) {
     return $ret;
   }
 
-  $index = search_api_index_load($index->id, TRUE);
+  $index = search_api_index_load($id, TRUE);
 
   if (isset($new_server)) {
     $new_server->addIndex($index);
@@ -1422,30 +1424,30 @@ function search_api_index_edit_fields($id, array $fields) {
 
   $ret = db_update('search_api_index')
     ->fields(array('options' => serialize($options)))
-    ->condition('id', $index->id)
+    ->condition('id', $id)
     ->execute();
 
   if (!$ret) {
     return $ret;
   }
 
-  $index = search_api_index_load($index->id);
+  $index = search_api_index_load($id);
 
   if ($index->server) {
     $server = $index->server();
     if ($server->enabled) {
       if ($server->fieldsUpdated($index)) {
-        _search_api_index_reindex($index);
+        _search_api_index_reindex($id);
       }
     }
     else {
       $tasks = variable_get('search_api_tasks', array());
-      if (!isset($tasks[$server->id][$index->id])
+      if (!isset($tasks[$server->id][$id])
               // We don't need to notify the server twice of field changes.
-          || (array_search('fields', $tasks[$server->id][$index->id]) === FALSE
+          || (array_search('fields', $tasks[$server->id][$id]) === FALSE
               // Adding a server also re-examines the field settings.
-              && array_search('add', $tasks[$server->id][$index->id]) === FALSE)) {
-        $tasks[$server->id][$index->id][] = 'fields';
+              && array_search('add', $tasks[$server->id][$id]) === FALSE)) {
+        $tasks[$server->id][$id][] = 'fields';
         variable_set('search_api_tasks', $tasks);
       }
     }
@@ -1474,7 +1476,7 @@ function search_api_index_enable($id) {
   }
   $ret = db_update('search_api_index')
     ->fields(array('enabled' => 1))
-    ->condition('id', $index->id)
+    ->condition('id', $id)
     ->execute();
   if (!$ret) {
     return $ret;
@@ -1500,7 +1502,7 @@ function search_api_index_disable($id) {
   $index = search_api_index_load($id, TRUE);
   $ret = db_update('search_api_index')
     ->fields(array('enabled' => 0))
-    ->condition('id', $index->id)
+    ->condition('id', $id)
     ->execute();
   if (!$ret) {
     return $ret;
@@ -1577,15 +1579,15 @@ function search_api_index_clear($id) {
   else {
     $tasks = variable_get('search_api_tasks', array());
     // If the index was cleared or newly added since the server was last enabled, we don't need to do anything.
-    if (!isset($tasks[$server->id][$index->id])
-        || (array_search('add', $tasks[$server->id][$index->id]) === FALSE
-            && array_search('clear', $tasks[$server->id][$index->id]) === FALSE)) {
-      $tasks[$server->id][$index->id][] = 'clear';
+    if (!isset($tasks[$server->id][$id])
+        || (array_search('add', $tasks[$server->id][$id]) === FALSE
+            && array_search('clear', $tasks[$server->id][$id]) === FALSE)) {
+      $tasks[$server->id][$id][] = 'clear';
       variable_set('search_api_tasks', $tasks);
     }
   }
 
-  $ret = _search_api_index_reindex($index);
+  $ret = _search_api_index_reindex($id);
 
   if(!$ret) {
     // If there just were no unchanged items, we don't want to report failure.
