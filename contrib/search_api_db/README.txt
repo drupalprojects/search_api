@@ -11,6 +11,8 @@ All Search API datatypes are supported by using appropriate SQL datatypes for
 their respective columns (with "String"/"URI", and "Integer"/"Duration" being
 equivalent).
 
+Due to SQL limitations, fulltext searches are always case-insensitive.
+
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
 at [http://drupal.org/project/issues/search_api].
