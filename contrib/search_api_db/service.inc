@@ -74,7 +74,6 @@ class SearchApiDbService extends SearchApiAbstractService {
       $indexes[$index->id][$name]['table'] = $prefix . $name;
       $indexes[$index->id][$name]['type']  = $field['type'];
       $indexes[$index->id][$name]['boost'] = $field['boost'];
-      $indexes[$index->id][$name]['original_type']  = $field['original_type'];
     }
 
     search_api_server_edit($this->id, array('options' => $this->options));
@@ -128,7 +127,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       ),
     );
     if ($type == 'text') {
-      $table['fields']['token'] = array(
+      $table['fields']['word'] = array(
         'description' => 'The text of the indexed token.',
         'type' => 'varchar',
         'length' => 50,
@@ -137,8 +136,8 @@ class SearchApiDbService extends SearchApiAbstractService {
         'description' => 'The score associated with this token.',
         'type' => 'float',
       );
-      $table['primary key'] = array('item_id', 'token');
-      $table['indexes']['token'] = array('token');
+      $table['primary key'] = array('item_id', 'word');
+      $table['indexes']['word'] = array('word');
     }
     else {
       $table['fields']['value'] = $this->sqlType($type);
@@ -238,7 +237,6 @@ class SearchApiDbService extends SearchApiAbstractService {
       $fields[$name]['table'] = $prefix . $name;
       $fields[$name]['type']  = $field['type'];
       $fields[$name]['boost'] = $field['boost'];
-      $indexes[$index->id][$name]['original_type']  = $field['original_type'];
     }
     if ($set) {
       $this->resetDb();
@@ -265,30 +263,78 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {
+    if (empty($this->options['indexes'][$index->id])) {
+      throw new SearchApiException(t('No field settings for index with id !id.', array('!id' => $index->id)));
+    }
     $indexed = array();
+    $set = $this->setDb();
     foreach ($items as $id => $item) {
-      if ($this->indexItem($index, $id, $item)) {
-        $indexed[] = $id;
+      try {
+        if ($this->indexItem($index, $id, $item)) {
+          $indexed[] = $id;
+        }
       }
+      catch (Exception $e) {
+        // We just log the error, hoping we can index the other items.
+        watchdog('search api', $e->getMessage(), NULL, WATCHDOG_WARNING);
+      }
+    }
+    if ($set) {
+      $this->resetDb();
     }
     return $indexed;
   }
 
   protected function indexItem(SearchApiIndex $index, $id, array $item) {
-    if (empty($this->options['indexes'][$index->id])) {
-      throw new SearchApiException(t('No field settings for index with id !id.', array('!id' => $index->id)));
-    }
     $fields = $this->options['indexes'][$index->id];
-    foreach ($item as $name => $field) {
-      $type = $field['type'];
-      $value = $this->convert($field['value'], $type, $field['original_type']);
-      if (search_api_is_text_type($type, array('text', 'tokens'))) {
+    $txn = db_transaction('search_api_indexing', $this->query_options);
+    $item = $this->renameFields($item);
+    try {
+      foreach ($item as $name => $field) {
+        $table = $fields[$name]['table'];
+        db_delete($table, $this->query_options)
+            ->condition('item_id', $id)
+            ->execute();
+        $type = $field['type'];
+        $value = $this->convert($field['value'], $type, $field['original_type']);
 
-      }
-      else {
-
+        if (search_api_is_text_type($type, array('text', 'tokens'))) {
+          $words = array();
+          foreach ($value as $token) {
+            $token['value'] = drupal_strtolower($token['value']);
+            if (!isset($words[$token['value']])) {
+              $words[$token['value']] = $token;
+            }
+            else {
+              $words[$token['value']]['score'] += $token['score'];
+            }
+          }
+          $query = db_insert($table, $this->query_options)
+            ->fields(array('item_id', 'word', 'score'));
+          foreach ($words as $word) {
+            $query->values(array(
+              'item_id' => $id,
+              'word'    => $word['value'],
+              'score'   => $word['score'],
+            ));
+          }
+          $query->execute();
+        }
+        else {
+          db_insert($table, $this->query_options)
+            ->fields(array(
+              'item_id' => $id,
+              'value'   => $value,
+            ))
+            ->execute();
+        }
       }
     }
+    catch (Exception $e) {
+      $txn->rollback();
+      throw $e;
+    }
+    return TRUE;
   }
 
   protected function convert($value, $type, $original_type) {
@@ -303,7 +349,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     switch ($type) {
       case 'text':
         $ret = array();
-        foreach (preg_split('', $value) as $v) {
+        foreach (preg_split('/\s+/', $value) as $v) {
           $ret[] = array(
             'value' => $v,
             'score' => 1.0,
@@ -350,7 +396,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       foreach ($this->options['indexes'] as $index) {
         foreach ($index as $fields) {
           foreach ($fields as $field) {
-            db_delete($field['table'], $this->query_options)->execute();
+            db_truncate($field['table'], $this->query_options)->execute();
           }
         }
       }
@@ -365,11 +411,14 @@ class SearchApiDbService extends SearchApiAbstractService {
     }
     $set = $this->setDb();
     foreach ($this->options['indexes'][$index->id] as $field) {
-      $query = db_delete($field['table'], $this->query_options);
       if (is_array($ids)) {
-        $query->condition('item_id', $ids, 'IN');
+        db_delete($field['table'], $this->query_options)
+          ->condition('item_id', $ids, 'IN')
+          ->execute();
       }
-      $query->execute();
+      else {
+        db_truncate($field['table'], $this->query_options)->execute();
+      }
     }
     if ($set) {
       $this->resetDb();
