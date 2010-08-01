@@ -25,14 +25,32 @@ class SearchApiDbService extends SearchApiAbstractService {
               'Cannot be changed after creation.'),
           '#options' => $options,
         ),
+        'min_chars' => array(
+          '#type' => 'select',
+          '#title' => t('Minimum word length'),
+          '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
+          '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6)),
+        ),
       );
     }
     else {
       $form = array(
         'database' => array(
+          '#type' => 'value',
+          '#title' => t('Database'), // Slight hack for the "View server" page.
+          '#value' => $this->options['database'],
+        ),
+        'database_text' => array(
           '#type' => 'item',
           '#title' => t('Database'),
           '#markup' => check_plain(str_replace(':', ' > ', $this->options['database'])),
+        ),
+        'min_chars' => array(
+          '#type' => 'select',
+          '#title' => t('Minimum word length'),
+          '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
+          '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6)),
+          '#default_value' => $this->options['min_chars'],
         ),
       );
     }
@@ -301,6 +319,9 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (search_api_is_text_type($type, array('text', 'tokens'))) {
           $words = array();
           foreach ($value as $token) {
+            if (drupal_strlen($token['value']) < $this->options['min_chars']) {
+              continue;
+            }
             $token['value'] = drupal_strtolower($token['value']);
             if (!isset($words[$token['value']])) {
               $words[$token['value']] = $token;
@@ -309,16 +330,18 @@ class SearchApiDbService extends SearchApiAbstractService {
               $words[$token['value']]['score'] += $token['score'];
             }
           }
-          $query = db_insert($table, $this->query_options)
-            ->fields(array('item_id', 'word', 'score'));
-          foreach ($words as $word) {
-            $query->values(array(
-              'item_id' => $id,
-              'word'    => $word['value'],
-              'score'   => $word['score'],
-            ));
+          if ($words) {
+            $query = db_insert($table, $this->query_options)
+              ->fields(array('item_id', 'word', 'score'));
+            foreach ($words as $word) {
+              $query->values(array(
+                'item_id' => $id,
+                'word'    => $word['value'],
+                'score'   => $word['score'],
+              ));
+            }
+            $query->execute();
           }
-          $query->execute();
         }
         else {
           db_insert($table, $this->query_options)
