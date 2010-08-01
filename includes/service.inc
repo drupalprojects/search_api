@@ -13,7 +13,7 @@ interface SearchApiServiceInterface {
    * Form callback. Might be called on an uninitialized object - in this case,
    * the form is for configuring a newly created server.
    *
-   * @return
+   * @return array
    *   A form array for setting service-specific options.
    */
   public function configurationForm();
@@ -115,7 +115,7 @@ interface SearchApiServiceInterface {
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
-   * @return
+   * @return array
    *   An array of the ids of all items that were successfully indexed.
    */
   public function indexItems(SearchApiIndex $index, array $items);
@@ -159,8 +159,8 @@ interface SearchApiServiceInterface {
    * @throws SearchApiException
    *   If the server is currently disabled.
    *
-   * @return
-   *   A SearchApiQueryInterface object for searching the given index.
+   * @return SearchApiQueryInterface
+   *   An object for searching the given index.
    */
   public function query(SearchApiIndex $index, $options = array());
 
@@ -170,7 +170,7 @@ interface SearchApiServiceInterface {
    * @param $query
    *   The SearchApiQueryInterface object to execute.
    *
-   * @return
+   * @return array
    *   An associative array containing the search results, as required by
    *   SearchApiQueryInterface::execute().
    */
@@ -316,8 +316,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @throws SearchApiException
    *   If the server is currently disabled.
    *
-   * @return
-   *   A SearchApiQueryInterface object for searching the given index.
+   * @return SearchApiQueryInterface
+   *   An object for searching the given index.
    */
   public function query(SearchApiIndex $index, $options = array()) {
     return new SearchApiQuery($index, $options);

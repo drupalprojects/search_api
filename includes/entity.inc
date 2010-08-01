@@ -144,7 +144,7 @@ class SearchApiIndex extends EntityDBExtendable {
   }
 
   /**
-   * @return
+   * @return SearchApiServer
    *   The server associated with this index, or NULL if this index currently
    *   doesn't lie on a server.
    */
@@ -175,8 +175,8 @@ class SearchApiIndex extends EntityDBExtendable {
    * @throws SearchApiException
    *   If the index is currently disabled.
    *
-   * @return
-   *   A SearchApiQueryInterface object for searching this index.
+   * @return SearchApiQueryInterface
+   *   A query object for searching this index.
    */
   public function query($options = array()) {
     if (!$this->enabled) {
@@ -193,7 +193,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param array $items
    *   An array of entities to index.
    *
-   * @return
+   * @return array
    *   An array of the ids of all items that were successfully indexed.
    */
   public function index(array $items) {
@@ -252,7 +252,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param array $items
    *   An array of items to be altered.
    *
-   * @return
+   * @return SearchApiIndex
    *   The called object.
    */
   public function dataAlter(array &$items) {
@@ -300,7 +300,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param $property_info
    *   The original property info.
    *
-   * @return
+   * @return array
    *   The altered property info.
    */
   public function propertyInfoAlter(EntityMetadataWrapper $wrapper, array $property_info) {
@@ -313,7 +313,7 @@ class SearchApiIndex extends EntityDBExtendable {
   /**
    * Fills the $processors array for use by the pre-/postprocessing functions.
    *
-   * @return
+   * @return SearchApiIndex
    *   The called object.
    */
   protected function prepareProcessors() {
@@ -355,7 +355,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param array $items
    *   An array of items to be preprocessed for indexing.
    *
-   * @return
+   * @return SearchApiIndex
    *   The called object.
    */
   public function preprocessIndexItems(array &$items) {
@@ -377,7 +377,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param SearchApiQuery $query
    *   The object representing the query to be executed.
    *
-   * @return
+   * @return SearchApiIndex
    *   The called object.
    */
   public function preprocessSearchQuery(SearchApiQuery $query) {
@@ -401,7 +401,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * @param SearchApiQuery $query
    *   The object representing the executed query.
    *
-   * @return
+   * @return SearchApiIndex
    *   The called object.
    */
   public function postprocessSearchResults(array &$results, SearchApiQuery $query) {

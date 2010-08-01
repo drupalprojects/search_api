@@ -18,7 +18,8 @@
  *
  * @see hook_search_api_service_info_alter()
  *
- * @return An associative array of search service classes, keyed by a unique
+ * @return array
+ *   An associative array of search service classes, keyed by a unique
  *   identifier and containing associative arrays with the following keys:
  *   - name: The service class' translated name.
  *   - description: A translated string to be shown to administrators when
@@ -71,7 +72,8 @@ function hook_search_api_service_info_alter(array &$service_info) {
  *
  * @see example_random_alter()
  *
- * @return An associative array keyed by the function names and containing
+ * @return array
+ *   An associative array keyed by the function names and containing
  *   arrays with the following keys:
  *   - name: The name to display for this callback.
  *   - description: A short description of what the callback does.
@@ -100,7 +102,8 @@ function hook_search_api_alter_callback_info() {
  *
  * @see SearchApiProcessorInterface
  *
- * @return An associative array keyed by the processor id and containing arrays
+ * @return array
+ *   An associative array keyed by the processor id and containing arrays
  *   with the following keys:
  *   - name: The name to display for this processor.
  *   - description: A short description of what the processor does at each
@@ -288,7 +291,7 @@ function hook_search_api_index_delete(SearchApiIndex $index) {
  * @param array $items
  *   An array of objects containing the entity data.
  *
- * @return
+ * @return array
  *   An array of property infos for all added properties, as required by
  *   hook_entity_property_info().
  */

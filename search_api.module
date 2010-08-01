@@ -498,7 +498,7 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
  * @param $limit
  *   The maximum number of items to retrieve. -1 means no limit.
  *
- * @return
+ * @return array
  *   An array of items (entities) that need to be indexed.
  */
 function search_api_get_items_to_index(SearchApiIndex $index, $limit = -1) {
@@ -665,8 +665,8 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
  *     parse modes recognized by the SearchApiQuery class.
  *     Subclasses might define additional modes.
  *
- * @return
- *   A SearchApiQueryInterface object for searching on the specified index.
+ * @return SearchApiQueryInterface
+ *   An object for searching on the specified index.
  */
 function search_api_query(SearchApiIndex $index, array $options = array()) {
   return $index->query($options);
@@ -675,7 +675,7 @@ function search_api_query(SearchApiIndex $index, array $options = array()) {
 /**
  * Returns all field types recognized by the Search API framework.
  *
- * @return
+ * @return array
  *   An associative array with all recognized types as keys, mapped to their
  *   translated display names.
  */
@@ -700,7 +700,7 @@ function search_api_field_types() {
  * @param $id
  *   The id of the service info to retrieve.
  *
- * @return
+ * @return array
  *   If $id was not specified, an array of all available service classes.
  *   Otherwise, either the service info with the specified id (if it exists),
  *   or NULL.
@@ -726,7 +726,7 @@ function search_api_get_service_info($id = NULL) {
  *
  * @see hook_search_api_alter_callback_info()
  *
- * @return
+ * @return array
  *   An array of all available data alter callbacks, keyed by function name.
  */
 function search_api_get_alter_callbacks() {
@@ -751,7 +751,7 @@ function search_api_get_alter_callbacks() {
  *
  * @see hook_search_api_processor_info()
  *
- * @return
+ * @return array
  *   An array of all available processors, keyed by id.
  */
 function search_api_get_processors() {
@@ -798,7 +798,7 @@ function search_api_is_text_type($type, array $allowed = array('text')) {
  * @param $header
  *   A table header to sort by.
  *
- * @return
+ * @return array
  *   An array of objects representing all (or, if $enabled is TRUE, only
  *   enabled) search servers.
  */
@@ -837,9 +837,8 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
  * @param $reset
  *   Whether to reset the internal cache.
  *
- * @return
- *   The loaded and initialized SearchApiServer object
- *   representing the server with the specified id.
+ * @return SearchApiServer
+ *   An object representing the server with the specified id.
  */
 function search_api_server_load($id, $reset = FALSE) {
   $ret = entity_load('search_api_server', array($id), array(), $reset);
@@ -1103,7 +1102,7 @@ function search_api_server_delete(SearchApiServer $server) {
  * @param $header
  *   A table header to sort by.
  *
- * @return
+ * @return array
  *   An array of objects representing the search indexes that meet the
  *   specified criteria.
  */
@@ -1146,7 +1145,7 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  * @param $reset
  *   Whether to reset the internal cache.
  *
- * @return
+ * @return SearchApiIndex
  *   A completely loaded index object, or NULL if no such index exists.
  */
 function search_api_index_load($id, $reset = FALSE) {
@@ -1160,7 +1159,7 @@ function search_api_index_load($id, $reset = FALSE) {
  * @param $index
  *   Either an index object, or the index' id.
  *
- * @return
+ * @return array
  *   An associative array containing two keys (in this order):
  *   - indexed: The number of items already indexed in their latest version.
  *   - total: The total number of items that have to be indexed for this index.
@@ -1193,8 +1192,8 @@ function search_api_index_url(SearchApiIndex $index) {
 /**
  * Property callback.
  *
- * @return
- *   The SearchApiServer this index currently resides on, or NULL if the index
+ * @return SearchApiServer
+ *   The server this index currently resides on, or NULL if the index
  *   is currently unassigned.
  */
 function search_api_index_get_server(SearchApiIndex $index) {

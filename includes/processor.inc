@@ -27,7 +27,7 @@ interface SearchApiProcessorInterface {
    * Since forcing users to specify options for disabled processors makes no
    * sense, none of the form elements should have the '#required' attribute set.
    *
-   * @return
+   * @return array
    *   A form array for configuring this processor, or FALSE if no configuration
    *   is possible.
    */

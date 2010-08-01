@@ -33,7 +33,7 @@ interface SearchApiQueryInterface {
   public function __construct(SearchApiIndex $index, $options = array());
 
   /**
-   * @return
+   * @return array
    *   An associative array of parse modes recognized by objects of this class.
    *   The keys are the parse modes' ids, values are associative arrays
    *   containing the following entries:
@@ -48,6 +48,9 @@ interface SearchApiQueryInterface {
    *
    * @param $keys
    *   A string with the unparsed search keys, or NULL to use no search keys.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    */
   public function keys($keys = NULL);
 
@@ -57,6 +60,9 @@ interface SearchApiQueryInterface {
    *
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    *
    * @throws SearchApiException
    *   If one of the fields isn't of type "text".
@@ -68,6 +74,9 @@ interface SearchApiQueryInterface {
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    */
   public function filter($filter);
 
@@ -82,6 +91,9 @@ interface SearchApiQueryInterface {
    *   The operator to use for checking the constraint, e.g. '=' or '<'. If
    *   $field is a fulltext field, $operator is ignored and a fulltext search
    *   performed in any case.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    */
   public function condition($field, $value, $operator = '=');
 
@@ -93,20 +105,23 @@ interface SearchApiQueryInterface {
    *   used to sort by relevance.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    */
   public function sort($field, $order = 'ASC');
 
   /**
    * Executes this search query.
    *
-   * @return
+   * @return array
    *   An associative array containing the search results and some metadata.
    */
   //@todo Specify this in a more detailled way.
   public function execute();
 
   /**
-   * @return
+   * @return SearchApiIndex
    *   The search index this query should be executed on.
    */
   public function getIndex();
@@ -121,20 +136,20 @@ interface SearchApiQueryInterface {
   public function &getKeys();
 
   /**
-   * @return
+   * @return array
    *   An array containing the fields that should be searched for the search
    *   keys. If this is NULL, all fulltext fields should be searched.
    */
   public function &getFields();
 
   /**
-   * @return
-   *   This object's associated SearchApiQueryFilter object.
+   * @return SearchApiQueryFilterInterface
+   *   This object's associated filter object.
    */
   public function &getFilter();
 
   /**
-   * @return
+   * @return array
    *   An array specifying the sort order for this query. Array keys are the
    *   field names in order of importance, the values are the respective order
    *   in which to sort the results according to the field.
@@ -142,7 +157,7 @@ interface SearchApiQueryInterface {
   public function &getSort();
 
   /**
-   * @return
+   * @return array
    *   An associative array of query options.
    */
   public function &getOptions();
@@ -217,7 +232,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * @return
+   * @return array
    *   An associative array of parse modes recognized by objects of this class.
    *   The keys are the parse modes' ids, values are associative arrays
    *   containing the following entries:
@@ -304,9 +319,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $conjunction
    *   The conjunction to use for the filter - either 'AND' or 'OR'.
    *
-   * @return
-   *   An object that implements SearchApiQueryFilterInterface and is set to use
-   *   the specified conjunction.
+   * @return SearchApiQueryFilterInterface
+   *   A filter object that is set to use the specified conjunction.
    */
   protected function createFilter($conjunction = 'AND') {
     $filter_class = $this->options['filter class'];
@@ -320,7 +334,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $keys
    *   A string with the unparsed search keys, or NULL to use no search keys.
    *
-   * @return
+   * @return SearchApiQuery
    *   The called object.
    */
   public function keys($keys = NULL) {
@@ -338,6 +352,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
+   *
+   * @return SearchApiQuery
+   *   The called object.
    */
   public function fields(array $fields) {
     $index_fields = $index->options['fields'];
@@ -356,7 +373,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    *
-   * @return
+   * @return SearchApiQuery
    *   The called object.
    */
   public function filter($filter) {
@@ -376,7 +393,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   $field is a fulltext field, $operator is ignored and a fulltext search
    *   performed in any case.
    *
-   * @return
+   * @return SearchApiQuery
    *   The called object.
    */
   public function condition($field, $value, $operator = '=') {
@@ -393,7 +410,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
-   * @return
+   * @return SearchApiQuery
    *   The called object.
    */
   public function sort($field, $order = 'ASC') {
@@ -408,6 +425,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * Since this method takes care of important hook invocations, caching, etc.,
    * it must not be overridden. Override the provided hooks preExecute() and
    * postExecute() if you have to add/modify behaviour.
+   *
+   * @return array
+   *   An associative array containing the search results and some metadata.
    */
   public final function execute() {
     // Call pre-execute hook.
@@ -453,7 +473,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   protected function postExecute(array &$results) {}
 
   /**
-   * @return
+   * @return SearchApiIndex
    *   The search index this query will be executed on.
    */
   public function getIndex() {
@@ -472,7 +492,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * @return
+   * @return array
    *   An array containing the fields that should be searched for the search
    *   keys.
    */
@@ -481,15 +501,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * @return
-   *   This object's associated SearchApiQueryFilter object.
+   * @return SearchApiQueryFilterInterface
+   *   This object's associated filter object.
    */
   public function &getFilter() {
     return $this->filter;
   }
 
   /**
-   * @return
+   * @return array
    *   An array specifying the sort order for this query. Array keys are the
    *   field names in order of importance, the values are the respective order
    *   in which to sort the results according to the field.
@@ -499,7 +519,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * @return
+   * @return array
    *   An associative array of query options.
    */
   public function &getOptions() {
@@ -530,6 +550,9 @@ interface SearchApiQueryFilterInterface {
    *
    * @param $conjunction
    *   The conjunction to use for this filter - either 'AND' or 'OR'.
+   *
+   * @return SearchApiQueryFilterInterface
+   *   The called object.
    */
   public function setConjunction($conjunction);
 
@@ -538,6 +561,9 @@ interface SearchApiQueryFilterInterface {
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *
+   * @return SearchApiQueryFilterInterface
+   *   The called object.
    */
   public function filter(SearchApiQueryFilter $filter);
 
@@ -552,6 +578,9 @@ interface SearchApiQueryFilterInterface {
    *   The operator to use for checking the constraint, e.g. '=' or '<'. If
    *   $field is a fulltext field, $operator is ignored and a fulltext search
    *   performed in any case.
+   *
+   * @return SearchApiQueryFilterInterface
+   *   The called object.
    */
   public function condition($field, $value, $operator = '=');
 
@@ -562,7 +591,7 @@ interface SearchApiQueryFilterInterface {
   public function getConjunction();
 
   /**
-   * @return
+   * @return array
    *   An array containing this filter's subfilters. Each of these is either an
    *   array (field, value, operator), or another SearchApiFilter object.
    */
@@ -600,6 +629,9 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *
    * @param $conjunction
    *   The conjunction to use for this filter - either 'AND' or 'OR'.
+   *
+   * @return SearchApiQueryFilter
+   *   The called object.
    */
   public function setConjunction($conjunction) {
     $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
@@ -611,6 +643,9 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *
    * @param $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *
+   * @return SearchApiQueryFilter
+   *   The called object.
    */
   public function filter(SearchApiQueryFilter $filter) {
     $this->filters[] = $filter;
@@ -628,6 +663,9 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *   The operator to use for checking the constraint, e.g. '=' or '<'. If
    *   $field is a fulltext field, $operator is ignored and a fulltext search
    *   performed in any case.
+   *
+   * @return SearchApiQueryFilter
+   *   The called object.
    */
   public function condition($field, $value, $operator = '=') {
     $this->filters[] = array($field, $value, $operator);
@@ -643,7 +681,7 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
   }
 
   /**
-   * @return
+   * @return array
    *   An array containing this filter's subfilters. Each of these is either an
    *   array (field, value, operator), or another SearchApiFilter object.
    */
