@@ -115,6 +115,9 @@ interface SearchApiServiceInterface {
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
+   * @throws SearchApiException
+   *   If indexing was prevented by a fundamental configuration error.
+   *
    * @return array
    *   An array of the ids of all items that were successfully indexed.
    */

@@ -27,6 +27,7 @@ interface SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
@@ -61,11 +62,11 @@ interface SearchApiQueryInterface {
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
    *
-   * @return SearchApiQueryInterface
-   *   The called object.
-   *
    * @throws SearchApiException
    *   If one of the fields isn't of type "text".
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
    */
   public function fields(array $fields);
 
@@ -205,6 +206,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
@@ -346,14 +348,17 @@ class SearchApiQuery implements SearchApiQueryInterface {
     }
     return $this;
   }
-
   /**
-   * Sets the fields that will be searched for the search keys.
+   * Sets the fields that will be searched for the search keys. If this is not
+   * called, all fulltext fields should be searched.
    *
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
    *
-   * @return SearchApiQuery
+   * @throws SearchApiException
+   *   If one of the fields isn't of type "text".
+   *
+   * @return SearchApiQueryInterface
    *   The called object.
    */
   public function fields(array $fields) {
