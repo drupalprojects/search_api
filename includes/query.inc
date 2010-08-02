@@ -22,7 +22,9 @@ interface SearchApiQueryInterface {
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
-   *   - languages: The languages to search for.
+   *   - languages: The languages to search for, as an array of language IDs.
+   *     If not specified, all languages will be searched. Language-neutral
+   *     content (LANGUAGE_NONE) is always searched.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
@@ -89,9 +91,12 @@ interface SearchApiQueryInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
-   *   $field is a fulltext field, $operator is ignored and a fulltext search
-   *   performed in any case.
+   *   The operator to use for checking the constraint. The following operators
+   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
+   *   have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
    *
    * @return SearchApiQueryInterface
    *   The called object.
@@ -133,6 +138,9 @@ interface SearchApiQueryInterface {
    *   complex search expression.
    *   An array will contain a '#conjunction' key specifying the conjunction
    *   type, and search strings or nested expression arrays at numeric keys.
+   *   Additionally, a '#negation' key might be present, which means – unless it
+   *   maps to a FALSE value – that the search keys contained in that array
+   *   should be negated, i.e. not be present in returned results.
    */
   public function &getKeys();
 
@@ -201,7 +209,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
-   *   - languages: The languages to search for.
+   *   - languages: The languages to search for, as an array of language IDs.
+   *     If not specified, all languages will be searched. Language-neutral
+   *     content (LANGUAGE_NONE) is always searched.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
@@ -394,9 +404,12 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
-   *   $field is a fulltext field, $operator is ignored and a fulltext search
-   *   performed in any case.
+   *   The operator to use for checking the constraint. The following operators
+   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
+   *   have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
    *
    * @return SearchApiQuery
    *   The called object.
@@ -438,30 +451,74 @@ class SearchApiQuery implements SearchApiQueryInterface {
     // Call pre-execute hook.
     $this->preExecute();
 
-    // Preprocess query
+    // Preprocess query.
     $this->index->preprocessSearchQuery($this);
 
-    // Let modules alter the query
+    // Let modules alter the query.
     drupal_alter('search_api_query', $this);
 
-    // Cache query (e.g. for facets)
+    // Add filter for languages.
+    if (isset($this->options['languages'])) {
+      $this->addLanguages($this->options['languages']);
+    }
+
+    // Cache query (e.g. for facets).
     $query_cache = &drupal_static('search_api_search_query');
     $query_cache[] = $this;
 
-    // Execute query
+    // Execute query.
     $results = $server->search($this);
 
     // Call post-execute hook.
     $this->postExecute($results);
 
-    // Postprocess results
+    // Postprocess results.
     $this->index->postprocessSearchResults($results, $this);
 
-    // Cache results
-    $result_cache = &drupal_static('search_api_search_results');
-    $result_cache[] = $results;
-
     return $results;
+  }
+
+  /**
+   * Helper method for adding a language filter.
+   */
+  protected function addLanguages(array $languages) {
+    if (array_search(LANGUAGE_NONE, $languages) === FALSE) {
+      $languages[] = 'und';
+    }
+
+    if ($this->filter->getConjunction() == 'AND') {
+      $languages = drupal_map_assoc($languages);
+      $langs_to_add = $languages;
+      $filters = $this->filter->getFilters();
+      while ($filters && $langs_to_add) {
+        $filter = array_shift($filters);
+        if (is_array($filter)) {
+          if ($filter[0] == 'search-api-language' && $filter[2] == '=') {
+            $lang = $filter[1];
+          }
+        }
+        else {
+          if ($filter->getConjunction() == 'AND') {
+            $filters += $filter->getFilters();
+          }
+        }
+      }
+    }
+    else {
+      $filter = $this->createFilter('AND');
+      $filter->filter($this->filter);
+      $this->filter = $filter;
+      if (count($languages) == 1) {
+        $this->condition('search-api-language', array_shift($languages));
+      }
+      else {
+        $filter = $this->createFilter('OR');
+        foreach ($languases as $lang) {
+          $filter->condition('search-api-language', array_shift($languages));
+        }
+        $this->filter($filter);
+      }
+    }
   }
 
   /**
@@ -491,6 +548,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   complex search expression.
    *   An array will contain a '#conjunction' key specifying the conjunction
    *   type, and search strings or nested expression arrays at numeric keys.
+   *   Additionally, a '#negation' key might be present, which means – unless it
+   *   maps to a FALSE value – that the search keys contained in that array
+   *   should be negated, i.e. not be present in returned results.
    */
   public function &getKeys() {
     return $this->keys;
@@ -580,9 +640,12 @@ interface SearchApiQueryFilterInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
-   *   $field is a fulltext field, $operator is ignored and a fulltext search
-   *   performed in any case.
+   *   The operator to use for checking the constraint. The following operators
+   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
+   *   have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
    *
    * @return SearchApiQueryFilterInterface
    *   The called object.
@@ -665,9 +728,12 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    * @param $value
    *   The value the field should have (or be related to by the operator).
    * @param $operator
-   *   The operator to use for checking the constraint, e.g. '=' or '<'. If
-   *   $field is a fulltext field, $operator is ignored and a fulltext search
-   *   performed in any case.
+   *   The operator to use for checking the constraint. The following operators
+   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
+   *   have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
    *
    * @return SearchApiQueryFilter
    *   The called object.

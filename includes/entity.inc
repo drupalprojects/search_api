@@ -177,18 +177,8 @@ class SearchApiIndex extends EntityDBExtendable {
    * Create a query object for this index.
    *
    * @param $options
-   *   Associative array of options configuring this query. Recognized options
-   *   are:
-   *   - conjunction: The type of conjunction to use for this query - either
-   *     'AND' or 'OR'. 'AND' by default.
-   *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See SearchApiQuery::parseModes() for
-   *     recognized parse modes.
-   *   - languages: The languages to search for.
-   *   - offset: The position of the first returned search results relative to
-   *     the whole result in the index.
-   *   - limit: The maximum number of search results to return. -1 means no
-   *     limit.
+   *   Associative array of options configuring this query. See
+   *   SearchApiQueryInterface::__construct().
    *
    * @throws SearchApiException
    *   If the index is currently disabled.

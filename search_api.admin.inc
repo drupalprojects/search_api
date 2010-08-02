@@ -1084,7 +1084,7 @@ function search_api_admin_index_workflow($form, &$form_state, SearchApiIndex $in
 }
 
 /**
- * Returns HTML for an processor/callback order form.
+ * Returns HTML for a processor/callback order form.
  *
  * @param array $variables
  *   An associative array containing:

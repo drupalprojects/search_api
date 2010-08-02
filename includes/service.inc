@@ -111,7 +111,7 @@ interface SearchApiServiceInterface {
    *   should always be indexed.
    *
    *   The value of fields with the "tokens" type is an array of tokens. Each
-   *   token is an array containingthe following keys:
+   *   token is an array containing the following keys:
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
@@ -146,18 +146,8 @@ interface SearchApiServiceInterface {
    * @param SearchApiIndex $index
    *   The index to search on.
    * @param $options
-   *   Associative array of options configuring this query. Recognized options
-   *   are:
-   *   - conjunction: The type of conjunction to use for this query - either
-   *     'AND' or 'OR'. 'AND' by default.
-   *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See SearchApiQuery::parseModes() for
-   *     recognized parse modes.
-   *   - languages: The languages to search for.
-   *   - offset: The position of the first returned search results relative to
-   *     the whole result in the index.
-   *   - limit: The maximum number of search results to return. -1 means no
-   *     limit.
+   *   Associative array of options configuring this query. See
+   *   SearchApiQueryInterface::__construct().
    *
    * @throws SearchApiException
    *   If the server is currently disabled.
@@ -303,18 +293,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @param SearchApiIndex $index
    *   The index to search on.
    * @param $options
-   *   Associative array of options configuring this query. Recognized options
-   *   are:
-   *   - conjunction: The type of conjunction to use for this query - either
-   *     'AND' or 'OR'. 'AND' by default.
-   *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See SearchApiQuery::parseModes() for
-   *     recognized parse modes.
-   *   - languages: The languages to search for.
-   *   - offset: The position of the first returned search results relative to
-   *     the whole result in the index.
-   *   - limit: The maximum number of search results to return. -1 means no
-   *     limit.
+   *   Associative array of options configuring this query. See
+   *   SearchApiQueryInterface::__construct().
    *
    * @throws SearchApiException
    *   If the server is currently disabled.
