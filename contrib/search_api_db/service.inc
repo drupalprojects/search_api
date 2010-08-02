@@ -84,12 +84,13 @@ class SearchApiDbService extends SearchApiAbstractService {
     }
 
     $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
-    foreach ($this->renameFields($index->options['fields']) as $name => $field) {
+    foreach ($index->options['fields'] as $name => $field) {
       if (empty($field['indexed'])) {
         continue;
       }
-      $this->createFieldTable($field, $prefix . $name);
-      $indexes[$index->id][$name]['table'] = $prefix . $name;
+      $table = $this->findFreeTable($prefix, $name);
+      $this->createFieldTable($field, $table);
+      $indexes[$index->id][$name]['table'] = $table;
       $indexes[$index->id][$name]['type']  = $field['type'];
       $indexes[$index->id][$name]['boost'] = $field['boost'];
     }
@@ -98,28 +99,18 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   /**
-   * Helper method for renaming fields to be valid db identifiers.
+   * Helper method for finding table names for fields.
    */
-  protected function renameFields($fields) {
-    $ret = array();
-    foreach ($fields as $name => $field) {
-      $new_name = $this->findFreeKey($name, $ret);
-      $ret[$new_name] = $field;
-    }
-    return $ret;
-  }
-
-  /**
-   * Helper method for finding an unused key that is a valid db identifier in an
-   * array.
-   */
-  protected function findFreeKey($name, $array) {
+  protected function findFreeTable($prefix, $name) {
     $subst = '';
     do {
       $subst .= '_';
-      $new_name = preg_replace('/[^a-z0-9_]/i', $subst, $name);
-    } while (isset($array[$new_name]));
-    return $new_name;
+      $ret = $prefix . preg_replace('/[^a-z0-9_]/i', $subst, $name);
+      if (strlen($subst) > 10) {
+        throw new SearchApiException(t('Possible infinite loop detected because of existing table !table. The initial cause might be stale data due to an unsuccessful update. Please remove the corresponding index from the server and afterwards add it again.', array('!table' => $prefix . preg_replace('/[^a-z0-9_]/i', '_', $name))));
+      }
+    } while (db_table_exists($ret));
+    return $ret;
   }
 
   /**
@@ -127,10 +118,8 @@ class SearchApiDbService extends SearchApiAbstractService {
    */
   protected function createFieldTable($field, $name) {
     $type = $field['type'];
-    $list = FALSE;
-    while (substr($type, 0, 5) == 'list<') {
-      $list = TRUE;
-      $type = substr($type, 5, -1);
+    if ($list = search_api_is_list_type($type)) {
+      $type = search_api_extract_inner_type($type);
     }
     $table = array(
       'name' => $name,
@@ -177,9 +166,7 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   protected function sqlType($type) {
-    if (substr($type, 0, 5) == 'list<') {
-      return $this->sqlType(substr($type, 5, -1));
-    }
+    $type = search_api_extract_inner_type($type);
     switch ($type) {
       case 'string':
       case 'uri':
@@ -206,7 +193,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         unset($new_fields[$name]);
       }
     }
-    $new_fields = $this->renameFields($new_fields);
+    $new_fields = $new_fields;
 
     $reindex = FALSE;
     $cleared = FALSE;
@@ -248,11 +235,13 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       unset($new_fields[$name]);
     }
+    $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
     // These are new fields that were previously not indexed.
     foreach ($new_fields as $name => $field) {
       $reindex = TRUE;
-      $this->createFieldTable($field, $prefix . $name);
-      $fields[$name]['table'] = $prefix . $name;
+      $table = $this->findFreeTable($prefix, $name);
+      $this->createFieldTable($field, $table);
+      $fields[$name]['table'] = $table;
       $fields[$name]['type']  = $field['type'];
       $fields[$name]['boost'] = $field['boost'];
     }
@@ -306,10 +295,11 @@ class SearchApiDbService extends SearchApiAbstractService {
   protected function indexItem(SearchApiIndex $index, $id, array $item) {
     $fields = $this->options['indexes'][$index->id];
     $txn = db_transaction('search_api_indexing', $this->query_options);
-    $item = $this->renameFields($item);
+    $item = $item;
     try {
       foreach ($item as $name => $field) {
         $table = $fields[$name]['table'];
+        $boost = $fields[$name]['boost'];
         db_delete($table, $this->query_options)
             ->condition('item_id', $id)
             ->execute();
@@ -337,7 +327,7 @@ class SearchApiDbService extends SearchApiAbstractService {
               $query->values(array(
                 'item_id' => $id,
                 'word'    => $word['value'],
-                'score'   => $word['score'],
+                'score'   => $word['score'] * $boost,
               ));
             }
             $query->execute();
@@ -361,7 +351,7 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   protected function convert($value, $type, $original_type) {
-    if (substr($type, 0, 5) == 'list<') {
+    if (search_api_is_list_type($type)) {
       $type = substr($type, 5, -1);
       $ret = array();
       foreach ($value as $v) {
@@ -372,7 +362,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     switch ($type) {
       case 'text':
         $ret = array();
-        foreach (preg_split('/\s+/', $value) as $v) {
+        foreach (preg_split('/\s+/', $value, PREG_SPLIT_NO_EMPTY) as $v) {
           $ret[] = array(
             'value' => $v,
             'score' => 1.0,
@@ -449,7 +439,144 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   public function search(SearchApiQueryInterface $query) {
+    $index = $query->getIndex();
+    if (empty($this->options['indexes'][$index->id])) {
+      throw new SearchApiException();
+    }
+    $fields = $this->options['indexes'][$index->id];
+    $tables = array();
+    $keys = &$query->getKeys();
+    $keys = $this->prepareKeys($keys);
+    if ($keys) {
+      $fulltext_fields = $query->getFields();
+      if (!isset($fulltext_fields)) {
+        $fulltext_fields = array();
+        foreach ($fields as $name => $field) {
+          $fulltext_fields[] = $name;
+        }
+      }
+      if ($fulltext_fields) {
+        $_fulltext_fields = $fulltext_fields;
+        $fulltext_fields = array();
+        foreach ($_fulltext_fields as $name) {
+          if (!isset($fields[$name])) {
+            throw new SearchApiException(t('Unknown field !field specified as search target.', array('!field' => $name)));
+          }
+          if (!search_api_is_text_type($fields[$name]['type'])) {
+            throw new SearchApiException(t('Cannot perform fulltext search on field !field of type !type.', array('!field' => $name, '!type' => $fields[$name]['type'])));
+          }
+          $fulltext_fields[$name] = $fields[$name];
+        }
 
+        $db_query = $this->createKeysQuery($keys, $fulltext_fields);
+      }
+      else {
+        watchdog('search api', t('Search keys are given but no fulltext fields are defined.'), NULL, WATCHDOG_WARNING);
+      }
+    }
+  }
+
+  /**
+   * Helper method for removing unnecessary nested expressions from keys.
+   */
+  protected function prepareKeys($keys) {
+    if (is_string($keys)) {
+      $keys = $this->splitKeys($keys);
+      return is_array($keys) ? $this->eliminateDuplicates($keys) : $keys;
+    }
+    elseif (!$keys) {
+      return NULL;
+    }
+    $keys = $this->eliminateDuplicates($this->splitKeys($keys));
+    $conj = $keys['#conjunction'];
+    $neg = !empty($keys['#negation']);
+    foreach ($keys as $i => &$nested) {
+      if (is_array($nested)) {
+        $nested = $this->prepareKeys($nested);
+        if (($count = count($nested)) <= 2) {
+          if ($count < 2 || isset($nested['#negation'])) {
+            unset($keys[$i]);
+          }
+          else {
+            unset($nested['#conjunction']);
+            $nested = array_shift($nested);
+            $keys[$i] = $nested;
+          }
+        }
+        if ($neg == !empty($nested['#negation'])) {
+          if ($nested['#conjunction'] == $conj) {
+            unset($nested['#conjunction'], $nested['#negation']);
+            foreach ($nested as $renested) {
+              $keys[] = $renested;
+            }
+            unset($keys[$i]);
+          }
+        }
+      }
+    }
+    return $keys;
+  }
+
+  /**
+   * Helper method for splitting keys.
+   */
+  protected function splitKeys($keys) {
+    if (is_string($keys)) {
+      $keys = drupal_strtolower(trim($keys));
+      if (drupal_strlen($keys) < $this->options['min_chars']) {
+        $this->ignored[$keys] = $keys;
+        return NULL;
+      }
+      $words = preg_split('/\s+/', $keys);
+      if (count($words) > 1) {
+        $keys = $this->splitKeys($words);
+        $keys['#conjunction'] = 'AND';
+      }
+      return $keys;
+    }
+    foreach ($keys as $i => $key) {
+      if (element_child($i)) {
+        $keys[$i] = $this->splitKeys($key);
+      }
+    }
+    return array_filter($keys);
+  }
+
+  /**
+   * Helper method for eliminating duplicates from the search keys.
+   */
+  protected function eliminateDuplicates($keys, &$words = array()) {
+    foreach ($keys as $i => $word) {
+      if (!element_child($i)) {
+        continue;
+      }
+      if (is_string($word)) {
+        if (isset($words[$word])) {
+          unset($keys[$i]);
+        }
+        else {
+          $words[$word] = TRUE;
+        }
+      }
+      else {
+        $keys[$i] = $this->eliminateDuplicates($word, $words);
+      }
+    }
+    return $keys;
+  }
+
+  /**
+   * Helper method for creating a SELECT query for given search keys.
+   */
+  protected function createKeysQuery($keys, array $fields) {
+    if (!is_array($keys)) {
+      $keys = array(
+        '#conjunction' => 'AND',
+        $keys,
+      );
+    }
+
+    return NULL;
   }
 
   /**
