@@ -148,9 +148,28 @@ interface SearchApiQueryInterface {
    * Executes this search query.
    *
    * @return array
-   *   An associative array containing the search results and some metadata.
+   *   An associative array containing the search results. The following keys
+   *   are standardized:
+   *   - 'result count': The overall number of results for this query, without
+   *     range restrictions. Might be approximated, for large numbers.
+   *   - results: An array of results, ordered as specified. The array keys are
+   *     the items' IDs, values are arrays containing the following keys:
+   *     - id: The item's ID.
+   *     - score: A float measuring how well the item fits the search.
+   *   - warnings: A numeric array of translated warning messages that may be
+   *     displayed to the user.
+   *   - ignored: A numeric array of search keys that were ignored for this
+   *     search (e.g., because of being too short or stop words).
+   *   - performance: An associative array with the time taken (as floats, in
+   *     seconds) for specific parts of the search execution:
+   *     - complete: The complete runtime of the query.
+   *     - hooks: Hook invocations and other client-side preprocessing.
+   *     - preprocessing: Preprocessing of the service class.
+   *     - execution: The actual query to the search server, in whatever form.
+   *     - postprocessing: Preparing the results for returning.
+   *   Additional metadata may be returned in other keys. Only 'result count'
+   *   and 'result' always have to be set, all other entries are optional.
    */
-  //@todo Specify this in a more detailled way.
   public function execute();
 
   /**
@@ -498,17 +517,36 @@ class SearchApiQuery implements SearchApiQueryInterface {
     return $this;
   }
 
+
   /**
    * Executes this search query.
    *
-   * Since this method takes care of important hook invocations, caching, etc.,
-   * it must not be overridden. Override the provided hooks preExecute() and
-   * postExecute() if you have to add/modify behaviour.
-   *
    * @return array
-   *   An associative array containing the search results and some metadata.
+   *   An associative array containing the search results. The following keys
+   *   are standardized:
+   *   - 'result count': The overall number of results for this query, without
+   *     range restrictions. Might be approximated, for large numbers.
+   *   - results: An array of results, ordered as specified. The array keys are
+   *     the items' IDs, values are arrays containing the following keys:
+   *     - id: The item's ID.
+   *     - score: A float measuring how well the item fits the search.
+   *   - warnings: A numeric array of translated warning messages that may be
+   *     displayed to the user.
+   *   - ignored: A numeric array of search keys that were ignored for this
+   *     search (e.g., because of being too short or stop words).
+   *   - performance: An associative array with the time taken (as floats, in
+   *     seconds) for specific parts of the search execution:
+   *     - complete: The complete runtime of the query.
+   *     - hooks: Hook invocations and other server-independent processing.
+   *     - preprocessing: Preprocessing of the service class.
+   *     - execution: The actual query to the search server, in whatever form.
+   *     - postprocessing: Preparing the results for returning.
+   *   Additional metadata may be returned in other keys. Only 'result count'
+   *   and 'result' always have to be set, all other entries are optional.
    */
   public final function execute() {
+    $start = microtime(TRUE);
+
     // Call pre-execute hook.
     $this->preExecute();
 
@@ -527,14 +565,22 @@ class SearchApiQuery implements SearchApiQueryInterface {
     $query_cache = &drupal_static('search_api_search_query');
     $query_cache[] = $this;
 
+    $pre_search = microtime(TRUE);
+
     // Execute query.
     $results = $this->index->server()->search($this);
+
+    $post_search = microtime(TRUE);
 
     // Call post-execute hook.
     $this->postExecute($results);
 
     // Postprocess results.
     $this->index->postprocessSearchResults($results, $this);
+
+    $end = microtime(TRUE);
+    $results['performance']['complete'] = $end - $start;
+    $results['performance']['hooks'] = $results['performance']['complete'] - ($pre_search - $post_search);
 
     return $results;
   }
