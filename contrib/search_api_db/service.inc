@@ -6,8 +6,10 @@
  */
 class SearchApiDbService extends SearchApiAbstractService {
 
-  protected $previousDb;
-  protected $query_options;
+  protected $previous_db;
+  protected $query_options = array();
+  protected $ignored = array();
+  protected $warnings = array();
 
   public function configurationForm() {
     if (empty($this->options)) {
@@ -138,24 +140,27 @@ class SearchApiDbService extends SearchApiAbstractService {
         'description' => 'The text of the indexed token.',
         'type' => 'varchar',
         'length' => 50,
+        'not null' => TRUE,
       );
       $table['fields']['score'] = array(
         'description' => 'The score associated with this token.',
         'type' => 'float',
+        'not null' => TRUE,
       );
       $table['primary key'] = array('item_id', 'word');
-      $table['indexes']['word'] = array('word');
+      $table['indexes']['word'] = array(array('word', 10));
     }
     else {
       $table['fields']['value'] = $this->sqlType($type);
       $table['fields']['value'] += array('description' => "The field's value for this item.");
       if ($list) {
+        $table['fields']['value']['not null'] = TRUE;
         $table['primary key'] = array('item_id', 'value');
       }
       else {
         $table['primary key'] = array('item_id');
       }
-      $table['indexes']['value'] = array('value');
+      $table['indexes']['value'] = $table['fields']['value'] == 'varchar' ? array(array('value', 10)) : array('value');
     }
 
     $set = $this->setDb();
@@ -439,12 +444,14 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   public function search(SearchApiQueryInterface $query) {
+    $time_method_called = microtime(TRUE);
+    $set = $this->setDb();
     $index = $query->getIndex();
     if (empty($this->options['indexes'][$index->id])) {
-      throw new SearchApiException();
+      throw new SearchApiException(t('Unknown index !id.'), array('!id' => $index->id));
     }
     $fields = $this->options['indexes'][$index->id];
-    $tables = array();
+
     $keys = &$query->getKeys();
     $keys = $this->prepareKeys($keys);
     if ($keys) {
@@ -468,19 +475,89 @@ class SearchApiDbService extends SearchApiAbstractService {
           $fulltext_fields[$name] = $fields[$name];
         }
 
-        $db_query = $this->createKeysQuery($keys, $fulltext_fields);
+        $db_query = $this->createKeysQuery($keys, $fulltext_fields, $fields);
+        if (is_array($keys) && !empty($keys['#negation'])) {
+          $db_query->addExpression(':score', 'score', array(':score' => 1));
+        }
+        else {
+          $db_query->orderBy('score', 'DESC');
+        }
       }
       else {
-        watchdog('search api', t('Search keys are given but no fulltext fields are defined.'), NULL, WATCHDOG_WARNING);
+        $msg = t('Search keys are given but no fulltext fields are defined.');
+        watchdog('search api', $msg, NULL, WATCHDOG_WARNING);
+        $this->warnings[$msg] = 1;
       }
     }
+
+    $filter = $query->getFilter();
+    if ($filter->getFilters()) {
+      if (!isset($db_query)) {
+        $table = $this->findTable($filter->getFilters(), $fields);
+        if ($table) {
+          $db_query = db_select($table, 't', $this->query_options);
+          $db_query->addField('t', 'item_id', 'item_id');
+          $db_query->addExpression(':score', 'score', array(':score' => 1));
+        }
+        else {
+          throw new SearchApiException(t('No valid keys or filters given.'));
+        }
+      }
+      $condition = $this->createFilterCondition($filter, $fields, $db_query);
+      if ($condition) {
+        $db_query->condition($condition);
+      }
+    }
+
+    if (!isset($db_query)) {
+      throw new SearchApiException(t('No valid keys or filters given.'));
+    }
+
+    $time_processing_done = microtime(TRUE);
+    $results = array();
+    $results['result count'] = $db_query->countQuery()->execute();
+    if ($results['result count']) {
+      $query_options = $query->getOptions();
+      if (isset($query_options['offset']) && isset($query_options['limit'])) {
+        $db_query->range($query_options['offset'], $query_options['limit']);
+      }
+      $result = $db_query->execute();
+      $time_queries_done = microtime(TRUE);
+      foreach ($result as $row) {
+        $results['results'][$row->item_id] = array(
+          'id' => $row->item_id,
+          'score' => $row->score,
+        );
+      }
+    }
+    else {
+      $time_queries_done = microtime(TRUE);
+      $results['results'] = array();
+    }
+
+    $results['warnings'] = array_keys($this->warnings);
+    $results['ignored'] = array_keys($this->ignored);
+
+    if ($set) {
+      $this->resetDb();
+    }
+
+    $time_end = microtime(TRUE);
+    $results['performance'] = array(
+      'complete' => $time_end - $time_method_called,
+      'preprocessing' => $time_processing_done - $time_method_called,
+      'execution' => $time_queries_done - $time_processing_done,
+      'postprocessing' => $time_end - $time_queries_done,
+    );
+
+    return $results;
   }
 
   /**
    * Helper method for removing unnecessary nested expressions from keys.
    */
   protected function prepareKeys($keys) {
-    if (is_string($keys)) {
+    if (is_scalar($keys)) {
       $keys = $this->splitKeys($keys);
       return is_array($keys) ? $this->eliminateDuplicates($keys) : $keys;
     }
@@ -493,16 +570,6 @@ class SearchApiDbService extends SearchApiAbstractService {
     foreach ($keys as $i => &$nested) {
       if (is_array($nested)) {
         $nested = $this->prepareKeys($nested);
-        if (($count = count($nested)) <= 2) {
-          if ($count < 2 || isset($nested['#negation'])) {
-            unset($keys[$i]);
-          }
-          else {
-            unset($nested['#conjunction']);
-            $nested = array_shift($nested);
-            $keys[$i] = $nested;
-          }
-        }
         if ($neg == !empty($nested['#negation'])) {
           if ($nested['#conjunction'] == $conj) {
             unset($nested['#conjunction'], $nested['#negation']);
@@ -514,6 +581,16 @@ class SearchApiDbService extends SearchApiAbstractService {
         }
       }
     }
+    $keys = array_filter($keys);
+    if (($count = count($keys)) <= 2) {
+      if ($count < 2 || isset($keys['#negation'])) {
+        $keys = NULL;
+      }
+      else {
+        unset($keys['#conjunction']);
+        $keys = array_shift($keys);
+      }
+    }
     return $keys;
   }
 
@@ -521,18 +598,18 @@ class SearchApiDbService extends SearchApiAbstractService {
    * Helper method for splitting keys.
    */
   protected function splitKeys($keys) {
-    if (is_string($keys)) {
-      $keys = drupal_strtolower(trim($keys));
-      if (drupal_strlen($keys) < $this->options['min_chars']) {
-        $this->ignored[$keys] = $keys;
+    if (is_scalar($keys)) {
+      $proc = drupal_strtolower(trim($keys));
+      if (drupal_strlen($proc) < $this->options['min_chars']) {
+        $this->ignored[$keys] = 1;
         return NULL;
       }
-      $words = preg_split('/\s+/', $keys);
+      $words = preg_split('/\s+/', $proc);
       if (count($words) > 1) {
-        $keys = $this->splitKeys($words);
-        $keys['#conjunction'] = 'AND';
+        $proc = $this->splitKeys($words);
+        $proc['#conjunction'] = 'AND';
       }
-      return $keys;
+      return $proc;
     }
     foreach ($keys as $i => $key) {
       if (element_child($i)) {
@@ -550,7 +627,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       if (!element_child($i)) {
         continue;
       }
-      if (is_string($word)) {
+      if (is_scalar($word)) {
         if (isset($words[$word])) {
           unset($keys[$i]);
         }
@@ -567,8 +644,12 @@ class SearchApiDbService extends SearchApiAbstractService {
 
   /**
    * Helper method for creating a SELECT query for given search keys.
+   *
+   * @return SelectQueryInterface
+   *   A SELECT query returning item_id and score (or only item_id, if
+   *   $keys['#negation'] is set).
    */
-  protected function createKeysQuery($keys, array $fields) {
+  protected function createKeysQuery($keys, array $fields, array $all_fields) {
     if (!is_array($keys)) {
       $keys = array(
         '#conjunction' => 'AND',
@@ -576,16 +657,222 @@ class SearchApiDbService extends SearchApiAbstractService {
       );
     }
 
-    return NULL;
+    $or = db_or();
+    $neg = !empty($keys['#negation']);
+    $conj = $keys['#conjunction'];
+    $words = array();
+    $nested = array();
+    $negated = array();
+    $db_query = NULL;
+    $mul_words = FALSE;
+    $not_nested = FALSE; // If the query will nest UNIONed subqueries or just leave them that way.
+
+    foreach ($keys as $i => $key) {
+      if (!element_child($i)) {
+        continue;
+      }
+      if (is_scalar($key)) {
+        $words[] = $key;
+      }
+      elseif (empty($key['#negation'])) {
+        if ($neg) {
+          $key['#negation'] = TRUE; // If this query is negated, we also only need item_ids from subqueries.
+        }
+        $nested[] = $key;
+      }
+      else {
+        $negated[] = $key;
+      }
+    }
+    $subs = count($words) + count($nested);
+    $not_nested = ($subs <= 1 && count($fields) == 1) || ($neg && $conj == 'OR' && !$negated);
+
+    if ($words) {
+      if (count($words) > 1) {
+        $mul_words = TRUE;
+        foreach ($words as $word) {
+          $or->condition('word', $word);
+        }
+      }
+      foreach ($fields as $name => $field) {
+        $table = $field['table'];
+        $query = db_select($table, 't', $this->query_options);
+        if ($neg) {
+          $query->fields('t', array('item_id'));
+        }
+        elseif ($not_nested) {
+          $query->fields('t', array('item_id', 'score'));
+        }
+        else {
+          $query->fields('t');
+        }
+        if ($one_word) {
+          $query->condition('word', $word);
+        }
+        else {
+          $query->condition($or);
+        }
+        if (!isset($db_query)) {
+          $db_query = $query;
+        }
+        elseif ($not_nested) {
+          $db_query->union($query, 'UNION');
+        }
+        else {
+          $db_query->union($query, 'UNION ALL');
+        }
+      }
+    }
+
+    if ($nested) {
+      $word = '';
+      foreach ($nested as $k) {
+        $query = $this->createKeysQuery($k, $fields);
+        if (!$neg) {
+          $word .= ' ';
+          $query->addExpression(':word', 'word', array(':word' => $word));
+        }
+        if (!isset($db_query)) {
+          $db_query = $query;
+        }
+        elseif ($not_nested) {
+          $db_query->union($query, 'UNION');
+        }
+        else {
+          $db_query->union($query, 'UNION ALL');
+        }
+      }
+    }
+
+    if (isset($db_query) && !$not_nested) {
+      $db_query = db_select($db_query, 't', $this->query_options);
+      $db_query->addField('t', 'item_id', 'item_id');
+      if (!$neg) {
+        $db_query->addExpression('SUM(t.score)', 'score');
+        $db_query->groupBy('t.item_id');
+      }
+      if ($conj == 'AND') {
+        if ($mul_words) {
+          $db_query->having('COUNT(DISTINCT word) = :subs', array(':subs' => $subs));
+        }
+        else {
+          $db_query->having('COUNT(word) = :subs', array(':subs' => $subs));
+        }
+      }
+    }
+
+    if ($negated) {
+      if (!isset($db_query) || $conj == 'OR') {
+        if (isset($all_fields['search-api-language'])) {
+          // We use this table because all items should be contained exactly once.
+          $table = $all_fields['search-api-language']['table'];
+        }
+        else {
+          foreach ($all_fields as $field) {
+            $table = $field['table'];
+            $distinct = TRUE;
+            if (!search_api_is_list_type($field['type']) && !search_api_is_text_type($field['type'])) {
+              unset($distinct);
+              break;
+            }
+          }
+        }
+        if (isset($db_query)) {
+          // We are in a rather bizarre case where the keys are something like "a OR (NOT b)".
+          $old_query = $db_query;
+        }
+        $db_query = db_select($table, 't', $this->query_options);
+        $db_query->addField('t', 'item_id', 'item_id');
+        if (!$neg) {
+          $db_query->addExpression(':score', 'score', array(':score' => 1));
+        }
+        if (isset($distinct)) {
+          $db_query->distinct();
+        }
+      }
+
+      if ($conj == 'AND') {
+        foreach ($negated as $k) {
+          $db_query->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields), 'NOT IN');
+        }
+      }
+      else {
+        $or = db_or();
+        foreach ($negated as $k) {
+          $or->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields), 'NOT IN');
+        }
+        if (isset($old_query)) {
+          $or->condition('t.item_id', $old_query, 'NOT IN');
+        }
+        $db_query->condition($or);
+      }
+    }
+
+    return $db_query;
+  }
+
+  /**
+   * Helper method for finding any needed table for a filter query.
+   */
+  protected function findTable(array $filters, array $fields) {
+    foreach ($filters as $filter) {
+      if (is_array($filter)) {
+        return $fields[$filter[0]]['table'];
+      }
+    }
+    foreach ($filters as $filter) {
+      if (is_object($filter)) {
+        $ret = $this->findTable($filter->getFilters(), $fields);
+        if ($ret) {
+          return $ret;
+        }
+      }
+    }
+  }
+
+  /**
+   * Helper method for creating a condition for filtering search results.
+   *
+   * @return QueryConditionInterface
+   */
+  protected function createFilterCondition(SearchApiQueryFilterInterface $filter, array $fields, SelectQueryInterface $db_query) {
+    $cond = db_condition($filter->getConjunction());
+    $empty = TRUE;
+    foreach ($filter->getFilters() as $f) {
+      if (is_object($f)) {
+        $c = $this->createFilterCondition($f, $fields, $db_query);
+        if ($c) {
+          $empty = FALSE;
+          $cond->condition($c);
+        }
+      }
+      else {
+        $empty = FALSE;
+        if (!isset($fields[$f[0]])) {
+          throw new SearchApiException(t('Unknown field in filter clause: !field.', array('!field' => $f[0])));
+        }
+        if (search_api_is_text_type($fields[$f[0]]['type'])) {
+          $keys = array('#conjunction' => 'AND', '#negation' => TRUE, $f[1]);
+          $keys = $this->prepareKeys($keys);
+          $query = $this->createKeysQuery($keys, array($f[0]), $fields);
+          $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'NOT IN' : 'IN');
+        }
+        else {
+          $alias = $this->getTableAlias($fields[$f[0]], $db_query);
+          $cond->condition($alias . '.value', $f[1], $f[2]);
+        }
+      }
+    }
+    return $empty ? NULL : $cond;
   }
 
   /**
    * Helper method for setting the database to the one selected by the user.
    */
   protected function setDb() {
-    if (!isset($this->previousDb)) {
+    if (!isset($this->previous_db)) {
       list($key, $target) = explode(':', $this->options['database'], 2);
-      $this->previousDb = db_set_active($key);
+      $this->previous_db = db_set_active($key);
       if (!isset($this->query_options)) {
         $this->query_options = array('target' => $target);
       }
@@ -598,9 +885,9 @@ class SearchApiDbService extends SearchApiAbstractService {
    * Helper method for resetting the original database.
    */
   protected function resetDb() {
-    if (isset($this->previousDb)) {
-      db_set_active($this->previousDb);
-      $this->previousDb = NULL;
+    if (isset($this->previous_db)) {
+      db_set_active($this->previous_db);
+      $this->previous_db = NULL;
       return TRUE;
     }
     return FALSE;
