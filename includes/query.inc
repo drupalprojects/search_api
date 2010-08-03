@@ -18,7 +18,8 @@ interface SearchApiQueryInterface {
    *   Associative array of options configuring this query. Recognized options
    *   are:
    *   - conjunction: The type of conjunction to use for this query - either
-   *     'AND' or 'OR'. 'AND' by default.
+   *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
+   *     filters will always use AND by default.
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
@@ -44,6 +45,17 @@ interface SearchApiQueryInterface {
    *   - description: (optional) A translated text describing the parse mode.
    */
   public function parseModes();
+
+  /**
+   * Method for creating a filter to use with this query object.
+   *
+   * @param $conjunction
+   *   The conjunction to use for the filter - either 'AND' or 'OR'.
+   *
+   * @return SearchApiQueryFilterInterface
+   *   A filter object that is set to use the specified conjunction.
+   */
+  public function createFilter($conjunction = 'AND');
 
   /**
    * Sets the keys to search for. If this method is not called on the query
@@ -145,6 +157,13 @@ interface SearchApiQueryInterface {
   public function &getKeys();
 
   /**
+   * @return
+   *   This unprocessed search keys, exactly as passed to this object. Has the
+   *   same format as getKeys().
+   */
+  public function getOriginalKeys();
+
+  /**
    * @return array
    *   An array containing the fields that should be searched for the search
    *   keys. If this is NULL, all fulltext fields should be searched.
@@ -155,7 +174,7 @@ interface SearchApiQueryInterface {
    * @return SearchApiQueryFilterInterface
    *   This object's associated filter object.
    */
-  public function &getFilter();
+  public function getFilter();
 
   /**
    * @return array
@@ -184,6 +203,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /** The search keys. If NULL, this will be a filter-only search. */
   protected $keys;
 
+  /** The unprocessed search keys, as passed to the keys() method. */
+  protected $orig_keys;
+
   /** The fields that will be searched for the keys. */
   protected $fields;
 
@@ -205,7 +227,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   Associative array of options configuring this query. Recognized options
    *   are:
    *   - conjunction: The type of conjunction to use for this query - either
-   *     'AND' or 'OR'. 'AND' by default.
+   *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
+   *     filters will always use AND by default.
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
    *     is set and not already an array. See SearchApiQuery::parseModes() for
    *     recognized parse modes.
@@ -239,7 +262,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
       'parse mode' => 'terms',
       'filter class' => 'SearchApiQueryFilter',
     );
-    $this->filter = $this->createFilter($this->options['conjunction']);
+    $this->filter = $this->createFilter('AND');
     $this->sort = array();
   }
 
@@ -266,7 +289,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
       'description' => t('The query is interpreted as multiple keywords seperated by spaces. ' .
           'Keywords containing spaces may be "quoted". Quoted keywords must still be seperated by spaces.'),
     );
-    // @todo Add fourth mode for complicated expr., e.g.: "vanilla ice" (love OR NOT hate)
+    // @todo Add fourth mode for complicated expr., e.g.: »"vanilla ice" OR (love NOT hate)«
     return $modes;
   }
 
@@ -328,13 +351,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
+   * Method for creating a filter to use with this query object.
+   *
    * @param $conjunction
    *   The conjunction to use for the filter - either 'AND' or 'OR'.
    *
    * @return SearchApiQueryFilterInterface
    *   A filter object that is set to use the specified conjunction.
    */
-  protected function createFilter($conjunction = 'AND') {
+  public function createFilter($conjunction = 'AND') {
     $filter_class = $this->options['filter class'];
     return new $filter_class($conjunction);
   }
@@ -350,6 +375,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The called object.
    */
   public function keys($keys = NULL) {
+    $this->orig_keys = $keys;
     if (isset($keys)) {
       $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     }
@@ -483,40 +509,34 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   protected function addLanguages(array $languages) {
     if (array_search(LANGUAGE_NONE, $languages) === FALSE) {
-      $languages[] = 'und';
+      $languages[] = LANGUAGE_NONE;
     }
 
-    if ($this->filter->getConjunction() == 'AND') {
-      $languages = drupal_map_assoc($languages);
-      $langs_to_add = $languages;
-      $filters = $this->filter->getFilters();
-      while ($filters && $langs_to_add) {
-        $filter = array_shift($filters);
-        if (is_array($filter)) {
-          if ($filter[0] == 'search-api-language' && $filter[2] == '=') {
-            $lang = $filter[1];
+    $languages = drupal_map_assoc($languages);
+    $langs_to_add = $languages;
+    $filters = $this->filter->getFilters();
+    while ($filters && $langs_to_add) {
+      $filter = array_shift($filters);
+      if (is_array($filter)) {
+        if ($filter[0] == 'search-api-language' && $filter[2] == '=') {
+          $lang = $filter[1];
+          if (isset($languages[$lang])) {
+            unset($langs_to_add[$lang]);
+          }
+          else {
+            throw new SearchApiException(t('Impossible combination of filters and languages. There is a filter for "!language", but allowed languages are: "!languages".', array('!language' => $lang, '!languages' => implode(t('", "', array(), array('context' => 'list of language IDs')), $languages))));
           }
         }
-        else {
-          if ($filter->getConjunction() == 'AND') {
-            $filters += $filter->getFilters();
-          }
+      }
+      else {
+        if ($filter->getConjunction() == 'AND') {
+          $filters += $filter->getFilters();
         }
       }
     }
-    else {
-      $filter = $this->createFilter('AND');
-      $filter->filter($this->filter);
-      $this->filter = $filter;
-      if (count($languages) == 1) {
-        $this->condition('search-api-language', array_shift($languages));
-      }
-      else {
-        $filter = $this->createFilter('OR');
-        foreach ($languases as $lang) {
-          $filter->condition('search-api-language', array_shift($languages));
-        }
-        $this->filter($filter);
+    if ($langs_to_add) {
+      foreach ($langs_to_add as $lang) {
+        $this->condition('search-api-language', $lang);
       }
     }
   }
@@ -557,6 +577,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
+   * @return
+   *   This unprocessed search keys, exactly as passed to this object. Has the
+   *   same format as getKeys().
+   */
+  public function getOriginalKeys() {
+    return $this->orig_keys;
+  }
+
+  /**
    * @return array
    *   An array containing the fields that should be searched for the search
    *   keys.
@@ -569,7 +598,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @return SearchApiQueryFilterInterface
    *   This object's associated filter object.
    */
-  public function &getFilter() {
+  public function getFilter() {
     return $this->filter;
   }
 
