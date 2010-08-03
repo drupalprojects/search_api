@@ -324,10 +324,11 @@ class SearchApiQuery implements SearchApiQueryInterface {
         return $keys;
 
       case 'single':
-        return array($keys);
+        return array('#conjunction' => $this->options['conjunction'], $keys);
 
       case 'terms':
         $ret = explode(' ', $keys);
+        $ret['#conjunction'] = $this->options['conjunction'];
         $quoted = FALSE;
         $str = '';
         foreach ($ret as $k => $v) {

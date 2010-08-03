@@ -416,7 +416,7 @@ class SearchApiIndex extends EntityDBExtendable {
     $this->prepareProcessors();
     // Postprocessing is done in exactly the opposite direction than preprocessing.
     foreach (array_reverse($this->processors) as $processor) {
-      $processor->preprocessSearchQuery($results, $query);
+      $processor->postprocessSearchResults($results, $query);
     }
     return $this;
   }

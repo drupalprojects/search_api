@@ -515,7 +515,8 @@ class SearchApiDbService extends SearchApiAbstractService {
 
     $time_processing_done = microtime(TRUE);
     $results = array();
-    $results['result count'] = $db_query->countQuery()->execute();
+    $results['result count'] = $db_query->countQuery()->execute()->fetchField();
+
     if ($results['result count']) {
       $query_options = $query->getOptions();
       if (isset($query_options['offset']) && isset($query_options['limit'])) {
