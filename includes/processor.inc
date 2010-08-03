@@ -192,15 +192,15 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
    * Method for preprocessing search keys.
    */
   protected function processKeys(&$keys) {
-    if (is_array($value)) {
-      foreach ($value as $key => &$v) {
+    if (is_array($keys)) {
+      foreach ($keys as $key => &$v) {
         if (element_child($key)) {
           $this->processKeys($v);
         }
       }
     }
     else {
-      $this->processKey($value);
+      $this->processKey($keys);
     }
   }
 

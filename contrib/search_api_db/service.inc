@@ -694,6 +694,9 @@ class SearchApiDbService extends SearchApiAbstractService {
           $or->condition('word', $word);
         }
       }
+      else {
+        $word = array_shift($words);
+      }
       foreach ($fields as $name => $field) {
         $table = $field['table'];
         $query = db_select($table, 't', $this->query_options);
@@ -706,11 +709,11 @@ class SearchApiDbService extends SearchApiAbstractService {
         else {
           $query->fields('t');
         }
-        if ($one_word) {
-          $query->condition('word', $word);
+        if ($mul_words) {
+          $query->condition($or);
         }
         else {
-          $query->condition($or);
+          $query->condition('word', $word);
         }
         if (!isset($db_query)) {
           $db_query = $query;
@@ -727,7 +730,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     if ($nested) {
       $word = '';
       foreach ($nested as $k) {
-        $query = $this->createKeysQuery($k, $fields);
+        $query = $this->createKeysQuery($k, $fields, $all_fields);
         if (!$neg) {
           $word .= ' ';
           $query->addExpression(':word', 'word', array(':word' => $word));

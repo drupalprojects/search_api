@@ -130,6 +130,21 @@ interface SearchApiQueryInterface {
   public function sort($field, $order = 'ASC');
 
   /**
+   * Adds a range of results to return. This will be saved in the query's
+   * options. If called without parameters, this will remove all range
+   * restrictions previously set.
+   *
+   * @param $offset
+   *   The zero-based offset of the first result returned.
+   * @param $limit
+   *   The number of results to return.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
+   */
+  public function range($offset = NULL, $limit = NULL);
+
+  /**
    * Executes this search query.
    *
    * @return array
@@ -398,7 +413,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The called object.
    */
   public function fields(array $fields) {
-    $index_fields = $index->options['fields'];
+    $index_fields = $this->index->options['fields'];
     foreach ($fields as $field) {
       if (!isset($index_fields[$field]['type']) || !search_api_is_text_type($index_fields[$field]['type'])) {
         throw new SearchApiException(t('Trying to search on field !field which is no fulltext field.', array('!field' => $field)));
@@ -464,6 +479,25 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
+   * Adds a range of results to return. This will be saved in the query's
+   * options. If called without parameters, this will remove all range
+   * restrictions previously set.
+   *
+   * @param $offset
+   *   The zero-based offset of the first result returned.
+   * @param $limit
+   *   The number of results to return.
+   *
+   * @return SearchApiQueryInterface
+   *   The called object.
+   */
+  public function range($offset = NULL, $limit = NULL) {
+    $this->options['offset'] = $offset;
+    $this->options['limit'] = $limit;
+    return $this;
+  }
+
+  /**
    * Executes this search query.
    *
    * Since this method takes care of important hook invocations, caching, etc.,
@@ -493,7 +527,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     $query_cache[] = $this;
 
     // Execute query.
-    $results = $server->search($this);
+    $results = $this->index->server()->search($this);
 
     // Call post-execute hook.
     $this->postExecute($results);
