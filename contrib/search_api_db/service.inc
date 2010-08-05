@@ -479,9 +479,6 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (is_array($keys) && !empty($keys['#negation'])) {
           $db_query->addExpression(':score', 'score', array(':score' => 1));
         }
-        else {
-          $db_query->orderBy('score', 'DESC');
-        }
       }
       else {
         $msg = t('Search keys are given but no fulltext fields are defined.');
@@ -522,8 +519,13 @@ class SearchApiDbService extends SearchApiAbstractService {
       if (isset($query_options['offset']) && isset($query_options['limit'])) {
         $db_query->range($query_options['offset'], $query_options['limit']);
       }
+
+      // @todo Mind $query->getSort()
+      $db_query->orderBy('score', 'DESC');
+
       $result = $db_query->execute();
       $time_queries_done = microtime(TRUE);
+
       foreach ($result as $row) {
         $results['results'][$row->item_id] = array(
           'id' => $row->item_id,
@@ -734,7 +736,8 @@ class SearchApiDbService extends SearchApiAbstractService {
         $query = $this->createKeysQuery($k, $fields, $all_fields);
         if (!$neg) {
           $word .= ' ';
-          $query->addExpression(':word', 'word', array(':word' => $word));
+          $var = ':word' . strlen($word);
+          $query->addExpression($var, 'word', array($var => $word));
         }
         if (!isset($db_query)) {
           $db_query = $query;
@@ -755,12 +758,13 @@ class SearchApiDbService extends SearchApiAbstractService {
         $db_query->addExpression('SUM(t.score)', 'score');
         $db_query->groupBy('t.item_id');
       }
-      if ($conj == 'AND') {
+      if ($conj == 'AND' && $subs > 1) {
+        $var = ':subs' . ((int) $subs);
         if ($mul_words) {
-          $db_query->having('COUNT(DISTINCT word) = :subs', array(':subs' => $subs));
+          $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
         }
         else {
-          $db_query->having('COUNT(word) = :subs', array(':subs' => $subs));
+          $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
         }
       }
     }
@@ -868,6 +872,19 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
     }
     return $empty ? NULL : $cond;
+  }
+
+  /**
+   * Helper method for adding a field's table to a database query.
+   */
+  protected function getTableAlias(array $field, SelectQueryInterface $db_query) {
+    foreach ($db_query->getTables() as $alias => $info) {
+      $table = $info['table'];
+      if (is_scalar($table) && $table == $field['table']) {
+        return $alias;
+      }
+    }
+    return $db_query->join($field['table'], 't', 't.item_id = %alias.item_id');
   }
 
   /**
