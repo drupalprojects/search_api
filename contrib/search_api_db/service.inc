@@ -520,8 +520,35 @@ class SearchApiDbService extends SearchApiAbstractService {
         $db_query->range($query_options['offset'], $query_options['limit']);
       }
 
-      // @todo Mind $query->getSort()
-      $db_query->orderBy('score', 'DESC');
+      $sort = $query->getSort();
+      if ($sort) {
+        foreach ($sort as $field_name => $order) {
+          if ($order != 'ASC' && $order != 'DESC') {
+            $msg = t('Unknown sort order !order. Assuming "ASC".', array('!order' => $order));
+            $this->warnings[$msg] = $msg;
+            $order = 'ASC';
+          }
+          if ($field_name == 'search-api-relevance') {
+            $db_query->orderBy('score', $order);
+            continue;
+          }
+          if (!isset($fields[$field_name])) {
+            throw new SearchApiException(t('Trying to sort on unknown field !field.', array('!field' => $field_name)));
+          }
+          $field = $fields[$field_name];
+          if (search_api_is_list_type($field['type'])) {
+            throw new SearchApiException(t('Cannot sort on field !field of a list type.', array('!field' => $field_name)));
+          }
+          if (search_api_is_text_type($field['type'])) {
+            throw new SearchApiException(t('Cannot sort on fulltext field !field.', array('!field' => $field_name)));
+          }
+          $alias = $this->getTableAlias($field, $db_query);
+          $db_query->orderBy($alias . '.value', $order);
+        }
+      }
+      else {
+        $db_query->orderBy('score', 'DESC');
+      }
 
       $result = $db_query->execute();
       $time_queries_done = microtime(TRUE);
