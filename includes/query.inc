@@ -116,10 +116,11 @@ interface SearchApiQueryInterface {
   public function condition($field, $value, $operator = '=');
 
   /**
-   * Add a sort directive to this search query.
+   * Add a sort directive to this search query. If no sort is manually set, the
+   * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special field 'search_api_relevance' may be
+   *   The field to sort by. The special field 'search-api-relevance' may be
    *   used to sort by relevance.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
@@ -481,10 +482,11 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * Add a sort directive to this search query.
+   * Add a sort directive to this search query. If no sort is manually set, the
+   * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special field 'search_api_relevance' may be
+   *   The field to sort by. The special field 'search-api-relevance' may be
    *   used to sort by relevance.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
