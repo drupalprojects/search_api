@@ -156,6 +156,7 @@ interface SearchApiQueryInterface {
    *   - results: An array of results, ordered as specified. The array keys are
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
+   *     - entity: The item as a loaded entity object.
    *     - score: A float measuring how well the item fits the search.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
@@ -531,6 +532,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   - results: An array of results, ordered as specified. The array keys are
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
+   *     - entity: The item as a loaded entity object.
    *     - score: A float measuring how well the item fits the search.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
@@ -542,6 +544,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     - hooks: Hook invocations and other server-independent processing.
    *     - preprocessing: Preprocessing of the service class.
    *     - execution: The actual query to the search server, in whatever form.
+   *     - load: Loading the search results from the database.
    *     - postprocessing: Preparing the results for returning.
    *   Additional metadata may be returned in other keys. Only 'result count'
    *   and 'result' always have to be set, all other entries are optional.
@@ -562,10 +565,6 @@ class SearchApiQuery implements SearchApiQueryInterface {
     if (isset($this->options['languages'])) {
       $this->addLanguages($this->options['languages']);
     }
-
-    // Cache query (e.g. for facets).
-    $query_cache = &drupal_static('search_api_search_query');
-    $query_cache[] = $this;
 
     $pre_search = microtime(TRUE);
 

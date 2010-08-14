@@ -97,7 +97,7 @@ function search_api_admin_overview() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('There are no search servers defined yet.'),
+    '#empty' => t('There are no search servers or indexes defined yet.'),
   );
 }
 
@@ -213,6 +213,7 @@ function search_api_admin_add_server_submit($form, &$form_state) {
   $values['options'] = $values['options']['form'];
   $id = search_api_server_insert($values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
+  drupal_set_message(t('The server was successfully created.'));
 }
 
 /**
@@ -537,6 +538,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
       return $ret;
     }
   }
+  drupal_set_title(search_api_admin_item_title($index));
 
   $ret = array(
     '#theme' => 'search_api_index',
@@ -677,7 +679,7 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
   else {
     $percentage = (int) (100 * $status['indexed'] / $status['total']);
     $form['progress']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
-        array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' =>$percentage));
+        array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' => $percentage));
   }
 
   if ($enabled && !$all) {
@@ -749,7 +751,7 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
  * Validation function for search_api_admin_index_status_form.
  */
 function search_api_admin_index_status_form_validate($form, &$form_state) {
-  if ($form_state['values']['op'] == t('Index now') && $form_state['values']['limit'] == 0) {
+  if ($form_state['values']['op'] == t('Index now') && !$form_state['values']['limit']) {
     form_set_error('number', t('You have to set the number of items to index. Set to -1 for indexing all items.'));
   }
 }
@@ -1129,7 +1131,7 @@ function search_api_admin_index_workflow_submit($form, &$form_state) {
 
   $ret = search_api_index_edit($index->id, array('options' => $options));
   if ($ret) {
-    search_api_index_reindex($index);
+    search_api_index_reindex($index->id);
     drupal_set_message(t("The search index' workflow was successfully edited. " .
         'All content was scheduled for re-indexing so the new settings can take effect.'));
   }
@@ -1401,11 +1403,11 @@ function theme_search_api_admin_fields_table($variables) {
  * Submit function for search_api_admin_index_fields.
  */
 function search_api_admin_index_fields_submit($form, &$form_state) {
-  $index = search_api_index_load($form_state['values']['id']);
+  $id = $form_state['values']['id'];
   if ($form_state['values']['op'] == t('Save changes')) {
-    $ret = search_api_index_edit_fields($index, $form_state['values']['fields']);
+    $ret = search_api_index_edit_fields($id, $form_state['values']['fields']);
 
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id;
     if ($ret) {
       drupal_set_message(t('The indexed fields were successfully changed. ' .
           'The index was cleared and will have to be re-indexed with the new settings.'));
@@ -1416,6 +1418,7 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
     return;
   }
   // Adding a related entity's fields
+  $index = search_api_index_load($id);
   $form_state['rebuild'] = TRUE;
 
   $wrapper = entity_metadata_wrapper($index->entity_type);

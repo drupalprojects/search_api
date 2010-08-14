@@ -236,14 +236,21 @@ class SearchApiIndex extends EntityDBExtendable {
     foreach ($wrappers as $id => $wrapper) {
       $item = array();
       foreach ($fields as $field => $info) {
-        $tmp = $wrapper;
-        foreach (explode(':', $field) as $property) {
-          $tmp = $tmp->$property;
-        }
         $item[$field] = $info;
-        $item[$field]['value'] = $tmp->value();
-        $property_info = $tmp->info();
-        $item[$field]['original_type'] = $property_info['type'];
+        try {
+          $tmp = $wrapper;
+          foreach (explode(':', $field) as $property) {
+            $tmp = $tmp->$property;
+          }
+          $item[$field]['value'] = $tmp->value();
+          $property_info = $tmp->info();
+          $item[$field]['original_type'] = $property_info['type'];
+        }
+        catch (Exception $e) {
+          // This might happen for entity fields that are NULL, e.g. comments without parent.
+          $item[$field]['value'] = NULL;
+          $item[$field]['original_type'] = $info['type'];
+        }
       }
       $items[$id] = $item;
     }

@@ -446,10 +446,15 @@ function search_api_search_api_processor_info() {
     'description' => t('A processor that makes searches case-independent.'),
     'class' => 'SearchApiIgnoreCase',
   );
-  // @todo Add HTML filter.
+  $processors['search_api_html_filter'] = array(
+    'name' => t('HTML filter'),
+    'description' => t('Strips HTML tags from indexed data and decodes HTML entities.'),
+    'class' => 'SearchApiHtmlFilter',
+    'weight' => 10,
+  );
   $processors['search_api_tokenizer'] = array(
     'name' => t('Tokenizer'),
-    'description' => t('Tokenizes fulltext data by stripping non-letters.'),
+    'description' => t('Tokenizes fulltext data by stripping whitespace.'),
     'class' => 'SearchApiTokenizer',
     'weight' => 20,
   );
@@ -609,17 +614,23 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
     $text = '';
     if ($fields) {
       foreach (array_keys($fields) as $field) {
-        $tmp = $wrapper;
-        foreach (explode(':', $field) as $property) {
-          if (!isset($tmp->$property)) {
-            // This can especially happen for fields added by data alter callbacks - e.g., this one.
-            $tmp = FALSE;
-            break;
+        try {
+          $tmp = $wrapper;
+          foreach (explode(':', $field) as $property) {
+            if (!isset($tmp->$property)) {
+              // This can especially happen for fields added by data alter callbacks - e.g., this one.
+              $tmp = FALSE;
+              break;
+            }
+            $tmp = $tmp->$property;
           }
-          $tmp = $tmp->$property;
+          if ($tmp) {
+            $text .= $tmp->value() . "\n\n";
+          }
         }
-        if ($tmp) {
-          $text .= $tmp->value() . "\n\n";
+        catch (Exception $e) {
+          // This might happen for entity fields that are NULL, e.g. comments without parent.
+          // We just ignore the field, then.
         }
       }
     }
@@ -1023,7 +1034,7 @@ function search_api_server_enable($id) {
             break;
           case 'fields':
             if ($server->fieldsUpdated($index)) {
-              _search_api_index_reindex($index);
+              _search_api_index_reindex($index_id);
             }
             break;
           case 'remove':
@@ -1067,7 +1078,7 @@ function search_api_server_disable($id) {
   $id = $server->id;
   $indexes = search_api_list_indexes(array('server' => $id));
   foreach ($indexes as $index) {
-    search_api_index_disable($index);
+    search_api_index_disable($index->id);
   }
   $ret = db_update('search_api_server')
     ->fields(array('enabled' => 0))
@@ -1101,8 +1112,8 @@ function search_api_server_delete($id) {
   $id = $server->id;
   $indexes = search_api_list_indexes(array('server' => $id));
   foreach ($indexes as $index) {
-    search_api_index_disable($index);
-    search_api_index_reindex($index);
+    search_api_index_disable($index->id);
+    search_api_index_reindex($index->id);
   }
   db_update('search_api_index')
     ->fields(array('server' => NULL))
@@ -1460,7 +1471,7 @@ function search_api_index_edit_fields($id, array $fields) {
     return $ret;
   }
 
-  $index = search_api_index_load($id);
+  $index = search_api_index_load($id, TRUE);
 
   if ($index->server) {
     $server = $index->server();

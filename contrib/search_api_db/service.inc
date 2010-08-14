@@ -86,15 +86,18 @@ class SearchApiDbService extends SearchApiAbstractService {
     }
 
     $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
-    foreach ($index->options['fields'] as $name => $field) {
-      if (empty($field['indexed'])) {
-        continue;
+    $indexes[$index->id] = array();
+    if (!empty($index->options['fields'])) {
+      foreach ($index->options['fields'] as $name => $field) {
+        if (empty($field['indexed'])) {
+          continue;
+        }
+        $table = $this->findFreeTable($prefix, $name);
+        $this->createFieldTable($field, $table);
+        $indexes[$index->id][$name]['table'] = $table;
+        $indexes[$index->id][$name]['type']  = $field['type'];
+        $indexes[$index->id][$name]['boost'] = $field['boost'];
       }
-      $table = $this->findFreeTable($prefix, $name);
-      $this->createFieldTable($field, $table);
-      $indexes[$index->id][$name]['table'] = $table;
-      $indexes[$index->id][$name]['type']  = $field['type'];
-      $indexes[$index->id][$name]['boost'] = $field['boost'];
     }
 
     search_api_server_edit($this->id, array('options' => $this->options));
@@ -459,7 +462,9 @@ class SearchApiDbService extends SearchApiAbstractService {
       if (!isset($fulltext_fields)) {
         $fulltext_fields = array();
         foreach ($fields as $name => $field) {
-          $fulltext_fields[] = $name;
+          if (search_api_is_text_type($field['type'])) {
+            $fulltext_fields[] = $name;
+          }
         }
       }
       if ($fulltext_fields) {
