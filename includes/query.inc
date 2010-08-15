@@ -120,8 +120,8 @@ interface SearchApiQueryInterface {
    * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special field 'search-api-relevance' may be
-   *   used to sort by relevance.
+   *   The field to sort by. The special fields 'search-api-relevance' (sort by
+   *   relevance) and 'search-api-id' (sort by entity id) may be used.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
@@ -233,25 +233,53 @@ interface SearchApiQueryInterface {
  */
 class SearchApiQuery implements SearchApiQueryInterface {
 
-  /** The index. */
+  /**
+   * The index.
+   *
+   * @var SearchApiIndex
+   */
   protected $index;
 
-  /** The search keys. If NULL, this will be a filter-only search. */
+  /**
+   * The search keys. If NULL, this will be a filter-only search.
+   *
+   * @var mixed
+   */
   protected $keys;
 
-  /** The unprocessed search keys, as passed to the keys() method. */
+  /**
+   * The unprocessed search keys, as passed to the keys() method.
+   *
+   * @var mixed
+   */
   protected $orig_keys;
 
-  /** The fields that will be searched for the keys. */
+  /**
+   * The fields that will be searched for the keys.
+   *
+   * @var array
+   */
   protected $fields;
 
-  /** The search filter associated with this query. */
+  /**
+   * The search filter associated with this query.
+   *
+   * @var SearchApiQueryFilterInterface
+   */
   protected $filter;
 
-  /** The sort associated with this query. */
+  /**
+   * The sort associated with this query.
+   *
+   * @var array
+   */
   protected $sort;
 
-  /** Search options configuring this query. */
+  /**
+   * Search options configuring this query.
+   *
+   * @var array
+   */
   protected $options;
 
   /**
@@ -569,21 +597,31 @@ class SearchApiQuery implements SearchApiQueryInterface {
     $pre_search = microtime(TRUE);
 
     // Execute query.
-    $results = $this->index->server()->search($this);
+    $response = $this->index->server()->search($this);
 
     $post_search = microtime(TRUE);
 
+    // Load results
+    if (!empty($response['results'])) {
+      foreach (entity_load($this->index->entity_type, array_keys($response['results'])) as $id => $entity) {
+        $response['results'][$id]['entity'] = $entity;
+      }
+    }
+
+    $entities_loaded = microtime(TRUE);
+
     // Call post-execute hook.
-    $this->postExecute($results);
+    $this->postExecute($response);
 
     // Postprocess results.
-    $this->index->postprocessSearchResults($results, $this);
+    $this->index->postprocessSearchResults($response, $this);
 
     $end = microtime(TRUE);
-    $results['performance']['complete'] = $end - $start;
-    $results['performance']['hooks'] = $results['performance']['complete'] - ($pre_search - $post_search);
+    $response['performance']['complete'] = $end - $start;
+    $response['performance']['load'] = $entities_loaded - $post_search;
+    $response['performance']['hooks'] = $response['performance']['complete'] - ($entities_loaded - $pre_search);
 
-    return $results;
+    return $response;
   }
 
   /**

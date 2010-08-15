@@ -8,4 +8,5 @@ package = Search
 
 files[] = search_api_db.install
 files[] = search_api_db.module
+files[] = search_api_db.test
 files[] = service.inc

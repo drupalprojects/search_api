@@ -32,6 +32,9 @@ function search_api_test_menu() {
  */
 function search_api_test_insert_item(array $form, array &$form_state) {
   return array(
+    'id' => array(
+      '#type' => 'textfield',
+    ),
     'title' => array(
       '#type' => 'textfield',
     ),
@@ -53,8 +56,8 @@ function search_api_test_insert_item(array $form, array &$form_state) {
  */
 function search_api_test_insert_item_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
-  $id = db_insert('search_api_test')->fields($form_state['values'])->execute();
-  module_invoke_all('entity_insert', search_api_test_load($id), 'search_api_test');
+  db_insert('search_api_test')->fields($form_state['values'])->execute();
+  module_invoke_all('entity_insert', search_api_test_load($form_state['values']['id']), 'search_api_test');
 }
 
 /**
@@ -75,8 +78,29 @@ function search_api_test_view($entity) {
 /**
  * Menu callback for executing a search.
  */
-function search_api_test_query(SearchApiIndex $index, $keys = 'foo bar', $offset = 0, $limit = 10) {
-  $result = $index->query()->keys($keys)->range($offset, $limit)->execute();
+function search_api_test_query(SearchApiIndex $index, $keys = 'foo bar', $offset = 0, $limit = 10, $fields = NULL, $sort = NULL, $filters = NULL) {
+  $query = $index->query()
+    ->keys($keys)
+    ->range($offset, $limit);
+  if ($fields) {
+    $query->fields(explode(',', $fields));
+  }
+  if ($sort) {
+    $sort = explode(',', $sort);
+    $query->sort($sort[0], $sort[1]);
+  }
+  else {
+    $query->sort('search-api-id', 'ASC');
+  }
+  if ($filters) {
+    $filters = explode(',', $filters);
+    foreach ($filters as $filter) {
+      $filter = explode('=', $filter);
+      $query->condition($filter[0], $filter[1]);
+    }
+  }
+  $result = $query->execute();
+
   $ret = '';
   $ret .= 'result count = ' . (int) $result['result count'] . '<br/>';
   $ret .= 'results = (' . (empty($result['results']) ? '' : implode(', ', array_keys($result['results']))) . ')<br/>';

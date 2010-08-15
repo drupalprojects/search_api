@@ -178,12 +178,36 @@ interface SearchApiServiceInterface {
  */
 abstract class SearchApiAbstractService implements SearchApiServiceInterface {
 
-  /** Database values that will be set when object is loaded: */
+  /* Database values that will be set when object is loaded: */
+
+  /**
+   * @var integer
+   */
   public $id = 0;
+
+  /**
+   * @var string
+   */
   public $name = '';
+
+  /**
+   * @var string
+   */
   public $description = '';
+
+  /**
+   * @var string
+   */
   public $class = '';
+
+  /**
+   * @var array
+   */
   public $options = array();
+
+  /**
+   * @var integer
+   */
   public $enabled = 1;
 
   /**

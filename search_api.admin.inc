@@ -397,7 +397,11 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   unset($values['id']);
 
   if (isset($values['options'])) {
+    $server = search_api_server_load($id);
     $values['options'] = $values['options']['form'];
+    if (!empty($server->options)) {
+      $values['options'] += $server->options;
+    }
   }
 
   $ret = search_api_server_edit($id, $values);
@@ -669,8 +673,8 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
   );
   $all = ($status['indexed'] == $status['total']);
   if ($all) {
-    $form['progress']['#description'] = t('All items have been indexed (@indexed / @total).',
-        array('@indexed' => $status['indexed'], '@total' => $status['total']));
+    $form['progress']['#description'] = t('All items have been indexed (@total / @total).',
+        array('@total' => $status['total']));
   }
   elseif (!$status['indexed']) {
     $form['progress']['#description'] = t('All items still need to be indexed (@total total).',

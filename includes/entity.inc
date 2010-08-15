@@ -140,18 +140,56 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
  */
 class SearchApiIndex extends EntityDBExtendable {
 
+  /**
+   * @var SearchApiServer
+   */
   private $server_object = NULL;
+
+  /**
+   * @var array
+   */
   private $processors = array();
+
+  /**
+   * @var array
+   */
   private $added_properties = array();
 
   // Database values that will be set when object is loaded
 
+  /**
+   * @var integer
+   */
   public $id;
+
+  /**
+   * @var string
+   */
   public $name;
+
+  /**
+   * @var string
+   */
   public $description;
+
+  /**
+   * @var integer
+   */
   public $server;
+
+  /**
+   * @var string
+   */
   public $entity_type;
+
+  /**
+   * @var array
+   */
   public $options;
+
+  /**
+   * @var integer
+   */
   public $enabled;
 
   /**
@@ -410,7 +448,7 @@ class SearchApiIndex extends EntityDBExtendable {
    * same object will be used for both calls (so preserving some data or state
    * locally is possible).
    *
-   * @param array $results
+   * @param array $response
    *   An array containing the search results. See
    *   SearchApiServiceInterface->search() for the detailled format.
    * @param SearchApiQuery $query
@@ -419,11 +457,11 @@ class SearchApiIndex extends EntityDBExtendable {
    * @return SearchApiIndex
    *   The called object.
    */
-  public function postprocessSearchResults(array &$results, SearchApiQuery $query) {
+  public function postprocessSearchResults(array &$response, SearchApiQuery $query) {
     $this->prepareProcessors();
     // Postprocessing is done in exactly the opposite direction than preprocessing.
     foreach (array_reverse($this->processors) as $processor) {
-      $processor->postprocessSearchResults($results, $query);
+      $processor->postprocessSearchResults($response, $query);
     }
     return $this;
   }

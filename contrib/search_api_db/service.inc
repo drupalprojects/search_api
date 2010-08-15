@@ -78,7 +78,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       // Easiest and safest method to ensure all of the index' data is properly re-added.
       $this->removeIndex($index);
     }
-    if (empty($index->options['fields'])) {
+    if (empty($index->options['fields']) || !is_array($index->options['fields'])) {
       // No fields, no work.
       $indexes[$index->id] = array();
       search_api_server_edit($this->id, array('options' => $this->options));
@@ -87,17 +87,15 @@ class SearchApiDbService extends SearchApiAbstractService {
 
     $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
     $indexes[$index->id] = array();
-    if (!empty($index->options['fields'])) {
-      foreach ($index->options['fields'] as $name => $field) {
-        if (empty($field['indexed'])) {
-          continue;
-        }
-        $table = $this->findFreeTable($prefix, $name);
-        $this->createFieldTable($field, $table);
-        $indexes[$index->id][$name]['table'] = $table;
-        $indexes[$index->id][$name]['type']  = $field['type'];
-        $indexes[$index->id][$name]['boost'] = $field['boost'];
+    foreach ($index->options['fields'] as $name => $field) {
+      if (empty($field['indexed'])) {
+        continue;
       }
+      $table = $this->findFreeTable($prefix, $name);
+      $this->createFieldTable($field, $table);
+      $indexes[$index->id][$name]['table'] = $table;
+      $indexes[$index->id][$name]['type']  = $field['type'];
+      $indexes[$index->id][$name]['boost'] = $field['boost'];
     }
 
     search_api_server_edit($this->id, array('options' => $this->options));
@@ -363,18 +361,21 @@ class SearchApiDbService extends SearchApiAbstractService {
       $type = substr($type, 5, -1);
       $ret = array();
       foreach ($value as $v) {
-        $ret = array_merge($ret, $this->convert($v, $type));
+        $v = $this->convert($v, $type);
+        $ret = array_merge($ret, is_array($v) ? $v : array($v));
       }
       return $ret;
     }
     switch ($type) {
       case 'text':
         $ret = array();
-        foreach (preg_split('/\s+/', $value, PREG_SPLIT_NO_EMPTY) as $v) {
-          $ret[] = array(
-            'value' => $v,
-            'score' => 1.0,
-          );
+        foreach (preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
+          if ($v) {
+            $ret[] = array(
+              'value' => $v,
+              'score' => 1.0,
+            );
+          }
         }
         return $ret;
 
@@ -451,13 +452,14 @@ class SearchApiDbService extends SearchApiAbstractService {
     $set = $this->setDb();
     $index = $query->getIndex();
     if (empty($this->options['indexes'][$index->id])) {
-      throw new SearchApiException(t('Unknown index !id.'), array('!id' => $index->id));
+      throw new SearchApiException(t('Unknown index !id.', array('!id' => $index->id)));
     }
     $fields = $this->options['indexes'][$index->id];
 
     $keys = &$query->getKeys();
+    $keys_set = (boolean) $keys;
     $keys = $this->prepareKeys($keys);
-    if ($keys) {
+    if ($keys && !(is_array($keys) && count($keys) == 1)) {
       $fulltext_fields = $query->getFields();
       if (!isset($fulltext_fields)) {
         $fulltext_fields = array();
@@ -491,6 +493,10 @@ class SearchApiDbService extends SearchApiAbstractService {
         $this->warnings[$msg] = 1;
       }
     }
+    elseif ($keys_set) {
+      $msg = t('No valid search keys were present in the query.');
+      $this->warnings[$msg] = 1;
+    }
 
     $filter = $query->getFilter();
     if ($filter->getFilters()) {
@@ -501,23 +507,27 @@ class SearchApiDbService extends SearchApiAbstractService {
           $db_query->addField('t', 'item_id', 'item_id');
           $db_query->addExpression(':score', 'score', array(':score' => 1));
         }
-        else {
-          throw new SearchApiException(t('No valid keys or filters given.'));
-        }
       }
-      $condition = $this->createFilterCondition($filter, $fields, $db_query);
-      if ($condition) {
-        $db_query->condition($condition);
+      if (isset($db_query)) {
+        $condition = $this->createFilterCondition($filter, $fields, $db_query);
+        if ($condition) {
+          $db_query->condition($condition);
+        }
       }
     }
 
     if (!isset($db_query)) {
-      throw new SearchApiException(t('No valid keys or filters given.'));
+      $msg = t('No valid search keys or filters given.');
+      $this->warnings[$msg] = 1;
+      $db_query = db_select($fields['search-api-language']['table'], 't', $this->query_options);
+      $db_query->addField('t', 'item_id', 'item_id');
+      $db_query->addExpression(':score', 'score', array(':score' => 1));
     }
 
     $time_processing_done = microtime(TRUE);
     $results = array();
-    $results['result count'] = $db_query->countQuery()->execute()->fetchField();
+    $count_query = $db_query->countQuery();
+    $results['result count'] = $count_query->execute()->fetchField();
 
     if ($results['result count']) {
       $query_options = $query->getOptions();
@@ -535,6 +545,10 @@ class SearchApiDbService extends SearchApiAbstractService {
           }
           if ($field_name == 'search-api-relevance') {
             $db_query->orderBy('score', $order);
+            continue;
+          }
+          if ($field_name == 'search-api-id') {
+            $db_query->orderBy('item_id', $order);
             continue;
           }
           if (!isset($fields[$field_name])) {
@@ -639,7 +653,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         $this->ignored[$keys] = 1;
         return NULL;
       }
-      $words = preg_split('/\s+/', $proc);
+      $words = preg_split('/\s+/', $proc, -1, PREG_SPLIT_NO_EMPTY);
       if (count($words) > 1) {
         $proc = $this->splitKeys($words);
         $proc['#conjunction'] = 'AND';

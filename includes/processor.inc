@@ -66,13 +66,13 @@ interface SearchApiProcessorInterface {
    * same object will be used for both calls (so preserving some data or state
    * locally is possible).
    *
-   * @param array $results
+   * @param array $response
    *   An array containing the search results. See the return value of
    *   SearchApiQueryInterface->execute() for the detailled format.
    * @param SearchApiQuery $query
    *   The object representing the executed query.
    */
-  public function postprocessSearchResults(array &$results, SearchApiQuery $query);
+  public function postprocessSearchResults(array &$response, SearchApiQuery $query);
 
 }
 
@@ -86,7 +86,14 @@ interface SearchApiProcessorInterface {
  */
 abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface {
 
+  /**
+   * @var SearchApiIndex
+   */
   protected $index;
+
+  /**
+   * @var array
+   */
   protected $options;
 
   /**
@@ -126,7 +133,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   /**
    * Does nothing.
    */
-  public function postprocessSearchResults(array &$results, SearchApiQuery $query) {
+  public function postprocessSearchResults(array &$response, SearchApiQuery $query) {
     return;
   }
 
@@ -300,7 +307,14 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
  */
 class SearchApiTokenizer extends SearchApiAbstractProcessor {
 
+  /**
+   * @var string
+   */
   protected $spaces;
+
+  /**
+   * @var string
+   */
   protected $ignorable;
 
   public function configurationForm() {
@@ -311,7 +325,6 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
         '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
             'Specify the characters as a <a href="@link">PCRE character class</a>.',
             array('@link' => url('http://php.net/manual/en/regexp.reference.squarebrackets.php'))),
-        // @todo Improve regex (numbers).
         '#default_value' => '[^\p{L}\p{N}]',
       ),
       'ignorable' => array(
@@ -373,6 +386,9 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
 // @todo Process query?
 class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
 
+  /**
+   * @var array
+   */
   protected $tags;
 
   public function __construct(SearchApiIndex $index, array $options = array()) {

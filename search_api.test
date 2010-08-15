@@ -42,7 +42,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->insertItems();
     $this->checkOverview1();
     $this->createIndex();
-    $this->insertItems();
+    $this->insertItems(5);
     $this->createServer();
     $this->checkOverview2();
     $this->enableIndex();
@@ -55,29 +55,34 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->deleteServer();
   }
 
-  private function insertItems() {
+  private function insertItems($offset = 0) {
     $count = db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField();
     $this->insertItem(array(
+      'id' => $offset + 1,
       'title' => 'Title 1',
       'body' => 'Body text 1.',
       'type' => 'Item',
     ));
     $this->insertItem(array(
+      'id' => $offset + 2,
       'title' => 'Title 2',
       'body' => 'Body text 2.',
       'type' => 'Item',
     ));
     $this->insertItem(array(
+      'id' => $offset + 3,
       'title' => 'Title 3',
       'body' => 'Body text 3.',
       'type' => 'Item',
     ));
     $this->insertItem(array(
+      'id' => $offset + 4,
       'title' => 'Title 4',
       'body' => 'Body text 4.',
       'type' => 'Page',
     ));
     $this->insertItem(array(
+      'id' => $offset + 5,
       'title' => 'Title 5',
       'body' => 'Body text 5.',
       'type' => 'Page',
@@ -145,7 +150,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'processors[search_api_tokenizer][settings][spaces]' => '[^\p{L}\p{N}]',
       'processors[search_api_tokenizer][settings][ignorable]' => '[-]',
     );
-    $this->drupalPost("admin/config/search/search_api/index/$id/workflow", $values, t('Save configuration'));
+    $this->drupalPost(NULL, $values, t('Save configuration'));
     $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
 
     $this->drupalPost("admin/config/search/search_api/index/$id/workflow", $values, t('Save configuration'));
