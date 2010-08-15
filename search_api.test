@@ -345,8 +345,11 @@ class SearchApiWebTest extends DrupalWebTestCase {
 
 /**
  * Class with unit tests testing small fragments of the Search API.
+ *
+ * Due to severe limitations for "real" unit tests, this still has to be a
+ * subclass of DrupalWebTestCase.
  */
-class SearchApiUnitTest extends DrupalUnitTestCase {
+class SearchApiUnitTest extends DrupalWebTestCase {
 
   private $index;
 
@@ -383,7 +386,7 @@ class SearchApiUnitTest extends DrupalUnitTestCase {
   }
 
   function setUp() {
-    parent::setUp();
+    parent::setUp('entity', 'entity_metadata', 'search_api');
     $this->index = new SearchApiIndex(array(
       'id' => 1,
       'name' => 'test',
@@ -411,8 +414,14 @@ class SearchApiUnitTest extends DrupalUnitTestCase {
     ));
   }
 
-  // @todo Find out how objects can be tested
-  public function teztQueryParseKeys() {
+  public function testUnits() {
+    $this->checkQueryParseKeys();
+    $this->checkIgnoreCaseProcessor();
+    $this->checkTokenizer();
+    $this->checkHtmlFilter();
+  }
+
+  public function checkQueryParseKeys() {
     $options['parse mode'] = 'direct';
     $mode = &$options['parse mode'];
     $num = 1;
@@ -449,7 +458,7 @@ class SearchApiUnitTest extends DrupalUnitTestCase {
     $this->assertEqual($query->getKeys(), array('(foo', 'bar)', 'OR', 'bar baz', '#conjunction' => 'AND'), t('"!mode" parse mode, test !num.', array('!mode' => $modes[$mode]['name'], '!num' => $num++)));
   }
 
-  function teztIgnoreCaseProcessor() {
+  public function checkIgnoreCaseProcessor() {
     $types = search_api_field_types();
     $orig = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
     $processed = 'foo bar baz, äöüàá<>»«.';
@@ -516,7 +525,7 @@ class SearchApiUnitTest extends DrupalUnitTestCase {
     $this->assertEqual($query->getFilter()->getFilters(), $filters2, t('Filters were processed correctly.'));
   }
 
-  function teztTokenizer() {
+  public function checkTokenizer() {
     $orig = 'Foo bar1 BaZ,  La-la-la.';
     $processed1 = array(
       array(
@@ -598,7 +607,7 @@ class SearchApiUnitTest extends DrupalUnitTestCase {
     $this->assertEqual($query->getKeys(), 'foo"b r b z"foob r1', t('Search keys were processed correctly.'));
   }
 
-  function teztHtmlFilter() {
+  public function checkHtmlFilter() {
     $orig = <<<END
 This is <em lang="en" title =
 "something">a test</em>.
