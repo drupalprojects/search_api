@@ -324,7 +324,7 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
         '#title' => t('Whitespace characters'),
         '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
             'Specify the characters as a <a href="@link">PCRE character class</a>.',
-            array('@link' => url('http://php.net/manual/en/regexp.reference.squarebrackets.php'))),
+            array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
         '#default_value' => '[^\p{L}\p{N}]',
       ),
       'ignorable' => array(
@@ -491,7 +491,7 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
 }
 
 /**
- * Processor for making searches case-independent.
+ * Processor for making searches case-insensitive.
  */
 class SearchApiIgnoreCase extends SearchApiAbstractProcessor {
 

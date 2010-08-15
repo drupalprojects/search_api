@@ -29,7 +29,10 @@ interface SearchApiServiceInterface {
    * this object will still show the old values to allow comparison.
    *
    * @param array $fields
-   *   The fields that are about to change.
+   *   The fields that are about to change, mapped to their values.
+   *
+   * @return
+   *   TRUE, if the update requires reindexing of all content on the server.
    */
   public function postUpdate(array $fields);
 
@@ -227,10 +230,13 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * Does nothing, by default.
    *
    * @param array $fields
-   *   The fields that are about to change.
+   *   The fields that are about to change, mapped to their values.
+   *
+   * @return
+   *   TRUE, if the update requires reindexing of all content on the server.
    */
   public function postUpdate(array $fields) {
-    return;
+    return FALSE;
   }
 
   /**

@@ -60,6 +60,10 @@ class SearchApiDbService extends SearchApiAbstractService {
     return $form;
   }
 
+  public function postUpdate(array $fields) {
+    return isset($fields['options']) && $fields['options'] != $this->options;
+  }
+
   public function preDelete() {
     if (empty($this->options['indexes'])) {
       return;

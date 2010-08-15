@@ -443,7 +443,7 @@ function search_api_search_api_alter_callback_info() {
 function search_api_search_api_processor_info() {
   $processors['search_api_case_ignore'] = array(
     'name' => t('Ignore case'),
-    'description' => t('A processor that makes searches case-independent.'),
+    'description' => t('A processor that makes searches case-insensitive.'),
     'class' => 'SearchApiIgnoreCase',
   );
   $processors['search_api_html_filter'] = array(
@@ -979,12 +979,18 @@ function search_api_server_edit($id, array $fields) {
   if (isset($fields['options'])) {
     $fields['options'] = unserialize($fields['options']);
   }
-  $server->postUpdate($fields);
+  $reindex = $server->postUpdate($fields);
 
   $server = search_api_server_load($server->id, TRUE);
 
   module_invoke_all('search_api_server_update', $server, 'edit');
   module_invoke_all('entity_update', $server, 'search_api_server');
+
+  if ($reindex) {
+    foreach (search_api_list_indexes(array('server' => $server->id)) as $index) {
+      search_api_index_reindex($index->id);
+    }
+  }
 
   return $ret;
 }

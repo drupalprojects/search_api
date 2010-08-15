@@ -617,8 +617,8 @@ class SearchApiUnitTest extends DrupalWebTestCase {
 This is <em lang="en" title =
 "something">a test</em>.
 How to write <strong>links to <em>other sites</em></strong>: &lt;a href="URL" title="MOUSEOVER TEXT"&gt;TEXT&lt;/a&gt;.
-&lt; signs can be <a href="http://example.com/topic/html-escapes" title =  'HTML &quot;escapes&quot;'
-target = '_blank'>escaped</a> with "&amp;lt;".
+&lt; signs can be <A HREF="http://example.com/topic/html-escapes" TITLE =  'HTML &quot;escapes&quot;'
+TARGET = '_blank'>escaped</A> with "&amp;lt;".
 <img src = "foo.png" alt = "someone's image" />
 END;
     $tags = <<<END

@@ -437,7 +437,9 @@ function search_api_admin_add_index($form, &$form_state) {
     '#required' => TRUE,
   );
   foreach (entity_get_info() as $name => $entity) {
-    $form['entity_type']['#options'][$name] = $entity['label'];
+    if (entity_metadata_get_info($name)) {
+      $form['entity_type']['#options'][$name] = $entity['label'];
+    }
   }
   $form['enabled'] = array(
     '#type' => 'checkbox',
@@ -1317,6 +1319,9 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         $type = $info['type'];
         // We hide the complexity of multi-valued types from the user here
         $type = search_api_extract_inner_type($type);
+        if ($type == 'token') {
+          $type = 'string';
+        }
         if (isset($types[$type])) {
           if (isset($fields[$property])) {
             $fields[$property]['name'] = $prefix_name . $info['label'];
