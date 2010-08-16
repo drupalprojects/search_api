@@ -171,6 +171,12 @@ keep on using the old data.
 Information for developers
 --------------------------
 
+ | NOTE:
+ | For modules providing new entities: In order for your entities to become
+ | searchable with the Search API, your module will need to implement
+ | hook_entity_property_info() in addition to the normal hook_entity_info().
+ | hook_entity_property_info() is documented in the entity_metadata module.
+
 Apart from improving the module itself, developers can extend search
 capabilities provided by the Search API by providing implementations for one (or
 several) of the following classes. Detailled documentation on the methods that
@@ -178,14 +184,16 @@ need to be implemented are always available as doc comments in the respective
 interface definition (all found in their respective files in the includes/
 directory). The details for hooks can be looked up in the search_api.api.php
 file.
-For all interfaces there are handy base classes which can be used to ease
-custom implementations, since they provide sensible generic implementations for
-many methods. They, too, should be documented well enough with doc comments for
-a developer to find the right methods to override or implement.
+For all interfaces there are handy base classes which can (but don't need to) be
+used to ease custom implementations, since they provide sensible generic
+implementations for many methods. They, too, should be documented well enough
+with doc comments for a developer to find the right methods to override or
+implement.
 
 - Service class
   Interface: SearchApiServiceInterface
   Base class: SearchApiAbstractService
+  Hook: hook_search_api_service_info()
 
 The service classes are the heart of the API, since they allow data to be
 indexed on different search servers. Since these are quite some work to get
@@ -199,27 +207,40 @@ service class.
 The central methods here are the indexItems() and the search() methods, which
 always have to be overridden manually. The configurationForm() method allows
 services to provide custom settings for the user.
+See the SearchApiDbService class for an example implementation.
 
+- Query class
+  Interface: SearchApiQueryInterface
+  Base class: SearchApiQuery
 
+You can also override the query class' behaviour for your service class. You
+can, for example, change key parsing behaviour, add additional parse modes
+specific to your service, or override methods so the information is stored more
+suitable for your service.
+For the query class to become available (other than through manual creation),
+you need a custom service class where you override the query() method to return
+an instance of your query class.
 
+- Data-alter callbacks
+  Documented in example_random_alter() in the search_api.api.php file
+  Hook: hook_search_api_alter_callback_info()
 
+Data alter callbacks aren't objects, but simple functions that take an index
+object and the items to alter (by reference) as parameters and should return
+information on all added fields in the format expected by
+hook_entity_property_info(). They are only called when indexing, or when
+selecting the fields to index (in the latter case, with an empty array). For
+adding additional information to search results, you have to use a processor.
+See the data-alter callbacks in search_api.module for examples.
 
+- Processors
+  Interface: SearchApiProcessorInterface
+  Base class: SearchApiAbstractProcessor
+  Hook: hook_search_api_processor_info()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Processors are used for altering the data when indexing or searching. The exact
+specifications are available in the interface's doc comments. Just note that the
+processor description should clearly state assumptions or restrictions on input
+types (e.g. only tokenized text), item language, etc. and explain concisely what
+effect it will have on searches.
+See the processors in includes/processor.inc for examples.
