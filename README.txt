@@ -13,6 +13,10 @@ definition of indexed content from the search server it lies on, thus enabling
 almost complete backend-independence.
 
 
+If you need help with the module, please post to the project's issue queue at
+[http://drupal.org/project/issues/search_api].
+
+
 Content:
  - Glossary
  - Information for users
