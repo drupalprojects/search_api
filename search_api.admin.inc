@@ -600,7 +600,7 @@ function theme_search_api_index(array $variables) {
   $output .= '</dd>' . "\n";
 
   $output .= '<dt>' . t('Entity type') . '</dt>' . "\n";
-  $type = entity_get_info($variables['entity_type']);
+  $type = entity_get_info($entity_type);
   $type = $type['label'];
   $output .= '<dd>' . check_plain($type) . '</dd>' . "\n";
 
@@ -631,7 +631,25 @@ function theme_search_api_index(array $variables) {
     else {
       $output .= '<dd>' . format_plural($options['cron_limit'], '1 item per cron run.', '@count items per cron run.') . '</dd>' . "\n";
     }
-    // @todo List indexed fields, etc.?
+
+    if (!empty($options['fields'])) {
+      $fields = array();
+      foreach ($options['fields'] as $name => $field) {
+        if ($field['indexed']) {
+          if (search_api_is_text_type($field['type'])) {
+            $fields[] = t('@field (@boost x)', array('@field' => $field['name'], '@boost' => $field['boost']));
+          }
+          else {
+            $fields[] = $field['name'];
+          }
+        }
+      }
+      if ($fields) {
+        $output .= '<dt>' . t('Indexed fields') . '</dt>' . "\n";
+        $output .= '<dd>' . implode(', ', $fields) . '</dd>' . "\n";
+      }
+    }
+
     $output .= '</dl></dd>' . "\n";
   }
 
@@ -1202,7 +1220,11 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
   );
   foreach ($fields as $key => $info) {
-    $form['fields'][$key]['name']['#markup'] = check_plain($info['name']);
+    $form['fields'][$key]['title']['#markup'] = check_plain($info['name']);
+    $form['fields'][$key]['name'] = array(
+      '#type' => 'value',
+      '#value' => $info['name'],
+    );
     if (isset($info['description'])) {
       $form['fields'][$key]['description'] = array(
         '#type' => 'value',
@@ -1414,7 +1436,11 @@ function theme_search_api_admin_fields_table($variables) {
 function search_api_admin_index_fields_submit($form, &$form_state) {
   $id = $form_state['values']['id'];
   if ($form_state['values']['op'] == t('Save changes')) {
-    $ret = search_api_index_edit_fields($id, $form_state['values']['fields']);
+    $fields = $form_state['values']['fields'];
+    foreach ($fields as $name => &$field) {
+      unset($field['description']);
+    }
+    $ret = search_api_index_edit_fields($id, $fields);
 
     $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id;
     if ($ret) {
