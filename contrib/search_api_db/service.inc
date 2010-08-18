@@ -319,15 +319,25 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (search_api_is_text_type($type, array('text', 'tokens'))) {
           $words = array();
           foreach ($value as $token) {
-            if (drupal_strlen($token['value']) < $this->options['min_chars']) {
+            // Taken from core search to reflect less importance of words later in the text.
+            // Focus is a decaying value in terms of the amount of unique words up to this point.
+            // From 100 words and more, it decays, to e.g. 0.5 at 500 words and 0.3 at 1000 words.
+            $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
+
+            $value = &$token['value'];
+            if (is_numeric($value)) {
+              $value = ltrim($value, '-0');
+            }
+            elseif (drupal_strlen($value) < $this->options['min_chars']) {
               continue;
             }
-            $token['value'] = drupal_strtolower($token['value']);
-            if (!isset($words[$token['value']])) {
-              $words[$token['value']] = $token;
+            $value = drupal_strtolower($value);
+            $token['score'] *= $focus;
+            if (!isset($words[$value])) {
+              $words[$value] = $token;
             }
             else {
-              $words[$token['value']]['score'] += $token['score'];
+              $words[$value]['score'] += $token['score'];
             }
           }
           if ($words) {
@@ -653,7 +663,10 @@ class SearchApiDbService extends SearchApiAbstractService {
   protected function splitKeys($keys) {
     if (is_scalar($keys)) {
       $proc = drupal_strtolower(trim($keys));
-      if (drupal_strlen($proc) < $this->options['min_chars']) {
+      if (is_numeric($proc)) {
+        return ltrim($proc, '-0');
+      }
+      elseif (drupal_strlen($proc) < $this->options['min_chars']) {
         $this->ignored[$keys] = 1;
         return NULL;
       }
