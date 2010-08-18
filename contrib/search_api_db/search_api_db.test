@@ -64,7 +64,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->insertItem(array(
       'id' => 2,
       'title' => 'foo test',
-      'body' => 'bar baz test',
+      'body' => 'bar test',
       'type' => 'item',
     ));
     $this->insertItem(array(
@@ -189,6 +189,12 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText('results = (1, 2)', t('Search for »!keys« returned correct result.', array('!keys' => 'foo')));
     $this->assertText('ignored = ()', t('No keys were ignored.'));
     $this->assertText('warnings = ()', t('No warnings were displayed.'));
+
+    $this->drupalGet($base . '/|COMPLEX|');
+    $this->assertText('result count = 1', t('Complex search returned correct result.'));
+    $this->assertText('results = (4)', t('Complex search returned correct result.'));
+    $this->assertText('ignored = ()', t('No keys were ignored.'));
+    $this->assertText('warnings = ()', t('No warnings were displayed.'));
   }
 
   private function editServer() {
@@ -220,6 +226,12 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText('results = (1, 2, 3)', t('Search for »!keys« returned correct result.', array('!keys' => 'foo')));
     $this->assertText('ignored = (foo)', t('Short key was ignored.'));
     $this->assertText('warnings = ("' . t('No valid search keys were present in the query.') . '")', t('Warning displayed.'));
+
+    $this->drupalGet($base . '/|COMPLEX|');
+    $this->assertText('result count = 1', t('Complex search returned correct result.'));
+    $this->assertText('results = (3)', t('Complex search returned correct result.'));
+    $this->assertText('ignored = (baz, bar)', t('No keys were ignored.'));
+    $this->assertText('warnings = ()', t('No warnings were displayed.'));
   }
 
   private function clearIndex() {

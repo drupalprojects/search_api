@@ -79,6 +79,23 @@ function search_api_test_view($entity) {
  * Menu callback for executing a search.
  */
 function search_api_test_query(SearchApiIndex $index, $keys = 'foo bar', $offset = 0, $limit = 10, $fields = NULL, $sort = NULL, $filters = NULL) {
+  // Slight "hack" for testing complex queries.
+  if ($keys == '|COMPLEX|') {
+    $keys = array(
+      '#conjunction' => 'AND',
+      'test',
+      array(
+        '#conjunction' => 'OR',
+        'baz',
+        'foobar',
+      ),
+      array(
+        '#conjunction' => 'AND',
+        '#negation' => TRUE,
+        'bar',
+      ),
+    );
+  }
   $query = $index->query()
     ->keys($keys)
     ->range($offset, $limit);
