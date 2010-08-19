@@ -220,7 +220,7 @@ function search_api_admin_add_server_submit($form, &$form_state) {
  * Title callback for viewing or editing a server or index.
  */
 function search_api_admin_item_title($object) {
-  return check_plain($object->name);
+  return $object->name;
 }
 
 /**
@@ -611,7 +611,7 @@ function theme_search_api_index(array $variables) {
 
   if (!empty($server)) {
     $output .= '<dt>' . t('Server') . '</dt>' . "\n";
-    $output .= '<dd>' . l(check_plain($server->name), 'admin/config/search/search_api/server/' . $server->id);
+    $output .= '<dd>' . l($server->name, 'admin/config/search/search_api/server/' . $server->id);
     if (!empty($server->description)) {
       $output .= '<p class="description">' . nl2br(check_plain($server->description)) . '</p>';
     }
@@ -1512,7 +1512,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
       switch ($action) {
         case 'disable':
           $text = array(
-            t('Disable server !name', array('!name' => $info->name)),
+            t('Disable server @name', array('@name' => $info->name)),
             t('Do you really want to disable this server?'),
             t('This will disable both the server and all associated indexes. ' .
                 "Searches on these indexes won't be available until they are re-enabled."),
@@ -1521,7 +1521,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
           break;
         case 'delete':
           $text = array(
-            t('Delete server !name', array('!name' => $info->name)),
+            t('Delete server @name', array('@name' => $info->name)),
             t('Do you really want to delete this server?'),
             t('This will delete the server and disable all associated indexes. ' .
                 "Searches on these indexes won't be available until they are moved to another server and re-enabled."),
@@ -1536,7 +1536,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
       switch ($action) {
         case 'disable':
           $text = array(
-            t('Disable index !name', array('!name' => $info->name)),
+            t('Disable index @name', array('@name' => $info->name)),
             t('Do you really want to disable this index?'),
             t("Searches on this index won't be available until it is re-enabled."),
             t('The index was successfully disabled.'),
@@ -1544,7 +1544,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
           break;
         case 'delete':
           $text = array(
-            t('Delete index !name', array('!name' => $info->name)),
+            t('Delete index @name', array('@name' => $info->name)),
             t('Do you really want to delete this index?'),
             t('This will remove the index from the server and delete all settings. ' .
                 'All data on this index will be lost.'),
