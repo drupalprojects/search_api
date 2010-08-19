@@ -6,6 +6,9 @@
  */
 class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInterface {
 
+  /**
+   * @var SearchApiServerInterface
+   */
   private $proxy;
   private $values = array();
 
@@ -233,14 +236,15 @@ class SearchApiIndex extends EntityDBExtendable {
 
 
   /**
-   * Indexes items for the specified index. Only items marked as changed are
-   * indexed, in their order of change (if known).
+   * Indexes items on this index. Will return an array of IDs of items that
+   * should be marked as indexed – i.e. items that were either rejected by a
+   * data-alter callback or were successfully indexed.
    *
    * @param array $items
    *   An array of entities to index.
    *
    * @return array
-   *   An array of the ids of all items that were successfully indexed.
+   *   An array of the IDs of all items that should be marked as indexed.
    */
   public function index(array $items) {
     if (!$this->enabled) {
@@ -261,9 +265,13 @@ class SearchApiIndex extends EntityDBExtendable {
       throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
     }
 
+    // Marks all items that are rejected by a data-alter callback as indexed.
+    $ret = array_keys($items);
     $this->dataAlter($items);
+    $ret = array_diff($ret, array_keys($items));
     if (!$items) {
-      return 0;
+      watchdog('search_api', t('Indexing the items of type "!type" with the following IDs was rejected by data-alter callbacks: !list.', array('type' => $this->entity_type, '!list' => implode(', ', $ret))));
+      return $ret;
     }
     $wrappers = array();
     foreach ($items as $id => $item) {
@@ -295,7 +303,7 @@ class SearchApiIndex extends EntityDBExtendable {
 
     $this->preprocessIndexItems($items);
 
-    return $this->server()->indexItems($this, $items);
+    return array_merge($ret, $this->server()->indexItems($this, $items));
   }
 
   /**

@@ -569,7 +569,7 @@ function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
 function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
   $info = entity_get_info($index->entity_type);
   if (empty($info['uri callback'])) {
-    return FALSE;
+    return array();
   }
   $uri_callback = $info['uri callback'];
   foreach ($items as $id => &$item) {
@@ -606,7 +606,7 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
       }
     }
     if (empty($fields)) {
-      return;
+      return array();
     }
   }
   foreach ($items as $id => &$item) {
@@ -813,7 +813,7 @@ function search_api_is_list_type($type) {
 }
 
 /**
- * Utility method for extracting the contained primitive type of a list type.
+ * Utility function for extracting the contained primitive type of a list type.
  *
  * @param $type
  *   A string containing the list type to process.
@@ -828,6 +828,25 @@ function search_api_extract_inner_type($type) {
     $type = substr($type, 5, -1);
   }
   return $type;
+}
+
+/**
+ * Utility function for creating a URL to an entity.
+ *
+ * @param $entity_type
+ *   The entity's type.
+ * @param $entity
+ *   The entity for which to create an URL.
+ * @param array $options
+ *   An array of additional options that will be passed to url().
+ */
+function search_api_entity_url($entity_type, $entity, array $options = array()) {
+  $info = entity_get_info($entity_type);
+  if (empty($info['uri callback'])) {
+    return FALSE;
+  }
+  $url = $info['uri callback']($entity) + array('path' => NULL, 'options' => array());
+  return url($url['path'], $url['options'] + $options);
 }
 
 /**
@@ -1441,6 +1460,9 @@ function search_api_index_edit($id, array $fields) {
   module_invoke_all('search_api_index_update', $index, 'edit');
   if (isset($fields['enabled'])) {
     module_invoke_all('search_api_index_update', $index, $fields['enabled'] ? 'enable' : 'disable');
+  }
+  if (isset($fields['fields'])) {
+    module_invoke_all('search_api_index_update', $index, 'fields');
   }
   module_invoke_all('entity_update', $index, 'search_api_index');
 

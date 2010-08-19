@@ -181,7 +181,7 @@ function hook_search_api_server_insert(SearchApiServer $server) {
  *   A hint as to how the server was updated. Either 'enable', 'disable' or
  *   'edit'.
  */
-function hook_search_api_server_update(SearchApiServer $server, $op) {
+function hook_search_api_server_update(SearchApiServer $server, $op = 'edit') {
   db_insert('example_search_server_update')
     ->fields(array(
       'server' => $server->id,
@@ -252,7 +252,7 @@ function hook_search_api_index_insert(SearchApiIndex $index) {
  *   A hint as to how the index was updated. Either 'enable', 'disable', 'edit',
  *   'reindex', 'clear' or 'fields'.
  */
-function hook_search_api_index_update(SearchApiIndex $index, $op) {
+function hook_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
   db_insert('example_search_index_update')
     ->fields(array(
       'index' => $index->id,
