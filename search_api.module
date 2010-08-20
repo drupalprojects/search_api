@@ -567,16 +567,16 @@ function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
  *   An array of objects containing the entity data.
  */
 function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
-  $info = entity_get_info($index->entity_type);
-  if (empty($info['uri callback'])) {
-    return array();
-  }
-  $uri_callback = $info['uri callback'];
   foreach ($items as $id => &$item) {
-    $url = $uri_callback($item) + array('path' => NULL, 'options' => array());
-    $item->search_api_url = url($url['path'], $url['options']);
+    $url = search_api_entity_url($index->entity_type, $item);
+    if (!$url) {
+      $item->search_api_url = NULL;
+      continue;
+    }
+    $set = TRUE;
+    $item->search_api_url = url($url['path'], array('absolute' => TRUE) + $url['options']);
   }
-  return array(
+  return empty($set) ? array() : array(
     'search-api-url' => array(
       'label' => t('URI'),
       'description' => t('An URI where the item can be accessed.'),
@@ -656,8 +656,8 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
 /**
  * Creates a search query on a specified search index.
  *
- * @param SearchApiIndex $index
- *   The index to execute the search on.
+ * @param $id
+ *   The ID of the index to execute the search on.
  * @param $options
  *   An associative array of options. The following are recognized:
  *   - filters: Either a SearchApiQueryFilterInterface object or an array of
@@ -679,7 +679,11 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
  * @return SearchApiQueryInterface
  *   An object for searching on the specified index.
  */
-function search_api_query(SearchApiIndex $index, array $options = array()) {
+function search_api_query($id, array $options = array()) {
+  $index = search_api_index_load($id);
+  if (!$id) {
+    throw new SearchApiException(t('Unknown index with ID !id.', array('!id' => $id)));
+  }
   return $index->query($options);
 }
 
@@ -837,16 +841,57 @@ function search_api_extract_inner_type($type) {
  *   The entity's type.
  * @param $entity
  *   The entity for which to create an URL.
- * @param array $options
- *   An array of additional options that will be passed to url().
+ *
+ * @return array
+ *   An array as returned by an entity URI callback, containing "path" and
+ *   "options". On failure, NULL is returned.
  */
-function search_api_entity_url($entity_type, $entity, array $options = array()) {
+function search_api_entity_url($entity_type, $entity) {
   $info = entity_get_info($entity_type);
   if (empty($info['uri callback'])) {
     return FALSE;
   }
-  $url = $info['uri callback']($entity) + array('path' => NULL, 'options' => array());
-  return url($url['path'], $url['options'] + $options);
+  $info = $info['uri callback']($entity);
+  if (!$info) {
+    return FALSE;
+  }
+  return $info + array('path' => NULL, 'options' => array());
+}
+
+/**
+ * Utility function for extracting specific fields from an EntityMetadataWrapper
+ * object.
+ *
+ * @param EntityMetadataWrapper $wrapper
+ *   The wrapper from which to extract fields.
+ * @param array $fields
+ *   The fields to extract, as stored in an index. I.e., the array keys are
+ *   field names, the values are arrays with the keys "name", "type", "boost"
+ *   and "indexed".
+ *
+ * @return
+ *   The $fields array with additional "value" and "original_type" keys set.
+ */
+function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields) {
+  $item = array();
+  foreach ($fields as $field => $info) {
+    $item[$field] = $info;
+    try {
+      $tmp = $wrapper;
+      foreach (explode(':', $field) as $property) {
+        $tmp = $tmp->$property;
+      }
+      $item[$field]['value'] = $tmp->value();
+      $property_info = $tmp->info();
+      $item[$field]['original_type'] = $property_info['type'];
+    }
+    catch (Exception $e) {
+      // This might happen for entity fields that are NULL, e.g. comments without parent.
+      $item[$field]['value'] = NULL;
+      $item[$field]['original_type'] = $info['type'];
+    }
+  }
+  return $item;
 }
 
 /**
@@ -971,9 +1016,9 @@ function search_api_server_insert(array $values) {
  */
 function search_api_server_edit($id, array $fields) {
   $server = search_api_server_load($id, TRUE);
-  $defined = array('id' => 1, 'name' => 1, 'description' => 1, 'class' => 1, 'options' => 1, 'enabled' => 1);
+  $changeable = array('name' => 1, 'description' => 1, 'options' => 1, 'enabled' => 1);
   foreach ($fields as $field => $value) {
-    if (!isset($defined[$field]) || $value === $server->$field) {
+    if (!isset($changeable[$field]) || $value === $server->$field) {
       unset($fields[$field]);
     }
   }
@@ -1392,9 +1437,9 @@ function search_api_index_edit($id, array $fields) {
     $fields['server'] = NULL;
   }
   $index = search_api_index_load($id, TRUE);
-  $index_values = (array) $index;
+  $changeable = array('name' => 1, 'description' => 1, 'server' => 1, 'options' => 1, 'enabled' => 1);
   foreach ($fields as $field => $value) {
-    if (!array_key_exists($field, $index_values) || $value === $index->$field) {
+    if (!isset($changeable[$field]) || $value === $index->$field) {
       unset($fields[$field]);
     }
   }
