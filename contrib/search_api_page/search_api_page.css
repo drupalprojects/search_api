@@ -1,0 +1,13 @@
+/* $Id$ */
+
+.search-performance {
+  font-size: 80%;
+}
+
+ol.search-results {
+  display: block;
+}
+
+li.search-result {
+  display: block;
+}

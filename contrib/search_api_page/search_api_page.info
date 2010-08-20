@@ -1,0 +1,14 @@
+; $Id$
+
+name = Search pages
+description = "Create search pages using Search API indexes."
+dependencies[] = search_api
+core = 7.x
+package = Search
+
+files[] = search_api_page.admin.inc
+files[] = search_api_page.install
+files[] = search_api_page.module
+files[] = search_api_page.pages.inc
+
+configure = admin/config/search/search_api/page
