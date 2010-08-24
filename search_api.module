@@ -568,7 +568,7 @@ function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
  */
 function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
   foreach ($items as $id => &$item) {
-    $url = search_api_entity_url($index->entity_type, $item);
+    $url = entity_url($index->entity_type, $item);
     if (!$url) {
       $item->search_api_url = NULL;
       continue;
@@ -832,30 +832,6 @@ function search_api_extract_inner_type($type) {
     $type = substr($type, 5, -1);
   }
   return $type;
-}
-
-/**
- * Utility function for creating a URL to an entity.
- *
- * @param $entity_type
- *   The entity's type.
- * @param $entity
- *   The entity for which to create an URL.
- *
- * @return array
- *   An array as returned by an entity URI callback, containing "path" and
- *   "options". On failure, NULL is returned.
- */
-function search_api_entity_url($entity_type, $entity) {
-  $info = entity_get_info($entity_type);
-  if (empty($info['uri callback'])) {
-    return FALSE;
-  }
-  $info = $info['uri callback']($entity);
-  if (!$info) {
-    return FALSE;
-  }
-  return $info + array('path' => NULL, 'options' => array());
 }
 
 /**
