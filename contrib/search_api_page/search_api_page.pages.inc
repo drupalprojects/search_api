@@ -18,8 +18,10 @@ function search_api_page_view($id, $keys = NULL) {
   $ret['form'] = drupal_get_form('search_api_page_search_form', $page, $keys);
 
   if ($keys) {
+    // @todo This is a fix for an assumed PDO bug which would produce a WSoD.
+    new SearchApiIndex();
     $ret['results']['#theme'] = 'search_api_page_results';
-    $ret['results']['#index'] = search_api_index_load($page->index_id, TRUE);
+    $ret['results']['#index'] = search_api_index_load($page->index_id);
     $ret['results']['#results'] = $results = search_api_page_search_execute($page, $keys);
     $ret['results']['#keys'] = $keys;
 
@@ -174,7 +176,7 @@ function theme_search_api_page_result(array $variables) {
 
   $wrapper = entity_metadata_wrapper($index->entity_type, $entity);
 
-  $url = search_api_entity_url($index->entity_type, $entity);
+  $url = entity_uri($index->entity_type, $entity);
 
   foreach (array('name', 'title', 'label') as $field) {
     if (isset($wrapper->$field)) {
@@ -203,7 +205,7 @@ function theme_search_api_page_result(array $variables) {
     }
   }
 
-  $output = '<h3>' . l($name, $url['path'], $url['options']) . "</h3>\n";
+  $output = '<h3>' . ($url ? l($name, $url['path'], $url['options']) : check_plain($name)) . "</h3>\n";
   if ($text) {
     $output .= text_summary($text);
   }
