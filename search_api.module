@@ -568,7 +568,7 @@ function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
  */
 function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
   foreach ($items as $id => &$item) {
-    $url = entity_url($index->entity_type, $item);
+    $url = entity_uri($index->entity_type, $item);
     if (!$url) {
       $item->search_api_url = NULL;
       continue;
