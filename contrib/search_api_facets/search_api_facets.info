@@ -1,0 +1,11 @@
+; $Id$
+
+name = Search facets
+description = "Create facets for search queries executed via the Search API."
+dependencies[] = search_api
+core = 7.x
+package = Search
+
+files[] = search_api_facets.module
+
+configure = admin/config/search/search_api/facets

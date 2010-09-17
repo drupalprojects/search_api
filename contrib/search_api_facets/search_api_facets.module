@@ -1,0 +1,57 @@
+<?php
+// $Id$
+
+/**
+ * Function for retrieving the active filters for a certain search.
+ *
+ * Filters are taken from URL parameters named "filter_ID", or just "filter"
+ * when only one facetted search is active.
+ *
+ * @param SearchApiQuery $query
+ *   The query for which to create the filters. Needed for index/field specific
+ *   data.
+ * @param $search_id
+ *   On pages with multiple facetted searches, a string identifying the search
+ *   for which to retrieve the filter.
+ *
+ * @return SearchApiQueryFilterInterface
+ *   A filter suitable for adding to the query to filter according to the
+ *   facets; or NULL, if no facets are active.
+ */
+function search_api_facet_get_filter(SearchApiQuery $query, $search_id = NULL) {
+  $params = drupal_get_query_parameters();
+  if (isset($search_id) && isset($params['filter_' . $search_id])) {
+    $filters = $params['filter_' . $search_id];
+  }
+  elseif (isset($params['filter'])) {
+    $filters = $params['filter'];
+  }
+  if (empty($filters)) {
+    return NULL;
+  }
+  $ret = $query->createFilter('AND');
+  $fields = $query->getIndex()->options['fields'];
+  foreach ($filters as $field => $filter) {
+    if (isset($fields[$field])) {
+      _search_api_facet_conditions_add($ret, $field, $filter, $fields[$field]);
+    }
+  }
+  return $ret;
+}
+
+/**
+ * Helper function for adding facet conditions to a filter.
+ *
+ * @param SearchApiQueryFilterInterface $filter
+ *   The filter object to which conditions should be added.
+ * @param $field_name
+ *   The name of the field on which to filter.
+ * @param $value
+ *   The value(s) for which to filter, in any kind.
+ * @param array $field
+ *   The field's definition, as saved in the index' options.
+ */
+function _search_api_facet_conditions_add(SearchApiQueryFilterInterface $filter, $field_name, $value, array $field) {
+  // @todo Handle any special cases (multiple filters, ranges, dates, etc.).
+  $filter->condition($field_name, $value);
+}
