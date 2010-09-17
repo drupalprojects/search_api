@@ -135,11 +135,7 @@ function search_api_page_search_execute(stdClass $page, $keys) {
  */
 function template_preprocess_search_api_page_results(array &$variables) {
   if (!empty($variables['results']['results'])) {
-    $ids = array();
-    foreach ($variables['results']['results'] as $id => $item) {
-      $ids[] = $id;
-    }
-    $variables['entities'] = entity_load($variables['index']->entity_type, $ids);
+    $variables['entities'] = entity_load($variables['index']->entity_type, array_keys($variables['results']['results']));
   }
 }
 
@@ -159,6 +155,7 @@ function theme_search_api_page_results(array $variables) {
 
   $index = $variables['index'];
   $results = $variables['results'];
+  $entities = $variables['entities'];
   $keys = $variables['keys'];
 
   $output = '<p class="search-performance">' . format_plural($results['result count'],
