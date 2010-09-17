@@ -688,6 +688,43 @@ function search_api_query($id, array $options = array()) {
 }
 
 /**
+ * Static store for the searches executed on the current page. Can either be
+ * used to store an executed search, or to retrieve a previously stored
+ * search.
+ *
+ * @param $search_id
+ *   For pages displaying multiple searches, an optional ID identifying the
+ *   search in questions.
+ * @param SearchApiQuery $query
+ *   When storing an executed search, the query that was executed. NULL
+ *   otherwise.
+ * @param array $results
+ *   When storing an executed search, the returned results as specified by
+ *   SearchApiQueryInterface::execute(). An empty array, otherwise.
+ *
+ * @return
+ *   If a search with the specified ID was executed, an array containing
+ *   ($query, $results) as used in this function's parameters. If $search_id is
+ *   NULL and there was only one search executed, the corresponding array will
+ *   be returned. FALSE otherwise.
+ */
+function search_api_current_search($search_id = NULL, SearchApiQuery $query = NULL, array $results = array()) {
+  $searches = &drupal_static(__FUNCTION__, array());
+
+  if (isset($query)) {
+    $searches[$search_id] = array($query, $results);
+  }
+
+  if (isset($searches[$search_id])) {
+    return $searches[$search_id];
+  }
+  if ($search_id === NULL && count($searches) == 1) {
+    return reset($searches);
+  }
+  return FALSE;
+}
+
+/**
  * Returns all field types recognized by the Search API framework.
  *
  * @return array
