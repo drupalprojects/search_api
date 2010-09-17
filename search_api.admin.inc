@@ -10,8 +10,8 @@ function search_api_admin_overview() {
 
   $header = array(
     // @todo Wait for http://drupal.org/node/109493
-  array('data' => t('Status'), 'field' => 'enabled', 'descending' => TRUE, 'sort' => 'desc'),
-//    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
+//    array('data' => t('Status'), 'field' => 'enabled', 'descending' => TRUE, 'sort' => 'desc'),
+    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
     array('data' => t('Type'), 'colspan' => 2),
     array('data' => t('Name'), 'field' => 'name'),
     array('data' => t('Operations'), 'colspan' => 3),
