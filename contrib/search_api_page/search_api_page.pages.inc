@@ -177,17 +177,7 @@ function theme_search_api_page_result(array $variables) {
   $wrapper = entity_metadata_wrapper($index->entity_type, $entity);
 
   $url = entity_uri($index->entity_type, $entity);
-
-  foreach (array('name', 'title', 'label') as $field) {
-    if (isset($wrapper->$field)) {
-      $name = $wrapper->$field->value();
-      break;
-    }
-  }
-  if (!isset($name)) {
-    $info = entity_get_info($index->entity_type);
-    $name = $info['label'] . ' #' . $id;
-  }
+  $name = entity_label($index->entity_type, $entity);
 
   $fields = $index->options['fields'];
   foreach ($fields as $field => $info) {
