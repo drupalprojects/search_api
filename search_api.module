@@ -51,7 +51,6 @@ function search_api_menu() {
     'page arguments' => array(5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
-    'type' => MENU_CALLBACK,
   );
   $items[$pre . '/server/%search_api_server/view'] = array(
     'title' => 'View',
@@ -86,7 +85,6 @@ function search_api_menu() {
     'page arguments' => array(5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
-    'type' => MENU_CALLBACK,
   );
   $items[$pre . '/index/%search_api_index/view'] = array(
     'title' => 'View',
@@ -238,6 +236,7 @@ function search_api_entity_info() {
     'uri callback' => 'search_api_server_url',
     'entity keys' => array(
       'id' => 'id',
+      'label' => 'name',
     ),
   );
   $info['search_api_index'] = array(
@@ -249,6 +248,7 @@ function search_api_entity_info() {
     'uri callback' => 'search_api_index_url',
     'entity keys' => array(
       'id' => 'id',
+      'label' => 'name',
     ),
   );
 
