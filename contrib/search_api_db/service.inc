@@ -26,6 +26,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           '#description' => t('Select the database key and target to use for storing indexing information in. ' .
               'Cannot be changed after creation.'),
           '#options' => $options,
+          '#required' => TRUE,
         ),
         'min_chars' => array(
           '#type' => 'select',
