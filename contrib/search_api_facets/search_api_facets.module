@@ -7,7 +7,7 @@
  * Filters are taken from URL parameters named "filter_ID", or just "filter"
  * when only one facetted search is active.
  *
- * @param SearchApiQuery $query
+ * @param SearchApiQueryInterface $query
  *   The query for which to create the filters. Needed for index/field specific
  *   data.
  * @param $search_id
@@ -18,7 +18,7 @@
  *   A filter suitable for adding to the query to filter according to the
  *   facets; or NULL, if no facets are active.
  */
-function search_api_facet_get_filter(SearchApiQuery $query, $search_id = NULL) {
+function search_api_facet_get_filter(SearchApiQueryInterface  $query, $search_id = NULL) {
   $params = drupal_get_query_parameters();
   if (isset($search_id) && isset($params['filter_' . $search_id])) {
     $filters = $params['filter_' . $search_id];
