@@ -30,7 +30,6 @@ function search_api_page_menu() {
     'page arguments' => array('search_api_page_admin_edit', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api_page.admin.inc',
-    'type' => MENU_CALLBACK,
   );
 
   foreach (entity_load('search_api_page', FALSE, array('enabled' => 1), TRUE) as $page) {
@@ -41,6 +40,7 @@ function search_api_page_menu() {
       'page arguments' => array((string) $page->id),
       'access arguments' => array('access search_api_page'),
       'file' => 'search_api_page.pages.inc',
+      'type' => MENU_SUGGESTED_ITEM,
     );
   }
 
