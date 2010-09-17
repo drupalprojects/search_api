@@ -10,7 +10,7 @@
  *   The keys to search for.
  */
 function search_api_page_view($id, $keys = NULL) {
-  $page = search_api_page_load($id);
+  $page = search_api_page_load((int) $id);
   if (!$page) {
     return MENU_NOT_FOUND;
   }
@@ -123,6 +123,27 @@ function search_api_page_search_execute(stdClass $page, $keys) {
 }
 
 /**
+ * Function for preprocessing the variables for the search_api_page_results
+ * theme.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - index: The index this search was executed on.
+ *   - results: An array of search results, as returned by
+ *     SearchApiQueryInterface::execute().
+ *   - keys: The keywords of the executed search.
+ */
+function template_preprocess_search_api_page_results(array &$variables) {
+  if (!empty($variables['results']['results'])) {
+    $ids = array();
+    foreach ($variables['results']['results'] as $id => $item) {
+      $ids[] = $id;
+    }
+    $variables['entities'] = entity_load($variables['index']->entity_type, $ids);
+  }
+}
+
+/**
  * Theme function for displaying search results.
  *
  * @param array $variables
@@ -130,6 +151,7 @@ function search_api_page_search_execute(stdClass $page, $keys) {
  *   - index: The index this search was executed on.
  *   - results: An array of search results, as returned by
  *     SearchApiQueryInterface::execute().
+ *   - entities: The loaded entities for all results, in an array keyed by ID.
  *   - keys: The keywords of the executed search.
  */
 function theme_search_api_page_results(array $variables) {
@@ -152,7 +174,7 @@ function theme_search_api_page_results(array $variables) {
   $output .= "\n<h2>" . t('Search results') . "</h2>\n";
   $output .= '<ol class="search-results">';
   foreach ($results['results'] as $item) {
-    $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'keys' => $keys)) . '</li>';
+    $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'entity' => isset($entities[$item['id']]) ? $entities[$item['id']] : NULL, 'keys' => $keys)) . '</li>';
   }
   $output .= '</ol>';
   return $output;
@@ -165,13 +187,14 @@ function theme_search_api_page_results(array $variables) {
  *   An associative array containing:
  *   - index: The index this search was executed on.
  *   - result: One item of the search results, an array containing the keys
- *     'id', 'entity' and 'score'.
+ *     'id' and 'score'.
+ *   - entity: The loaded entity corresponding to the result.
  *   - keys: The keywords of the executed search.
  */
 function theme_search_api_page_result(array $variables) {
   $index = $variables['index'];
   $id = $variables['result']['id'];
-  $entity = $variables['result']['entity'];
+  $entity = $variables['entity'];
   entity_prepare_view($index->entity_type, array($entity));
 
   $wrapper = entity_metadata_wrapper($index->entity_type, $entity);

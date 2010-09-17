@@ -168,9 +168,7 @@ interface SearchApiServiceInterface {
    *
    * @return array
    *   An associative array containing the search results, as required by
-   *   SearchApiQueryInterface::execute(). However, the "entity" keys of the
-   *   "results" array might be omitted, as they are automatically loaded by
-   *   the query object.
+   *   SearchApiQueryInterface::execute().
    */
   public function search(SearchApiQueryInterface $query);
 

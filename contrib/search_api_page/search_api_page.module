@@ -71,6 +71,7 @@ function search_api_page_theme() {
     'variables' => array(
       'index' => NULL,
       'results' => array('result count' => 0),
+      'entities' => array(),
       'keys' => '',
     ),
     'file' => 'search_api_page.pages.inc',
@@ -79,6 +80,7 @@ function search_api_page_theme() {
     'variables' => array(
       'index' => NULL,
       'result' => NULL,
+      'entity' => NULL,
       'keys' => '',
     ),
     'file' => 'search_api_page.pages.inc',
