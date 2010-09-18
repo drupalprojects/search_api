@@ -1,8 +1,7 @@
 ; $Id$
 
 name = Search views
-description = "Integrates the Search API with Views, enabling users to create 
-               views with searches as filters or arguments."
+description = Integrates the Search API with Views, enabling users to create views with searches as filters or arguments.
 dependencies[] = search_api
 dependencies[] = views
 core = 7.x
