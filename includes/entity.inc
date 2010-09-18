@@ -7,7 +7,7 @@
 class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInterface {
 
   /**
-   * @var SearchApiServerInterface
+   * @var SearchApiServiceInterface
    */
   private $proxy;
   private $values = array();
