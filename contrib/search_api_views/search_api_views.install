@@ -1,0 +1,9 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_uninstall().
+ */
+function search_api_views_uninstall() {
+  variable_del('search_api_views.module');
+}
