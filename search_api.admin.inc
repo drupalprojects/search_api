@@ -1296,45 +1296,31 @@ function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $inde
  */
 function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapper $wrapper) {
   if (empty($index->options['fields'])) {
-    if (empty($index->options)) {
-      $index->options = array();
-    }
     $index->options['fields'] = array();
   }
-
-  // First, we build a multi-level array of fields, instead of encoding it with "parent:child".
-  $fields = array();
-  foreach($index->options['fields'] as $field => $settings) {
-    if ($pos = strpos($field, ':')) {
-      $tmp = &$fields;
-      do {
-        list($key, $field) = explode(':', $field, 2);
-        $tmp = &$tmp[$key];
-      } while ($pos = strpos($field, ':'));
-      $tmp[$field] = $settings;
-    }
-    elseif (isset($wrapper->$field)) {
-      $fields[$field] = $settings;
-    }
-  }
+  $fields = $index->options['fields'];
   $additional = array();
+
+  // First we need all already added prefixes.
+  $added = array();
+  foreach (array_keys($fields) as $key) {
+    $key = substr($key, 0, strrpos($key, ':'));
+    $added[$key] = TRUE;
+  }
 
   // Then we walk through all properties and look if they are already contained in one of the arrays.
   // Since this uses an iterative instead of a recursive approach, it is a bit complicated,
-  // with three arrays tracking the current depth.
+  // with two arrays tracking the current depth.
 
   // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
   $wrappers = array('' => $wrapper);
-  // The portion of the fields array that corresponds to this prefix, e.g. ('user:' => $fields['user'])
-  $fields_array = array('' => $fields);
   // Display names for the prefixes
   $prefix_names = array('' => '');
 
   $types = search_api_field_types();
-  $flat = array(); // The array that really becomes options['fields']
+  $flat = array();
   while ($wrappers) {
     foreach ($wrappers as $prefix => $wrapper) {
-      $fields = $fields_array[$prefix];
       $prefix_name = $prefix_names[$prefix];
       foreach ($wrapper as $property => $value) {
         $info = $value->info();
@@ -1344,14 +1330,15 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         if ($type == 'token') {
           $type = 'string';
         }
+        $key = $prefix . $property;
         if (isset($types[$type])) {
-          if (isset($fields[$property])) {
-            $fields[$property]['name'] = $prefix_name . $info['label'];
-            $fields[$property]['description'] = empty($info['description']) ? NULL : $info['description'];
-            $flat[$prefix . $property] = $fields[$property];
+          if (isset($fields[$key])) {
+            $fields[$key]['name'] = $prefix_name . $info['label'];
+            $fields[$key]['description'] = empty($info['description']) ? NULL : $info['description'];
+            $flat[$key] = $fields[$key];
           }
           else {
-            $flat[$prefix . $property] = array(
+            $flat[$key] = array(
               'name'    => $prefix_name . $info['label'],
               'description' => empty($info['description']) ? NULL : $info['description'],
               'type'    => $info['type'],
@@ -1361,12 +1348,10 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
           }
         }
         else {
-          $key = $prefix . $property . ':';
-          if (isset($fields[$property])) {
+          if (isset($added[$key])) {
             // Visit this entity/struct in a later iteration.
-            $wrappers[$key] = $value;
-            $fields_array[$key] = $fields[$property];
-            $prefix_names[$key] = $prefix_name . $info['label'] . ' » ';
+            $wrappers[$key . ':'] = $value;
+            $prefix_names[$key . ':'] = $prefix_name . $info['label'] . ' » ';
           }
           elseif (!search_api_is_list_type($type)) {
             // @todo Make this work with lists, too - this won't be easy:
@@ -1456,11 +1441,11 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
   $index = search_api_index_load($id);
   $form_state['rebuild'] = TRUE;
 
-  $wrapper = entity_metadata_wrapper($index->entity_type);
+  $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type);
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
 
-  foreach (explode(':', substr($prefix, 0, -1)) as $element) {
+  foreach (explode(':', $prefix) as $element) {
     if (!isset($wrapper->$element)) {
       $wrapper = NULL;
       break;
@@ -1472,14 +1457,15 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
     return;
   }
 
-  if (isset($index->options['fields'])) {
+  if (!empty($index->options['fields'])) {
     $fields = $index->options['fields'];
   }
   else {
-    $fields = _search_api_admin_get_fields($index, $wrapper);
+    $fields = _search_api_admin_get_fields($index, $orig_wrapper);
     $fields = $fields['fields'];
   }
 
+  $prefix .= ':';
   foreach ($wrapper as $field => $value) {
     $info = $value->info();
     $key = $prefix . $field;
@@ -1488,7 +1474,7 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
     }
   }
   $index->options['fields'] = $fields;
-  $ret = search_api_index_edit($index->id, array('options' => $index->options));
+  $ret = search_api_index_edit($id, array('options' => $index->options));
 
   if ($ret) {
     drupal_set_message(t('The available fields were successfully changed.'));
@@ -1496,6 +1482,7 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
   else {
     drupal_set_message(t('No values were changed.'));
   }
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id . '/fields';
 }
 
 
