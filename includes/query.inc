@@ -125,6 +125,9 @@ interface SearchApiQueryInterface {
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
+   * @throws SearchApiException
+   *   If the field is multi-valued or of a fulltext type.
+   *
    * @return SearchApiQueryInterface
    *   The called object.
    */
@@ -519,11 +522,21 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
+   * @throws SearchApiException
+   *   If the field is multi-valued or of a fulltext type.
+   *
    * @return SearchApiQuery
    *   The called object.
    */
   public function sort($field, $order = 'ASC') {
-    $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
+    if (empty($this->index->options['fields'][$field])) {
+      throw new SearchApiException(t('Trying to sort on unknown field !field.', array('!field' => $field)));
+    }
+    $type = $this->index->options['fields'][$field]['type'];
+    if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
+      throw new SearchApiException(t('Trying to sort on field !field of illegal type !type.', array('!field' => $field, '!type' => $type)));
+    }
+    $order = drupal_strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
     $this->sort[$field] = $order;
     return $this;
   }
@@ -572,7 +585,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     - execution: The actual query to the search server, in whatever form.
    *     - postprocessing: Preparing the results for returning.
    *   Additional metadata may be returned in other keys. Only 'result count'
-   *   and 'result' always have to be set, all other entries are optional.
+   *   and 'results' always have to be set, all other entries are optional.
    */
   public final function execute() {
     $start = microtime(TRUE);
@@ -839,7 +852,7 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *   The called object.
    */
   public function setConjunction($conjunction) {
-    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
+    $this->conjunction = drupal_strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
     return $this;
   }
 
