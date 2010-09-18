@@ -65,6 +65,7 @@ function search_api_views_views_data() {
                 $table[$key]['field']['click sortable'] = TRUE;
               }
             }
+            unset($fields[$key]);
           }
           else {
             $key .= ':';
@@ -83,17 +84,20 @@ function search_api_views_views_data() {
       }
     }
 
-    // Additional sorts
-    $table['search-api-id']['sort'] = array(
-      'title' => t('Entity ID'),
-      'help' => t('Order the results by entity ID.'),
-      'handler' => 'SearchApiViewsHandlerSort',
-    );
-    $table['search-api-relevance']['sort'] = array(
-      'title' => t('Relevance'),
-      'help' => t('Order the search results according to their relevance.'),
-      'handler' => 'SearchApiViewsHandlerSort',
-    );
+    // Add handlers for all indexed fields which weren't processed yet.
+    foreach ($fields as $key => $field) {
+      // @todo
+    }
+
+    // Special fields and sorts
+    $table['search-api-id']['title'] = t('Entity ID');
+    $table['search-api-id']['help'] = t('Order the results by entity ID.');
+    $table['search-api-id']['sort']['handler'] = 'SearchApiViewsHandlerSort';
+
+    $table['search-api-relevance']['title'] = t('Relevance');
+    $table['search-api-relevance']['help'] = t('Order the search results according to their relevance.');
+    $table['search-api-relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
+    $table['search-api-relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
   }
   return $data;
 }
