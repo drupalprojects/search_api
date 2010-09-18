@@ -87,13 +87,13 @@ interface SearchApiQueryInterface {
   /**
    * Adds a subfilter to this query's filter.
    *
-   * @param $filter
+   * @param SearchApiQueryFilter $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    *
    * @return SearchApiQueryInterface
    *   The called object.
    */
-  public function filter($filter);
+  public function filter(SearchApiQueryFilter $filter);
 
   /**
    * Add a new ($field $operator $value) condition filter.
@@ -478,13 +478,13 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /**
    * Adds a subfilter to this query's filter.
    *
-   * @param $filter
+   * @param SearchApiQueryFilter $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    *
    * @return SearchApiQuery
    *   The called object.
    */
-  public function filter($filter) {
+  public function filter(SearchApiQueryFilter $filter) {
     $this->filter->filter($filter);
     return $this;
   }
