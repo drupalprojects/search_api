@@ -21,35 +21,42 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $offset;
 
   /**
-   * Constructor; Create the basic query object and fill with default values.
-   */
-  function init($base_table, $base_field, $options) {
-    $this->options = $options;
-  }
-
-  /**
-   * Generate a query and a countquery from all of the information supplied
-   * to the object.
+   * The index this view accesses.
    *
-   * @param $get_count
-   *   Provide a countquery if this is true, otherwise provide a normal query.
+   * @var SearchApiIndex
    */
-  function query($get_count = FALSE) {
-
-  }
+  protected $index;
 
   /**
-   * Let modules modify the query just prior to finalizing it.
+   * The query that will be executed.
+   *
+   * @var SearchApiQueryInterface
    */
-  function alter(&$view) {
-
-  }
+  protected $query;
 
   /**
-   * Builds the necessary info to execute the query.
+   * Array of all encountered errors. Each of these is fatal, meaning that a
+   * non-empty $errors property will result in an empty result being returned.
+   *
+   * @var array
    */
-  function build(&$view) {
+  protected $errors;
 
+  /**
+   * Create the basic query object and fill with default values.
+   */
+  public function init($base_table, $base_field, $options) {
+    try {
+      $this->errors = array();
+      parent::init($base_table, $base_field, $options);
+      $id = substr($base_table, 17);
+      $this->index = search_api_index_load($id);
+      $this->query = $this->index->query(array('parse mode' => 'terms'));
+      $this->options = $options;
+    }
+    catch (Exception $e) {
+      $this->errors[] = $e->getMessage();
+    }
   }
 
   /**
@@ -59,42 +66,138 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Values to set: $view->result, $view->total_rows, $view->execute_time,
    * $view->pager['current_page'].
    */
-  function execute(&$view) {
+  public function execute(view $view) {
+    if ($this->errors) {
+      $view->result = array();
+      $view->total_rows = $this->pager->total_rows = 0;
+      $view->execute_time = 0;
+      return;
+    }
 
+    try {
+      $this->query->range($this->offset, $this->limit);
+      $results = $this->query->execute();
+      $view->total_rows = $this->pager->total_rows = $results['result count'];
+      $this->pager->update_page_info();
+      $view->result = array();
+      if (!empty($results['results'])) {
+        $this->addResults($results['results'], $view);
+      }
+      $view->execute_time = $results['performance']['complete'];
+    }
+    catch (Exception $e) {
+      $this->errors[] = $e->getMessage();
+      // Recursion to get the same error behaviour as above.
+      $this->execute($view);
+    }
   }
 
   /**
-   * Add a signature to the query, if such a thing is feasible.
-   *
-   * This signature is something that can be used when perusing query logs to
-   * discern where particular queries might be coming from.
+   * Helper function for adding results to a view in the format expected by the
+   * view.
    */
-  function add_signature(&$view) {
-
+  protected function addResults(array $results, view $view) {
+    $entities = entity_load($this->index->entity_type, array_keys($results));
+    foreach ($entities as $id => $entity) {
+      // @todo Instead, extract required fields
+      $entity->search_api_relevance = $results[$id]['score'];
+      $view->result[$id] = $entity;
+    }
   }
 
-  /**
-   * Get aggregation info for group by queries.
-   *
-   * If NULL, aggregation is not allowed.
-   */
-  function get_aggregation_info() {
+  //
+  // Query interface methods (proxy to $this->query)
+  //
 
+  public function createFilter($conjunction = 'AND') {
+    if (!$this->errors) {
+      $this->query->createFilter($conjunction = 'AND');
+    }
+    return $this;
   }
 
-  /**
-   * Add settings for the UI.
-   */
-  function options_form(&$form, &$form_state) {
-
+  public function keys($keys = NULL) {
+    if (!$this->errors) {
+      $this->query->keys($keys = NULL);
+    }
+    return $this;
   }
 
-  function options_validate(&$form, &$form_state) {
-
+  public function fields(array $fields) {
+    if (!$this->errors) {
+      $this->query->fields($fields);
+    }
+    return $this;
   }
 
-  function options_submit(&$form, &$form_state) {
+  public function filter(SearchApiQueryFilter $filter) {
+    if (!$this->errors) {
+      $this->query->filter($filter);
+    }
+    return $this;
+  }
 
+  public function condition($field, $value, $operator = '=') {
+    if (!$this->errors) {
+      $this->query->condition($field, $value, $operator = '=');
+    }
+    return $this;
+  }
+
+  public function sort($field, $order = 'ASC') {
+    if (!$this->errors) {
+      $this->query->sort($field, $order = 'ASC');
+    }
+    return $this;
+  }
+
+  public function range($offset = NULL, $limit = NULL) {
+    if (!$this->errors) {
+      $this->query->range($offset = NULL, $limit = NULL);
+    }
+    return $this;
+  }
+
+  public function getIndex() {
+    if (!$this->errors) {
+      return $this->query->getIndex();
+    }
+  }
+
+  public function &getKeys() {
+    if (!$this->errors) {
+      return $this->query->getKeys();
+    }
+  }
+
+  public function getOriginalKeys() {
+    if (!$this->errors) {
+      return $this->query->getOriginalKeys();
+    }
+  }
+
+  public function &getFields() {
+    if (!$this->errors) {
+      return $this->query->getFields();
+    }
+  }
+
+  public function getFilter() {
+    if (!$this->errors) {
+      return $this->query->getFilter();
+    }
+  }
+
+  public function &getSort() {
+    if (!$this->errors) {
+      return $this->query->getSort();
+    }
+  }
+
+  public function &getOptions() {
+    if (!$this->errors) {
+      return $this->query->getOptions();
+    }
   }
 
 }
