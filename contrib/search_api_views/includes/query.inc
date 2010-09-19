@@ -43,9 +43,17 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $errors;
 
   /**
+   * The names of all fields whose value is required by a handler. The format
+   * follows the same as Search API field identifiers (parent:child).
+   *
+   * @var array
+   */
+  protected $fields;
+
+  /**
    * Create the basic query object and fill with default values.
    */
-  public function init($base_table, $base_field, $options) {
+  public function init($base_table, $base_field, array $options) {
     try {
       $this->errors = array();
       parent::init($base_table, $base_field, $options);
@@ -53,10 +61,25 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->index = search_api_index_load($id);
       $this->query = $this->index->query(array('parse mode' => 'terms'));
       $this->options = $options;
+      $this->fields = array();
     }
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
     }
+  }
+
+  /**
+   * Add a field that should be retrieved from the results by this view.
+   *
+   * @param $field
+   *   The field's identifier, as used by the Search API. E.g., "title" for a
+   *   node's title, "author:name" for a node's author's name.
+   *
+   * @return SearchApiViewsQuery
+   *   The called object.
+   */
+  public function addField($field) {
+    $this->fields[$field] = TRUE;
   }
 
   /**
@@ -75,6 +98,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     }
 
     try {
+      $start = microtime(TRUE);
       $this->query->range($this->offset, $this->limit);
       $results = $this->query->execute();
       $view->total_rows = $this->pager->total_rows = $results['result count'];
@@ -83,7 +107,9 @@ class SearchApiViewsQuery extends views_plugin_query {
       if (!empty($results['results'])) {
         $this->addResults($results['results'], $view);
       }
-      $view->execute_time = $results['performance']['complete'];
+      // We shouldn't use $results['performance']['complete'] here, since
+      // extracting the results probably takes considerable time as well.
+      $view->execute_time = microtime(TRUE) - $start;
     }
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
@@ -97,11 +123,45 @@ class SearchApiViewsQuery extends views_plugin_query {
    * view.
    */
   protected function addResults(array $results, view $view) {
-    $entities = entity_load($this->index->entity_type, array_keys($results));
+    // Maybe the service class or a postprocessor already set the entities
+    foreach ($results as $id => $result) {
+      if (!empty($result['entity']) && ($fields = $this->extractFields($result['entity']))) {
+        $view->result[$id] = $fields;
+        $view->result[$id]['search-api-relevance'] = $result['score'];
+      }
+      else {
+        $ids[] = $id;
+      }
+    }
+    if (empty($ids)) {
+      return;
+    }
+
+    $entities = entity_load($this->index->entity_type, $ids);
     foreach ($entities as $id => $entity) {
-      // @todo Instead, extract required fields
-      $entity->search_api_relevance = $results[$id]['score'];
-      $view->result[$id] = $entity;
+      $view->result[$id] = $this->extractFields($entity);
+      $view->result[$id]['search-api-relevance'] = $results[$id]['score'];
+    }
+  }
+
+  /**
+   * Helper function for extracting all necessary fields from an entity.
+   */
+  protected function extractFields($entity) {
+    if (!is_object($entity)) {
+      return NULL;
+    }
+    try {
+      $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
+      $fields = search_api_extract_fields($wrapper, $this->fields);
+      $ret = array();
+      foreach ($fields as $key => $field) {
+        $ret[$key] = $field['value'];
+      }
+      return $ret;
+    }
+    catch (Exception $e) {
+      return NULL;
     }
   }
 
