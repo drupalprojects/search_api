@@ -384,7 +384,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     switch ($type) {
       case 'text':
         $ret = array();
-        foreach (preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
+        foreach (preg_split('/[^\p{L}\p{N}]+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
           if ($v) {
             $ret[] = array(
               'value' => $v,
@@ -546,8 +546,10 @@ class SearchApiDbService extends SearchApiAbstractService {
 
     if ($results['result count']) {
       $query_options = $query->getOptions();
-      if (isset($query_options['offset']) && isset($query_options['limit'])) {
-        $db_query->range($query_options['offset'], $query_options['limit']);
+      if (isset($query_options['offset']) || isset($query_options['limit'])) {
+        $offset = isset($query_options['offset']) ? $query_options['offset'] : 0;
+        $limit = isset($query_options['limit']) ? $query_options['limit'] : 1000000;
+        $db_query->range($offset, $limit);
       }
 
       $sort = $query->getSort();
