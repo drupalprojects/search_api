@@ -158,7 +158,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     try {
       $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
       $fields = array();
-      foreach ($this->fields as $key) {
+      foreach ($this->fields as $key => $true) {
         $fields[$key]['type'] = 'string';
       }
       $fields = search_api_extract_fields($wrapper, $fields);
