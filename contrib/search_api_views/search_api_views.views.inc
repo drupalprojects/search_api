@@ -112,7 +112,7 @@ function search_api_views_views_data() {
       $table[$key] += _search_api_views_add_handlers($field, $tmp);
     }
 
-    // Special fields and sorts
+    // Special handlers
     $table['search-api-id']['title'] = t('Entity ID');
     $table['search-api-id']['help'] = t('Order the results by entity ID.');
     $table['search-api-id']['type'] = 'integer';
@@ -123,6 +123,12 @@ function search_api_views_views_data() {
     $table['search-api-relevance']['type'] = 'decimal';
     $table['search-api-relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
     $table['search-api-relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
+
+    $table['search-api-views-fulltext']['title'] = t('Fulltext search');
+    $table['search-api-views-fulltext']['help'] = t('Search several or all fulltext fields at once.');
+    $table['search-api-views-fulltext']['type'] = 'text';
+    $table['search-api-views-fulltext']['filter']['handler'] = 'SearchApiViewsHandlerFilterFulltext';
+    $table['search-api-views-fulltext']['argument']['handler'] = 'SearchApiViewsHandlerArgumentFulltext';
   }
   return $data;
 }
