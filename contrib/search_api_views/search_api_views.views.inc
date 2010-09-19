@@ -7,6 +7,10 @@
 function search_api_views_views_data() {
   $data = array();
   foreach (search_api_list_indexes() as $index) {
+    // We need the complete indexed data.
+    $array = array();
+    $index->dataAlter($array);
+
     // Base data
     $key = 'search_api_index_' . $index->id;
     $table = & $data[$key];
@@ -23,11 +27,11 @@ function search_api_views_views_data() {
     // Add all available fields
     // This is largely copied from _search_api_admin_get_fields().
     $max_depth = variable_get('search_api_views_max_fields_depth', 2);
-    $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
+    $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
     $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
 
     // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
-    $wrappers = array('' => $wrapper);
+    $wrappers = array('' => $orig_wrapper);
     // Display names for the prefixes
     $prefix_names = array('' => '');
 
@@ -86,7 +90,24 @@ function search_api_views_views_data() {
 
     // Add handlers for all indexed fields which weren't processed yet.
     foreach ($fields as $key => $field) {
-      // @todo
+      if (empty($field['indexed'])) {
+        continue;
+      }
+      $tmp = $orig_wrapper;
+      $group = '';
+      $name = '';
+      foreach (explode(':', $key) as $part) {
+        $tmp = $tmp->$part;
+        $info = $tmp->info();
+        $group = ($group ? $group . ' » ' . $name : ($name ? $name : ''));
+        $name = $info['label'];
+      }
+      if ($group) {
+        $table[$key]['group'] = $group;
+      }
+      $table[$key]['title'] = $name;
+      $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
+      $table[$key] += _search_api_views_add_handlers($field, $tmp);
     }
 
     // Special fields and sorts
