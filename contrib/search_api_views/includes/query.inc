@@ -102,7 +102,10 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->query->range($this->offset, $this->limit);
       $results = $this->query->execute();
       $view->total_rows = $this->pager->total_rows = $results['result count'];
-      $this->pager->update_page_info();
+      // @todo Dirty hack - I hope this works another way, normally.
+      if (!empty($this->pager) && method_exists($this->pager, 'update_page_info')) {
+        $this->pager->update_page_info();
+      }
       $view->result = array();
       if (!empty($results['results'])) {
         $this->addResults($results['results'], $view);
@@ -147,13 +150,18 @@ class SearchApiViewsQuery extends views_plugin_query {
   /**
    * Helper function for extracting all necessary fields from an entity.
    */
+  // @todo Optimize
   protected function extractFields($entity) {
     if (!is_object($entity)) {
       return NULL;
     }
     try {
       $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
-      $fields = search_api_extract_fields($wrapper, $this->fields);
+      $fields = array();
+      foreach ($this->fields as $key) {
+        $fields[$key]['type'] = 'string';
+      }
+      $fields = search_api_extract_fields($wrapper, $fields);
       $ret = array();
       foreach ($fields as $key => $field) {
         $ret[$key] = $field['value'];
