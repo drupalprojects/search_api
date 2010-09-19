@@ -516,12 +516,9 @@ class SearchApiDbService extends SearchApiAbstractService {
     $filter = $query->getFilter();
     if ($filter->getFilters()) {
       if (!isset($db_query)) {
-        $table = $this->findTable($filter->getFilters(), $fields);
-        if ($table) {
-          $db_query = db_select($table, 't', $this->query_options);
-          $db_query->addField('t', 'item_id', 'item_id');
-          $db_query->addExpression(':score', 'score', array(':score' => 1));
-        }
+        $db_query = db_select($fields['search-api-language']['table'], 't', $this->query_options);
+        $db_query->addField('t', 'item_id', 'item_id');
+        $db_query->addExpression(':score', 'score', array(':score' => 1));
       }
       if (isset($db_query)) {
         $condition = $this->createFilterCondition($filter, $fields, $db_query);
@@ -850,9 +847,9 @@ class SearchApiDbService extends SearchApiAbstractService {
           $table = $all_fields['search-api-language']['table'];
         }
         else {
+          $distinct = TRUE;
           foreach ($all_fields as $field) {
             $table = $field['table'];
-            $distinct = TRUE;
             if (!search_api_is_list_type($field['type']) && !search_api_is_text_type($field['type'])) {
               unset($distinct);
               break;
