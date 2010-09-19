@@ -196,7 +196,7 @@ interface SearchApiQueryInterface {
 
   /**
    * @return
-   *   This unprocessed search keys, exactly as passed to this object. Has the
+   *   The unprocessed search keys, exactly as passed to this object. Has the
    *   same format as getKeys().
    */
   public function getOriginalKeys();
@@ -536,7 +536,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
       throw new SearchApiException(t('Trying to sort on field !field of illegal type !type.', array('!field' => $field, '!type' => $type)));
     }
-    $order = drupal_strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
+    $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
     $this->sort[$field] = $order;
     return $this;
   }
@@ -699,7 +699,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
   /**
    * @return
-   *   This unprocessed search keys, exactly as passed to this object. Has the
+   *   The unprocessed search keys, exactly as passed to this object. Has the
    *   same format as getKeys().
    */
   public function getOriginalKeys() {
@@ -852,7 +852,7 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *   The called object.
    */
   public function setConjunction($conjunction) {
-    $this->conjunction = drupal_strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
+    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
     return $this;
   }
 
