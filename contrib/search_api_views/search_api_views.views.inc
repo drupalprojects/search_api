@@ -60,6 +60,7 @@ function search_api_views_views_data() {
             }
             $table[$key]['title'] = $info['label'];
             $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
+            $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
 
             // If field is indexed, also add additional handlers.
@@ -107,16 +108,19 @@ function search_api_views_views_data() {
       }
       $table[$key]['title'] = $name;
       $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
+      $table[$key]['type'] = $field['type'];
       $table[$key] += _search_api_views_add_handlers($field, $tmp);
     }
 
     // Special fields and sorts
     $table['search-api-id']['title'] = t('Entity ID');
     $table['search-api-id']['help'] = t('Order the results by entity ID.');
+    $table['search-api-id']['type'] = 'integer';
     $table['search-api-id']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
     $table['search-api-relevance']['title'] = t('Relevance');
     $table['search-api-relevance']['help'] = t('Order the search results according to their relevance.');
+    $table['search-api-relevance']['type'] = 'decimal';
     $table['search-api-relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
     $table['search-api-relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
   }
@@ -168,7 +172,6 @@ function _search_api_views_add_handlers($field, $wrapper) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilter';
   }
 
-  // @todo: Does any type require a special handler here?
   $ret['argument']['handler'] = 'SearchApiViewsHandlerArgument';
 
   // We can only sort according to single-valued fields.
