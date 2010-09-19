@@ -619,8 +619,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
     $end = microtime(TRUE);
     $response['performance']['complete'] = $end - $start;
-    $response['performance']['load'] = $entities_loaded - $post_search;
-    $response['performance']['hooks'] = $response['performance']['complete'] - ($entities_loaded - $pre_search);
+    $response['performance']['hooks'] = $response['performance']['complete'] - ($post_search - $pre_search);
 
     return $response;
   }
