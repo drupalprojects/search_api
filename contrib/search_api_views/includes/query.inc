@@ -179,14 +179,14 @@ class SearchApiViewsQuery extends views_plugin_query {
 
   public function createFilter($conjunction = 'AND') {
     if (!$this->errors) {
-      $this->query->createFilter($conjunction = 'AND');
+      $this->query->createFilter($conjunction);
     }
     return $this;
   }
 
   public function keys($keys = NULL) {
     if (!$this->errors) {
-      $this->query->keys($keys = NULL);
+      $this->query->keys($keys);
     }
     return $this;
   }
@@ -207,21 +207,21 @@ class SearchApiViewsQuery extends views_plugin_query {
 
   public function condition($field, $value, $operator = '=') {
     if (!$this->errors) {
-      $this->query->condition($field, $value, $operator = '=');
+      $this->query->condition($field, $value, $operator);
     }
     return $this;
   }
 
   public function sort($field, $order = 'ASC') {
     if (!$this->errors) {
-      $this->query->sort($field, $order = 'ASC');
+      $this->query->sort($field, $order);
     }
     return $this;
   }
 
   public function range($offset = NULL, $limit = NULL) {
     if (!$this->errors) {
-      $this->query->range($offset = NULL, $limit = NULL);
+      $this->query->range($offset, $limit);
     }
     return $this;
   }
