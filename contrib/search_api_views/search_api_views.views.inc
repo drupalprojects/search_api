@@ -65,6 +65,9 @@ function search_api_views_views_data() {
 
             // If field is indexed, also add additional handlers.
             if (!empty($fields[$key]['indexed'])) {
+              // Discern between original and indexed type
+              $table[$key]['field']['type'] = $table[$key]['type'];
+              $table[$key]['type'] = $fields[$key]['type'];
               $table[$key] += _search_api_views_add_handlers($fields[$key], $value);
               if (!empty($table[$key]['sort'])) {
                 $table[$key]['field']['click sortable'] = TRUE;
