@@ -936,7 +936,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (search_api_is_text_type($fields[$f[0]]['type'])) {
           $keys = array('#conjunction' => 'AND', '#negation' => TRUE, $f[1]);
           $keys = $this->prepareKeys($keys);
-          $query = $this->createKeysQuery($keys, array($f[0]), $fields);
+          $query = $this->createKeysQuery($keys, array($fields[$f[0]]), $fields);
           $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'NOT IN' : 'IN');
         }
         else {
