@@ -87,7 +87,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
    *   The values retrieved from the database.
    */
   public function render($values) {
-    $value = $values[$this->field_alias];
+    $value = $values[$this->real_field];
     // if ($this->is_list_type)?
     if (is_array($value)) {
       $vs = array();
