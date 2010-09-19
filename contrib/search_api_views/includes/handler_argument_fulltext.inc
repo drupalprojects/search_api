@@ -15,16 +15,21 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
    *
    * The argument sent may be found at $this->argument.
    */
+  // @todo Improve conflict resolution. => Move to query class?
   public function query() {
-    $old = $this->query->getKeys();
-    $this->query->keys($this->value);
+    $old = $this->query->getOriginalKeys();
+    $this->query->keys($this->argument);
     if ($old) {
       $keys = &$this->query->getKeys();
       if (is_array($keys)) {
         $keys[] = $old;
       }
+      elseif (is_array($old)) {
+        unset($old['#conjunction']);
+        $keys = '"' . implode('" "', $old) . '" ' . $keys;
+      }
       else {
-        $keys = print_r($old, TRUE) . ' ' . $keys;
+        $keys = $old . ' ' . $keys;
       }
     }
   }
