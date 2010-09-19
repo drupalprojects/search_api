@@ -885,26 +885,25 @@ function search_api_extract_inner_type($type) {
  * @return
  *   The $fields array with additional "value" and "original_type" keys set.
  */
+// @todo This could probably be optimized.
 function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields) {
-  $item = array();
-  foreach ($fields as $field => $info) {
-    $item[$field] = $info;
+  foreach ($fields as $field => &$info) {
     try {
       $tmp = $wrapper;
       foreach (explode(':', $field) as $property) {
         $tmp = $tmp->$property;
       }
-      $item[$field]['value'] = $tmp->value();
+      $info['value'] = $tmp->value();
       $property_info = $tmp->info();
-      $item[$field]['original_type'] = $property_info['type'];
+      $info['original_type'] = $property_info['type'];
     }
     catch (Exception $e) {
       // This might happen for entity fields that are NULL, e.g. comments without parent.
-      $item[$field]['value'] = NULL;
-      $item[$field]['original_type'] = $info['type'];
+      $info['value'] = NULL;
+      $info['original_type'] = $info['type'];
     }
   }
-  return $item;
+  return $fields;
 }
 
 /**
