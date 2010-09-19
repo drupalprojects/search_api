@@ -11,7 +11,6 @@ class SearchApiViewsHandlerArgumentText extends SearchApiViewsHandlerArgument {
    *
    * This usually needs to be overridden to provide a proper title.
    */
-  // @todo Provide an option to change this text.
   public function title() {
     return t('Search for "@arg"', array('@field' => $this->definition['title'], '@arg' => $this->argument));
   }
