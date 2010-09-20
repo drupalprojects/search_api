@@ -431,7 +431,9 @@ function search_api_search_api_alter_callback_info() {
   );
   $callbacks['search_api_alter_add_fulltext'] = array(
     'name' => t('Fulltext field'),
-    'description' => t("Adds a fulltext summary field to the data, incorporating all of the item's fulltext data."),
+    'description' => t("Adds a fulltext summary field to the data, incorporating all of the item's fulltext data. " .
+        'Note that this will aggregate <em>all</em> fields whose type is "@type", not only those configured as indexed.',
+        array('@type' => t('Fulltext'))),
   );
 
   return $callbacks;
