@@ -414,7 +414,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         return $value ? 0 : 1;
 
       case 'date':
-        if (preg_match('/^\d*$/', $value)) {
+        if (is_numeric($value) || !$value) {
           return 0 + $value;
         }
         return strtotime($value);
@@ -670,7 +670,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         $this->ignored[$keys] = 1;
         return NULL;
       }
-      $words = preg_split('/\s+/', $proc, -1, PREG_SPLIT_NO_EMPTY);
+      $words = preg_split('/[^\p{L}\p{N}]+/u', $proc, -1, PREG_SPLIT_NO_EMPTY);
       if (count($words) > 1) {
         $proc = $this->splitKeys($words);
         $proc['#conjunction'] = 'AND';

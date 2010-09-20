@@ -11,9 +11,9 @@ All Search API datatypes are supported by using appropriate SQL datatypes for
 their respective columns (with "String"/"URI", and "Integer"/"Duration" being
 equivalent).
 
-The "direct" parse mode for queries will result in a simple whitespace-splitting
-of the query string into keys. Additionally, search keys containing whitespace
-will be split, as searching for phrases is currently not supported.
+The "direct" parse mode for queries will result in a simple splitting of the
+query string into keys. Additionally, search keys containing whitespace will be
+split, as searching for phrases is currently not supported.
 
 Due to SQL limitations, fulltext searches are always case-insensitive.
 
