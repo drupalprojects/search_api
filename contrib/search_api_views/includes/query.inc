@@ -51,6 +51,11 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $fields;
 
   /**
+   * Count for providing a unique ID.
+   */
+  protected static $count = 0;
+
+  /**
    * Create the basic query object and fill with default values.
    */
   public function init($base_table, $base_field, array $options) {
@@ -59,7 +64,10 @@ class SearchApiViewsQuery extends views_plugin_query {
       parent::init($base_table, $base_field, $options);
       $id = substr($base_table, 17);
       $this->index = search_api_index_load($id);
-      $this->query = $this->index->query(array('parse mode' => 'terms'));
+      $this->query = $this->index->query(array(
+        'parse mode' => 'terms',
+        'search id' => 'search_api_views-' . $this->index->id . '-' . (++self::$count),
+      ));
       $this->options = $options;
       $this->fields = array();
     }
@@ -95,6 +103,15 @@ class SearchApiViewsQuery extends views_plugin_query {
       $view->total_rows = 0;
       $view->execute_time = 0;
       return;
+    }
+
+    // Add facet filters, if applicable
+    // @todo Make facet use optional
+    if (function_exists('search_api_facet_get_filter')) {
+      $filter = search_api_facet_get_filter($this->query);
+      if ($filter && $filter->getFilters()) {
+        $this->query->filter($filter);
+      }
     }
 
     try {
