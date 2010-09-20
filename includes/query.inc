@@ -30,6 +30,8 @@ interface SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *   - 'search id': A string that will be used as the identifier when storing
+   *     this search in the Search API's static cache.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
@@ -223,6 +225,15 @@ interface SearchApiQueryInterface {
   public function &getSort();
 
   /**
+   * @param $name string
+   *   The name of an option.
+   *
+   * @return mixed
+   *   The option with the specified name, if set, or NULL otherwise.
+   */
+  public function getOption($name);
+
+  /**
    * @return array
    *   An associative array of query options.
    */
@@ -285,6 +296,11 @@ class SearchApiQuery implements SearchApiQueryInterface {
   protected $options;
 
   /**
+   * Count for providing a unique ID.
+   */
+  protected static $count = 0;
+
+  /**
    * Constructor for SearchApiQuery objects.
    *
    * @param SearchApiIndex $index
@@ -305,6 +321,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *   - 'search id': A string that will be used as the identifier when storing
+   *     this search in the Search API's static cache.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
@@ -327,6 +345,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
       'conjunction' => 'AND',
       'parse mode' => 'terms',
       'filter class' => 'SearchApiQueryFilter',
+      'search id' => __CLASS__ . '-' . (++self::$count),
     );
     $this->filter = $this->createFilter('AND');
     $this->sort = array();
@@ -621,6 +640,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
     $response['performance']['complete'] = $end - $start;
     $response['performance']['hooks'] = $response['performance']['complete'] - ($post_search - $pre_search);
 
+    // Store search for later retrieval for facets, etc.
+    search_api_current_search(NULL, $this, $response);
+
     return $response;
   }
 
@@ -730,6 +752,17 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   public function &getSort() {
     return $this->sort;
+  }
+
+  /**
+   * @param $name string
+   *   The name of an option.
+   *
+   * @return mixed
+   *   The option with the specified name, if set, or NULL otherwise.
+   */
+  public function getOption($name) {
+    return isset($this->options[$name]) ? $this->options[$name] : NULL;
   }
 
   /**

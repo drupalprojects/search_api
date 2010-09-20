@@ -694,7 +694,8 @@ function search_api_query($id, array $options = array()) {
  *
  * @param $search_id
  *   For pages displaying multiple searches, an optional ID identifying the
- *   search in questions.
+ *   search in questions. When storing a search, this is filled automatically,
+ *   unless it is manually set.
  * @param SearchApiQuery $query
  *   When storing an executed search, the query that was executed. NULL
  *   otherwise.
@@ -712,6 +713,9 @@ function search_api_current_search($search_id = NULL, SearchApiQuery $query = NU
   $searches = &drupal_static(__FUNCTION__, array());
 
   if (isset($query)) {
+    if (!isset($search_id)) {
+      $search_id = $query->getOption('search id');
+    }
     $searches[$search_id] = array($query, $results);
   }
 

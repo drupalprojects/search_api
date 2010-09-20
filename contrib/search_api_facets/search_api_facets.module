@@ -18,8 +18,11 @@
  *   A filter suitable for adding to the query to filter according to the
  *   facets; or NULL, if no facets are active.
  */
-function search_api_facet_get_filter(SearchApiQueryInterface  $query, $search_id = NULL) {
+function search_api_facet_get_filter(SearchApiQueryInterface $query, $search_id = NULL) {
   $params = drupal_get_query_parameters();
+  if (!isset($search_id)) {
+    $search_id = $query->getOption('search id');
+  }
   if (isset($search_id) && isset($params['filter_' . $search_id])) {
     $filters = $params['filter_' . $search_id];
   }
