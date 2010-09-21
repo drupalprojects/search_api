@@ -67,6 +67,15 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     unset($this->values[$name]);
   }
 
+  // If the service class defines additional methods, not specified in the
+  // SearchApiServiceInterface interface, then they are called via this magic
+  // method.
+
+  public function __call($name, array $arguments) {
+    $this->ensureProxy();
+    return call_user_func_array(array($this->proxy, $name), $arguments);
+  }
+
   // Proxy methods
 
   // Since we are implementing the interface, we can't just use the __call() magic method.
