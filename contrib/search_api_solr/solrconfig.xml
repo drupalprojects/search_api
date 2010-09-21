@@ -534,14 +534,22 @@
  <!--<str name="bf">
         popularity^0.5 recip(price,1,1000,1000)^0.3
      </str>-->
- <!--<str name="fl">
-        id,name,price,score
-     </str>-->
-     <str name="mm">
-        2&lt;-35%
-     </str>
+
+<!--
+     If you want to get more results back from Search API queries, just add the
+     additional fields here (after setting them to "stored" in the schema.xml).
+     schema.xml). These will be returned alongside "id" and "score" in the
+     search results.
+-->
+     <str name="fl">item_id,score </str>
+<!--
+     If you want to allow results where not all keywords are matched, uncomment
+     the following line and insert your own "minimum match" definition.
+-->
+     <!-- <str name="mm">2&lt;-35%</str> -->
      <int name="ps">100</int>
      <str name="q.alt">*:*</str>
+
      <!-- example highlighter config, enable per-query with hl=true -->
      <str name="hl.fl">text features name</str>
      <!-- for this field, we want no fragmenting, just highlighting -->
@@ -808,7 +816,7 @@
   <!-- a search component that enables you to configure the top results for
        a given query regardless of the normal lucene scoring.-->
 <!-- <searchComponent name="elevator" class="solr.QueryElevationComponent" >
-    --><!-- pick a fieldType to analyze queries --><!-- 
+    --><!-- pick a fieldType to analyze queries --><!--
     <str name="queryFieldType">string</str>
     <str name="config-file">elevate.xml</str>
   </searchComponent>-->

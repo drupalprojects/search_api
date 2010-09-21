@@ -8,6 +8,7 @@ package = Search
 
 files[] = search_api_solr.module
 files[] = service.inc
+files[] = solr_connection.inc
 files[] = SolrPhpClient/Apache/Solr/Document.php
 files[] = SolrPhpClient/Apache/Solr/Response.php
 files[] = SolrPhpClient/Apache/Solr/Service.php

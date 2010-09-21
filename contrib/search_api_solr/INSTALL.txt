@@ -70,9 +70,5 @@ directory, not directly the ones provided with this module.
 
 [4] http://wiki.apache.org/solr/
 
-Sometimes when editing a Solr server's options via the Drupal interface, you are
-told to download a new schema.xml file and replace the existing one in Solr's
-configuration directory. It is very important that you then also don't overwrite
-the file provided with this module, but only the copy in the configuration
-directory. You'll also have to restart your Solr server after such changes to
-schema.xml (or manual ones to solrconfig.xml).
+You'll have to restart your Solr server after making such changes, for them to
+take effect.

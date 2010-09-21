@@ -51,4 +51,12 @@ the newly added field named "Fulltext".
 Configuration
 -------------
 
-TODO: Explain options and downloading/replacing the schema.xml. 
+TODO: Explain options and downloading/replacing the schema.xml.
+
+Developers
+----------
+
+The SearchApiSolrService class has a few custom extensions, documented with its
+code. Methods of note are:
+- deleteItems()
+- ping()
