@@ -195,6 +195,9 @@ interface SearchApiServiceInterface {
    * @param $query
    *   The SearchApiQueryInterface object to execute.
    *
+   * @throws SearchApiException
+   *   If an error prevented the search from completing.
+   *
    * @return array
    *   An associative array containing the search results, as required by
    *   SearchApiQueryInterface::execute().
