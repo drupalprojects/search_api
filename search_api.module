@@ -839,7 +839,8 @@ function search_api_get_processors() {
  *   Optionally, an array of allowed types.
  *
  * @return
- *   TRUE iff $type is either "text", or a list of a text type.
+ *   TRUE if $type is either one of the specified types, or a list of such
+ *   values. FALSE otherwise.
  */
 function search_api_is_text_type($type, array $allowed = array('text')) {
   return array_search(search_api_extract_inner_type($type), $allowed) !== FALSE;

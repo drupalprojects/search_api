@@ -170,7 +170,7 @@ interface SearchApiServiceInterface {
    *   The index from which items should be deleted, or NULL if all indexes on
    *   this server should be cleared (then, $ids has to be 'all').
    */
-  public function deleteItems($ids, SearchApiIndex $index = NULL);
+  public function deleteItems($ids = 'all', SearchApiIndex $index = NULL);
 
   /**
    * Create a query object for searching on an index lying on this server.
@@ -270,7 +270,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    *   @endcode
    */
   public function configurationFormValidate(array $form, array &$values, $prefix = '') {
-
+    return;
   }
 
   /**

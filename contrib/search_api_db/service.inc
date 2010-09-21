@@ -424,7 +424,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     }
   }
 
-  public function deleteItems($ids, SearchApiIndex $index = NULL) {
+  public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     if (!$index) {
       if (empty($this->options['indexes'])) {
         return;
