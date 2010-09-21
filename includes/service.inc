@@ -19,6 +19,35 @@ interface SearchApiServiceInterface {
   public function configurationForm();
 
   /**
+   * Validation callback for the form returned by configurationForm().
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param $prefix
+   *   The prefix to use when flagging form errors. E.g., if an element "name"
+   *   of the $values array contains an error, call:
+   *   @code
+   *   form_set_error($prefix . 'name', ...);
+   *   @endcode
+   */
+  public function configurationFormValidate(array $form, array &$values, $prefix = '');
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   * The $values array is automatically set as the server's new $options after
+   * calling this method. Any necessary preprocessing that should only occur
+   * after validation can be done here.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   */
+  public function configurationFormSubmit(array $form, array &$values);
+
+  /**
    * Called once, when the server is first created. Allows it to set up its
    * necessary infrastructure.
    */
@@ -210,6 +239,56 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @var integer
    */
   public $enabled = 1;
+
+  /**
+   * Form callback. Might be called on an uninitialized object - in this case,
+   * the form is for configuring a newly created server.
+   *
+   * Returns an empty form by default.
+   *
+   * @return array
+   *   A form array for setting service-specific options.
+   */
+  public function configurationForm() {
+    return array();
+  }
+
+  /**
+   * Validation callback for the form returned by configurationForm().
+   *
+   * Does nothing, by default.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param $prefix
+   *   The prefix to use when flagging form errors. E.g., if an element "name"
+   *   of the $values array contains an error, call:
+   *   @code
+   *   form_set_error($prefix . 'name', ...);
+   *   @endcode
+   */
+  public function configurationFormValidate(array $form, array &$values, $prefix = '') {
+
+  }
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   *
+   * By default only ensures that additional options not present in the form are
+   * still kept.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   */
+  public function configurationFormSubmit(array $form, array &$values) {
+    if (!empty($this->options)) {
+      $values += $this->options;
+    }
+  }
 
   /**
    * Called once, when the server is first created. Allows it to set up its

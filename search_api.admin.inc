@@ -104,7 +104,7 @@ function search_api_admin_overview() {
 /**
  * Form callback showing a form for adding a server.
  */
-function search_api_admin_add_server($form, &$form_state) {
+function search_api_admin_add_server(array $form, array &$form_state) {
   drupal_set_title(t('Add server'));
 
   $class = empty($form_state['values']['class']) ? '' : $form_state['values']['class'];
@@ -162,7 +162,8 @@ function search_api_admin_add_server($form, &$form_state) {
       watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
       continue;
     }
-    $form['options']['form'] = $service->configurationForm();
+    $service_form = $service->configurationForm();
+    $form['options']['form'] = $service_form ? $service_form : array('#markup' => t('There are no configuration options for this service class.'));
     $form['options']['class']['#type'] = 'value';
     $form['options']['class']['#value'] = $class;
     $form['options']['#type'] = 'fieldset';
@@ -186,14 +187,37 @@ function search_api_admin_add_server($form, &$form_state) {
  * AJAX callback that just returns the "options" array of the already built form
  * array.
  */
-function search_api_admin_add_server_ajax_callback($form, &$form_state) {
+function search_api_admin_add_server_ajax_callback(array $form, array &$form_state) {
   return $form['options'];
+}
+
+/**
+ * Form validation callback for adding a server.
+ *
+ * Just calls the service class' validation handler.
+ */
+function search_api_admin_add_server_validate(array $form, array &$form_state) {
+  if (empty($form_state['values']['options']['class'])) {
+    return;
+  }
+  $class = $form_state['values']['options']['class'];
+  $info = search_api_get_service_info($class);
+  $service = NULL;
+  if (class_exists($info['class'])) {
+    $service = new $info['class']();
+  }
+  if (!($service instanceof SearchApiServiceInterface)) {
+    form_set_error('class', t('There seems to be something wrong with the selected service class.'));
+    return;
+  }
+  $form_state['values']['options']['service'] = $service;
+  $service->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], 'options][form][');
 }
 
 /**
  * Form submit callback for adding a server.
  */
-function search_api_admin_add_server_submit($form, &$form_state) {
+function search_api_admin_add_server_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
   $values = $form_state['values'];
 
@@ -210,6 +234,8 @@ function search_api_admin_add_server_submit($form, &$form_state) {
     return;
   }
 
+  $service = $form_state['values']['options']['service'];
+  $service->configurationFormSubmit($form['options']['form'], $values['options']['form']);
   $values['options'] = $values['options']['form'];
   $id = search_api_server_insert($values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
@@ -348,7 +374,7 @@ function theme_search_api_server(array $variables) {
  * @param SearchApiServer $server
  *   The server to edit.
  */
-function search_api_admin_server_edit($form, &$form_state, SearchApiServer $server) {
+function search_api_admin_server_edit(array $form, array &$form_state, SearchApiServer $server) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Server name'),
@@ -387,9 +413,18 @@ function search_api_admin_server_edit($form, &$form_state, SearchApiServer $serv
 }
 
 /**
+ * Validation function for search_api_admin_server_edit.
+ */
+function search_api_admin_server_edit_validate(array $form, array &$form_state) {
+  $id = $form_state['values']['id'];
+  $server = $form_state['values']['options']['server'] = search_api_server_load($id);
+  $server->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], 'options][form][');
+}
+
+/**
  * Submit function for search_api_admin_server_edit.
  */
-function search_api_admin_server_edit_submit($form, &$form_state) {
+function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
@@ -397,11 +432,9 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
   unset($values['id']);
 
   if (isset($values['options'])) {
-    $server = search_api_server_load($id);
+    $server = $values['options']['server'];
     $values['options'] = $values['options']['form'];
-    if (!empty($server->options)) {
-      $values['options'] += $server->options;
-    }
+    $server->configurationFormSubmit($form['options']['form'], $values['options']);
   }
 
   $ret = search_api_server_edit($id, $values);
@@ -417,7 +450,7 @@ function search_api_admin_server_edit_submit($form, &$form_state) {
 /**
  * Form callback showing a form for adding an index.
  */
-function search_api_admin_add_index($form, &$form_state) {
+function search_api_admin_add_index(array $form, array &$form_state) {
   drupal_set_title(t('Add index'));
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
@@ -491,7 +524,7 @@ function search_api_admin_add_index($form, &$form_state) {
 /**
  * Validation callback for search_api_admin_add_index.
  */
-function search_api_admin_add_index_validate($form, &$form_state) {
+function search_api_admin_add_index_validate(array $form, array &$form_state) {
   $cron_limit = $form_state['values']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
@@ -502,7 +535,7 @@ function search_api_admin_add_index_validate($form, &$form_state) {
 /**
  * Submit callback for search_api_admin_add_index.
  */
-function search_api_admin_add_index_submit($form, &$form_state) {
+function search_api_admin_add_index_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
@@ -664,7 +697,7 @@ function theme_search_api_index(array $variables) {
  * @param SearchApiIndex $index
  *   The index whose status should be displayed.
  */
-function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex $index) {
+function search_api_admin_index_status_form(array $form, array &$form_state, SearchApiIndex $index) {
   $enabled = !empty($index->enabled);
   $status = search_api_index_status($index);
   $server = $index->server();
@@ -774,7 +807,7 @@ function search_api_admin_index_status_form($form, &$form_state, SearchApiIndex 
 /**
  * Validation function for search_api_admin_index_status_form.
  */
-function search_api_admin_index_status_form_validate($form, &$form_state) {
+function search_api_admin_index_status_form_validate(array $form, array &$form_state) {
   if ($form_state['values']['op'] == t('Index now') && !$form_state['values']['limit']) {
     form_set_error('number', t('You have to set the number of items to index. Set to -1 for indexing all items.'));
   }
@@ -783,7 +816,7 @@ function search_api_admin_index_status_form_validate($form, &$form_state) {
 /**
  * Submit function for search_api_admin_index_status_form.
  */
-function search_api_admin_index_status_form_submit($form, &$form_state) {
+function search_api_admin_index_status_form_submit(array $form, array &$form_state) {
   $redirect = &$form_state['redirect'];
   $values = $form_state['values'];
   $id = $values['id'];
@@ -849,7 +882,7 @@ function search_api_admin_index_status_form_submit($form, &$form_state) {
  * @param SearchApiIndex $index
  *   The index to edit.
  */
-function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index) {
+function search_api_admin_index_edit(array $form, array &$form_state, SearchApiIndex $index) {
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['name'] = array(
     '#type' => 'textfield',
@@ -908,7 +941,7 @@ function search_api_admin_index_edit($form, &$form_state, SearchApiIndex $index)
 /**
  * Validation callback for search_api_admin_index_edit.
  */
-function search_api_admin_index_edit_validate($form, &$form_state) {
+function search_api_admin_index_edit_validate(array $form, array &$form_state) {
   $cron_limit = $form_state['values']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
@@ -919,7 +952,7 @@ function search_api_admin_index_edit_validate($form, &$form_state) {
 /**
  * Submit callback for search_api_admin_index_edit.
  */
-function search_api_admin_index_edit_submit($form, &$form_state) {
+function search_api_admin_index_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
@@ -947,7 +980,7 @@ function search_api_admin_index_edit_submit($form, &$form_state) {
  *   The index to edit.
  */
 // Copied from filter_admin_format_form
-function search_api_admin_index_workflow($form, &$form_state, SearchApiIndex $index) {
+function search_api_admin_index_workflow(array $form, array &$form_state, SearchApiIndex $index) {
   $callback_info = search_api_get_alter_callbacks();
   $processor_info = search_api_get_processors();
   $options = empty($index->options) ? array() : $index->options;
@@ -1140,7 +1173,7 @@ function theme_search_api_admin_item_order(array $variables) {
 /**
  * Submit callback for search_api_admin_index_workflow.
  */
-function search_api_admin_index_workflow_submit($form, &$form_state) {
+function search_api_admin_index_workflow_submit(array $form, array &$form_state) {
   $values = $form_state['values'];
   unset($values['processors']['settings']);
   $index = search_api_index_load($values['id']);
@@ -1192,7 +1225,7 @@ function search_api_admin_element_compare($a, $b) {
  * @param SearchApiIndex $index
  *   The index to edit.
  */
-function search_api_admin_index_fields($form, &$form_state, SearchApiIndex $index) {
+function search_api_admin_index_fields(array $form, array &$form_state, SearchApiIndex $index) {
   $array = array();
   $index->dataAlter($array);
   $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
@@ -1418,7 +1451,7 @@ function theme_search_api_admin_fields_table($variables) {
 /**
  * Submit function for search_api_admin_index_fields.
  */
-function search_api_admin_index_fields_submit($form, &$form_state) {
+function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $id = $form_state['values']['id'];
   if ($form_state['values']['op'] == t('Save changes')) {
     $fields = $form_state['values']['fields'];
@@ -1493,7 +1526,7 @@ function search_api_admin_index_fields_submit($form, &$form_state) {
  *   Either a form array, or FALSE if this combination of type and action is
  *   not supported.
  */
-function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
+function search_api_admin_confirm(array $form, array &$form_state, $type, $action, $info) {
   switch ($type) {
     case 'server':
       switch ($action) {
@@ -1571,7 +1604,7 @@ function search_api_admin_confirm($form, &$form_state, $type, $action, $info) {
 /**
  * Submit function for search_api_admin_confirm().
  */
-function search_api_admin_confirm_submit($form, &$form_state) {
+function search_api_admin_confirm_submit(array $form, array &$form_state) {
   $values = $form_state['values'];
 
   $type = $values['type'];
