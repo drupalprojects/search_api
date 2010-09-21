@@ -114,8 +114,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   public function removeIndex($index) {
     $id = is_object($index) ? $index->id : $index;
-    $this->connect();
-    $this->solr->deleteByQuery("index_id:" . $id);
+    try {
+      $this->connect();
+      $this->solr->deleteByQuery("index_id:" . $id);
+    }
+    catch (Exception $e) {
+      watchdog('search_api_solr', t("An error occurred while deleting an index' data: !msg.", array('!msg' => $e->getMessage())));
+    }
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {
