@@ -140,7 +140,7 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     return $this->proxy->indexItems($index, $items);
   }
 
-  public function deleteItems($ids, SearchApiIndex $index = NULL) {
+  public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     $this->ensureProxy();
     return $this->proxy->deleteItems($ids, $index);
   }
