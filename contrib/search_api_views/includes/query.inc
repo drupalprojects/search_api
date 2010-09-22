@@ -119,10 +119,6 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->query->range($this->offset, $this->limit);
       $results = $this->query->execute();
       $view->total_rows = $results['result count'];
-      // @todo Dirty hack - I hope this works another way, normally.
-      if (!empty($this->pager) && method_exists($this->pager, 'update_page_info')) {
-        $this->pager->update_page_info();
-      }
       $view->result = array();
       if (!empty($results['results'])) {
         $this->addResults($results['results'], $view);
