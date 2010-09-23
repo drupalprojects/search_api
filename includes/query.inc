@@ -122,8 +122,8 @@ interface SearchApiQueryInterface {
    * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special fields 'search-api-relevance' (sort by
-   *   relevance) and 'search-api-id' (sort by entity id) may be used.
+   *   The field to sort by. The special fields 'search_api_relevance' (sort by
+   *   relevance) and 'search_api_id' (sort by entity id) may be used.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
@@ -536,7 +536,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special field 'search-api-relevance' may be
+   *   The field to sort by. The special field 'search_api_relevance' may be
    *   used to sort by relevance.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
@@ -660,7 +660,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     while ($filters && $langs_to_add) {
       $filter = array_shift($filters);
       if (is_array($filter)) {
-        if ($filter[0] == 'search-api-language' && $filter[2] == '=') {
+        if ($filter[0] == 'search_api_language' && $filter[2] == '=') {
           $lang = $filter[1];
           if (isset($languages[$lang])) {
             unset($langs_to_add[$lang]);
@@ -678,7 +678,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
     }
     if ($langs_to_add) {
       foreach ($langs_to_add as $lang) {
-        $this->condition('search-api-language', $lang);
+        $this->condition('search_api_language', $lang);
       }
     }
   }

@@ -127,7 +127,7 @@ function search_api_page_entity_property_info() {
       'type' => 'integer',
       'description' => t('The primary identifier for a search page.'),
     ),
-    'index-id' => array(
+    'index_id' => array(
       'label' => t('Index ID'),
       'type' => 'integer',
       'description' => t('The ID of the index this search page uses.'),

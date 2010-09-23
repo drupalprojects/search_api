@@ -307,13 +307,13 @@ function search_api_entity_property_info() {
       'description' => t("A string describing the index' use to users."),
       'sanitize' => 'filter_xss',
     ),
-    'server-entity' => array(
+    'server_entity' => array(
       'label' => t('Server'),
       'type' => 'search_api_server',
       'description' => t('The search_api_server with which data should be indexed.'),
       'getter callback' => 'search_api_index_get_server',
     ),
-    'entity-type' => array(
+    'entity_type' => array(
       'label' => t('Entity type'),
       'type' => 'text',
       'description' => t('The entity type of items stored in this index.'),
@@ -579,7 +579,7 @@ function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
     $item->search_api_url = url($url['path'], array('absolute' => TRUE) + $url['options']);
   }
   return empty($set) ? array() : array(
-    'search-api-url' => array(
+    'search_api_url' => array(
       'label' => t('URI'),
       'description' => t('An URI where the item can be accessed.'),
       'type' => 'uri',
@@ -647,7 +647,7 @@ function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
     $item->search_api_fulltext = $text;
   }
   return array(
-    'search-api-fulltext' => array(
+    'search_api_fulltext' => array(
       'label' => t('Fulltext'),
       'description' => t('The aggregated content of all indexed fulltext fields.'),
       'type' => 'text',

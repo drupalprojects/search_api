@@ -516,7 +516,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     $filter = $query->getFilter();
     if ($filter->getFilters()) {
       if (!isset($db_query)) {
-        $db_query = db_select($fields['search-api-language']['table'], 't', $this->query_options);
+        $db_query = db_select($fields['search_api_language']['table'], 't', $this->query_options);
         $db_query->addField('t', 'item_id', 'item_id');
         $db_query->addExpression(':score', 'score', array(':score' => 1));
       }
@@ -531,7 +531,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     if (!isset($db_query)) {
       $msg = t('No valid search keys or filters given.');
       $this->warnings[$msg] = 1;
-      $db_query = db_select($fields['search-api-language']['table'], 't', $this->query_options);
+      $db_query = db_select($fields['search_api_language']['table'], 't', $this->query_options);
       $db_query->addField('t', 'item_id', 'item_id');
       $db_query->addExpression(':score', 'score', array(':score' => 1));
     }
@@ -557,11 +557,11 @@ class SearchApiDbService extends SearchApiAbstractService {
             $this->warnings[$msg] = $msg;
             $order = 'ASC';
           }
-          if ($field_name == 'search-api-relevance') {
+          if ($field_name == 'search_api_relevance') {
             $db_query->orderBy('score', $order);
             continue;
           }
-          if ($field_name == 'search-api-id') {
+          if ($field_name == 'search_api_id') {
             $db_query->orderBy('item_id', $order);
             continue;
           }
@@ -842,9 +842,9 @@ class SearchApiDbService extends SearchApiAbstractService {
 
     if ($negated) {
       if (!isset($db_query) || $conj == 'OR') {
-        if (isset($all_fields['search-api-language'])) {
+        if (isset($all_fields['search_api_language'])) {
           // We use this table because all items should be contained exactly once.
-          $table = $all_fields['search-api-language']['table'];
+          $table = $all_fields['search_api_language']['table'];
         }
         else {
           $distinct = TRUE;

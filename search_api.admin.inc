@@ -1278,7 +1278,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       '#type' => 'checkbox',
       '#default_value' => $info['indexed'],
     );
-    if ($key == 'search-api-language') {
+    if ($key == 'search_api_language') {
       // Is treated specially to always index the language.
       $form['fields'][$key]['type']['#default_value'] = 'string';
       $form['fields'][$key]['type']['#disabled'] = TRUE;

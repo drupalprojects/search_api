@@ -179,13 +179,13 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
    * Create a list of all indexed field names mapped to their Solr field names.
-   * The special fields "search-api-id" and "search-api-relevance" are also
+   * The special fields "search_api_id" and "search_api_relevance" are also
    * included.
    */
   protected function getFieldNames(SearchApiIndex $index) {
     $ret = array(
-      'search-api-id' => 'is_search-api-id',
-      'search-api-relevance' => 'score',
+      'search_api_id' => 'is_search_api_id',
+      'search_api_relevance' => 'score',
     );
     if (empty($index->options['fields'])) {
       return $ret;

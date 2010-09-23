@@ -17,7 +17,7 @@ function search_api_views_views_data() {
     $entity_info = entity_get_info($index->entity_type);
     $table['table']['group'] = $entity_info['label'];
     $table['table']['base'] = array(
-      'field' => 'search-api-id',
+      'field' => 'search_api_id',
       'index' => $index->id,
       'title' => $index->name,
       'help' => t('Use the %name search index for filtering and retrieving data.', array('%name' => $index->name)),
@@ -116,22 +116,22 @@ function search_api_views_views_data() {
     }
 
     // Special handlers
-    $table['search-api-id']['title'] = t('Entity ID');
-    $table['search-api-id']['help'] = t('Order the results by entity ID.');
-    $table['search-api-id']['type'] = 'integer';
-    $table['search-api-id']['sort']['handler'] = 'SearchApiViewsHandlerSort';
+    $table['search_api_id']['title'] = t('Entity ID');
+    $table['search_api_id']['help'] = t('Order the results by entity ID.');
+    $table['search_api_id']['type'] = 'integer';
+    $table['search_api_id']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
-    $table['search-api-relevance']['title'] = t('Relevance');
-    $table['search-api-relevance']['help'] = t('Order the search results according to their relevance.');
-    $table['search-api-relevance']['type'] = 'decimal';
-    $table['search-api-relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
-    $table['search-api-relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
+    $table['search_api_relevance']['title'] = t('Relevance');
+    $table['search_api_relevance']['help'] = t('Order the search results according to their relevance.');
+    $table['search_api_relevance']['type'] = 'decimal';
+    $table['search_api_relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
+    $table['search_api_relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
-    $table['search-api-views-fulltext']['title'] = t('Fulltext search');
-    $table['search-api-views-fulltext']['help'] = t('Search several or all fulltext fields at once.');
-    $table['search-api-views-fulltext']['type'] = 'text';
-    $table['search-api-views-fulltext']['filter']['handler'] = 'SearchApiViewsHandlerFilterFulltext';
-    $table['search-api-views-fulltext']['argument']['handler'] = 'SearchApiViewsHandlerArgumentFulltext';
+    $table['search_api_views_fulltext']['title'] = t('Fulltext search');
+    $table['search_api_views_fulltext']['help'] = t('Search several or all fulltext fields at once.');
+    $table['search_api_views_fulltext']['type'] = 'text';
+    $table['search_api_views_fulltext']['filter']['handler'] = 'SearchApiViewsHandlerFilterFulltext';
+    $table['search_api_views_fulltext']['argument']['handler'] = 'SearchApiViewsHandlerArgumentFulltext';
   }
   return $data;
 }

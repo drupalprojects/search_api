@@ -322,7 +322,7 @@ class SearchApiIndex extends EntityDBExtendable {
       return $this;
     }
     $this->added_properties = array(
-      'search-api-language' => array(
+      'search_api_language' => array(
         'label' => t('Item language'),
         'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
         'type' => 'string',

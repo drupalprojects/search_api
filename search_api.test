@@ -176,12 +176,12 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'fields[type][type]' => 'string',
       'fields[type][boost]' => '1.0',
       'fields[type][indexed]' => 1,
-      'fields[search-api-fulltext][type]' => 'text',
-      'fields[search-api-fulltext][boost]' => '1.0',
-      'fields[search-api-fulltext][indexed]' => 1,
-      'fields[search-api-url][type]' => 'uri',
-      'fields[search-api-url][boost]' => '1.0',
-      'fields[search-api-url][indexed]' => 1,
+      'fields[search_api_fulltext][type]' => 'text',
+      'fields[search_api_fulltext][boost]' => '1.0',
+      'fields[search_api_fulltext][indexed]' => 1,
+      'fields[search_api_url][type]' => 'uri',
+      'fields[search_api_url][boost]' => '1.0',
+      'fields[search_api_url][indexed]' => 1,
       'fields[parent:id][type]' => 'integer',
       'fields[parent:id][boost]' => '1.0',
       'fields[parent:id][indexed]' => 1,
@@ -409,7 +409,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
             'boost' => 1.0,
             'indexed' => 1,
           ),
-          'search-api-language' => array(
+          'search_api_language' => array(
             'type' => 'string',
             'boost' => 1.0,
             'indexed' => 1,
@@ -479,7 +479,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
           'original_type' => 'text',
           'value' => $orig,
         ),
-        'search-api-language' => array(
+        'search_api_language' => array(
           'type' => 'string',
           'original_type' => 'string',
           'value' => LANGUAGE_NONE,
@@ -583,7 +583,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
           'original_type' => 'text',
           'value' => $orig,
         ),
-        'search-api-language' => array(
+        'search_api_language' => array(
           'type' => 'string',
           'original_type' => 'string',
           'value' => LANGUAGE_NONE,
@@ -661,7 +661,7 @@ END;
           'original_type' => 'text',
           'value' => $orig,
         ),
-        'search-api-language' => array(
+        'search_api_language' => array(
           'type' => 'string',
           'original_type' => 'string',
           'value' => LANGUAGE_NONE,

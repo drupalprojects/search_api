@@ -139,7 +139,7 @@ interface SearchApiServiceInterface {
    *     hook_entity_property_info().
    *   - value: The value to index.
    *
-   *   The special field "search-api-language" contains the item's language and
+   *   The special field "search_api_language" contains the item's language and
    *   should always be indexed.
    *
    *   The value of fields with the "tokens" type is an array of tokens. Each

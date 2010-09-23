@@ -30,6 +30,8 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     if ($options['http_user'] && $options['http_pass']) {
       $this->http_auth = 'Authorization: Basic ' . base64_encode($options['http_user'] . ':' . $options['http_pass']);
     }
+    // Since /ping otherwise complains about missing default field.
+    $this->_pingUrl .= '?q=id:1';
   }
 
   protected function _sendRawGet($url, $timeout = FALSE) {

@@ -1,0 +1,75 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_requirements().
+ */
+function search_api_solr_requirements($phase) {
+  if ($phase == 'install') {
+    $t = get_t();
+    $dir = dirname(__FILE__) . '/SolrPhpClient/Apache/Solr/';
+    if (file_exists($dir . 'Document.php') && file_exists($dir . 'Response.php') && file_exists($dir . 'Servuce.php')) {
+      return array(
+        'search_api_solr' => array(
+          'title' => $t('Solr PHP library'),
+          'description' => $t('The library was correctly installed.'),
+          'title' => REQUIREMENT_OK,
+        ),
+      );
+    }
+    else {
+      return array(
+        'search_api_solr' => array(
+          'title' => $t('Solr PHP library'),
+          'description' => $t('The library was not correctly installed. Please see INSTALL.txt for instructions.'),
+          'title' => REQUIREMENT_ERROR,
+        ),
+      );
+    }
+  }
+  elseif ($phase == 'runtime') {
+    $servers = entity_load('search_api_server', FALSE, array('class' => 'search_api_solr_service', 'enabled' => TRUE));
+    $count = 0;
+    $unavailable = 0;
+    $last = NULL;
+    foreach ($servers as $server) {
+      if (!$server->ping()) {
+        ++$unavailable;
+        $last = $server;
+      }
+      ++$count;
+    }
+    if (!$count) {
+      return array();
+    }
+    $ret['search_api_solr'] = array(
+      'title' => t('Solr servers'),
+      'value' => format_plural($count, '1 server', '@count servers'),
+    );
+    if ($unavailable) {
+      if ($unavailable == 1) {
+        $ret['search_api_solr']['description'] = t('The Solr server of <a href="!url">%name</a> could not be reached.',
+            array('!url' => url('admin/config/search/search_api/server/' . $last->id), '%name' => $last->name));
+      }
+      else {
+        $ret['search_api_solr']['description'] = t('@count Solr servers could not be reached.', array('@count' => $unavailable));
+      }
+      $ret['search_api_solr']['severity'] = REQUIREMENT_ERROR;
+    }
+    else {
+      $ret['search_api_solr']['description'] = format_plural($count, 'The Solr server could be reached.', 'All @count Solr servers could be reached.');
+      $ret['search_api_solr']['severity'] = REQUIREMENT_OK;
+    }
+    return $ret;
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function search_api_solr_uninstall() {
+  $servers = entity_load('search_api_server', FALSE, array('class' => 'search_api_solr_service'));
+  foreach ($servers as $server) {
+    search_api_server_delete($server);
+  }
+}

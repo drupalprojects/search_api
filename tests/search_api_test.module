@@ -107,7 +107,7 @@ function search_api_test_query(SearchApiIndex $index, $keys = 'foo bar', $offset
     $query->sort($sort[0], $sort[1]);
   }
   else {
-    $query->sort('search-api-id', 'ASC');
+    $query->sort('search_api_id', 'ASC');
   }
   if ($filters) {
     $filters = explode(',', $filters);

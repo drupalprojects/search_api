@@ -143,6 +143,17 @@ function search_api_schema() {
 }
 
 /**
+ * Implements hook_enable().
+ */
+function search_api_enable() {
+  // Mark all items as "dirty", since we can't know whether they are.
+  db_update('search_api_item')
+    ->fields(array('changed' => REQUEST_TIME))
+    ->condition('changed', 0)
+    ->execute();
+}
+
+/**
  * Implements hook_uninstall().
  */
 function search_api_uninstall() {

@@ -143,7 +143,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     foreach ($results as $id => $result) {
       if (!empty($result['entity']) && ($fields = $this->extractFields($result['entity']))) {
         $view->result[$id] = $fields;
-        $view->result[$id]['search-api-relevance'] = $result['score'];
+        $view->result[$id]['search_api_relevance'] = $result['score'];
       }
       else {
         $ids[] = $id;
@@ -156,7 +156,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     $entities = entity_load($this->index->entity_type, $ids);
     foreach ($entities as $id => $entity) {
       $view->result[$id] = $this->extractFields($entity);
-      $view->result[$id]['search-api-relevance'] = $results[$id]['score'];
+      $view->result[$id]['search_api_relevance'] = $results[$id]['score'];
     }
   }
 

@@ -8,3 +8,5 @@ package = Search
 dependencies[] = search_api
 
 files[] = search_api_test.module
+
+hidden = TRUE

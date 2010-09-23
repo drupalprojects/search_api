@@ -152,8 +152,8 @@
         Duplicate tokens at the same position (which may result from Stemmed Synonyms or
         WordDelim parts) are removed.
         -->
-        
-<!-- 
+
+<!--
     This is the field type this module will (unless manually changed) use for
     all fulltext fields. Some filters are commented out because they are not
     language-independent – i.e., SynonymFilterFactory, StopFilterFactory and
@@ -317,7 +317,7 @@
    <field name="index_id" type="long"   indexed="true" stored="true" required="true" />
 
    <!-- Since sorting by ID is explicitly allowed, store item_id also in a sortable way. -->
-   <copyField source="item_id" dest="is_search-api-id" />
+   <copyField source="item_id" dest="is_search_api_id" />
 
    <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
         will be used if the name matches any of the patterns.
