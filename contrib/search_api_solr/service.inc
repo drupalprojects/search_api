@@ -216,7 +216,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if (search_api_is_list_type($type)) {
       $type = substr($type, 5, -1);
       foreach ($value as $v) {
-        $this->addIndexFieldValue($doc, $key, $value, $type, TRUE);
+        $this->addIndexField($doc, $key, $v, $type, TRUE);
       }
       return;
     }
