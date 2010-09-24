@@ -143,10 +143,8 @@ function search_api_page_admin_add(array $form, array &$form_state) {
 
   if (!empty($index->options['fields'])) {
     $fields = array();
-    foreach ($index->options['fields'] as $name => $field) {
-      if ($field['indexed'] && search_api_is_text_type($field['type'])) {
-        $fields[$name] = $field['name'];
-      }
+    foreach ($index->getFulltextFields() as $name) {
+      $fields[$name] = $index->options['fields'][$name]['name'];
     }
   }
   if (!empty($fields)) {
@@ -284,10 +282,8 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
 
   if (!empty($index->options['fields'])) {
     $fields = array();
-    foreach ($index->options['fields'] as $name => $field) {
-      if ($field['indexed'] && search_api_is_text_type($field['type'])) {
-        $fields[$name] = $field['name'];
-      }
+    foreach ($index->getFulltextFields() as $name) {
+      $fields[$name] = $index->options['fields'][$name]['name'];
     }
   }
   if (!empty($fields)) {

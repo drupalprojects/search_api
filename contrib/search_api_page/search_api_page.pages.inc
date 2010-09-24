@@ -200,11 +200,7 @@ function theme_search_api_page_result(array $variables) {
   $name = entity_label($index->entity_type, $entity);
 
   $fields = $index->options['fields'];
-  foreach ($fields as $field => $info) {
-    if (!$info['indexed'] || !search_api_is_text_type($info['type'])) {
-      unset($fields[$field]);
-    }
-  }
+  $fields = array_intersect_key($fields, drupal_map_assoc($index->getFulltextFields()));
   $fields = search_api_extract_fields($wrapper, $fields);
   $text = '';
   $length = 0;
