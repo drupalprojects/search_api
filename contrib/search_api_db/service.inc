@@ -354,6 +354,31 @@ class SearchApiDbService extends SearchApiAbstractService {
             $query->execute();
           }
         }
+        elseif (search_api_is_list_type($type)) {
+          $values = array();
+          if (is_array($value)) {
+            foreach ($value as $v) {
+              if ($v !== NULL) {
+                $values[$v] = TRUE;
+              }
+            }
+            $values = array_keys($values);
+          }
+          else {
+            $values[] = $value;
+          }
+          if ($values) {
+            $insert = db_insert($table, $this->query_options)
+              ->fields(array('item_id', 'value'));
+            foreach ($values as $v) {
+              $insert->values(array(
+                'item_id' => $id,
+                'value'   => $v,
+              ));
+            }
+            $insert->execute();
+          }
+        }
         else {
           db_insert($table, $this->query_options)
             ->fields(array(
@@ -374,9 +399,10 @@ class SearchApiDbService extends SearchApiAbstractService {
   protected function convert($value, $type, $original_type) {
     if (search_api_is_list_type($type)) {
       $type = substr($type, 5, -1);
+      $original_type = search_api_extract_inner_type($original_type);
       $ret = array();
       foreach ($value as $v) {
-        $v = $this->convert($v, $type);
+        $v = $this->convert($v, $type, $original_type);
         $ret = array_merge($ret, is_array($v) ? $v : array($v));
       }
       return $ret;
