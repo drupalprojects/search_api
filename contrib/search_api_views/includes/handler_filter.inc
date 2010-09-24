@@ -36,7 +36,12 @@ class SearchApiViewsHandlerFilter extends views_handler_filter {
    * Add this filter to the query.
    */
   function query() {
-    $this->query->condition($this->real_field, $this->value, $this->operator);
+    while (is_array($this->value)) {
+      $this->value = $this->value ? array_shift($this->value) : NULL;
+    }
+    if ($this->value) {
+      $this->query->condition($this->real_field, $this->value, $this->operator);
+    }
   }
 
 }
