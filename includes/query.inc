@@ -206,7 +206,7 @@ interface SearchApiQueryInterface {
   /**
    * @return array
    *   An array containing the fields that should be searched for the search
-   *   keys. If this is NULL, all fulltext fields should be searched.
+   *   keys.
    */
   public function &getFields();
 
@@ -484,11 +484,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The called object.
    */
   public function fields(array $fields) {
-    $index_fields = $this->index->options['fields'];
-    foreach ($fields as $field) {
-      if (!isset($index_fields[$field]['type']) || !search_api_is_text_type($index_fields[$field]['type'])) {
-        throw new SearchApiException(t('Trying to search on field !field which is no fulltext field.', array('!field' => $field)));
-      }
+    $fulltext_fields = $this->index->getFulltextFields();
+    foreach (array_diff($fields, $fulltext_fields) as $field) {
+      throw new SearchApiException(t('Trying to search on field !field which is no indexed fulltext field.', array('!field' => $field)));
     }
     $this->fields = $fields;
     return $this;
@@ -609,6 +607,16 @@ class SearchApiQuery implements SearchApiQueryInterface {
   public final function execute() {
     $start = microtime(TRUE);
 
+    // Add filter for languages.
+    if (isset($this->options['languages'])) {
+      $this->addLanguages($this->options['languages']);
+    }
+
+    // Add fulltext fields, unless set
+    if ($this->fields === NULL) {
+      $this->fields = $this->index->getFulltextFields();
+    }
+
     // Call pre-execute hook.
     $this->preExecute();
 
@@ -617,11 +625,6 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
     // Let modules alter the query.
     drupal_alter('search_api_query', $this);
-
-    // Add filter for languages.
-    if (isset($this->options['languages'])) {
-      $this->addLanguages($this->options['languages']);
-    }
 
     $pre_search = microtime(TRUE);
 
