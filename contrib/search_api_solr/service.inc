@@ -308,6 +308,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Extract filters
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $fields);
+    $fq[] = 'index_id:' . $index->id;
 
     // Extract sort
     $sort = array();
@@ -328,9 +329,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $params = array(
       'qf' => $qf,
     );
-    if ($fq) {
-      $params['fq'] = $fq;
-    }
+    $params['fq'] = $fq;
     if ($sort) {
       $params['sort'] = implode(', ', $sort);
     }
