@@ -292,17 +292,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $options = $query->getOptions();
     $search_fields = $query->getFields();
     $qf = array();
-    if ($search_fields === NULL) {
-      foreach ($index->options['fields'] as $f => $field) {
-        if (!empty($field['indexed']) && search_api_is_text_type($field['type'])) {
-          $qf[] = $fields[$f];
-        }
-      }
-    }
-    else {
-      foreach ($search_fields as $f) {
-        $qf[] = $fields[$f];
-      }
+    foreach ($search_fields as $f) {
+      $qf[] = $fields[$f];
     }
 
     // Extract filters

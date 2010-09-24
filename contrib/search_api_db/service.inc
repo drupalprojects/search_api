@@ -502,14 +502,6 @@ class SearchApiDbService extends SearchApiAbstractService {
     $keys = $this->prepareKeys($keys);
     if ($keys && !(is_array($keys) && count($keys) == 1)) {
       $fulltext_fields = $query->getFields();
-      if (!isset($fulltext_fields)) {
-        $fulltext_fields = array();
-        foreach ($fields as $name => $field) {
-          if (search_api_is_text_type($field['type'])) {
-            $fulltext_fields[] = $name;
-          }
-        }
-      }
       if ($fulltext_fields) {
         $_fulltext_fields = $fulltext_fields;
         $fulltext_fields = array();
