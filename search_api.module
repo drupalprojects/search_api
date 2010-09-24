@@ -1224,7 +1224,8 @@ function search_api_server_delete($id) {
   variable_set('search_api_tasks', $tasks);
 
   module_invoke_all('search_api_server_delete', $server);
-  module_invoke_all('entity_delete', $server, 'search_api_server');
+  // Wait until http://drupal.org/node/709892 gets in.
+  //module_invoke_all('entity_delete', $server, 'search_api_server');
 
   return $ret;
 }
@@ -1771,7 +1772,8 @@ function search_api_index_delete($id) {
     ->execute();
 
   module_invoke_all('search_api_index_delete', $index);
-  module_invoke_all('entity_delete', $index, 'search_api_index');
+  // Wait until http://drupal.org/node/709892 gets in.
+  //module_invoke_all('entity_delete', $index, 'search_api_index');
 
   return TRUE;
 }
