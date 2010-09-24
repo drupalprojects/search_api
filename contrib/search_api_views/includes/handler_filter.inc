@@ -28,7 +28,7 @@ class SearchApiViewsHandlerFilter extends views_handler_filter {
       '#type' => 'textfield',
       '#title' => empty($form_state['exposed']) ? t('Value') : '',
       '#size' => 30,
-      '#default_value' => $this->value['value'],
+      '#default_value' => isset($this->value['value']) ? $this->value['value'] : '',
     );
   }
 
