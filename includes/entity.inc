@@ -177,6 +177,11 @@ class SearchApiIndex extends EntityDBExtendable {
    */
   private $added_properties = array();
 
+  /**
+   * @var array
+   */
+  private $fulltext_fields = NULL;
+
   // Database values that will be set when object is loaded
 
   /**
@@ -473,6 +478,31 @@ class SearchApiIndex extends EntityDBExtendable {
       $processor->postprocessSearchResults($response, $query);
     }
     return $this;
+  }
+
+  /**
+   * Convenience method for getting all of this index' fulltext fields.
+   *
+   * @param boolean $only_indexed
+   *   If set to TRUE, only the indexed fulltext fields will be returned.
+   *
+   * @return array
+   *   An array containing all (or all indexed) fulltext fields defined for this
+   *   index.
+   */
+  public function getFulltextFields($only_indexed = TRUE) {
+    if ($this->fulltext_fields === NULL) {
+      $this->fulltext_fields = array();
+      if (empty($this->options['fields'])) {
+        return array();
+      }
+      foreach ($this->options['fields'] as $key => $field) {
+        if (search_api_is_text_type($field['type']) && (!$only_indexed || $field['indexed'])) {
+          $this->fulltext_fields[] = $key;
+        }
+      }
+    }
+    return $this->fulltext_fields;
   }
 
 }
