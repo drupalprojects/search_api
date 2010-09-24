@@ -42,7 +42,7 @@ function search_api_views_views_data() {
         $depth = substr_count($prefix, ':');
         foreach ($wrapper as $property => $value) {
           $info = $value->info();
-          $type = $info['type'];
+          $type = $value->optionsList() ? 'options' : $info['type'];
           $inner_type = search_api_extract_inner_type($type);
           if ($inner_type == 'token') {
             $inner_type = 'string';
@@ -61,6 +61,7 @@ function search_api_views_views_data() {
             $table[$key]['title'] = $info['label'];
             $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
             $table[$key]['type'] = $type;
+            $table[$key]['options'] = $value->optionsList();
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
 
             // If field is indexed, also add additional handlers.
@@ -147,6 +148,8 @@ function _search_api_views_field_handler($type, $inner_type) {
       return 'SearchApiViewsHandlerFieldDate';
     case 'duration':
       return 'SearchApiViewsHandlerFieldDuration';
+    case 'options':
+      return 'SearchApiViewsHandlerFieldOptions';
 
     default:
       return 'SearchApiViewsHandlerField';
@@ -175,7 +178,6 @@ function _search_api_views_add_handlers($field, $wrapper) {
 
   if ($wrapper->optionsList()) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
-    $ret['filter']['options'] = $wrapper->optionsList();
   }
   else {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilter';
