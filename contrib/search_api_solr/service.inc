@@ -320,7 +320,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Set defaults
     if (!$keys) {
-      $keys = '*:*';
+      $keys = NULL;
     }
     $offset = isset($options['offset']) ? $options['offset'] : 0;
     $limit = isset($options['limit']) ? $options['limit'] : 1000000;

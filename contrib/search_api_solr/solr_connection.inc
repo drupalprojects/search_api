@@ -35,6 +35,12 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
   }
 
   protected function _sendRawGet($url, $timeout = FALSE) {
+    // Little "hack" to allow filter-only queries
+    // Since "*:*" doesn't work with the dismax query handler, we mustn't set
+    // "q", to let "q.alt" kick in. However, Apache_Solr_Service::search() will
+    // always add "q", even if it is empty. Therefore, we delete empty "q"
+    // parameters here.
+    $url = preg_replace('/([?&])q=(&|$)/', '$1$2', $url);
     if ($this->http_auth) {
       stream_context_set_option($this->_getContext, 'http', 'header', $this->http_auth);
     }
