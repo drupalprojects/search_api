@@ -121,7 +121,7 @@ function search_api_page_entity_info() {
  * Implements hook_entity_property_info().
  */
 function search_api_page_entity_property_info() {
-  $info['search_api_server']['properties'] = array(
+  $info['search_api_page']['properties'] = array(
     'id' => array(
       'label' => t('ID'),
       'type' => 'integer',
