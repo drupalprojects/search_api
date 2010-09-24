@@ -129,20 +129,9 @@ function search_api_page_admin_add(array $form, array &$form_state) {
   }
   else {
     $modes = array();
-    $modes['direct'] = array(
-      'name' => t('Direct query'),
-      'description' => t("Don't parse the query, just hand it to the search server unaltered. " .
-          "Might fail if the query contains syntax errors in regard to the specific server's query syntax."),
-    );
-    $modes['single'] = array(
-      'name' => t('Single term'),
-      'description' => t('The query is interpreted as a single keyword, maybe containing spaces or special characters.'),
-    );
-    $modes['terms'] = array(
-      'name' => t('Multiple terms'),
-      'description' => t('The query is interpreted as multiple keywords seperated by spaces. ' .
-          'Keywords containing spaces may be "quoted". Quoted keywords must still be seperated by spaces.'),
-    );
+    $modes['direct'] = t('Direct query');
+    $modes['single'] = t('Single term');
+    $modes['terms'] = t('Multiple terms');
   }
   $form['mode'] = array(
     '#type' => 'select',
