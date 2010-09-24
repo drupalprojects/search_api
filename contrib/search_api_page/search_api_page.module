@@ -255,7 +255,6 @@ function search_api_page_insert(array $values) {
   }
 
   menu_rebuild();
-  menu_cache_clear_all();
   module_invoke_all('entity_insert', (object) $fields, 'search_api_page');
 
   return $id;
@@ -298,7 +297,6 @@ function search_api_page_edit($id, array $fields) {
     $page = search_api_page_load($id, TRUE);
     if (isset($fields['path'])) {
       menu_rebuild();
-      menu_cache_clear_all();
     }
     module_invoke_all('entity_update', $page, 'search_api_page');
   }
@@ -327,7 +325,6 @@ function search_api_page_delete($id) {
   }
 
   menu_rebuild();
-  menu_cache_clear_all();
   module_invoke_all('entity_delete', $page, 'search_api_page');
 
   return TRUE;
