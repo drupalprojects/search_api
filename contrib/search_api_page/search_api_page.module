@@ -35,7 +35,7 @@ function search_api_page_menu() {
   foreach (entity_load('search_api_page', FALSE, array('enabled' => 1), TRUE) as $page) {
     $items[$page->path] = array(
       'title' => $page->name,
-      'description' => $page->description,
+      'description' => $page->description ? $page->description : $page->name,
       'page callback' => 'search_api_page_view',
       'page arguments' => array((string) $page->id),
       'access arguments' => array('access search_api_page'),
