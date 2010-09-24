@@ -341,6 +341,10 @@ function search_api_entity_property_info() {
  *   The entity's type.
  */
 function search_api_entity_insert($entity, $type) {
+  if ($type == 'search_api_index') {
+    // This comment is a lie.
+    return;
+  }
   $info = entity_get_info($type);
   $id = $info['entity keys']['id'];
 
