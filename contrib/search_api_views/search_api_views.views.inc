@@ -36,6 +36,7 @@ function search_api_views_views_data() {
     $prefix_names = array('' => '');
 
     $types = search_api_field_types();
+    $types['options'] = t('Options');
     while ($wrappers) {
       foreach ($wrappers as $prefix => $wrapper) {
         $prefix_name = $prefix_names[$prefix];
@@ -61,8 +62,10 @@ function search_api_views_views_data() {
             $table[$key]['title'] = $info['label'];
             $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
             $table[$key]['type'] = $type;
-            $table[$key]['options'] = $value->optionsList();
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
+            if ($type == 'options') {
+              $table[$key]['field']['options'] = $value->optionsList();
+            }
 
             // If field is indexed, also add additional handlers.
             if (!empty($fields[$key]['indexed'])) {
@@ -180,6 +183,7 @@ function _search_api_views_add_handlers($field, $wrapper) {
 
   if ($wrapper->optionsList()) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
+    $ret['filter']['options'] = $wrapper->optionsList();
   }
   else {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilter';
