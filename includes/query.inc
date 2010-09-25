@@ -534,8 +534,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * results will be sorted descending by relevance.
    *
    * @param $field
-   *   The field to sort by. The special field 'search_api_relevance' may be
-   *   used to sort by relevance.
+   *   The field to sort by. The special fields 'search_api_relevance' (sort by
+   *   relevance) and 'search_api_id' (sort by entity id) may be used.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
@@ -546,10 +546,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The called object.
    */
   public function sort($field, $order = 'ASC') {
-    if (empty($this->index->options['fields'][$field])) {
+    $fields = $this->index->options['fields'];
+    $fields += array(
+      'search_api_relevance' => array('type' => 'decimal'),
+      'search_api_id' => array('type' => 'integer'),
+    );
+    if (empty($fields[$field])) {
       throw new SearchApiException(t('Trying to sort on unknown field !field.', array('!field' => $field)));
     }
-    $type = $this->index->options['fields'][$field]['type'];
+    $type = $fields[$field]['type'];
     if (search_api_is_list_type($type) || search_api_is_text_type($type)) {
       throw new SearchApiException(t('Trying to sort on field !field of illegal type !type.', array('!field' => $field, '!type' => $type)));
     }
