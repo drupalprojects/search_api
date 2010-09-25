@@ -105,15 +105,6 @@ class SearchApiViewsQuery extends views_plugin_query {
       return;
     }
 
-    // Add facet filters, if applicable
-    // @todo Make facet use optional
-    if (function_exists('search_api_facet_get_filter')) {
-      $filter = search_api_facet_get_filter($this->query);
-      if ($filter && $filter->getFilters()) {
-        $this->query->filter($filter);
-      }
-    }
-
     try {
       $start = microtime(TRUE);
       $this->query->range($this->offset, $this->limit);
@@ -240,9 +231,7 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   public function getIndex() {
-    if (!$this->errors) {
-      return $this->query->getIndex();
-    }
+    return $this->index;
   }
 
   public function &getKeys() {
