@@ -43,7 +43,16 @@ function search_api_views_views_data() {
         $depth = substr_count($prefix, ':');
         foreach ($wrapper as $property => $value) {
           $info = $value->info();
-          $type = $value->optionsList() ? 'options' : $info['type'];
+          $type = $info['type'];
+          if ($value->optionsList()) {
+            // This is necessary so the list nesting level stays the same.
+            $tmp = 'options';
+            while (search_api_is_list_type($type)) {
+              $tmp = "list<$tmp>";
+              $type = substr($type, 5, -1);
+            }
+            $type = $tmp;
+          }
           $inner_type = search_api_extract_inner_type($type);
           if ($inner_type == 'token') {
             $inner_type = 'string';
@@ -63,7 +72,7 @@ function search_api_views_views_data() {
             $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
-            if ($type == 'options') {
+            if ($inner_type == 'options') {
               $table[$key]['field']['options'] = $value->optionsList();
             }
 

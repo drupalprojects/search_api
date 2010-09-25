@@ -45,14 +45,33 @@ class SearchApiViewsHandlerField extends views_handler_field {
   function option_definition() {
     $options = parent::option_definition();
     $options['link_to_entity'] = array('default' => FALSE);
+    $options['list']['mode'] = array('default' => 'collapse');
+    $options['list']['glue'] = array('default' => ', ');
     return $options;
   }
 
   /**
-   * Provide "Link to entity" option
+   * Provide "Link to entity" option, and list handling options if applicable.
    */
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    if ($this->is_list_type) {
+      $form['list']['mode'] = array(
+        '#type' => 'select',
+        '#title' => t('List handling'),
+        '#options' => array(
+          'collapse' => t('Concatenate values using the list seperator'),
+          'first' => t('Show first (if present)'),
+          'count' => t('Show item count'),
+        ),
+        '#default_value' => $this->options['list']['mode'],
+      );
+      $form['list']['glue'] = array(
+        '#type' => 'textfield',
+        '#title' => t('List seperator'),
+        '#default_value' => $this->options['list']['glue'],
+      );
+    }
     $form['link_to_entity'] = array(
       '#type' => 'checkbox',
       '#title' => t('Link this field to its entity'),
@@ -123,12 +142,27 @@ class SearchApiViewsHandlerField extends views_handler_field {
    * Render a list of values.
    */
   protected function renderArray($value) {
+    if (isset($this->options['list']['mode'])) {
+      if ($this->options['list']['mode'] == 'first') {
+        $value = count($value) ? array_shift($value) : NULL;
+        if (is_array($value)) {
+          return $this->renderArray($value);
+        }
+        elseif (isset($value)) {
+          return $this->renderValue($value);
+        }
+        return NULL;
+      }
+      if ($this->options['list']['mode'] == 'count') {
+        return count($value);
+      }
+    }
     $vs = array();
     foreach ($value as $v) {
       $vs[] = is_array($v) ? $this->renderArray($v) : $this->renderValue($v);
     }
-    // @todo Make this string configurable
-    return implode(', ', $vs);
+    $glue = isset($this->options['list']['glue']) ? $this->options['list']['glue'] : ', ';
+    return implode($glue, $vs);
   }
 
   /**
