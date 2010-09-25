@@ -48,6 +48,12 @@ interface SearchApiServiceInterface {
   public function configurationFormSubmit(array $form, array &$values);
 
   /**
+   * View this server's settings. Output can be HTML or a render array, a <dl>
+   * listing all relevant settings is preferred.
+   */
+  public function view();
+
+  /**
    * Called once, when the server is first created. Allows it to set up its
    * necessary infrastructure.
    */
@@ -291,6 +297,32 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
     if (!empty($this->options)) {
       $values += $this->options;
     }
+  }
+
+  /**
+   * View this server's settings. Output can be HTML or a render array, a <dl>
+   * listing all relevant settings is preferred.
+   *
+   * The default implementation does a crude output as a definition list, with
+   * option names taken from the configuration form.
+   */
+  public function view() {
+    $output = '';
+    $option_form = $this->configurationForm();
+    $option_names = array();
+    foreach ($option_form as $key => $element) {
+      if (isset($element['#title']) && isset($this->options[$key])) {
+        $option_names[$key] = $element['#title'];
+      }
+    }
+
+    foreach ($option_names as $key => $name) {
+      $value = $this->options[$key];
+      $output .= '<dt>' . check_plain($name) . '</dt>' . "\n";
+      $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' . "\n";
+    }
+
+    return $output ? "<dl>\n$output</dl>" : '';
   }
 
   /**

@@ -62,35 +62,29 @@ class SearchApiSolrService extends SearchApiAbstractService {
     else {
       // Editing this server
       $options = $this->options;
-      $form['host'] = array(
-        '#type' => 'value',
-        '#value' => $options['host'],
-      );
-      $form['port'] = array(
-        '#type' => 'value',
-        '#value' => $options['port'],
-      );
-      $form['path'] = array(
-        '#type' => 'value',
-        '#value' => $options['path'],
-      );
       $url = 'http://' . $options['host'] . ':' . $options['port'] . $options['path'];
       $form['server_description'] = array(
         '#type' => 'item',
         '#title' => t('Solr server URI'),
-        '#value' => l($url, $url),
+        '#description' => l($url, $url),
       );
     }
 
-    $form['http_user'] = array(
-      '#type' => 'textfield',
+    $form['http'] = array(
+      '#type' => 'fieldset',
       '#title' => t('Basic HTTP authentication'),
-      '#description' => t('If your Solr server is protected by basic HTTP authentication, enter the used username here.'),
+      '#description' => t('If your Solr server is protected by basic HTTP authentication, enter the login data here.'),
+      '#collapsible' => TRUE,
+      '#collapsed' => empty($options['http_user']),
+    );
+    $form['http']['http_user'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Username'),
       '#default_value' => $options['http_user'],
     );
-    $form['http_pass'] = array(
+    $form['http']['http_pass'] = array(
       '#type' => 'password',
-      '#description' => t('Enter the corresponding HTTP authentication password.'),
+      '#title' => t('Password'),
       '#default_value' => $options['http_pass'],
     );
 
@@ -98,9 +92,47 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function configurationFormValidate(array $form, array &$values, $prefix = '') {
-    if (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535) {
+    if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
       form_set_error($prefix . 'port', t('The port has to be an integer between 0 and 65535.'));
     }
+  }
+
+  public function configurationFormSubmit(array $form, array &$values, $prefix = '') {
+    $http = $values['http'];
+    unset($values['http']);
+    $values += $http;
+    parent::configurationFormSubmit($form, $values);
+  }
+
+  /**
+   * View this server's settings. Output can be HTML or a render array, a <dl>
+   * listing all relevant settings is preferred.
+   *
+   * The default implementation does a crude output as a definition list, with
+   * option names taken from the configuration form.
+   */
+  public function view() {
+    $output = '';
+    $options = $this->options;
+
+    $url = 'http://' . $options['host'] . ':' . $options['port'] . $options['path'];
+    $output .= "<dl>\n  <dt>";
+    $output .= t('Solr server URI');
+    $output .= "</dt>\n  <dd>";
+    $output .= l($url, $url);
+    $output .= '</dd>';
+    if ($options['http_user']) {
+      $output .= "\n  <dt>";
+      $output .= t('Basic HTTP authentication');
+      $output .= "</dt>\n  <dd>";
+      $output .= t('Username: !user', array('!user' => $options['http_user']));
+      $output .= "</dd>\n  <dd>";
+      $output .= t('Password: !pass', array('!pass' => str_repeat('*', strlen($options['http_pass']))));
+      $output .= '</dd>';
+    }
+    $output .= "\n</dl>";
+
+    return $output;
   }
 
   /**

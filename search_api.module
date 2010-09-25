@@ -157,7 +157,6 @@ function search_api_theme() {
       'class_name' => NULL,
       'class_description' => NULL,
       'options' => array(),
-      'option_names' => array()
     ),
     'file' => 'search_api.admin.inc',
   );

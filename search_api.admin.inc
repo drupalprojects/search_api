@@ -282,14 +282,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
 
   drupal_set_title(search_api_admin_item_title($server));
   $class = search_api_get_service_info($server->class);
-  $option_form = $server->configurationForm();
-  $option_names = array();
-  $options = $server->options;
-  foreach ($option_form as $key => $element) {
-    if (isset($element['#title']) && isset($options[$key])) {
-      $option_names[$key] = $element['#title'];
-    }
-  }
+  $options = $server->view();
   return array(
     '#theme' => 'search_api_server',
     '#id' => $server->id,
@@ -299,7 +292,6 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
     '#class_name' => $class['name'],
     '#class_description' => $class['description'],
     '#options' => $options,
-    '#option_names' => $option_names,
   );
 }
 
@@ -314,10 +306,8 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
  *   - enabled: Boolean indicating whether the server is enabled.
  *   - class_name: The used service class' display name.
  *   - class_description: The used service class' description.
- *   - options: The service-specific user options as an array, keyed by field
- *     name.
- *   - option_names: The names of those options, as determined by the service
- *     configuration form.
+ *   - options: An HTML string or render array containing information about the
+ *     server's service-specific settings.
  */
 // @todo There may be some room for improvement here, in almost every respect.
 function theme_search_api_server(array $variables) {
@@ -352,15 +342,11 @@ function theme_search_api_server(array $variables) {
     $output .= '</dd>' . "\n";
   }
 
-  if (!empty($option_names)) {
+  if (!empty($options)) {
     $output .= '<dt>' . t('Service options') . '</dt>' . "\n";
-    $output .= '<dd><dl>' . "\n";
-    foreach ($option_names as $key => $name) {
-      $value = $options[$key];
-      $output .= '<dt>' . check_plain($name) . '</dt>' . "\n";
-      $output .= '<dd>' . nl2br(check_plain(print_r($value, TRUE))) . '</dd>' . "\n";
-    }
-    $output .= '</dl></dd>' . "\n";
+    $output .= '<dd>' . "\n";
+    $output .= render($options);
+    $output .= '</dd>' . "\n";
   }
 
   $output .= '</dl>';
