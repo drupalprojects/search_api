@@ -139,6 +139,7 @@ function search_api_views_views_data() {
     $table['search_api_relevance']['help'] = t('The relevance of this search result with respect to the query.');
     $table['search_api_relevance']['type'] = 'decimal';
     $table['search_api_relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
+    $table['search_api_relevance']['field']['click sortable'] = TRUE;
     $table['search_api_relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
     $table['search_api_views_fulltext']['group'] = t('Search');
