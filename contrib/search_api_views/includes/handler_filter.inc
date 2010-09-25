@@ -16,26 +16,29 @@ class SearchApiViewsHandlerFilter extends views_handler_filter {
   /**
    * Provide a list of options for the operator form.
    */
-  function operator_options() {
+  public function operator_options() {
     return drupal_map_assoc(array('=', '<>', '<', '<=', '>', '>='));
   }
 
   /**
    * Provide a form for setting options.
    */
-  function value_form(&$form, &$form_state) {
+  public function value_form(&$form, &$form_state) {
+    while (is_array($this->value)) {
+      $this->value = $this->value ? array_shift($this->value) : NULL;
+    }
     $form['value'] = array(
       '#type' => 'textfield',
       '#title' => empty($form_state['exposed']) ? t('Value') : '',
       '#size' => 30,
-      '#default_value' => isset($this->value['value']) ? $this->value['value'] : '',
+      '#default_value' => isset($this->value) ? $this->value : '',
     );
   }
 
   /**
    * Add this filter to the query.
    */
-  function query() {
+  public function query() {
     while (is_array($this->value)) {
       $this->value = $this->value ? array_shift($this->value) : NULL;
     }

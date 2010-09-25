@@ -118,16 +118,18 @@ function search_api_views_views_data() {
 
     // Special handlers
     $table['search_api_id']['title'] = t('Entity ID');
-    $table['search_api_id']['help'] = t('Order the results by entity ID.');
+    $table['search_api_id']['help'] = t("The entity's ID.");
     $table['search_api_id']['type'] = 'integer';
     $table['search_api_id']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
+    $table['search_api_relevance']['group'] = t('Search');
     $table['search_api_relevance']['title'] = t('Relevance');
-    $table['search_api_relevance']['help'] = t('Order the search results according to their relevance.');
+    $table['search_api_relevance']['help'] = t('The relevance of this search result with respect to the query.');
     $table['search_api_relevance']['type'] = 'decimal';
     $table['search_api_relevance']['field']['handler'] = _search_api_views_field_handler('decimal', 'decimal');
     $table['search_api_relevance']['sort']['handler'] = 'SearchApiViewsHandlerSort';
 
+    $table['search_api_views_fulltext']['group'] = t('Search');
     $table['search_api_views_fulltext']['title'] = t('Fulltext search');
     $table['search_api_views_fulltext']['help'] = t('Search several or all fulltext fields at once.');
     $table['search_api_views_fulltext']['type'] = 'text';

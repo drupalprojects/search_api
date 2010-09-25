@@ -6,17 +6,58 @@
  */
 class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumentText {
 
-  // @todo Add option for selecting the fields to search.
-  // If different fields are selected for different filters, the query() method
-  // would get messy, though.
+  /**
+   * Specify the options this filter uses.
+   */
+  function option_definition() {
+    $options = parent::option_definition();
+    $options['fields'] = array('default' => array());
+    return $options;
+  }
+
+  /**
+   * Extend the options form a bit.
+   */
+  public function options_form(array &$form, array &$form_state) {
+    parent::options_form($form, $form_state);
+
+    $index = $this->query->getIndex();
+    if (!empty($index->options['fields'])) {
+      $fields = array();
+      $f = $index->options['fields'];
+      foreach ($index->getFulltextFields() as $name) {
+        $fields[$name] = $f[$name]['name'];
+      }
+    }
+    if (!empty($fields)) {
+      $form['fields'] = array(
+        '#type' => 'select',
+        '#title' => t('Searched fields'),
+        '#description' => t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
+        '#options' => $fields,
+        '#size' => min(4, count($fields)),
+        '#multiple' => TRUE,
+        '#default_value' => $this->options['fields'],
+      );
+    }
+    else {
+      $form['fields'] = array(
+        '#type' => 'value',
+        '#value' => array(),
+      );
+    }
+  }
 
   /**
    * Set up the query for this argument.
    *
    * The argument sent may be found at $this->argument.
    */
-  // @todo Improve conflict resolution. => Move to query class?
   public function query() {
+    $fields = $this->options['fields'];
+    $fields = $fields ? $fields : $this->query->getIndex()->getFulltextFields();
+    $this->query->fields($fields);
+
     $old = $this->query->getOriginalKeys();
     $this->query->keys($this->argument);
     if ($old) {
@@ -25,11 +66,10 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
         $keys[] = $old;
       }
       elseif (is_array($old)) {
-        unset($old['#conjunction']);
-        $keys = '"' . implode('" "', $old) . '" ' . $keys;
+        // We don't support such nonsense.
       }
       else {
-        $keys = $old . ' ' . $keys;
+        $keys = "($old) ($keys)";
       }
     }
   }
