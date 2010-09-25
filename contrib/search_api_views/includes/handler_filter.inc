@@ -7,6 +7,20 @@
 class SearchApiViewsHandlerFilter extends views_handler_filter {
 
   /**
+   * The value to filter for.
+   *
+   * @var mixed
+   */
+  public $value;
+
+  /**
+   * The operator used for filtering.
+   *
+   * @var string
+   */
+  public $operator;
+
+  /**
    * The associated views query object.
    *
    * @var SearchApiViewsQuery
