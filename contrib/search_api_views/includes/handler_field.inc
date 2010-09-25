@@ -40,6 +40,28 @@ class SearchApiViewsHandlerField extends views_handler_field {
   }
 
   /**
+   * Specifies the options this handler uses.
+   */
+  function option_definition() {
+    $options = parent::option_definition();
+    $options['link_to_entity'] = array('default' => FALSE);
+    return $options;
+  }
+
+  /**
+   * Provide "Link to entity" option
+   */
+  function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    $form['link_to_entity'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Link this field to its entity'),
+      '#description' => t('This will override any other link you have set.'),
+      '#default_value' => $this->options['link_to_entity'],
+    );
+  }
+
+  /**
    * Called to add the field to a query.
    */
   public function query() {
@@ -83,21 +105,42 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render the field.
    *
-   * @param $values
+   * @param array $values
    *   The values retrieved from the database.
    */
-  public function render($values) {
+  public function render(array $values) {
     $value = $values[$this->real_field];
-    // if ($this->is_list_type)?
     if (is_array($value)) {
-      $vs = array();
-      foreach ($value as $v) {
-        $vs[] = $this->renderValue($v);
-      }
-      // @todo Make this string configurable
-      return implode(', ', $vs);
+      $value = $this->renderArray($value);
     }
-    return $this->renderValue($value);
+    else {
+      $value = $this->renderValue($value);
+    }
+    return $this->renderLink($value, $values);
+  }
+
+  /**
+   * Render a list of values.
+   */
+  protected function renderArray($value) {
+    $vs = array();
+    foreach ($value as $v) {
+      $vs[] = is_array($v) ? $this->renderArray($v) : $this->renderValue($v);
+    }
+    // @todo Make this string configurable
+    return implode(', ', $vs);
+  }
+
+  /**
+   * Render a value as a link to the entity, if applicable.
+   */
+  protected function renderLink($value, array $values) {
+    if (!$this->options['link_to_entity']) {
+      return $value;
+    }
+    $entity = $values['search_api_views_entity'];
+    $url = entity_uri($this->query->getIndex()->entity_type, $entity);
+    return l($value, $url['path'], array('html' => TRUE) + $url['options']);
   }
 
   /**

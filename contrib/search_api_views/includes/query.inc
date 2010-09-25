@@ -170,6 +170,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       foreach ($fields as $key => $field) {
         $ret[$key] = $field['value'];
       }
+      $ret['search_api_views_entity'] = $entity;
       return $ret;
     }
     catch (Exception $e) {
