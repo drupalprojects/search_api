@@ -711,8 +711,7 @@ function search_api_query($id, array $options = array()) {
  * @return
  *   If a search with the specified ID was executed, an array containing
  *   ($query, $results) as used in this function's parameters. If $search_id is
- *   NULL and there was only one search executed, the corresponding array will
- *   be returned. FALSE otherwise.
+ *   NULL, an array of all executed searches will be returned, keyed by ID.
  */
 function search_api_current_search($search_id = NULL, SearchApiQuery $query = NULL, array $results = array()) {
   $searches = &drupal_static(__FUNCTION__, array());
@@ -727,10 +726,7 @@ function search_api_current_search($search_id = NULL, SearchApiQuery $query = NU
   if (isset($searches[$search_id])) {
     return $searches[$search_id];
   }
-  if ($search_id === NULL && count($searches) == 1) {
-    return reset($searches);
-  }
-  return FALSE;
+  return $searches;
 }
 
 /**
