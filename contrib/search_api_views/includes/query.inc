@@ -99,6 +99,9 @@ class SearchApiViewsQuery extends views_plugin_query {
    */
   public function execute(view $view) {
     if ($this->errors) {
+      foreach ($this->errors as $msg) {
+        drupal_set_message($msg, 'error');
+      }
       $view->result = array();
       $view->total_rows = 0;
       $view->execute_time = 0;
