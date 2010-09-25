@@ -16,7 +16,7 @@ class SearchApiViewsHandlerArgument extends views_handler_argument {
   /**
    * Determine if the argument can generate a breadcrumb
    *
-   * @return TRUE/FALSE
+   * @return boolean
    */
   // @todo Change and implement set_breadcrumb()?
   public function uses_breadcrumb() {
