@@ -43,6 +43,105 @@ function search_api_facets_theme() {
 }
 
 /**
+ * Implements hook_block_info().
+ */
+function search_api_facets_block_info() {
+  $blocks = array();
+  $facets = search_api_facet_load(array('enabled' => TRUE));
+  foreach ($facets as $facet) {
+    $blocks[$facet->delta]['info'] = $facet->name;
+    // It will hardly ever be possible to cache facet blocks sensibly.
+    $blocks[$facet->delta]['cache'] = DRUPAL_NO_CACHE;
+    // Use this so facet blocks are initially grouped together.
+    $blocks[$facet->delta]['weight'] = 5;
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function search_api_facets_block_configure($delta = '') {
+  $facet = search_api_facet_load($delta);
+  if (!$facet) {
+    return array();
+  }
+  $index = search_api_index_load($facet->index_id);
+  if (!$index || empty($index->options['fields'][$facet->field])) {
+    drupal_set_message(t("This facet's index field is unknown."), 'error');
+    return array();
+  }
+  $field = $index->options['fields'][$facet->field];
+  $options = $facet->options;
+  $options += array(
+    'min_count' => 0,
+    'sort_count' => TRUE,
+  );
+
+  $form['#element_validate'] = array('search_api_facets_block_configure_validate');
+  $form['index_description'] = array(
+    '#type' => 'item',
+    '#title' => t('Search index'),
+    '#description' => l($index->name, 'admin/config/search/search_api/index/' . $index->id),
+  );
+  $form['field_description'] = array(
+    '#type' => 'item',
+    '#title' => t('Field'),
+    '#description' => check_plain($field['name']),
+  );
+  $form['min_count'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum result count'),
+    '#description' => t('The minimum number of results a facet value has to have in order to be displayed.'),
+    '#default_value' => $options['min_count'],
+  );
+  $form['sort_count'] = array(
+    '#type' => 'select',
+    '#title' => t('Facet sort'),
+    '#options' => array(
+      TRUE => t('Sort by result count'),
+      FALSE => t('Sort by label'),
+    ),
+    '#default_value' => $options['sort_count'],
+  );
+
+  $form['facet'] = array(
+    '#type' => 'value',
+    '#value' => $facet,
+  );
+  $form['index'] = array(
+    '#type' => 'value',
+    '#value' => $index,
+  );
+
+  return $form;
+}
+
+/**
+ * Validation function for search_api_facets_block_configure().
+ */
+function search_api_facets_block_configure_validate(array $element, array &$form_state) {
+  $min_count = $element['min_count']['#value'];
+  if ($min_count && (!is_numeric($min_count) || $min_count < 0)) {
+    form_error($element['min_count'], t('The minimum count has to be a non-negative integer, or left blank.'));
+  }
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function search_api_facets_block_save($delta = '', array $edit = array()) {
+
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function search_api_facets_block_view($delta = '') {
+
+}
+
+/**
  * Load one or more facets. Either the block delta or an array of conditions
  * might be given.
  *
@@ -65,6 +164,7 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
     $cache = &drupal_static(__FUNCTION__);
     if (!isset($cache[$delta]) || $reset) {
       $cache[$delta] = db_query('SELECT * FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetch();
+      $cache[$delta]->options = $cache[$delta]->options ? unserialize($cache[$delta]->options) : array();
     }
     return $cache[$delta];
   }
@@ -73,7 +173,11 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
   foreach ($conditions as $field => $value) {
     $select->condition($field, $value);
   }
-  return $select->execute()->fetchAllAssoc('delta');
+  $facets = $select->execute()->fetchAllAssoc('delta');
+  foreach ($facets as $facet) {
+    $facet->options = $facet->options ? unserialize($facet->options) : array();
+  }
+  return $facets;
 }
 
 /**
@@ -88,6 +192,9 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
 function search_api_facet_save(stdClass $facet) {
   if (!empty($facet->delta) && empty($facet->is_new)) {
     drupal_write_record('search_api_facet', $facet, 'delta');
+    if ($facet->enabled != search_api_facet_load($facet->delta, TRUE)->enabled) {
+      block_flush_caches();
+    }
     return;
   }
   if (empty($facet->delta)) {
@@ -97,13 +204,16 @@ function search_api_facet_save(stdClass $facet) {
     $delta = 'index' . $facet->index_id . '_' . preg_replace('/\W+/', '_', $facet->field);
     $base = $delta = substr($delta, 0, 32);
     $i = 0;
-    while (search_api_facet_load($delta, TRUE)) {
+    while (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))) {
       $suffix = '_' . ++$i;
       $delta = substr($base, 0, 32 - strlen($suffix)) . $suffix;
     }
     $facet->delta = $delta;
   }
   drupal_write_record('search_api_facet', $facet);
+  if ($facet->enabled) {
+    block_flush_caches();
+  }
 }
 
 /**
@@ -127,7 +237,11 @@ function search_api_facet_delete($conditions = array()) {
   foreach ($conditions as $field => $value) {
     $del->condition($field, $value);
   }
-  return $del->execute();
+  if ($del->execute()) {
+    block_flush_caches();
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
