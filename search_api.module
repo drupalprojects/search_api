@@ -79,7 +79,7 @@ function search_api_menu() {
   $items[$pre . '/index/%search_api_index'] = array(
     'title' => 'View index',
     'title callback' => 'search_api_admin_item_title',
-    'title arguments' => array(5, 6),
+    'title arguments' => array(5),
     'description' => 'View index details.',
     'page callback' => 'search_api_admin_index_view',
     'page arguments' => array(5),
