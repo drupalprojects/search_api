@@ -52,7 +52,7 @@ interface SearchApiServiceInterface {
    * feature. Features are optional extensions to Search API functionality and
    * usually defined and used by third-party modules.
    * Currently, the only feature specified directly in the search_api project is
-   * "facets", defined by the search_api_facets module.
+   * "search_api_facets", defined by the module of the same name.
    *
    * @param string $feature
    *   The name of the optional feature.
@@ -320,7 +320,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * feature. Features are optional extensions to Search API functionality and
    * usually defined and used by third-party modules.
    * Currently, the only feature specified directly in the search_api project is
-   * "facets", defined by the search_api_facets module.
+   * "search_api_facets", defined by the module of the same name.
    *
    * @param string $feature
    *   The name of the optional feature.
