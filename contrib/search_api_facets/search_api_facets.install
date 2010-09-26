@@ -1,0 +1,52 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_schema().
+ */
+function search_api_facets_schema() {
+  $schema['search_api_facet'] = array(
+    'description' => 'Stores all activated or configured facets of a site.',
+    'fields' => array(
+      'delta' => array(
+        'description' => "The facet block's {block}.delta.",
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '0',
+      ),
+      'index_id' => array(
+        'description' => 'The {search_api_index}.id this facet belongs to.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'field' => array(
+        'description' => 'The index field this facet belongs to.',
+        'type' => 'varchar',
+        'length' => 255,// This is ugly, but we can't be sure how long a field name might get.
+        'not null' => TRUE,
+      ),
+      'enabled' => array(
+        'description' => 'A flag indicating whether the facet is enabled.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'options' => array(
+        'description' => 'The options used to configure the facet.',
+        'type' => 'text',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'field' => array('index_id', array('field', 50)),
+      'enabled' => array('enabled'),
+    ),
+    'primary key' => array('delta'),
+  );
+
+  return $schema;
+}
