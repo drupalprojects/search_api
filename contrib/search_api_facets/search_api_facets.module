@@ -24,6 +24,7 @@ function search_api_facets_menu() {
     'access arguments' => array('administer search_api'),
     'weight' => -1,
     'type' => MENU_LOCAL_TASK,
+    'file' => 'search_api_facets.admin.inc',
   );
 
   return $items;
