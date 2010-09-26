@@ -2,59 +2,144 @@
 // $Id$
 
 /**
+ * Implements hook_help().
+ */
+function search_api_facets_help($path, array $arg) {
+  if ($path == 'admin/config/search/search_api/index/%/facets') {
+    return t('Select the indexed fields for which you want to create facet blocks. ' .
+        'Before facet blocks are actually displayed, you will have to enable and configure them at the <a href="!url">block administration page</a>.',
+        array('!url' => url('admin/structure/block')));
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function search_api_facets_menu() {
+  $items['admin/config/search/search_api/index/%search_api_index/facets'] = array(
+    'title' => 'Facets',
+    'description' => 'Select the facet blocks to display.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('search_api_facets_index_select', 5),
+    'access arguments' => array('administer search_api'),
+    'weight' => -1,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Load one or more facets. Either the block delta or an array of conditions
+ * might be given.
+ *
+ * @param $conditions
+ *   Either a facet's delta, or an array containing conditions in the form
+ *   $field => $value for the facets to be returned. An empty array will return
+ *   all defined facets.
+ * @param $reset
+ *   If set to TRUE, the returned facets will be freshly loaded, instead of
+ *   being loaded from the cache.
+ *
+ * @return stdClass
+ *   Either the facet with the specified delta, or an array of facets matching
+ *   the specified conditions, keyed by delta.
+ */
+function search_api_facet_load($conditions = array(), $reset = FALSE) {
+  if (is_scalar($conditions)) {
+    $delta = $conditions;
+    // At the moment, we only use caching when returning a single facet.
+    $cache = &drupal_static(__FUNCTION__);
+    if (!isset($cache[$delta]) || $reset) {
+      $cache[$delta] = db_query('SELECT * FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetch();
+    }
+    return $cache[$delta];
+  }
+  $select = db_select('search_api_facet', 'f');
+  $select->fields('f');
+  foreach ($conditions as $field => $value) {
+    $select->condition($field, $value);
+  }
+  return $select->execute()->fetchAllAssoc('delta');
+}
+
+/**
+ * Saves a facet.
+ * If $facet->delta is empty, it will be computed automatically. In this case,
+ * or if $facet->is_new is set, the facet will be inserted. Otherwise, it will
+ * be updated.
+ *
+ * @param stdClass $facet
+ *   The facet object to save.
+ */
+function search_api_facet_save(stdClass $facet) {
+  if (!empty($facet->delta) && empty($facet->is_new)) {
+    drupal_write_record('search_api_facet', $facet, 'delta');
+    return;
+  }
+  if (empty($facet->delta)) {
+    // Construct a delta using index id and field.
+    // We have to ensure that it's both unique and at most 32 characters long,
+    // leading to a bit of complexity.
+    $delta = 'index' . $facet->index_id . '_' . preg_replace('/\W+/', '_', $facet->field);
+    $base = $delta = substr($delta, 0, 32);
+    $i = 0;
+    while (search_api_facet_load($delta)) {
+      $suffix = '_' . ++$i;
+      $delta = substr($base, 0, 32 - strlen($suffix));
+    }
+    $facet->delta = $delta;
+  }
+  drupal_write_record('search_api_facet', $facet);
+}
+
+/**
+ * Deletes a facet.
+ *
+ * @param $delta
+ *   The delta of the facet to delete.
+ *
+ * @return
+ *   TRUE, if the facet was successfully deleted, FALSE otherwise.
+ */
+function search_api_facet_delete($delta) {
+  return db_delete('search_api_facet')
+    ->condition('delta', $delta)
+    ->execute() != 0;
+}
+
+/**
  * Function for retrieving the active filters for a certain search.
  *
  * Filters are taken from URL parameters named "filter_ID", or just "filter"
  * when only one facetted search is active.
  *
  * @param SearchApiQueryInterface $query
- *   The query for which to create the filters. Needed for index/field specific
- *   data.
- * @param $search_id
- *   On pages with multiple facetted searches, a string identifying the search
- *   for which to retrieve the filter.
+ *   The query for which to create the filters.
  *
- * @return SearchApiQueryFilterInterface
- *   A filter suitable for adding to the query to filter according to the
- *   facets; or NULL, if no facets are active.
+ * @return array
+ *   An array with field names as keys, mapped to a type-specific filter value.
  */
-function search_api_facet_get_filter(SearchApiQueryInterface $query, $search_id = NULL) {
+function search_api_facet_get_filter(SearchApiQueryInterface $query) {
   $params = drupal_get_query_parameters();
-  if (!isset($search_id)) {
-    $search_id = $query->getOption('search id');
-  }
+  $search_id = $query->getOption('search id');
+
   if (isset($search_id) && isset($params['filter_' . $search_id])) {
     $filters = $params['filter_' . $search_id];
   }
   elseif (isset($params['filter'])) {
     $filters = $params['filter'];
   }
-  if (empty($filters)) {
-    return NULL;
-  }
-  $ret = $query->createFilter('AND');
-  $fields = $query->getIndex()->options['fields'];
-  foreach ($filters as $field => $filter) {
-    if (isset($fields[$field])) {
-      _search_api_facet_conditions_add($ret, $field, $filter, $fields[$field]);
-    }
-  }
-  return $ret;
+  return empty($filters) ? array() : $filters;
 }
 
 /**
- * Helper function for adding facet conditions to a filter.
+ * Displays a form for selecting the indexed fields for which facets should be
+ * created.
  *
- * @param SearchApiQueryFilterInterface $filter
- *   The filter object to which conditions should be added.
- * @param $field_name
- *   The name of the field on which to filter.
- * @param $value
- *   The value(s) for which to filter, in any kind.
- * @param array $field
- *   The field's definition, as saved in the index' options.
+ * @param SearchApiIndex $index
+ *   The index for which to display the settings.
  */
-function _search_api_facet_conditions_add(SearchApiQueryFilterInterface $filter, $field_name, $value, array $field) {
-  // @todo Handle any special cases (multiple filters, ranges, dates, etc.).
-  $filter->condition($field_name, $value);
+function search_api_facets_index_select(array $form, array &$form_state, SearchApiIndex $index) {
+
 }
