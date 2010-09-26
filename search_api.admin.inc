@@ -563,7 +563,6 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
       return $ret;
     }
   }
-  drupal_set_title(search_api_admin_item_title($index));
 
   $ret = array(
     '#theme' => 'search_api_index',
