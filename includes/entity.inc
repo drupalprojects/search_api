@@ -95,6 +95,11 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     return $this->proxy->configurationFormSubmit($form, $values);
   }
 
+  public function supportsFeature($feature) {
+    $this->ensureProxy();
+    return $this->proxy->supportsFeature($feature);
+  }
+
   public function view() {
     $this->ensureProxy();
     return $this->proxy->view();

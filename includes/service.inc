@@ -48,6 +48,22 @@ interface SearchApiServiceInterface {
   public function configurationFormSubmit(array $form, array &$values);
 
   /**
+   * Determines whether this service class implementation supports a given
+   * feature. Features are optional extensions to Search API functionality and
+   * usually defined and used by third-party modules.
+   * Currently, the only feature specified directly in the search_api project is
+   * "facets", defined by the search_api_facets module.
+   *
+   * @param string $feature
+   *   The name of the optional feature.
+   *
+   * @return boolean
+   *   TRUE if this service knows and supports the specified feature. FALSE
+   *   otherwise.
+   */
+  public function supportsFeature($feature);
+
+  /**
    * View this server's settings. Output can be HTML or a render array, a <dl>
    * listing all relevant settings is preferred.
    */
@@ -297,6 +313,24 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
     if (!empty($this->options)) {
       $values += $this->options;
     }
+  }
+
+  /**
+   * Determines whether this service class implementation supports a given
+   * feature. Features are optional extensions to Search API functionality and
+   * usually defined and used by third-party modules.
+   * Currently, the only feature specified directly in the search_api project is
+   * "facets", defined by the search_api_facets module.
+   *
+   * @param string $feature
+   *   The name of the optional feature.
+   *
+   * @return boolean
+   *   TRUE if this service knows and supports the specified feature. FALSE
+   *   otherwise.
+   */
+  public function supportsFeature($feature) {
+    return FALSE;
   }
 
   /**
