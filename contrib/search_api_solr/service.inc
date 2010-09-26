@@ -7,6 +7,11 @@
 class SearchApiSolrService extends SearchApiAbstractService {
 
   /**
+   * The date format that Solr uses, in PHP date() syntax.
+   */
+  const SOLR_DATE_FORMAT = 'Y-m-d\TH:i:s\Z';
+
+  /**
    * A connection to the Solr server.
    *
    * @var SearchApiSolrConnection
@@ -257,22 +262,23 @@ class SearchApiSolrService extends SearchApiAbstractService {
         foreach ($value as $v) {
           $doc->addField($key, $v['value']);
         }
+        return;
+      case 'boolean':
+        $value = $value ? 'true' : 'false';
         break;
       case 'date':
         $value = is_numeric($value) ? (int) $value : strtotime($value);
         if ($value === FALSE) {
           return;
         }
-        $value = format_date($value, 'custom', 'Y-m-d\TH:i:s\Z', 'UTC');
-        // Fall-through
-
-      default:
-        if ($multi_valued) {
-          $doc->addField($key, $value);
-        }
-        else {
-          $doc->setField($key, $value);
-        }
+        $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
+        break;
+    }
+    if ($multi_valued) {
+      $doc->addField($key, $value);
+    }
+    else {
+      $doc->setField($key, $value);
     }
   }
 
@@ -330,7 +336,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
 
     // Extract filters
     $filter = $query->getFilter();
-    $fq = $this->createFilterQueries($filter, $fields);
+    $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
     $fq[] = 'index_id:' . $index->id;
 
     // Extract sort
@@ -442,15 +448,18 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * Transforms a query filter into a flat array of Solr filter queries, using
    * the field names in $fields.
    */
-  protected function createFilterQueries(SearchApiQueryFilterInterface $filter, array $fields) {
+  protected function createFilterQueries(SearchApiQueryFilterInterface $filter, array $solr_fields, array $fields) {
     $or = $filter->getConjunction() == 'OR';
     $fq = array();
     foreach ($filter->getFilters() as $f) {
       if (is_array($f)) {
-        $fq[] = $this->createFilterQuery($fields[$f[0]], $f[1], $f[2]);
+        if (!isset($fields[$f[0]]) || empty($fields[$f[0]]['indexed'])) {
+          throw new SearchApiException(t('Filter term on unknown or unindexed field !field.', array('!field' => $f[0])));
+        }
+        $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
       }
       else {
-        $f = $this->createFilterQueries($f, $fields);
+        $f = $this->createFilterQueries($f, $solr_fields);
         if ($filter->getConjunction() != $f->getConjunction()) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
@@ -468,10 +477,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * Create a single search query string according to the given field, value
    * and operator.
    */
-  protected function createFilterQuery($field, $value, $operator) {
+  protected function createFilterQuery($field, $value, $operator, $field_info) {
     $field = SearchApiSolrConnection::escape($field);
     $value = trim($value);
-    $value = strpos($value, ' ') === FALSE ? SearchApiSolrConnection::escape($value) : SearchApiSolrConnection::phrase($value);
+    $value = $this->formatFilterValue($value, search_api_extract_inner_type($field_info['type']));
     switch ($operator) {
       case '<>':
         return "-($field:$value)";
@@ -487,6 +496,25 @@ class SearchApiSolrService extends SearchApiAbstractService {
       default:
         return "$field:$value";
     }
+  }
+
+  /**
+   * Format a value for filtering on a field of a specific type.
+   */
+  protected function formatFilterValue($value, $type) {
+    switch ($type) {
+      case 'boolean':
+        $value = $value ? 'true' : 'false';
+        break;
+      case 'date':
+        $value = is_numeric($value) ? (int) $value : strtotime($value);
+        if ($value === FALSE) {
+          return;
+        }
+        $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
+        break;
+    }
+    return strpos($value, ' ') === FALSE ? SearchApiSolrConnection::escape($value) : SearchApiSolrConnection::phrase($value);
   }
 
   //
