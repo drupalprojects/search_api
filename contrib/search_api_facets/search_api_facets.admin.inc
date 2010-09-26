@@ -37,7 +37,8 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     '#type' => 'item',
     '#title' => t('Select the available facet blocks'),
     '#description' => t('<p>All enabled blocks will be shown, along with their names, on the block administration page. ' .
-        "For your own convenience, choose unique names, they won't be displayed to normal users. " .
+        'For your own convenience, choose unique names. ' .
+        'The names will also be displayed to normal users, unless manually changed in the block settings. ' .
         'By cloning blocks, you can have multiple facet blocks with seperate configurations for a single index field.</p>' .
         "<p>When you won't be using a disabled facet anymore, you can delete all its settings permanently, reducing database size. " .
         "This won't influence other facets. You can enable it again later, but without the previously stored settings.</p>" .
