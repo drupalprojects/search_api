@@ -9,5 +9,3 @@ package = Search
 files[] = search_api_facets.admin.inc
 files[] = search_api_facets.install
 files[] = search_api_facets.module
-
-configure = admin/config/search/search_api/facets
