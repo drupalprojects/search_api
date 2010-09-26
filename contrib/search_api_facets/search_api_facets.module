@@ -97,9 +97,9 @@ function search_api_facet_save(stdClass $facet) {
     $delta = 'index' . $facet->index_id . '_' . preg_replace('/\W+/', '_', $facet->field);
     $base = $delta = substr($delta, 0, 32);
     $i = 0;
-    while (search_api_facet_load($delta)) {
+    while (search_api_facet_load($delta, TRUE)) {
       $suffix = '_' . ++$i;
-      $delta = substr($base, 0, 32 - strlen($suffix));
+      $delta = substr($base, 0, 32 - strlen($suffix)) . $suffix;
     }
     $facet->delta = $delta;
   }
