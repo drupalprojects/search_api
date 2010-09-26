@@ -229,9 +229,17 @@ interface SearchApiQueryInterface {
    *   The name of an option.
    *
    * @return mixed
-   *   The option with the specified name, if set, or NULL otherwise.
+   *   The value of the option with the specified name, if set. NULL otherwise.
    */
   public function getOption($name);
+
+  /**
+   * @param string $name
+   *   The name of an option.
+   * @param mixed $value
+   *   The new value of the option.
+   */
+  public function setOption($name, $value);
 
   /**
    * @return array
