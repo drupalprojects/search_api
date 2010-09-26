@@ -30,6 +30,18 @@ function search_api_facets_menu() {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function search_api_facets_theme() {
+  $themes['search_api_facets_form_table'] = array(
+    'render element' => 'element',
+    'file' => 'search_api_facets.admin.inc',
+  );
+
+  return $themes;
+}
+
+/**
  * Load one or more facets. Either the block delta or an array of conditions
  * might be given.
  *
@@ -94,18 +106,27 @@ function search_api_facet_save(stdClass $facet) {
 }
 
 /**
- * Deletes a facet.
+ * Deletes one or more facets.
  *
- * @param $delta
- *   The delta of the facet to delete.
+ * @param $conditions
+ *   Analogous to search_api_facet_load(), this can be either a facet delta or
+ *   an array of conditions.
  *
  * @return
- *   TRUE, if the facet was successfully deleted, FALSE otherwise.
+ *   TRUE, if any facets were successfully deleted, FALSE otherwise.
  */
-function search_api_facet_delete($delta) {
-  return db_delete('search_api_facet')
-    ->condition('delta', $delta)
-    ->execute() != 0;
+function search_api_facet_delete($conditions = array()) {
+  if (is_scalar($conditions)) {
+    $delta = $conditions;
+    return db_delete('search_api_facet')
+      ->condition('delta', $delta)
+      ->execute() != 0;
+  }
+  $del = db_delete('search_api_facet');
+  foreach ($conditions as $field => $value) {
+    $del->condition($field, $value);
+  }
+  return $del->execute();
 }
 
 /**
@@ -131,15 +152,4 @@ function search_api_facet_get_filter(SearchApiQueryInterface $query) {
     $filters = $params['filter'];
   }
   return empty($filters) ? array() : $filters;
-}
-
-/**
- * Displays a form for selecting the indexed fields for which facets should be
- * created.
- *
- * @param SearchApiIndex $index
- *   The index for which to display the settings.
- */
-function search_api_facets_index_select(array $form, array &$form_state, SearchApiIndex $index) {
-
 }
