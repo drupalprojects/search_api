@@ -69,7 +69,7 @@ function search_api_views_views_data() {
               $table[$key]['group'] = $prefix_name;
             }
             $table[$key]['title'] = $info['label'];
-            $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
+            $table[$key]['help'] = empty($info['description']) ? '' : $info['description'];
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
             if ($inner_type == 'options') {
