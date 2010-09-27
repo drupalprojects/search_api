@@ -168,6 +168,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render a value as a link to the entity, if applicable.
    */
+  // @todo Let e.g. author:name be linked to author instead
   protected function renderLink($value, array $values) {
     if (!$this->options['link_to_entity']) {
       return $value;
