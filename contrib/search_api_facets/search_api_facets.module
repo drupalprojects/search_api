@@ -278,8 +278,9 @@ function search_api_facets_block_view($delta = '') {
 
   // Process available facet terms.
   $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
-  foreach ($terms as &$term) {
-    $term = (object) $term;
+  foreach ($terms as $i => $term) {
+    $terms[$i] = (object) $term;
+    $term = $terms[$i];
     $term->name = _search_api_create_filter_name($term->filter, $type, $values);
     $term->iname = drupal_strtolower($term->name);
     $term->params = $params;
@@ -304,8 +305,8 @@ function search_api_facets_block_view($delta = '') {
   $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->field);
   $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->delta);
   $theme = array(
-    '#theme' => 'search_api_facets_list' . $theme_suffix,
-    '#terms' => array(),
+    '#theme'  => 'search_api_facets_list' . $theme_suffix,
+    '#terms'  => array(),
     '#active' => array(),
   );
 
