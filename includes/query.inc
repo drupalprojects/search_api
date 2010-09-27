@@ -14,7 +14,7 @@ interface SearchApiQueryInterface {
    *
    * @param SearchApiIndex $index
    *   The index the query should be executed on.
-   * @param $options
+   * @param array $options
    *   Associative array of options configuring this query. Recognized options
    *   are:
    *   - conjunction: The type of conjunction to use for this query - either
@@ -315,7 +315,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param SearchApiIndex $index
    *   The index the query should be executed on.
-   * @param $options
+   * @param array $options
    *   Associative array of options configuring this query. Recognized options
    *   are:
    *   - conjunction: The type of conjunction to use for this query - either
