@@ -9,6 +9,9 @@
  *   The index for which to display the settings.
  */
 function search_api_facets_index_select(array $form, array &$form_state, SearchApiIndex $index) {
+  module_load_include('admin.inc', 'search_api');
+  drupal_set_title(search_api_admin_item_title($index));
+
   if (!$index->server() || !$index->server()->supportsFeature('search_api_facets')) {
     // We can't offer any facets, but maybe the user can delete old facet data.
     drupal_set_message(t("The server this index currently lies on doesn't support facets. " .
