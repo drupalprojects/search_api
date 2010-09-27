@@ -36,7 +36,7 @@ interface SearchApiQueryInterface {
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
-  public function __construct(SearchApiIndex $index, $options = array());
+  public function __construct(SearchApiIndex $index, array $options = array());
 
   /**
    * @return array
@@ -337,7 +337,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
-  public function __construct(SearchApiIndex $index, $options = array()) {
+  public function __construct(SearchApiIndex $index, array $options = array()) {
     if (empty($index->options['fields'])) {
       throw new SearchApiException(t("Can't search an index which hasn't got any fields defined."));
     }
