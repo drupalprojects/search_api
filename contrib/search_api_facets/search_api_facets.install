@@ -56,3 +56,10 @@ function search_api_facets_schema() {
 
   return $schema;
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function search_api_facets_uninstall() {
+  variable_del('search_api_facets_search_ids');
+}
