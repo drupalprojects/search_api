@@ -30,8 +30,6 @@ interface SearchApiFacetsQueryInterface extends SearchApiQueryInterface {
    *     array should be keyed by the facets' unique identifiers, and contain
    *     a numeric array of facet terms, sorted descending by result count. A
    *     term is represented by an array with the following keys:
-   *     - name: Some textual representation of the term, which might be
-   *       displayed to the user.
    *     - count: Number of results for this term.
    *     - filter: The filter to apply when selecting this facet term. A filter
    *       is a string of one of the following forms:
