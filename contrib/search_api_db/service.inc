@@ -26,6 +26,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           '#description' => t('Select the database key and target to use for storing indexing information in. ' .
               'Cannot be changed after creation.'),
           '#options' => $options,
+          '#default_value' => 'default:default',
           '#required' => TRUE,
         ),
         'min_chars' => array(
@@ -33,6 +34,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           '#title' => t('Minimum word length'),
           '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
           '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6)),
+          '#default_value' => 1,
         ),
       );
     }
