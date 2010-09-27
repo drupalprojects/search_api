@@ -35,10 +35,10 @@ interface SearchApiFacetsQueryInterface extends SearchApiQueryInterface {
    *       is a string of one of the following forms:
    *       - "VALUE": Filter by the literal value VALUE (not only for string
    *         types).
-   *       - [VALUE1:VALUE2]: Filter for a value between VALUE1 and VALUE2. Use
+   *       - [VALUE1 VALUE2]: Filter for a value between VALUE1 and VALUE2. Use
    *         parantheses for excluding the border values and square brackets for
    *         including them. An asterisk (*) can be used as a wildcard, e.g.
-   *         (*:0) or [*:0) would be a filter for all negative values.
+   *         (* 0) or [* 0) would be a filter for all negative values.
    *       - !: Filter for items without a value for this field (i.e., the
    *         "missing" facet).
    */
