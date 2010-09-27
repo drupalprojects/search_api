@@ -74,8 +74,8 @@ function search_api_facets_block_configure($delta = '') {
   $field = $index->options['fields'][$facet->field];
   $options = $facet->options;
   $options += array(
+    'limit' => 10,
     'min_count' => 0,
-    'sort_count' => TRUE,
   );
 
   $form['#element_validate'] = array('search_api_facets_block_configure_validate');
@@ -89,29 +89,22 @@ function search_api_facets_block_configure($delta = '') {
     '#title' => t('Field'),
     '#description' => check_plain($field['name']),
   );
+  $form['limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of terms'),
+    '#description' => t('The maximum number of facet terms to be displayed in this block. Leave blank or set to 0 for no limit.'),
+    '#default_value' => $options['limit'],
+  );
   $form['min_count'] = array(
     '#type' => 'textfield',
     '#title' => t('Minimum result count'),
     '#description' => t('The minimum number of results a facet value has to have in order to be displayed.'),
     '#default_value' => $options['min_count'],
   );
-  $form['sort_count'] = array(
-    '#type' => 'select',
-    '#title' => t('Facet sort'),
-    '#options' => array(
-      TRUE => t('Sort by result count'),
-      FALSE => t('Sort by label'),
-    ),
-    '#default_value' => $options['sort_count'],
-  );
 
   $form['facet'] = array(
     '#type' => 'value',
     '#value' => $facet,
-  );
-  $form['index'] = array(
-    '#type' => 'value',
-    '#value' => $index,
   );
 
   return $form;
@@ -121,9 +114,13 @@ function search_api_facets_block_configure($delta = '') {
  * Validation function for search_api_facets_block_configure().
  */
 function search_api_facets_block_configure_validate(array $element, array &$form_state) {
+  $limit = $element['limit']['#value'];
+  if ($limit && (!is_numeric($limit) || $limit < 0 || strpos($limit, '.') !== FALSE)) {
+    form_error($element['limit'], t('The number of terms has to be a non-negative integer, or left blank.'));
+  }
   $min_count = $element['min_count']['#value'];
-  if ($min_count && (!is_numeric($min_count) || $min_count < 0)) {
-    form_error($element['min_count'], t('The minimum count has to be a non-negative integer, or left blank.'));
+  if (!$min_count || !is_numeric($min_count) || $min_count <= 0 || strpos($min_count, '.') !== FALSE) {
+    form_error($element['min_count'], t('The minimum count has to be a positive integer.'));
   }
 }
 
@@ -131,7 +128,15 @@ function search_api_facets_block_configure_validate(array $element, array &$form
  * Implements hook_block_save().
  */
 function search_api_facets_block_save($delta = '', array $edit = array()) {
-
+  $facet = $edit['facet'];
+  $options = $facet->options + array(
+    'limit'     => (int) $edit['limit'],
+    'min_count' => (int) $edit['min_count'],
+  );
+  if ($options != $facet->options) {
+    $facet->options = $options;
+    search_api_facet_save($facet);
+  }
 }
 
 /**
