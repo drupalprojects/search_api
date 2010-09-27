@@ -60,6 +60,9 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
 
   if (!empty($index->options['fields'])) {
     $facets = array();
+    if ($disabled = empty($index->enabled)) {
+      drupal_set_message('Since this index is at the moment disabled, no facet blocks can be activated.', 'warning');
+    }
     foreach (search_api_facet_load(array('index_id' => $index->id)) as $facet) {
       $facets[$facet->field][] = $facet;
     }
@@ -88,6 +91,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
         $form['facets'][$k]['enabled'] = array(
           '#type' => 'checkbox',
           '#default_value' => $facet->enabled,
+          '#disabled' => $disabled,
         );
         $form['facets'][$k]['field'] = array(
           '#markup' => $field['name'],
