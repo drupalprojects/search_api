@@ -278,14 +278,14 @@ function search_api_facets_block_view($delta = '') {
 
   // Process available facet terms.
   $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
-  foreach ($terms as $i => $term) {
-    $terms[$i] = (object) $term;
-    $term = $terms[$i];
+  foreach ($terms as &$term) {
+    $term = (object) $term;
     $term->name = _search_api_create_filter_name($term->filter, $type, $values);
     $term->iname = drupal_strtolower($term->name);
     $term->params = $params;
     $term->params[$filter_name][$facet->field][] = $term->filter;
   }
+  unset($term);
   if ($terms && $options['sort'] == 'name') {
     usort($terms, '_search_api_facets_compare_iname');
   }
