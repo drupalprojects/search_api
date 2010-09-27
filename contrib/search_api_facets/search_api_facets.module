@@ -72,10 +72,13 @@ function search_api_facets_block_configure($delta = '') {
     return array();
   }
   $field = $index->options['fields'][$facet->field];
-  $options = $facet->options;
-  $options += array(
+  $options = $facet->options += array(
     'limit' => 10,
-    'min_count' => 0,
+    'min_count' => 1,
+    'sort' => 'count',
+    'missing' => TRUE,
+    'default_true' => TRUE,
+    'ids_list' => array(),
   );
 
   $form['#element_validate'] = array('search_api_facets_block_configure_validate');
@@ -101,6 +104,50 @@ function search_api_facets_block_configure($delta = '') {
     '#description' => t('The minimum number of results a facet value has to have in order to be displayed.'),
     '#default_value' => $options['min_count'],
   );
+  $form['sort'] = array(
+    '#type' => 'select',
+    '#title' => t('Order'),
+    '#options' => array(
+      'count' => t('Order by result count'),
+      'name' => t('Order by name'),
+    ),
+    '#default_value' => $options['sort'],
+  );
+  $form['missing'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include "missing" facet'),
+    '#description' => t('Include a facet term for all results without a value for this field.'),
+    '#default_value' => $options['missing'],
+  );
+
+  $search_ids = variable_get('search_api_facets_search_ids', array());
+  if (empty($search_ids[$index->id])) {
+    $form['default_true'] = array(
+      '#type' => 'value',
+      '#value' => $options['default_true'],
+    );
+    $form['ids_list'] = array(
+      '#type' => 'value',
+      '#value' => $options['ids_list'],
+    );
+  }
+  else {
+    $form['default_true'] = array(
+      '#type' => 'select',
+      '#title' => t('Display for searches'),
+      '#options' => array(
+        TRUE => t('For all except the selected'),
+        FALSE => t('Only for the selected'),
+      ),
+      '#default_value' => $options['default_true'],
+    );
+    $form['ids_list'] = array(
+      '#type' => 'select',
+      '#title' => t('Search IDs'),
+      '#options' => $search_ids[$index->id],
+      '#default_value' => $options['ids_list'],
+    );
+  }
 
   $form['facet'] = array(
     '#type' => 'value',
@@ -130,9 +177,32 @@ function search_api_facets_block_configure_validate(array $element, array &$form
 function search_api_facets_block_save($delta = '', array $edit = array()) {
   $facet = $edit['facet'];
   $options = $facet->options + array(
-    'limit'     => (int) $edit['limit'],
-    'min_count' => (int) $edit['min_count'],
+    'limit'        => (int) $edit['limit'],
+    'min_count'    => (int) $edit['min_count'],
+    'sort'         => $edit['sort'],
+    'missing'      => (boolean) $edit['missing'],
+    'default_true' => (boolean) $edit['default_true'],
+    'ids_list'     => $edit['ids_list'],
   );
+  // We refresh the options each time the form is viewes. Similar behaviour
+  // exists for modules, menus, blocks and themes, so – why not?
+  if (empty($options['type']) || $options['type'] == 'options') {
+    $index = search_api_index_load($facet->index_id);
+    $type = $index->options['fields'][$facet->field]['type'];
+    $options['type'] = search_api_extract_inner_type($type);
+    $wrapper = entity_metadata_wrapper($index->entity_type);
+    foreach (explode(':', $facet->field) as $part) {
+      if (!isset($wrapper->$part)) {
+        $wrapper = NULL;
+        break;
+      }
+      $wrapper = $wrapper->$part;
+    }
+    if ($wrapper && $wrapper->optionsList()) {
+      $options['type'] = 'options';
+      $options['options'] = $wrapper->optionsList();
+    }
+  }
   if ($options != $facet->options) {
     $facet->options = $options;
     search_api_facet_save($facet);
@@ -143,7 +213,38 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
  * Implements hook_block_view().
  */
 function search_api_facets_block_view($delta = '') {
+  $facet = search_api_facet_load($delta);
+  if (empty($facet->enabled)) {
+    return;
+  }
+  $options = $facet->options;
+  foreach (search_api_current_search() as $search_id => $search) {
+    list($query, $results) = $search;
+    $index = $query->getIndex();
+    if ($facet->index_id == $index->id) {
+      if (array_search($search_id, $options['ids_list']) === FALSE) {
+        $search_ids = variable_get('search_api_facets_search_ids', array());
+        if (empty($search_ids[$search_id])) {
+          // Remember this search ID.
+          $search_ids[$search_id] = $search_id;
+          variable_set('search_api_facets_search_ids', $search_ids);
+        }
+        if ($options['default_true']) {
+          break; // Search matches.
+        }
+      }
+      elseif (!$options['default_true']) {
+        break; // Search matches.
+      }
+    }
 
+    // Search doesn't match, set $index to NULL to recognize this.
+    $index = NULL;
+  }
+  if (!isset($index)) {
+    return;
+  }
+  // @todo View facet block.
 }
 
 /**
