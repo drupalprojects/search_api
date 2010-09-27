@@ -238,6 +238,8 @@ interface SearchApiQueryInterface {
    *   The name of an option.
    * @param mixed $value
    *   The new value of the option.
+   *
+   * @return The option's previous value.
    */
   public function setOption($name, $value);
 
@@ -779,6 +781,20 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   public function getOption($name) {
     return isset($this->options[$name]) ? $this->options[$name] : NULL;
+  }
+
+  /**
+   * @param string $name
+   *   The name of an option.
+   * @param mixed $value
+   *   The new value of the option.
+   *
+   * @return The option's previous value.
+   */
+  public function setOption($name, $value) {
+    $old = $this->getOption($name);
+    $this->option[$name] = $value;
+    return $old;
   }
 
   /**
