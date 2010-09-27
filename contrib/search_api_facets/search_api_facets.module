@@ -38,6 +38,23 @@ function search_api_facets_theme() {
     'render element' => 'element',
     'file' => 'search_api_facets.admin.inc',
   );
+  $themes['search_api_facets_list'] = array(
+    'variables' => array(
+      'terms' => array(),
+      'active' => array(),
+    ),
+    'file' => 'search_api_facets.theme.inc',
+  );
+  $themes['search_api_facets_facet'] = array(
+    'variables' => array(
+      'name' => '',
+      'count' => 0,
+      'path' => NULL,
+      'options' => array(),
+      'active' => FALSE,
+    ),
+    'file' => 'search_api_facets.theme.inc',
+  );
 
   return $themes;
 }
@@ -145,6 +162,8 @@ function search_api_facets_block_configure($delta = '') {
       '#type' => 'select',
       '#title' => t('Search IDs'),
       '#options' => $search_ids[$index->id],
+      '#size' => min(4, count($search_ids[$index->id])),
+      '#multiple' => TRUE,
       '#default_value' => $options['ids_list'],
     );
   }
@@ -184,24 +203,10 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
     'default_true' => (boolean) $edit['default_true'],
     'ids_list'     => $edit['ids_list'],
   );
-  // We refresh the options each time the form is viewes. Similar behaviour
+  // We refresh the options each time the form is viewed. Similar behaviour
   // exists for modules, menus, blocks and themes, so – why not?
   if (empty($options['type']) || $options['type'] == 'options') {
-    $index = search_api_index_load($facet->index_id);
-    $type = $index->options['fields'][$facet->field]['type'];
-    $options['type'] = search_api_extract_inner_type($type);
-    $wrapper = entity_metadata_wrapper($index->entity_type);
-    foreach (explode(':', $facet->field) as $part) {
-      if (!isset($wrapper->$part)) {
-        $wrapper = NULL;
-        break;
-      }
-      $wrapper = $wrapper->$part;
-    }
-    if ($wrapper && $wrapper->optionsList()) {
-      $options['type'] = 'options';
-      $options['options'] = $wrapper->optionsList();
-    }
+    _search_api_facets_refresh_type($facet, $options);
   }
   if ($options != $facet->options) {
     $facet->options = $options;
@@ -218,7 +223,8 @@ function search_api_facets_block_view($delta = '') {
     return;
   }
   $options = $facet->options;
-  foreach (search_api_current_search() as $search_id => $search) {
+  $searches = search_api_current_search();
+  foreach ($searches as $search_id => $search) {
     list($query, $results) = $search;
     $index = $query->getIndex();
     if ($facet->index_id == $index->id) {
@@ -244,7 +250,137 @@ function search_api_facets_block_view($delta = '') {
   if (!isset($index)) {
     return;
   }
-  // @todo View facet block.
+
+  // Get active facet filters for this query.
+  $num = count($searches);
+  $params = drupal_get_query_parameters();
+  $filter_name = $num > 1 ? 'filter_' . $search_id : 'filter';
+  $filters = isset($params[$filter_name]) ? $params[$filter_name] : array();
+  if (!$filters && $num == 1 && isset($params['filter_' . $search_id])) {
+    $filter_name = 'filter_' . $search_id;
+    $filters = $params[$filter_name];
+  }
+  $filters = empty($filters[$facet->field]) ? array() : $filters[$facet->field];
+
+  // Bail early if there is nothing to do.
+  if (empty($results['search_api_facets'][$delta]) && empty($filters)) {
+    return;
+  }
+
+  // Get type information for later name-generation.
+  if (empty($options['type'])) {
+    _search_api_facets_refresh_type($facet, $options);
+    $facet->options = $options;
+    search_api_facet_save($facet);
+  }
+  $type = $options['type'];
+  $values = isset($options['options']) ? $options['options'] : array();
+
+  // Process available facet terms.
+  $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
+  foreach ($terms as &$term) {
+    $term = (object) $term;
+    $term->name = _search_api_create_filter_name($term->filter, $type, $values);
+    $term->iname = drupal_strtolower($term->name);
+    $term->params = $params;
+    $term->params[$filter_name][$facet->field][] = $term->filter;
+  }
+  if ($terms && $options['sort'] == 'name') {
+    usort($terms, '_search_api_facets_compare_iname');
+  }
+
+  // Process active facet filters.
+  $active = array();
+  foreach ($filters as $i => $v) {
+    $filter = new stdClass();
+    $filter->name = _search_api_create_filter_name($v, $type, $values);
+    $filter->params = $params;
+    unset($filter->params[$filter_name][$facet->field][$i]);
+    $active[] = $filter;
+  }
+
+  $theme_suffix  = '';
+  $theme_suffix .= '__' . preg_replace('/\W+/', '_', $query->getIndex()->entity_type);
+  $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->field);
+  $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->delta);
+  $theme = array(
+    '#theme' => 'search_api_facets_list' . $theme_suffix,
+    '#terms' => array(),
+    '#active' => array(),
+  );
+
+  foreach ($terms as $term) {
+    $theme['#terms'][] = array(
+      '#theme'   => 'search_api_facets_facet' . $theme_suffix,
+      '#name'    => $term->name,
+      '#count'   => $term->count,
+      '#path'    => $_GET['q'],
+      '#options' => array('query' => $term->params),
+      '#active'  => FALSE,
+    );
+  }
+  foreach ($active as $filter) {
+    $theme['#active'][] = array(
+      '#theme'   => 'search_api_facets_facet' . $theme_suffix,
+      '#name'    => $filter->name,
+      '#count'   => 0,
+      '#path'    => $_GET['q'],
+      '#options' => array('query' => $filter->params),
+      '#active'  => TRUE,
+    );
+  }
+
+  return array(
+    'subject' => $facet->name,
+    'content' => $theme,
+  );
+}
+
+/**
+ * Implements hook_search_api_index_update().
+ */
+function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
+  $id = $index->id;
+  if ($op == 'enable') {
+    if (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE index_id = :id', array(':id' => $id))->fetchField()) {
+      drupal_set_message(t('There are saved facets for this index. ' .
+          'Go to the <a href="!url">facet page</a> to enable them.',
+          array('!url' => 'admin/config/search/search_api/index/' . $id . '/facets')));
+    }
+  }
+  elseif ($op == 'disable') {
+    $count = db_update('search_api_facet')
+      ->fields(array('enabled' => FALSE))
+      ->condition('index_id', $id)
+      ->execute();
+    if ($count) {
+      drupal_set_message(t('The disabled index still had active facet blocks. They were deactivated.'), 'warning', FALSE);
+    }
+  }
+  elseif ($op == 'fields') {
+    $fields = $index->options['fields'];
+    $facets = search_api_facet_load(array('index_id' => $id, 'enabled' => TRUE));
+    foreach ($facets as $facet) {
+      if (empty($fields[$facet->field]['indexed'])) {
+        $facet->enabled = FALSE;
+        search_api_facet_save($facet);
+      }
+      elseif (empty($facet->options['type']) || $facet->options['type'] != $fields[$facet->field]['type']) {
+        $options = $facet->options;
+        _search_api_facets_refresh_type($facet, $options);
+        search_api_facet_save($facet);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_search_api_index_delete().
+ */
+function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
+  db_delete('search_api_facet')
+    ->condition('index_id', $index->id)
+    ->execute();
 }
 
 /**
@@ -264,26 +400,31 @@ function search_api_facets_block_view($delta = '') {
  *   the specified conditions, keyed by delta.
  */
 function search_api_facet_load($conditions = array(), $reset = FALSE) {
-  if (is_scalar($conditions)) {
-    $delta = $conditions;
-    // At the moment, we only use caching when returning a single facet.
-    $cache = &drupal_static(__FUNCTION__);
-    if (!isset($cache[$delta]) || $reset) {
-      $cache[$delta] = db_query('SELECT * FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetch();
-      $cache[$delta]->options = $cache[$delta]->options ? unserialize($cache[$delta]->options) : array();
+  $cache = &drupal_static(__FUNCTION__, array());
+  $key = serialize($conditions);
+  if (!isset($cache[$key]) || $reset) {
+    if (is_scalar($conditions)) {
+      $delta = $conditions;
+      $f = db_query('SELECT * FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetch();
+      if ($f) {
+        $f->options = $f->options ? unserialize($f->options) : array();
+      }
+      $cache[$key] = $f;
     }
-    return $cache[$delta];
+    else {
+      $select = db_select('search_api_facet', 'f');
+      $select->fields('f');
+      foreach ($conditions as $field => $value) {
+        $select->condition($field, $value);
+      }
+      $facets = $select->execute()->fetchAllAssoc('delta');
+      foreach ($facets as $facet) {
+        $facet->options = $facet->options ? unserialize($facet->options) : array();
+      }
+      $cache[$key] = $facets;
+    }
   }
-  $select = db_select('search_api_facet', 'f');
-  $select->fields('f');
-  foreach ($conditions as $field => $value) {
-    $select->condition($field, $value);
-  }
-  $facets = $select->execute()->fetchAllAssoc('delta');
-  foreach ($facets as $facet) {
-    $facet->options = $facet->options ? unserialize($facet->options) : array();
-  }
-  return $facets;
+  return $cache[$key];
 }
 
 /**
@@ -360,9 +501,9 @@ function search_api_facet_delete($conditions = array()) {
  *   The query for which to create the filters.
  *
  * @return array
- *   An array with field names as keys, mapped to a type-specific filter value.
+ *   An array with field names as keys, mapped to a filter value.
  */
-function search_api_facet_get_filter(SearchApiQueryInterface $query) {
+function search_api_facet_get_filters(SearchApiQueryInterface $query) {
   $params = drupal_get_query_parameters();
   $search_id = $query->getOption('search id');
 
@@ -373,4 +514,90 @@ function search_api_facet_get_filter(SearchApiQueryInterface $query) {
     $filters = $params['filter'];
   }
   return empty($filters) ? array() : $filters;
+}
+
+/**
+ * Refresh the type information in the given options array.
+ *
+ * @param stdClass $facet
+ *   The facet whose type information should be refreshed.
+ * @param array $options
+ *   An array for which 'type' and, if applicable, 'options' will be set.
+ */
+function _search_api_facets_refresh_type(stdClass $facet, array &$options) {
+  $index = search_api_index_load($facet->index_id);
+  $type = $index->options['fields'][$facet->field]['type'];
+  $options['type'] = search_api_extract_inner_type($type);
+  $wrapper = entity_metadata_wrapper($index->entity_type);
+  foreach (explode(':', $facet->field) as $part) {
+    if (!isset($wrapper->$part)) {
+      $wrapper = NULL;
+      break;
+    }
+    $wrapper = $wrapper->$part;
+  }
+  if ($wrapper && $wrapper->optionsList()) {
+    $options['type'] = 'options';
+    $options['options'] = $wrapper->optionsList();
+  }
+}
+
+/**
+ * Creates a human-readable name for a certain filter. $values is only needed if
+ * $type is "options".
+ */
+function _search_api_create_filter_name($filter, $type, array $values = array()) {
+  if ($filter == '!') {
+    return t('None');
+  }
+  if ($filter[0] == '"') {
+    $filter = substr($filter, 1, -1);
+    if (!$filter || $filter == '*') {
+      return t('Any');
+    }
+    return _search_api_create_value_name($filter, $type, $values);
+  }
+  $lowtype = $filter[0];
+  $uptype = $filter[strlen($filter) - 1];
+  $filter = substr($filter, 1, -1);
+  $filter = explode(' ', $filter, 2);
+  if ($filter[0] == '*' && $filter[1] == '*') {
+    return t('Any');
+  }
+  if ($filter[0] == '*') {
+    return ($uptype == ']' ? '< ' : '≤ ') . _search_api_create_value_name($filter[1], $type, $values);
+  }
+  if ($filter[1] == '*') {
+    return ($lowtype == ']' ? '> ' : '≥ ') . _search_api_create_value_name($filter[0], $type, $values);
+  }
+  return _search_api_create_value_name($filter[0], $type, $values) . ' – ' . _search_api_create_value_name($filter[1], $type, $values);
+}
+
+/**
+ * Creates a human-readable name for a single filter value. $values is only
+ * needed if $type is "options".
+ */
+function _search_api_create_value_name($value, $type, array $values = array()) {
+  switch ($type) {
+    case 'boolean':
+      return $value ? t('True') : t('False');
+    case 'date':
+      // @todo Implement something really clever here. hook_date_types()?
+      return format_date($value, 'short');
+    case 'duration':
+      return format_interval($value);
+    case 'options':
+      return empty($values[$value]) ? $value : $values[$value];
+
+    default:
+      // Nothing we can do about it.
+      return $value;
+  }
+}
+
+/**
+ * Compares two object by their "iname" properties.
+ */
+function _search_api_facets_compare_iname(stdClass $term1, stdClass $term2) {
+  return strcmp($term1->iname, $term2->iname);
 }
