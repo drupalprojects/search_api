@@ -203,7 +203,7 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
     'default_true' => (boolean) $edit['default_true'],
     'ids_list'     => $edit['ids_list'],
   );
-  // We refresh the options each time the form is viewed. Similar behaviour
+  // We refresh the options each time the form is saved. Similar behaviour
   // exists for modules, menus, blocks and themes, so – why not?
   if (empty($options['type']) || $options['type'] == 'options') {
     _search_api_facets_refresh_type($facet, $options);
@@ -218,41 +218,19 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
  * Implements hook_block_view().
  */
 function search_api_facets_block_view($delta = '') {
-  $facet = search_api_facet_load($delta);
-  if (empty($facet->enabled)) {
+  // Since we already computed the active facets when altering the search queries, we don't do it again here.
+  $search_ids = drupal_static('search_api_facets_search_api_query_alter', array());
+  if (empty($search_ids[$delta]) || !search_api_current_search($search_ids[$delta])) {
     return;
   }
-  $options = $facet->options;
-  $searches = search_api_current_search();
-  foreach ($searches as $search_id => $search) {
-    list($query, $results) = $search;
-    $index = $query->getIndex();
-    if ($facet->index_id == $index->id) {
-      if (array_search($search_id, $options['ids_list']) === FALSE) {
-        $search_ids = variable_get('search_api_facets_search_ids', array());
-        if (empty($search_ids[$index->id][$search_id])) {
-          // Remember this search ID.
-          $search_ids[$index->id][$search_id] = $search_id;
-          variable_set('search_api_facets_search_ids', $search_ids);
-        }
-        if ($options['default_true']) {
-          break; // Search matches.
-        }
-      }
-      elseif (!$options['default_true']) {
-        break; // Search matches.
-      }
-    }
+  list($query, $result) = search_api_current_search($search_ids[$delta]);
+  $index = $query->getIndex();
 
-    // Search doesn't match, set $index to NULL to recognize this.
-    $index = NULL;
-  }
-  if (!isset($index)) {
-    return;
-  }
+  $facet = search_api_facet_load($delta);
+  $options = $facet->options;
 
   // Get active facet filters for this query.
-  $num = count($searches);
+  $num = count(search_api_current_search());
   $params = drupal_get_query_parameters();
   $filter_name = $num > 1 ? 'filter_' . $search_id : 'filter';
   $filters = isset($params[$filter_name]) ? $params[$filter_name] : array();
@@ -341,6 +319,50 @@ function search_api_facets_block_view($delta = '') {
  * Implements hook_search_api_query_alter().
  */
 function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query) {
+  // Add facet fields to query.
+  $facets = search_api_facet_load(array('index_id' => $query->getIndex()->id, 'b.status' => 1));
+  $fields = array();
+  // Save the active facets for later retrieval when generating blocks.
+  $active = &drupal_static(__FUNCTION__, array());
+  $search_id = $query->getOption('search id');
+  foreach ($facets as $facet) {
+    $facet->options += array(
+      'ids_list' => array(),
+      'default_true' => TRUE,
+      'limit' => 10,
+      'min_count' => 1,
+      'missing' => TRUE,
+    );
+    if (array_search($search_id, $facet->options['ids_list']) === FALSE) {
+      $search_ids = variable_get('search_api_facets_search_ids', array());
+      if (empty($search_ids[$query->getIndex()->id][$search_id])) {
+        // Remember this search ID.
+        $search_ids[$query->getIndex()->id][$search_id] = $search_id;
+        variable_set('search_api_facets_search_ids', $search_ids);
+      }
+      if (!$facet->options['default_true']) {
+        break; // Facet doesn't match.
+      }
+    }
+    elseif ($facet->options['default_true']) {
+      break; // Facet doesn't match.
+    }
+    $active[$facet->delta] = $search_id;
+    $fields[$facet->delta] = array(
+      'field'     => $facet->field,
+      'limit'     => $facet->options['limit'],
+      'min_count' => $facet->options['min_count'],
+      'missing'   => $facet->options['missing'],
+    );
+  }
+  if ($fields) {
+    $old = $query->setOption('search_api_facets', $fields);
+    if ($old) { // This will only happen if other modules add facets of their own.
+      $query->setOption('search_api_facets', $fields + $old);
+    }
+  }
+
+  // Add active facet filters.
   $filter_array = search_api_facets_get_filters($query);
   foreach ($filter_array as $field => $filters) {
     foreach ($filters as $filter) {
@@ -429,6 +451,8 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
  *   Either a facet's delta, or an array containing conditions in the form
  *   $field => $value for the facets to be returned. An empty array will return
  *   all defined facets.
+ *   The special key "b.status" can be used in an array to specify the facet's
+ *   corresponding {block}.status (in the current theme).
  * @param $reset
  *   If set to TRUE, the returned facets will be freshly loaded, instead of
  *   being loaded from the cache.
@@ -453,11 +477,18 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
       $select = db_select('search_api_facet', 'f');
       $select->fields('f');
       foreach ($conditions as $field => $value) {
+        if ($field == 'b.status') {
+          global $theme;
+          $select->join('block', 'b', 'b.module = :module AND b.delta = f.delta AND b.theme = :theme AND b.status = :status',
+              array(':module' => 'search_api_facets', ':theme' => $theme, ':status' => $value));
+          continue;
+        }
         $select->condition($field, $value);
       }
       $facets = $select->execute()->fetchAllAssoc('delta');
       foreach ($facets as $facet) {
         $facet->options = $facet->options ? unserialize($facet->options) : array();
+        $cache[serialize($facet->delta)] = $facet;
       }
       $cache[$key] = $facets;
     }
