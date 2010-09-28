@@ -797,7 +797,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   public function setOption($name, $value) {
     $old = $this->getOption($name);
-    $this->option[$name] = $value;
+    $this->options[$name] = $value;
     return $old;
   }
 
