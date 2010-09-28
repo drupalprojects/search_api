@@ -341,7 +341,37 @@ function search_api_facets_block_view($delta = '') {
  * Implements hook_search_api_query_alter().
  */
 function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query) {
-  $filters = search_api_facets_get_filters($query);
+  $filter_array = search_api_facets_get_filters($query);
+  foreach ($filter_array as $field => $filters) {
+    foreach ($filters as $filter) {
+      if ($filter == '!') {
+        $query->condition($field, NULL);
+      }
+      elseif ($filter[0] = '"') {
+        $filter = substr($filter, 1, -1);
+        if ($filter) {
+          $query->condition($field, $filter);
+        }
+      }
+      else {
+        $lowtype = $filter[0];
+        $uptype = $filter[strlen($filter) - 1];
+        $filter = substr($filter, 1, -1);
+        list($lower, $upper) = explode(' ', $filter, 2);
+        if ($lower == '*' && $upper == '*') {
+          $query->condition($field, NULL, '<>');
+        }
+        else {
+          if ($lower != '*') {
+            $query->condition($field, $lower, $lowtype == '[' ? '>=' : '>');
+          }
+          if ($upper != '*') {
+            $query->condition($field, $upper, $uptype == ']' ? '<=' : '<');
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
