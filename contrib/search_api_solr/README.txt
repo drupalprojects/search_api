@@ -18,10 +18,16 @@ possible.
 
 The "direct" parse mode for queries will result in the keys being directly used
 as the query to Solr. For details about Lucene's query syntax, see [1]. There
-are also some Solr additions to this, listed at [2].
+are also some Solr additions to this, listed at [2]. Note however that, by
+default, this module uses the dismax query handler, so searches like
+"field:value" won't with the "direct" mode.
 
 [1] http://lucene.apache.org/java/2_9_1/queryparsersyntax.html
 [2] http://wiki.apache.org/solr/SolrQuerySyntax
+
+Regarding third-party features, this module supports the "search_api_facets"
+feature, introduced by the module of the same name. This lets you create
+facetted searches for any index lying on a Solr server.
 
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
