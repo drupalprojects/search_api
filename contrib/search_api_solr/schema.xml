@@ -362,6 +362,13 @@
    <!-- These will be used for fields with type "Boolean". -->
    <dynamicField name="bs_*" type="boolean" multiValued="false" />
    <dynamicField name="bm_*" type="boolean" multiValued="true" />
+   
+   <!-- These fields are used for facetting on string fields, so case and
+        special characters are correctly displayed. -->
+   <dynamicField name="f_ss_*" type="string" multiValued="false" />
+   <dynamicField name="f_sm_*" type="string" multiValued="true" />
+   <copyField source="ss_*" dest="f_ss_*" />
+   <copyField source="sm_*" dest="f_sm_*" />
 
    <!-- The following causes solr to ignore any fields that don't already match an existing
         field name or dynamic field, rather than reporting them as an error.

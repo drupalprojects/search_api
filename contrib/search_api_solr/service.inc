@@ -410,6 +410,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $facet_fields = $response->facet_counts->facet_fields;
         foreach ($facets as $delta => $info) {
           $field = $fields[$info['field']];
+          if ($field[0] == 's') {
+            $field = 'f_' . $field;
+          }
           if (!empty($facet_fields->$field)) {
             $min_count = $info['min_count'];
             $terms = $facet_fields->$field;
@@ -590,6 +593,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
         continue;
       }
       $field = $fields[$info['field']];
+      if ($field[0] == 's') {
+        $field = 'f_' . $field;
+      }
       $facet_params['facet.field'][] = $field;
       if ($info['limit'] != 10) {
         $facet_params["f.$field.facet.limit"] = $info['limit'] ? $info['limit'] : -1;
