@@ -153,6 +153,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
   }
 
+  public function fieldsUpdated(SearchApiIndex $index) {
+    return TRUE;
+  }
+
   public function removeIndex($index) {
     $id = is_object($index) ? $index->id : $index;
     try {
@@ -352,6 +356,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $sort[] = "$f $order";
     }
 
+    // Get facet fields
+    $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
+    $facet_params = $this->getFacetParams($facets, $fields);
+
     // Set defaults
     if (!$keys) {
       $keys = NULL;
@@ -367,8 +375,12 @@ class SearchApiSolrService extends SearchApiAbstractService {
     if ($sort) {
       $params['sort'] = implode(', ', $sort);
     }
+    if (!empty($facet_params['facet.field'])) {
+      $params += $facet_params;
+    }
 
     try {
+      // Send search request
       $time_processing_done = microtime(TRUE);
       $this->connect();
       $response = $this->solr->search($keys, $offset, $limit, $params);
@@ -379,6 +391,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
             array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
       }
 
+      // Extract results
       $results = array();
       $results['result count'] = $response->response->numFound;
       $results['results'] = array();
@@ -391,20 +404,38 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $results['results'][$doc->id] = $result;
       }
 
-      // @todo DEBUG Remove this or change it to a real implementation
-      $results['search_api_facets'] = array(
-        'index1_type' => array(
-          array(
-            'filter' => '"article"',
-            'count' => 9,
-          ),
-          array(
-            'filter' => '"page"',
-            'count' => 5,
-          ),
-        ),
-      );
+      // Extract facets
+      if (isset($response->facet_counts->facet_fields)) {
+        $results['search_api_facets'] = array();
+        $facet_fields = $response->facet_counts->facet_fields;
+        foreach ($facets as $delta => $info) {
+          $field = $fields[$info['field']];
+          if (!empty($facet_fields->$field)) {
+            $min_count = $info['min_count'];
+            $terms = $facet_fields->$field;
+            if ($info['missing']) {
+              // We have to correctly incorporate the "_empty_" term.
+              // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
+              $terms = (array) $terms;
+              arsort($terms);
+              if (count($terms) > $info['limit']) {
+                array_pop($terms);
+              }
+            }
+            foreach ($terms as $term => $count) {
+              if ($count > $min_count) {
+                $term = $term == '_empty_' ? '!' : '"' . $term . '"';
+                $results['search_api_facets'][$delta][] = array(
+                  'filter' => $term,
+                  'count' => $count,
+                );
+              }
+            }
+          }
+        }
+      }
 
+      // Compute performance
       $time_end = microtime(TRUE);
       $results['performance'] = array(
         'complete' => $time_end - $time_method_called,
@@ -531,12 +562,43 @@ class SearchApiSolrService extends SearchApiAbstractService {
       case 'date':
         $value = is_numeric($value) ? (int) $value : strtotime($value);
         if ($value === FALSE) {
-          return;
+          return 0;
         }
         $value = format_date($value, 'custom', self::SOLR_DATE_FORMAT, 'UTC');
         break;
     }
     return strpos($value, ' ') === FALSE ? SearchApiSolrConnection::escape($value) : SearchApiSolrConnection::phrase($value);
+  }
+
+  /**
+   * Helper method for creating the facet field parameters.
+   */
+  protected function getFacetParams(array $facets, array $fields) {
+    if (!$facets) {
+      return array();
+    }
+    $facet_params['facet'] = 'true';
+    $facet_params['facet.sort'] = 'count';
+    $facet_params['facet.limit'] = 10;
+    $facet_params['facet.mincount'] = 1;
+    $facet_params['facet.missing'] = 'true';
+    foreach ($facets as $info) {
+      if (empty($fields[$info['field']])) {
+        continue;
+      }
+      $field = $fields[$info['field']];
+      $facet_params['facet.field'][] = $field;
+      if ($info['limit'] != 10) {
+        $facet_params["f.$field.facet.limit"] = $info['limit'] ? $info['limit'] : -1;
+      }
+      if ($info['min_count'] != 1) {
+        $facet_params["f.$field.facet.mincount"] = $info['min_count'];
+      }
+      if (!$info['missing']) {
+        $facet_params["f.$field.facet.missing"] = 'false';
+      }
+    }
+    return $facet_params;
   }
 
   //
