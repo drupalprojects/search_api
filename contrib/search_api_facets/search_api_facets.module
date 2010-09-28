@@ -98,7 +98,7 @@ function search_api_facets_block_configure($delta = '') {
     'ids_list' => array(),
   );
 
-  $form['#element_validate'] = array('search_api_facets_block_configure_validate');
+  $form['#element_validate'][] = 'search_api_facets_block_configure_validate';
   $form['index_description'] = array(
     '#type' => 'item',
     '#title' => t('Search index'),
@@ -138,7 +138,7 @@ function search_api_facets_block_configure($delta = '') {
   );
 
   $search_ids = variable_get('search_api_facets_search_ids', array());
-  if (empty($search_ids[$index->id])) {
+  if (empty($search_ids[$index->id]) || count($search_ids[$index->id]) <= 1) {
     $form['default_true'] = array(
       '#type' => 'value',
       '#value' => $options['default_true'],
@@ -230,9 +230,9 @@ function search_api_facets_block_view($delta = '') {
     if ($facet->index_id == $index->id) {
       if (array_search($search_id, $options['ids_list']) === FALSE) {
         $search_ids = variable_get('search_api_facets_search_ids', array());
-        if (empty($search_ids[$search_id])) {
+        if (empty($search_ids[$index->id][$search_id])) {
           // Remember this search ID.
-          $search_ids[$search_id] = $search_id;
+          $search_ids[$index->id][$search_id] = $search_id;
           variable_set('search_api_facets_search_ids', $search_ids);
         }
         if ($options['default_true']) {
@@ -335,6 +335,13 @@ function search_api_facets_block_view($delta = '') {
     'subject' => $facet->name,
     'content' => $theme,
   );
+}
+
+/**
+ * Implements hook_search_api_query_alter().
+ */
+function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query) {
+  $filters = search_api_facets_get_filters($query);
 }
 
 /**
@@ -504,7 +511,7 @@ function search_api_facet_delete($conditions = array()) {
  * @return array
  *   An array with field names as keys, mapped to a filter value.
  */
-function search_api_facet_get_filters(SearchApiQueryInterface $query) {
+function search_api_facets_get_filters(SearchApiQueryInterface $query) {
   $params = drupal_get_query_parameters();
   $search_id = $query->getOption('search id');
 
