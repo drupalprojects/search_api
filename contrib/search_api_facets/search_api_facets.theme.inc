@@ -39,5 +39,5 @@ function theme_search_api_facets_facet(array $variables) {
   if ($variables['active']) {
     return l('(-)', $path, $options) . ' ' . check_plain($name);
   }
-  return l($name, $path, $options);
+  return l($name . ' (' . $variables['count'] . ')', $path, $options);
 }
