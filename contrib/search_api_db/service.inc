@@ -540,11 +540,9 @@ class SearchApiDbService extends SearchApiAbstractService {
         $db_query->addField('t', 'item_id', 'item_id');
         $db_query->addExpression(':score', 'score', array(':score' => 1));
       }
-      if (isset($db_query)) {
-        $condition = $this->createFilterCondition($filter, $fields, $db_query);
-        if ($condition) {
-          $db_query->condition($condition);
-        }
+      $condition = $this->createFilterCondition($filter, $fields, $db_query);
+      if ($condition) {
+        $db_query->condition($condition);
       }
     }
 
@@ -950,7 +948,14 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (!isset($fields[$f[0]])) {
           throw new SearchApiException(t('Unknown field in filter clause: !field.', array('!field' => $f[0])));
         }
+        if ($f[1] === NULL) {
+          $query = db_select($fields[$f[0]]['table'], 't')
+            ->fields('t', array('item_id'));
+          $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'IN' : 'NOT IN');
+          continue;
+        }
         if (search_api_is_text_type($fields[$f[0]]['type'])) {
+          // #negation is set here purely because we don't want any score.
           $keys = array('#conjunction' => 'AND', '#negation' => TRUE, $f[1]);
           $keys = $this->prepareKeys($keys);
           $query = $this->createKeysQuery($keys, array($fields[$f[0]]), $fields);

@@ -111,6 +111,8 @@ interface SearchApiQueryInterface {
    *   If $field is a fulltext field, $operator can only be "=" or "<>", which
    *   are in this case interpreted as "contains" or "doesn't contain",
    *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
    *
    * @return SearchApiQueryInterface
    *   The called object.
@@ -530,6 +532,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   If $field is a fulltext field, $operator can only be "=" or "<>", which
    *   are in this case interpreted as "contains" or "doesn't contain",
    *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
    *
    * @return SearchApiQuery
    *   The called object.
@@ -860,6 +864,8 @@ interface SearchApiQueryFilterInterface {
    *   If $field is a fulltext field, $operator can only be "=" or "<>", which
    *   are in this case interpreted as "contains" or "doesn't contain",
    *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
    *
    * @return SearchApiQueryFilterInterface
    *   The called object.
@@ -948,6 +954,8 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    *   If $field is a fulltext field, $operator can only be "=" or "<>", which
    *   are in this case interpreted as "contains" or "doesn't contain",
    *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
    *
    * @return SearchApiQueryFilter
    *   The called object.

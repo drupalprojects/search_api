@@ -109,6 +109,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
     parent::configurationFormSubmit($form, $values);
   }
 
+  public function supportsFeature($feature) {
+    return $feature == 'search_api_facets';
+  }
+
   /**
    * View this server's settings. Output can be HTML or a render array, a <dl>
    * listing all relevant settings is preferred.
@@ -195,6 +199,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
       $this->connect();
       $response = $this->solr->addDocuments($documents);
       if ($response->getHttpStatus() == 200) {
+        $this->solr->commit(TRUE, FALSE, FALSE);
         return $ret;
       }
       throw new SearchApiException(t('HTTP status !status: !msg.',
@@ -386,6 +391,20 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $results['results'][$doc->id] = $result;
       }
 
+      // @todo DEBUG Remove this or change it to a real implementation
+      $results['search_api_facets'] = array(
+        'index1_type' => array(
+          array(
+            'filter' => '"article"',
+            'count' => 9,
+          ),
+          array(
+            'filter' => '"page"',
+            'count' => 5,
+          ),
+        ),
+      );
+
       $time_end = microtime(TRUE);
       $results['performance'] = array(
         'complete' => $time_end - $time_method_called,
@@ -479,6 +498,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
    */
   protected function createFilterQuery($field, $value, $operator, $field_info) {
     $field = SearchApiSolrConnection::escape($field);
+    if ($value === NULL) {
+      return ($operator == '=' ? '-' : '') . "$field:[* TO *]";
+    }
     $value = trim($value);
     $value = $this->formatFilterValue($value, search_api_extract_inner_type($field_info['type']));
     switch ($operator) {
