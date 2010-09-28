@@ -89,14 +89,7 @@ function search_api_facets_block_configure($delta = '') {
     return array();
   }
   $field = $index->options['fields'][$facet->field];
-  $options = $facet->options += array(
-    'limit' => 10,
-    'min_count' => 1,
-    'sort' => 'count',
-    'missing' => TRUE,
-    'default_true' => TRUE,
-    'ids_list' => array(),
-  );
+  $options = $facet->options;
 
   $form['#element_validate'][] = 'search_api_facets_block_configure_validate';
   $form['index_description'] = array(
@@ -195,14 +188,7 @@ function search_api_facets_block_configure_validate(array $element, array &$form
  */
 function search_api_facets_block_save($delta = '', array $edit = array()) {
   $facet = $edit['facet'];
-  $options = $facet->options + array(
-    'limit'        => (int) $edit['limit'],
-    'min_count'    => (int) $edit['min_count'],
-    'sort'         => $edit['sort'],
-    'missing'      => (boolean) $edit['missing'],
-    'default_true' => (boolean) $edit['default_true'],
-    'ids_list'     => $edit['ids_list'],
-  );
+  $options = $facet->options;
   // We refresh the options each time the form is saved. Similar behaviour
   // exists for modules, menus, blocks and themes, so – why not?
   if (empty($options['type']) || $options['type'] == 'options') {
@@ -327,13 +313,6 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
   $active = &drupal_static(__FUNCTION__, array());
   $search_id = $query->getOption('search id');
   foreach ($facets as $facet) {
-    $facet->options += array(
-      'ids_list' => array(),
-      'default_true' => TRUE,
-      'limit' => 10,
-      'min_count' => 1,
-      'missing' => TRUE,
-    );
     if (array_search($search_id, $facet->options['ids_list']) === FALSE) {
       $search_ids = variable_get('search_api_facets_search_ids', array());
       if (empty($search_ids[$query->getIndex()->id][$search_id])) {
@@ -507,6 +486,16 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
  *   The facet object to save.
  */
 function search_api_facet_save(stdClass $facet) {
+  // Always set default options.
+  $facet->options += array(
+    'limit'        => 10,
+    'min_count'    => 1,
+    'sort'         => 'count',
+    'missing'      => TRUE,
+    'default_true' => TRUE,
+    'ids_list'     => array(),
+    'type'         => '',
+  );
   if (!empty($facet->delta) && empty($facet->is_new)) {
     drupal_write_record('search_api_facet', $facet, 'delta');
     if ($facet->enabled != search_api_facet_load($facet->delta, TRUE)->enabled) {
@@ -521,7 +510,7 @@ function search_api_facet_save(stdClass $facet) {
     $delta = 'index' . $facet->index_id . '_' . preg_replace('/\W+/', '_', $facet->field);
     $base = $delta = substr($delta, 0, 32);
     $i = 0;
-    while (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))) {
+    while (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetchField()) {
       $suffix = '_' . ++$i;
       $delta = substr($base, 0, 32 - strlen($suffix)) . $suffix;
     }
@@ -622,7 +611,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
   }
   if ($filter[0] == '"') {
     $filter = substr($filter, 1, -1);
-    if (!$filter || $filter == '*') {
+    if ($filter == '' || $filter == '*') {
       return t('Any');
     }
     return _search_api_create_value_name($filter, $type, $values);
