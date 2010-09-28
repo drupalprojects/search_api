@@ -116,7 +116,7 @@ function search_api_page_search_form_submit(array $form, array &$form_state) {
 function search_api_page_search_execute(stdClass $page, $keys) {
   $limit = $page->options['per_page'];
   $offset = pager_find_page() * $limit;
-  return search_api_query($page->index_id)
+  return search_api_query($page->index_id, array('search id' => 'search_api_page:' . $page->path))
     ->keys($keys)
     ->range($offset, $limit)
     ->execute();
