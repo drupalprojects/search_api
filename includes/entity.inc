@@ -157,7 +157,7 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
 
   public function query(SearchApiIndex $index, $options = array()) {
     $this->ensureProxy();
-    return $this->proxy->query($index);
+    return $this->proxy->query($index, $options);
   }
 
   public function search(SearchApiQueryInterface $query) {
