@@ -92,6 +92,16 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   /**
+   * Builds the necessary info to execute the query.
+   */
+  function build(view $view) {
+    $view->init_pager();
+
+    // Let the pager modify the query to add limits.
+    $this->pager->query();
+  }
+
+  /**
    * Executes the query and fills the associated view object with according
    * values.
    *
@@ -113,7 +123,8 @@ class SearchApiViewsQuery extends views_plugin_query {
       $start = microtime(TRUE);
       $this->query->range($this->offset, $this->limit);
       $results = $this->query->execute();
-      $view->total_rows = $results['result count'];
+      $this->pager->total_items = $view->total_rows = $results['result count'];
+      $this->pager->update_page_info();
       $view->result = array();
       if (!empty($results['results'])) {
         $this->addResults($results['results'], $view);
