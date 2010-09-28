@@ -431,6 +431,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
                 );
               }
             }
+            if (empty($results['search_api_facets'][$delta]) || count($results['search_api_facets'][$delta]) <= 1) {
+              unset($results['search_api_facets'][$delta]);
+            }
           }
         }
       }

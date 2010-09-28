@@ -243,10 +243,14 @@ function search_api_facets_block_view($delta = '') {
 
   // Process available facet terms.
   $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
-  foreach ($terms as &$term) {
+  foreach ($terms as $i => &$term) {
     $term = (object) $term;
     $term->name = _search_api_create_filter_name($term->filter, $type, $values);
     $term->iname = drupal_strtolower($term->name);
+    if (!empty($params[$filter_name][$facet->field]) && array_search($term->filter, $params[$filter_name][$facet->field]) !== FALSE) {
+      unset($terms[$i]);
+      continue;
+    }
     $term->params = $params;
     $term->params[$filter_name][$facet->field][] = $term->filter;
   }
@@ -406,8 +410,7 @@ function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 
         search_api_facet_save($facet);
       }
       elseif (empty($facet->options['type']) || $facet->options['type'] != $fields[$facet->field]['type']) {
-        $options = $facet->options;
-        _search_api_facets_refresh_type($facet, $options);
+        _search_api_facets_refresh_type($facet, $facet->options);
         search_api_facet_save($facet);
       }
     }
@@ -421,6 +424,20 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
   db_delete('search_api_facet')
     ->condition('index_id', $index->id)
     ->execute();
+}
+
+/**
+ * Implements hook_flush_caches().
+ *
+ * Refreshes type information for all enabled facets.
+ */
+function search_api_facets_flush_caches() {
+  foreach (search_api_facet_load(array('enabled' => TRUE)) as $facet) {
+    if (empty($facet->options['type']) || $facet->options['type'] == 'options') {
+      _search_api_facets_refresh_type($facet, $facet->options);
+      search_api_facet_save($facet);
+    }
+  }
 }
 
 /**
