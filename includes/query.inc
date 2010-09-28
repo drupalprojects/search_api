@@ -357,7 +357,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
       'conjunction' => 'AND',
       'parse mode' => 'terms',
       'filter class' => 'SearchApiQueryFilter',
-      'search id' => __CLASS__ . '-' . (++self::$count),
+      'search id' => __CLASS__,
     );
     $this->filter = $this->createFilter('AND');
     $this->sort = array();

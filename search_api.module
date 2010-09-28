@@ -720,6 +720,11 @@ function search_api_current_search($search_id = NULL, SearchApiQuery $query = NU
     if (!isset($search_id)) {
       $search_id = $query->getOption('search id');
     }
+    $base = $search_id;
+    $i = 0;
+    while (isset($searches[$search_id])) {
+      $search_id = $base . '-' . ++$i;
+    }
     $searches[$search_id] = array($query, $results);
   }
 

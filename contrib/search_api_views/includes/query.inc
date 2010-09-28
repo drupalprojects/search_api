@@ -51,11 +51,6 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $fields;
 
   /**
-   * Count for providing a unique ID.
-   */
-  protected static $count = 0;
-
-  /**
    * Create the basic query object and fill with default values.
    */
   public function init($base_table, $base_field, array $options) {
@@ -66,8 +61,6 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->index = search_api_index_load($id);
       $this->query = $this->index->query(array(
         'parse mode' => 'terms',
-        // @todo Provide a better ID (best would be using view name, once that is possible)
-        'search id' => 'search_api_views-' . $this->index->id . '-' . (++self::$count),
       ));
       $this->options = $options;
       $this->fields = array();
@@ -121,8 +114,14 @@ class SearchApiViewsQuery extends views_plugin_query {
 
     try {
       $start = microtime(TRUE);
+      // Add range and search ID
       $this->query->range($this->offset, $this->limit);
+      $this->query->setOption('search id', 'search_api_views:' . $view->name);
+
+      // Execute the search
       $results = $this->query->execute();
+
+      // Store the results
       $this->pager->total_items = $view->total_rows = $results['result count'];
       $this->pager->update_page_info();
       $view->result = array();
