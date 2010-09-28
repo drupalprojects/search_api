@@ -223,7 +223,8 @@ function search_api_facets_block_view($delta = '') {
   if (empty($search_ids[$delta]) || !search_api_current_search($search_ids[$delta])) {
     return;
   }
-  list($query, $result) = search_api_current_search($search_ids[$delta]);
+  $search_id = $search_ids[$delta];
+  list($query, $results) = search_api_current_search($search_id);
   $index = $query->getIndex();
 
   $facet = search_api_facet_load($delta);
