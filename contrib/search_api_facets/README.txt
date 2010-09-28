@@ -8,6 +8,8 @@ the Search API, no matter if executed by a search page, a view or any other
 module. The only thing you'll need is a search service class that supports the
 "search_api_facets" feature. Currently, only the "Solr search" supports this.
 
+
+
 Information for users
 ---------------------
 
@@ -81,6 +83,8 @@ If you find any bugs or shortcomings while using this module, please file an
 issue in the project's issue queue [1], using the "Facets" component.
 
 [1] http://drupal.org/project/issues/search_api
+
+
 
 Information for developers
 --------------------------
