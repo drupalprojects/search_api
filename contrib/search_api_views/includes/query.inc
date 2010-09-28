@@ -66,6 +66,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->index = search_api_index_load($id);
       $this->query = $this->index->query(array(
         'parse mode' => 'terms',
+        // @todo Provide a better ID (best would be using view name, once that is possible)
         'search id' => 'search_api_views-' . $this->index->id . '-' . (++self::$count),
       ));
       $this->options = $options;
