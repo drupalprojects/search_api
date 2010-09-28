@@ -60,6 +60,17 @@ function search_api_facets_theme() {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function search_api_facets_permission() {
+  return array(
+    'use search_api_facets' => array(
+      'title' => t('Use search facets'),
+    ),
+  );
+}
+
+/**
  * Implements hook_block_info().
  */
 function search_api_facets_block_info() {
@@ -204,6 +215,9 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
  * Implements hook_block_view().
  */
 function search_api_facets_block_view($delta = '') {
+  if (!user_access('use search_api_facets')) {
+    return;
+  }
   // Since we already computed the active facets when altering the search queries, we don't do it again here.
   $search_ids = drupal_static('search_api_facets_search_api_query_alter', array());
   if (empty($search_ids[$delta]) || !search_api_current_search($search_ids[$delta])) {
@@ -310,6 +324,9 @@ function search_api_facets_block_view($delta = '') {
  * Implements hook_search_api_query_alter().
  */
 function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query) {
+  if (!user_access('use search_api_facets')) {
+    return;
+  }
   // Add facet fields to query.
   $facets = search_api_facet_load(array('index_id' => $query->getIndex()->id, 'b.status' => 1));
   $fields = array();
