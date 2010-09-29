@@ -1283,6 +1283,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   );
 
   if ($additional) {
+    reset($additional);
     $form['additional'] = array(
       '#type' => 'fieldset',
       '#title' => t('Add related entity'),
@@ -1294,6 +1295,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       'field' => array(
         '#type' => 'select',
         '#options' => $additional,
+        '#default_value' => key($additional),
       ),
       'add' => array(
         '#type' => 'submit',
