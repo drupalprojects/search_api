@@ -198,9 +198,8 @@ class SearchApiViewsQuery extends views_plugin_query {
 
   public function createFilter($conjunction = 'AND') {
     if (!$this->errors) {
-      $this->query->createFilter($conjunction);
+      return $this->query->createFilter($conjunction);
     }
-    return $this;
   }
 
   public function keys($keys = NULL) {
