@@ -81,7 +81,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           'index_id' => $index->id,
           'field' => $key,
           'name' => t('!index: Filter on !field', array('!field' => $field['name'], '!index' => $index->name)),
-          'enabled' => FALSE,
+          'enabled' => 0,
           'options' => array(),
         );
       }

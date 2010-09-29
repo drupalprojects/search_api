@@ -75,7 +75,7 @@ function search_api_facets_permission() {
  */
 function search_api_facets_block_info() {
   $blocks = array();
-  $facets = search_api_facet_load(array('enabled' => TRUE));
+  $facets = search_api_facet_load(array('enabled' => 1));
   foreach ($facets as $facet) {
     $blocks[$facet->delta]['info'] = $facet->name;
     // It will hardly ever be possible to cache facet blocks sensibly.
@@ -411,7 +411,7 @@ function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 
   }
   elseif ($op == 'disable') {
     $count = db_update('search_api_facet')
-      ->fields(array('enabled' => FALSE))
+      ->fields(array('enabled' => 0))
       ->condition('index_id', $id)
       ->execute();
     if ($count) {
@@ -420,7 +420,7 @@ function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 
   }
   elseif ($op == 'fields') {
     $fields = $index->options['fields'];
-    $facets = search_api_facet_load(array('index_id' => $id, 'enabled' => TRUE));
+    $facets = search_api_facet_load(array('index_id' => $id, 'enabled' => 1));
     foreach ($facets as $facet) {
       if (empty($fields[$facet->field]['indexed'])) {
         $facet->enabled = FALSE;
@@ -449,7 +449,7 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
  * Refreshes type information for all enabled facets.
  */
 function search_api_facets_flush_caches() {
-  foreach (search_api_facet_load(array('enabled' => TRUE)) as $facet) {
+  foreach (search_api_facet_load(array('enabled' => 1)) as $facet) {
     if (empty($facet->options['type']) || $facet->options['type'] == 'options') {
       _search_api_facets_refresh_type($facet, $facet->options);
       search_api_facet_save($facet);
