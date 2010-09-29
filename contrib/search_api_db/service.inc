@@ -838,17 +838,12 @@ class SearchApiDbService extends SearchApiAbstractService {
       if (!$neg) {
         $db_query->addExpression('SUM(t.score)', 'score');
         $db_query->groupBy('t.item_id');
-        $grouped = 1;
       }
       if ($conj == 'AND' && $subs > 1) {
         $var = ':subs' . ((int) $subs);
-        // @todo: This has to wait for the patch in http://drupal.org/node/423888
-//        if (empty($db_query->getGroupBy())) {
-        if (!isset($grouped)) {
+        if (!$db_query->getGroupBy()) {
           $db_query->groupBy('t.item_id');
-          $grouped = 1;
         }
-//        }
         if ($mul_words) {
           $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
         }
