@@ -44,8 +44,6 @@ usually not needed or even cumbersome. If you are adding an index to a Solr
 server you should therefore then disable all processors which handle such
 classic preprocessing tasks.
 
-TODO: Highlighting?
-
 Also, due to the way Solr works, using a single field for fulltext searching
 will result in the smallest index size and best search performance, as well as
 possibly having other advantages, too. Therefore, if you don't need to search
@@ -53,11 +51,6 @@ different sets of fields in different searches on an index, it is adviced that
 you simply set all fields that should be searched to type "Fulltext" (but don't
 check "Indexed"), add the "Fulltext field" data alter callback and only index
 the newly added field named "Fulltext".
-
-Configuration
--------------
-
-TODO: Explain options and downloading/replacing the schema.xml.
 
 Developers
 ----------
