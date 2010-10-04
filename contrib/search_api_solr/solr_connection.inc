@@ -58,9 +58,8 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
   public function ping($timeout = 2) {
     $start = microtime(TRUE);
 
-    // when using timeout in context and file_get_contents
-    // it seems to take twice the timout value
-    $timeout = $timeout < 0 ? (float) $timeout / 2 : -1;
+    // When using timeout in context and file_get_contents it seems to take twice the timout value
+    $timeout = $timeout > 0 ? (float) $timeout / 2 : -1;
 
     $options = array(
       'http' => array(
