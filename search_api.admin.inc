@@ -116,7 +116,33 @@ function search_api_admin_add_server(array $form, array &$form_state) {
       '#description' => t('Enter the displayed name for the new server.'),
       '#maxlength' => 50,
       '#required' => TRUE,
+      '#field_suffix' => ' <small id="edit-name-suffix">' . t('Machine name: @name', array('@name' => '')) . '</small>',
     );
+
+    $js_settings = array(
+      'type' => 'setting',
+      'data' => array(
+        'machineReadableValue' => array(
+          'name' => array(
+            'text' => t('Machine name'),
+            'target' => 'machine-name',
+            'searchPattern' => '[^a-z0-9]+',
+            'replaceToken' => '_',
+          ),
+        ),
+      ),
+    );
+    $form['machine_name'] = array(
+      '#title' => t('Machine name'),
+      '#type' => 'textfield',
+      '#maxlength' => 50,
+      '#required' => TRUE,
+      '#description' => t("The machine-readable name of this server. This name must be unique and can't be a pure number."),
+      '#attached' => array(
+        'js' => array(drupal_get_path('module', 'system') . '/system.js', $js_settings),
+      ),
+    );
+
     $form['enabled'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enabled'),
@@ -194,9 +220,19 @@ function search_api_admin_add_server_ajax_callback(array $form, array &$form_sta
 /**
  * Form validation callback for adding a server.
  *
- * Just calls the service class' validation handler.
+ * Validates the machine name and calls the service class' validation handler.
  */
 function search_api_admin_add_server_validate(array $form, array &$form_state) {
+  if (!empty($form_state['values']['machine_name'])) {
+    $name = $form_state['values']['machine_name'];
+    if (is_numeric($name)) {
+      form_set_error('machine_name', t('The machine name must not be a pure number.'));
+    }
+    if (search_api_server_load($name)) {
+      form_set_error('machine_name', t('The chosen machine name is already in use.'));
+    }
+  }
+
   if (empty($form_state['values']['options']['class'])) {
     return;
   }
@@ -287,6 +323,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
     '#theme' => 'search_api_server',
     '#id' => $server->id,
     '#name' => $server->name,
+    '#machine_name' => $server->machine_name,
     '#description' => $server->description,
     '#enabled' => $server->enabled,
     '#class_name' => $class['name'],
@@ -302,6 +339,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
  *   An associative array containing:
  *   - id: The server's id.
  *   - name: The server's name.
+ *   - machine_name: The server's machine name.
  *   - description: The server's description.
  *   - enabled: Boolean indicating whether the server is enabled.
  *   - class_name: The used service class' display name.
@@ -327,6 +365,9 @@ function theme_search_api_server(array $variables) {
     $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/server/' . $id . '/enable')));
   }
   $output .= '</dd>' . "\n";
+
+  $output .= '<dt>' . t('Machine name') . '</dt>' . "\n";
+  $output .= '<dd>' . check_plain($machine_name) . '</dd>' . "\n";
 
   if (!empty($description)) {
     $output .= '<dt>' . t('Description') . '</dt>' . "\n";
@@ -445,7 +486,33 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#title' => t('Index name'),
     '#maxlength' => 50,
     '#required' => TRUE,
+    '#field_suffix' => ' <small id="edit-name-suffix">' . t('Machine name: @name', array('@name' => '')) . '</small>',
   );
+
+  $js_settings = array(
+    'type' => 'setting',
+    'data' => array(
+      'machineReadableValue' => array(
+        'name' => array(
+          'text' => t('Machine name'),
+          'target' => 'machine-name',
+          'searchPattern' => '[^a-z0-9]+',
+          'replaceToken' => '_',
+        ),
+      ),
+    ),
+  );
+  $form['machine_name'] = array(
+    '#title' => t('Machine name'),
+    '#type' => 'textfield',
+    '#maxlength' => 50,
+    '#required' => TRUE,
+    '#description' => t("The machine-readable name of this index. This name must be unique and can't be a pure number."),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'system') . '/system.js', $js_settings),
+    ),
+  );
+
   $form['entity_type'] = array(
     '#type' => 'select',
     '#title' => t('Entity type'),
@@ -509,6 +576,14 @@ function search_api_admin_add_index(array $form, array &$form_state) {
  * Validation callback for search_api_admin_add_index.
  */
 function search_api_admin_add_index_validate(array $form, array &$form_state) {
+  $name = $form_state['values']['machine_name'];
+  if (is_numeric($name)) {
+    form_set_error('machine_name', t('The machine name must not be a pure number.'));
+  }
+  if (search_api_index_load($name)) {
+    form_set_error('machine_name', t('The chosen machine name is already in use.'));
+  }
+
   $cron_limit = $form_state['values']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
@@ -566,6 +641,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     '#theme' => 'search_api_index',
     '#id' => $index->id,
     '#name' => $index->name,
+    '#machine_name' => $index->machine_name,
     '#description' => $index->description,
     '#entity_type' => $index->entity_type,
     '#enabled' => $index->enabled,
@@ -583,6 +659,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
  *   An associative array containing:
  *   - id: The index's id.
  *   - name: The index' name.
+ *   - machine_name: The index' machine name.
  *   - description: The index' description.
  *   - entity_type: The type of entities stored in this index.
  *   - enabled: Boolean indicating whether the index is enabled.
@@ -614,6 +691,9 @@ function theme_search_api_index(array $variables) {
     $output .= t('disabled');
   }
   $output .= '</dd>' . "\n";
+
+  $output .= '<dt>' . t('Machine name') . '</dt>' . "\n";
+  $output .= '<dd>' . check_plain($machine_name) . '</dd>' . "\n";
 
   $output .= '<dt>' . t('Entity type') . '</dt>' . "\n";
   $type = entity_get_info($entity_type);

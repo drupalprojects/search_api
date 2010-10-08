@@ -207,6 +207,11 @@ class SearchApiIndex extends EntityDBExtendable {
   /**
    * @var string
    */
+  public $machine_name;
+
+  /**
+   * @var string
+   */
   public $description;
 
   /**

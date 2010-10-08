@@ -25,6 +25,12 @@ function search_api_schema() {
         'length' => 50,
         'not null' => TRUE,
       ),
+      'machine_name' => array(
+        'description' => 'The machine name for a server.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
       'description' => array(
         'description' => 'The displayed description for a server.',
         'type' => 'text',
@@ -53,6 +59,9 @@ function search_api_schema() {
     'indexes' => array(
       'enabled' => array('enabled'),
     ),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
     'primary key' => array('id'),
   );
 
@@ -67,6 +76,12 @@ function search_api_schema() {
       ),
       'name' => array(
         'description' => 'A name to be displayed for the index.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => 'The machine name of the index.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
@@ -107,6 +122,9 @@ function search_api_schema() {
       'server' => array('server'),
       'enabled' => array('enabled'),
     ),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
     'primary key' => array('id'),
   );
 
@@ -146,11 +164,13 @@ function search_api_schema() {
  * Implements hook_enable().
  */
 function search_api_enable() {
-  // Mark all items as "dirty", since we can't know whether they are.
+  // Mark all old items as "dirty", since we can't know whether they are.
   db_update('search_api_item')
     ->fields(array('changed' => REQUEST_TIME))
     ->condition('changed', 0)
     ->execute();
+  // Add all new items.
+  // @todo
 }
 
 /**
@@ -158,4 +178,83 @@ function search_api_enable() {
  */
 function search_api_uninstall() {
   variable_del('search_api_tasks');
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Update function that adds the machine names for servers and indexes.
+ */
+function search_api_update_7101() {
+  $tx = db_transaction();
+  try {
+    // Servers
+    $spec = array(
+      'description' => 'The machine name for a server.',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => TRUE,
+      'default' => '',
+    );
+    db_add_field('search_api_server', 'machine_name', $spec);
+
+    $names = array();
+    $servers = db_select('search_api_server', 's')
+      ->fields('s')
+      ->execute();
+    foreach ($servers as $server) {
+      $base = $name = drupal_strtolower(preg_replace('/[^a-z0-9]+/i', '_', $server->name));
+      $i = 0;
+      while (isset($names[$name])) {
+        $name = $base . '_' . ++$i;
+      }
+      $names[$name] = TRUE;
+      db_update('search_api_server')
+        ->fields(array('machine_name' => $name))
+        ->condition('id', $server->id)
+        ->execute();
+    }
+
+    db_add_unique_key('search_api_server', 'machine_name', array('machine_name'));
+
+    //Indexes
+    $spec = array(
+      'description' => 'The machine name of the index.',
+      'type' => 'varchar',
+      'length' => 50,
+      'not null' => TRUE,
+      'default' => '',
+    );
+    db_add_field('search_api_index', 'machine_name', $spec);
+
+    $names = array();
+    $indexes = db_select('search_api_index', 'i')
+      ->fields('i')
+      ->execute();
+    foreach ($indexes as $index) {
+      $base = $name = drupal_strtolower(preg_replace('/[^a-z0-9]+/i', '_', $index->name));
+      $i = 0;
+      while (isset($names[$name])) {
+        $name = $base . '_' . ++$i;
+      }
+      $names[$name] = TRUE;
+      db_update('search_api_index')
+        ->fields(array('machine_name' => $name))
+        ->condition('id', $index->id)
+        ->execute();
+    }
+
+    db_add_unique_key('search_api_index', 'machine_name', array('machine_name'));
+  }
+  catch (Exception $e) {
+    $tx->rollback();
+    try {
+      db_drop_field('search_api_server', 'machine_name');
+      db_drop_field('search_api_index', 'machine_name');
+    }
+    catch (Exception $e1) {
+      // Ignore.
+    }
+    throw new DrupalUpdateException(t('An exception occurred during the update: !msg.', array('!msg' => $e->getMessage())));
+  }
 }

@@ -152,6 +152,7 @@ function search_api_theme() {
     'variables' => array(
       'id' => NULL,
       'name' => '',
+      'machine_name' => '',
       'description' => NULL,
       'enabled' => NULL,
       'class_name' => NULL,
@@ -164,6 +165,7 @@ function search_api_theme() {
     'variables' => array(
       'id' => NULL,
       'name' => '',
+      'machine_name' => '',
       'description' => NULL,
       'entity_type' => NULL,
       'enabled' => NULL,
@@ -229,25 +231,33 @@ function search_api_entity_info() {
   $info['search_api_server'] = array(
     'label' => t('Search server'),
     'controller class' => 'EntityAPIController',
+    'metadata controller class' => FALSE,
     'entity class' => 'SearchApiServer',
     'base table' => 'search_api_server',
     'load hook' => 'search_api_server_load',
     'uri callback' => 'search_api_server_url',
+    'module' => 'search_api',
+    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
       'label' => 'name',
+      'name' => 'machine_name',
     ),
   );
   $info['search_api_index'] = array(
     'label' => t('Search index'),
     'controller class' => 'EntityAPIController',
+    'metadata controller class' => FALSE,
     'entity class' => 'SearchApiIndex',
     'base table' => 'search_api_index',
     'load hook' => 'search_api_index_load',
     'uri callback' => 'search_api_index_url',
+    'module' => 'search_api',
+    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
       'label' => 'name',
+      'name' => 'machine_name',
     ),
   );
 
@@ -268,6 +278,12 @@ function search_api_entity_property_info() {
       'label' => t('Name'),
       'type' => 'text',
       'description' => t('The displayed name for a server.'),
+      'required' => TRUE,
+    ),
+    'machine_name' => array(
+      'label' => t('Machine name'),
+      'type' => 'token',
+      'description' => t('The internally used machine name for a server.'),
       'required' => TRUE,
     ),
     'description' => array(
@@ -298,6 +314,12 @@ function search_api_entity_property_info() {
       'label' => t('Name'),
       'type' => 'text',
       'description' => t('A name to be displayed for the index.'),
+      'required' => TRUE,
+    ),
+    'machine_name' => array(
+      'label' => t('Machine name'),
+      'type' => 'token',
+      'description' => t('The internally used machine name for an index.'),
       'required' => TRUE,
     ),
     'description' => array(
@@ -991,7 +1013,7 @@ function search_api_server_url(SearchApiServer $server) {
  *   The newly inserted server's id, or FALSE on error.
  */
 function search_api_server_insert(array $values) {
-  foreach (array('name', 'class', 'options') as $var) {
+  foreach (array('name', 'machine_name', 'class', 'options') as $var) {
     if (empty($values[$var])) {
       throw new SearchApiException(t('Property !field has to be set for new server!', array('!field' => $var)));
     }
@@ -1001,6 +1023,7 @@ function search_api_server_insert(array $values) {
   }
   $fields = array(
     'name' => $values['name'],
+    'machine_name' => $values['machine_name'],
     'description' => $values['description'],
     'enabled' => empty($values['enabled']) ? 0 : 1,
     'class' => $values['class'],
@@ -1349,7 +1372,7 @@ function search_api_index_get_server(SearchApiIndex $index) {
  *   The newly inserted index' id, or FALSE on error.
  */
 function search_api_index_insert(array $values) {
-  foreach (array('name', 'entity_type', 'options') as $var) {
+  foreach (array('name', 'machine_name', 'entity_type', 'options') as $var) {
     if (empty($values[$var])) {
       throw new SearchApiException(t('Field !field has to be set for new index!', array('!field' => $var)));
       return FALSE;
@@ -1382,6 +1405,7 @@ function search_api_index_insert(array $values) {
 
   $fields = array(
     'name' => $values['name'],
+    'machine_name' => $values['machine_name'],
     'description' => $values['description'],
     'enabled' => $values['enabled'],
     'server' => $values['server'],

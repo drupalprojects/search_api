@@ -248,6 +248,11 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   /**
    * @var string
    */
+  public $machine_name = '';
+
+  /**
+   * @var string
+   */
   public $description = '';
 
   /**
