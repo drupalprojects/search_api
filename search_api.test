@@ -157,7 +157,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('No values were changed.'));
 
     $values = array(
-      'additional[field]' => 'parent:',
+      'additional[field]' => 'parent',
     );
     $this->drupalPost(NULL, $values, t('Add fields'));
     $this->assertText(t('The available fields were successfully changed.'), t('Successfully added fields.'));
