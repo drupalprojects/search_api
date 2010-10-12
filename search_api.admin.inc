@@ -1427,6 +1427,15 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         // We hide the complexity of multi-valued types from the user here
         $type = search_api_extract_inner_type($type);
         if ($type == 'token') {
+          // Set the field type accordingly.
+          $type = $info['type'];
+          $t = 'string';
+          while (search_api_is_list_type($type)) {
+            $type = substr(5, -1, $type);
+            $t = "list<$t>";
+          }
+          $info['type'] = $t;
+          // Inner type is changed to "string".
           $type = 'string';
         }
         $key = $prefix . $property;
