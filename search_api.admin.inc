@@ -1131,7 +1131,8 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   $form['processors'] = array(
     '#type' => 'fieldset',
     '#title' => t('Processors'),
-    '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order.'),
+    '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order. ' .
+        'Most processors will only influence fulltext fields, but refer to their individual descriptions for details regarding their effect.'),
     '#collapsible' => TRUE,
   );
 

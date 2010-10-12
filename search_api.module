@@ -465,22 +465,25 @@ function search_api_search_api_alter_callback_info() {
 function search_api_search_api_processor_info() {
   $processors['search_api_case_ignore'] = array(
     'name' => t('Ignore case'),
-    'description' => t('A processor that makes searches case-insensitive.'),
+    'description' => t('This processor will make searches case-insensitive for all fulltext fields (and, optionally, also for filters on string fields).'),
     'class' => 'SearchApiIgnoreCase',
   );
   $processors['search_api_html_filter'] = array(
     'name' => t('HTML filter'),
-    'description' => t('Strips HTML tags from indexed data and decodes HTML entities.'),
+    'description' => t('Strips HTML tags from fulltext fields and decodes HTML entities. ' .
+        'Use this processor when indexing HTML data, e.g., node bodies for certain text formats.<br />' .
+        'The processor also allows to boost (or ignore) the contents of specific elements.'),
     'class' => 'SearchApiHtmlFilter',
     'weight' => 10,
   );
   $processors['search_api_tokenizer'] = array(
     'name' => t('Tokenizer'),
-    'description' => t('Tokenizes fulltext data by stripping whitespace.'),
+    'description' => t('Tokenizes fulltext data by stripping whitespace. ' .
+        'This processor allows you to specify which characters make up words and which characters should be ignored, using regular expression syntax. ' .
+        'Otherwise it is up to the search server implementation to decide how to split indexed fulltext data.'),
     'class' => 'SearchApiTokenizer',
     'weight' => 20,
   );
-  // @todo Add a "Score corrector", normalizing scores a bit?
 
   return $processors;
 }
