@@ -445,11 +445,6 @@ function search_api_entity_delete($entity, $type) {
  * Implements hook_search_api_alter_callback_info().
  */
 function search_api_search_api_alter_callback_info() {
-  $callbacks['search_api_alter_prepare_view'] = array(
-    'name' => t('Call hook'),
-    'description' => t('Calls the standard entity_prepare_view() function for all items.'),
-    'weight' => -10,
-  );
   $callbacks['search_api_alter_add_url'] = array(
     'name' => t('URL field'),
     'description' => t("Adds the item's URL to the indexed data."),
@@ -569,20 +564,6 @@ function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
       ->condition('index_id', $index->id)
       ->condition('item_id', $ids, 'IN')
       ->execute();
-}
-
-/**
- * Search API data alteration callback that calls entity_prepare_view() for all
- * items.
- *
- * @param SearchApiIndex $index
- *   The index on which the items are indexed.
- * @param array $items
- *   An array of objects containing the entity data.
- */
-function search_api_alter_prepare_view(SearchApiIndex $index, array &$items) {
-  entity_prepare_view($index->entity_type, $items);
-  return array();
 }
 
 /**
