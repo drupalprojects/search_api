@@ -29,6 +29,25 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
   }
 
   /**
+   * Exports this server object as an entity.
+   *
+   * @param $prefix
+   *   A string to prepend to each line of the return value, except for the
+   *   first.
+   *
+   * @return
+   *   The exported entity as code.
+   */
+  public function export($prefix = '') {
+    $vars = array();
+    // We don't include "id" here, as it seems that EntityAPIController::export() will also omit it.
+    foreach (array('module', 'name', 'machine_name', 'description', 'class', 'options', 'enabled') as $var) {
+      $vars[$var] = isset($this->$var) ? $this->$var : NULL;
+    }
+    return "entity_create('search_api_server', " . entity_var_export($vars, $prefix) . ")";
+  }
+
+  /**
    * Helper method for ensuring the proxy object is set up.
    */
   protected function ensureProxy() {
