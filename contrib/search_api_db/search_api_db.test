@@ -7,8 +7,8 @@
  */
 class SearchApiDbTest extends DrupalWebTestCase {
 
-  private $server_id;
-  private $index_id;
+  protected $server_id;
+  protected $index_id;
 
   protected function assertText($text, $message = '', $group = 'Other') {
     return parent::assertText($text, $message ? $message : $text, $group);
@@ -52,7 +52,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->searchNoResults();
   }
 
-  private function insertItems() {
+  protected function insertItems() {
     $this->drupalGet('search_api_test/insert');
     $count = db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField();
     $this->insertItem(array(
@@ -89,11 +89,11 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertEqual($count, 5, t('@count items inserted.', array('@count' => $count)));
   }
 
-  private function insertItem($values) {
+  protected function insertItem($values) {
     $this->drupalPost(NULL, $values, t('Save'));
   }
 
-  private function createServer() {
+  protected function createServer() {
     $values = array(
       'name' => 'Database search server',
       'enabled' => 1,
@@ -113,7 +113,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->server_id = $m[1];
   }
 
-  private function createIndex() {
+  protected function createIndex() {
     $values = array(
       'name' => 'Test index',
       'entity_type' => 'search_api_test',
@@ -154,7 +154,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 5)), t('!field displayed.', array('!field' => t('Correct index status'))));
   }
 
-  private function searchNoResults() {
+  protected function searchNoResults() {
     $this->drupalGet('search_api_test/query/' . $this->index_id . '/text');
     $this->assertText('result count = 0', t('No search results returned without indexing.'));
     $this->assertText('results = ()', t('No search results returned without indexing.'));
@@ -162,7 +162,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText('warnings = ()', t('No warnings were displayed.'));
   }
 
-  private function indexItems() {
+  protected function indexItems() {
     $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}/status", array(), t('Index now'));
     $this->assertText(t('Successfully indexed @count items.', array('@count' => 5)));
     $this->assertNoText(t("Some items couldn't be indexed. Check the logs for details."), t("Index errors warning isn't displayed."));
@@ -170,7 +170,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText(t('All items have been indexed (@total / @total).', array('@total' => 5)), t('!field displayed.', array('!field' => t('Correct index status'))));
   }
 
-  private function searchSuccess1() {
+  protected function searchSuccess1() {
     $base ='search_api_test/query/' . $this->index_id;
     $this->drupalGet($base . '/test/1/2');
     $this->assertText('result count = 4', t('Search for »!keys« returned correct result.', array('!keys' => 'test')));
@@ -197,7 +197,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText('warnings = ()', t('No warnings were displayed.'));
   }
 
-  private function editServer() {
+  protected function editServer() {
     $values = array(
       'options[form][min_chars]' => 4,
     );
@@ -207,7 +207,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->indexItems();
   }
 
-  private function searchSuccess2() {
+  protected function searchSuccess2() {
     $base ='search_api_test/query/' . $this->index_id;
     $this->drupalGet($base . '/test/1/2');
     $this->assertText('result count = 4', t('Search for »!keys« returned correct result.', array('!keys' => 'test')));
@@ -234,7 +234,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->assertText('warnings = ()', t('No warnings were displayed.'));
   }
 
-  private function clearIndex() {
+  protected function clearIndex() {
     $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}/status", array(), t('Clear index'));
     $this->assertText(t('The index was successfully cleared.'));
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 5)), t('!field displayed.', array('!field' => t('Correct index status'))));

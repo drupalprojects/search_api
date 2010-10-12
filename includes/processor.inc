@@ -170,7 +170,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   /**
    * Internal helper function for normalizing tokens.
    */
-  private function normalizeTokens($tokens, $score = 1) {
+  protected function normalizeTokens($tokens, $score = 1) {
     $ret = array();
     foreach ($tokens as $token) {
       if (empty($token['value'])) {

@@ -246,7 +246,7 @@ class SearchApiTestService extends SearchApiAbstractService {
     return $this->index($index, $ret);
   }
 
-  private function index(SearchApiIndex $index, array $ids) {
+  protected function index(SearchApiIndex $index, array $ids) {
     $this->options += array('indexes' => array());
     $this->options['indexes'] += array($index->id => array());
     $this->options['indexes'][$index->id] += drupal_map_assoc($ids);

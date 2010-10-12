@@ -6,8 +6,8 @@
  */
 class SearchApiWebTest extends DrupalWebTestCase {
 
-  private $server_id;
-  private $index_id;
+  protected $server_id;
+  protected $index_id;
 
   protected function assertText($text, $message = '', $group = 'Other') {
     return parent::assertText($text, $message ? $message : $text, $group);
@@ -55,7 +55,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->deleteServer();
   }
 
-  private function insertItems($offset = 0) {
+  protected function insertItems($offset = 0) {
     $count = db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField();
     $this->insertItem(array(
       'id' => $offset + 1,
@@ -91,16 +91,16 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertEqual($count, 5, t('@count items inserted.', array('@count' => $count)));
   }
 
-  private function insertItem($values) {
+  protected function insertItem($values) {
     $this->drupalPost('search_api_test/insert', $values, t('Save'));
   }
 
-  private function checkOverview1() {
+  protected function checkOverview1() {
     $this->drupalGet('admin/config/search/search_api');
     $this->assertText(t('There are no search servers or indexes defined yet.'), t('"No servers" message is displayed.'));
   }
 
-  private function createIndex() {
+  protected function createIndex() {
     $values = array(
       'name' => '',
       'entity_type' => '',
@@ -207,7 +207,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 5)), t('!field displayed.', array('!field' => t('Correct index status'))));
   }
 
-  private function createServer() {
+  protected function createServer() {
     $values = array(
       'name' => '',
       'enabled' => 1,
@@ -248,14 +248,14 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText('search_api_test foo bar', t('!field displayed.', array('!field' => t('Service options'))));
   }
 
-  private function checkOverview2() {
+  protected function checkOverview2() {
     $this->drupalGet('admin/config/search/search_api');
     $this->assertText('Search API test server', t('!field displayed.', array('!field' => t('Server'))));
     $this->assertText('Search API test index', t('!field displayed.', array('!field' => t('Index'))));
     $this->assertNoText(t('There are no search servers or indexes defined yet.'), t('"No servers" message not displayed.'));
   }
 
-  private function enableIndex() {
+  protected function enableIndex() {
     $values = array(
       'server' => $this->server_id,
     );
@@ -267,13 +267,13 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('The index was successfully enabled.'));
   }
 
-  private function searchNoResults() {
+  protected function searchNoResults() {
     $this->drupalGet('search_api_test/query/' . $this->index_id);
     $this->assertText('result count = 0', t('No search results returned without indexing.'));
     $this->assertText('results = ()', t('No search results returned without indexing.'));
   }
 
-  private function indexItems() {
+  protected function indexItems() {
     $this->drupalGet("admin/config/search/search_api/index/{$this->index_id}/status");
     $this->assertText(t('The index is currently enabled.'), t('"Enabled" status displayed.'));
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 10)), t('!field displayed.', array('!field' => t('Correct index status'))));
@@ -310,7 +310,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertNoText(t('Index now'), t('"Index now" button no longer displayed.'));
   }
 
-  private function searchSuccess() {
+  protected function searchSuccess() {
     $this->drupalGet('search_api_test/query/' . $this->index_id);
     $this->assertText('result count = 10', t('Correct search result count returned after indexing.'));
     $this->assertText('results = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)', t('Correct search results returned after indexing.'));
@@ -320,7 +320,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText('results = (3, 4, 5, 6)', t('Correct search results with ranged query.'));
   }
 
-  private function editServer() {
+  protected function editServer() {
     $values = array(
       'name' => 'test-name-foo',
       'description' => 'test-description-bar',
@@ -333,13 +333,13 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText('test-test-baz', t('!field changed.', array('!field' => t('Service options'))));
   }
 
-  private function clearIndex() {
+  protected function clearIndex() {
     $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}/status", array(), t('Clear index'));
     $this->assertText(t('The index was successfully cleared.'));
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 10)), t('!field displayed.', array('!field' => t('Correct index status'))));
   }
 
-  private function deleteServer() {
+  protected function deleteServer() {
     $this->drupalPost("admin/config/search/search_api/server/{$this->server_id}/delete", array(), t('Confirm'));
     $this->assertNoText('test-name-foo', t('Server no longer listed.'));
     $this->drupalGet("admin/config/search/search_api/index/{$this->index_id}/status");
@@ -356,7 +356,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
  */
 class SearchApiUnitTest extends DrupalWebTestCase {
 
-  private $index;
+  protected $index;
 
   protected function assertEqual($first, $second, $message = '', $group = 'Other') {
     if (is_array($first) && is_array($second)) {

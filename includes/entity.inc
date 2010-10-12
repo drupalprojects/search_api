@@ -9,8 +9,17 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
   /**
    * @var SearchApiServiceInterface
    */
-  private $proxy;
-  private $values = array();
+  protected $proxy;
+  protected $values = array();
+
+  /**
+   * Will be set by the Entity CRUD API for exporting.
+   */
+  public $module;
+  /**
+   * Will be set by the Entity CRUD API for exporting.
+   */
+  public $status;
 
   /**
    * Constructor as a helper to the parent constructor.
@@ -22,7 +31,7 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
   /**
    * Helper method for ensuring the proxy object is set up.
    */
-  private function ensureProxy() {
+  protected function ensureProxy() {
     if (!isset($this->proxy)) {
       $class = search_api_get_service_info($this->class);
       if ($class && class_exists($class['class'])) {
@@ -175,22 +184,22 @@ class SearchApiIndex extends EntityDBExtendable {
   /**
    * @var SearchApiServer
    */
-  private $server_object = NULL;
+  protected $server_object = NULL;
 
   /**
    * @var array
    */
-  private $processors = array();
+  protected $processors = array();
 
   /**
    * @var array
    */
-  private $added_properties = array();
+  protected $added_properties = array();
 
   /**
    * @var array
    */
-  private $fulltext_fields = NULL;
+  protected $fulltext_fields = NULL;
 
   // Database values that will be set when object is loaded
 
