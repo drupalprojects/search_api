@@ -1426,7 +1426,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         $type = $info['type'];
         // We hide the complexity of multi-valued types from the user here
         $type = search_api_extract_inner_type($type);
-        if ($type == 'token') {
+        if ($type == 'token' || ($type == 'text' && $value->optionsList())) {
           // Set the field type accordingly.
           $type = $info['type'];
           $t = 'string';
