@@ -1461,7 +1461,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             $wrappers[$key . ':'] = $value;
             $prefix_names[$key . ':'] = $prefix_name . $info['label'] . ' » ';
           }
-          elseif (!search_api_is_list_type($type)) {
+          elseif (!search_api_is_list_type($info['type'])) {
             // @todo Make this work with lists, too - this won't be easy:
             // -> Obtain wrapper for listed type (may even be a struct!)
             // -> When adding fields, change all types to lists
