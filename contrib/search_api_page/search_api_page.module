@@ -328,8 +328,7 @@ function search_api_page_delete($id) {
   }
 
   menu_rebuild();
-  // Wait until http://drupal.org/node/709892 gets in.
-  //module_invoke_all('entity_delete', $page, 'search_api_page');
+  module_invoke_all('entity_delete', $page, 'search_api_page');
 
   return TRUE;
 }
