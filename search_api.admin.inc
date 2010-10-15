@@ -1243,6 +1243,39 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   $index = search_api_index_load($values['id']);
 
   $options = empty($index->options) ? array() : $index->options;
+
+  // Set default indexed status for newly added fields.
+  foreach ($values['callbacks'] as $func => $callback) {
+    if ($callback['status'] && empty($options['callbacks'][$func]['status'])) {
+      if (!is_callable($func)) {
+        watchdog('search_api', t('Undefined data alter callback function !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+      $items = array();
+      $properties = $func($index, $items);
+      if ($properties) {
+        foreach ($properties as $key => $field) {
+          $type = $field['type'];
+          $inner = search_api_extract_inner_type($type);
+          if ($inner == 'token' || !empty($field['options list'])) {
+            $old = $type;
+            $type = 'string';
+            while (search_api_is_list_type($old)) {
+              $old = substr($old, 5, -1);
+              $type = "list<$type>";
+            }
+          }
+          $options['fields'][$key] = array(
+            'name' => $field['label'],
+            'type' => $type,
+            'boost' => '1.0',
+            'indexed' => 1,
+          );
+        }
+      }
+    }
+  }
+
   $options['data_alter_callbacks'] = $values['callbacks'];
   $options['processors'] = $values['processors'];
 
@@ -1434,7 +1467,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
           $type = $info['type'];
           $t = 'string';
           while (search_api_is_list_type($type)) {
-            $type = substr(5, -1, $type);
+            $type = substr($type, 5, -1);
             $t = "list<$t>";
           }
           $info['type'] = $t;

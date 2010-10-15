@@ -9,6 +9,8 @@ API changes:
 - Added #936360: Make servers and indexes exportable.
 
 Others:
+- Added #939414: Set fields provided by data-alter callbacks to "indexed" by
+                 default.
 - Added #939414: Provide a default node index upon installation.
 - Added #939822 by fago: Support fields.
 - Fixed #939442: Bad data type defaults [string for fields with options].

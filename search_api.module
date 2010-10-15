@@ -584,10 +584,9 @@ function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
       $item->search_api_url = NULL;
       continue;
     }
-    $set = TRUE;
     $item->search_api_url = url($url['path'], array('absolute' => TRUE) + $url['options']);
   }
-  return empty($set) ? array() : array(
+  return array(
     'search_api_url' => array(
       'label' => t('URI'),
       'description' => t('An URI where the item can be accessed.'),
