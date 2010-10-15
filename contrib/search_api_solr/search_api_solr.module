@@ -35,7 +35,7 @@ function search_api_solr_help($path, array $arg = array()) {
   }
   elseif ($path == 'admin/config/search/search_api/server/%' && !empty($arg[5])) {
     $server = search_api_server_load($arg[5]);
-    if ($server && $server->class == 'search_api_solr_service') {
+    if ($server && $server->enabled && $server->class == 'search_api_solr_service') {
       $ping = $server->ping();
       $type = $ping ? 'status' : 'error';
       if ($ping) {
