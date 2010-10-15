@@ -5,6 +5,9 @@
  * Implements hook_uninstall().
  */
 function search_api_db_uninstall() {
+  db_delete('search_api_server')
+    ->condition('class', 'search_api_db_service')
+    ->execute();
   foreach (db_find_tables(Database::getConnection()->prefixTables('{search_api_db}') . '%') as $table) {
     if (preg_match('/search_api_db_.*$/', $table, $matches)) {
       db_drop_table($matches[0]);
