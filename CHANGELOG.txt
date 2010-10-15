@@ -3,20 +3,21 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- Added #939414: Enhanced service class descriptions. [soft API change]
 - Fixed #939464: Documented Entity API's module and status properties.
 - Added #939092: Changed private members to protected in all classes.
-- Added #936360: Make servers and indexes exportable
-
+- Added #936360: Make servers and indexes exportable.
 
 Others:
+- Added #939414: Provide a default node index upon installation.
 - Added #939822 by fago: Support fields.
-- Fixed #939442: Bad data type defaults [string for fields with options]
-- Fixed #939482: Override export() to work with "magic" __get fields
+- Fixed #939442: Bad data type defaults [string for fields with options].
+- Fixed #939482: Override export() to work with "magic" __get fields.
 - Fixed #939442: Bad data type defaults.
 - Added #939414: Improved descriptions for processors.
 - Change #939414: Removed the "Call hook" data alter callback.
-- Fixed #938982: Not all SearchApiQuery options are passed
-- Fixed #931066 by luke_b: HTTP timeout not set correctly
+- Fixed #938982: Not all SearchApiQuery options are passed.
+- Fixed #931066 by luke_b: HTTP timeout not set correctly.
 
 Search API 1.0, Beta 3 (09/30/2010):
 ------------------------------------

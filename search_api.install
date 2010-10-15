@@ -161,6 +161,270 @@ function search_api_schema() {
 }
 
 /**
+ * Implements hook_install().
+ *
+ * Creates a default node index.
+ */
+function search_api_install() {
+  $name = t('Default node index');
+  $values = array(
+    'name' => $name,
+    'machine_name' => preg_replace('/\W+/', '_', $name),
+    'description' => t('An automatically created search index for indexing node data. Might be configured to specific needs.'),
+    'entity_type' => 'node',
+    'options' => array(
+      array(
+        'cron_limit' => '50',
+        'data_alter_callbacks' => array(
+          'search_api_alter_add_fulltext' => array(
+            'status' => 1,
+            'weight' => '0',
+          ),
+          'search_api_alter_add_url' => array(
+            'status' => 0,
+            'weight' => '0',
+          ),
+        ),
+        'processors' => array(
+          'search_api_case_ignore' => array(
+            'status' => 1,
+            'weight' => '0',
+            'settings' => array(
+              'strings' => 0,
+            ),
+          ),
+          'search_api_html_filter' => array(
+            'status' => 1,
+            'weight' => '10',
+            'settings' => array(
+              'title' => 0,
+              'alt' => 1,
+              'tags' => 'h1 = 5
+              h2 = 3
+              h3 = 2
+              strong = 2
+              b = 2
+              em = 1.5
+              u = 1.5',
+            ),
+          ),
+          'search_api_tokenizer' => array(
+            'status' => 1,
+            'weight' => '20',
+            'settings' => array(
+              'spaces' => '[^\\p{L}\\p{N}]',
+              'ignorable' => '[-]',
+            ),
+          ),
+        ),
+        'fields' => array(
+          'nid' => array(
+            'name' => 'Node ID',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'vid' => array(
+            'name' => 'Revision ID',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'tnid' => array(
+            'name' => 'Translation set ID',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'uid' => array(
+            'name' => 'User ID',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'is_new' => array(
+            'name' => 'Is new',
+            'type' => 'boolean',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'type' => array(
+            'name' => 'Content type',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'type_name' => array(
+            'name' => 'Content type name',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'title' => array(
+            'name' => 'Title',
+            'type' => 'text',
+            'boost' => '5.0',
+            'indexed' => 1,
+          ),
+          'language' => array(
+            'name' => 'Language',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'url' => array(
+            'name' => 'URL',
+            'type' => 'uri',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'edit_url' => array(
+            'name' => 'Edit URL',
+            'type' => 'uri',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'status' => array(
+            'name' => 'Published',
+            'type' => 'boolean',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'promote' => array(
+            'name' => 'Promoted to frontpage',
+            'type' => 'boolean',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'sticky' => array(
+            'name' => 'Sticky in lists',
+            'type' => 'boolean',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'created' => array(
+            'name' => 'Date created',
+            'type' => 'date',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'changed' => array(
+            'name' => 'Date changed',
+            'type' => 'date',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'log' => array(
+            'name' => 'Revision log message',
+            'type' => 'text',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'revision' => array(
+            'name' => 'Creates revision',
+            'type' => 'boolean',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'comment' => array(
+            'name' => 'Comments allowed',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'comment_count' => array(
+            'name' => 'Comment count',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'comment_count_new' => array(
+            'name' => 'New comment count',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'search_api_language' => array(
+            'name' => 'Item language',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'search_api_fulltext' => array(
+            'name' => 'Fulltext',
+            'type' => 'text',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'author:uid' => array(
+            'name' => 'Author » User ID',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:name' => array(
+            'name' => 'Author » Name',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'author:mail' => array(
+            'name' => 'Author » Email',
+            'type' => 'string',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:url' => array(
+            'name' => 'Author » URL',
+            'type' => 'uri',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:edit_url' => array(
+            'name' => 'Author » Edit URL',
+            'type' => 'uri',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:login' => array(
+            'name' => 'Author » Last login',
+            'type' => 'date',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:created' => array(
+            'name' => 'Author » Created',
+            'type' => 'date',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+          'author:roles' => array(
+            'name' => 'Author » User roles',
+            'type' => 'list<integer>',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'body:value' => array(
+            'name' => 'Body » Text',
+            'type' => 'text',
+            'boost' => '1.0',
+            'indexed' => 1,
+          ),
+          'body:format' => array(
+            'name' => 'Body » Text format',
+            'type' => 'integer',
+            'boost' => '1.0',
+            'indexed' => 0,
+          ),
+        ),
+      ),
+    ),
+  );
+  search_api_index_insert($values);
+  drupal_set_message('The Search API module was installed. A new default node index was created.');
+}
+
+/**
  * Implements hook_enable().
  */
 function search_api_enable() {
