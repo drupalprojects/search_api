@@ -10,42 +10,52 @@
 interface SearchApiServiceInterface {
 
   /**
+   * Constructor for a service class, setting the server configuration used with
+   * this service.
+   *
+   * @param SearchApiServer $server
+   *   The server object for this service.
+   */
+  public function __construct(SearchApiServer $server);
+
+  /**
    * Form callback. Might be called on an uninitialized object - in this case,
    * the form is for configuring a newly created server.
    *
    * @return array
    *   A form array for setting service-specific options.
    */
-  public function configurationForm();
+  public function configurationForm(array $form, array &$form_state);
 
   /**
    * Validation callback for the form returned by configurationForm().
    *
-   * @param array $form
-   *   The form returned by configurationForm().
-   * @param array $values
-   *   The part of the $form_state['values'] array corresponding to this form.
-   * @param $prefix
-   *   The prefix to use when flagging form errors. E.g., if an element "name"
-   *   of the $values array contains an error, call:
-   *   @code
-   *   form_set_error($prefix . 'name', ...);
-   *   @endcode
-   */
-  public function configurationFormValidate(array $form, array &$values, $prefix = '');
-
-  /**
-   * Submit callback for the form returned by configurationForm().
-   * The $values array is automatically set as the server's new $options after
-   * calling this method. Any necessary preprocessing that should only occur
-   * after validation can be done here.
+   * $form_state['server'] will contain the server that is created or edited.
+   * Use form_error() to flag errors on form elements.
    *
    * @param array $form
    *   The form returned by configurationForm().
    * @param array $values
    *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
    */
-  public function configurationFormSubmit(array $form, array &$values);
+  public function configurationFormValidate(array $form, array &$values, array &$form_state);
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   *
+   * This method should set the options of this service' server according to
+   * $values.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   */
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state);
 
   /**
    * Determines whether this service class implementation supports a given
@@ -67,7 +77,7 @@ interface SearchApiServiceInterface {
    * View this server's settings. Output can be HTML or a render array, a <dl>
    * listing all relevant settings is preferred.
    */
-  public function view();
+  public function viewSettings();
 
   /**
    * Called once, when the server is first created. Allows it to set up its
@@ -233,42 +243,27 @@ interface SearchApiServiceInterface {
  */
 abstract class SearchApiAbstractService implements SearchApiServiceInterface {
 
-  /* Database values that will be set when object is loaded: */
-
   /**
-   * @var integer
+   * @var SearchApiServer
    */
-  public $id = 0;
-
-  /**
-   * @var string
-   */
-  public $name = '';
-
-  /**
-   * @var string
-   */
-  public $machine_name = '';
-
-  /**
-   * @var string
-   */
-  public $description = '';
-
-  /**
-   * @var string
-   */
-  public $class = '';
+  protected $server;
 
   /**
    * @var array
    */
-  public $options = array();
+  protected $options = array();
 
   /**
-   * @var integer
+   * Constructor for a service class, setting the server configuration used with
+   * this service.
+   *
+   * @param SearchApiServer $server
+   *   The server object for this service.
    */
-  public $enabled = 1;
+  public function __construct(SearchApiServer $server) {
+    $this->server = $server;
+    $this->options = &$server->options;
+  }
 
   /**
    * Form callback. Might be called on an uninitialized object - in this case,
@@ -279,45 +274,44 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * @return array
    *   A form array for setting service-specific options.
    */
-  public function configurationForm() {
+  public function configurationForm(array $form, array &$form_state) {
     return array();
   }
 
   /**
    * Validation callback for the form returned by configurationForm().
    *
-   * Does nothing, by default.
+   * Does nothing by default.
    *
    * @param array $form
    *   The form returned by configurationForm().
    * @param array $values
    *   The part of the $form_state['values'] array corresponding to this form.
-   * @param $prefix
-   *   The prefix to use when flagging form errors. E.g., if an element "name"
-   *   of the $values array contains an error, call:
-   *   @code
-   *   form_set_error($prefix . 'name', ...);
-   *   @endcode
+   * @param array $form_state
+   *   The complete form state.
    */
-  public function configurationFormValidate(array $form, array &$values, $prefix = '') {
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     return;
   }
 
   /**
    * Submit callback for the form returned by configurationForm().
    *
-   * By default only ensures that additional options not present in the form are
-   * still kept.
+   * The default implementation just ensures that additional elements in
+   * $options, not present in the form, don't get lost at the update.
    *
    * @param array $form
    *   The form returned by configurationForm().
    * @param array $values
    *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
    */
-  public function configurationFormSubmit(array $form, array &$values) {
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     if (!empty($this->options)) {
       $values += $this->options;
     }
+    $this->options = $values + $this->options;
   }
 
   /**
@@ -345,9 +339,10 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * The default implementation does a crude output as a definition list, with
    * option names taken from the configuration form.
    */
-  public function view() {
+  public function viewSettings() {
     $output = '';
-    $option_form = $this->configurationForm();
+    $form = $form_state = array();
+    $option_form = $this->configurationForm($form, $form_state);
     $option_names = array();
     foreach ($option_form as $key => $element) {
       if (isset($element['#title']) && isset($this->options[$key])) {
@@ -418,7 +413,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * By default, deletes all indexes from this server.
    */
   public function preDelete() {
-    $indexes = search_api_list_indexes(array('server' => $this->id));
+    $indexes = search_api_list_indexes(array('server' => $this->server->id));
     foreach ($indexes as $index) {
       $this->removeIndex($index);
     }

@@ -11,7 +11,7 @@ class SearchApiDbService extends SearchApiAbstractService {
   protected $ignored = array();
   protected $warnings = array();
 
-  public function configurationForm() {
+  public function configurationForm(array $form, array &$form_state) {
     if (empty($this->options)) {
       global $databases;
       foreach ($databases as $key => $targets) {
@@ -88,11 +88,11 @@ class SearchApiDbService extends SearchApiAbstractService {
     if (empty($index->options['fields']) || !is_array($index->options['fields'])) {
       // No fields, no work.
       $indexes[$index->id] = array();
-      search_api_server_edit($this->id, array('options' => $this->options));
+      search_api_server_edit($this->server->id, array('options' => $this->options));
       return $this;
     }
 
-    $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
+    $prefix = 'search_api_db_' . $this->server->id . '_' . $index->id . '_';
     $indexes[$index->id] = array();
     foreach ($index->options['fields'] as $name => $field) {
       if (empty($field['indexed'])) {
@@ -105,7 +105,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       $indexes[$index->id][$name]['boost'] = $field['boost'];
     }
 
-    search_api_server_edit($this->id, array('options' => $this->options));
+    search_api_server_edit($this->server->id, array('options' => $this->options));
   }
 
   /**
@@ -248,7 +248,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       unset($new_fields[$name]);
     }
-    $prefix = 'search_api_db_' . $this->id . '_' . $index->id . '_';
+    $prefix = 'search_api_db_' . $this->server->id . '_' . $index->id . '_';
     // These are new fields that were previously not indexed.
     foreach ($new_fields as $name => $field) {
       $reindex = TRUE;
@@ -262,7 +262,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       $this->resetDb();
     }
 
-    search_api_server_edit($this->id, array('options' => $this->options));
+    search_api_server_edit($this->server->id, array('options' => $this->options));
     return $reindex;
   }
 
@@ -279,7 +279,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       $this->resetDb();
     }
     unset($this->options['indexes'][$id]);
-    search_api_server_edit($this->id, array('options' => $this->options));
+    search_api_server_edit($this->server->id, array('options' => $this->options));
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {

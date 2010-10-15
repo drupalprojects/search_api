@@ -20,8 +20,8 @@ class SearchApiDbTest extends DrupalWebTestCase {
     return $ret;
   }
 
-  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL) {
-    $ret = parent::drupalPost($path, $edit, $submit, $options, $headers, $form_html_id);
+  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array(), $form_html_id = NULL, $extra_post = NULL) {
+    $ret = parent::drupalPost($path, $edit, $submit, $options, $headers, $form_html_id, $extra_post);
     $this->assertResponse(200, t('HTTP code 200 returned.'));
     return $ret;
   }

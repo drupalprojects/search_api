@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- Change #939092: Several API changes regarding service class methods.
 - Added #939414: Enhanced service class descriptions. [soft API change]
 - Fixed #939464: Documented Entity API's module and status properties.
 - Added #939092: Changed private members to protected in all classes.

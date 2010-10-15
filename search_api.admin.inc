@@ -166,9 +166,17 @@ function search_api_admin_add_server(array $form, array &$form_state) {
         'wrapper' => 'search-api-class-options',
       ),
     );
+
+    if ($class) {
+      $form_state['server'] = new SearchApiServer($form_state['values']);
+    }
+    else {
+      $form_state['server'] = new SearchApiServer();
+    }
   }
   elseif (!$class) {
     $class = $form_state['storage']['step_one']['class'];
+    $form_state['server'] = new SearchApiServer($form_state['storage']['step_one']);
   }
 
   foreach (search_api_get_service_info() as $id => $info) {
@@ -182,13 +190,13 @@ function search_api_admin_add_server(array $form, array &$form_state) {
 
     $service = NULL;
     if (class_exists($info['class'])) {
-      $service = new $info['class']();
+      $service = new $info['class']($form_state['server']);
     }
     if (!($service instanceof SearchApiServiceInterface)) {
       watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
       continue;
     }
-    $service_form = $service->configurationForm();
+    $service_form = $service->configurationForm($form, $form_state);
     $form['options']['form'] = $service_form ? $service_form : array('#markup' => t('There are no configuration options for this service class.'));
     $form['options']['class']['#type'] = 'value';
     $form['options']['class']['#value'] = $class;
@@ -240,14 +248,14 @@ function search_api_admin_add_server_validate(array $form, array &$form_state) {
   $info = search_api_get_service_info($class);
   $service = NULL;
   if (class_exists($info['class'])) {
-    $service = new $info['class']();
+    $service = new $info['class']($form_state['server']);
   }
   if (!($service instanceof SearchApiServiceInterface)) {
     form_set_error('class', t('There seems to be something wrong with the selected service class.'));
     return;
   }
   $form_state['values']['options']['service'] = $service;
-  $service->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], 'options][form][');
+  $service->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
 }
 
 /**
@@ -270,10 +278,11 @@ function search_api_admin_add_server_submit(array $form, array &$form_state) {
     return;
   }
 
-  $service = $form_state['values']['options']['service'];
-  $service->configurationFormSubmit($form['options']['form'], $values['options']['form']);
-  $values['options'] = $values['options']['form'];
-  $id = search_api_server_insert($values);
+  $options = isset($values['options']['form']) ? $values['options']['form'] : array();
+  unset($values['options']);
+  $form_state['server']  = $server = new SearchApiServer($values);
+  $server->configurationFormSubmit($form['options']['form'], $options, $form_state);
+  $id = search_api_server_insert((array) $server);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
   drupal_set_message(t('The server was successfully created.'));
 }
@@ -318,7 +327,7 @@ function search_api_admin_server_view(SearchApiServer $server = NULL, $action = 
 
   drupal_set_title(search_api_admin_item_title($server));
   $class = search_api_get_service_info($server->class);
-  $options = $server->view();
+  $options = $server->viewSettings();
   return array(
     '#theme' => 'search_api_server',
     '#id' => $server->id,
@@ -402,6 +411,8 @@ function theme_search_api_server(array $variables) {
  *   The server to edit.
  */
 function search_api_admin_server_edit(array $form, array &$form_state, SearchApiServer $server) {
+  $form_state['server'] = $server;
+
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Server name'),
@@ -419,17 +430,12 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
 
   $class = search_api_get_service_info($server->class);
 
-  $form['options']['form'] = $server->configurationForm();
+  $form['options']['form'] = $server->configurationForm($form, $form_state);
   $form['options']['#type'] = 'fieldset';
   $form['options']['#tree'] = TRUE;
   $form['options']['#collapsible'] = TRUE;
   $form['options']['#title'] = $class['name'];
   $form['options']['#description'] = $class['description'];
-
-  $form['id'] = array(
-    '#type' => 'value',
-    '#value' => $server->id,
-  );
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -443,9 +449,7 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
  * Validation function for search_api_admin_server_edit.
  */
 function search_api_admin_server_edit_validate(array $form, array &$form_state) {
-  $id = $form_state['values']['id'];
-  $server = $form_state['values']['options']['server'] = search_api_server_load($id);
-  $server->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], 'options][form][');
+  $form_state['server']->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
 }
 
 /**
@@ -453,19 +457,21 @@ function search_api_admin_server_edit_validate(array $form, array &$form_state) 
  */
 function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
-
   $values = $form_state['values'];
-  $id = $values['id'];
-  unset($values['id']);
 
+  $server = $form_state['server'];
   if (isset($values['options'])) {
-    $server = $values['options']['server'];
     $values['options'] = $values['options']['form'];
-    $server->configurationFormSubmit($form['options']['form'], $values['options']);
   }
+  foreach ($values as $key => $value) {
+    if ($key != 'options') {
+      $server->$key = $value;
+    }
+  }
+  $server->configurationFormSubmit($form['options']['form'], $values['options'], $form_state);
 
-  $ret = search_api_server_edit($id, $values);
-  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
+  $ret = search_api_server_edit($server->id, $values);
+  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
   }

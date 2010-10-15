@@ -36,7 +36,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     'uri' => 's',
   );
 
-  public function configurationForm() {
+  public function configurationForm(array $form, array &$form_state) {
     if (empty($this->options)) {
       // First configuring this server
       $options = array(
@@ -96,17 +96,17 @@ class SearchApiSolrService extends SearchApiAbstractService {
     return $form;
   }
 
-  public function configurationFormValidate(array $form, array &$values, $prefix = '') {
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     if (isset($values['port']) && (!is_numeric($values['port']) || $values['port'] < 0 || $values['port'] > 65535)) {
-      form_set_error($prefix . 'port', t('The port has to be an integer between 0 and 65535.'));
+      form_error($form['port'], t('The port has to be an integer between 0 and 65535.'));
     }
   }
 
-  public function configurationFormSubmit(array $form, array &$values, $prefix = '') {
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     $http = $values['http'];
     unset($values['http']);
     $values += $http;
-    parent::configurationFormSubmit($form, $values);
+    parent::configurationFormSubmit($form, $values, $form_state);
   }
 
   public function supportsFeature($feature) {
@@ -120,7 +120,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * The default implementation does a crude output as a definition list, with
    * option names taken from the configuration form.
    */
-  public function view() {
+  public function viewSettings() {
     $output = '';
     $options = $this->options;
 

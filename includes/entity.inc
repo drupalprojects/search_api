@@ -3,14 +3,48 @@
 
 /**
  * Class representing a search server.
+ *
+ * This can handle the same calls as defined in the SearchApiServiceInterface
+ * and pass it on to the service implementation appropriate for this server.
  */
-class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInterface {
+class SearchApiServer extends EntityDBExtendable {
+
+  /* Database values that will be set when object is loaded: */
 
   /**
-   * @var SearchApiServiceInterface
+   * @var integer
    */
-  protected $proxy;
-  protected $values = array();
+  public $id = 0;
+
+  /**
+   * @var string
+   */
+  public $name = '';
+
+  /**
+   * @var string
+   */
+  public $machine_name = '';
+
+  /**
+   * @var string
+   */
+  public $description = '';
+
+  /**
+   * @var string
+   */
+  public $class = '';
+
+  /**
+   * @var array
+   */
+  public $options = array();
+
+  /**
+   * @var integer
+   */
+  public $enabled = 1;
 
   /**
    * Will be set by the Entity CRUD API for exporting.
@@ -22,29 +56,17 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
   public $status;
 
   /**
+   * Proxy object for invoking service methods.
+   *
+   * @var SearchApiServiceInterface
+   */
+  protected $proxy;
+
+  /**
    * Constructor as a helper to the parent constructor.
    */
   public function __construct(array $values = array()) {
     parent::__construct($values, 'search_api_server');
-  }
-
-  /**
-   * Exports this server object as an entity.
-   *
-   * @param $prefix
-   *   A string to prepend to each line of the return value, except for the
-   *   first.
-   *
-   * @return
-   *   The exported entity as code.
-   */
-  public function export($prefix = '') {
-    $vars = array();
-    // We don't include "id" here, as it seems that EntityAPIController::export() will also omit it.
-    foreach (array('module', 'name', 'machine_name', 'description', 'class', 'options', 'enabled') as $var) {
-      $vars[$var] = isset($this->$var) ? $this->$var : NULL;
-    }
-    return "entity_create('search_api_server', " . entity_var_export($vars, $prefix) . ")";
   }
 
   /**
@@ -54,45 +76,16 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     if (!isset($this->proxy)) {
       $class = search_api_get_service_info($this->class);
       if ($class && class_exists($class['class'])) {
-        $this->proxy = new $class['class']();
+        if (empty($this->options)) {
+          // We always have to provide the options.
+          $this->options = array();
+        }
+        $this->proxy = new $class['class']($this);
       }
       if (!($this->proxy instanceof SearchApiServiceInterface)) {
         throw new SearchApiException(t('Search server with id !id specifies illegal service class !class.', array('!id' => $this->id, '!class' => $this->class)));
       }
-      foreach ($this->values as $key => $value) {
-        $this->proxy->$key = $value;
-      }
     }
-  }
-
-  // Magic methods for property magic
-
-  public function __get($name) {
-    if (isset($this->proxy)) {
-      return $this->proxy->$name;
-    }
-    return $this->values[$name];
-  }
-
-  public function __set($name, $value) {
-    if (isset($this->proxy)) {
-      $this->proxy->$name = $value;
-    }
-    $this->values[$name] = $value;
-  }
-
-  public function __isset($name) {
-    if (isset($this->proxy)) {
-      return isset($this->proxy->$name);
-    }
-    return isset($this->values[$name]);
-  }
-
-  public function __unset($name) {
-    if (isset($this->proxy)) {
-      unset($this->proxy->$name);
-    }
-    unset($this->values[$name]);
   }
 
   // If the service class defines additional methods, not specified in the
@@ -106,21 +99,22 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
 
   // Proxy methods
 
-  // Since we are implementing the interface, we can't just use the __call() magic method.
+  // For increased clarity, and since some parameters are passed by reference,
+  // we don't use the __call() magic method for those.
 
-  public function configurationForm() {
+  public function configurationForm(array $form, array &$form_state) {
     $this->ensureProxy();
-    return $this->proxy->configurationForm();
+    return $this->proxy->configurationForm($form, $form_state);
   }
 
-  public function configurationFormValidate(array $form, array &$values, $prefix = '') {
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     $this->ensureProxy();
-    return $this->proxy->configurationFormValidate($form, $values, $prefix);
+    return $this->proxy->configurationFormValidate($form, $values, $form_state);
   }
 
-  public function configurationFormSubmit(array $form, array &$values) {
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     $this->ensureProxy();
-    return $this->proxy->configurationFormSubmit($form, $values);
+    return $this->proxy->configurationFormSubmit($form, $values, $form_state);
   }
 
   public function supportsFeature($feature) {
@@ -128,9 +122,9 @@ class SearchApiServer extends EntityDBExtendable implements SearchApiServiceInte
     return $this->proxy->supportsFeature($feature);
   }
 
-  public function view() {
+  public function viewSettings() {
     $this->ensureProxy();
-    return $this->proxy->view();
+    return $this->proxy->viewSettings();
   }
 
   public function postCreate() {

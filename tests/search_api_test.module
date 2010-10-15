@@ -216,7 +216,7 @@ function search_api_test_search_api_service_info() {
  */
 class SearchApiTestService extends SearchApiAbstractService {
 
-  public function configurationForm() {
+  public function configurationForm(array $form, array &$form_state) {
     $form = array(
       'test' => array(
         '#type' => 'textfield',
