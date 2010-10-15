@@ -23,7 +23,9 @@
  *   identifier and containing associative arrays with the following keys:
  *   - name: The service class' translated name.
  *   - description: A translated string to be shown to administrators when
- *     selecting a service class.
+ *     selecting a service class. Should contain all peculiarities of the
+ *     service class, like field type support, supported features (like facets),
+ *     the "direct" parse mode and other specific things to keep in mind.
  *   - class: The service class, which has to implement the
  *     SearchApiServiceInterface interface.
  */

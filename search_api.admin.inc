@@ -378,7 +378,7 @@ function theme_search_api_server(array $variables) {
     $output .= '<dt>' . t('Service class') . '</dt>' . "\n";
     $output .= '<dd><em>' . check_plain($class_name) . '</em>';
     if (!empty($class_description)) {
-      $output .= '<p class="description">' . nl2br(check_plain($class_description)) . '</p>';
+      $output .= '<p class="description">' . $class_description . '</p>';
     }
     $output .= '</dd>' . "\n";
   }
@@ -1313,9 +1313,12 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
     '#description' => t('<p>The datatype of fields determines, how they can be searched or filtered upon. ' .
         'The boost is used to give additional weight to certain fields, e.g. titles or tags. It only takes effect for fulltext fields.</p>' .
         '<p>Whether detailled field types are supported depends on the type of server this index resides on. ' .
-        "Check the server's service class' documentation for details.<br />" .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
   );
+  if ($index->server) {
+    $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
+        array('@server-url' => url('admin/config/search/search_api/server/' . $index->server))) . '</p>';
+  }
   foreach ($fields as $key => $info) {
     $form['fields'][$key]['title']['#markup'] = check_plain($info['name']);
     $form['fields'][$key]['name'] = array(
