@@ -171,6 +171,7 @@ function search_api_install() {
     'name' => $name,
     'machine_name' => preg_replace('/\W+/', '_', $name),
     'description' => t('An automatically created search index for indexing node data. Might be configured to specific needs.'),
+    'server' => NULL,
     'entity_type' => 'node',
     'options' => array(
       array(
