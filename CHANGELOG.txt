@@ -10,6 +10,7 @@ API changes:
 - Added #936360: Make servers and indexes exportable.
 
 Others:
+- Fixed #943578: Duplicate fields on service creation.
 - Adapted to #709892: Invoke hook_entity_delete() on entity deletions.
 - Added #939414: Set fields provided by data-alter callbacks to "indexed" by
                  default.

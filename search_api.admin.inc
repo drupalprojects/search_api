@@ -108,6 +108,7 @@ function search_api_admin_add_server(array $form, array &$form_state) {
   drupal_set_title(t('Add server'));
 
   $class = empty($form_state['values']['class']) ? '' : $form_state['values']['class'];
+  $form_state['server'] = new SearchApiServer();
 
   if (empty($form_state['storage']['step_one'])) {
     $form['name'] = array(
@@ -166,17 +167,9 @@ function search_api_admin_add_server(array $form, array &$form_state) {
         'wrapper' => 'search-api-class-options',
       ),
     );
-
-    if ($class) {
-      $form_state['server'] = new SearchApiServer($form_state['values']);
-    }
-    else {
-      $form_state['server'] = new SearchApiServer();
-    }
   }
   elseif (!$class) {
     $class = $form_state['storage']['step_one']['class'];
-    $form_state['server'] = new SearchApiServer($form_state['storage']['step_one']);
   }
 
   foreach (search_api_get_service_info() as $id => $info) {
@@ -196,7 +189,8 @@ function search_api_admin_add_server(array $form, array &$form_state) {
       watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
       continue;
     }
-    $service_form = $service->configurationForm($form, $form_state);
+    $service_form = isset($form['options']['form']) ? $form['options']['form'] : array();
+    $service_form = $service->configurationForm($service_form, $form_state);
     $form['options']['form'] = $service_form ? $service_form : array('#markup' => t('There are no configuration options for this service class.'));
     $form['options']['class']['#type'] = 'value';
     $form['options']['class']['#value'] = $class;
