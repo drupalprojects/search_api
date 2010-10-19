@@ -117,30 +117,13 @@ function search_api_admin_add_server(array $form, array &$form_state) {
       '#description' => t('Enter the displayed name for the new server.'),
       '#maxlength' => 50,
       '#required' => TRUE,
-      '#field_suffix' => ' <small id="edit-name-suffix">' . t('Machine name: @name', array('@name' => '')) . '</small>',
     );
 
-    $js_settings = array(
-      'type' => 'setting',
-      'data' => array(
-        'machineReadableValue' => array(
-          'name' => array(
-            'text' => t('Machine name'),
-            'target' => 'machine-name',
-            'searchPattern' => '[^a-z0-9]+',
-            'replaceToken' => '_',
-          ),
-        ),
-      ),
-    );
     $form['machine_name'] = array(
-      '#title' => t('Machine name'),
-      '#type' => 'textfield',
+      '#type' => 'machine_name',
       '#maxlength' => 50,
-      '#required' => TRUE,
-      '#description' => t("The machine-readable name of this server. This name must be unique and can't be a pure number."),
-      '#attached' => array(
-        'js' => array(drupal_get_path('module', 'system') . '/system.js', $js_settings),
+      '#machine_name' => array(
+        'exists' => 'search_api_server_load',
       ),
     );
 
@@ -229,9 +212,6 @@ function search_api_admin_add_server_validate(array $form, array &$form_state) {
     $name = $form_state['values']['machine_name'];
     if (is_numeric($name)) {
       form_set_error('machine_name', t('The machine name must not be a pure number.'));
-    }
-    if (search_api_server_load($name)) {
-      form_set_error('machine_name', t('The chosen machine name is already in use.'));
     }
   }
 
@@ -486,30 +466,13 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#title' => t('Index name'),
     '#maxlength' => 50,
     '#required' => TRUE,
-    '#field_suffix' => ' <small id="edit-name-suffix">' . t('Machine name: @name', array('@name' => '')) . '</small>',
   );
 
-  $js_settings = array(
-    'type' => 'setting',
-    'data' => array(
-      'machineReadableValue' => array(
-        'name' => array(
-          'text' => t('Machine name'),
-          'target' => 'machine-name',
-          'searchPattern' => '[^a-z0-9]+',
-          'replaceToken' => '_',
-        ),
-      ),
-    ),
-  );
   $form['machine_name'] = array(
-    '#title' => t('Machine name'),
-    '#type' => 'textfield',
+    '#type' => 'machine_name',
     '#maxlength' => 50,
-    '#required' => TRUE,
-    '#description' => t("The machine-readable name of this index. This name must be unique and can't be a pure number."),
-    '#attached' => array(
-      'js' => array(drupal_get_path('module', 'system') . '/system.js', $js_settings),
+    '#machine_name' => array(
+      'exists' => 'search_api_index_load',
     ),
   );
 
@@ -579,9 +542,6 @@ function search_api_admin_add_index_validate(array $form, array &$form_state) {
   $name = $form_state['values']['machine_name'];
   if (is_numeric($name)) {
     form_set_error('machine_name', t('The machine name must not be a pure number.'));
-  }
-  if (search_api_index_load($name)) {
-    form_set_error('machine_name', t('The chosen machine name is already in use.'));
   }
 
   $cron_limit = $form_state['values']['cron_limit'];
