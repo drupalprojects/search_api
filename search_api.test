@@ -390,7 +390,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('entity', 'entity_metadata', 'search_api');
     $this->index = new SearchApiIndex(array(
       'id' => 1,

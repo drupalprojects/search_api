@@ -89,13 +89,13 @@ interface SearchApiQueryInterface {
   /**
    * Adds a subfilter to this query's filter.
    *
-   * @param SearchApiQueryFilter $filter
+   * @param SearchApiQueryFilterInterface $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    *
    * @return SearchApiQueryInterface
    *   The called object.
    */
-  public function filter(SearchApiQueryFilter $filter);
+  public function filter(SearchApiQueryFilterInterface $filter);
 
   /**
    * Add a new ($field $operator $value) condition filter.
@@ -507,13 +507,13 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /**
    * Adds a subfilter to this query's filter.
    *
-   * @param SearchApiQueryFilter $filter
+   * @param SearchApiQueryFilterInterface $filter
    *   A SearchApiQueryFilter object that should be added as a subfilter.
    *
    * @return SearchApiQuery
    *   The called object.
    */
-  public function filter(SearchApiQueryFilter $filter) {
+  public function filter(SearchApiQueryFilterInterface $filter) {
     $this->filter->filter($filter);
     return $this;
   }
@@ -843,12 +843,13 @@ interface SearchApiQueryFilterInterface {
    * Adds a subfilter.
    *
    * @param $filter
-   *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *   A SearchApiQueryFilterInterface object that should be added as a
+   *   subfilter.
    *
    * @return SearchApiQueryFilterInterface
    *   The called object.
    */
-  public function filter(SearchApiQueryFilter $filter);
+  public function filter(SearchApiQueryFilterInterface $filter);
 
   /**
    * Add a new ($field $operator $value) condition.
@@ -930,12 +931,13 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    * Adds a subfilter.
    *
    * @param $filter
-   *   A SearchApiQueryFilter object that should be added as a subfilter.
+   *   A SearchApiQueryFilterInterface object that should be added as a
+   *   subfilter.
    *
    * @return SearchApiQueryFilter
    *   The called object.
    */
-  public function filter(SearchApiQueryFilter $filter) {
+  public function filter(SearchApiQueryFilterInterface $filter) {
     $this->filters[] = $filter;
     return $this;
   }
