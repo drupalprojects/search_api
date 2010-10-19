@@ -92,7 +92,7 @@ class SearchApiServer extends EntityDBExtendable {
   // SearchApiServiceInterface interface, then they are called via this magic
   // method.
 
-  public function __call($name, array $arguments) {
+  public function __call($name, $arguments = array()) {
     $this->ensureProxy();
     return call_user_func_array(array($this->proxy, $name), $arguments);
   }
