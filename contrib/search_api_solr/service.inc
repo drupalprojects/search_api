@@ -515,14 +515,14 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
       }
       else {
-        $f = $this->createFilterQueries($f, $solr_fields);
+        $q = $this->createFilterQueries($f, $solr_fields, $fields);
         if ($filter->getConjunction() != $f->getConjunction()) {
           // $or == TRUE means the nested filter has conjunction AND, and vice versa
           $sep = $or ? ' ' : ' OR ';
-          $fq[] = '((' . implode(')' . $sep . '(', $f) . '))';
+          $fq[] = '((' . implode(')' . $sep . '(', $q) . '))';
         }
         else {
-          $fq = array_merge($fq, $f);
+          $fq = array_merge($fq, $q);
         }
       }
     }
