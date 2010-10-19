@@ -13,8 +13,9 @@ definition of indexed content from the search server it lies on, thus enabling
 almost complete backend-independence.
 
 
-If you need help with the module, please post to the project's issue queue at
-[http://drupal.org/project/issues/search_api].
+If you need help with the module, please post to the project's issue queue [1].
+
+[1] http://drupal.org/project/issues/search_api
 
 
 Content:
@@ -67,11 +68,11 @@ Terms as used in this module.
   found in the body. Of course, this has only an effect when the score is used
   (for sorting or other purposes). It has no effect on other parts of the search
   result.
-- Data-alter callback:
-  A function that is called when indexing data. It can add
-  additional fields to the indexed entity or prevent certain entities from being
-  indexed. Fields added by callbacks will have to be enabled on the "Fields"
-  page afterwards to be of any use.
+- Data alteration:
+  A component that is used when indexing data. It can add additional fields to
+  the indexed entity or prevent certain entities from being indexed. Fields
+  added by callbacks have to be enabled on the "Fields" page to be of any use,
+  but this is done by default.
 - Processor:
   An object that is used for preprocessing indexed data as well as search
   queries, and for postprocessing search results. Usually only work on fulltext
@@ -129,18 +130,19 @@ be used.
   (Configuration > Search API > [Index name] > Workflow)
 
 This page lets you customize how the created index works, and what metadata will
-be available, by selecting data-alter callbacks and processors (see the glossary
-for further explanations).
-Data-alter callbacks usually only add one or more fields to the entity and their
+be available, by selecting data alterations and processors (see the glossary for
+further explanations).
+Data alterations usually only add one or more fields to the entity and their
 order is mostly irrelevant.
-The order of processors, however, often is important. Consult the processors'
-documentation for determining how to use them most effectively.
+The order of processors, however, often is important. Read the processors'
+descriptions or consult their documentation for determining how to use them most
+effectively.
 
 - Indexed fields
   (Configuration > Search API > [Index name] > Fields)
 
 Here you can select which of the entities' fields will be indexed, and how.
-Fields added by (enabled) data-alter callbacks will be available here, too.
+Fields added by (enabled) data alterations will be available here, too.
 Without selecting fields to index, the index will be useless and also won't be
 available for searches. Select the "Fulltext" data type for fields which you
 want search for keywords, and other data types when you want to use the field
@@ -236,6 +238,7 @@ hook_entity_property_info(). They are only called when indexing, or when
 selecting the fields to index (in the latter case, with an empty array). For
 adding additional information to search results, you have to use a processor.
 See the data-alter callbacks in search_api.module for examples.
+Data-alter callbacks are called "data alterations" in the UI.
 
 - Processors
   Interface: SearchApiProcessorInterface
@@ -248,3 +251,60 @@ processor description should clearly state assumptions or restrictions on input
 types (e.g. only tokenized text), item language, etc. and explain concisely what
 effect it will have on searches.
 See the processors in includes/processor.inc for examples.
+
+
+Included components
+-------------------
+
+- Service classes
+
+  * Database search
+    A search server implementation that uses the normal database for indexing
+    data. It isn't very fast and the results might also be less accurate than
+    with third-party solutions like Solr, but it's very easy to set up and good
+    for smaller applications or testing.
+    See contrib/search_api_db/README.txt for details.
+  * Solr search
+    A search server implementation that connects to an Apache Solr server for
+    indexing and searching. The Solr server has to be set up seperately. Solr
+    search is a very fast, accurate and professional search solution, sufficient
+    for almost all needs.
+    See contrib/search_api_solr/README.txt for details.
+
+- Data alterations
+
+  * URL field
+    Provides a field with the URL for displaying the entity.
+  * Fulltext field
+    Aggregates the contents of all fields set to the "Fulltext" type, for
+    searching an entity's complete fulltext data in a single field.
+
+- Processors
+
+  * Ignore case
+    Makes all fulltext searches (and, optionally, also filters on string values)
+    case-insensitive. Some servers might do this automatically, for others this
+    should probably always be activated.
+  * HTML filter
+    Strips HTML tags from fulltext fields and decodes HTML entities. If you are
+    indexing HTML content (like node bodies) and the search server doesn't
+    handle HTML on its own, this should be activated to avoid indexing HTML
+    tags, as well as to give e.g. terms appearing in a heading a higher boost.
+  * Tokenizer
+    This processor allows you to specify how indexed fulltext content is split
+    into seperate tokens – which characters are ignored and which treated as
+    white-space that seperates words.
+    
+- Additional modules
+
+  * Search pages
+    This module lets you create simple search pages for indexes.
+  * Search views
+    This integrates the Search API with the Views module [2], enabling the user
+    to create views which display search results from any Search API index.
+  * Search facets
+    For service classes supporting this feature (e.g. Solr search), this module
+    automatically provides configurable facet blocks on pages that execute
+    a search query.
+    
+[2] http://drupal.org/project/views

@@ -1023,15 +1023,15 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   $form['#callbacks'] = $callbacks;
   $form['callbacks'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Data-alter callbacks'),
-    '#description' => t('Select the callbacks that will be executed on indexed items, and their order.'),
+    '#title' => t('Data alterations'),
+    '#description' => t('Select the alterations that will be executed on indexed items, and their order.'),
     '#collapsible' => TRUE,
   );
 
   // Callback status.
   $form['callbacks']['status'] = array(
     '#type' => 'item',
-    '#title' => t('Enabled data-alter callbacks'),
+    '#title' => t('Enabled data alterations'),
     '#prefix' => '<div class="search-api-status-wrapper">',
     '#suffix' => '</div>',
   );
@@ -1049,7 +1049,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   // Callback order (tabledrag).
   $form['callbacks']['order'] = array(
     '#type' => 'item',
-    '#title' => t('Data-alter callback processing order'),
+    '#title' => t('Data alteration processing order'),
     '#theme' => 'search_api_admin_item_order',
     '#table_id' => 'search-api-callbacks-order-table',
   );

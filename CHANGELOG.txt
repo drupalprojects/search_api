@@ -3,27 +3,28 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
-- Change #939092: Several API changes regarding service class methods.
-- Added #939414: Enhanced service class descriptions. [soft API change]
-- Fixed #939464: Documented Entity API's module and status properties.
-- Added #939092: Changed private members to protected in all classes.
-- Added #936360: Make servers and indexes exportable.
+- #939092: Several API changes regarding service class methods.
+- #939414: Enhanced service class descriptions. [soft API change]
+- #939464: Documented Entity API's module and status properties.
+- #939092: Changed private members to protected in all classes.
+- #936360: Make servers and indexes exportable.
 
 Others:
-- Fixed #945754: Fix server and index machine name inputs.
-- Fixed #943578: Duplicate fields on service creation.
-- Adapted to #709892: Invoke hook_entity_delete() on entity deletions.
-- Added #939414: Set fields provided by data-alter callbacks to "indexed" by
-                 default.
-- Added #939414: Provide a default node index upon installation.
-- Added #939822 by fago: Support fields.
-- Fixed #939442: Bad data type defaults [string for fields with options].
-- Fixed #939482: Override export() to work with "magic" __get fields.
-- Fixed #939442: Bad data type defaults.
-- Added #939414: Improved descriptions for processors.
-- Change #939414: Removed the "Call hook" data alter callback.
-- Fixed #938982: Not all SearchApiQuery options are passed.
-- Fixed #931066 by luke_b: HTTP timeout not set correctly.
+- #939414: Rename "data-alter callbacks" to "data alterations".
+- #939460: Views integration troubles.
+- #945754: Fix server and index machine name inputs.
+- #943578: Duplicate fields on service creation.
+- #709892: Invoke hook_entity_delete() on entity deletions.
+- #939414: Set fields provided by data-alter callbacks to "indexed" by default.
+- #939414: Provide a default node index upon installation.
+- #939822 by fago: Support fields.
+- #939442: Bad data type defaults [string for fields with options].
+- #939482: Override export() to work with "magic" __get fields.
+- #939442: Bad data type defaults.
+- #939414: Improved descriptions for processors.
+- #939414: Removed the "Call hook" data alter callback.
+- #938982: Not all SearchApiQuery options are passed.
+- #931066 by luke_b: HTTP timeout not set correctly.
 
 Search API 1.0, Beta 3 (09/30/2010):
 ------------------------------------
