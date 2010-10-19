@@ -308,7 +308,6 @@ class SearchApiDbService extends SearchApiAbstractService {
   protected function indexItem(SearchApiIndex $index, $id, array $item) {
     $fields = $this->options['indexes'][$index->id];
     $txn = db_transaction('search_api_indexing', $this->query_options);
-    $item = $item;
     try {
       foreach ($item as $name => $field) {
         $table = $fields[$name]['table'];
@@ -439,7 +438,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         return 0 + $value;
 
       case 'boolean':
-        return $value ? 0 : 1;
+        return $value ? 1 : 0;
 
       case 'date':
         if (is_numeric($value) || !$value) {
