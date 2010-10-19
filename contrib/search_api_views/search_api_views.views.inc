@@ -195,6 +195,12 @@ function _search_api_views_add_handlers($field, $wrapper) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
     $ret['filter']['options'] = $wrapper->optionsList();
   }
+  elseif ($inner_type == 'boolean') {
+    $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterBoolean';
+  }
+  elseif ($inner_type == 'date') {
+    $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterDate';
+  }
   else {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilter';
   }

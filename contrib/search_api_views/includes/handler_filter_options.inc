@@ -14,16 +14,16 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
    * Provide a list of options for the operator form.
    */
   public function operator_options() {
-    return array('=' => t('is one of'), '<>' => t('is not one of'));
+    return array(
+      '=' => t('is one of'),
+      '<>' => t('is not one of'),
+    );
   }
 
   /**
    * Provide a form for setting options.
    */
   public function value_form(&$form, &$form_state) {
-    while (is_array($this->value)) {
-      $this->value = $this->value ? array_shift($this->value) : NULL;
-    }
     $form['value'] = array(
       '#type' => 'select',
       '#title' => empty($form_state['exposed']) ? t('Value') : '',
@@ -32,6 +32,53 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
       '#size' => min(4, count($this->definition['options'])),
       '#default_value' => isset($this->value) ? $this->value : array(),
     );
+  }
+
+  /**
+   * Provides a summary of this filter's value for the admin UI.
+   */
+  function admin_summary() {
+    if (!empty($this->options['exposed'])) {
+      return t('exposed');
+    }
+
+    if (!is_array($this->value)) {
+      return;
+    }
+
+    $operator_options = $this->operator_options();
+    $operator = $operator_options[$this->operator];
+    $values = '';
+
+    // Remove every element which is not known.
+    foreach ($this->value as $i => $value) {
+      if (!isset($this->definition['options'][$value])) {
+        unset($this->value[$i]);
+      }
+    }
+    // Choose different kind of ouput for 0, a single and multiple values.
+    if (count($this->value) == 0) {
+      return $this->operator == '=' ? t('none') : t('any');
+    }
+    else if (count($this->value) == 1) {
+      // If there is only a single value, use just the plain operator, = or <>.
+      $operator = check_plain($this->operator);
+      $values = check_plain($this->definition['options'][reset($this->value)]);
+    }
+    else {
+      foreach ($this->value as $value) {
+        if ($values !== '') {
+          $values .= ', ';
+        }
+        if (drupal_strlen($values) > 20) {
+          $values .= '…';
+          break;
+        }
+        $values .= check_plain($this->definition['options'][$value]);
+      }
+    }
+
+    return $operator . (($values !== '') ? ' ' . $values : '');
   }
 
   /**

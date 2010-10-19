@@ -9,7 +9,7 @@ class SearchApiViewsHandlerFieldDate extends SearchApiViewsHandlerField {
   /**
    * Specifies the options this handler uses.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['format']['type'] = array('default' => 'medium');
     $options['format']['custom'] = array('default' => '');
@@ -19,7 +19,7 @@ class SearchApiViewsHandlerFieldDate extends SearchApiViewsHandlerField {
   /**
    * Returns an option form for setting this handler's options.
    */
-  function options_form(array &$form, array &$form_state) {
+  public function options_form(array &$form, array &$form_state) {
     parent::options_form($form, $form_state);
 
     $formats = system_get_date_types();

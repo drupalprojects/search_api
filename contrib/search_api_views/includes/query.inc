@@ -87,7 +87,7 @@ class SearchApiViewsQuery extends views_plugin_query {
   /**
    * Builds the necessary info to execute the query.
    */
-  function build(view $view) {
+  public function build($view) {
     $view->init_pager();
 
     // Let the pager modify the query to add limits.
@@ -101,7 +101,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Values to set: $view->result, $view->total_rows, $view->execute_time,
    * $view->pager['current_page'].
    */
-  public function execute(view $view) {
+  public function execute($view) {
     if ($this->errors) {
       foreach ($this->errors as $msg) {
         drupal_set_message($msg, 'error');
@@ -143,7 +143,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Helper function for adding results to a view in the format expected by the
    * view.
    */
-  protected function addResults(array $results, view $view) {
+  protected function addResults(array $results, $view) {
     // Maybe the service class or a postprocessor already set the entities
     foreach ($results as $id => $result) {
       if (!empty($result['entity']) && ($fields = $this->extractFields($result['entity']))) {
@@ -216,7 +216,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     return $this;
   }
 
-  public function filter(SearchApiQueryFilter $filter) {
+  public function filter(SearchApiQueryFilterInterface $filter) {
     if (!$this->errors) {
       $this->query->filter($filter);
     }

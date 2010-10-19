@@ -9,7 +9,7 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
   /**
    * Specify the options this filter uses.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['fields'] = array('default' => array());
     return $options;

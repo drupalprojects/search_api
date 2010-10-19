@@ -31,11 +31,18 @@ class SearchApiViewsHandlerFilter extends views_handler_filter {
    * Provide a list of options for the operator form.
    */
   public function operator_options() {
-    return drupal_map_assoc(array('=', '<>', '<', '<=', '>', '>='));
+    return array(
+      '<' => t('Is smaller than'),
+      '<=' => t('Is smaller than or equal to'),
+      '=' => t('Is equal to'),
+      '<>' => t('Is not equal to'),
+      '>=' => t('Is greater than or equal to'),
+      '>' => t('Is greater than'),
+    );
   }
 
   /**
-   * Provide a form for setting options.
+   * Provide a form for setting the filter value.
    */
   public function value_form(&$form, &$form_state) {
     while (is_array($this->value)) {

@@ -9,7 +9,7 @@ class SearchApiViewsHandlerFieldBoolean extends SearchApiViewsHandlerField {
   /**
    * Specifies the options this handler uses.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     unset($options['alter']['strip_tags']);
     $options['format']['true'] = array('default' => '1');
@@ -21,7 +21,7 @@ class SearchApiViewsHandlerFieldBoolean extends SearchApiViewsHandlerField {
   /**
    * Returns an option form for setting this handler's options.
    */
-  function options_form(array &$form, array &$form_state) {
+  public function options_form(array &$form, array &$form_state) {
     parent::options_form($form, $form_state);
 
     unset($form['alter']['strip_tags']);

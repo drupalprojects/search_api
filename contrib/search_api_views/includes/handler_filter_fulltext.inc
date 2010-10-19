@@ -9,7 +9,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
   /**
    * Specify the options this filter uses.
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $options['mode'] = array('default' => 'filter');
