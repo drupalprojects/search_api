@@ -688,7 +688,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
             unset($langs_to_add[$lang]);
           }
           else {
-            throw new SearchApiException(t('Impossible combination of filters and languages. There is a filter for "!language", but allowed languages are: "!languages".', array('!language' => $lang, '!languages' => implode(t('", "', array(), array('context' => 'list of language IDs')), $languages))));
+            throw new SearchApiException(t('Impossible combination of filters and languages. There is a filter for "!language", but allowed languages are: "!languages".', array('!language' => $lang, '!languages' => implode('", "', $languages))));
           }
         }
       }
