@@ -11,7 +11,8 @@ API changes:
 - #936360: Make servers and indexes exportable.
 
 Others:
-- #951830: "List of language IDs" context suspicious
+- #955892: Typo in search_api_solr.install.
+- #951830: "List of language IDs" context suspicious.
 - #939414: Rename "data-alter callbacks" to "data alterations".
 - #939460: Views integration troubles.
 - #945754: Fix server and index machine name inputs.
