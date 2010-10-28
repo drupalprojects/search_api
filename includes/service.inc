@@ -151,8 +151,8 @@ interface SearchApiServiceInterface {
    * If the index wasn't added to the server, the method call should be ignored.
    *
    * @param $index
-   *   Either an object representing the index to remove, or its id (if the
-   *   index was completely deleted).
+   *   Either an object representing the index to remove, or its machine name
+   *   (if the index was completely deleted).
    */
   public function removeIndex($index);
 
@@ -249,6 +249,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   protected $server;
 
   /**
+   * Direct reference to the server's $options property.
+   *
    * @var array
    */
   protected $options = array();
@@ -311,7 +313,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
     if (!empty($this->options)) {
       $values += $this->options;
     }
-    $this->options = $values + $this->options;
+    $this->options = $values;
   }
 
   /**
@@ -409,11 +411,10 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * Notifies this server that it is about to be deleted from the database and
    * should therefore clean up, if appropriate.
    *
-   *
    * By default, deletes all indexes from this server.
    */
   public function preDelete() {
-    $indexes = search_api_list_indexes(array('server' => $this->server->id));
+    $indexes = entity_load('search_api_index', FALSE, array('server' => $this->server->machine_name));
     foreach ($indexes as $index) {
       $this->removeIndex($index);
     }
@@ -458,8 +459,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * By default, removes all items from that index.
    *
    * @param $index
-   *   Either an object representing the index to remove, or its id (if the
-   *   index was completely deleted).
+   *   Either an object representing the index to remove, or its machine name
+   *   (if the index was completely deleted).
    */
   public function removeIndex($index) {
     $this->deleteItems('all', $index);

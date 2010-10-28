@@ -39,7 +39,7 @@ function search_api_views_search_api_index_delete(SearchApiIndex $index) {
  */
 function _search_api_views_index_unavailable(SearchApiIndex $index) {
   $names = array();
-  $table = 'search_api_index_' . $index->id;
+  $table = 'search_api_index_' . $index->machine_name;
   foreach (views_get_all_views() as $name => $view) {
     if (empty($view->disabled) && $view->base_table == $table) {
       $names[] = $name;

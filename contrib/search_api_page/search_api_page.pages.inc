@@ -165,6 +165,9 @@ function theme_search_api_page_results(array $variables) {
   $entities = $variables['entities'];
   $keys = $variables['keys'];
 
+  $index->dataAlter($entities);
+  entity_prepare_view($index->entity_type, $entities);
+
   $output = '<p class="search-performance">' . format_plural($results['result count'],
       'The search found 1 result in @sec seconds.',
       'The search found @count results in @sec seconds.',
@@ -199,7 +202,6 @@ function theme_search_api_page_result(array $variables) {
   $index = $variables['index'];
   $id = $variables['result']['id'];
   $entity = $variables['entity'];
-  entity_prepare_view($index->entity_type, array($entity));
 
   $wrapper = entity_metadata_wrapper($index->entity_type, $entity);
 
@@ -219,7 +221,7 @@ function theme_search_api_page_result(array $variables) {
   }
 
   $output = '<h3>' . ($url ? l($name, $url['path'], $url['options']) : check_plain($name)) . "</h3>\n";
-  if ($text) {
+  if ($text && function_exists('text_summary')) {
     $output .= text_summary($text);
   }
 

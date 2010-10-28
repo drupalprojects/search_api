@@ -106,7 +106,7 @@ function search_api_facets_block_configure($delta = '') {
   $form['index_description'] = array(
     '#type' => 'item',
     '#title' => t('Search index'),
-    '#description' => l($index->name, 'admin/config/search/search_api/index/' . $index->id),
+    '#description' => l($index->name, 'admin/config/search/search_api/index/' . $index->machine_name),
   );
   $form['field_description'] = array(
     '#type' => 'item',
@@ -142,7 +142,7 @@ function search_api_facets_block_configure($delta = '') {
   );
 
   $search_ids = variable_get('search_api_facets_search_ids', array());
-  if (empty($search_ids[$index->id]) || count($search_ids[$index->id]) <= 1) {
+  if (empty($search_ids[$index->machine_name]) || count($search_ids[$index->machine_name]) <= 1) {
     $form['default_true'] = array(
       '#type' => 'value',
       '#value' => $options['default_true'],
@@ -165,8 +165,8 @@ function search_api_facets_block_configure($delta = '') {
     $form['ids_list'] = array(
       '#type' => 'select',
       '#title' => t('Search IDs'),
-      '#options' => $search_ids[$index->id],
-      '#size' => min(4, count($search_ids[$index->id])),
+      '#options' => $search_ids[$index->machine_name],
+      '#size' => min(4, count($search_ids[$index->machine_name])),
       '#multiple' => TRUE,
       '#default_value' => $options['ids_list'],
     );
@@ -225,7 +225,6 @@ function search_api_facets_block_view($delta = '') {
   }
   $search_id = $search_ids[$delta];
   list($query, $results) = search_api_current_search($search_id);
-  $index = $query->getIndex();
 
   $facet = search_api_facet_load($delta);
   $options = $facet->options;
@@ -328,7 +327,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
     return;
   }
   // Add facet fields to query.
-  $facets = search_api_facet_load(array('index_id' => $query->getIndex()->id, 'b.status' => 1));
+  $facets = search_api_facet_load(array('index_id' => $query->getIndex()->machine_name, 'b.status' => 1));
   $fields = array();
   // Save the active facets for later retrieval when generating blocks.
   $active = &drupal_static(__FUNCTION__, array());
@@ -336,9 +335,9 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
   foreach ($facets as $facet) {
     if (array_search($search_id, $facet->options['ids_list']) === FALSE) {
       $search_ids = variable_get('search_api_facets_search_ids', array());
-      if (empty($search_ids[$query->getIndex()->id][$search_id])) {
+      if (empty($search_ids[$query->getIndex()->machine_name][$search_id])) {
         // Remember this search ID.
-        $search_ids[$query->getIndex()->id][$search_id] = $search_id;
+        $search_ids[$query->getIndex()->machine_name][$search_id] = $search_id;
         variable_set('search_api_facets_search_ids', $search_ids);
       }
       if (!$facet->options['default_true']) {
@@ -401,7 +400,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
  * Implements hook_search_api_index_update().
  */
 function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
-  $id = $index->id;
+  $id = $index->machine_name;
   if ($op == 'enable') {
     if (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE index_id = :id', array(':id' => $id))->fetchField()) {
       drupal_set_message(t('There are saved facets for this index. ' .
@@ -439,7 +438,7 @@ function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 
  */
 function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
   db_delete('search_api_facet')
-    ->condition('index_id', $index->id)
+    ->condition('index_id', $index->machine_name)
     ->execute();
 }
 
@@ -531,8 +530,9 @@ function search_api_facet_save(stdClass $facet) {
     'type'         => '',
   );
   if (!empty($facet->delta) && empty($facet->is_new)) {
+    $enabled_changed = $facet->enabled != search_api_facet_load($facet->delta, TRUE)->enabled;
     drupal_write_record('search_api_facet', $facet, 'delta');
-    if ($facet->enabled != search_api_facet_load($facet->delta, TRUE)->enabled) {
+    if ($enabled_changed) {
       block_flush_caches();
     }
     return;
@@ -541,7 +541,7 @@ function search_api_facet_save(stdClass $facet) {
     // Construct a delta using index id and field.
     // We have to ensure that it's both unique and at most 32 characters long,
     // leading to a bit of complexity.
-    $delta = 'index' . $facet->index_id . '_' . preg_replace('/\W+/', '_', $facet->field);
+    $delta = substr($facet->index_id, 0, 20) . '_' . preg_replace('/\W+/', '_', $facet->field);
     $base = $delta = substr($delta, 0, 32);
     $i = 0;
     while (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetchField()) {

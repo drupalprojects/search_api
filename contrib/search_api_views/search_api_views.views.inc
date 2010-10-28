@@ -6,19 +6,19 @@
  */
 function search_api_views_views_data() {
   $data = array();
-  foreach (search_api_list_indexes() as $index) {
+  foreach (entity_load('search_api_index', FALSE) as $index) {
     // We need the complete indexed data.
     $array = array();
     $index->dataAlter($array);
 
     // Base data
-    $key = 'search_api_index_' . $index->id;
+    $key = 'search_api_index_' . $index->machine_name;
     $table = & $data[$key];
     $entity_info = entity_get_info($index->entity_type);
     $table['table']['group'] = $entity_info['label'];
     $table['table']['base'] = array(
       'field' => 'search_api_id',
-      'index' => $index->id,
+      'index' => $index->machine_name,
       'title' => $index->name,
       'help' => t('Use the %name search index for filtering and retrieving data.', array('%name' => $index->name)),
       'query class' => 'search_api_views_query',
@@ -69,7 +69,7 @@ function search_api_views_views_data() {
               $table[$key]['group'] = $prefix_name;
             }
             $table[$key]['title'] = $info['label'];
-            $table[$key]['help'] = empty($info['description']) ? '' : $info['description'];
+            $table[$key]['help'] = empty($info['description']) ? t('(No information available)') : $info['description'];
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
             if ($inner_type == 'options') {

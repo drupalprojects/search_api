@@ -139,7 +139,7 @@ function hook_search_api_processor_info() {
  */
 function hook_search_api_query_alter(SearchApiQueryInterface $query) {
   $info = entity_get_info($index->entity_type);
-  $query->addCondition($info['entity keys']['id'], 0, '!=');
+  $query->condition($info['entity keys']['id'], 0, '!=');
 }
 
 /**
@@ -152,7 +152,7 @@ function hook_search_api_server_load(array $servers) {
   foreach ($servers as $server) {
     db_insert('example_search_server_access')
       ->fields(array(
-        'server' => $server->id,
+        'server' => $server->machine_name,
         'access_time' => REQUEST_TIME,
       ))
       ->execute();
@@ -168,7 +168,7 @@ function hook_search_api_server_load(array $servers) {
 function hook_search_api_server_insert(SearchApiServer $server) {
   db_insert('example_search_server')
     ->fields(array(
-      'server' => $server->id,
+      'server' => $server->machine_name,
       'insert_time' => REQUEST_TIME,
     ))
     ->execute();
@@ -186,7 +186,7 @@ function hook_search_api_server_insert(SearchApiServer $server) {
 function hook_search_api_server_update(SearchApiServer $server, $op = 'edit') {
   db_insert('example_search_server_update')
     ->fields(array(
-      'server' => $server->id,
+      'server' => $server->machine_name,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();
@@ -201,12 +201,12 @@ function hook_search_api_server_update(SearchApiServer $server, $op = 'edit') {
 function hook_search_api_server_delete(SearchApiServer $server) {
   db_insert('example_search_server_update')
     ->fields(array(
-      'server' => $server->id,
+      'server' => $server->machine_name,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();
   db_delete('example_search_server')
-    ->condition('server', $server->id)
+    ->condition('server', $server->machine_name)
     ->execute();
 }
 
@@ -220,7 +220,7 @@ function hook_search_api_index_load(array $indexes) {
   foreach ($indexes as $index) {
     db_insert('example_search_index_access')
       ->fields(array(
-        'index' => $index->id,
+        'index' => $index->machine_name,
         'access_time' => REQUEST_TIME,
       ))
       ->execute();
@@ -236,7 +236,7 @@ function hook_search_api_index_load(array $indexes) {
 function hook_search_api_index_insert(SearchApiIndex $index) {
   db_insert('example_search_index')
     ->fields(array(
-      'index' => $index->id,
+      'index' => $index->machine_name,
       'insert_time' => REQUEST_TIME,
     ))
     ->execute();
@@ -257,7 +257,7 @@ function hook_search_api_index_insert(SearchApiIndex $index) {
 function hook_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
   db_insert('example_search_index_update')
     ->fields(array(
-      'index' => $index->id,
+      'index' => $index->machine_name,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();
@@ -272,12 +272,12 @@ function hook_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
 function hook_search_api_index_delete(SearchApiIndex $index) {
   db_insert('example_search_index_update')
     ->fields(array(
-      'index' => $index->id,
+      'index' => $index->machine_name,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();
   db_delete('example_search_index')
-    ->condition('index', $index->id)
+    ->condition('index', $index->machine_name)
     ->execute();
 }
 
@@ -317,7 +317,7 @@ function example_random_alter(SearchApiIndex $index, array &$items) {
   }
 
   return array(
-    'example-id-plus-rand' => array(
+    'example_id_plus_rand' => array(
       'label' => t('Useless field'),
       'description' => t('A really, really useless field, consisting of the entity ID and a random number.'),
       'type' => 'text',

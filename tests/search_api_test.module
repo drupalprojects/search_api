@@ -233,7 +233,7 @@ class SearchApiTestService extends SearchApiAbstractService {
 
   public function indexItems(SearchApiIndex $index, array $items) {
     // Refuse to index items with IDs that are multiples of 7 unless all items are indexed.
-    $count = db_query('SELECT COUNT(*) FROM {search_api_item} WHERE index_id = :index_id AND changed <> 0', array(':index_id' => $index->id))->fetchField();
+    $count = db_query('SELECT COUNT(*) FROM {search_api_item} WHERE index_id = :index_id AND changed <> 0', array(':index_id' => $index->machine_name))->fetchField();
     if ($count == count($items)) {
       return $this->index($index, array_keys($items));
     }
@@ -248,17 +248,17 @@ class SearchApiTestService extends SearchApiAbstractService {
 
   protected function index(SearchApiIndex $index, array $ids) {
     $this->options += array('indexes' => array());
-    $this->options['indexes'] += array($index->id => array());
-    $this->options['indexes'][$index->id] += drupal_map_assoc($ids);
-    sort($this->options['indexes'][$index->id]);
-    search_api_server_edit($this->id, array('options' => $this->options));
+    $this->options['indexes'] += array($index->machine_name => array());
+    $this->options['indexes'][$index->machine_name] += drupal_map_assoc($ids);
+    sort($this->options['indexes'][$index->machine_name]);
+    $this->server->save();
     return $ids;
   }
 
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     if ($ids == 'all') {
       if ($index) {
-        $this->options['indexes'][$index->id] = array();
+        $this->options['indexes'][$index->machine_name] = array();
       }
       else {
         $this->options['indexes'] = array();
@@ -266,16 +266,16 @@ class SearchApiTestService extends SearchApiAbstractService {
     }
     else {
       foreach ($ids as $id) {
-        unset($this->options['indexes'][$index->id][$id]);
+        unset($this->options['indexes'][$index->machine_name][$id]);
       }
     }
-    search_api_server_edit($this->id, array('options' => $this->options));
+    $this->server->save();
   }
 
   public function search(SearchApiQueryInterface $query) {
     $options = $query->getOptions();
     $ret = array();
-    $index_id = $query->getIndex()->id;
+    $index_id = $query->getIndex()->machine_name;
     if (empty($this->options['indexes'][$index_id])) {
       return array(
         'result count' => 0,

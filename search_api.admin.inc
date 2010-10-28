@@ -9,19 +9,16 @@ function search_api_admin_overview() {
   drupal_add_css($base_path . 'search_api.admin.css');
 
   $header = array(
-    // @todo Wait for http://drupal.org/node/109493
-//    array('data' => t('Status'), 'field' => 'enabled', 'descending' => TRUE, 'sort' => 'desc'),
-    array('data' => t('Status'), 'field' => 'enabled', 'sort' => 'desc'),
+    t('Status'),
     array('data' => t('Type'), 'colspan' => 2),
-    array('data' => t('Name'), 'field' => 'name'),
+    t('Name'),
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
-  $servers = search_api_list_servers(FALSE, $header);
-  $all_indexes = search_api_list_indexes(array('only_enabled' => FALSE), $header);
+  $servers = entity_load('search_api_server', FALSE);
   $indexes = array();
-  foreach ($all_indexes as $index) {
-    $indexes[$index->server][$index->id] = $index;
+  foreach (entity_load('search_api_index', FALSE) as $index) {
+    $indexes[$index->server][$index->machine_name] = $index;
   }
 
   $rows = array();
@@ -52,7 +49,7 @@ function search_api_admin_overview() {
   $edit = '/edit';
   $delete = '/delete';
   foreach ($servers as $server) {
-    $url = $pre . $server->id;
+    $url = $pre . $server->machine_name;
     $rows[] = array(
       $server->enabled ? $t_enabled : $t_disabled,
       $t_server,
@@ -61,9 +58,9 @@ function search_api_admin_overview() {
       l($t_edit, $url . $edit),
       l($t_delete, $url . $delete),
     );
-    if (!empty($indexes[$server->id])) {
-      foreach ($indexes[$server->id] as $index) {
-        $url = $pre_index . $index->id;
+    if (!empty($indexes[$server->machine_name])) {
+      foreach ($indexes[$server->machine_name] as $index) {
+        $url = $pre_index . $index->machine_name;
         $rows[] = array(
           $index->enabled ? $t_enabled : $t_disabled,
           '',
@@ -80,7 +77,7 @@ function search_api_admin_overview() {
   }
   if (!empty($indexes[''])) {
     foreach ($indexes[''] as $index) {
-      $url = $pre_index . $index->id;
+      $url = $pre_index . $index->machine_name;
       $link = l($index->name, $url);
       $rows[] = array(
         $t_disabled,
@@ -256,8 +253,8 @@ function search_api_admin_add_server_submit(array $form, array &$form_state) {
   unset($values['options']);
   $form_state['server']  = $server = new SearchApiServer($values);
   $server->configurationFormSubmit($form['options']['form'], $options, $form_state);
-  $id = search_api_server_insert((array) $server);
-  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $id;
+  $server->save();
+  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
   drupal_set_message(t('The server was successfully created.'));
 }
 
@@ -276,26 +273,22 @@ function search_api_admin_item_title($object) {
  * @param $action
  *   One of 'enable', 'disable', 'delete'; or NULL if the server is only viewed.
  */
-function search_api_admin_server_view(SearchApiServer $server = NULL, $action = NULL) {
-  if (empty($server)) {
-    return MENU_NOT_FOUND;
-  }
-
+function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
   if (!empty($action)) {
     if ($action == 'enable') {
-      if (search_api_server_enable($server->id)) {
+      if ($server->enable()) {
         drupal_set_message(t('The server was successfully enabled.'));
       }
       else {
         drupal_set_message(t('The server could not be enabled. Check the logs for details.'), 'error');
       }
-      drupal_goto('admin/config/search/search_api/server/' . $server->id);
+      drupal_goto('admin/config/search/search_api/server/' . $server->machine_name);
     }
     else {
       $ret = drupal_get_form('search_api_admin_confirm', 'server', $action, $server);
-    }
-    if ($ret) {
-      return $ret;
+      if ($ret) {
+        return $ret;
+      }
     }
   }
 
@@ -342,10 +335,10 @@ function theme_search_api_server(array $variables) {
   $output .= '<dt>' . t('Status') . '</dt>' . "\n";
   $output .= '<dd>';
   if ($enabled) {
-    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/server/' . $id . '/disable')));
+    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/server/' . $machine_name . '/disable')));
   }
   else {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/server/' . $id . '/enable')));
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/server/' . $machine_name . '/enable')));
   }
   $output .= '</dd>' . "\n";
 
@@ -444,8 +437,8 @@ function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   }
   $server->configurationFormSubmit($form['options']['form'], $values['options'], $form_state);
 
-  $ret = search_api_server_edit($server->id, $values);
-  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->id;
+  $ret = $server->update($values);
+  $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
   if ($ret) {
     drupal_set_message(t('The search server was successfully edited.'));
   }
@@ -505,16 +498,16 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_list_servers(FALSE);
+  $servers = entity_load('search_api_server', FALSE);
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {
-      $form['server']['#options'][$server->id] = $server->name;
+      $form['server']['#options'][$server->machine_name] = $server->name;
     }
   }
   foreach ($servers as $server) {
     if (!$server->enabled) {
-      $form['server']['#options'][$server->id] = $server->name . ' (' . t('disabled') . ')';
+      $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
   $form['cron_limit'] = array(
@@ -547,7 +540,7 @@ function search_api_admin_add_index_validate(array $form, array &$form_state) {
   $cron_limit = $form_state['values']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
-    form_set_error('cron_limit', t('The cron limit must be a number.'));
+    form_set_error('cron_limit', t('The cron limit must be an integer.'));
   }
 }
 
@@ -565,7 +558,7 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
   $id = search_api_index_insert($values);
 
   drupal_set_message(t('The index was successfully created. Please set up its workflow now.'));
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id . '/workflow';
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $values['machine_name'] . '/workflow';
 }
 
 /**
@@ -581,19 +574,19 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
 
   if (!empty($action)) {
     if ($action == 'enable') {
-      if (search_api_index_enable($index->id)) {
+      if ($index->enable()) {
         drupal_set_message(t('The index was successfully enabled.'));
       }
       else {
         drupal_set_message(t('The index could not be enabled. Check the logs for details.'), 'error');
       }
-      drupal_goto('admin/config/search/search_api/index/' . $index->id);
+      drupal_goto('admin/config/search/search_api/index/' . $index->machine_name);
     }
     else {
       $ret = drupal_get_form('search_api_admin_confirm', 'index', $action, $index);
-    }
-    if ($ret) {
-      return $ret;
+      if ($ret) {
+        return $ret;
+      }
     }
   }
 
@@ -642,10 +635,10 @@ function theme_search_api_index(array $variables) {
   $output .= '<dt>' . t('Status') . '</dt>' . "\n";
   $output .= '<dd>';
   if ($enabled) {
-    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $id . '/disable')));
+    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $machine_name . '/disable')));
   }
   elseif ($server && $server->enabled) {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $id . '/enable')));
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $machine_name . '/enable')));
   }
   else {
     $output .= t('disabled');
@@ -667,7 +660,7 @@ function theme_search_api_index(array $variables) {
 
   if (!empty($server)) {
     $output .= '<dt>' . t('Server') . '</dt>' . "\n";
-    $output .= '<dd>' . l($server->name, 'admin/config/search/search_api/server/' . $server->id);
+    $output .= '<dd>' . l($server->name, 'admin/config/search/search_api/server/' . $server->machine_name);
     if (!empty($server->description)) {
       $output .= '<p class="description">' . nl2br(check_plain($server->description)) . '</p>';
     }
@@ -726,10 +719,7 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
   $server = $index->server();
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
-  $form['id'] = array(
-    '#type' => 'value',
-    '#value' => $index->id,
-  );
+  $form_state['index'] = $index;
 
   $form['status_message'] = array(
     '#type' => 'item',
@@ -842,9 +832,8 @@ function search_api_admin_index_status_form_validate(array $form, array &$form_s
 function search_api_admin_index_status_form_submit(array $form, array &$form_state) {
   $redirect = &$form_state['redirect'];
   $values = $form_state['values'];
-  $id = $values['id'];
-  $base = 'admin/config/search/search_api';
-  $pre = $base . '/index/' . $id;
+  $index = $form_state['index'];
+  $pre = 'admin/config/search/search_api/index/' . $index->machine_name;
   switch ($values['op']) {
     case t('Enable'):
       $redirect = $pre . '/enable';
@@ -853,30 +842,30 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       $redirect = $pre . '/disable';
       break;
     case t('Index now'):
-      $index = search_api_index_load($id);
-      if ($index) {
-        $limit = $values['limit'];
-        // @todo Batch API?
+      $limit = $values['limit'];
+      // @todo Batch API?
+      try {
         $ret = search_api_index_items($index, $limit);
-        if ($ret) {
-          drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
-          if (($limit > 0 && $ret < min(array($limit, $values['remaining'])))
-              || ($limit < 0 && $ret < $values['remaining'])) {
-            drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
-          }
+      }
+      catch (SearchApiException $e) {
+        $ret = FALSE;
+        watchdog('search_api', t('An error occurred while trying to index items on index !name: !message',
+            array('!name' => $index->machine_name, '!message' => $e->getMessage())), NULL, WATCHDOG_ERROR);
+      }
+      if ($ret) {
+        drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
+        if (($limit > 0 && $ret < min(array($limit, $values['remaining'])))
+            || ($limit < 0 && $ret < $values['remaining'])) {
+          drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
         }
-        else {
-          drupal_set_message(t("Couldn't index items. Check the logs for details."), 'error');
-        }
-        $redirect = $pre . '/status';
       }
       else {
-        drupal_set_message(t('This index does not exist.'), 'warning');
-        $redirect = $base;
+        drupal_set_message(t("Couldn't index items. Check the logs for details."), 'error');
       }
+      $redirect = $pre . '/status';
       break;
     case t('Re-index content'):
-      if (search_api_index_reindex($id)) {
+      if ($index->reindex()) {
         drupal_set_message(t('The index was successfully scheduled for re-indexing.'));
       }
       else {
@@ -885,7 +874,7 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       $redirect = $pre . '/status';
       break;
     case t('Clear index'):
-      if (search_api_index_clear($id)) {
+      if ($index->clear()) {
         drupal_set_message(t('The index was successfully cleared.'));
       }
       else {
@@ -906,6 +895,8 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
  *   The index to edit.
  */
 function search_api_admin_index_edit(array $form, array &$form_state, SearchApiIndex $index) {
+  $form_state['index'] = $index;
+
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form['name'] = array(
     '#type' => 'textfield',
@@ -926,16 +917,16 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => $index->server,
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_list_servers(FALSE);
+  $servers = entity_load('search_api_server', FALSE);
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {
-      $form['server']['#options'][$server->id] = $server->name;
+      $form['server']['#options'][$server->machine_name] = $server->name;
     }
   }
   foreach ($servers as $server) {
     if (!$server->enabled) {
-      $form['server']['#options'][$server->id] =  t('@server_name (disabled)', array('@server_name' => $server->name));
+      $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
   $form['cron_limit'] = array(
@@ -946,11 +937,6 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => isset($index->options['cron_limit']) ? $index->options['cron_limit'] : SEARCH_API_DEFAULT_CRON_LIMIT,
     '#size' => 4,
     '#attributes' => array('class' => array('search-api-cron-limit')),
-  );
-
-  $form['id'] = array(
-    '#type' => 'value',
-    '#value' => $index->id,
   );
 
   $form['submit'] = array(
@@ -979,14 +965,13 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
-  $index = search_api_index_load($values['id']);
+  $index = $form_state['index'];
   $values['options'] = $index->options;
   $values['options']['cron_limit'] = $values['cron_limit'];
   unset($values['cron_limit']);
-  unset($values['id']);
 
-  $ret = search_api_index_edit($index->id, $values);
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+  $ret = $index->update($values);
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
   if ($ret) {
     drupal_set_message(t('The search index was successfully edited.'));
   }
@@ -1008,6 +993,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   $processor_info = search_api_get_processors();
   $options = empty($index->options) ? array() : $index->options;
 
+  $form_state['index'] = $index;
   $form['#tree'] = TRUE;
   $form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
 
@@ -1159,7 +1145,6 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
     }
   }
 
-  $form['id'] = array('#type' => 'value', '#value' => $index->id);
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
@@ -1200,9 +1185,10 @@ function theme_search_api_admin_item_order(array $variables) {
 function search_api_admin_index_workflow_submit(array $form, array &$form_state) {
   $values = $form_state['values'];
   unset($values['processors']['settings']);
-  $index = search_api_index_load($values['id']);
+  $index = $form_state['index'];
 
   $options = empty($index->options) ? array() : $index->options;
+  $fields_set = !empty($options['fields']);
 
   // Set default indexed status for newly added fields.
   foreach ($values['callbacks'] as $func => $callback) {
@@ -1213,11 +1199,16 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
       }
       $items = array();
       $properties = $func($index, $items);
+      $types = search_api_field_types();
       if ($properties) {
         foreach ($properties as $key => $field) {
           $type = $field['type'];
           $inner = search_api_extract_inner_type($type);
-          if ($inner == 'token' || !empty($field['options list'])) {
+          if ($inner != 'token' && empty($types[$inner])) {
+            // Someone apparently added a structure or entity as a property in a data-alter callback.
+            continue;
+          }
+          if ($inner == 'token' || (search_api_is_text_type($inner) && !empty($field['options list']))) {
             $old = $type;
             $type = 'string';
             while (search_api_is_list_type($old)) {
@@ -1243,9 +1234,9 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   uasort($options['data_alter_callbacks'], 'search_api_admin_element_compare');
   uasort($options['processors'], 'search_api_admin_element_compare');
 
-  $ret = search_api_index_edit($index->id, array('options' => $options));
+  $ret = $index->update(array('options' => $options));
   if ($ret) {
-    search_api_index_reindex($index->id);
+    $index->reindex();
     drupal_set_message(t("The search index' workflow was successfully edited. " .
         'All content was scheduled for re-indexing so the new settings can take effect.'));
   }
@@ -1253,12 +1244,12 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     drupal_set_message(t('No values were changed.'));
   }
 
-  if (empty($options['fields'])) {
+  if (!$fields_set) {
     drupal_set_message(t('Please set the fields that should be indexed.'));
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id . '/fields';
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
   }
   else {
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->id;
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
   }
 }
 
@@ -1298,6 +1289,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   }
   $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
+  $form_state['index'] = $index;
   $form['#theme'] = 'search_api_admin_fields_table';
   $form['#tree'] = TRUE;
   $form['description'] = array(
@@ -1348,11 +1340,6 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       $form['fields'][$key]['indexed']['#disabled'] = TRUE;
     }
   }
-
-  $form['id'] = array(
-    '#type' => 'value',
-    '#value' => $index->id,
-  );
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -1523,15 +1510,17 @@ function theme_search_api_admin_fields_table($variables) {
  * Submit function for search_api_admin_index_fields.
  */
 function search_api_admin_index_fields_submit(array $form, array &$form_state) {
-  $id = $form_state['values']['id'];
+  $index = $form_state['index'];
+  $options = isset($index->options) ? $index->options : array();
   if ($form_state['values']['op'] == t('Save changes')) {
     $fields = $form_state['values']['fields'];
     foreach ($fields as $name => &$field) {
       unset($field['description']);
     }
-    $ret = search_api_index_edit_fields($id, $fields);
+    $options['fields'] = $fields;
+    $ret = $index->update(array('options' => $options));
 
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id;
+    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
     if ($ret) {
       drupal_set_message(t('The indexed fields were successfully changed. ' .
           'The index was cleared and will have to be re-indexed with the new settings.'));
@@ -1542,9 +1531,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     return;
   }
   // Adding a related entity's fields
-  $index = search_api_index_load($id);
-
-  $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type);
+  $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
 
@@ -1560,8 +1547,8 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     return;
   }
 
-  if (!empty($index->options['fields'])) {
-    $fields = $index->options['fields'];
+  if (!empty($options['fields'])) {
+    $fields = $options['fields'];
   }
   else {
     $fields = _search_api_admin_get_fields($index, $orig_wrapper);
@@ -1576,8 +1563,8 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
       $fields[$key] = array('type' => $info['type'], 'boost' => '1.0', 'indexed' => 0);
     }
   }
-  $index->options['fields'] = $fields;
-  $ret = search_api_index_edit($id, array('options' => $index->options));
+  $options['fields'] = $fields;
+  $ret = $index->update(array('options' => $options));
 
   if ($ret) {
     drupal_set_message(t('The available fields were successfully changed.'));
@@ -1585,7 +1572,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   else {
     drupal_set_message(t('No values were changed.'));
   }
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $id . '/fields';
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
 }
 
 
@@ -1660,7 +1647,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
     ),
     'id' => array(
       '#type' => 'value',
-      '#value' => $info->id,
+      '#value' => $info->machine_name,
     ),
     'message' => array(
       '#type' => 'value',
@@ -1668,7 +1655,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
     ),
   );
   $desc = "<h3>{$text[1]}</h3><p>{$text[2]}</p>";
-  return confirm_form($form, $text[0], "admin/config/search/search_api/$type/{$info->id}", $desc);
+  return confirm_form($form, $text[0], "admin/config/search/search_api/$type/{$info->machine_name}", $desc);
 }
 
 /**

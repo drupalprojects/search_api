@@ -158,7 +158,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function removeIndex($index) {
-    $id = is_object($index) ? $index->id : $index;
+    $id = is_object($index) ? $index->machine_name : $index;
     try {
       $this->connect();
       $this->solr->deleteByQuery("index_id:" . $id);
@@ -171,7 +171,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function indexItems(SearchApiIndex $index, array $items) {
     $documents = array();
     $ret = array();
-    $index_id = $index->id;
+    $index_id = $index->machine_name;
     $fields = $this->getFieldNames($index);
 
     foreach ($items as $id => $item) {
@@ -192,7 +192,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
         $ret[] = $id;
       }
       catch (Exception $e) {
-        watchdog('search_api_solr', t('An error occurred while indexing: !msg.', array('!msg' => $e->getMessage())));
+        watchdog('search_api_solr', t('An error occurred while indexing !type with ID !id: !msg.', array('!type' => $index->entity_type, '!id' => $id, '!msg' => $e->getMessage())), NULL, WATCHDOG_WARNING);
       }
     }
 
@@ -210,7 +210,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
           array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
     }
     catch (Exception $e) {
-      watchdog('search_api_solr', t('An error occurred while indexing: !msg.', array('!msg' => $e->getMessage())));
+      watchdog('search_api_solr', t('An error occurred while indexing: !msg.', array('!msg' => $e->getMessage())), NULL, WATCHDOG_ERROR);
     }
     return array();
   }
@@ -302,7 +302,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     $this->connect();
     if ($index) {
-      $index_id = $index->id;
+      $index_id = $index->machine_name;
       if (is_array($ids)) {
         $solr_ids = array();
         foreach ($ids as $id) {
@@ -346,7 +346,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     // Extract filters
     $filter = $query->getFilter();
     $fq = $this->createFilterQueries($filter, $fields, $index->options['fields']);
-    $fq[] = 'index_id:' . $index->id;
+    $fq[] = 'index_id:' . $index->machine_name;
 
     // Extract sort
     $sort = array();
@@ -426,7 +426,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
               }
             }
             foreach ($terms as $term => $count) {
-              if ($count > $min_count) {
+              if ($count >= $min_count) {
                 $term = $term == '_empty_' ? '!' : '"' . $term . '"';
                 $results['search_api_facets'][$delta][] = array(
                   'filter' => $term,

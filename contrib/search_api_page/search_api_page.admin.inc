@@ -36,7 +36,7 @@ function search_api_page_admin_overview() {
   $edit = '/edit';
   $delete = '/delete';
 
-  $indexes = search_api_list_indexes();
+  $indexes = entity_load('search_api_index', FALSE);
   foreach (entity_load('search_api_page', FALSE) as $page) {
     $url = $pre . $page->id;
     $index = $indexes[$page->index_id];
@@ -44,7 +44,7 @@ function search_api_page_admin_overview() {
       $page->enabled ? $t_enabled : $t_disabled,
       l($page->name, $page->path),
       l($page->path, $page->path),
-      l($index->name, $pre_index . $index->id),
+      l($index->name, $pre_index . $index->machine_name),
       l($t_edit, $url . $edit),
     );
   }
@@ -63,7 +63,7 @@ function search_api_page_admin_overview() {
 function search_api_page_admin_add(array $form, array &$form_state) {
   $form = array();
   if (empty($form_state['step_one'])) {
-    $indexes = search_api_list_indexes();
+    $indexes = entity_load('search_api_index', FALSE);
     if (!$indexes) {
       drupal_set_message(t('There are no searches indexes which can be searched. Please <a href="@url">create an index</a> first.', array('@url' => url('admin/config/search/search_api/add_index'))), 'warning');
       return array();
@@ -71,12 +71,12 @@ function search_api_page_admin_add(array $form, array &$form_state) {
     $index_options = array();
     foreach ($indexes as $index) {
       if ($index->enabled) {
-        $index_options[$index->id] = $index->name;
+        $index_options[$index->machine_name] = $index->name;
       }
     }
     foreach ($indexes as $index) {
       if (!$index->enabled) {
-        $index_options[$index->id] = $index->name . ' (' . t('disabled') . ')';
+        $index_options[$index->machine_name] = $index->name . ' (' . t('disabled') . ')';
       }
     }
 
@@ -141,13 +141,13 @@ function search_api_page_admin_add(array $form, array &$form_state) {
     '#default_value' => 'terms',
   );
 
+  $fields = array();
   if (!empty($index->options['fields'])) {
-    $fields = array();
-    foreach ($index->getFulltextFields() as $name) {
+    foreach ($index->getFulltextFields(TRUE) as $name) {
       $fields[$name] = $index->options['fields'][$name]['name'];
     }
   }
-  if (!empty($fields)) {
+  if (count($fields) > 1) {
     $form['fields'] = array(
       '#type' => 'select',
       '#title' => t('Searched fields'),
@@ -214,7 +214,7 @@ function search_api_page_admin_add_submit(array $form, array &$form_state) {
  */
 function search_api_page_admin_edit(array $form, array &$form_state, stdClass $page) {
   $index = search_api_index_load($page->index_id);
-  $form = array();
+  $form_state['page'] = $page;
 
   $form['name'] = array(
     '#type' => 'textfield',
@@ -238,7 +238,7 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
   $form['index'] = array(
     '#type' => 'item',
     '#title' => t('Index'),
-    '#description' => l($index->name, 'admin/config/search/search_api/index/' . $index->id),
+    '#description' => l($index->name, 'admin/config/search/search_api/index/' . $index->machine_name),
   );
   $form['path'] = array(
     '#type' => 'textfield',
@@ -280,13 +280,13 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
     '#default_value' => $page->options['mode'],
   );
 
+  $fields = array();
   if (!empty($index->options['fields'])) {
-    $fields = array();
-    foreach ($index->getFulltextFields() as $name) {
+    foreach ($index->getFulltextFields(TRUE) as $name) {
       $fields[$name] = $index->options['fields'][$name]['name'];
     }
   }
-  if (!empty($fields)) {
+  if (count($fields) > 1) {
     $form['options']['fields'] = array(
       '#type' => 'select',
       '#title' => t('Searched fields'),
@@ -312,17 +312,12 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
     '#default_value' => $page->options['per_page'],
   );
 
-  $form['id'] = array(
-    '#type' => 'value',
-    '#value' => $page->id,
-  );
-
-  $form['submit'] = array(
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save changes'),
   );
-
-  $form['delete'] = array(
+  $form['actions']['delete'] = array(
     '#type' => 'fieldset',
     '#title' => t('Delete search page'),
     '#description' => t('This will delete the search page along with all of its settings.'),
@@ -344,8 +339,8 @@ function search_api_page_admin_edit_validate(array $form, array &$form_state) {
   if ($form_state['values']['op'] == t('Save changes')) {
     $form_state['values']['path'] = drupal_strtolower(trim($form_state['values']['path']));
     $pages = entity_load('search_api_page', FALSE, array('path' => $form_state['values']['path']));
-    if (count($pages) > 1 || (($page = array_shift($pages)) && $page->id != $form_state['values']['id'])) {
-      form_set_error('options][path', t('The entered path is already in use. Please enter a unique path.'));
+    if (count($pages) > 1 || (($page = array_shift($pages)) && $page->id != $form_state['page']->id)) {
+      form_set_error('path', t('The entered path is already in use. Please enter a unique path.'));
     }
   }
 }
@@ -356,16 +351,13 @@ function search_api_page_admin_edit_validate(array $form, array &$form_state) {
 function search_api_page_admin_edit_submit(array $form, array &$form_state) {
   $op = $form_state['values']['op'];
   form_state_values_clean($form_state);
-  $values = $form_state['values'];
-  $id = $values['id'];
-  unset($values['id']);
+  $form_state['redirect'] = 'admin/config/search/search_api/page';
+
   if ($op == t('Delete search page')) {
-    search_api_page_delete($id);
+    search_api_page_delete($form_state['page']->id);
     drupal_set_message(t('The search page was successfully deleted.'));
-    $form_state['redirect'] = 'admin/config/search/search_api/page';
     return;
   }
-  search_api_page_edit($id, $values);
+  search_api_page_edit($form_state['page']->id, $form_state['values']);
   drupal_set_message(t('The changes were successfully saved.'));
-  $form_state['redirect'] = 'admin/config/search/search_api/page';
 }

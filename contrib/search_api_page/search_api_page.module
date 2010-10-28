@@ -37,7 +37,7 @@ function search_api_page_menu() {
     foreach (entity_load('search_api_page', FALSE, array('enabled' => 1), TRUE) as $page) {
       $items[$page->path] = array(
         'title' => $page->name,
-        'description' => $page->description ? $page->description : $page->name,
+        'description' => $page->description ? $page->description : '',
         'page callback' => 'search_api_page_view',
         'page arguments' => array((string) $page->id),
         'access arguments' => array('access search_api_page'),
@@ -50,21 +50,20 @@ function search_api_page_menu() {
   return $items;
 }
 
-/**
- * Implements hook_block_info().
- */
-function search_api_page_block_info() {
-  // @todo Implement.
-  return array();
-}
-
-/**
- * Implements hook_block_view().
- */
-function search_api_page_block_view() {
-  // @todo Implement.
-  return array();
-}
+// @todo Implement a search block like provided by the search module.
+///**
+// * Implements hook_block_info().
+// */
+//function search_api_page_block_info() {
+//  return array();
+//}
+//
+///**
+// * Implements hook_block_view().
+// */
+//function search_api_page_block_view() {
+//  return array();
+//}
 
 /**
  * Implements hook_theme().
@@ -132,7 +131,7 @@ function search_api_page_entity_property_info() {
     ),
     'index_id' => array(
       'label' => t('Index ID'),
-      'type' => 'integer',
+      'type' => 'token',
       'description' => t('The ID of the index this search page uses.'),
     ),
     'index' => array(
@@ -168,7 +167,7 @@ function search_api_page_entity_property_info() {
  */
 function search_api_page_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
   if ($op == 'disable') {
-    foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->id, 'enabled' => 1)) as $page) {
+    foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
       search_api_page_edit($page->id, array('enabled' => 0));
     }
   }
@@ -178,7 +177,7 @@ function search_api_page_search_api_index_update(SearchApiIndex $index, $op = 'e
  * Implements hook_search_api_index_delete().
  */
 function search_api_page_search_api_index_delete(SearchApiIndex $index) {
-  foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->id, 'enabled' => 1)) as $page) {
+  foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
     search_api_page_delete($page->id);
   }
 }
@@ -206,7 +205,7 @@ function search_api_page_get_index(stdClass $page) {
 function search_api_page_load($id, $reset = FALSE) {
   $ret = entity_load('search_api_page', array($id), array(), $reset);
   if (!$ret) {
-    return NULL;
+    return FALSE;
   }
   $ret = array_shift($ret);
   if (is_string($ret->options)) {

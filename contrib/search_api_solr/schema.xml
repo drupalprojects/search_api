@@ -307,14 +307,14 @@
 <!--
      The document IDs.
      - item_id contains the entity ID, e.g. a node's nid.
-     - index_id is the ID of the search index this entry belongs to.
+     - index_id is the machine name of the search index this entry belongs to.
      - id is a combination of the two, for uniquely identifying a document.
        The format used is "$index_id-$item_id".
 -->
 
    <field name="id"       type="string" indexed="true" stored="true" required="true" />
    <field name="item_id"  type="long"   indexed="true" stored="true" required="true" />
-   <field name="index_id" type="long"   indexed="true" stored="true" required="true" />
+   <field name="index_id" type="string" indexed="true" stored="true" required="true" />
 
    <!-- Since sorting by ID is explicitly allowed, store item_id also in a sortable way. -->
    <copyField source="item_id" dest="is_search_api_id" />

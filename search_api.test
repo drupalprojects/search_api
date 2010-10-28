@@ -113,8 +113,10 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Entity type'))));
 
+    $this->index_id = $id = 'test_index';
     $values = array(
       'name' => 'Search API test index',
+      'machine_name' => $id,
       'entity_type' => 'search_api_test',
       'enabled' => 1,
       'description' => 'An index used for testing.',
@@ -124,9 +126,8 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->drupalPost(NULL, $values, t('Create index'));
 
     $this->assertText(t('The index was successfully created. Please set up its workflow now.'), t('The index was successfully created.'));
-    $found = preg_match('#admin/config/search/search_api/index/(\d+)#', $this->getUrl(), $m);
+    $found = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
-    $this->index_id = $id = $m[1];
     $index = search_api_index_load($id, TRUE);
     $this->assertEqual($index->name, $values['name'], t('Name correctly inserted.'));
     $this->assertEqual($index->entity_type, $values['entity_type'], t('Index entity type correctly inserted.'));
@@ -218,8 +219,10 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Service class'))));
 
+    $this->server_id = $id = 'test_server';
     $values = array(
       'name' => 'Search API test server',
+      'machine_name' => $id,
       'enabled' => 1,
       'description' => 'A server used for testing.',
       'class' => 'search_api_test_service',
@@ -232,9 +235,8 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->drupalPost(NULL, $values2, t('Create server'));
 
     $this->assertText(t('The server was successfully created.'));
-    $found = preg_match('#admin/config/search/search_api/server/(\d+)#', $this->getUrl(), $m);
+    $found = strpos($this->getUrl(), 'admin/config/search/search_api/server/' . $id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
-    $this->server_id = $id = $m[1];
     $server = search_api_server_load($id, TRUE);
     $this->assertEqual($server->name, $values['name'], t('Name correctly inserted.'));
     $this->assertTrue($server->enabled, t('Status correctly inserted.'));

@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- #939482 by fago: Fix exportables.
 - #939092: Several API changes regarding service class methods.
 - #939414: Enhanced service class descriptions. [soft API change]
 - #939464: Documented Entity API's module and status properties.
@@ -10,6 +11,7 @@ API changes:
 - #936360: Make servers and indexes exportable.
 
 Others:
+- #951830: "List of language IDs" context suspicious
 - #939414: Rename "data-alter callbacks" to "data alterations".
 - #939460: Views integration troubles.
 - #945754: Fix server and index machine name inputs.

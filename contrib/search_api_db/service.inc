@@ -81,56 +81,54 @@ class SearchApiDbService extends SearchApiAbstractService {
   public function addIndex(SearchApiIndex $index) {
     $this->options += array('indexes' => array());
     $indexes = &$this->options['indexes'];
-    if (isset($indexes[$index->id])) {
+    if (isset($indexes[$index->machine_name])) {
       // Easiest and safest method to ensure all of the index' data is properly re-added.
       $this->removeIndex($index);
     }
     if (empty($index->options['fields']) || !is_array($index->options['fields'])) {
       // No fields, no work.
-      $indexes[$index->id] = array();
-      search_api_server_edit($this->server->id, array('options' => $this->options));
+      $indexes[$index->machine_name] = array();
+      $this->server->save();
       return $this;
     }
 
-    $prefix = 'search_api_db_' . $this->server->id . '_' . $index->id . '_';
-    $indexes[$index->id] = array();
+    $prefix = 'search_api_db_' . $index->machine_name. '_';
+    $indexes[$index->machine_name] = array();
     foreach ($index->options['fields'] as $name => $field) {
       if (empty($field['indexed'])) {
         continue;
       }
       $table = $this->findFreeTable($prefix, $name);
       $this->createFieldTable($field, $table);
-      $indexes[$index->id][$name]['table'] = $table;
-      $indexes[$index->id][$name]['type']  = $field['type'];
-      $indexes[$index->id][$name]['boost'] = $field['boost'];
+      $indexes[$index->machine_name][$name]['table'] = $table;
+      $indexes[$index->machine_name][$name]['type']  = $field['type'];
+      $indexes[$index->machine_name][$name]['boost'] = $field['boost'];
     }
 
-    search_api_server_edit($this->server->id, array('options' => $this->options));
+    $this->server->save();
   }
 
   /**
-   * Helper method for finding table names for fields.
+   * Helper method for finding free table names for fields.
+   *
+   * MySQL 5.0 imposes a 64 characters length limit for table names, PostgreSQL
+   * 8.3 only allows 63 characters. Therefore, always return a name at most 63
+   * characters long.
    */
   protected function findFreeTable($prefix, $name) {
-    $subst = '';
-    do {
-      $subst .= '_';
-      $ret = $prefix . preg_replace('/[^a-z0-9_]/i', $subst, $name);
-      if (strlen($subst) > 10) {
-        throw new SearchApiException(t('Possible infinite loop detected because of existing table !table. The initial cause might be stale data due to an unsuccessful update. Please remove the corresponding index from the server and afterwards add it again.', array('!table' => $prefix . preg_replace('/[^a-z0-9_]/i', '_', $name))));
-      }
-    } while (db_table_exists($ret));
-    return $ret;
+    $base = $table = drupal_substr($prefix . drupal_strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, 63);
+    $i = 0;
+    while (db_table_exists($table)) {
+      $suffix = '_' . ++$i;
+      $table = drupal_substr($base, 0, 63 - drupal_strlen($suffix)) . $suffix;
+    }
+    return $table;
   }
 
   /**
    * Helper method for creating the table for a field.
    */
   protected function createFieldTable($field, $name) {
-    $type = $field['type'];
-    if ($list = search_api_is_list_type($type)) {
-      $type = search_api_extract_inner_type($type);
-    }
     $table = array(
       'name' => $name,
       'module' => 'search_api_db',
@@ -143,6 +141,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         ),
       ),
     );
+    $type = search_api_extract_inner_type($field['type']);
     if ($type == 'text') {
       $table['fields']['word'] = array(
         'description' => 'The text of the indexed token.',
@@ -161,7 +160,8 @@ class SearchApiDbService extends SearchApiAbstractService {
     else {
       $table['fields']['value'] = $this->sqlType($type);
       $table['fields']['value'] += array('description' => "The field's value for this item.");
-      if ($list) {
+      if ($type != $field['type']) {
+        // This is a list type.
         $table['fields']['value']['not null'] = TRUE;
         $table['primary key'] = array('item_id', 'value');
       }
@@ -199,14 +199,13 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   public function fieldsUpdated(SearchApiIndex $index) {
-    $fields = &$this->options['indexes'][$index->id];
+    $fields = &$this->options['indexes'][$index->machine_name];
     $new_fields = $index->options['fields'];
     foreach ($new_fields as $name => $field) {
       if (empty($field['indexed'])) {
         unset($new_fields[$name]);
       }
     }
-    $new_fields = $new_fields;
 
     $reindex = FALSE;
     $cleared = FALSE;
@@ -219,7 +218,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       $old_type = $field['type'];
       $new_type = $new_fields[$name]['type'];
-      if ($field['type'] != $new_fields[$name]['type']) {
+      if ($old_type != $new_type) {
         if ($old_type == 'text' || $new_type == 'text') {
           // A change in fulltext status necessitates completely clearing the index.
           $reindex = TRUE;
@@ -240,7 +239,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           $reindex = TRUE;
         }
       }
-      if (!$reindex && $new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
+      elseif (!$reindex && $new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
         $multiplier = $new_fields[$name]['boost'] / $field['boost'];
         db_update($field['table'], $this->query_options)
           ->expression('score', 'score * :mult', array(':mult' => $multiplier))
@@ -248,7 +247,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       unset($new_fields[$name]);
     }
-    $prefix = 'search_api_db_' . $this->server->id . '_' . $index->id . '_';
+    $prefix = 'search_api_db_' . $index->machine_name. '_';
     // These are new fields that were previously not indexed.
     foreach ($new_fields as $name => $field) {
       $reindex = TRUE;
@@ -262,12 +261,12 @@ class SearchApiDbService extends SearchApiAbstractService {
       $this->resetDb();
     }
 
-    search_api_server_edit($this->server->id, array('options' => $this->options));
+    $this->server->save();
     return $reindex;
   }
 
   public function removeIndex($index) {
-    $id = is_object($index) ? $index->id : $index;
+    $id = is_object($index) ? $index->machine_name : $index;
     if (!isset($this->options['indexes'][$id])) {
       return;
     }
@@ -279,12 +278,12 @@ class SearchApiDbService extends SearchApiAbstractService {
       $this->resetDb();
     }
     unset($this->options['indexes'][$id]);
-    search_api_server_edit($this->server->id, array('options' => $this->options));
+    $this->server->save();
   }
 
   public function indexItems(SearchApiIndex $index, array $items) {
-    if (empty($this->options['indexes'][$index->id])) {
-      throw new SearchApiException(t('No field settings for index with id !id.', array('!id' => $index->id)));
+    if (empty($this->options['indexes'][$index->machine_name])) {
+      throw new SearchApiException(t('No field settings for index with id !id.', array('!id' => $index->machine_name)));
     }
     $indexed = array();
     $set = $this->setDb();
@@ -306,7 +305,7 @@ class SearchApiDbService extends SearchApiAbstractService {
   }
 
   protected function indexItem(SearchApiIndex $index, $id, array $item) {
-    $fields = $this->options['indexes'][$index->id];
+    $fields = $this->options['indexes'][$index->machine_name];
     $txn = db_transaction('search_api_indexing', $this->query_options);
     try {
       foreach ($item as $name => $field) {
@@ -470,11 +469,11 @@ class SearchApiDbService extends SearchApiAbstractService {
       return;
     }
 
-    if (empty($this->options['indexes'][$index->id])) {
+    if (empty($this->options['indexes'][$index->machine_name])) {
       return;
     }
     $set = $this->setDb();
-    foreach ($this->options['indexes'][$index->id] as $field) {
+    foreach ($this->options['indexes'][$index->machine_name] as $field) {
       if (is_array($ids)) {
         db_delete($field['table'], $this->query_options)
           ->condition('item_id', $ids, 'IN')
@@ -493,10 +492,10 @@ class SearchApiDbService extends SearchApiAbstractService {
     $time_method_called = microtime(TRUE);
     $set = $this->setDb();
     $index = $query->getIndex();
-    if (empty($this->options['indexes'][$index->id])) {
-      throw new SearchApiException(t('Unknown index !id.', array('!id' => $index->id)));
+    if (empty($this->options['indexes'][$index->machine_name])) {
+      throw new SearchApiException(t('Unknown index !id.', array('!id' => $index->machine_name)));
     }
-    $fields = $this->options['indexes'][$index->id];
+    $fields = $this->options['indexes'][$index->machine_name];
 
     $keys = &$query->getKeys();
     $keys_set = (boolean) $keys;

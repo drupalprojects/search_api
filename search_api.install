@@ -92,9 +92,9 @@ function search_api_schema() {
         'not null' => FALSE,
       ),
       'server' => array(
-        'description' => 'The {search_api_server}.id with which data should be indexed.',
-        'type' => 'int',
-        'unsigned' => TRUE,
+        'description' => 'The {search_api_server}.machine_name with which data should be indexed.',
+        'type' => 'varchar',
+        'length' => 50,
         'not null' => FALSE,
       ),
       'entity_type' => array(
@@ -138,9 +138,9 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'index_id' => array(
-        'description' => 'The {search_api_index}.id this item belongs to.',
-        'type' => 'int',
-        'unsigned' => TRUE,
+        'description' => 'The {search_api_index}.machine_name this item belongs to.',
+        'type' => 'varchar',
+        'length' => 50,
         'not null' => TRUE,
       ),
       'changed' => array(
@@ -169,7 +169,7 @@ function search_api_install() {
   $name = t('Default node index');
   $values = array(
     'name' => $name,
-    'machine_name' => preg_replace('/\W+/', '_', $name),
+    'machine_name' => drupal_strtolower(preg_replace('/[^a-z0-9]+/i', '_', $name)),
     'description' => t('An automatically created search index for indexing node data. Might be configured to specific needs.'),
     'server' => NULL,
     'entity_type' => 'node',
@@ -427,13 +427,33 @@ function search_api_install() {
  * Implements hook_enable().
  */
 function search_api_enable() {
-  // Mark all old items as "dirty", since we can't know whether they are.
-  db_update('search_api_item')
-    ->fields(array('changed' => REQUEST_TIME))
-    ->condition('changed', 0)
+  // Mark all items as "dirty", since we can't know whether they are.
+  db_delete('search_api_item')
     ->execute();
-  // Add all new items.
-  // @todo
+  $types = array();
+  foreach (entity_load('search_api_index', FALSE) as $index) {
+    $types[$index->entity_type][] = $index->machine_name;
+  }
+  if (!$types) {
+    return;
+  }
+  $insert = db_insert('search_api_item')
+    ->fields(array('item_id', 'index_id', 'changed'));
+  foreach ($types as $type => $indexes) {
+    $info = entity_get_info($type);
+    $id_key = $info['entity keys']['id'];
+    foreach (entity_load($type, FALSE) as $entity) {
+      $id = $entity->$id_key;
+      foreach ($indexes as $index_id) {
+        $insert->values(array(
+          'item_id' => $id,
+          'index_id' => $index_id,
+          'changed' => 1,
+        ));
+      }
+    }
+  }
+  $insert->execute();
 }
 
 /**
@@ -519,5 +539,66 @@ function search_api_update_7101() {
       // Ignore.
     }
     throw new DrupalUpdateException(t('An exception occurred during the update: !msg.', array('!msg' => $e->getMessage())));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Update replacing IDs with machine names for foreign keys.
+ * {search_api_index}.server and {search_api_item}.index_id are altered.
+ */
+function search_api_update_7102() {
+  // Update of search_api_index:
+  $indexes = array();
+  $select = db_select('search_api_index', 'i')->fields('i');
+  foreach ($select->execute() as $index) {
+    $indexes[$index->id] = $index;
+  }
+  $servers = db_select('search_api_server', 's')->fields('s', array('id', 'machine_name'))->execute()->fetchAllKeyed();
+
+  db_drop_index('search_api_index', 'server');
+  db_drop_field('search_api_index', 'server');
+  $spec = array(
+    'description' => 'The {search_api_server}.machine_name with which data should be indexed.',
+    'type' => 'varchar',
+    'length' => 50,
+    'not null' => FALSE,
+  );
+  db_add_field('search_api_index', 'server', $spec);
+
+  foreach ($indexes as $index) {
+    db_update('search_api_index')
+      ->fields(array('server' => $servers[$index->server]))
+      ->condition('id', $index->id)
+      ->execute();
+  }
+  db_add_index('search_api_index', 'server', array('server'));
+
+  // Update of search_api_item:
+  db_drop_index('search_api_item', 'indexing');
+  db_drop_primary_key('search_api_item');
+  $spec = array(
+    'description' => 'The {search_api_index}.machine_name this item belongs to.',
+    'type' => 'varchar',
+    'length' => 50,
+    'not null' => TRUE,
+  );
+  $keys_new = array(
+    'indexes' => array(
+      'indexing' => array('index_id', 'changed'),
+    ),
+    'primary key' => array('item_id', 'index_id'),
+  );
+  db_change_field('search_api_item', 'index_id', 'index_id', $spec, $keys_new);
+
+  foreach ($indexes as $index) {
+    // We explicitly forbid numeric machine names, therefore we don't have to worry about conflicts here.
+    db_update('search_api_item')
+      ->fields(array(
+        'index_id' => $index->machine_name,
+      ))
+      ->condition('index_id', $index->id)
+      ->execute();
   }
 }

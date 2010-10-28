@@ -49,7 +49,7 @@ function search_api_solr_requirements($phase) {
     if ($unavailable) {
       if ($unavailable == 1) {
         $ret['search_api_solr']['description'] = t('The Solr server of <a href="!url">%name</a> could not be reached.',
-            array('!url' => url('admin/config/search/search_api/server/' . $last->id), '%name' => $last->name));
+            array('!url' => url('admin/config/search/search_api/server/' . $last->machine_name), '%name' => $last->name));
       }
       else {
         $ret['search_api_solr']['description'] = t('@count Solr servers could not be reached.', array('@count' => $unavailable));
@@ -68,7 +68,51 @@ function search_api_solr_requirements($phase) {
  * Implements hook_uninstall().
  */
 function search_api_solr_uninstall() {
-  db_delete('search_api_server')
-    ->condition('class', 'search_api_solr_service')
-    ->execute();
+  if (module_exists('search_api')) {
+    db_delete('search_api_server')
+      ->condition('class', 'search_api_solr_service')
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function search_api_solr_update_dependencies() {
+  // This update should run after primary IDs have been changed to machine names in the framework.
+  $dependencies['search_api_solr'][7101] = array(
+    'search_api' => 7102,
+  );
+  return $dependencies;
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Implements transition from using the index IDs to using machine names.
+ */
+function search_api_solr_update_7101() {
+  foreach (entity_load('search_api_server', FALSE, array('class' => 'search_api_solr_service')) as $server) {
+    if ($server->enabled) {
+      $server->deleteItems('all');
+    }
+    else {
+      $tasks = variable_get('search_api_tasks', array());
+      $tasks[$server->machine_name][''] = array('clear all');
+      variable_set('search_api_tasks', $tasks);
+    }
+    $query = db_select('search_api_index', 'i')
+      ->fields('i', array('machine_name'))
+      ->condition('server', $server->machine_name);
+    db_update('search_api_item')
+      ->fields(array(
+        'changed' => REQUEST_TIME,
+      ))
+      ->condition('index_id', $query, 'IN')
+      ->execute();
+  }
+
+  return t('The Solr search module was updated. ' .
+      'Please stop your Solr servers, replace their schema.xml with the new version and then start them again. ' .
+      'All data indexed on Solr servers will have to be reindexed.');
 }

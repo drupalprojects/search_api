@@ -11,16 +11,13 @@
 function search_api_facets_index_select(array $form, array &$form_state, SearchApiIndex $index) {
   module_load_include('admin.inc', 'search_api');
   drupal_set_title(search_api_admin_item_title($index));
+  $form_state['index'] = $index;
 
   if (!$index->server() || !$index->server()->supportsFeature('search_api_facets')) {
     // We can't offer any facets, but maybe the user can delete old facet data.
     drupal_set_message(t("The server this index currently lies on doesn't support facets. " .
         'To use facets, you will have to move this index to a server supporting this feature.'), 'error');
-    if (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE index_id = :id', array(':id' => $index->id))->fetchField()) {
-      $form['index'] = array(
-        '#type' => 'value',
-        '#value' => $index->id,
-      );
+    if (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE index_id = :id', array(':id' => $index->machine_name))->fetchField()) {
       $form['description'] = array(
         '#type' => 'item',
         '#title' => t('Delete facet settings'),
@@ -66,7 +63,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     if ($disabled = empty($index->enabled)) {
       drupal_set_message('Since this index is at the moment disabled, no facet blocks can be activated.', 'warning');
     }
-    foreach (search_api_facet_load(array('index_id' => $index->id)) as $facet) {
+    foreach (search_api_facet_load(array('index_id' => $index->machine_name)) as $facet) {
       $facets[$facet->field][] = $facet;
     }
     $types = search_api_field_types();
@@ -78,7 +75,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
       $type = isset($types[$type]) ? $types[$type] : $type;
       if (empty($facets[$key])) {
         $facets[$key][] = (object) array(
-          'index_id' => $index->id,
+          'index_id' => $index->machine_name,
           'field' => $key,
           'name' => t('!index: Filter on !field', array('!field' => $field['name'], '!index' => $index->name)),
           'enabled' => 0,
@@ -126,10 +123,6 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     }
   }
 
-  $form['index'] = array(
-    '#type' => 'value',
-    '#value' => $index,
-  );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save settings'),
@@ -167,7 +160,7 @@ function search_api_facets_index_select_validate(array $form, array &$form_state
  * Submit callback for search_api_facets_index_select().
  */
 function search_api_facets_index_select_submit(array $form, array &$form_state) {
-  $index = $form_state['values']['index'];
+  $index = $form_state['index'];
   $count = 0;
   $clone_count = 0;
   $delete_count = 0;
@@ -227,15 +220,15 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
  * "Delete facet settings".
  */
 function search_api_facets_index_select_submit_delete(array $form, array &$form_state) {
-  $index_id = $form_state['values']['index'];
-  $ret = search_api_facet_delete(array('index_id' => $index_id));
+  $index = $form_state['index'];
+  $ret = search_api_facet_delete(array('index_id' => $index->machine_name));
   if ($ret) {
     drupal_set_message(t('All facet data stored for this index was deleted.'));
   }
   else {
     drupal_set_message(t('There was no data to delete.'), 'warning');
   }
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index_id;
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
 }
 
 /**
