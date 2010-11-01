@@ -661,9 +661,9 @@ class SearchApiIndex extends EntityDBExtendable {
       return TRUE;
     }
 
-    $server = $index->server();
+    $server = $this->server();
     if ($server->enabled) {
-      $server->deleteItems('all', $index);
+      $server->deleteItems('all', $this);
     }
     else {
       $tasks = variable_get('search_api_tasks', array());
@@ -678,7 +678,7 @@ class SearchApiIndex extends EntityDBExtendable {
 
     $ret = _search_api_index_reindex($this->machine_name);
     if($ret) {
-      module_invoke_all('search_api_index_update', $index, 'clear');
+      module_invoke_all('search_api_index_update', $this, 'clear');
     }
 
     return TRUE;
