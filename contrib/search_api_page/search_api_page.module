@@ -297,7 +297,7 @@ function search_api_page_edit($id, array $fields) {
 
   if ($ret) {
     $page = search_api_page_load($id, TRUE);
-    if (isset($fields['path'])) {
+    if (isset($fields['path']) || isset($fields['enabled'])) {
       menu_rebuild();
     }
     module_invoke_all('entity_update', $page, 'search_api_page');
