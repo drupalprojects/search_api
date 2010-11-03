@@ -325,7 +325,6 @@ function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
  *     server's service-specific settings.
  *   - status: The entity configuration status (in database, in code, etc.).
  */
-// @todo There may be some room for improvement here, in almost every respect.
 function theme_search_api_server(array $variables) {
   extract($variables);
   $output = '';
@@ -632,7 +631,6 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
  *     index.
  *   - status: The entity configuration status (in database, in code, etc.).
  */
-// @todo There may be some room for improvement here, in almost every respect.
 function theme_search_api_index(array $variables) {
   extract($variables);
   $output = '';
@@ -1296,11 +1294,8 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   $fields = $options['fields'];
   $additional = $options['additional fields'];
 
-  $types = search_api_field_types();
-  $list_types = array();
-  foreach ($types as $type => $name) {
-    $list_types["list<$type>"] = $name;
-  }
+  // An array of option arrays for types, keyed by nesting level.
+  $types = array(0 => search_api_field_types());
   $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
   $form_state['index'] = $index;
@@ -1330,9 +1325,20 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
         '#value' => $info['description'],
       );
     }
+    // Determine the correct type options (i.e., with the correct nesting level).
+    $level = search_api_list_nesting_level($info['type']);
+    if (empty($types[$level])) {
+      $type_prefix = str_repeat('list<', $level);
+      $type_suffix = str_repeat('>', $level);
+      $types[$level] = array();
+      foreach ($types[0] as $type => $name) {
+        // We use the singular name for list types, since the user usually doesn't care about the nesting level.
+        $types[$level][$type_prefix . $type . $type_suffix] = $name;
+      }
+    }
     $form['fields'][$key]['type'] = array(
       '#type' => 'select',
-      '#options' => search_api_is_list_type($info['type']) ? $list_types : $types,
+      '#options' => $types[$level],
       '#default_value' => $info['type'],
     );
     $form['fields'][$key]['boost'] = array(
@@ -1391,10 +1397,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
  * Helper function for building the field list for an index.
  */
 function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapper $wrapper) {
-  if (empty($index->options['fields'])) {
-    $index->options['fields'] = array();
-  }
-  $fields = $index->options['fields'];
+  $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
   $additional = array();
 
   // First we need all already added prefixes.
@@ -1405,36 +1408,46 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
   }
 
   // Then we walk through all properties and look if they are already contained in one of the arrays.
-  // Since this uses an iterative instead of a recursive approach, it is a bit complicated,
-  // with two arrays tracking the current depth.
+  // Since this uses an iterative instead of a recursive approach, it is a bit complicated, with three arrays tracking the current depth.
 
   // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
   $wrappers = array('' => $wrapper);
   // Display names for the prefixes
   $prefix_names = array('' => '');
+  // Display names for the prefixes
+  $nesting_levels = array('' => 0);
 
   $types = search_api_field_types();
   $flat = array();
   while ($wrappers) {
     foreach ($wrappers as $prefix => $wrapper) {
       $prefix_name = $prefix_names[$prefix];
+      // Deal with lists of entities.
+      $nesting_level = $nesting_levels[$prefix];
+      $type_prefix = str_repeat('list<', $nesting_level);
+      $type_suffix = str_repeat('>', $nesting_level);
+      if ($nesting_level) {
+        $info = $wrapper->info();
+        // The real nesting level of the wrapper, not the accumulated one.
+        $level = search_api_list_nesting_level($info['type']);
+        for ($i = 0; $i < $level; ++$i) {
+          $wrapper = $wrapper[0];
+        }
+      }
+      // Now look at all properties.
       foreach ($wrapper as $property => $value) {
         $info = $value->info();
-        $type = $info['type'];
-        // We hide the complexity of multi-valued types from the user here
-        $type = search_api_extract_inner_type($type);
+        // We hide the complexity of multi-valued types from the user here.
+        $type = search_api_extract_inner_type($info['type']);
+        // Treat Entity API type "token" as our "string" type.
+        // Also let text fields with limited options be of type "string" by default.
         if ($type == 'token' || ($type == 'text' && $value->optionsList())) {
-          // Set the field type accordingly.
-          $type = $info['type'];
-          $t = 'string';
-          while (search_api_is_list_type($type)) {
-            $type = substr($type, 5, -1);
-            $t = "list<$t>";
-          }
-          $info['type'] = $t;
           // Inner type is changed to "string".
           $type = 'string';
+          // Set the field type accordingly.
+          $info['type'] = search_api_nest_type('string', $info['type']);
         }
+        $info['type'] = $type_prefix . $info['type'] . $type_suffix;
         $key = $prefix . $property;
         if (isset($types[$type])) {
           if (isset($fields[$key])) {
@@ -1457,12 +1470,9 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             // Visit this entity/struct in a later iteration.
             $wrappers[$key . ':'] = $value;
             $prefix_names[$key . ':'] = $prefix_name . $info['label'] . ' » ';
+            $nesting_levels[$key . ':'] = search_api_list_nesting_level($info['type']);
           }
-          elseif (!search_api_is_list_type($info['type'])) {
-            // @todo Make this work with lists, too - this won't be easy:
-            // -> Obtain wrapper for listed type (may even be a struct!)
-            // -> When adding fields, change all types to lists
-            // -> Somehow spot this while indexing
+          else {
             $additional[$key] = $prefix_name . $info['label'];
           }
         }
@@ -1544,17 +1554,28 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     }
     return;
   }
-  // Adding a related entity's fields
+  // Adding a related entity's fields.
+  $array = array();
+  $index->dataAlter($array);
   $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
 
+  $type_prefix = $type_suffix = '';
   foreach (explode(':', $prefix) as $element) {
     if (!isset($wrapper->$element)) {
       $wrapper = NULL;
       break;
     }
     $wrapper = $wrapper->$element;
+    $wrapper_info = $wrapper->info();
+    $level = search_api_list_nesting_level($wrapper_info['type']);
+    for ($i = 0; $i < $level; ++$i) {
+      $wrapper = $wrapper[0];
+      // For each nesting level, wrap the field types in an additional "list<%>".
+      $type_prefix .= str_repeat('list<', $level);
+      $type_suffix .= str_repeat('>', $level);
+    }
   }
   if (!$wrapper) {
     drupal_set_message(t("An error occurred while trying to add the related entity's fields."), 'error');
@@ -1572,9 +1593,15 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $prefix .= ':';
   foreach ($wrapper as $field => $value) {
     $info = $value->info();
+    $type = $type_prefix . $info['type'] . $type_suffix;
     $key = $prefix . $field;
     if (isset($types[$info['type']]) && empty($fields[$key])) {
-      $fields[$key] = array('type' => $info['type'], 'boost' => '1.0', 'indexed' => 0);
+      $fields[$key] = array(
+        'name' => $info['label'],
+        'type' => $type,
+        'boost' => '1.0',
+        'indexed' => 0,
+      );
     }
   }
   $options['fields'] = $fields;

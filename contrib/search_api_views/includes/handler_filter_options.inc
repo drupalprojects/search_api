@@ -88,7 +88,7 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
     while (is_array($this->value) && count($this->value) == 1) {
       $this->value = array_shift($this->value);
     }
-    if (is_scalar($this->value)) {
+    if (is_scalar($this->value) && $this->value !== '') {
       $this->query->condition($this->real_field, $this->value, $this->operator);
     }
     elseif($this->value) {

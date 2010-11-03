@@ -878,6 +878,50 @@ function search_api_is_list_type($type) {
 }
 
 /**
+ * Utility function for determining the nesting level of a list type.
+ *
+ * @param $type
+ *   A string containing the type to check.
+ *
+ * @return
+ *   The nesting level of the type. 0 for singular types, 1 for lists of
+ *   singular types, etc.
+ */
+function search_api_list_nesting_level($type) {
+  $level = 0;
+  while (search_api_is_list_type($type)) {
+    $type = substr($type, 5, -1);
+    ++$level;
+  }
+  return $level;
+}
+
+/**
+ * Utility function for nesting a type to the same level as another type.
+ * I.e., after <code>$t = search_api_nest_type($type, $nested_type);</code> is
+ * executed, the following statements will always be true:
+ * @code
+ * search_api_list_nesting_level($t) == search_api_list_nesting_level($nested_type);
+ * search_api_extract_inner_type($t) == search_api_extract_inner_type($type);
+ * @endcode
+ *
+ * @param $type
+ *   The type to wrap.
+ * @param $nested_type
+ *   Another type, determining the nesting level.
+ *
+ * @return
+ *   A list version of $type, as specified above.
+ */
+function search_api_nest_type($type, $nested_type) {
+  while (search_api_is_list_type($nested_type)) {
+    $nested_type = substr($type, 5, -1);
+    $type = "list<$type>";
+  }
+  return $type;
+}
+
+/**
  * Utility function for extracting the contained primitive type of a list type.
  *
  * @param $type
@@ -904,35 +948,62 @@ function search_api_extract_inner_type($type) {
  * @param array $fields
  *   The fields to extract, as stored in an index. I.e., the array keys are
  *   field names, the values are arrays with the keys "name", "type", "boost"
- *   and "indexed".
+ *   and "indexed" (although only "type" is used by this function).
  *
  * @return
  *   The $fields array with additional "value" and "original_type" keys set.
  */
-// @todo This could probably be optimized.
 function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields) {
-  foreach ($fields as $field => &$info) {
-    // Set "defaults" in case an error occurs later.
-    $info['value'] = NULL;
-    $info['original_type'] = $info['type'];
-    try {
-      $tmp = $wrapper;
-      foreach (explode(':', $field) as $property) {
-        if (!isset($tmp->$property)) {
-          $tmp = NULL;
-          break;
-        }
-        $tmp = $tmp->$property;
-      }
-      if (!$tmp) {
-        continue;
-      }
-      $info['value'] = $tmp->value();
-      $property_info = $tmp->info();
-      $info['original_type'] = $property_info['type'];
+  // If $wrapper is a list of entities, we have to aggregate their field values.
+  $wrapper_info = $wrapper->info();
+  if (search_api_is_list_type($wrapper_info['type'])) {
+    foreach ($fields as $field => &$info) {
+      $info['value'] = array();
+      $info['original_type'] = $info['type'];
     }
-    catch (Exception $e) {
-      // This might happen for entity fields that are NULL, e.g. comments without parent.
+    unset($info);
+    foreach ($wrapper as $i => $w) {
+      $nested_fields = search_api_extract_fields($w, $fields);
+      foreach ($nested_fields as $field => $info) {
+        if (isset($info['value'])) {
+          $fields[$field]['value'][] = $info['value'];
+        }
+        if (isset($info['original_type'])) {
+          $fields[$field]['original_type'] = $info['original_type'];
+        }
+      }
+    }
+    return $fields;
+  }
+
+  $nested = array();
+  foreach ($fields as $field => &$info) {
+    $pos = strpos($field, ':');
+    if ($pos === FALSE) {
+      // Set "defaults" in case an error occurs later.
+      $info['value'] = NULL;
+      $info['original_type'] = $info['type'];
+      try {
+        $info['value'] = $wrapper->$field->value();
+        $property_info = $wrapper->$field->info();
+        $info['original_type'] = $property_info['type'];
+      }
+      catch (Exception $e) {
+        // This might happen for entity-typed properties that are NULL, e.g., for comments without parent.
+      }
+    }
+    else {
+      list($prefix, $key) = explode(':', $field, 2);
+      $nested[$prefix][$key] = $info;
+    }
+  }
+  unset($info);
+  foreach ($nested as $prefix => $nested_fields) {
+    if (isset($wrapper->$prefix)) {
+      $nested_fields = search_api_extract_fields($wrapper->$prefix, $nested_fields);
+      foreach ($nested_fields as $field => $info) {
+        $fields["$prefix:$field"] = $info;
+      }
     }
   }
   return $fields;
@@ -1130,6 +1201,7 @@ function search_api_server_delete($id) {
  *   An array of objects representing the search indexes that meet the
  *   specified criteria.
  */
+// @todo Remove when changing the API.
 function search_api_list_indexes(array $options = array(), $header = NULL) {
   $server = empty($options['server']) ? NULL : $options['server'];
   $type = empty($options['entity_type']) ? NULL : $options['entity_type'];

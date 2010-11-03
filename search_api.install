@@ -169,7 +169,7 @@ function search_api_install() {
   $name = t('Default node index');
   $values = array(
     'name' => $name,
-    'machine_name' => drupal_strtolower(preg_replace('/[^a-z0-9]+/i', '_', $name)),
+    'machine_name' => preg_replace('/[^a-z0-9]+/', '_', drupal_strtolower($name)),
     'description' => t('An automatically created search index for indexing node data. Might be configured to specific needs.'),
     'server' => NULL,
     'entity_type' => 'node',

@@ -628,6 +628,11 @@ function _search_api_facets_refresh_type(stdClass $facet, array &$options) {
       break;
     }
     $wrapper = $wrapper->$part;
+    $wrapper_info = $wrapper->info();
+    $level = search_api_list_nesting_level($wrapper_info['type']);
+    for ($i = 0; $i < $level; ++$i) {
+      $wrapper = $wrapper[0];
+    }
   }
   if ($wrapper && $wrapper->optionsList()) {
     $options['type'] = 'options';

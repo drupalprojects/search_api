@@ -135,7 +135,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
       // Recursion to get the same error behaviour as above.
-      $this->execute($view);
+      return $this->execute($view);
     }
   }
 
@@ -151,6 +151,7 @@ class SearchApiViewsQuery extends views_plugin_query {
         $view->result[$id]['search_api_relevance'] = $result['score'];
       }
       else {
+        $view->result[$id] = array();
         $ids[] = $id;
       }
     }
@@ -181,8 +182,8 @@ class SearchApiViewsQuery extends views_plugin_query {
       }
       $fields = search_api_extract_fields($wrapper, $fields);
       $ret = array();
-      foreach ($fields as $key => $field) {
-        $ret[$key] = $field['value'];
+      foreach ($this->fields as $key => $true) {
+        $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
       }
       $ret['search_api_views_entity'] = $entity;
       return $ret;

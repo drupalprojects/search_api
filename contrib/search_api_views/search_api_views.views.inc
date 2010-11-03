@@ -34,6 +34,8 @@ function search_api_views_views_data() {
     $wrappers = array('' => $orig_wrapper);
     // Display names for the prefixes
     $prefix_names = array('' => '');
+    // Display names for the prefixes
+    $nesting_levels = array('' => 0);
 
     $types = search_api_field_types();
     $types['options'] = t('Options');
@@ -41,21 +43,26 @@ function search_api_views_views_data() {
       foreach ($wrappers as $prefix => $wrapper) {
         $prefix_name = $prefix_names[$prefix];
         $depth = substr_count($prefix, ':');
+        // Deal with lists of entities.
+        $nesting_level = $nesting_levels[$prefix];
+        $type_prefix = str_repeat('list<', $nesting_level);
+        $type_suffix = str_repeat('>', $nesting_level);
+        if ($nesting_level) {
+          $info = $wrapper->info();
+          // The real nesting level of the wrapper, not the accumulated one.
+          $level = search_api_list_nesting_level($info['type']);
+          for ($i = 0; $i < $level; ++$i) {
+            $wrapper = $wrapper[0];
+          }
+        }
+        // Now look at all properties.
         foreach ($wrapper as $property => $value) {
           $info = $value->info();
-          $type = $info['type'];
-          if ($value->optionsList()) {
-            // This is necessary so the list nesting level stays the same.
-            $tmp = 'options';
-            while (search_api_is_list_type($type)) {
-              $tmp = "list<$tmp>";
-              $type = substr($type, 5, -1);
-            }
-            $type = $tmp;
-          }
-          $inner_type = search_api_extract_inner_type($type);
+          $type = $type_prefix . $info['type'] . $type_suffix;
+          $inner_type = search_api_extract_inner_type($info['type']);
           if ($inner_type == 'token') {
             $inner_type = 'string';
+            $type = search_api_nest_type('string', $type);
           }
           $key = $prefix . $property;
           if ($key == 'table') {
@@ -64,6 +71,10 @@ function search_api_views_views_data() {
             continue;
           }
           if (isset($types[$inner_type])) {
+            if ($value->optionsList()) {
+              $inner_type = 'options';
+              $type = search_api_nest_type('options', $type);
+            }
             // Add field handler.
             if ($prefix_name) {
               $table[$key]['group'] = $prefix_name;
@@ -88,17 +99,12 @@ function search_api_views_views_data() {
             }
             unset($fields[$key]);
           }
-          else {
+          elseif ($depth < $max_depth) {
+            // Visit this entity/struct in a later iteration.
             $key .= ':';
-            if ($depth < $max_depth) {
-              // Visit this entity/struct in a later iteration.
-              while (search_api_is_list_type($type)) {
-                $value = $value[0];
-                $type = substr($type, 5, -1);
-              }
-              $wrappers[$key] = $value;
-              $prefix_names[$key] = $prefix_name ? $prefix_name . ' » ' . $info['label'] : $info['label'];
-            }
+            $wrappers[$key] = $value;
+            $prefix_names[$key] = $prefix_name ? $prefix_name . ' » ' . $info['label'] : $info['label'];
+            $nesting_levels[$key] = search_api_list_nesting_level($type);
           }
         }
         unset($wrappers[$prefix]);
@@ -113,11 +119,22 @@ function search_api_views_views_data() {
       $tmp = $orig_wrapper;
       $group = '';
       $name = '';
-      foreach (explode(':', $key) as $part) {
+      $parts = explode(':', $key);
+      foreach ($parts as $i => $part) {
+        if (!isset($tmp->$part)) {
+          continue 2;
+        }
         $tmp = $tmp->$part;
         $info = $tmp->info();
         $group = ($group ? $group . ' » ' . $name : ($name ? $name : ''));
         $name = $info['label'];
+        if ($i < count($parts) - 1) {
+          // Unwrap lists.
+          $level = search_api_list_nesting_level($info['type']);
+          for ($j = 0; $j < $level; ++$j) {
+            $tmp = $tmp[0];
+          }
+        }
       }
       if ($group) {
         $table[$key]['group'] = $group;
