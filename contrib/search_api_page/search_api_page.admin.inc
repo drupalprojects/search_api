@@ -36,7 +36,7 @@ function search_api_page_admin_overview() {
   $edit = '/edit';
   $delete = '/delete';
 
-  $indexes = entity_load('search_api_index', FALSE);
+  $indexes = search_api_index_load_multiple(FALSE);
   foreach (entity_load('search_api_page', FALSE) as $page) {
     $url = $pre . $page->id;
     $index = $indexes[$page->index_id];
@@ -63,7 +63,7 @@ function search_api_page_admin_overview() {
 function search_api_page_admin_add(array $form, array &$form_state) {
   $form = array();
   if (empty($form_state['step_one'])) {
-    $indexes = entity_load('search_api_index', FALSE);
+    $indexes = search_api_index_load_multiple(FALSE);
     if (!$indexes) {
       drupal_set_message(t('There are no searches indexes which can be searched. Please <a href="@url">create an index</a> first.', array('@url' => url('admin/config/search/search_api/add_index'))), 'warning');
       return array();

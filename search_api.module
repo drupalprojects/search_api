@@ -206,7 +206,7 @@ function search_api_permission() {
  * Will index $options['cron-limit'] items for each enabled index.
  */
 function search_api_cron() {
-  foreach (entity_load('search_api_index', FALSE, array('enabled' => TRUE)) as $index) {
+  foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
@@ -426,7 +426,7 @@ function search_api_entity_delete($entity, $type) {
   $info = entity_get_info($type);
   $id_field = $info['entity keys']['id'];
   $id = $entity->$id_field;
-  foreach (entity_load('search_api_index', FALSE, array('entity_type' => $type)) as $index) {
+  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
     db_delete('search_api_item')
       ->condition('item_id', $id)
       ->condition('index_id', $index->machine_name)
@@ -992,8 +992,31 @@ function search_api_list_servers($only_enabled = TRUE, $header = NULL) {
  *   An object representing the server with the specified id.
  */
 function search_api_server_load($id, $reset = FALSE) {
-  $ret = entity_load('search_api_server', array($id), array(), $reset);
+  $ret = search_api_server_load_multiple(array($id), array(), $reset);
   return $ret ? reset($ret) : FALSE;
+}
+
+/**
+ * Load multiple servers at once, determined by IDs or machine names, or by
+ * other conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of server IDs or machine names.
+ * @param $conditions
+ *   An array of conditions on the {search_api_server} table in the form
+ *   'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal entity_load cache.
+ *
+ * @return array
+ *   An array of server objects keyed by machine name.
+ */
+function search_api_server_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+  // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
+  module_load_include('inc', 'search_api', 'includes/entity');
+  return entity_load('search_api_server', $ids, $conditions, $reset);
 }
 
 /**
@@ -1148,8 +1171,32 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  *   A completely loaded index object, or NULL if no such index exists.
  */
 function search_api_index_load($id, $reset = FALSE) {
-  $ret = entity_load('search_api_index', array($id), array(), $reset);
+  module_load_include('inc', 'search_api', 'includes/entity');
+  $ret = search_api_index_load_multiple(array($id), array(), $reset);
   return $ret ? reset($ret) : FALSE;
+}
+
+/**
+ * Load multiple indexs at once, determined by IDs or machine names, or by
+ * other conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of index IDs or machine names.
+ * @param $conditions
+ *   An array of conditions on the {search_api_index} table in the form
+ *   'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal entity_load cache.
+ *
+ * @return array
+ *   An array of index objects keyed by machine name.
+ */
+function search_api_index_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+  // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
+  module_load_include('inc', 'search_api', 'includes/entity');
+  return entity_load('search_api_index', $ids, $conditions, $reset);
 }
 
 /**

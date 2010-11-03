@@ -136,7 +136,7 @@ class SearchApiServer extends EntityDBExtendable {
     $ret = $this->save('edit');
     if ($ret) {
       if ($reindex) {
-        foreach (entity_load('search_api_index', FALSE, array('server' => $this->machine_name)) as $index) {
+        foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
           $index->reindex();
         }
       }
@@ -208,7 +208,7 @@ class SearchApiServer extends EntityDBExtendable {
     }
     else {
       $this->postDisable();
-      foreach (entity_load('search_api_index', FALSE, array('server' => $this->machine_name)) as $index) {
+      foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
         $index->enable(FALSE);
       }
     }
@@ -226,7 +226,7 @@ class SearchApiServer extends EntityDBExtendable {
     // Call hook method before doing anything else.
     $this->preDelete();
 
-    foreach (entity_load('search_api_index', FALSE, array('server' => $this->machine_name)) as $index) {
+    foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
       $index->enable(FALSE);
       $index->update(array('server' => NULL));
       $index->reindex();

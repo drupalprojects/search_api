@@ -414,7 +414,7 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * By default, deletes all indexes from this server.
    */
   public function preDelete() {
-    $indexes = entity_load('search_api_index', FALSE, array('server' => $this->server->machine_name));
+    $indexes = search_api_index_load_multiple(FALSE, array('server' => $this->server->machine_name));
     foreach ($indexes as $index) {
       $this->removeIndex($index);
     }

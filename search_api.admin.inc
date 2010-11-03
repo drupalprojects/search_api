@@ -15,9 +15,9 @@ function search_api_admin_overview() {
     array('data' => t('Operations'), 'colspan' => 3),
   );
 
-  $servers = entity_load('search_api_server', FALSE);
+  $servers = search_api_server_load_multiple(FALSE);
   $indexes = array();
-  foreach (entity_load('search_api_index', FALSE) as $index) {
+  foreach (search_api_index_load_multiple(FALSE) as $index) {
     $indexes[$index->server][$index->machine_name] = $index;
   }
 
@@ -498,7 +498,7 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
-  $servers = entity_load('search_api_server', FALSE);
+  $servers = search_api_server_load_multiple(FALSE);
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {
@@ -917,7 +917,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => $index->server,
     '#options' => array('' => t('< No server >'))
   );
-  $servers = entity_load('search_api_server', FALSE);
+  $servers = search_api_server_load_multiple(FALSE);
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {

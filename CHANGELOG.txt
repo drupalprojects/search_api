@@ -11,6 +11,7 @@ API changes:
 - #936360: Make servers and indexes exportable.
 
 Others:
+- #889286: EntityAPIController::load() produces WSoD sometimes.
 - #955892: Typo in search_api_solr.install.
 - #951830: "List of language IDs" context suspicious.
 - #939414: Rename "data-alter callbacks" to "data alterations".

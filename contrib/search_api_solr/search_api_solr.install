@@ -28,7 +28,7 @@ function search_api_solr_requirements($phase) {
     }
   }
   elseif ($phase == 'runtime') {
-    $servers = entity_load('search_api_server', FALSE, array('class' => 'search_api_solr_service', 'enabled' => TRUE));
+    $servers = search_api_server_load_multiple(FALSE, array('class' => 'search_api_solr_service', 'enabled' => TRUE));
     $count = 0;
     $unavailable = 0;
     $last = NULL;
@@ -92,7 +92,7 @@ function search_api_solr_update_dependencies() {
  * Implements transition from using the index IDs to using machine names.
  */
 function search_api_solr_update_7101() {
-  foreach (entity_load('search_api_server', FALSE, array('class' => 'search_api_solr_service')) as $server) {
+  foreach (search_api_server_load_multiple(FALSE, array('class' => 'search_api_solr_service')) as $server) {
     if ($server->enabled) {
       $server->deleteItems('all');
     }
