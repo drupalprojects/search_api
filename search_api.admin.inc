@@ -8,17 +8,25 @@ function search_api_admin_overview() {
   $base_path = drupal_get_path('module', 'search_api') . '/';
   drupal_add_css($base_path . 'search_api.admin.css');
 
-  $header = array(
-    t('Status'),
-    array('data' => t('Type'), 'colspan' => 2),
-    t('Name'),
-    array('data' => t('Operations'), 'colspan' => 3),
-  );
-
   $servers = search_api_server_load_multiple(FALSE);
   $indexes = array();
+  // When any entity was not normally created in the database, then show status for all.
+  $show_config_status = FALSE;
   foreach (search_api_index_load_multiple(FALSE) as $index) {
     $indexes[$index->server][$index->machine_name] = $index;
+    if (!$show_config_status && $index->status != ENTITY_IN_DB) {
+      $show_config_status = TRUE;
+    }
+  }
+  // Show disabled servers after enabled ones.
+  foreach ($servers as $id => $server) {
+    if (!$server->enabled) {
+      unset($servers[$id]);
+      $servers[$id] = $server;
+    }
+    if (!$show_config_status && $server->status != ENTITY_IN_DB) {
+      $show_config_status = TRUE;
+    }
   }
 
   $rows = array();
@@ -41,54 +49,69 @@ function search_api_admin_overview() {
   $t_enable = t('enable');
   $t_disable = t('disable');
   $t_edit = t('edit');
-  $t_delete = t('delete');
   $pre = 'admin/config/search/search_api/server/';
   $pre_index = 'admin/config/search/search_api/index/';
   $enable = '/enable';
   $disable = '/disable';
   $edit = '/edit';
-  $delete = '/delete';
   foreach ($servers as $server) {
     $url = $pre . $server->machine_name;
-    $rows[] = array(
-      $server->enabled ? $t_enabled : $t_disabled,
-      $t_server,
-      l($server->name, $url),
-      $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable),
-      l($t_edit, $url . $edit),
-      l($t_delete, $url . $delete),
-    );
+    $row = array();
+    $row[] = $server->enabled ? $t_enabled : $t_disabled;
+    if ($show_config_status) {
+      $row[] = theme('entity_status', array('status' => $server->status));
+    }
+    $row[] = $t_server;
+    $row[] = l($server->name, $url);
+    $row[] = $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable);
+    $row[] = l($t_edit, $url . $edit);
+    $row[] = _search_api_admin_delete_link($server);
+    $rows[] = $row;
     if (!empty($indexes[$server->machine_name])) {
       foreach ($indexes[$server->machine_name] as $index) {
         $url = $pre_index . $index->machine_name;
-        $rows[] = array(
-          $index->enabled ? $t_enabled : $t_disabled,
-          '',
-          $t_index,
-          l($index->name, $url),
-          $index->enabled
-              ? l($t_disable, $url . $disable)
-              : ($server->enabled ? l($t_enable, $url . $enable) : ''),
-          l($t_edit, $url . $edit),
-          l($t_delete, $url . $delete),
-        );
+        $row = array();
+        $row[] = $index->enabled ? $t_enabled : $t_disabled;
+        if ($show_config_status) {
+          $row[] = theme('entity_status', array('status' => $index->status));
+        }
+        $row[] = '';
+        $row[] = $t_index;
+        $row[] = l($index->name, $url);
+        $row[] = $index->enabled
+            ? l($t_disable, $url . $disable)
+            : ($server->enabled ? l($t_enable, $url . $enable) : '');
+        $row[] = l($t_edit, $url . $edit);
+        $row[] = _search_api_admin_delete_link($index);
+        $rows[] = $row;
       }
     }
   }
   if (!empty($indexes[''])) {
     foreach ($indexes[''] as $index) {
       $url = $pre_index . $index->machine_name;
-      $link = l($index->name, $url);
-      $rows[] = array(
-        $t_disabled,
-        array('data' => $t_index, 'colspan' => 2),
-        $link,
-        '',
-        l($t_edit, $url . $edit),
-        l($t_delete, $url . $delete),
-      );
+      $row = array();
+      $row[] = $t_disabled;
+      if ($show_config_status) {
+        $row[] = theme('entity_status', array('status' => $index->status));
+      }
+      $row[] = array('data' => $t_index, 'colspan' => 2);
+      $row[] = l($index->name, $url);
+      $row[] = '';
+      $row[] = l($t_edit, $url . $edit);
+      $row[] = _search_api_admin_delete_link($index);
+      $rows[] = $row;
     }
   }
+
+  $header = array();
+  $header[] = t('Status');
+  if ($show_config_status) {
+    $header[] = t('Configuration');
+  }
+  $header[] = array('data' => t('Type'), 'colspan' => 2);
+  $header[] = t('Name');
+  $header[] = array('data' => t('Operations'), 'colspan' => 3);
 
   return array(
     '#theme' => 'table',
@@ -96,6 +119,24 @@ function search_api_admin_overview() {
     '#rows' => $rows,
     '#empty' => t('There are no search servers or indexes defined yet.'),
   );
+}
+
+/**
+ * @param EntityDBExtendable $entity
+ *   The index or server for which a link should be generated.
+ *
+ * @return string
+ *   A link to a delete form for the entity, if applicable.
+ */
+function _search_api_admin_delete_link(EntityDBExtendable $entity) {
+  // Delete link only makes sense if entity is in the database (custom or overridden).
+  if ($entity->status & ENTITY_IN_DB) {
+    $type = $entity instanceof SearchApiServer ? 'server' : 'index';
+    $url = 'admin/config/search/search_api/' . $type . '/' . $entity->machine_name . '/delete';
+    $title = $entity->status == ENTITY_IN_DB ? t('delete') : t('revert');
+    return l($title, $url);
+  }
+  return '';
 }
 
 /**
@@ -434,14 +475,9 @@ function search_api_admin_server_edit_submit(array $form, array &$form_state) {
 
   $server = $form_state['server'];
   if (isset($values['options'])) {
-    $values['options'] = $values['options']['form'];
+    $server->configurationFormSubmit($form['options']['form'], $values['options']['form'], $form_state);
   }
-  foreach ($values as $key => $value) {
-    if ($key != 'options') {
-      $server->$key = $value;
-    }
-  }
-  $server->configurationFormSubmit($form['options']['form'], $values['options'], $form_state);
+  unset($values['options']);
 
   $ret = $server->update($values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
@@ -1624,13 +1660,13 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
  *   Either a form array, or FALSE if this combination of type and action is
  *   not supported.
  */
-function search_api_admin_confirm(array $form, array &$form_state, $type, $action, $info) {
+function search_api_admin_confirm(array $form, array &$form_state, $type, $action, EntityDBExtendable $entity) {
   switch ($type) {
     case 'server':
       switch ($action) {
         case 'disable':
           $text = array(
-            t('Disable server @name', array('@name' => $info->name)),
+            t('Disable server @name', array('@name' => $entity->name)),
             t('Do you really want to disable this server?'),
             t('This will disable both the server and all associated indexes. ' .
                 "Searches on these indexes won't be available until they are re-enabled."),
@@ -1638,13 +1674,23 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
           );
           break;
         case 'delete':
-          $text = array(
-            t('Delete server @name', array('@name' => $info->name)),
-            t('Do you really want to delete this server?'),
-            t('This will delete the server and disable all associated indexes. ' .
-                "Searches on these indexes won't be available until they are moved to another server and re-enabled."),
-            t('The server was successfully deleted.'),
-          );
+          if ($entity->status == ENTITY_OVERRIDDEN) {
+            $text = array(
+              t('Revert server @name', array('@name' => $entity->name)),
+              t('Do you really want to revert this server?'),
+              t('This will revert all settings for this server back to the defaults. This action cannot be undone.'),
+              t('The server settings have been successfully reverted.'),
+            );
+          }
+          else {
+            $text = array(
+              t('Delete server @name', array('@name' => $entity->name)),
+              t('Do you really want to delete this server?'),
+              t('This will delete the server and disable all associated indexes. ' .
+                  "Searches on these indexes won't be available until they are moved to another server and re-enabled."),
+              t('The server was successfully deleted.'),
+            );
+          }
           break;
         default:
           return FALSE;
@@ -1654,20 +1700,30 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
       switch ($action) {
         case 'disable':
           $text = array(
-            t('Disable index @name', array('@name' => $info->name)),
+            t('Disable index @name', array('@name' => $entity->name)),
             t('Do you really want to disable this index?'),
             t("Searches on this index won't be available until it is re-enabled."),
             t('The index was successfully disabled.'),
           );
           break;
         case 'delete':
-          $text = array(
-            t('Delete index @name', array('@name' => $info->name)),
-            t('Do you really want to delete this index?'),
-            t('This will remove the index from the server and delete all settings. ' .
-                'All data on this index will be lost.'),
-            t('The index has been successfully deleted.'),
-          );
+          if ($entity->status == ENTITY_OVERRIDDEN) {
+            $text = array(
+              t('Revert index @name', array('@name' => $entity->name)),
+              t('Do you really want to revert this index?'),
+              t('This will revert all settings on this index back to the defaults. This action cannot be undone.'),
+              t('The index settings have been successfully reverted.'),
+            );
+          }
+          else {
+            $text = array(
+              t('Delete index @name', array('@name' => $entity->name)),
+              t('Do you really want to delete this index?'),
+              t('This will remove the index from the server and delete all settings. ' .
+                  'All data on this index will be lost.'),
+              t('The index has been successfully deleted.'),
+            );
+          }
           break;
         default:
           return FALSE;
@@ -1688,7 +1744,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
     ),
     'id' => array(
       '#type' => 'value',
-      '#value' => $info->machine_name,
+      '#value' => $entity->machine_name,
     ),
     'message' => array(
       '#type' => 'value',
@@ -1696,7 +1752,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
     ),
   );
   $desc = "<h3>{$text[1]}</h3><p>{$text[2]}</p>";
-  return confirm_form($form, $text[0], "admin/config/search/search_api/$type/{$info->machine_name}", $desc);
+  return confirm_form($form, $text[0], "admin/config/search/search_api/$type/{$entity->machine_name}", $desc);
 }
 
 /**

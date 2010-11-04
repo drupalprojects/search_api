@@ -69,10 +69,13 @@ function search_api_menu() {
   );
   $items[$pre . '/server/%search_api_server/delete'] = array(
     'title' => 'Delete',
+    'title callback' => 'search_api_title_delete_page',
+    'title arguments' => array(5),
     'description' => 'Delete server.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_confirm', 'server', 'delete', 5),
-    'access arguments' => array('administer search_api'),
+    'access callback' => 'search_api_access_delete_page',
+    'access arguments' => array(5),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -133,10 +136,13 @@ function search_api_menu() {
   );
   $items[$pre . '/index/%search_api_index/delete'] = array(
     'title' => 'Delete',
+    'title callback' => 'search_api_title_delete_page',
+    'title arguments' => array(5),
     'description' => 'Delete index.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_confirm', 'index', 'delete', 5),
-    'access arguments' => array('administer search_api'),
+    'access callback' => 'search_api_access_delete_page',
+    'access arguments' => array(5),
     'file' => 'search_api.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -1100,6 +1106,34 @@ function search_api_server_url(SearchApiServer $server) {
     'path' => 'admin/config/search/search_api/server/' . $server->machine_name,
     'options' => array(),
   );
+}
+
+/**
+ * Title callback for determining which title should be displayed for the
+ * "delete" local task.
+ *
+ * @param EntityDBExtendable $entity
+ *   The server or index for which the menu link is displayed.
+ *
+ * @return string
+ *   A translated version of either "Delete" or "Revert".
+ */
+function search_api_title_delete_page(EntityDBExtendable $entity) {
+  return $entity->status == ENTITY_OVERRIDDEN ? t('Revert') : t('Delete');
+}
+
+/**
+ * Access callback for determining if a server's or index' "delete" page should
+ * be accessible.
+ *
+ * @param EntityDBExtendable $entity
+ *   The server or index for which the access to the delete page is checked.
+ *
+ * @return
+ *   TRUE if the delete page can be accessed by the user, FALSE otherwise.
+ */
+function search_api_access_delete_page(EntityDBExtendable $entity) {
+  return user_access('administer search_api') && $entity->status & ENTITY_IN_DB;
 }
 
 /**
