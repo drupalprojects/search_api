@@ -380,16 +380,17 @@ function search_api_entity_insert($entity, $type) {
   }
   $info = entity_get_info($type);
   $id = $info['entity keys']['id'];
+  $id = $entity->$id;
 
-  $query = db_select('search_api_index', 'i');
-  $query->addField('i', 'machine_name', 'index_id');
-  $query->addExpression(':item_id', 'item_id', array(':item_id' => $entity->$id));
-  $query->addExpression('1', 'changed');
-  $query->condition('entity_type', $type);
-
-  db_insert('search_api_item')
-    ->from($query)
-    ->execute();
+  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
+    db_insert('search_api_item')
+      ->fields(array(
+        'index_id' => $index->machine_name,
+        'item_id' => $id,
+        'changed' => 1,
+      ))
+      ->execute();
+  }
 }
 
 /**
@@ -405,19 +406,18 @@ function search_api_entity_insert($entity, $type) {
 function search_api_entity_update($entity, $type) {
   $info = entity_get_info($type);
   $id = $info['entity keys']['id'];
+  $id = $entity->$id;
 
-  $query = db_select('search_api_index', 'ind')
-    ->fields('ind', array('machine_name'))
-    ->condition('entity_type', $type);
-
-  db_update('search_api_item')
-    ->fields(array(
-      'changed' => REQUEST_TIME,
-    ))
-    ->condition('item_id', $entity->$id)
-    ->condition('index_id', $query, 'IN')
-    ->condition('changed', 0)
-    ->execute();
+  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
+    db_update('search_api_item')
+      ->fields(array(
+        'changed' => REQUEST_TIME,
+      ))
+      ->condition('item_id', $id)
+      ->condition('index_id', $index->machine_name)
+      ->condition('changed', 0)
+      ->execute();
+  }
 }
 
 /**

@@ -12,7 +12,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
   public function option_definition() {
     $options = parent::option_definition();
 
-    $options['mode'] = array('default' => 'filter');
+    $options['mode'] = array('default' => 'keys');
     $options['fields'] = array('default' => array());
 
     return $options;

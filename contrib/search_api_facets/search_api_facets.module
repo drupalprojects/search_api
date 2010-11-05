@@ -200,8 +200,12 @@ function search_api_facets_block_configure_validate(array $element, array &$form
 function search_api_facets_block_save($delta = '', array $edit = array()) {
   $facet = $edit['facet'];
   $options = $facet->options;
-  // We refresh the options each time the form is saved. Similar behaviour
-  // exists for modules, menus, blocks and themes, so – why not?
+  foreach ($options as $key => $value) {
+    if (isset($edit[$key])) {
+      $options[$key] = $edit[$key];
+    }
+  }
+  // We refresh the options each time the form is saved. Similar behaviour exists for modules, menus, blocks and themes, so – why not?
   if (empty($options['type']) || $options['type'] == 'options') {
     _search_api_facets_refresh_type($facet, $options);
   }
@@ -227,6 +231,9 @@ function search_api_facets_block_view($delta = '') {
   list($query, $results) = search_api_current_search($search_id);
 
   $facet = search_api_facet_load($delta);
+  if (!$facet->enabled) {
+    return;
+  }
   $options = $facet->options;
 
   // Get active facet filters for this query.
@@ -524,7 +531,7 @@ function search_api_facet_save(stdClass $facet) {
     'limit'        => 10,
     'min_count'    => 1,
     'sort'         => 'count',
-    'missing'      => TRUE,
+    'missing'      => FALSE,
     'default_true' => TRUE,
     'ids_list'     => array(),
     'type'         => '',
@@ -534,6 +541,7 @@ function search_api_facet_save(stdClass $facet) {
     drupal_write_record('search_api_facet', $facet, 'delta');
     if ($enabled_changed) {
       block_flush_caches();
+      cache_clear_all('*', 'cache_block', TRUE);
     }
     return;
   }
@@ -553,6 +561,7 @@ function search_api_facet_save(stdClass $facet) {
   drupal_write_record('search_api_facet', $facet);
   if ($facet->enabled) {
     block_flush_caches();
+    cache_clear_all('*', 'cache_block', TRUE);
   }
 }
 
@@ -579,6 +588,7 @@ function search_api_facet_delete($conditions = array()) {
   }
   if ($del->execute()) {
     block_flush_caches();
+    cache_clear_all('*', 'cache_block', TRUE);
     return TRUE;
   }
   return FALSE;
@@ -621,11 +631,13 @@ function _search_api_facets_refresh_type(stdClass $facet, array &$options) {
   $index = search_api_index_load($facet->index_id);
   $type = $index->options['fields'][$facet->field]['type'];
   $options['type'] = search_api_extract_inner_type($type);
-  $wrapper = entity_metadata_wrapper($index->entity_type);
+  $array = array();
+  $index->dataAlter($array);
+  $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
   foreach (explode(':', $facet->field) as $part) {
     if (!isset($wrapper->$part)) {
       $wrapper = NULL;
-      break;
+      return;
     }
     $wrapper = $wrapper->$part;
     $wrapper_info = $wrapper->info();
@@ -634,7 +646,7 @@ function _search_api_facets_refresh_type(stdClass $facet, array &$options) {
       $wrapper = $wrapper[0];
     }
   }
-  if ($wrapper && $wrapper->optionsList()) {
+  if ($wrapper->optionsList()) {
     $options['type'] = 'options';
     $options['options'] = $wrapper->optionsList();
   }

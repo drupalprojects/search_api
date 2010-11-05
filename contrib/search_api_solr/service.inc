@@ -259,6 +259,10 @@ class SearchApiSolrService extends SearchApiAbstractService {
    * is the same as specified in SearchApiServiceInterface::indexItems().
    */
   protected function addIndexField(Apache_Solr_Document $doc, $key, $value, $type, $multi_valued = FALSE) {
+    // Don't index empty values (i.e., when field is missing)
+    if (!isset($value)) {
+      return;
+    }
     if (search_api_is_list_type($type)) {
       $type = substr($type, 5, -1);
       foreach ($value as $v) {
@@ -587,7 +591,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
     $facet_params['facet.sort'] = 'count';
     $facet_params['facet.limit'] = 10;
     $facet_params['facet.mincount'] = 1;
-    $facet_params['facet.missing'] = 'true';
+    $facet_params['facet.missing'] = 'false';
     foreach ($facets as $info) {
       if (empty($fields[$info['field']])) {
         continue;
@@ -603,8 +607,8 @@ class SearchApiSolrService extends SearchApiAbstractService {
       if ($info['min_count'] != 1) {
         $facet_params["f.$field.facet.mincount"] = $info['min_count'];
       }
-      if (!$info['missing']) {
-        $facet_params["f.$field.facet.missing"] = 'false';
+      if ($info['missing']) {
+        $facet_params["f.$field.facet.missing"] = 'true';
       }
     }
     return $facet_params;

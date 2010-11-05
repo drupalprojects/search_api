@@ -11,6 +11,7 @@ API changes:
 - #936360: Make servers and indexes exportable.
 
 Others:
+- #961276: Some random bugs.
 - #961122: Exportability UI fixes.
 - #913858: Fix adding properties that are lists of entities.
 - #961210: Don't hide error messages.
