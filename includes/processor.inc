@@ -145,6 +145,9 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
    * tokens back into a one-dimensional array.
    */
   protected function processField(&$value, &$type) {
+    if (!isset($value) || $value === '') {
+      return;
+    }
     if (substr($type, 0, 5) == 'list<') {
       $type = substr($type, 5, -1);
       foreach ($value as &$v) {
