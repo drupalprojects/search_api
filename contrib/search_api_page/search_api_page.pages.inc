@@ -18,8 +18,8 @@ function search_api_page_view($id, $keys = NULL) {
   $ret['form'] = drupal_get_form('search_api_page_search_form', $page, $keys);
 
   if ($keys) {
-    // @todo This is a fix for an assumed PDO bug which would produce a WSoD.
-    new SearchApiIndex();
+    // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
+    module_load_include('inc', 'search_api', 'includes/entity');
     $ret['results']['#theme'] = 'search_api_page_results';
     $ret['results']['#index'] = search_api_index_load($page->index_id);
     $ret['results']['#results'] = $results = search_api_page_search_execute($page, $keys);
@@ -214,9 +214,13 @@ function theme_search_api_page_result(array $variables) {
   $text = '';
   $length = 0;
   foreach ($fields as $field) {
-    if (strlen($field['value']) > $length) {
+    if (search_api_is_list_type($field['type'])) {
+      continue;
+    }
+    $val_length = drupal_strlen($field['value']);
+    if ($val_length > $length) {
       $text = $field['value'];
-      $length = strlen($text);
+      $length = $val_length;
     }
   }
 
