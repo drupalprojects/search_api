@@ -103,6 +103,7 @@ function search_api_menu() {
     'file' => 'search_api.admin.inc',
     'weight' => -8,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
   $items[$pre . '/index/%search_api_index/edit'] = array(
     'title' => 'Settings',
@@ -113,6 +114,7 @@ function search_api_menu() {
     'file' => 'search_api.admin.inc',
     'weight' => -6,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
   $items[$pre . '/index/%search_api_index/workflow'] = array(
     'title' => 'Workflow',
@@ -123,6 +125,7 @@ function search_api_menu() {
     'file' => 'search_api.admin.inc',
     'weight' => -4,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
   $items[$pre . '/index/%search_api_index/fields'] = array(
     'title' => 'Fields',
@@ -133,6 +136,7 @@ function search_api_menu() {
     'file' => 'search_api.admin.inc',
     'weight' => -2,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
   $items[$pre . '/index/%search_api_index/delete'] = array(
     'title' => 'Delete',
@@ -359,6 +363,83 @@ function search_api_entity_property_info() {
   );
 
   return $info;
+}
+
+/**
+ * Implements hook_modules_enabled().
+ *
+ * Populates {search_api_item} for indexes defined in code.
+ */
+function search_api_modules_enabled(array $modules) {
+  $hook = 'default_search_api_index';
+  $indexes = array();
+  $db_indexes = db_select('search_api_index', 'i')
+    ->fields('i', array('machine_name'))
+    ->distinct()
+    ->execute()
+    ->fetchCol();
+  $db_indexes = drupal_map_assoc($db_indexes);
+  foreach ($modules as $module) {
+    if (module_hook($module, $hook)) {
+      $ret = module_invoke($module, $hook);
+      if ($ret && is_array($ret)) {
+        // Copied from EntityAPIController::getDefaults().
+        foreach ($ret as $id => $index) {
+          $index->status |= ENTITY_IN_CODE;
+          $index->machine_name = $id;
+          $index->module = $module;
+          $indexes[$id] = $index;
+        }
+      }
+    }
+    // We don't know what drupal_alter() might do to the indexes, so we have to call it, too.
+    drupal_alter($hook, $indexes);
+  }
+
+  foreach ($indexes as $index) {
+    // Be paranoid about people using duplicate machine names.
+    if (!isset($db_indexes[$index->machine_name])) {
+      $index->postCreate();
+    }
+  }
+}
+
+/**
+ * Implements hook_modules_enabled().
+ *
+ * Populates {search_api_item} for indexes defined in code.
+ */
+function search_api_modules_disabled(array $modules) {
+  $hook = 'default_search_api_index';
+  $db_indexes = db_select('search_api_index', 'i')
+    ->fields('i', array('machine_name'))
+    ->distinct()
+    ->execute()
+    ->fetchCol();
+  $db_indexes = drupal_map_assoc($db_indexes);
+  foreach ($modules as $module) {
+    if (module_hook($module, $hook)) {
+      $ret = module_invoke($module, $hook);
+      if ($ret && is_array($ret)) {
+        // Copied from EntityAPIController::getDefaults().
+        foreach ($ret as $id => $index) {
+          $index->status |= ENTITY_IN_CODE;
+          $index->machine_name = $id;
+          $index->module = $module;
+          $indexes[$id] = $index;
+        }
+      }
+    }
+    // We don't know what drupal_alter() might do to the indexes, so we have to call it, too.
+    drupal_alter($hook, $indexes);
+  }
+
+  foreach ($indexes as $index) {
+    // We have to ensure that the index isn't actually overridden.
+    if (!isset($db_indexes[$index->machine_name])) {
+      $index->postDelete();
+    }
+  }
 }
 
 /**

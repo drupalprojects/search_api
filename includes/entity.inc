@@ -94,10 +94,9 @@ class SearchApiServer extends EntityDBExtendable {
 
     $ret = parent::save();
     if ($ret == SAVED_NEW) {
-      module_invoke_all('search_api_server_insert', $this);
       $this->postCreate();
     }
-    elseif ($ret == SAVED_UPDATED) {
+    elseif ($ret == SAVED_UPDATED && $op != 'edit') {
       module_invoke_all('search_api_server_update', $this, $op);
     }
 
@@ -233,7 +232,6 @@ class SearchApiServer extends EntityDBExtendable {
     }
 
     parent::delete();
-    module_invoke_all('search_api_server_delete', $this);
 
     $tasks = variable_get('search_api_tasks', array());
     unset($tasks[$this->machine_name]);
@@ -454,6 +452,57 @@ class SearchApiIndex extends EntityDBExtendable {
   }
 
   /**
+   * Execute necessary tasks for a newly created index (either created in the
+   * database, or for the first time loaded from code).
+   */
+  public function postCreate() {
+    $entities = entity_load($this->entity_type, FALSE);
+    $query = db_insert('search_api_item')->fields(array('item_id', 'index_id', 'changed'));
+    foreach ($entities as $item_id => $entity) {
+      $query->values(array(
+        'item_id' => $item_id,
+        'index_id' => $this->machine_name,
+        'changed' => 1,
+      ));
+    }
+    $query->execute();
+
+    $server = $this->server();
+    if ($server) {
+      if ($server->enabled) {
+        $server->addIndex($this);
+      }
+      else {
+        $tasks = variable_get('search_api_tasks', array());
+        // When we add or remove an index, we can ignore all other tasks.
+        $tasks[$server->machine_name][$this->machine_name] = array('add');
+        variable_set('search_api_tasks', $tasks);
+      }
+    }
+  }
+
+  /**
+   * Execute necessary tasks when index is either deleted from the database or
+   * not defined in code anymore.
+   */
+  public function postDelete() {
+    if ($server = $this->server()) {
+      if ($server->enabled) {
+        $server->removeIndex($this);
+      }
+      else {
+        $tasks = variable_get('search_api_tasks', array());
+        $tasks[$server->machine_name][$this->machine_name] = array('remove');
+        variable_set('search_api_tasks', $tasks);
+      }
+    }
+
+    db_delete('search_api_item')
+      ->condition('index_id', $this->machine_name)
+      ->execute();
+  }
+
+  /**
    * Saves this index to the database, either creating a new record or updating
    * an existing one.
    *
@@ -485,35 +534,11 @@ class SearchApiIndex extends EntityDBExtendable {
     }
 
     $ret = parent::save();
-    if ($ret == SAVED_NEW) {
-      module_invoke_all('search_api_index_insert', $this);
-
-      // Remember items to index
-      $entities = entity_load($this->entity_type, FALSE);
-      $query = db_insert('search_api_item')->fields(array('item_id', 'index_id', 'changed'));
-      foreach ($entities as $item_id => $entity) {
-        $query->values(array(
-          'item_id' => $item_id,
-          'index_id' => $this->machine_name,
-          'changed' => 1,
-        ));
-      }
-      $query->execute();
-
-      $server = $this->server();
-      if ($server) {
-        if ($server->enabled) {
-          $server->addIndex($this);
-        }
-        else {
-          $tasks = variable_get('search_api_tasks', array());
-          // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$server->machine_name][$this->machine_name] = array('add');
-          variable_set('search_api_tasks', $tasks);
-        }
-      }
+    // We only have to execute the "new index" tasks when the entity was newly created, not overridden.
+    if ($ret == SAVED_NEW && (!isset($this->status) || !($this->status & ENTITY_IN_CODE))) {
+      $this->postCreate();
     }
-    elseif ($ret == SAVED_UPDATED) {
+    elseif ($ret == SAVED_UPDATED && $op != 'edit') {
       module_invoke_all('search_api_index_update', $this, $op);
     }
 
@@ -691,26 +716,8 @@ class SearchApiIndex extends EntityDBExtendable {
    *   TRUE on success, FALSE on failure.
    */
   public function delete() {
-    if ($this->server) {
-      $server = $this->server();
-      if ($server->enabled) {
-        $server->removeIndex($this);
-      }
-      else {
-        $tasks = variable_get('search_api_tasks', array());
-        $tasks[$server->machine_name][$this->machine_name] = array('remove');
-        variable_set('search_api_tasks', $tasks);
-      }
-    }
-
     parent::delete();
-
-    db_delete('search_api_item')
-      ->condition('index_id', $this->machine_name)
-      ->execute();
-
-    module_invoke_all('search_api_index_delete', $this);
-
+    $this->postDelete();
     return TRUE;
   }
 

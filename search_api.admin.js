@@ -44,4 +44,19 @@ Drupal.behaviors.searchApiStatus = {
   }
 };
 
+Drupal.behaviors.searchApiEditMenu = {
+  attach: function (context, settings) {
+    $('.search-api-edit-menu-toggle', context).click(function (e) {
+      $menu = $(this).parent().find('.search-api-edit-menu');
+      if ($menu.is('.collapsed')) {
+    	$menu.removeClass('collapsed');
+      }
+      else {
+    	$menu.addClass('collapsed');
+      }
+      return false;
+    });
+  }
+};
+
 })(jQuery);

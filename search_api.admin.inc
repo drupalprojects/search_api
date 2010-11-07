@@ -7,6 +7,7 @@
 function search_api_admin_overview() {
   $base_path = drupal_get_path('module', 'search_api') . '/';
   drupal_add_css($base_path . 'search_api.admin.css');
+  drupal_add_js($base_path . 'search_api.admin.js');
 
   $servers = search_api_server_load_multiple(FALSE);
   $indexes = array();
@@ -49,13 +50,14 @@ function search_api_admin_overview() {
   $t_enable = t('enable');
   $t_disable = t('disable');
   $t_edit = t('edit');
-  $pre = 'admin/config/search/search_api/server/';
-  $pre_index = 'admin/config/search/search_api/index/';
+  $pre_server = 'admin/config/search/search_api/server';
+  $pre_index = 'admin/config/search/search_api/index';
   $enable = '/enable';
   $disable = '/disable';
   $edit = '/edit';
+  $edit_link_options['attributes']['class'][] = 'search-api-edit-menu-toggle';
   foreach ($servers as $server) {
-    $url = $pre . $server->machine_name;
+    $url = $pre_server . '/' . $server->machine_name;
     $row = array();
     $row[] = $server->enabled ? $t_enabled : $t_disabled;
     if ($show_config_status) {
@@ -69,7 +71,7 @@ function search_api_admin_overview() {
     $rows[] = $row;
     if (!empty($indexes[$server->machine_name])) {
       foreach ($indexes[$server->machine_name] as $index) {
-        $url = $pre_index . $index->machine_name;
+        $url = $pre_index . '/' . $index->machine_name;
         $row = array();
         $row[] = $index->enabled ? $t_enabled : $t_disabled;
         if ($show_config_status) {
@@ -81,7 +83,10 @@ function search_api_admin_overview() {
         $row[] = $index->enabled
             ? l($t_disable, $url . $disable)
             : ($server->enabled ? l($t_enable, $url . $enable) : '');
-        $row[] = l($t_edit, $url . $edit);
+        $row[] = l($t_edit, $url . $edit, $edit_link_options) .
+            '<div class="search-api-edit-menu collapsed">' .
+            theme('links', array('links' => menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)))) .
+            '</div>';
         $row[] = _search_api_admin_delete_link($index);
         $rows[] = $row;
       }
@@ -89,7 +94,7 @@ function search_api_admin_overview() {
   }
   if (!empty($indexes[''])) {
     foreach ($indexes[''] as $index) {
-      $url = $pre_index . $index->machine_name;
+      $url = $pre_index . '/' . $index->machine_name;
       $row = array();
       $row[] = $t_disabled;
       if ($show_config_status) {
