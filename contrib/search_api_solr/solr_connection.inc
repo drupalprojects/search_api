@@ -56,8 +56,6 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
   }
 
   public function ping($timeout = 2) {
-    $start = microtime(TRUE);
-
     // When using timeout in context and file_get_contents it seems to take twice the timout value.
     $timeout = $timeout > 0 ? (float) $timeout / 2 : -1;
 
@@ -73,13 +71,17 @@ class SearchApiSolrConnection extends Apache_Solr_Service {
     $context = stream_context_create($options);
 
     // Attempt a HEAD request to the solr ping page.
-    $ping = file_get_contents($this->_pingUrl, FALSE, $context);
+    $start = microtime(TRUE);
+    $ping = @file_get_contents($this->_pingUrl, FALSE, $context);
 
     // Result is false if there was a timeout or if the HTTP status was not 200.
     if ($ping !== FALSE) {
       return microtime(TRUE) - $start;
     }
     else {
+      if (isset($php_errormsg)) {
+        watchdog('search_api_solr', t('Error while trying to ping Solr server: !msg.', array('!msg' => $php_errormsg)), NULL, WATCHDOG_WARNING);
+      }
       return FALSE;
     }
   }
