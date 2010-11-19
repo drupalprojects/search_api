@@ -32,6 +32,7 @@ interface SearchApiQueryInterface {
    *     limit.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
+   *   All options are optional.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
@@ -164,6 +165,11 @@ interface SearchApiQueryInterface {
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
    *     - score: A float measuring how well the item fits the search.
+   *     - entity (optional): If set, the fully loaded entity. This field should
+   *       always be used by modules using search results, to avoid duplicate
+   *       entity loads.
+   *     - excerpt (optional): If set, an HTML text containing highlighted
+   *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
    *   - ignored: A numeric array of search keys that were ignored for this
@@ -335,6 +341,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     limit.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
+   *   All options are optional.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
@@ -386,7 +393,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
       'description' => t('The query is interpreted as multiple keywords seperated by spaces. ' .
           'Keywords containing spaces may be "quoted". Quoted keywords must still be seperated by spaces.'),
     );
-    // @todo Add fourth mode for complicated expr., e.g.: »"vanilla ice" OR (love NOT hate)«
+    // @todo Add fourth mode for complicated expressions, e.g.: »"vanilla ice" OR (love NOT hate)«
     return $modes;
   }
 
@@ -609,6 +616,11 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
    *     - score: A float measuring how well the item fits the search.
+   *     - entity (optional): If set, the fully loaded entity. This field should
+   *       always be used by modules using search results, to avoid duplicate
+   *       entity loads.
+   *     - excerpt (optional): If set, an HTML text containing highlighted
+   *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
    *   - ignored: A numeric array of search keys that were ignored for this
