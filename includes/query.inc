@@ -30,6 +30,8 @@ interface SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *   - 'filter class': Can be used to change the SearchApiQueryFilterInterface
+   *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
    *   All options are optional.
@@ -339,6 +341,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
+   *   - 'filter class': Can be used to change the SearchApiQueryFilterInterface
+   *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
    *   All options are optional.
@@ -711,8 +715,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
       }
     }
     if ($langs_to_add) {
-      foreach ($langs_to_add as $lang) {
-        $this->condition('search_api_language', $lang);
+      if (count($langs_to_add) == 1) {
+        $this->condition('search_api_language', reset($langs_to_add));
+      }
+      else {
+        $filter = $this->createFilter('OR');
+        foreach ($langs_to_add as $lang) {
+          $filter->condition('search_api_language', $lang);
+        }
+        $this->filter($filter);
       }
     }
   }
