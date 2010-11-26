@@ -13,6 +13,7 @@ API changes:
 
 Others:
 - #966512: "Time ago" option for Views date fields (+bug fix for missing value).
+- #965318: Lots of notices if entities are missing in Views.
 - #961210: Hide error messages.
 - #963756: Array to string conversion error.
 - #961276: Some random bugs.
