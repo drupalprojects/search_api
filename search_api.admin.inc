@@ -1455,7 +1455,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
   $wrappers = array('' => $wrapper);
   // Display names for the prefixes
   $prefix_names = array('' => '');
-  // Display names for the prefixes
+    // The list nesting level for entities with a certain prefix
   $nesting_levels = array('' => 0);
 
   $types = search_api_field_types();
