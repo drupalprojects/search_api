@@ -405,12 +405,13 @@ function search_api_modules_enabled(array $modules) {
 }
 
 /**
- * Implements hook_modules_enabled().
+ * Implements hook_modules_disabled().
  *
- * Populates {search_api_item} for indexes defined in code.
+ * Removes all data for default indexes not available any more.
  */
 function search_api_modules_disabled(array $modules) {
   $hook = 'default_search_api_index';
+  $indexes = array();
   $db_indexes = db_select('search_api_index', 'i')
     ->fields('i', array('machine_name'))
     ->distinct()
