@@ -264,12 +264,6 @@ Included components
     with third-party solutions like Solr, but it's very easy to set up and good
     for smaller applications or testing.
     See contrib/search_api_db/README.txt for details.
-  * Solr search
-    A search server implementation that connects to an Apache Solr server for
-    indexing and searching. The Solr server has to be set up seperately. Solr
-    search is a very fast, accurate and professional search solution, sufficient
-    for almost all needs.
-    See contrib/search_api_solr/README.txt for details.
 
 - Data alterations
 
