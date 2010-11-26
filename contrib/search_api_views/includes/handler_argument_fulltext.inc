@@ -21,7 +21,7 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
   public function options_form(array &$form, array &$form_state) {
     parent::options_form($form, $form_state);
 
-    $index = $this->query->getIndex();
+    $index = search_api_index_load(substr($this->table, 17));
     if (!empty($index->options['fields'])) {
       $fields = array();
       $f = $index->options['fields'];
@@ -54,9 +54,9 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
    * The argument sent may be found at $this->argument.
    */
   public function query() {
-    $fields = $this->options['fields'];
-    $fields = $fields ? $fields : $this->query->getIndex()->getFulltextFields();
-    $this->query->fields($fields);
+    if ($this->options['fields']) {
+      $this->query->fields($this->options['fields']);
+    }
 
     $old = $this->query->getOriginalKeys();
     $this->query->keys($this->argument);

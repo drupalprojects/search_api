@@ -110,7 +110,7 @@ class SearchApiSolrService extends SearchApiAbstractService {
   }
 
   public function supportsFeature($feature) {
-    return $feature == 'search_api_facets';
+    return $feature == 'search_api_facets' || $feature == 'search_api_multi';
   }
 
   /**
@@ -153,11 +153,23 @@ class SearchApiSolrService extends SearchApiAbstractService {
     }
   }
 
+  public function addIndex(SearchApiIndex $index) {
+    if (module_exists('search_api_multi') && module_exists('search_api_views')) {
+      views_invalidate_cache();
+    }
+  }
+
   public function fieldsUpdated(SearchApiIndex $index) {
+    if (module_exists('search_api_multi') && module_exists('search_api_views')) {
+      views_invalidate_cache();
+    }
     return TRUE;
   }
 
   public function removeIndex($index) {
+    if (module_exists('search_api_multi') && module_exists('search_api_views')) {
+      views_invalidate_cache();
+    }
     $id = is_object($index) ? $index->machine_name : $index;
     try {
       $this->connect();
@@ -516,7 +528,9 @@ class SearchApiSolrService extends SearchApiAbstractService {
         if (!isset($fields[$f[0]]) || empty($fields[$f[0]]['indexed'])) {
           throw new SearchApiException(t('Filter term on unknown or unindexed field !field.', array('!field' => $f[0])));
         }
-        $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
+        if ($f[1] !== '') {
+          $fq[] = $this->createFilterQuery($solr_fields[$f[0]], $f[1], $f[2], $fields[$f[0]]);
+        }
       }
       else {
         $q = $this->createFilterQueries($f, $solr_fields, $fields);
@@ -612,6 +626,197 @@ class SearchApiSolrService extends SearchApiAbstractService {
       }
     }
     return $facet_params;
+  }
+
+  //
+  // SearchApiMultiServiceInterface methods
+  //
+
+  /**
+   * Create a query object for searching on this server.
+   *
+   * @param $options
+   *   Associative array of options configuring this query. See
+   *   SearchApiMultiQueryInterface::__construct().
+   *
+   * @throws SearchApiException
+   *   If the server is currently disabled.
+   *
+   * @return SearchApiMultiQueryInterface
+   *   An object for searching this server.
+   */
+  public function queryMultiple(array $options = array()) {
+    return new SearchApiMultiQuery($this->server, $options);
+  }
+
+  /**
+   * Executes a search on the server represented by this object.
+   *
+   * @param SearchApiMultiQueryInterface $query
+   *   The search query to execute.
+   *
+   * @throws SearchApiException
+   *   If an error prevented the search from completing.
+   *
+   * @return array
+   *   An associative array containing the search results, as required by
+   *   SearchApiMultiQueryInterface::execute().
+   */
+  public function searchMultiple(SearchApiMultiQueryInterface $query) {
+    $time_method_called = microtime(TRUE);
+    // Get field information
+    $solr_fields = array(
+      'search_api_id' => 'is_search_api_id',
+      'search_api_relevance' => 'score',
+      'search_api_multi_index' => 'index_id',
+    );
+    $fields = array(
+      'search_api_multi_index' => array(
+        'type' => 'string',
+        'indexed' => TRUE,
+      ),
+    );
+    foreach ($query->getIndexes() as $index_id => $index) {
+      if (empty($index->options['fields'])) {
+        continue;
+      }
+      $prefix = $index_id . ':';
+      foreach ($this->getFieldNames($index) as $field => $key) {
+        if (substr($field, 0, 11) !== 'search_api_') {
+          $solr_fields[$prefix . $field] = $key;
+        }
+      }
+      foreach ($index->options['fields'] as $field => $info) {
+        $fields[$prefix . $field] = $info;
+      }
+    }
+
+    // Extract keys
+    $keys = $query->getKeys();
+    if (is_array($keys)) {
+      $keys = $this->flattenKeys($keys);
+    }
+
+    // Set searched fields
+    $search_fields = $query->getFields();
+    $qf = array();
+    foreach ($search_fields as $f) {
+      $qf[] = $solr_fields[$f];
+    }
+
+    // Extract filters
+    $filter = $query->getFilter();
+    $fq = $this->createFilterQueries($filter, $solr_fields, $fields);
+
+    // Extract sort
+    $sort = array();
+    foreach ($query->getSort() as $f => $order) {
+      $f = $solr_fields[$f];
+      $order = strtolower($order);
+      $sort[] = "$f $order";
+    }
+
+    // Get facet fields
+    $facets = $query->getOption('search_api_facets') ? $query->getOption('search_api_facets') : array();
+    $facet_params = $this->getFacetParams($facets, $solr_fields);
+
+    // Set defaults
+    if (!$keys) {
+      $keys = NULL;
+    }
+    $options = $query->getOptions();
+    $offset = isset($options['offset']) ? $options['offset'] : 0;
+    $limit = isset($options['limit']) ? $options['limit'] : 1000000;
+
+    // Collect parameters
+    $params = array(
+      'qf' => $qf,
+      'fl' => 'item_id,index_id,score',
+      'fq' => $fq,
+    );
+    if ($sort) {
+      $params['sort'] = implode(', ', $sort);
+    }
+    if (!empty($facet_params['facet.field'])) {
+      $params += $facet_params;
+    }
+
+    try {
+      // Send search request
+      $time_processing_done = microtime(TRUE);
+      $this->connect();
+      $response = $this->solr->search($keys, $offset, $limit, $params);
+      $time_query_done = microtime(TRUE);
+
+      if ($response->getHttpStatus() != 200) {
+        throw new SearchApiException(t('The Solr server responded with status code !status: !msg.',
+            array('!status' => $response->getHttpStatus(), '!msg' => $response->getHttpStatusMessage())));
+      }
+
+      // Extract results
+      $results = array();
+      $results['result count'] = $response->response->numFound;
+      $results['results'] = array();
+      foreach ($response->response->docs as $doc) {
+        $doc->id = $doc->item_id;
+        unset($doc->item_id);
+        foreach ($doc as $k => $v) {
+          $result[$k] = $v;
+        }
+        $results['results'][$doc->id] = $result;
+      }
+
+      // Extract facets
+      if (isset($response->facet_counts->facet_fields)) {
+        $results['search_api_facets'] = array();
+        $facet_fields = $response->facet_counts->facet_fields;
+        foreach ($facets as $delta => $info) {
+          $field = $solr_fields[$info['field']];
+          if ($field[0] == 's') {
+            $field = 'f_' . $field;
+          }
+          if (!empty($facet_fields->$field)) {
+            $min_count = $info['min_count'];
+            $terms = $facet_fields->$field;
+            if ($info['missing']) {
+              // We have to correctly incorporate the "_empty_" term.
+              // This will ensure that the term with the least results is dropped, if the limit would be exceeded.
+              $terms = (array) $terms;
+              arsort($terms);
+              if (count($terms) > $info['limit']) {
+                array_pop($terms);
+              }
+            }
+            foreach ($terms as $term => $count) {
+              if ($count >= $min_count) {
+                $term = $term == '_empty_' ? '!' : '"' . $term . '"';
+                $results['search_api_facets'][$delta][] = array(
+                  'filter' => $term,
+                  'count' => $count,
+                );
+              }
+            }
+            if (empty($results['search_api_facets'][$delta]) || count($results['search_api_facets'][$delta]) <= 1) {
+              unset($results['search_api_facets'][$delta]);
+            }
+          }
+        }
+      }
+
+      // Compute performance
+      $time_end = microtime(TRUE);
+      $results['performance'] = array(
+        'complete' => $time_end - $time_method_called,
+        'preprocessing' => $time_processing_done - $time_method_called,
+        'execution' => $time_query_done - $time_processing_done,
+        'postprocessing' => $time_end - $time_query_done,
+      );
+
+      return $results;
+    }
+    catch (Exception $e) {
+      throw new SearchApiException($e->getMessage());
+    }
   }
 
   //

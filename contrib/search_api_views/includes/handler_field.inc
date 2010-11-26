@@ -174,7 +174,8 @@ class SearchApiViewsHandlerField extends views_handler_field {
       return $value;
     }
     $entity = $values['search_api_views_entity'];
-    $url = entity_uri($this->query->getIndex()->entity_type, $entity);
+    $type = isset($values['search_api_views_entity_type']) ? $values['search_api_views_entity_type'] : $this->query->getIndex()->entity_type;
+    $url = entity_uri($type, $entity);
     return l($value, $url['path'], array('html' => TRUE) + $url['options']);
   }
 

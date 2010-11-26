@@ -34,14 +34,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
       '#default_value' => $this->options['mode'],
     );
 
-    $index = search_api_index_load(substr($this->table, 17));
-    if (!empty($index->options['fields'])) {
-      $fields = array();
-      $f = $index->options['fields'];
-      foreach ($index->getFulltextFields() as $name) {
-        $fields[$name] = $f[$name]['name'];
-      }
-    }
+    $fields = $this->getFulltextFields();
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
@@ -60,7 +53,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
       );
     }
     if (isset($form['expose'])) {
-      $form['expose']['#weight'] = 5;
+      $form['expose']['#weight'] = -5;
     }
   }
 
@@ -72,7 +65,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
       $this->value = $this->value ? array_shift($this->value) : NULL;
     }
     $fields = $this->options['fields'];
-    $fields = $fields ? $fields : $this->query->getIndex()->getFulltextFields();
+    $fields = $fields ? $fields : array_keys($this->getFulltextFields());
 
     // If something already specifically set different fields, we silently fall
     // back to mere filtering.
@@ -115,6 +108,21 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
         $keys = "($old) ($keys)";
       }
     }
+  }
+
+  /**
+   * Helper method to get an option list of all available fulltext fields.
+   */
+  protected function getFulltextFields() {
+    $fields = array();
+    $index = search_api_index_load(substr($this->table, 17));
+    if (!empty($index->options['fields'])) {
+      $f = $index->options['fields'];
+      foreach ($index->getFulltextFields() as $name) {
+        $fields[$name] = $f[$name]['name'];
+      }
+    }
+    return $fields;
   }
 
 }

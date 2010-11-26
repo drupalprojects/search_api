@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- #962582: Cross-entity searches (API addition).
 - #939482 by fago: Fix exportables.
 - #939092: Several API changes regarding service class methods.
 - #939414: Enhanced service class descriptions. [soft API change]

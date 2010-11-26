@@ -57,13 +57,14 @@ class SearchApiViewsQuery extends views_plugin_query {
     try {
       $this->errors = array();
       parent::init($base_table, $base_field, $options);
-      $id = substr($base_table, 17);
-      $this->index = search_api_index_load($id);
-      $this->query = $this->index->query(array(
-        'parse mode' => 'terms',
-      ));
-      $this->options = $options;
       $this->fields = array();
+      if (substr($base_table, 0, 17) == 'search_api_index_') {
+        $id = substr($base_table, 17);
+        $this->index = search_api_index_load($id);
+        $this->query = $this->index->query(array(
+          'parse mode' => 'terms',
+        ));
+      }
     }
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
@@ -151,7 +152,6 @@ class SearchApiViewsQuery extends views_plugin_query {
         $view->result[$id]['search_api_relevance'] = $result['score'];
       }
       else {
-        $view->result[$id] = array();
         $ids[] = $id;
       }
     }
@@ -161,8 +161,18 @@ class SearchApiViewsQuery extends views_plugin_query {
 
     $entities = entity_load($this->index->entity_type, $ids);
     foreach ($entities as $id => $entity) {
-      $view->result[$id] = $this->extractFields($entity);
-      $view->result[$id]['search_api_relevance'] = $results[$id]['score'];
+      try {
+        if (!is_object($entity)) {
+          continue;
+        }
+        $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
+        $view->result[$id] = $this->extractFields($wrapper, $this->fields);
+        $view->result[$id]['search_api_views_entity'] = $entity;
+        $view->result[$id]['search_api_relevance'] = $results[$id]['score'];
+      }
+      catch (Exception $e) {
+        continue;
+      }
     }
   }
 
@@ -170,27 +180,17 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Helper function for extracting all necessary fields from an entity.
    */
   // @todo Optimize
-  protected function extractFields($entity) {
-    if (!is_object($entity)) {
-      return NULL;
+  protected function extractFields(EntityMetadataWrapper $wrapper, array $all_fields) {
+    $fields = array();
+    foreach ($all_fields as $key => $true) {
+      $fields[$key]['type'] = 'string';
     }
-    try {
-      $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
-      $fields = array();
-      foreach ($this->fields as $key => $true) {
-        $fields[$key]['type'] = 'string';
-      }
-      $fields = search_api_extract_fields($wrapper, $fields);
-      $ret = array();
-      foreach ($this->fields as $key => $true) {
-        $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
-      }
-      $ret['search_api_views_entity'] = $entity;
-      return $ret;
+    $fields = search_api_extract_fields($wrapper, $fields);
+    $ret = array();
+    foreach ($all_fields as $key => $true) {
+      $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
     }
-    catch (Exception $e) {
-      return NULL;
-    }
+    return $ret;
   }
 
   //

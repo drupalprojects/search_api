@@ -13,7 +13,7 @@ function search_api_views_views_data() {
 
     // Base data
     $key = 'search_api_index_' . $index->machine_name;
-    $table = & $data[$key];
+    $table = &$data[$key];
     $entity_info = entity_get_info($index->entity_type);
     $table['table']['group'] = $entity_info['label'];
     $table['table']['base'] = array(
@@ -34,7 +34,7 @@ function search_api_views_views_data() {
     $wrappers = array('' => $orig_wrapper);
     // Display names for the prefixes
     $prefix_names = array('' => '');
-    // Display names for the prefixes
+    // The list nesting level for entities with a certain prefix
     $nesting_levels = array('' => 0);
 
     $types = search_api_field_types();

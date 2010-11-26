@@ -16,7 +16,7 @@ class SearchApiViewsHandlerFilterDate extends SearchApiViewsHandlerFilter {
     $form['value'] = array(
       '#type' => 'textfield',
       '#title' => empty($form_state['exposed']) ? t('Value') : '',
-      '#description' => t('A date in any format understood by <a href="@dpc-link">PHP</p>. For example, "@date1" or "@date2".',
+      '#description' => t('A date in any format understood by <a href="@doc-link">PHP</a>. For example, "@date1" or "@date2".',
           array('@doc-link' => 'http://php.net/manual/en/function.strtotime.php', '@date1' => format_date(REQUEST_TIME, 'custom', 'Y-m-d H:i:s'), '@date2' => 'now + 1 day')),
       '#size' => 30,
       '#default_value' => isset($this->value) ? $this->value : '',
