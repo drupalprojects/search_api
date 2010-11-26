@@ -13,6 +13,7 @@ class SearchApiViewsHandlerFieldDate extends SearchApiViewsHandlerField {
     $options = parent::option_definition();
     $options['format']['type'] = array('default' => 'medium');
     $options['format']['custom'] = array('default' => '');
+    $options['format']['granularity'] = array('default' => 2);
     return $options;
   }
 
@@ -30,6 +31,7 @@ class SearchApiViewsHandlerFieldDate extends SearchApiViewsHandlerField {
     if ($this->options['format']['custom']) {
       $options['custom'] .= ' – ' . format_date(REQUEST_TIME, 'custom', $this->options['format']['custom']);
     }
+    $options['time_span'] = t('Time span');
     $form['format']['#weight'] = -5;
     $form['format']['type'] = array(
       '#title' => t('Date format'),
@@ -44,12 +46,25 @@ class SearchApiViewsHandlerFieldDate extends SearchApiViewsHandlerField {
           array('@type' => t('Custom'), '!url' => 'http://php.net/manual/en/function.date.php')),
       '#default_value' => $this->options['format']['custom'],
     );
+    $form['format']['granularity'] = array(
+      '#title' => t('Time span granularity'),
+      '#type' => 'select',
+      '#options' => drupal_map_assoc(array(1, 2, 3, 4)),
+      '#description' => t('The number of units to display with the "@type" type.', array('@type' => t('Time span'))),
+      '#default_value' => $this->options['format']['granularity'],
+    );
   }
 
   /**
    * Helper function for rendering a single value.
    */
   protected function renderValue($value) {
+    if (!$value) {
+      return $value;
+    }
+    if ($this->options['format']['type'] == 'time_span') {
+      return format_interval(REQUEST_TIME - $value, $this->options['format']['granularity']);
+    }
     if ($this->options['format']['type'] == 'custom') {
       return format_date($value, 'custom', $this->options['format']['custom']);
     }

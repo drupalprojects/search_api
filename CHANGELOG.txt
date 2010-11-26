@@ -12,6 +12,7 @@ API changes:
 - #936360: Make servers and indexes exportable.
 
 Others:
+- #966512: "Time ago" option for Views date fields (+bug fix for missing value).
 - #961210: Hide error messages.
 - #963756: Array to string conversion error.
 - #961276: Some random bugs.
