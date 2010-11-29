@@ -2,7 +2,7 @@ $Id$
 
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
-
+#984174: Bug in Index::prepareProcessors() when processors have not been set.
 
 Search API 1.0, Beta 4 (11/29/2010):
 ------------------------------------

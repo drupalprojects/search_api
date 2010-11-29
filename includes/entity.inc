@@ -911,11 +911,14 @@ class SearchApiIndex extends EntityDBExtendable {
    *   The called object.
    */
   protected function prepareProcessors() {
-    if (empty($this->options['processors']) || isset($this->processors)) {
+    if (isset($this->processors)) {
       return $this;
     }
 
     $this->processors = array();
+    if (empty($this->options['processors'])) {
+      return $this;
+    }
     $processor_settings = $this->options['processors'];
     $infos = search_api_get_processors();
 
