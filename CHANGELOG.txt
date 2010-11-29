@@ -2,6 +2,10 @@ $Id$
 
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
+
+
+Search API 1.0, Beta 4 (11/29/2010):
+------------------------------------
 API changes:
 - #976876: Move Solr module into its own project.
 - #962582: Cross-entity searches (API addition).
