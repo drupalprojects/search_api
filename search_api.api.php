@@ -134,7 +134,7 @@ function hook_search_api_processor_info() {
 /**
  * Lets modules alter a search query before executing it.
  *
- * @param SearchApiQuery $query
+ * @param SearchApiQueryInterface $query
  *   The SearchApiQueryInterface object representing the search query.
  */
 function hook_search_api_query_alter(SearchApiQueryInterface $query) {
@@ -146,7 +146,7 @@ function hook_search_api_query_alter(SearchApiQueryInterface $query) {
  * Act on search servers when they are loaded.
  *
  * @param array $servers
- *   The loaded servers.
+ *   An array of loaded SearchApiServer objects.
  */
 function hook_search_api_server_load(array $servers) {
   foreach ($servers as $server) {
@@ -214,7 +214,7 @@ function hook_search_api_server_delete(SearchApiServer $server) {
  * Act on search indexes when they are loaded.
  *
  * @param array $indexes
- *   The loaded indexes.
+ *   An array of loaded SearchApiIndex objects.
  */
 function hook_search_api_index_load(array $indexes) {
   foreach ($indexes as $index) {
