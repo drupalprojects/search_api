@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Hooks provided by Drupal core and the System module.
+ * Hooks provided by the Search API module.
  */
 
 /**
