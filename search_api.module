@@ -829,8 +829,8 @@ function search_api_current_search($search_id = NULL, SearchApiQuery $query = NU
     $searches[$search_id] = array($query, $results);
   }
 
-  if (isset($searches[$search_id])) {
-    return $searches[$search_id];
+  if (isset($search_id)) {
+    return isset($searches[$search_id]) ? $searches[$search_id] : NULL;
   }
   return $searches;
 }
