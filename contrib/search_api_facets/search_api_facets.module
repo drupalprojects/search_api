@@ -464,6 +464,9 @@ function search_api_facets_block_current_search_view() {
       // We could also create a text representation of any complex query without too much effort.
       $keys = '[' . t('Complex query') . ']';
     }
+    elseif (((string) $keys) === '') {
+      $keys = '[' . t('All items') . ']';
+    }
     $query_options = $params;
     unset($query_options[$filter_name]);
     $filter_links = array();
