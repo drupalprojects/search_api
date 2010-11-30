@@ -56,6 +56,17 @@ function search_api_facets_theme() {
     ),
     'file' => 'search_api_facets.theme.inc',
   );
+  $themes['search_api_facets_current_search'] = array(
+    'variables' => array(
+      'index' => NULL,
+      'keys' => '',
+      'count' => 0,
+      'path' => NULL,
+      'options' => array(),
+      'filters' => array(),
+    ),
+    'file' => 'search_api_facets.theme.inc',
+  );
 
   return $themes;
 }
@@ -75,7 +86,13 @@ function search_api_facets_permission() {
  * Implements hook_block_info().
  */
 function search_api_facets_block_info() {
-  $blocks = array();
+  $blocks = array(
+    'current-search' => array(
+      'info'   => t('Current search'),
+      'cache'  => DRUPAL_NO_CACHE,
+      'weight' => 4,
+    ),
+  );
   $facets = search_api_facet_load(array('enabled' => 1));
   foreach ($facets as $facet) {
     $blocks[$facet->delta]['info'] = $facet->name;
@@ -91,6 +108,9 @@ function search_api_facets_block_info() {
  * Implements hook_block_configure().
  */
 function search_api_facets_block_configure($delta = '') {
+  if ($delta == 'current-search') {
+    return search_api_facets_block_current_search_configure();
+  }
   $facet = search_api_facet_load($delta);
   if (!$facet) {
     return array();
@@ -185,6 +205,9 @@ function search_api_facets_block_configure($delta = '') {
  * Validation function for search_api_facets_block_configure().
  */
 function search_api_facets_block_configure_validate(array $element, array &$form_state) {
+  if ($delta == 'current-search') {
+    return;
+  }
   $limit = $element['limit']['#value'];
   if ($limit && (!is_numeric($limit) || $limit < 0 || strpos($limit, '.') !== FALSE)) {
     form_error($element['limit'], t('The number of terms has to be a non-negative integer, or left blank.'));
@@ -199,6 +222,9 @@ function search_api_facets_block_configure_validate(array $element, array &$form
  * Implements hook_block_save().
  */
 function search_api_facets_block_save($delta = '', array $edit = array()) {
+  if ($delta == 'current-search') {
+    return search_api_facets_block_current_search_save($edit);
+  }
   $facet = $edit['facet'];
   $options = $facet->options;
   foreach ($options as $key => $value) {
@@ -222,6 +248,9 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
 function search_api_facets_block_view($delta = '') {
   if (!user_access('use search_api_facets')) {
     return;
+  }
+  if ($delta == 'current-search') {
+    return search_api_facets_block_current_search_view();
   }
   // Since we already computed the active facets when altering the search queries, we don't do it again here.
   $search_ids = drupal_static('search_api_facets_search_api_query_alter', array());
@@ -268,7 +297,7 @@ function search_api_facets_block_view($delta = '') {
     $term = (object) $term;
     $term->name = _search_api_create_filter_name($term->filter, $type, $values);
     $term->iname = drupal_strtolower($term->name);
-    if (!empty($params[$filter_name][$facet->field]) && array_search($term->filter, $params[$filter_name][$facet->field]) !== FALSE) {
+    if ($filters && array_search($term->filter, $filters) !== FALSE) {
       unset($terms[$i]);
       continue;
     }
@@ -323,6 +352,169 @@ function search_api_facets_block_view($delta = '') {
 
   return array(
     'subject' => $facet->name,
+    'content' => $theme,
+  );
+}
+
+/**
+ * Block configuration form for the "Current search" block.
+ */
+function search_api_facets_block_current_search_configure() {
+  $options = variable_get('search_api_facets_current_search_options', array());
+  $options += array(
+    'field_name' => TRUE,
+    'default_true' => TRUE,
+    'ids_list' => array(),
+  );
+  $form['field_name'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display field name for active filters'),
+    '#default_value' => $options['field_name'],
+  );
+  $search_ids = variable_get('search_api_facets_search_ids', array());
+  $ids = array();
+  foreach ($search_ids as $index_ids) {
+    $ids += $index_ids;
+  }
+  if (count($ids) > 1) {
+    $form['default_true'] = array(
+      '#type' => 'select',
+      '#title' => t('Display for searches'),
+      '#options' => array(
+        TRUE => t('For all except the selected'),
+        FALSE => t('Only for the selected'),
+      ),
+      '#default_value' => $options['default_true'],
+    );
+    $form['ids_list'] = array(
+      '#type' => 'select',
+      '#title' => t('Search IDs'),
+      '#options' => $ids,
+      '#size' => min(4, count($ids)),
+      '#multiple' => TRUE,
+      '#default_value' => $options['ids_list'],
+    );
+  }
+  else {
+    $form['default_true'] = array(
+      '#type' => 'value',
+      '#value' => TRUE,
+    );
+    $form['ids_list'] = array(
+      '#type' => 'value',
+      '#value' => array(),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Save the configuration form for the "Current search" block.
+ */
+function search_api_facets_block_current_search_save(array $edit = array()) {
+  $options = variable_get('search_api_facets_current_search_options', array());
+  $options += array(
+    'field_name' => TRUE,
+    'default_true' => TRUE,
+    'ids_list' => array(),
+  );
+  foreach ($options as $key => $value) {
+    if (isset($edit[$key])) {
+      $options[$key] = $edit[$key];
+    }
+  }
+  variable_set('search_api_facets_current_search_options', $options);
+}
+
+/**
+ * View the "Current search" block.
+ */
+function search_api_facets_block_current_search_view() {
+  $current_searches = search_api_current_search();
+  if (empty($current_searches)) {
+    return;
+  }
+  $theme = array();
+  $options = variable_get('search_api_facets_current_search_options', array());
+  $options += array(
+    'field_name' => TRUE,
+    'default_true' => TRUE,
+    'ids_list' => array(),
+  );
+  $ids_list = drupal_map_assoc($options['ids_list']);
+  $params = drupal_get_query_parameters();
+  $num = count(search_api_current_search());
+  $path = $_GET['q'];
+
+  foreach ($current_searches as $search_id => $data) {
+    if ($options['default_true'] == isset($ids_list[$search_id])) {
+      continue;
+    }
+    list ($query, $results) = $data;
+    $filter_name = $num > 1 ? 'filter_' . $search_id : 'filter';
+    $filters = isset($params[$filter_name]) ? $params[$filter_name] : array();
+    if (!$filters && $num == 1 && isset($params['filter_' . $search_id])) {
+      $filter_name = 'filter_' . $search_id;
+      $filters = $params[$filter_name];
+    }
+    $index = $query->getIndex();
+    $keys = $query->getOriginalKeys();
+    if (is_array($keys)) {
+      // We could also create a text representation of any complex query without too much effort.
+      $keys = '[' . t('Complex query') . ']';
+    }
+    $query_options = $params;
+    unset($query_options[$filter_name]);
+    $filter_links = array();
+    foreach ($filters as $field => $field_filters) {
+      $facets = search_api_facet_load(array('index_id' => $index->machine_name, 'field' => $field));
+      if (!$facets) {
+        continue;
+      }
+      $facet = reset($facets);
+      if (empty($facet->options['type'])) {
+        _search_api_facets_refresh_type($facet, $facet->options);
+        search_api_facet_save($facet);
+      }
+      $type = $facet->options['type'];
+      $values = isset($facet->options['options']) ? $facet->options['options'] : array();
+      $prefix = $options['field_name'] ? $index->options['fields'][$field]['name'] . ': ' : '';
+
+      $theme_suffix  = '';
+      $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->entity_type);
+      $theme_suffix .= '__' . preg_replace('/\W+/', '_', $field);
+      $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->delta);
+      foreach ($field_filters as $i => $v) {
+        $filter = array(
+          '#theme'   => 'search_api_facets_facet' . $theme_suffix,
+          '#name'    => $prefix . _search_api_create_filter_name($v, $type, $values),
+          '#count'   => 0,
+          '#path'    => $path,
+          '#options' => array('query' => $params),
+          '#active'  => TRUE,
+        );
+        unset($filter['#options']['query'][$filter_name][$field][$i]);
+        $filter_links[] = $filter;
+      }
+    }
+
+    $theme[$search_id] = array(
+      '#theme' => 'search_api_facets_current_search',
+      '#index' => $index,
+      '#keys' => $keys,
+      '#count' => $results['result count'],
+      '#path' => $path,
+      '#options' => $query_options,
+      '#filters' => $filter_links,
+    );
+  }
+
+  if (empty($theme)) {
+    return;
+  }
+  return array(
+    'subject' => t('Current search'),
     'content' => $theme,
   );
 }

@@ -62,6 +62,7 @@ function search_api_facets_schema() {
  */
 function search_api_facets_uninstall() {
   variable_del('search_api_facets_search_ids');
+  variable_del('search_api_facets_current_search_options');
 }
 
 /**
