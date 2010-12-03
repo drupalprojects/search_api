@@ -127,13 +127,13 @@ function search_api_admin_overview() {
 }
 
 /**
- * @param EntityDBExtendable $entity
+ * @param Entity $entity
  *   The index or server for which a link should be generated.
  *
  * @return string
  *   A link to a delete form for the entity, if applicable.
  */
-function _search_api_admin_delete_link(EntityDBExtendable $entity) {
+function _search_api_admin_delete_link(Entity $entity) {
   // Delete link only makes sense if entity is in the database (custom or overridden).
   if ($entity->status & ENTITY_IN_DB) {
     $type = $entity instanceof SearchApiServer ? 'server' : 'index';
@@ -1665,7 +1665,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
  *   Either a form array, or FALSE if this combination of type and action is
  *   not supported.
  */
-function search_api_admin_confirm(array $form, array &$form_state, $type, $action, EntityDBExtendable $entity) {
+function search_api_admin_confirm(array $form, array &$form_state, $type, $action, Entity $entity) {
   switch ($type) {
     case 'server':
       switch ($action) {

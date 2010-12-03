@@ -1194,13 +1194,13 @@ function search_api_server_url(SearchApiServer $server) {
  * Title callback for determining which title should be displayed for the
  * "delete" local task.
  *
- * @param EntityDBExtendable $entity
+ * @param Entity $entity
  *   The server or index for which the menu link is displayed.
  *
  * @return string
  *   A translated version of either "Delete" or "Revert".
  */
-function search_api_title_delete_page(EntityDBExtendable $entity) {
+function search_api_title_delete_page(Entity $entity) {
   return $entity->status == ENTITY_OVERRIDDEN ? t('Revert') : t('Delete');
 }
 
@@ -1208,13 +1208,13 @@ function search_api_title_delete_page(EntityDBExtendable $entity) {
  * Access callback for determining if a server's or index' "delete" page should
  * be accessible.
  *
- * @param EntityDBExtendable $entity
+ * @param Entity $entity
  *   The server or index for which the access to the delete page is checked.
  *
  * @return
  *   TRUE if the delete page can be accessed by the user, FALSE otherwise.
  */
-function search_api_access_delete_page(EntityDBExtendable $entity) {
+function search_api_access_delete_page(Entity $entity) {
   return user_access('administer search_api') && $entity->status & ENTITY_IN_DB;
 }
 

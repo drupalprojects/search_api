@@ -7,7 +7,7 @@
  * This can handle the same calls as defined in the SearchApiServiceInterface
  * and pass it on to the service implementation appropriate for this server.
  */
-class SearchApiServer extends EntityDBExtendable {
+class SearchApiServer extends Entity {
 
   /* Database values that will be set when object is loaded: */
 
@@ -249,11 +249,9 @@ class SearchApiServer extends EntityDBExtendable {
    *   An array of properties to be serialized.
    */
   public function __sleep() {
-    $ret = parent::__sleep();
-    if (($pos = array_search('proxy', $ret)) !== FALSE) {
-      unset($ret[$pos]);
-    }
-    return $ret;
+    $ret = get_object_vars($this);
+    unset($ret['id'], $ret['proxy'], $ret['status'], $ret['is_new']);
+    return array_keys($ret);
   }
 
   /**
@@ -380,7 +378,7 @@ class SearchApiServer extends EntityDBExtendable {
 /**
  * Class representing a search index.
  */
-class SearchApiIndex extends EntityDBExtendable {
+class SearchApiIndex extends Entity {
 
   /**
    * @var SearchApiServer
