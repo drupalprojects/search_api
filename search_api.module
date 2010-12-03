@@ -1086,11 +1086,18 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
     }
   }
   unset($info);
+
   foreach ($nested as $prefix => $nested_fields) {
     if (isset($wrapper->$prefix)) {
       $nested_fields = search_api_extract_fields($wrapper->$prefix, $nested_fields);
       foreach ($nested_fields as $field => $info) {
         $fields["$prefix:$field"] = $info;
+      }
+    }
+    else {
+      foreach ($nested_fields as $field => &$info) {
+        $info['value'] = NULL;
+        $info['original_type'] = $info['type'];
       }
     }
   }

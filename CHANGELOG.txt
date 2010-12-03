@@ -2,6 +2,7 @@ $Id$
 
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
+- #986412: Notice: Undefined index: value in theme_search_api_page_result().
 - #987928: EntityDBExtendable::__sleep() is gone.
 - #985324: Add "Current search" block.
 - #984174: Bug in Index::prepareProcessors() when processors have not been set.
