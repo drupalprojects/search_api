@@ -1368,13 +1368,12 @@ function search_api_list_indexes(array $options = array(), $header = NULL) {
  *   A completely loaded index object, or NULL if no such index exists.
  */
 function search_api_index_load($id, $reset = FALSE) {
-  module_load_include('inc', 'search_api', 'includes/entity');
   $ret = search_api_index_load_multiple(array($id), array(), $reset);
   return $ret ? reset($ret) : FALSE;
 }
 
 /**
- * Load multiple indexs at once, determined by IDs or machine names, or by
+ * Load multiple indexes at once, determined by IDs or machine names, or by
  * other conditions.
  *
  * @see entity_load()
