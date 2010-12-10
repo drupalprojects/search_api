@@ -545,8 +545,6 @@ class SearchApiDbService extends SearchApiAbstractService {
     }
 
     if (!isset($db_query)) {
-      $msg = t('No valid search keys or filters given.');
-      $this->warnings[$msg] = 1;
       $db_query = db_select($fields['search_api_language']['table'], 't', $this->query_options);
       $db_query->addField('t', 'item_id', 'item_id');
       $db_query->addExpression(':score', 'score', array(':score' => 1));
