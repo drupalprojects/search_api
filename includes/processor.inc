@@ -149,11 +149,18 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
       return;
     }
     if (substr($type, 0, 5) == 'list<') {
-      $type = substr($type, 5, -1);
+      $t = substr($type, 5, -1);
       foreach ($value as &$v) {
-        $this->processField($v, $type);
+        $this->processField($v, $t);
       }
-      $type = "list<$type>";
+      if ($t == 'tokens') {
+        foreach ($value as &$v) {
+          if (!is_array($v)) {
+            $v = $v ? array('value' => $v, 'score' => 1) : array();
+          }
+        }
+      }
+      $type = "list<$t>";
       return;
     }
     if ($type == 'tokens') {
@@ -176,7 +183,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   protected function normalizeTokens($tokens, $score = 1) {
     $ret = array();
     foreach ($tokens as $token) {
-      if (empty($token['value'])) {
+      if (empty($token['value']) && !is_numeric($token['value'])) {
         // Filter out empty tokens.
         continue;
       }
