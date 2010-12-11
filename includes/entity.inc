@@ -454,19 +454,38 @@ class SearchApiIndex extends Entity {
    * database, or for the first time loaded from code).
    */
   public function postCreate() {
-    $entities = entity_load($this->entity_type, FALSE);
-    $query = db_insert('search_api_item')->fields(array('item_id', 'index_id', 'changed'));
-    foreach ($entities as $item_id => $entity) {
-      $query->values(array(
-        'item_id' => $item_id,
-        'index_id' => $this->machine_name,
-        'changed' => 1,
-      ));
+    // Remember items to index.
+    $entity_info = entity_get_info($this->entity_type);
+    if (!empty($entity_info['base table'])) {
+      // Use a subselect, which will probably be much faster than entity_load().
+      // We just assume that no module/entity type will be stupid enough to use "base table" and
+      // "entity_keys[id]" in a different way than the default controller.
+      $id_field = $entity_info['entity keys']['id'];
+      $table = $entity_info['base table'];
+      $query = db_select($table, 't');
+      $query->addField('t', $id_field, 'item_id');
+      $query->addExpression(':index_id', 'index_id', array(':index_id' => $this->machine_name));
+      $query->addExpression('1', 'changed');
+
+      db_insert('search_api_item')->from($query)->execute();
     }
-    $query->execute();
+    else {
+      // We have to use the slow entity_load().
+      $entities = entity_load($this->entity_type, FALSE);
+      $query = db_insert('search_api_item')->fields(array('item_id', 'index_id', 'changed'));
+      foreach ($entities as $item_id => $entity) {
+        $query->values(array(
+          'item_id' => $item_id,
+          'index_id' => $this->machine_name,
+          'changed' => 1,
+        ));
+      }
+      $query->execute();
+    }
 
     $server = $this->server();
     if ($server) {
+      // Tell the server about the new index.
       if ($server->enabled) {
         $server->addIndex($this);
       }

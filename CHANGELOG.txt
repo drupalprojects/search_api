@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #994948: "Add index" results in blank page.
 - #993470: Unnecessary warning when no valid keys or filters are given.
 - #986412: Notice: Undefined index: value in theme_search_api_page_result().
 - #987928: EntityDBExtendable::__sleep() is gone.
