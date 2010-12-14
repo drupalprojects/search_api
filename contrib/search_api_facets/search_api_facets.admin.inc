@@ -42,6 +42,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
         'By cloning blocks, you can have multiple facet blocks with seperate configurations for a single index field.</p>' .
         "<p>When you won't be using a disabled facet anymore, you can delete all its settings permanently, reducing database size. " .
         "This won't influence other facets. You can enable it again later, but without the previously stored settings.</p>" .
+        "<p>* Checkboxes with an asterisk denote overridden facet configurations. These cannot be deleted, but only be reset to their defaults.</p>" .
         "<p>Note that, even though facets for fulltext fields are available, they won't make much sense in most scenarios.</p>"),
   );
   $form['facets'] = array(
@@ -63,8 +64,24 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     if ($disabled = empty($index->enabled)) {
       drupal_set_message('Since this index is at the moment disabled, no facet blocks can be activated.', 'warning');
     }
+    $show_status = FALSE;
     foreach (search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name)) as $facet) {
       $facets[$facet->field][] = $facet;
+      if ($facet->status & ENTITY_IN_CODE) {
+        $show_status = TRUE;
+      }
+    }
+    if ($show_status) {
+      $form['facets']['#table_header'] = array(
+        t('Enabled'),
+        t('Status'),
+        t('Field'),
+        t('Type'),
+        t('Name'),
+        t('Clone block'),
+        t('Delete data'),
+      );
+      $empty_status = '<span title="' . t('There is no saved facet for this field yet.') . '">' . t('Undefined') . '</span>';
     }
     $types = search_api_field_types();
     foreach ($index->options['fields'] as $key => $field) {
@@ -80,6 +97,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           'name' => t('!index: Filter on !field', array('!field' => $field['name'], '!index' => $index->name)),
           'enabled' => 0,
           'options' => array(),
+          'status' => 0,
         ));
       }
       foreach ($facets[$key] as $i => $facet) {
@@ -93,6 +111,9 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           '#default_value' => $facet->enabled,
           '#disabled' => $disabled,
         );
+        if ($show_status) {
+          $form['facets'][$k]['status']['#markup'] = $facet->status ? theme('entity_status', array('status' => $facet->status)) : $empty_status;
+        }
         $form['facets'][$k]['field'] = array(
           '#markup' => $field['name'],
         );
@@ -108,7 +129,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           '#type' => 'checkbox',
           '#default_value' => FALSE,
         );
-        if ($facet->enabled || empty($facet->delta)) {
+        if (($facet->enabled && $facet->status != ENTITY_OVERRIDDEN) || empty($facet->delta) || !($facet->status & ENTITY_IN_DB)) {
           $form['facets'][$k]['delete'] = array(
             '#markup' => '&nbsp;',
           );
@@ -118,6 +139,9 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
             '#type' => 'checkbox',
             '#default_value' => FALSE,
           );
+          if ($facet->status & ENTITY_IN_CODE) {
+            $form['facets'][$k]['delete']['#title'] = '*';
+          }
         }
       }
     }
@@ -164,6 +188,7 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
   $count = 0;
   $clone_count = 0;
   $delete_count = 0;
+  $reset_count = 0;
 
   $counts = array();
   foreach ($form_state['values']['facets'] as $key => $v) {
@@ -173,12 +198,11 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
       // Field is not stored, what use would cloning or deleting be?
       continue;
     }
-    if (empty($v['enabled']) && empty($v['clone'])) {
+    if ((empty($v['enabled']) && empty($v['clone'])) || $v['facet']->status == ENTITY_OVERRIDDEN) {
       // This is the only case in which a "delete" makes sense.
       if (!empty($v['delete'])) {
-        if ($v['facet']->delete()) {
-          ++$delete_count;
-        }
+        $v['facet']->delete();
+        $v['facet']->status == ENTITY_OVERRIDDEN ? ++$reset_count : ++$delete_count;
         continue;
       }
     }
@@ -193,7 +217,7 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
     }
     if ($v['clone']) {
       $f = $v['facet'];
-      unset($f->delta);
+      unset($f->id, $f->delta);
       $f->name = t('!index: Filter on !field #!num',
           array('!field' => $index->options['fields'][$f->field]['name'], '!index' => $index->name, '!num' => $c + 1));
       $f->save();
@@ -210,7 +234,10 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
   if ($count) {
     drupal_set_message(format_plural($count, '1 facet block was successfully updated.', '@count facet blocks were successfully updated.'));
   }
-  if (!($count + $clone_count + $delete_count)) {
+  if ($reset_count) {
+    drupal_set_message(format_plural($reset_count, '1 facet configuration was reset.', '@count facet configurations were reset.'));
+  }
+  if (!($count + $clone_count + $delete_count + $reset_count)) {
     drupal_set_message(t('No values were changed.'));
   }
 }

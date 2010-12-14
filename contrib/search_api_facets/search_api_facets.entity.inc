@@ -76,16 +76,11 @@ class SearchApiFacet extends Entity {
       'ids_list'     => array(),
       'type'         => '',
     );
-    if (!empty($this->id) && !empty($this->delta) && empty($this->is_new)) {
-      $enabled_changed = $this->enabled != search_api_facet_load($this->delta, TRUE)->enabled;
-      parent::save();
-      if ($enabled_changed) {
-        block_flush_caches();
-        cache_clear_all('*', 'cache_block', TRUE);
-      }
-      return;
-    }
+
     if (empty($this->delta)) {
+      // The facet should be newly created if save() is invoked with $this->delta being empty.
+      $this->id = NULL;
+
       // Construct a delta using index id and field.
       // We have to ensure that it's both unique and at most 32 characters long,
       // leading to a bit of complexity.
@@ -98,11 +93,8 @@ class SearchApiFacet extends Entity {
       }
       $this->delta = $delta;
     }
-    parent::save();
-    if ($this->enabled) {
-      block_flush_caches();
-      cache_clear_all('*', 'cache_block', TRUE);
-    }
+
+    return parent::save();
   }
 
 }

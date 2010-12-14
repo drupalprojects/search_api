@@ -676,11 +676,27 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
 }
 
 /**
- * Implements hook_search_api_facet_disabled().
- *
- * Clears the block cache once
+ * Implements hook_search_api_facet_enabled().
  */
-function search_api_facets_search_api_facet_disabled() {
+function search_api_facets_search_api_facet_enabled($facets) {
+  block_flush_caches();
+  cache_clear_all('*', 'cache_block', TRUE);
+}
+
+/**
+ * Implements hook_search_api_facet_update().
+ */
+function search_api_facets_search_api_facet_update(SearchApiFacet $facet) {
+  if ($facet->enabled != $facet->original->enabled) {
+    block_flush_caches();
+    cache_clear_all('*', 'cache_block', TRUE);
+  }
+}
+
+/**
+ * Implements hook_search_api_facet_disabled().
+ */
+function search_api_facets_search_api_facet_disabled($facets) {
   block_flush_caches();
   cache_clear_all('*', 'cache_block', TRUE);
 }
