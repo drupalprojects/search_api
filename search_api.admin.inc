@@ -454,7 +454,11 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
 
   $class = search_api_get_service_info($server->class);
 
-  $form['options']['form'] = $server->configurationForm($form, $form_state);
+  $service_options = array();
+  $service_options = $server->configurationForm($service_options, $form_state);
+  if ($service_options) {
+    $form['options']['form'] = $service_options;
+  }
   $form['options']['#type'] = 'fieldset';
   $form['options']['#tree'] = TRUE;
   $form['options']['#collapsible'] = TRUE;

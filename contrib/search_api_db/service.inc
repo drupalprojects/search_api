@@ -19,8 +19,8 @@ class SearchApiDbService extends SearchApiAbstractService {
           $options[$key]["$key:$target"] = "$key > $target";
         }
       }
-      $form = array(
-        'database' => array(
+      if (count($options) > 1) {
+        $form['database'] = array(
           '#type' => 'select',
           '#title' => t('Database'),
           '#description' => t('Select the database key and target to use for storing indexing information in. ' .
@@ -28,14 +28,20 @@ class SearchApiDbService extends SearchApiAbstractService {
           '#options' => $options,
           '#default_value' => 'default:default',
           '#required' => TRUE,
-        ),
-        'min_chars' => array(
-          '#type' => 'select',
-          '#title' => t('Minimum word length'),
-          '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
-          '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6)),
-          '#default_value' => 1,
-        ),
+        );
+      }
+      else {
+        $form['database'] = array(
+          '#type' => 'value',
+          '#value' => "$key:$target",
+        );
+      }
+      $form['min_chars'] = array(
+        '#type' => 'select',
+        '#title' => t('Minimum word length'),
+        '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
+        '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6)),
+        '#default_value' => 1,
       );
     }
     else {
