@@ -892,7 +892,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
 function _search_api_create_value_name($value, $type, array $values = array()) {
   switch ($type) {
     case 'boolean':
-      return $value ? t('True') : t('False');
+      return $value == 'true' ? t('True') : t('False');
     case 'date':
       // @todo Implement something really clever here. hook_date_types()?
       return format_date($value, 'short');
