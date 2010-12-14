@@ -322,7 +322,7 @@ function search_api_admin_item_title($object) {
 function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
   if (!empty($action)) {
     if ($action == 'enable') {
-      if ($server->enable()) {
+      if ($server->update(array('enabled' => 1))) {
         drupal_set_message(t('The server was successfully enabled.'));
       }
       else {
@@ -439,6 +439,11 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
     '#maxlength' => 50,
     '#default_value' => $server->name,
     '#required' => TRUE,
+  );
+  $form['enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled'),
+    '#default_value' => $server->enabled,
   );
   $form['description'] = array(
     '#type' => 'textarea',
@@ -621,7 +626,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
 
   if (!empty($action)) {
     if ($action == 'enable') {
-      if ($index->enable()) {
+      if ($index->update(array('enabled' => 1))) {
         drupal_set_message(t('The index was successfully enabled.'));
       }
       else {
@@ -957,6 +962,13 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#maxlength' => 50,
     '#default_value' => $index->name,
     '#required' => TRUE,
+  );
+  $form['enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled'),
+    '#default_value' => $index->enabled,
+    // Can't enable an index lying on a disabled server, or no server at all.
+    '#disabled' => !$index->enabled && (!$index->server() || !$index->server()->enabled),
   );
   $form['description'] = array(
     '#type' => 'textarea',

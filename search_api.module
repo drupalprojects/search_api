@@ -366,80 +366,165 @@ function search_api_entity_property_info() {
 }
 
 /**
- * Implements hook_modules_enabled().
+ * Implements hook_search_api_server_enabled().
  *
- * Populates {search_api_item} for indexes defined in code.
+ * Calls the postCreate() method for all servers.
  */
-function search_api_modules_enabled(array $modules) {
-  $hook = 'default_search_api_index';
-  $indexes = array();
-  $db_indexes = db_select('search_api_index', 'i')
-    ->fields('i', array('machine_name'))
-    ->distinct()
-    ->execute()
-    ->fetchCol();
-  $db_indexes = drupal_map_assoc($db_indexes);
-  foreach ($modules as $module) {
-    if (module_hook($module, $hook)) {
-      $ret = module_invoke($module, $hook);
-      if ($ret && is_array($ret)) {
-        // Copied from EntityAPIController::getDefaults().
-        foreach ($ret as $id => $index) {
-          $index->status |= ENTITY_IN_CODE;
-          $index->machine_name = $id;
-          $index->module = $module;
-          $indexes[$id] = $index;
+function search_api_search_api_server_enabled(array $servers) {
+  foreach ($servers as $server) {
+    $server->postCreate();
+  }
+}
+
+/**
+ * Implements hook_search_api_server_update().
+ *
+ * Calls the server's postUpdate() method and marks all of this server's indexes
+ * for reindexing, if necessary.
+ */
+function search_api_search_api_server_update(SearchApiServer $server) {
+  if ($server->postUpdate()) {
+    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+      $index->reindex();
+    }
+  }
+  if ($server->enabled != $server->original->enabled) {
+    if ($server->enabled) {
+      // Were there any changes in the server's indexes while it was disabled?
+      $tasks = variable_get('search_api_tasks', array());
+      if (isset($tasks[$server->machine_name])) {
+        foreach ($tasks[$server->machine_name] as $index_id => $index_tasks) {
+          $index = search_api_index_load($index_id);
+          foreach ($index_tasks as $task) {
+            switch ($task) {
+              case 'add':
+                $server->addIndex($index);
+                break;
+              case 'clear':
+                $server->deleteItems('all', $index);
+                break;
+              case 'clear all':
+                // Would normally be used with a fake index ID of "", since it doesn't matter.
+                $server->deleteItems('all');
+                break;
+              case 'fields':
+                if ($server->fieldsUpdated($index)) {
+                  _search_api_index_reindex($index->machine_name);
+                }
+                break;
+              case 'remove':
+                $server->removeIndex($index ? $index : $index_id);
+                break;
+              default:
+                if (substr($task, 0, 7) == 'delete-') {
+                  $id = substr($task, 7);
+                  $server->deleteItems(array($id), $index);
+                }
+                else {
+                  watchdog('search_api', t('Unknown task "!task" for server "!name".', array('!task' => $task, '!name' => $server->machine_name)), NULL, 'warning');
+                }
+            }
+          }
         }
+        unset($tasks[$server->machine_name]);
+        variable_set('search_api_tasks', $tasks);
       }
     }
-    // We don't know what drupal_alter() might do to the indexes, so we have to call it, too.
-    drupal_alter($hook, $indexes);
-  }
-
-  foreach ($indexes as $index) {
-    // Be paranoid about people using duplicate machine names.
-    if (!isset($db_indexes[$index->machine_name])) {
-      $index->postCreate();
+    else {
+      foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name, 'enabled' => 1)) as $index) {
+        $index->update(array('enabled' => 0));
+      }
     }
   }
 }
 
 /**
- * Implements hook_modules_disabled().
+ * Implements hook_search_api_server_disabled().
  *
- * Removes all data for default indexes not available any more.
+ * Calls the preDelete() method for all servers.
  */
-function search_api_modules_disabled(array $modules) {
-  $hook = 'default_search_api_index';
-  $indexes = array();
-  $db_indexes = db_select('search_api_index', 'i')
-    ->fields('i', array('machine_name'))
-    ->distinct()
-    ->execute()
-    ->fetchCol();
-  $db_indexes = drupal_map_assoc($db_indexes);
-  foreach ($modules as $module) {
-    if (module_hook($module, $hook)) {
-      $ret = module_invoke($module, $hook);
-      if ($ret && is_array($ret)) {
-        // Copied from EntityAPIController::getDefaults().
-        foreach ($ret as $id => $index) {
-          $index->status |= ENTITY_IN_CODE;
-          $index->machine_name = $id;
-          $index->module = $module;
-          $indexes[$id] = $index;
-        }
+function search_api_search_api_server_disabled(array $servers) {
+  foreach ($servers as $server) {
+    $server->preDelete();
+
+    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+      $index->update(array('server' => NULL, 'enabled' => FALSE));
+    }
+
+    $tasks = variable_get('search_api_tasks', array());
+    unset($tasks[$server->machine_name]);
+    variable_set('search_api_tasks', $tasks);
+  }
+}
+
+/**
+ * Implements hook_search_api_index_enabled().
+ *
+ * Populates {search_api_item} for new indexes.
+ */
+function search_api_search_api_index_enabled(array $indexes) {
+  foreach ($indexes as $index) {
+    $index->postCreate();
+  }
+}
+
+/**
+ * Implements hook_search_api_index_update().
+ */
+function search_api_search_api_index_update(SearchApiIndex $index) {
+  if ($index->server != $index->original->server) {
+    // Server changed - inform old and new ones.
+    if ($index->original->server) {
+      $old_server = search_api_server_load($index->original->server);
+      if ($old_server->enabled) {
+        $old_server->removeIndex($index);
+      }
+      else {
+        $tasks = variable_get('search_api_tasks', array());
+        // When we add or remove an index, we can ignore all other tasks.
+        $tasks[$old_server->machine_name][$index->machine_name] = array('remove');
+        variable_set('search_api_tasks', $tasks);
       }
     }
-    // We don't know what drupal_alter() might do to the indexes, so we have to call it, too.
-    drupal_alter($hook, $indexes);
+
+    if ($index->server) {
+      $new_server = $index->server(TRUE);
+      // If the server is enabled, we call addIndex(); otherwise, we save the task.
+      if ($new_server->enabled) {
+        $new_server->addIndex($index);
+      }
+      else {
+        $tasks = variable_get('search_api_tasks', array());
+        // When we add or remove an index, we can ignore all other tasks.
+        $tasks[$new_server->machine_name][$index->machine_name] = array('add');
+        variable_set('search_api_tasks', $tasks);
+        unset($new_server);
+      }
+    }
+
+    // We also have to re-index all content
+    _search_api_index_reindex($index->machine_name);
   }
 
-  foreach ($indexes as $index) {
-    // We have to ensure that the index isn't actually overridden.
-    if (!isset($db_indexes[$index->machine_name])) {
-      $index->postDelete();
+  $old_fields = $index->original->options + array('fields' => array());
+  $old_fields = $old_fields['fields'];
+  $new_fields = $index->options + array('fields' => array());
+  $new_fields = $new_fields['fields'];
+  if ($old_fields != $new_fields) {
+    if ($index->server && $index->server()->fieldsUpdated($index)) {
+      _search_api_index_reindex($index->machine_name);
     }
+  }
+}
+
+/**
+ * Implements hook_search_api_index_disabled().
+ *
+ * Removes all data for indexes not available any more.
+ */
+function search_api_search_api_index_disabled(array $indexes) {
+  foreach ($indexes as $index) {
+    $index->postDelete();
   }
 }
 
@@ -1272,7 +1357,7 @@ function search_api_server_edit($id, array $fields) {
  */
 function search_api_server_enable($id) {
   $server = search_api_server_load($id, TRUE);
-  $ret = $server->enable();
+  $ret = $server->update(array('enabled' => 1));
   return $ret ? 1 : $ret;
 }
 
@@ -1287,7 +1372,7 @@ function search_api_server_enable($id) {
  */
 function search_api_server_disable($id) {
   $server = search_api_server_load($id, TRUE);
-  $ret = $server->enable(FALSE);
+  $ret = $server->update(array('enabled' => 0));
   return $ret ? 1 : $ret;
 }
 
@@ -1302,7 +1387,8 @@ function search_api_server_disable($id) {
  */
 function search_api_server_delete($id) {
   $server = search_api_server_load($id, TRUE);
-  return $server->delete();
+  $server->delete();
+  return 1;
 }
 
 /**
@@ -1511,7 +1597,7 @@ function search_api_index_edit_fields($id, array $fields) {
  */
 function search_api_index_enable($id) {
   $index = search_api_index_load($id, TRUE);
-  $ret = $index->enable();
+  $ret = $index->update(array('enabled' => 1));
   return $ret ? 1 : $ret;
 }
 
@@ -1526,7 +1612,7 @@ function search_api_index_enable($id) {
  */
 function search_api_index_disable($id) {
   $index = search_api_index_load($id, TRUE);
-  $ret = $index->enable(FALSE);
+  $ret = $index->update(array('enabled' => 0));
   return $ret ? 1 : $ret;
 }
 
@@ -1586,5 +1672,9 @@ function search_api_index_clear($id) {
  */
 function search_api_index_delete($id) {
   $index = search_api_index_load($id);
-  return $index->delete();
+  if (!$index) {
+    return FALSE;
+  }
+  $index->delete();
+  return TRUE;
 }

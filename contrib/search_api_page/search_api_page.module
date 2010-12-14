@@ -165,8 +165,8 @@ function search_api_page_entity_property_info() {
 /**
  * Implements hook_search_api_index_update().
  */
-function search_api_page_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
-  if ($op == 'disable') {
+function search_api_page_search_api_index_update(SearchApiIndex $index) {
+  if (!$index->enabled && $index->original->enabled) {
     foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
       search_api_page_edit($page->id, array('enabled' => 0));
     }

@@ -175,21 +175,39 @@ function hook_search_api_server_insert(SearchApiServer $server) {
 }
 
 /**
+ * New servers have become available – either because they were created in the
+ * database, or because they were for the first time loaded from code.
+ *
+ * @param array $servers
+ *   An array of SearchApiServer objects representing the newly available
+ *   servers.
+ */
+function hook_search_api_server_enabled(array $servers) {
+  foreach ($servers as $server) {
+    db_insert('example_search_server')
+      ->fields(array(
+        'server' => $server->machine_name,
+        'insert_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
  * A search server was edited, enabled or disabled.
  *
  * @param SearchApiServer $server
  *   The edited server.
- * @param $op
- *   A hint as to how the server was updated. Either 'enable', 'disable' or
- *   'edit'.
  */
-function hook_search_api_server_update(SearchApiServer $server, $op = 'edit') {
-  db_insert('example_search_server_update')
-    ->fields(array(
-      'server' => $server->machine_name,
-      'update_time' => REQUEST_TIME,
-    ))
-    ->execute();
+function hook_search_api_server_update(SearchApiServer $server) {
+  if ($server->name != $server->original->name) {
+    db_insert('example_search_server_name_update')
+      ->fields(array(
+        'server' => $server->machine_name,
+        'update_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
 }
 
 /**
@@ -243,19 +261,51 @@ function hook_search_api_index_insert(SearchApiIndex $index) {
 }
 
 /**
- * A search index was edited in any way.
+ * New indexes have become available – either because they were created in the
+ * database, or because they were for the first time loaded from code.
  *
- * This includes being edited, enabled or disabled, as well as the index being
- * cleared or scheduled for re-indexing.
+ * @param array $indexes
+ *   An array of SearchApiIndex objects representing the newly available
+ *   indexes.
+ */
+function hook_search_api_index_enabled(array $indexes) {
+  foreach ($indexes as $index) {
+    db_insert('example_search_index')
+      ->fields(array(
+        'index' => $index->machine_name,
+        'insert_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A search index was edited in any way.
  *
  * @param SearchApiIndex $index
  *   The edited index.
- * @param $op
- *   A hint as to how the index was updated. Either 'enable', 'disable', 'edit',
- *   'reindex', 'clear' or 'fields'.
  */
-function hook_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
-  db_insert('example_search_index_update')
+function hook_search_api_index_update(SearchApiIndex $index) {
+  if ($index->name != $index->original->name) {
+    db_insert('example_search_index_name_update')
+      ->fields(array(
+        'index' => $index->machine_name,
+        'update_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A search index was scheduled for reindexing
+ *
+ * @param SearchApiIndex $index
+ *   The edited index.
+ * @param $clear
+ *   Boolean indicating whether the index was also cleared.
+ */
+function hook_search_api_index_reindex(SearchApiIndex $index, $clear = FALSE) {
+  db_insert('example_search_index_reindexed')
     ->fields(array(
       'index' => $index->machine_name,
       'update_time' => REQUEST_TIME,

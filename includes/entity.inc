@@ -70,174 +70,32 @@ class SearchApiServer extends Entity {
   }
 
   /**
-   * Saves this server to the database, either creating a new record or updating
-   * an existing one.
-   *
-   * @param $op
-   *   If the server is not newly inserted, this will be passed to
-   *   hook_search_api_server_update().
-   *
-   * @return
-   *   Failure to save the server will return FALSE. Otherwise, SAVED_NEW or
-   *   SAVED_UPDATED is returned depending on the operation performed. $this->id
-   *   will be set if a new server was inserted.
-   */
-  public function save($op = 'edit') {
-    foreach (array('name', 'machine_name', 'class', 'options') as $var) {
-      if (empty($this->$var)) {
-        throw new SearchApiException(t('Property !field has to be set for a server!', array('!field' => $var)));
-      }
-    }
-    if (empty($this->description)) {
-      $this->description = NULL;
-    }
-
-    $ret = parent::save();
-    if ($ret == SAVED_NEW) {
-      $this->postCreate();
-    }
-    elseif ($ret == SAVED_UPDATED && $op != 'edit') {
-      module_invoke_all('search_api_server_update', $this, $op);
-    }
-
-    return $ret;
-  }
-
-  /**
-   * Wrapper for save() to correctly call postUpdate().
+   * Helper method for updating entity properties.
    *
    * NOTE: You shouldn't change any properties of this object before calling
    * this method, as this might lead to the fields not being saved correctly.
    *
    * @param array $fields
-   *   The new field values. $this->enabled cannot be set this way, use
-   *   $this->enable() instead.
+   *   The new field values.
    *
    * @return
    *   SAVE_UPDATED on success, FALSE on failure, 0 if the fields already had
    *   the specified values.
    */
   public function update(array $fields) {
-    $changeable = array('name' => 1, 'description' => 1, 'options' => 1);
+    $changeable = array('name' => 1, 'enabled' => 1 , 'description' => 1, 'options' => 1);
+    $changed = FALSE;
     foreach ($fields as $field => $value) {
-      if (!isset($changeable[$field]) || $value === $this->$field) {
-        unset($fields[$field]);
+      if (isset($changeable[$field]) && $value !== $this->$field) {
+        $this->$field = $value;
+        $changed = TRUE;
       }
     }
     // If there are no new values, just return 0.
-    if (empty($fields)) {
+    if (!$changed) {
       return 0;
     }
-    $reindex = $this->postUpdate($fields);
-    foreach ($fields as $field => $value) {
-      $this->$field = $value;
-    }
-    $ret = $this->save('edit');
-    if ($ret) {
-      if ($reindex) {
-        foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
-          $index->reindex();
-        }
-      }
-    }
-    return $ret;
-  }
-
-  /**
-   * Enables or disables this server.
-   *
-   * @param $enabled
-   *   The new enabled status of the server.
-   *
-   * @return
-   *   SAVE_UPDATED on success, FALSE on failure, 0 if the field already had
-   *   the specified value.
-   */
-  public function enable($enabled = TRUE) {
-    if ($this->enabled == $enabled) {
-      return 0;
-    }
-    $this->enabled = $enabled;
-    $ret = $this->save($enabled ? 'enable' : 'disable');
-    if (!$ret) {
-      return $ret;
-    }
-
-    if ($enabled) {
-      $this->postEnable();
-      // Were there any changes in the server's indexes while it was disabled?
-      $tasks = variable_get('search_api_tasks', array());
-      if (isset($tasks[$this->machine_name])) {
-        foreach ($tasks[$this->machine_name] as $index_id => $index_tasks) {
-          $index = search_api_index_load($index_id);
-          foreach ($index_tasks as $task) {
-            switch ($task) {
-              case 'add':
-                $this->addIndex($index);
-                break;
-              case 'clear':
-                $this->deleteItems('all', $index);
-                break;
-              case 'clear all':
-                // Would normally be used with a fake index ID of '', since it doesn't matter.
-                $this->deleteItems('all');
-                break;
-              case 'fields':
-                if ($this->fieldsUpdated($index)) {
-                  _search_api_index_reindex($index->machine_name);
-                }
-                break;
-              case 'remove':
-                $this->removeIndex($index ? $index : $index_id);
-                break;
-              default:
-                if (substr($task, 0, 7) == 'delete-') {
-                  $id = substr($task, 7);
-                  $this->deleteItems(array($id), $index);
-                }
-                else {
-                  watchdog('search_api', t('Unknown task "!task" for server "!name".', array('!task' => $task, '!name' => $this->machine_name)), NULL, 'warning');
-                }
-            }
-          }
-        }
-        unset($tasks[$this->machine_name]);
-        variable_set('search_api_tasks', $tasks);
-      }
-    }
-    else {
-      $this->postDisable();
-      foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
-        $index->enable(FALSE);
-      }
-    }
-
-    return $ret;
-  }
-
-  /**
-   * Deletes this server.
-   *
-   * @return
-   *   1 on success, 0 or FALSE on failure.
-   */
-  public function delete() {
-    // Call hook method before doing anything else.
-    $this->preDelete();
-
-    foreach (search_api_index_load_multiple(FALSE, array('server' => $this->machine_name)) as $index) {
-      $index->enable(FALSE);
-      $index->update(array('server' => NULL));
-      $index->reindex();
-    }
-
-    parent::delete();
-
-    $tasks = variable_get('search_api_tasks', array());
-    unset($tasks[$this->machine_name]);
-    variable_set('search_api_tasks', $tasks);
-
-    return 1;
+    return $this->save();
   }
 
   /**
@@ -250,7 +108,7 @@ class SearchApiServer extends Entity {
    */
   public function __sleep() {
     $ret = get_object_vars($this);
-    unset($ret['id'], $ret['proxy'], $ret['status'], $ret['is_new']);
+    unset($ret['proxy'], $ret['status'], $ret['module'], $ret['is_new']);
     return array_keys($ret);
   }
 
@@ -318,19 +176,9 @@ class SearchApiServer extends Entity {
     return $this->proxy->postCreate();
   }
 
-  public function postUpdate(array $fields) {
+  public function postUpdate() {
     $this->ensureProxy();
-    return $this->proxy->postUpdate($fields);
-  }
-
-  public function postEnable() {
-    $this->ensureProxy();
-    return $this->proxy->postEnable();
-  }
-
-  public function postDisable() {
-    $this->ensureProxy();
-    return $this->proxy->postDisable();
+    return $this->proxy->postUpdate();
   }
 
   public function preDelete() {
@@ -381,6 +229,8 @@ class SearchApiServer extends Entity {
 class SearchApiIndex extends Entity {
 
   /**
+   * Cached return value of server().
+   *
    * @var SearchApiServer
    */
   protected $server_object = NULL;
@@ -523,21 +373,12 @@ class SearchApiIndex extends Entity {
    * Saves this index to the database, either creating a new record or updating
    * an existing one.
    *
-   * @param $op
-   *   If the index is not newly inserted, this will be passed to
-   *   hook_search_api_index_update().
-   *
    * @return
    *   Failure to save the index will return FALSE. Otherwise, SAVED_NEW or
    *   SAVED_UPDATED is returned depending on the operation performed. $this->id
    *   will be set if a new index was inserted.
    */
-  public function save($op = 'edit') {
-    foreach (array('name', 'machine_name', 'entity_type', 'options') as $var) {
-      if (empty($this->$var)) {
-        throw new SearchApiException(t('Property !field has to be set for an index!', array('!field' => $var)));
-      }
-    }
+  public function save() {
     if (empty($this->description)) {
       $this->description = NULL;
     }
@@ -546,133 +387,41 @@ class SearchApiIndex extends Entity {
       $this->enabled = FALSE;
     }
     // This will also throw an exception if the server doesn't exist – which is good.
-    elseif (!$this->server()->enabled) {
+    elseif (!$this->server(TRUE)->enabled) {
       $this->enabled = FALSE;
     }
 
-    $ret = parent::save();
-    // We only have to execute the "new index" tasks when the entity was newly created, not overridden.
-    if ($ret == SAVED_NEW && (!isset($this->status) || !($this->status & ENTITY_IN_CODE))) {
-      $this->postCreate();
-    }
-    elseif ($ret == SAVED_UPDATED && $op != 'edit') {
-      module_invoke_all('search_api_index_update', $this, $op);
-    }
-
-    return $ret;
+    return parent::save();
   }
 
   /**
-   * Wrapper for save() to correctly call hooks.
+   * Helper method for updating entity properties.
    *
    * NOTE: You shouldn't change any properties of this object before calling
    * this method, as this might lead to the fields not being saved correctly.
    *
    * @param array $fields
-   *   The new field values. $this->enabled cannot be set this way, use
-   *   $this->enable() instead.
+   *   The new field values.
    *
    * @return
    *   SAVE_UPDATED on success, FALSE on failure, 0 if the fields already had
    *   the specified values.
    */
   public function update(array $fields) {
-    $changeable = array('name' => 1, 'description' => 1, 'server' => 1, 'options' => 1);
+    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'server' => 1, 'options' => 1);
+    $changed = FALSE;
     foreach ($fields as $field => $value) {
-      if (!isset($changeable[$field]) || $value === $this->$field) {
-        unset($fields[$field]);
+      if (isset($changeable[$field]) && $value !== $this->$field) {
+        $this->$field = $value;
+        $changed = TRUE;
       }
     }
     // If there are no new values, just return 0.
-    if (empty($fields)) {
+    if (!$changed) {
       return 0;
     }
 
-    if (array_key_exists('server', $fields)) {
-      // Server changed - inform old and new ones.
-      if ($this->server) {
-        $old_server = $this->server();
-        if ($old_server->enabled) {
-          $old_server->removeIndex($this);
-        }
-        else {
-          $tasks = variable_get('search_api_tasks', array());
-          // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$old_server->machine_name][$this->machine_name] = array('remove');
-          variable_set('search_api_tasks', $tasks);
-        }
-      }
-
-      if ($fields['server']) {
-        $new_server = search_api_server_load($fields['server']);
-        // If the server is disabled, we save the task. Otherwise we call addIndex() after saving the entry.
-        if (!$new_server->enabled) {
-          if ($this->enabled) {
-            $fields['enabled'] = 0;
-          }
-          $tasks = variable_get('search_api_tasks', array());
-          // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$new_server->machine_name][$this->machine_name] = array('add');
-          variable_set('search_api_tasks', $tasks);
-          unset($new_server);
-        }
-      }
-      elseif ($this->enabled) {
-        $fields['enabled'] = 0;
-      }
-
-      // We also have to re-index all content
-      unset($this->server_object);
-      _search_api_index_reindex($this->machine_name);
-    }
-
-    // Determine whether the indexed fields were changed for later calling appropriate hooks.
-    $fields_changed = isset($fields['options']['fields'])
-        && isset($this->options['fields'])
-        && $fields['options']['fields'] != $this->options['fields'];
-    foreach ($fields as $field => $value) {
-      $this->$field = $value;
-    }
-    $ret = parent::save('edit');
-    if (!$ret) {
-      return $ret;
-    }
-
-    if (isset($new_server)) {
-      $new_server->addIndex($this);
-    }
-    if ($fields_changed) {
-      if ($this->server && $this->server()->fieldsUpdated($this)) {
-        _search_api_index_reindex($this->machine_name);
-      }
-      module_invoke_all('search_api_index_update', $this, 'fields');
-    }
-
-    return $ret;
-  }
-
-  /**
-   * Enables or disables this index.
-   *
-   * @param $enabled
-   *   The new enabled status of the index.
-   *
-   * @throws SearchApiException
-   *   If $enabled is TRUE and the index' server isn't enabled.
-   *
-   * @return
-   *   SAVE_UPDATED on success, FALSE on failure, 0 if the field already had
-   *   the specified value.
-   */
-  public function enable($enabled = TRUE) {
-    if ($this->enabled == $enabled) {
-      return 0;
-    }
-    if ($enabled && !($this->server() && $this->server()->enabled)) {
-      throw new SearchApiException(t("Attempt to enable index !name which isn't on an enabled server.", array('!name' => $this->machine_name)));
-    }
-    $this->enabled = $enabled;
-    return $this->save($enabled ? 'enable' : 'disable');
+    return $this->save();
   }
 
   /**
@@ -687,7 +436,7 @@ class SearchApiIndex extends Entity {
     }
     $ret = _search_api_index_reindex($this->machine_name);
     if($ret) {
-      module_invoke_all('search_api_index_update', $this, 'reindex');
+      module_invoke_all('search_api_index_reindex', $this, FALSE);
     }
     return TRUE;
   }
@@ -720,21 +469,9 @@ class SearchApiIndex extends Entity {
 
     $ret = _search_api_index_reindex($this->machine_name);
     if($ret) {
-      module_invoke_all('search_api_index_update', $this, 'clear');
+      module_invoke_all('search_api_index_reindex', $this, TRUE);
     }
 
-    return TRUE;
-  }
-
-  /**
-   * Deletes this search index.
-   *
-   * @return
-   *   TRUE on success, FALSE on failure.
-   */
-  public function delete() {
-    parent::delete();
-    $this->postDelete();
     return TRUE;
   }
 
@@ -747,18 +484,17 @@ class SearchApiIndex extends Entity {
    *   An array of properties to be serialized.
    */
   public function __sleep() {
-    $ret = parent::__sleep();
-    $ignore = array('server_object' => 1, 'processors' => 1, 'added_properties' => 1, 'fulltext_fields' => 1);
-    foreach ($ret as $i => $prop) {
-      if (isset($ignore[$prop])) {
-        unset($ret[$i]);
-      }
-    }
-    return $ret;
+    $ret = get_object_vars($this);
+    unset($ret['server_object'], $ret['processors'], $ret['added_properties'], $ret['fulltext_fields'], $ret['status'], $ret['module'], $ret['is_new']);
+    return array_keys($ret);
   }
 
   /**
    * Get the server this index lies on.
+   *
+   * @param $reset
+   *   Whether to reset the internal cache. Set to TRUE when the index' $server
+   *   property has just changed.
    *
    * @throws SearchApiException
    *   If $this->server is set, but no server with that machine name exists.
@@ -767,8 +503,8 @@ class SearchApiIndex extends Entity {
    *   The server associated with this index, or NULL if this index currently
    *   doesn't lie on a server.
    */
-  public function server() {
-    if (!isset($this->server_object)) {
+  public function server($reset = FALSE) {
+    if (!isset($this->server_object) || $reset) {
       $this->server_object = $this->server ? search_api_server_load($this->server) : FALSE;
       if ($this->server && !$this->server_object) {
         throw new SearchApiException(t('Unknown server !server specified for index !name.',

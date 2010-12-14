@@ -86,28 +86,13 @@ interface SearchApiServiceInterface {
   public function postCreate();
 
   /**
-   * Notifies this server that its fields are about to be updated. Fields set on
-   * this object will still show the old values to allow comparison.
-   *
-   * @param array $fields
-   *   The fields that are about to change, mapped to their values.
+   * Notifies this server that its fields are about to be updated. The server's
+   * $original property can be used to inspect the old property values.
    *
    * @return
    *   TRUE, if the update requires reindexing of all content on the server.
    */
-  public function postUpdate(array $fields);
-
-  /**
-   * Notifies this server that it has been re-enabled and allows the object to
-   * react appropriately.
-   */
-  public function postEnable();
-
-  /**
-   * Notifies this server that it has been disabled and allows the object to
-   * react appropriately.
-   */
-  public function postDisable();
+  public function postUpdate();
 
   /**
    * Notifies this server that it is about to be deleted from the database and
@@ -259,6 +244,8 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
    * Constructor for a service class, setting the server configuration used with
    * this service.
    *
+   * The default implementation sets $this->server and $this->options.
+   *
    * @param SearchApiServer $server
    *   The server object for this service.
    */
@@ -372,39 +359,14 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   }
 
   /**
-   * Notifies this server that its fields are about to be updated. Fields set on
-   * this object will still show the old values to allow comparison.
-   *
-   * Does nothing, by default.
-   *
-   * @param array $fields
-   *   The fields that are about to change, mapped to their values.
+   * Notifies this server that its fields are about to be updated. The server's
+   * $original property can be used to inspect the old property values.
    *
    * @return
    *   TRUE, if the update requires reindexing of all content on the server.
    */
-  public function postUpdate(array $fields) {
+  public function postUpdate() {
     return FALSE;
-  }
-
-  /**
-   * Notifies this server that it has been re-enabled and allows the object to
-   * react appropriately.
-   *
-   * Does nothing, by default.
-   */
-  public function postEnable() {
-    return;
-  }
-
-  /**
-   * Notifies this server that it has been disabled and allows the object to
-   * react appropriately.
-   *
-   * Does nothing, by default.
-   */
-  public function postDisable() {
-    return;
   }
 
   /**

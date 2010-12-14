@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- #991632: Incorporate newly available entity hooks.
 - #963062: Make facets exportable.
 
 Others:
