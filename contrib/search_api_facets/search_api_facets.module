@@ -72,6 +72,28 @@ function search_api_facets_theme() {
 }
 
 /**
+ * Implements hook_entity_info().
+ */
+function search_api_facets_entity_info() {
+  $info['search_api_facet'] = array(
+    'label' => t('Search facet'),
+    'controller class' => 'EntityAPIController',
+    'entity class' => 'SearchApiFacet',
+    'base table' => 'search_api_facet',
+    'uri callback' => 'search_api_facet_url',
+    'module' => 'search_api_facets',
+    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'name' => 'delta',
+      'label' => 'name',
+    ),
+  );
+
+  return $info;
+}
+
+/**
  * Implements hook_permission().
  */
 function search_api_facets_permission() {
@@ -93,7 +115,7 @@ function search_api_facets_block_info() {
       'weight' => 4,
     ),
   );
-  $facets = search_api_facet_load(array('enabled' => 1));
+  $facets = search_api_facet_load_multiple(FALSE, array('enabled' => 1));
   foreach ($facets as $facet) {
     $blocks[$facet->delta]['info'] = $facet->name;
     // It will hardly ever be possible to cache facet blocks sensibly.
@@ -238,7 +260,7 @@ function search_api_facets_block_save($delta = '', array $edit = array()) {
   }
   if ($options != $facet->options) {
     $facet->options = $options;
-    search_api_facet_save($facet);
+    $facet->save();
   }
 }
 
@@ -286,7 +308,7 @@ function search_api_facets_block_view($delta = '') {
   if (empty($options['type'])) {
     _search_api_facets_refresh_type($facet, $options);
     $facet->options = $options;
-    search_api_facet_save($facet);
+    $facet->save();
   }
   $type = $options['type'];
   $values = isset($options['options']) ? $options['options'] : array();
@@ -471,14 +493,14 @@ function search_api_facets_block_current_search_view() {
     unset($query_options[$filter_name]);
     $filter_links = array();
     foreach ($filters as $field => $field_filters) {
-      $facets = search_api_facet_load(array('index_id' => $index->machine_name, 'field' => $field));
+      $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'field' => $field));
       if (!$facets) {
         continue;
       }
       $facet = reset($facets);
       if (empty($facet->options['type'])) {
         _search_api_facets_refresh_type($facet, $facet->options);
-        search_api_facet_save($facet);
+        $facet->save();
       }
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();
@@ -530,7 +552,8 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
     return;
   }
   // Add facet fields to query.
-  $facets = search_api_facet_load(array('index_id' => $query->getIndex()->machine_name, 'b.status' => 1));
+  $index_id = $query->getIndex()->machine_name;
+  $facets = search_api_facet_load_multiple(search_api_facets_by_block_status(), array('index_id' => $index_id));
   $fields = array();
   // Save the active facets for later retrieval when generating blocks.
   $active = &drupal_static(__FUNCTION__, array());
@@ -538,9 +561,9 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
   foreach ($facets as $facet) {
     if (array_search($search_id, $facet->options['ids_list']) === FALSE) {
       $search_ids = variable_get('search_api_facets_search_ids', array());
-      if (empty($search_ids[$query->getIndex()->machine_name][$search_id])) {
+      if (empty($search_ids[$index_id][$search_id])) {
         // Remember this search ID.
-        $search_ids[$query->getIndex()->machine_name][$search_id] = $search_id;
+        $search_ids[$index_id][$search_id] = $search_id;
         variable_set('search_api_facets_search_ids', $search_ids);
       }
       if (!$facet->options['default_true']) {
@@ -605,32 +628,32 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
 function search_api_facets_search_api_index_update(SearchApiIndex $index, $op = 'edit') {
   $id = $index->machine_name;
   if ($op == 'enable') {
-    if (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE index_id = :id', array(':id' => $id))->fetchField()) {
+    if (search_api_facet_load_multiple(FALSE, array('index_id' => $id))) {
       drupal_set_message(t('There are saved facets for this index. ' .
           'Go to the <a href="!url">facet page</a> to enable them.',
           array('!url' => 'admin/config/search/search_api/index/' . $id . '/facets')));
     }
   }
   elseif ($op == 'disable') {
-    $count = db_update('search_api_facet')
-      ->fields(array('enabled' => 0))
-      ->condition('index_id', $id)
-      ->execute();
-    if ($count) {
-      drupal_set_message(t('The disabled index still had active facet blocks. They were deactivated.'), 'warning', FALSE);
+    foreach (search_api_facet_load_multiple(FALSE, array('index_id' => $id, 'enabled' => TRUE)) as $facet) {
+      $facet->enabled = FALSE;
+      $facet->save();
+    }
+    if (isset($facet)) {
+      drupal_set_message(t('The disabled index still had active facet blocks. They were deactivated.'), 'status', FALSE);
     }
   }
   elseif ($op == 'fields') {
     $fields = $index->options['fields'];
-    $facets = search_api_facet_load(array('index_id' => $id, 'enabled' => 1));
+    $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $id, 'enabled' => 1));
     foreach ($facets as $facet) {
       if (empty($fields[$facet->field]['indexed'])) {
         $facet->enabled = FALSE;
-        search_api_facet_save($facet);
+        $facet->save();
       }
       elseif (empty($facet->options['type']) || $facet->options['type'] != $fields[$facet->field]['type']) {
         _search_api_facets_refresh_type($facet, $facet->options);
-        search_api_facet_save($facet);
+        $facet->save();
       }
     }
   }
@@ -643,6 +666,19 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
   db_delete('search_api_facet')
     ->condition('index_id', $index->machine_name)
     ->execute();
+  if (search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name), TRUE)) {
+    drupal_set_message(t('A module defines default search facets for the deleted index. You should update the module code or disable it.'), 'warning');
+  }
+}
+
+/**
+ * Implements hook_search_api_facet_disabled().
+ *
+ * Clears the block cache once
+ */
+function search_api_facets_search_api_facet_disabled() {
+  block_flush_caches();
+  cache_clear_all('*', 'cache_block', TRUE);
 }
 
 /**
@@ -651,65 +687,76 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
  * Refreshes type information for all enabled facets.
  */
 function search_api_facets_flush_caches() {
-  foreach (search_api_facet_load(array('enabled' => 1)) as $facet) {
+  foreach (search_api_facet_load_multiple(FALSE, array('enabled' => 1)) as $facet) {
     if (empty($facet->options['type']) || $facet->options['type'] == 'options') {
       _search_api_facets_refresh_type($facet, $facet->options);
-      search_api_facet_save($facet);
+      $facet->save();
     }
   }
 }
 
 /**
- * Load one or more facets. Either the block delta or an array of conditions
- * might be given.
+ * Load a search facets.
  *
- * @param $conditions
- *   Either a facet's delta, or an array containing conditions in the form
- *   $field => $value for the facets to be returned. An empty array will return
- *   all defined facets.
- *   The special key "b.status" can be used in an array to specify the facet's
- *   corresponding {block}.status (in the current theme).
+ * @param $id
+ *   Either a facet's numeric ID or delta.
  * @param $reset
- *   If set to TRUE, the returned facets will be freshly loaded, instead of
- *   being loaded from the cache.
+ *   Whether to reset the internal entity_load cache.
  *
- * @return stdClass
- *   Either the facet with the specified delta, or an array of facets matching
- *   the specified conditions, keyed by delta.
+ * @return SearchApiFacet
+ *   Either the facet with the specified ID or delta, or FALSE, if no such facet
+ *   exists.
  */
-function search_api_facet_load($conditions = array(), $reset = FALSE) {
+function search_api_facet_load($id, $reset = FALSE) {
+  $ret = entity_load('search_api_facet', array($id), array(), $reset);
+  return $ret ? reset($ret) : FALSE;
+}
+
+/**
+ * Load multiple facets at once, determined by IDs or deltas, or by other
+ * conditions.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of facet IDs or machine names.
+ * @param $conditions
+ *   An array of conditions on the {search_api_facet} table in the form
+ *   'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal entity_load cache.
+ *
+ * @return array
+ *   An array of SearchApiFacet objects keyed by machine name.
+ */
+function search_api_facet_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('search_api_facet', $ids, $conditions, $reset);
+}
+
+/**
+ * Return the deltas of facet blocks with the specified status.
+ *
+ * @param $status
+ *   The {block}.status to search for (1 for enabled, 0 for disabled).
+ * @param $reset
+ *   Whether to reset the internal cache.
+ *
+ * @return array
+ *   The deltas of all search facet blocks with the specified status.
+ */
+function search_api_facets_by_block_status($status = 1, $reset = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
-  $key = serialize($conditions);
-  if (!isset($cache[$key]) || $reset) {
-    if (is_scalar($conditions)) {
-      $delta = $conditions;
-      $f = db_query('SELECT * FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetch();
-      if ($f) {
-        $f->options = $f->options ? unserialize($f->options) : array();
-      }
-      $cache[$key] = $f;
-    }
-    else {
-      $select = db_select('search_api_facet', 'f');
-      $select->fields('f');
-      foreach ($conditions as $field => $value) {
-        if ($field == 'b.status') {
-          global $theme;
-          $select->join('block', 'b', 'b.module = :module AND b.delta = f.delta AND b.theme = :theme AND b.status = :status',
-              array(':module' => 'search_api_facets', ':theme' => $theme, ':status' => $value));
-          continue;
-        }
-        $select->condition($field, $value);
-      }
-      $facets = $select->execute()->fetchAllAssoc('delta');
-      foreach ($facets as $facet) {
-        $facet->options = $facet->options ? unserialize($facet->options) : array();
-        $cache[serialize($facet->delta)] = $facet;
-      }
-      $cache[$key] = $facets;
-    }
+  if (!isset($cache[$status]) || $reset) {
+    global $theme;
+    $cache[$status] = db_select('block', 'b')
+    ->fields('b', array('delta'))
+    ->condition('module', 'search_api_facets')
+    ->condition('theme', $theme)
+    ->condition('status', $status)
+    ->execute()
+    ->fetchCol();
   }
-  return $cache[$key];
+  return $cache[$status];
 }
 
 /**
@@ -718,76 +765,31 @@ function search_api_facet_load($conditions = array(), $reset = FALSE) {
  * or if $facet->is_new is set, the facet will be inserted. Otherwise, it will
  * be updated.
  *
- * @param stdClass $facet
+ * @param SearchApiFacet $facet
  *   The facet object to save.
  */
-function search_api_facet_save(stdClass $facet) {
-  // Always set default options.
-  $facet->options += array(
-    'limit'        => 10,
-    'min_count'    => 1,
-    'sort'         => 'count',
-    'missing'      => FALSE,
-    'default_true' => TRUE,
-    'ids_list'     => array(),
-    'type'         => '',
-  );
-  if (!empty($facet->delta) && empty($facet->is_new)) {
-    $enabled_changed = $facet->enabled != search_api_facet_load($facet->delta, TRUE)->enabled;
-    drupal_write_record('search_api_facet', $facet, 'delta');
-    if ($enabled_changed) {
-      block_flush_caches();
-      cache_clear_all('*', 'cache_block', TRUE);
-    }
-    return;
-  }
-  if (empty($facet->delta)) {
-    // Construct a delta using index id and field.
-    // We have to ensure that it's both unique and at most 32 characters long,
-    // leading to a bit of complexity.
-    $delta = substr($facet->index_id, 0, 20) . '_' . preg_replace('/\W+/', '_', $facet->field);
-    $base = $delta = substr($delta, 0, 32);
-    $i = 0;
-    while (db_query('SELECT COUNT(1) FROM {search_api_facet} WHERE delta = :delta', array(':delta' => $delta))->fetchField()) {
-      $suffix = '_' . ++$i;
-      $delta = substr($base, 0, 32 - strlen($suffix)) . $suffix;
-    }
-    $facet->delta = $delta;
-  }
-  drupal_write_record('search_api_facet', $facet);
-  if ($facet->enabled) {
-    block_flush_caches();
-    cache_clear_all('*', 'cache_block', TRUE);
-  }
+function search_api_facet_save(SearchApiFacet $facet) {
+  $facet->save();
 }
 
 /**
- * Deletes one or more facets.
+ * Deletes facets according to a set of conditions.
  *
  * @param $conditions
- *   Analogous to search_api_facet_load(), this can be either a facet delta or
- *   an array of conditions.
+ *   An array of conditions, analogous to search_api_facet_load_multiple().
+ * @param $reset
+ *   Whether to reset the internal cache.
  *
  * @return
  *   TRUE, if any facets were successfully deleted, FALSE otherwise.
  */
-function search_api_facet_delete($conditions = array()) {
-  if (is_scalar($conditions)) {
-    $delta = $conditions;
-    return db_delete('search_api_facet')
-      ->condition('delta', $delta)
-      ->execute() != 0;
+function search_api_facet_delete_multiple(array $conditions = array(), $reset = FALSE) {
+  $ids = array_keys(search_api_facet_load_multiple(FALSE, $conditions, $reset));
+  if (!$ids) {
+    return FALSE;
   }
-  $del = db_delete('search_api_facet');
-  foreach ($conditions as $field => $value) {
-    $del->condition($field, $value);
-  }
-  if ($del->execute()) {
-    block_flush_caches();
-    cache_clear_all('*', 'cache_block', TRUE);
-    return TRUE;
-  }
-  return FALSE;
+  entity_delete_multiple('search_api_facet', $ids);
+  return TRUE;
 }
 
 /**
@@ -823,7 +825,7 @@ function search_api_facets_get_filters(SearchApiQueryInterface $query) {
  * @param array $options
  *   An array for which 'type' and, if applicable, 'options' will be set.
  */
-function _search_api_facets_refresh_type(stdClass $facet, array &$options) {
+function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options) {
   $index = search_api_index_load($facet->index_id);
   $type = $index->options['fields'][$facet->field]['type'];
   $options['type'] = search_api_extract_inner_type($type);

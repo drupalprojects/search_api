@@ -8,6 +8,12 @@ function search_api_facets_schema() {
   $schema['search_api_facet'] = array(
     'description' => 'Stores all activated or configured facets of a site.',
     'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a facet.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'delta' => array(
         'description' => "The facet block's {block}.delta.",
         'type' => 'varchar',
@@ -51,7 +57,10 @@ function search_api_facets_schema() {
       'field' => array('index_id', array('field', 50)),
       'enabled' => array('enabled'),
     ),
-    'primary key' => array('delta'),
+    'unique keys' => array(
+      'delta' => array('delta'),
+    ),
+    'primary key' => array('id'),
   );
 
   return $schema;
@@ -77,12 +86,9 @@ function search_api_facets_update_dependencies() {
 }
 
 /**
- * Implements hook_update_N().
- *
  * Make {search_api_facet}.index_id the index' machine name.
  */
 function search_api_facets_update_7101() {
-  // Update of search_api_item:
   db_drop_index('search_api_facet', 'field');
   $spec = array(
     'description' => 'The {search_api_index}.machine_name this facet belongs to.',
@@ -100,6 +106,39 @@ function search_api_facets_update_7101() {
         'index_id' => $index->machine_name,
       ))
       ->condition('index_id', $index->id)
+      ->execute();
+  }
+}
+
+/**
+ * Add a numeric id for facets, as required for all entities.
+ */
+function search_api_facets_update_7102() {
+  db_drop_primary_key('search_api_facet');
+  $spec = array(
+    'description' => 'The primary identifier for a facet.',
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+  $keys_new = array(
+    'unique keys' => array(
+      'delta' => array('delta'),
+    ),
+    'primary key' => array('id'),
+  );
+  db_add_field('search_api_facet', 'id', $spec, $keys_new);
+  $deltas = db_select('search_api_facet', 'f')
+    ->fields('f', array('delta'))
+    ->execute()
+    ->fetchCol();
+  $i = 0;
+  foreach ($deltas as $delta) {
+    db_update('search_api_facet')
+      ->fields(array(
+        'id' => ++$i,
+      ))
+      ->condition('delta', $delta)
       ->execute();
   }
 }

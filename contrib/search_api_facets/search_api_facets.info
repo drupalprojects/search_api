@@ -8,6 +8,7 @@ core = 7.x
 package = Search
 
 files[] = search_api_facets.admin.inc
+files[] = search_api_facets.entity.inc
 files[] = search_api_facets.install
 files[] = search_api_facets.module
 files[] = search_api_facets.theme.inc

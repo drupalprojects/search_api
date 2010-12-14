@@ -1,0 +1,108 @@
+<?php
+// $Id$
+
+/**
+ * Class representing a search facet.
+ */
+class SearchApiFacet extends Entity {
+
+  /* Database values that will be set when object is loaded: */
+
+  /**
+   * @var integer
+   */
+  public $id = 0;
+
+  /**
+   * @var string
+   */
+  public $delta = '';
+
+  /**
+   * @var string
+   */
+  public $index_id = '';
+
+  /**
+   * @var string
+   */
+  public $field = '';
+
+  /**
+   * @var string
+   */
+  public $name = '';
+
+  /**
+   * @var integer
+   */
+  public $enabled = 1;
+
+  /**
+   * @var array
+   */
+  public $options = array();
+
+  /**
+   * Will be set by the Entity CRUD API for exporting.
+   */
+  public $module;
+  /**
+   * Will be set by the Entity CRUD API for exporting.
+   */
+  public $status;
+
+  /**
+   * Constructor as a helper to the parent constructor.
+   */
+  public function __construct(array $values = array()) {
+    parent::__construct($values, 'search_api_facet');
+  }
+
+  /**
+   * Saves this facet.
+   * If $this->delta is empty, it will be computed automatically. In this case,
+   * or if $this->is_new is set, the facet will be inserted. Otherwise, it will
+   * be updated.
+   */
+  public function save() {
+    // Always set default options.
+    $this->options += array(
+      'limit'        => 10,
+      'min_count'    => 1,
+      'sort'         => 'count',
+      'missing'      => FALSE,
+      'default_true' => TRUE,
+      'ids_list'     => array(),
+      'type'         => '',
+    );
+    if (!empty($this->id) && !empty($this->delta) && empty($this->is_new)) {
+      $enabled_changed = $this->enabled != search_api_facet_load($this->delta, TRUE)->enabled;
+      parent::save();
+      if ($enabled_changed) {
+        block_flush_caches();
+        cache_clear_all('*', 'cache_block', TRUE);
+      }
+      return;
+    }
+    if (empty($this->delta)) {
+      // Construct a delta using index id and field.
+      // We have to ensure that it's both unique and at most 32 characters long,
+      // leading to a bit of complexity.
+      $delta = substr($this->index_id, 0, 20) . '_' . preg_replace('/\W+/', '_', $this->field);
+      $base = $delta = substr($delta, 0, 32);
+      $i = 0;
+      while (search_api_facet_load($delta)) {
+        $suffix = '_' . ++$i;
+        $delta = substr($base, 0, 32 - strlen($suffix)) . $suffix;
+      }
+      $this->delta = $delta;
+    }
+    parent::save();
+    if ($this->enabled) {
+      block_flush_caches();
+      cache_clear_all('*', 'cache_block', TRUE);
+    }
+  }
+
+}

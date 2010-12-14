@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- #963062: Make facets exportable.
 
 Others:
 - #994948: "Add index" results in blank page.
