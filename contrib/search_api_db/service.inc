@@ -19,7 +19,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           $options[$key]["$key:$target"] = "$key > $target";
         }
       }
-      if (count($options) > 1) {
+      if (count($options) > 1 || count(reset($options)) > 1) {
         $form['database'] = array(
           '#type' => 'select',
           '#title' => t('Database'),
