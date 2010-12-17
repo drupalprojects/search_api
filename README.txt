@@ -181,7 +181,7 @@ Information for developers
  | For modules providing new entities: In order for your entities to become
  | searchable with the Search API, your module will need to implement
  | hook_entity_property_info() in addition to the normal hook_entity_info().
- | hook_entity_property_info() is documented in the entity_metadata module.
+ | hook_entity_property_info() is documented in the entity module.
 
 Apart from improving the module itself, developers can extend search
 capabilities provided by the Search API by providing implementations for one (or

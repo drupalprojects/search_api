@@ -7,6 +7,7 @@ API changes:
 - #963062: Make facets exportable.
 
 Others:
+- #988780: Merge of entity modules.
 - #997852: Service config oddities.
 - #994948: "Add index" results in blank page.
 - #993470: Unnecessary warning when no valid keys or filters are given.

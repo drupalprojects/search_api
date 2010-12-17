@@ -3,7 +3,6 @@
 name = Search API
 description = "Provides a generic API for modules offering search capabilites."
 dependencies[] = entity
-dependencies[] = entity_metadata
 core = 7.x
 package = Search
 

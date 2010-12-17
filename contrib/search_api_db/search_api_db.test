@@ -35,7 +35,7 @@ class SearchApiDbTest extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    parent::setUp('entity', 'entity_metadata', 'search_api', 'search_api_db', 'search_api_test');
+    parent::setUp('entity', 'search_api', 'search_api_db', 'search_api_test');
   }
 
   public function testFramework() {

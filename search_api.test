@@ -34,7 +34,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    parent::setUp('entity', 'entity_metadata', 'search_api', 'search_api_test');
+    parent::setUp('entity', 'search_api', 'search_api_test');
   }
 
   public function testFramework() {
@@ -393,7 +393,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
   }
 
   public function setUp() {
-    parent::setUp('entity', 'entity_metadata', 'search_api');
+    parent::setUp('entity', 'search_api');
     $this->index = new SearchApiIndex(array(
       'id' => 1,
       'name' => 'test',

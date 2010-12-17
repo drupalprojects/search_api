@@ -649,7 +649,7 @@ class SearchApiIndex extends Entity {
   public function propertyInfoAlter(EntityMetadataWrapper $wrapper, array $property_info) {
     // Overwrite the existing properties with the list of properties including
     // all fields regardless of the used bundle.
-    $property_info['properties'] = entity_metadata_get_properties($wrapper->type());
+    $property_info['properties'] = entity_get_all_property_info($wrapper->type());
 
     if (!empty($this->added_properties)) {
       $property_info['properties'] += $this->added_properties;

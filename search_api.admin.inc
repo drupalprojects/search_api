@@ -533,7 +533,7 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#options' => array(),
   );
   foreach (entity_get_info() as $name => $entity) {
-    if (entity_metadata_get_info($name)) {
+    if (entity_get_property_info($name)) {
       $form['entity_type']['#options'][$name] = $entity['label'];
     }
   }
