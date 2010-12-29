@@ -7,10 +7,6 @@ dependencies[] = views
 core = 7.x
 package = Search
 
-files[] = search_api_views.install
-files[] = search_api_views.module
-files[] = search_api_views.views.inc
-
 ; Views handlers
 files[] = includes/handler_argument.inc
 files[] = includes/handler_argument_fulltext.inc
