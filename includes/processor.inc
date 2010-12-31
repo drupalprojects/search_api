@@ -4,11 +4,14 @@
 /**
  * Interface representing a Search API pre- and/or post-processor.
  *
- * Enabling classes for preprocessing and postprocessing is done seperately.
- * However, an enabled index data preprocessor will also be used to preprocess
- * search queries on that index, since most of the time the same steps should be
- * executed in both phases. If this does not apply to a specific processor, the
- * unnecessary method(s) can be left blank.
+ * While processors are enabled or disabled for both pre- and postprocessing at
+ * once, many processors will only need to run in one of those two phases. Then,
+ * the other method(s) should simply be left blank. A processor should make it
+ * clear in its description or documentation when it will run and what effect it
+ * will have.
+ * Usually, processors preprocessing indexed items will likewise preprocess
+ * search queries, so these two methods should mostly be implemented either both
+ * or neither.
  */
 interface SearchApiProcessorInterface {
 
