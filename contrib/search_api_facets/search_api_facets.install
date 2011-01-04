@@ -52,7 +52,7 @@ function search_api_facets_schema() {
         'serialize' => TRUE,
         'not null' => TRUE,
       ),
-    ),
+    ) + entity_exportable_schema_fields(),
     'indexes' => array(
       'field' => array('index_id', array('field', 50)),
       'enabled' => array('enabled'),
@@ -140,5 +140,17 @@ function search_api_facets_update_7102() {
       ))
       ->condition('delta', $delta)
       ->execute();
+  }
+}
+
+/**
+ * Add the database fields newly required for entities by the Entity API.
+ */
+function search_api_facets_update_7103() {
+  if (!function_exists('entity_exportable_schema_fields')) {
+    throw new DrupalUpdateException(t('Please update the Entity API module first.'));
+  }
+  foreach (entity_exportable_schema_fields() as $field => $spec) {
+    db_add_field('search_api_facet', $field, $spec);
   }
 }

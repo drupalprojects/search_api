@@ -3,12 +3,12 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
-- #917998: Make data alter callbacks objects and let them have a configuration
-           form.
+- #917998: Enhance data alterations by making them objects.
 - #991632: Incorporate newly available entity hooks.
 - #963062: Make facets exportable.
 
 Others:
+- #1014548: Add newly required database fields for entities.
 - #915174: Remove unnecessary files[] declarations from .info files.
 - #988780: Merge of entity modules.
 - #997852: Service config oddities.

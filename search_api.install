@@ -55,7 +55,7 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
-    ),
+    ) + entity_exportable_schema_fields(),
     'indexes' => array(
       'enabled' => array('enabled'),
     ),
@@ -116,7 +116,7 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
-    ),
+    ) + entity_exportable_schema_fields(),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'server' => array('server'),
@@ -600,5 +600,19 @@ function search_api_update_7102() {
       ))
       ->condition('index_id', $index->id)
       ->execute();
+  }
+}
+
+/**
+ * Add the database fields newly required for entities by the Entity API.
+ */
+function search_api_update_7103() {
+  if (!function_exists('entity_exportable_schema_fields')) {
+    throw new DrupalUpdateException(t('Please update the Entity API module first.'));
+  }
+  foreach (array('search_api_server', 'search_api_index') as $table) {
+    foreach (entity_exportable_schema_fields() as $field => $spec) {
+      db_add_field($table, $field, $spec);
+    }
   }
 }
