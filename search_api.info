@@ -7,6 +7,9 @@ core = 7.x
 package = Search
 
 files[] = search_api.test
+files[] = includes/callback.inc
+files[] = includes/callback_add_fulltext.inc
+files[] = includes/callback_add_url.inc
 files[] = includes/entity.inc
 files[] = includes/exception.inc
 files[] = includes/processor.inc

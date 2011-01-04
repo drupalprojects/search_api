@@ -7,10 +7,6 @@
 function search_api_views_views_data() {
   $data = array();
   foreach (search_api_index_load_multiple(FALSE) as $index) {
-    // We need the complete indexed data.
-    $array = array();
-    $index->dataAlter($array);
-
     // Base data
     $key = 'search_api_index_' . $index->machine_name;
     $table = &$data[$key];

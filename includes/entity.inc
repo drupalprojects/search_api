@@ -83,7 +83,7 @@ class SearchApiServer extends Entity {
    *   the specified values.
    */
   public function update(array $fields) {
-    $changeable = array('name' => 1, 'enabled' => 1 , 'description' => 1, 'options' => 1);
+    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'options' => 1);
     $changed = FALSE;
     foreach ($fields as $field => $value) {
       if (isset($changeable[$field]) && $value !== $this->$field) {
@@ -238,12 +238,17 @@ class SearchApiIndex extends Entity {
   /**
    * @var array
    */
+  protected $callbacks = NULL;
+
+  /**
+   * @var array
+   */
   protected $processors = NULL;
 
   /**
    * @var array
    */
-  protected $added_properties = array();
+  protected $added_properties = NULL;
 
   /**
    * @var array
@@ -420,7 +425,6 @@ class SearchApiIndex extends Entity {
     if (!$changed) {
       return 0;
     }
-
     return $this->save();
   }
 
@@ -565,7 +569,7 @@ class SearchApiIndex extends Entity {
       throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
     }
 
-    // Marks all items that are rejected by a data-alter callback as indexed.
+    // Mark all items that are rejected by a data-alter callback as indexed.
     $ret = array_keys($items);
     $this->dataAlter($items);
     $ret = array_diff($ret, array_keys($items));
@@ -590,7 +594,7 @@ class SearchApiIndex extends Entity {
 
   /**
    * Calls data alteration hooks for a set of items, according to the index
-   * options. Does nothing if hooks have already been called.
+   * options.
    *
    * @param array $items
    *   An array of items to be altered.
@@ -599,36 +603,13 @@ class SearchApiIndex extends Entity {
    *   The called object.
    */
   public function dataAlter(array &$items) {
-    if (!empty($this->added_properties)) {
-      return $this;
-    }
-    $this->added_properties = array(
-      'search_api_language' => array(
-        'label' => t('Item language'),
-        'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
-        'type' => 'string',
-      ),
-    );
+    // First, execute our own search_api_language data alteration.
     foreach ($items as &$item) {
       $item->search_api_language = isset($item->language) ? $item->language : LANGUAGE_NONE;
     }
 
-    if (empty($this->options['data_alter_callbacks'])) {
-      return;
-    }
-
-    foreach ($this->options['data_alter_callbacks'] as $func => $settings) {
-      if (empty($settings['status'])) {
-        continue;
-      }
-      if (!is_callable($func)) {
-        watchdog('search_api', t('Undefined data alter callback function !function() specified in index !name', array('!function' => $func, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
-        continue;
-      }
-      $ret = $func($this, $items);
-      if (is_array($ret)) {
-        $this->added_properties += $ret;
-      }
+    foreach ($this->getAlterCallbacks() as $callback) {
+      $callback->alterItems($items);
     }
 
     return $this;
@@ -651,26 +632,83 @@ class SearchApiIndex extends Entity {
     // all fields regardless of the used bundle.
     $property_info['properties'] = entity_get_all_property_info($wrapper->type());
 
-    if (!empty($this->added_properties)) {
-      $property_info['properties'] += $this->added_properties;
+    if (!isset($this->added_properties)) {
+      $this->added_properties = array(
+        'search_api_language' => array(
+          'label' => t('Item language'),
+          'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
+          'type' => 'string',
+        ),
+      );
+      // We use the reverse order here so the hierarchy for overwriting property infos is the same
+      // as for actually overwriting the properties.
+      foreach (array_reverse($this->getAlterCallbacks()) as $callback) {
+        $props = $callback->propertyInfo();
+        if ($props) {
+          $this->added_properties += $props;
+        }
+      }
     }
+    // Let fields added by data-alter callbacks override default fields.
+    $property_info['properties'] = $this->added_properties + $property_info['properties'];
+
     return $property_info;
   }
 
-  /**
+   /**
    * Fills the $processors array for use by the pre-/postprocessing functions.
    *
    * @return SearchApiIndex
    *   The called object.
+   * @return array
+   *   All enabled callbacks for this index, as SearchApiAlterCallbackInterface
+   *   objects.
    */
-  protected function prepareProcessors() {
+  protected function getAlterCallbacks() {
+    if (isset($this->callbacks)) {
+      return $this->callbacks;
+    }
+
+    $this->callbacks = array();
+    if (empty($this->options['data_alter_callbacks'])) {
+      return $this->callbacks;
+    }
+    $callback_settings = $this->options['data_alter_callbacks'];
+    $infos = search_api_get_alter_callbacks();
+
+    foreach ($callback_settings as $id => $settings) {
+      if (empty($settings['status'])) {
+        continue;
+      }
+      if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
+        watchdog('search_api', t('Undefined data alteration !class specified in index !name', array('!class' => $id, '!name' => $this->name)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+      $class = $infos[$id]['class'];
+      $callback = new $class($this, empty($settings['settings']) ? array() : $settings['settings']);
+      if (!($callback instanceof SearchApiAlterCallbackInterface)) {
+        watchdog('search_api', t('Unknown callback class !class specified for data alteration !name', array('!class' => $class, '!name' => $id)), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+
+      $this->callbacks[$id] = $callback;
+    }
+    return $this->callbacks;
+  }
+
+  /**
+   * @return array
+   *   All enabled processors for this index, as SearchApiProcessorInterface
+   *   objects.
+   */
+  protected function getProcessors() {
     if (isset($this->processors)) {
-      return $this;
+      return $this->processors;
     }
 
     $this->processors = array();
     if (empty($this->options['processors'])) {
-      return $this;
+      return $this->processors;
     }
     $processor_settings = $this->options['processors'];
     $infos = search_api_get_processors();
@@ -692,7 +730,7 @@ class SearchApiIndex extends Entity {
 
       $this->processors[$id] = $processor;
     }
-    return $this;
+    return $this->processors;
   }
 
   /**
@@ -710,8 +748,7 @@ class SearchApiIndex extends Entity {
    *   The called object.
    */
   public function preprocessIndexItems(array &$items) {
-    $this->prepareProcessors();
-    foreach ($this->processors as $processor) {
+    foreach ($this->getProcessors() as $processor) {
       $processor->preprocessIndexItems($items);
     }
     return $this;
@@ -732,8 +769,7 @@ class SearchApiIndex extends Entity {
    *   The called object.
    */
   public function preprocessSearchQuery(SearchApiQuery $query) {
-    $this->prepareProcessors();
-    foreach ($this->processors as $processor) {
+    foreach ($this->getProcessors() as $processor) {
       $processor->preprocessSearchQuery($query);
     }
     return $this;
@@ -756,9 +792,8 @@ class SearchApiIndex extends Entity {
    *   The called object.
    */
   public function postprocessSearchResults(array &$response, SearchApiQuery $query) {
-    $this->prepareProcessors();
     // Postprocessing is done in exactly the opposite direction than preprocessing.
-    foreach (array_reverse($this->processors) as $processor) {
+    foreach (array_reverse($this->getProcessors()) as $processor) {
       $processor->postprocessSearchResults($response, $query);
     }
     return $this;

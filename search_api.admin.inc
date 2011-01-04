@@ -1074,6 +1074,17 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       $callbacks[$name]['status'] = 0;
       $callbacks[$name]['weight'] = $callback['weight'];
     }
+    $settings = empty($callbacks[$name]['settings']) ? array() : $callbacks[$name]['settings'];
+    if (class_exists($callback['class'])) {
+      $callback_objects[$name] = new $callback['class']($index, $settings);
+    }
+    if (!(class_exists($callback['class']) && $callback_objects[$name] instanceof SearchApiAlterCallbackInterface)) {
+      watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $callback['class'])), NULL, WATCHDOG_WARNING);
+      unset($callback_info[$name]);
+      unset($callbacks[$name]);
+      unset($callback_objects[$name]);
+      continue;
+    }
   }
   $form['#callbacks'] = $callbacks;
   $form['callbacks'] = array(
@@ -1119,6 +1130,28 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       '#parents' => array('callbacks', $name, 'weight'),
     );
     $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['weight'];
+  }
+
+  // Callback settings.
+  $form['callbacks']['settings_title'] = array(
+    '#type' => 'item',
+    '#title' => t('Callback settings'),
+  );
+  $form['callbacks']['settings'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  foreach ($callback_info as $name => $callback) {
+    $settings_form = $callback_objects[$name]->configurationForm();
+    if (!empty($settings_form)) {
+      $form['callbacks']['settings'][$name] = array(
+        '#type' => 'fieldset',
+        '#title' => $callback['name'],
+        '#parents' => array('callbacks', $name, 'settings'),
+        '#weight' => $callback['weight'],
+      );
+      $form['callbacks']['settings'][$name] += $settings_form;
+    }
   }
 
   // Processors
@@ -1208,7 +1241,6 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
         '#title' => $processor['name'],
         '#parents' => array('processors', $name, 'settings'),
         '#weight' => $processor['weight'],
-        '#group' => 'processors_settings',
       );
       $form['processors']['settings'][$name] += $settings_form;
     }
@@ -1253,6 +1285,7 @@ function theme_search_api_admin_item_order(array $variables) {
  */
 function search_api_admin_index_workflow_submit(array $form, array &$form_state) {
   $values = $form_state['values'];
+  unset($values['callbacks']['settings']);
   unset($values['processors']['settings']);
   $index = $form_state['index'];
 
@@ -1260,15 +1293,22 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   $fields_set = !empty($options['fields']);
 
   // Set default indexed status for newly added fields.
-  foreach ($values['callbacks'] as $func => $callback) {
-    if ($callback['status'] && empty($options['callbacks'][$func]['status'])) {
-      if (!is_callable($func)) {
-        watchdog('search_api', t('Undefined data alter callback function !function() specified in index !name', array('!function' => $func, '!name' => $index->name)), NULL, WATCHDOG_WARNING);
+  $types = search_api_field_types();
+  foreach ($values['callbacks'] as $name => $callback) {
+    if ($callback['status'] && empty($options['callbacks'][$name]['status'])) {
+      $info = search_api_get_alter_callbacks();
+      if (empty($info[$name])) {
+        // Would only happen in very rare circumstances (module update between form creation and submission).
         continue;
       }
-      $items = array();
-      $properties = $func($index, $items);
-      $types = search_api_field_types();
+      if (class_exists($info[$name]['class'])) {
+        $obj = new $info[$name]['class']($index, empty($callback['settings']) ? array() : $callback['settings']);
+      }
+      if (!(class_exists($info[$name]['class']) && $obj instanceof SearchApiAlterCallbackInterface)) {
+        watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $info[$name]['class'])), NULL, WATCHDOG_WARNING);
+        continue;
+      }
+      $properties = $obj->propertyInfo();
       if ($properties) {
         foreach ($properties as $key => $field) {
           $type = $field['type'];
@@ -1343,8 +1383,6 @@ function search_api_admin_element_compare($a, $b) {
  *   The index to edit.
  */
 function search_api_admin_index_fields(array $form, array &$form_state, SearchApiIndex $index) {
-  $array = array();
-  $index->dataAlter($array);
   $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
 
   $options = _search_api_admin_get_fields($index, $wrapper);
@@ -1612,8 +1650,6 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     return;
   }
   // Adding a related entity's fields.
-  $array = array();
-  $index->dataAlter($array);
   $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();

@@ -70,15 +70,17 @@ function hook_search_api_service_info_alter(array &$service_info) {
  * additional data to the indexed items (e.g. comments or attachments to nodes),
  * alter the data in other forms or remove items from the array.
  *
- * For the required signature of callbacks, see example_random_alter().
+ * Data-alter callbacks (which are called "Data alterations" in the UI) are
+ * classes implementing the SearchApiAlterCallbackInterface interface.
  *
- * @see example_random_alter()
+ * @see SearchApiAlterCallbackInterface
  *
  * @return array
- *   An associative array keyed by the function names and containing
- *   arrays with the following keys:
+ *   An associative array keyed by the callback IDs and containing arrays with
+ *   the following keys:
  *   - name: The name to display for this callback.
  *   - description: A short description of what the callback does.
+ *   - class: The callback class.
  *   - weight: (optional) Defines the order in which callbacks are displayed
  *     (and, therefore, invoked) by default. Defaults to 0.
  */
@@ -86,11 +88,13 @@ function hook_search_api_alter_callback_info() {
   $callbacks['example_random_alter'] = array(
     'name' => t('Random alteration'),
     'description' => t('Alters all passed item data completely randomly.'),
+    'class' => 'ExampleRandomAlter',
     'weight' => 100,
   );
   $callbacks['example_add_comments'] = array(
     'name' => t('Add comments'),
     'description' => t('For nodes and similar entities, adds comments.'),
+    'class' => 'ExampleAddComments',
   );
 
   return $callbacks;
@@ -334,43 +338,3 @@ function hook_search_api_index_delete(SearchApiIndex $index) {
 /**
  * @} End of "addtogroup hooks".
  */
-
-/**
- * Search API data alteration callback that randomly changes item data.
- *
- * @param SearchApiIndex $index
- *   The index on which the items are indexed.
- * @param array $items
- *   An array of objects containing the entity data.
- *
- * @return array
- *   An array of property infos for all added properties, as required by
- *   hook_entity_property_info().
- */
-function example_random_alter(SearchApiIndex $index, array &$items) {
-  if ($index->id % 2) {
-    foreach ($items as $id => $item) {
-      srand($id);
-      if (rand(0, 4)) {
-        unset($items[$id]);
-        continue;
-      }
-      foreach ($item as $k => $v) {
-        srand(drupal_strlen($v) + count($v));
-        $item->$k = rand(1, 100);
-      }
-    }
-  }
-
-  foreach ($items as $id => $item) {
-    $item->example_id_plus_rand = "$id-" . rand(1, 500);
-  }
-
-  return array(
-    'example_id_plus_rand' => array(
-      'label' => t('Useless field'),
-      'description' => t('A really, really useless field, consisting of the entity ID and a random number.'),
-      'type' => 'text',
-    )
-  );
-}

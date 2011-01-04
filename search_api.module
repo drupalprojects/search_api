@@ -627,12 +627,14 @@ function search_api_search_api_alter_callback_info() {
   $callbacks['search_api_alter_add_url'] = array(
     'name' => t('URL field'),
     'description' => t("Adds the item's URL to the indexed data."),
+    'class' => 'SearchApiAlterAddUrl',
   );
   $callbacks['search_api_alter_add_fulltext'] = array(
     'name' => t('Fulltext field'),
     'description' => t("Adds a fulltext summary field to the data, incorporating all of the item's fulltext data. " .
         'Note that this will aggregate <em>all</em> fields whose type is "@type", not only those configured as indexed.',
         array('@type' => t('Fulltext'))),
+    'class' => 'SearchApiAlterAddFulltext',
   );
 
   return $callbacks;
@@ -750,98 +752,6 @@ function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
       ->condition('index_id', $index->machine_name)
       ->condition('item_id', $ids, 'IN')
       ->execute();
-}
-
-/**
- * Search API data alteration callback that adds an URL field for all items.
- *
- * @param SearchApiIndex $index
- *   The index on which the items are indexed.
- * @param array $items
- *   An array of objects containing the entity data.
- *
- * @return array
- *   The definition for the new search_api_url field.
- */
-function search_api_alter_add_url(SearchApiIndex $index, array &$items) {
-  foreach ($items as $id => &$item) {
-    $url = entity_uri($index->entity_type, $item);
-    if (!$url) {
-      $item->search_api_url = NULL;
-      continue;
-    }
-    $item->search_api_url = url($url['path'], array('absolute' => TRUE) + $url['options']);
-  }
-  return array(
-    'search_api_url' => array(
-      'label' => t('URI'),
-      'description' => t('An URI where the item can be accessed.'),
-      'type' => 'uri',
-    ),
-  );
-}
-
-/**
- * Search API data alteration callback that adds an aggregated fulltext field
- * for all items.
- *
- * @param SearchApiIndex $index
- *   The index on which the items are indexed.
- * @param array $items
- *   An array of objects containing the entity data.
- *
- * @return array
- *   The definition for the new search_api_fulltext field.
- */
-function search_api_alter_add_fulltext(SearchApiIndex $index, array &$items) {
-  if (empty($index->options['fields'])) {
-    $fields = FALSE;
-  }
-  else {
-    $fields = array_intersect_key($index->options['fields'], drupal_map_assoc($index->getFulltextFields()));
-  }
-  foreach ($items as $id => &$item) {
-    $wrapper = entity_metadata_wrapper($index->entity_type, $item);
-    $text = '';
-    if ($fields) {
-      foreach (array_keys($fields) as $field) {
-        try {
-          $tmp = $wrapper;
-          foreach (explode(':', $field) as $property) {
-            if (!isset($tmp->$property)) {
-              // This can especially happen for fields added by data alter callbacks – e.g., this one.
-              $tmp = FALSE;
-              break;
-            }
-            $tmp = $tmp->$property;
-          }
-          if ($tmp) {
-            $text .= $tmp->value() . "\n\n";
-          }
-        }
-        catch (Exception $e) {
-          // This might happen for entity fields that are NULL, e.g. comments without parent.
-          // We just ignore the field, then.
-        }
-      }
-    }
-    else {
-      foreach ($wrapper as $key => $field) {
-        $info = $field->info();
-        if ($info['type'] == 'text') {
-          $text .= $field->value() . "\n\n";
-        }
-      }
-    }
-    $item->search_api_fulltext = $text;
-  }
-  return array(
-    'search_api_fulltext' => array(
-      'label' => t('Fulltext'),
-      'description' => t('The aggregated content of all fulltext fields.'),
-      'type' => 'text',
-    ),
-  );
 }
 
 /**
