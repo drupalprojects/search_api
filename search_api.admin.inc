@@ -15,7 +15,7 @@ function search_api_admin_overview() {
   $show_config_status = FALSE;
   foreach (search_api_index_load_multiple(FALSE) as $index) {
     $indexes[$index->server][$index->machine_name] = $index;
-    if (!$show_config_status && $index->status != ENTITY_IN_DB) {
+    if (!$show_config_status && $index->status != ENTITY_CUSTOM) {
       $show_config_status = TRUE;
     }
   }
@@ -25,7 +25,7 @@ function search_api_admin_overview() {
       unset($servers[$id]);
       $servers[$id] = $server;
     }
-    if (!$show_config_status && $server->status != ENTITY_IN_DB) {
+    if (!$show_config_status && $server->status != ENTITY_CUSTOM) {
       $show_config_status = TRUE;
     }
   }
@@ -138,10 +138,10 @@ function search_api_admin_overview() {
  */
 function _search_api_admin_delete_link(Entity $entity) {
   // Delete link only makes sense if entity is in the database (custom or overridden).
-  if ($entity->status & ENTITY_IN_DB) {
+  if ($entity->status & ENTITY_CUSTOM) {
     $type = $entity instanceof SearchApiServer ? 'server' : 'index';
     $url = 'admin/config/search/search_api/' . $type . '/' . $entity->machine_name . '/delete';
-    $title = $entity->status == ENTITY_IN_DB ? t('delete') : t('revert');
+    $title = $entity->status == ENTITY_CUSTOM ? t('delete') : t('revert');
     return l($title, $url);
   }
   return '';

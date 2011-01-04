@@ -129,7 +129,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           '#type' => 'checkbox',
           '#default_value' => FALSE,
         );
-        if (($facet->enabled && $facet->status != ENTITY_OVERRIDDEN) || empty($facet->delta) || !($facet->status & ENTITY_IN_DB)) {
+        if (($facet->enabled && $facet->status != ENTITY_OVERRIDDEN) || empty($facet->delta) || !($facet->status & ENTITY_CUSTOM)) {
           $form['facets'][$k]['delete'] = array(
             '#markup' => '&nbsp;',
           );

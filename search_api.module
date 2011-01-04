@@ -168,7 +168,7 @@ function search_api_theme() {
       'class_name' => NULL,
       'class_description' => NULL,
       'options' => array(),
-      'status' => ENTITY_IN_DB,
+      'status' => ENTITY_CUSTOM,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -184,7 +184,7 @@ function search_api_theme() {
       'options' => array(),
       'indexed_items' => 0,
       'total_items' => 0,
-      'status' => ENTITY_IN_DB,
+      'status' => ENTITY_CUSTOM,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -1212,7 +1212,7 @@ function search_api_title_delete_page(Entity $entity) {
  *   TRUE if the delete page can be accessed by the user, FALSE otherwise.
  */
 function search_api_access_delete_page(Entity $entity) {
-  return user_access('administer search_api') && $entity->status & ENTITY_IN_DB;
+  return user_access('administer search_api') && $entity->status & ENTITY_CUSTOM;
 }
 
 /**
