@@ -103,7 +103,10 @@ function search_api_admin_overview() {
       $row[] = array('data' => $t_index, 'colspan' => 2);
       $row[] = l($index->name, $url);
       $row[] = '';
-      $row[] = l($t_edit, $url . $edit);
+      $row[] = l($t_edit, $url . $edit, $edit_link_options) .
+            '<div class="search-api-edit-menu collapsed">' .
+            theme('links', array('links' => menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)))) .
+            '</div>';
       $row[] = _search_api_admin_delete_link($index);
       $rows[] = $row;
     }
