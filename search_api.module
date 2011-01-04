@@ -366,14 +366,12 @@ function search_api_entity_property_info() {
 }
 
 /**
- * Implements hook_search_api_server_enabled().
+ * Implements hook_search_api_server_insert().
  *
- * Calls the postCreate() method for all servers.
+ * Calls the postCreate() method for the server.
  */
-function search_api_search_api_server_enabled(array $servers) {
-  foreach ($servers as $server) {
-    $server->postCreate();
-  }
+function search_api_search_api_server_insert(SearchApiServer $server) {
+  $server->postCreate();
 }
 
 /**
@@ -439,33 +437,29 @@ function search_api_search_api_server_update(SearchApiServer $server) {
 }
 
 /**
- * Implements hook_search_api_server_disabled().
+ * Implements hook_search_api_server_delete().
  *
- * Calls the preDelete() method for all servers.
+ * Calls the preDelete() method for the server.
  */
-function search_api_search_api_server_disabled(array $servers) {
-  foreach ($servers as $server) {
-    $server->preDelete();
+function search_api_search_api_server_delete(SearchApiServer $server) {
+  $server->preDelete();
 
-    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
-      $index->update(array('server' => NULL, 'enabled' => FALSE));
-    }
-
-    $tasks = variable_get('search_api_tasks', array());
-    unset($tasks[$server->machine_name]);
-    variable_set('search_api_tasks', $tasks);
+  foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+    $index->update(array('server' => NULL, 'enabled' => FALSE));
   }
+
+  $tasks = variable_get('search_api_tasks', array());
+  unset($tasks[$server->machine_name]);
+  variable_set('search_api_tasks', $tasks);
 }
 
 /**
- * Implements hook_search_api_index_enabled().
+ * Implements hook_search_api_index_insert().
  *
  * Populates {search_api_item} for new indexes.
  */
-function search_api_search_api_index_enabled(array $indexes) {
-  foreach ($indexes as $index) {
-    $index->postCreate();
-  }
+function search_api_search_api_index_insert(SearchApiIndex $index) {
+  $index->postCreate();
 }
 
 /**
@@ -476,14 +470,17 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
     // Server changed - inform old and new ones.
     if ($index->original->server) {
       $old_server = search_api_server_load($index->original->server);
-      if ($old_server->enabled) {
-        $old_server->removeIndex($index);
-      }
-      else {
-        $tasks = variable_get('search_api_tasks', array());
-        // When we add or remove an index, we can ignore all other tasks.
-        $tasks[$old_server->machine_name][$index->machine_name] = array('remove');
-        variable_set('search_api_tasks', $tasks);
+      // The server might have changed because the old one was deleted:
+      if ($old_server) {
+        if ($old_server->enabled) {
+          $old_server->removeIndex($index);
+        }
+        else {
+          $tasks = variable_get('search_api_tasks', array());
+          // When we add or remove an index, we can ignore all other tasks.
+          $tasks[$old_server->machine_name][$index->machine_name] = array('remove');
+          variable_set('search_api_tasks', $tasks);
+        }
       }
     }
 
@@ -518,14 +515,12 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
 }
 
 /**
- * Implements hook_search_api_index_disabled().
+ * Implements hook_search_api_index_delete().
  *
  * Removes all data for indexes not available any more.
  */
-function search_api_search_api_index_disabled(array $indexes) {
-  foreach ($indexes as $index) {
-    $index->postDelete();
-  }
+function search_api_search_api_index_delete(SearchApiIndex $index) {
+  $index->postDelete();
 }
 
 /**
