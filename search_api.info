@@ -10,10 +10,14 @@ files[] = search_api.test
 files[] = includes/callback.inc
 files[] = includes/callback_add_fulltext.inc
 files[] = includes/callback_add_url.inc
-files[] = includes/entity.inc
 files[] = includes/exception.inc
+files[] = includes/index_entity.inc
 files[] = includes/processor.inc
+files[] = includes/processor_html_filter.inc
+files[] = includes/processor_ignore_case.inc
+files[] = includes/processor_tokenizer.inc
 files[] = includes/query.inc
+files[] = includes/server_entity.inc
 files[] = includes/service.inc
 
 configure = admin/config/search/search_api
