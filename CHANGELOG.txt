@@ -8,6 +8,7 @@ API changes:
 - #963062: Make facets exportable.
 
 Others:
+- #1012478: HTML in node bodies is escaped in Views.
 - #1014548: Add newly required database fields for entities.
 - #915174: Remove unnecessary files[] declarations from .info files.
 - #988780: Merge of entity modules.

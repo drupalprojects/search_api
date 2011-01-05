@@ -184,7 +184,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
    * classes to provide more specific rendering.
    */
   protected function renderValue($value) {
-    return check_plain($value);
+    return $value;
   }
 
 }

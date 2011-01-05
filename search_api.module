@@ -1027,11 +1027,14 @@ function search_api_extract_inner_type($type) {
  *   The fields to extract, as stored in an index. I.e., the array keys are
  *   field names, the values are arrays with the keys "name", "type", "boost"
  *   and "indexed" (although only "type" is used by this function).
+ * @param array $value_options
+ *   An array of options that should be passed to the
+ *   EntityMetadataWrapper::value() method (see there).
  *
  * @return
  *   The $fields array with additional "value" and "original_type" keys set.
  */
-function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields) {
+function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields, array $value_options = array()) {
   // If $wrapper is a list of entities, we have to aggregate their field values.
   $wrapper_info = $wrapper->info();
   if (search_api_is_list_type($wrapper_info['type'])) {
@@ -1062,7 +1065,7 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
       $info['value'] = NULL;
       $info['original_type'] = $info['type'];
       try {
-        $info['value'] = $wrapper->$field->value();
+        $info['value'] = $wrapper->$field->value($value_options);
         $property_info = $wrapper->$field->info();
         $info['original_type'] = $property_info['type'];
       }

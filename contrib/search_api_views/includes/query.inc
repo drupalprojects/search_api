@@ -185,7 +185,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     foreach ($all_fields as $key => $true) {
       $fields[$key]['type'] = 'string';
     }
-    $fields = search_api_extract_fields($wrapper, $fields);
+    $fields = search_api_extract_fields($wrapper, $fields, array('sanitized' => TRUE));
     $ret = array();
     foreach ($all_fields as $key => $true) {
       $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
