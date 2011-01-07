@@ -1386,7 +1386,7 @@ function search_api_admin_element_compare($a, $b) {
  *   The index to edit.
  */
 function search_api_admin_index_fields(array $form, array &$form_state, SearchApiIndex $index) {
-  $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
+  $wrapper = $index->entityWrapper();
 
   $options = _search_api_admin_get_fields($index, $wrapper);
   $fields = $options['fields'];
@@ -1653,7 +1653,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     return;
   }
   // Adding a related entity's fields.
-  $wrapper = $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
+  $wrapper = $orig_wrapper = $index->entityWrapper();
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
 

@@ -849,7 +849,7 @@ function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options)
   $index = search_api_index_load($facet->index_id);
   $type = $index->options['fields'][$facet->field]['type'];
   $options['type'] = search_api_extract_inner_type($type);
-  $wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
+  $wrapper = $index->entityWrapper();
   foreach (explode(':', $facet->field) as $part) {
     if (!isset($wrapper->$part)) {
       $wrapper = NULL;

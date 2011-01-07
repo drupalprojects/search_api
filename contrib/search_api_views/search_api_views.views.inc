@@ -23,7 +23,7 @@ function search_api_views_views_data() {
     // Add all available fields
     // This is largely copied from _search_api_admin_get_fields().
     $max_depth = variable_get('search_api_views_max_fields_depth', 2);
-    $orig_wrapper = entity_metadata_wrapper($index->entity_type, NULL, array('property info alter' => array($index, 'propertyInfoAlter')));
+    $orig_wrapper = $index->entityWrapper();
     $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
 
     // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper

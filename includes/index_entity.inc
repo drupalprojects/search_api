@@ -357,7 +357,7 @@ class SearchApiIndex extends Entity {
     }
     $wrappers = array();
     foreach ($items as $id => $item) {
-      $wrappers[$id] = entity_metadata_wrapper($this->entity_type, $item, array('property info alter' => array($this, 'propertyInfoAlter')));
+      $wrappers[$id] = $this->entityWrapper($item);
     }
 
     $items = array();
@@ -601,6 +601,19 @@ class SearchApiIndex extends Entity {
       }
     }
     return $this->fulltext_fields[$i];
+  }
+
+  /**
+   * Helper function for creating an entity metadata wrapper appropriate for
+   * this index.
+   *
+   * @return EntityMetadataWrapper
+   *   A wrapper for the entity type of this index, optionally loaded with the
+   *   given data, and having fields according to the data alterations of this
+   *   index.
+   */
+  public function entityWrapper($item = NULL) {
+    return entity_metadata_wrapper($this->entity_type, $item, array('property info alter' => array($this, 'propertyInfoAlter')));
   }
 
 }
