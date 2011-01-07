@@ -1175,8 +1175,6 @@ function search_api_server_load($id, $reset = FALSE) {
  *   An array of server objects keyed by machine name.
  */
 function search_api_server_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
-  module_load_include('inc', 'search_api', 'includes/entity');
   return entity_load('search_api_server', $ids, $conditions, $reset);
 }
 
@@ -1384,8 +1382,6 @@ function search_api_index_load($id, $reset = FALSE) {
  *   An array of index objects keyed by machine name.
  */
 function search_api_index_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
-  module_load_include('inc', 'search_api', 'includes/entity');
   return entity_load('search_api_index', $ids, $conditions, $reset);
 }
 

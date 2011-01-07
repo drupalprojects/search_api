@@ -11,6 +11,7 @@ API changes:
 - #963062: Make facets exportable.
 
 Others:
+- #1018544: includes/entity.inc mentioned in a few places.
 - #1011458: Move entity and processor classes into individual files.
 - #1012478: HTML in node bodies is escaped in Views.
 - #1014548: Add newly required database fields for entities.

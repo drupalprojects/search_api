@@ -18,8 +18,6 @@ function search_api_page_view($id, $keys = NULL) {
   $ret['form'] = drupal_get_form('search_api_page_search_form', $page, $keys);
 
   if ($keys) {
-    // @todo This is a fix for a PDO bug in PHP 5.2 which would produce a WSoD.
-    module_load_include('inc', 'search_api', 'includes/entity');
     $ret['results']['#theme'] = 'search_api_page_results';
     $ret['results']['#index'] = search_api_index_load($page->index_id);
     $ret['results']['#results'] = $results = search_api_page_search_execute($page, $keys);
