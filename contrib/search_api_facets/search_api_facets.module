@@ -49,6 +49,7 @@ function search_api_facets_theme() {
   $themes['search_api_facets_facet'] = array(
     'variables' => array(
       'name' => '',
+      'field' => '',
       'count' => 0,
       'path' => NULL,
       'options' => array(),
@@ -504,7 +505,7 @@ function search_api_facets_block_current_search_view() {
       }
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();
-      $prefix = $options['field_name'] ? $index->options['fields'][$field]['name'] . ': ' : '';
+      $field_name = $options['field_name'] ? $index->options['fields'][$field]['name'] : '';
 
       $theme_suffix  = '';
       $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->entity_type);
@@ -513,7 +514,8 @@ function search_api_facets_block_current_search_view() {
       foreach ($field_filters as $i => $v) {
         $filter = array(
           '#theme'   => 'search_api_facets_facet' . $theme_suffix,
-          '#name'    => $prefix . _search_api_create_filter_name($v, $type, $values),
+          '#name'    => _search_api_create_filter_name($v, $type, $values),
+          '#field'   => $field_name,
           '#count'   => 0,
           '#path'    => $path,
           '#options' => array('query' => $params),

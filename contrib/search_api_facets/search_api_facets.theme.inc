@@ -17,7 +17,7 @@ function theme_search_api_facets_list(array $variables) {
   foreach ($variables['terms'] as $term) {
     $items[] = render($term);
   }
-  return $items ? theme('item_list', array('items' => $items, 'class' => array('search-api-facets'))) : '';
+  return $items ? theme('item_list', array('items' => $items, 'attributes' => array('class' => array('search-api-facets')))) : '';
 }
 
 /**
@@ -26,6 +26,7 @@ function theme_search_api_facets_list(array $variables) {
  * @param array $variables
  *   An associative array containing:
  *   - name: The name to display for the item.
+ *   - field: The name of the facetted field (active facets only).
  *   - count: The number of results for a non-active facet.
  *   - path: The destination path when the facet link is clicked.
  *   - options: An array of options to pass to l().
@@ -34,12 +35,19 @@ function theme_search_api_facets_list(array $variables) {
 function theme_search_api_facets_facet(array $variables) {
   $name = $variables['name'];
   $path = $variables['path'];
-  $options = $variables['options'];
+  $options = $variables['options'] + array('attributes' => array());
+  $options['attributes'] += array('class' => array());
 
   if ($variables['active']) {
-    return l('(-)', $path, $options) . ' ' . check_plain($name);
+    $options['attributes']['class'][] = 'search-api-facet-remove';
+    $field = '';
+    if ($variables['field']) {
+      $field = ' <span class="search-api-facet-field">' . $variables['field'] . ':</span>';
+    }
+    return l('(-)', $path, $options) . $field . ' <span class="search-api-facet-value">' . check_plain($name) . '</span>';
   }
-  return l($name . ' (' . $variables['count'] . ')', $path, $options);
+  $options['attributes']['class'][] = 'search-api-facet-value';
+  return l($name, $path, $options) . ' <span class="search-api-facet-count">(' . $variables['count'] . ')</span>';
 }
 
 /**
@@ -60,7 +68,7 @@ function theme_search_api_facets_current_search(array $variables) {
   foreach ($variables['filters'] as $filter) {
     $items[] = render($filter);
   }
-  $items = $items ? theme('item_list', array('items' => $items, 'class' => array('search-api-facets'))) : '';
+  $items = $items ? theme('item_list', array('items' => $items, 'attributes' => array('class' => array('search-api-facets')))) : '';
   $link = l($variables['keys'], $variables['path'], $variables['options']);
   $results = format_plural($variables['count'], '1 result', '@count results');
   return '<h3>' . $link . ' (' . $results . ")</h3>\n" . $items;
