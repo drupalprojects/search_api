@@ -152,14 +152,23 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
       return;
     }
     if (substr($type, 0, 5) == 'list<') {
-      $t = substr($type, 5, -1);
+      $inner_type = $t = $t1 = substr($type, 5, -1);
       foreach ($value as &$v) {
-        $this->processField($v, $t);
+        $t1 = $inner_type;
+        $this->processField($v, $t1);
+        // If one value got tokenized, all others have to follow.
+        if ($t1 != $inner_type) {
+          $t = $t1;
+        }
       }
       if ($t == 'tokens') {
-        foreach ($value as &$v) {
+        foreach ($value as $i => &$v) {
+          if (!$v) {
+            unset($value[$i]);
+            continue;
+          }
           if (!is_array($v)) {
-            $v = $v ? array('value' => $v, 'score' => 1) : array();
+            $v = array(array('value' => $v, 'score' => 1));
           }
         }
       }
@@ -172,7 +181,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
       }
     }
     else {
-      $this->processFieldValue($value);
+        $this->processFieldValue($value);
     }
     if (is_array($value)) {
       $type = 'tokens';
