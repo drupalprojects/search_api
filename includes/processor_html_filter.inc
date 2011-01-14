@@ -42,7 +42,7 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
       'alt' => array(
         '#type' => 'checkbox',
         '#title' => t('Index alt attribute'),
-        '#description' => t('If set, the alternative text y.'),
+        '#description' => t('If set, the alternative text of images will be indexed.'),
         '#default_value' => $this->options['alt'],
       ),
       'tags' => array(
