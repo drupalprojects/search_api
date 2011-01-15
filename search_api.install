@@ -138,9 +138,9 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'index_id' => array(
-        'description' => 'The {search_api_index}.machine_name this item belongs to.',
-        'type' => 'varchar',
-        'length' => 50,
+        'description' => 'The {search_api_index}.id this item belongs to.',
+        'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'changed' => array(
@@ -464,8 +464,6 @@ function search_api_uninstall() {
 }
 
 /**
- * Implements hook_update_N().
- *
  * Update function that adds the machine names for servers and indexes.
  */
 function search_api_update_7101() {
@@ -543,8 +541,6 @@ function search_api_update_7101() {
 }
 
 /**
- * Implements hook_update_N().
- *
  * Update replacing IDs with machine names for foreign keys.
  * {search_api_index}.server and {search_api_item}.index_id are altered.
  */
@@ -615,4 +611,35 @@ function search_api_update_7103() {
       db_add_field($table, $field, $spec);
     }
   }
+}
+
+/**
+ * Change {search_api_item}.index_id back to the index' numeric ID.
+ */
+function search_api_update_7104() {
+  foreach (search_api_index_load_multiple(FALSE) as $index) {
+    // We explicitly forbid numeric machine names, therefore we don't have to worry about conflicts here.
+    db_update('search_api_item')
+      ->fields(array(
+        'index_id' => $index->id,
+      ))
+      ->condition('index_id', $index->machine_name)
+      ->execute();
+  }
+
+  db_drop_index('search_api_item', 'indexing');
+  db_drop_primary_key('search_api_item');
+  $spec = array(
+    'description' => 'The {search_api_index}.id this item belongs to.',
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  );
+  $keys_new = array(
+    'indexes' => array(
+      'indexing' => array('index_id', 'changed'),
+    ),
+    'primary key' => array('item_id', 'index_id'),
+  );
+  db_change_field('search_api_item', 'index_id', 'index_id', $spec, $keys_new);
 }

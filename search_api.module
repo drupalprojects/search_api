@@ -407,7 +407,7 @@ function search_api_search_api_server_update(SearchApiServer $server) {
                 break;
               case 'fields':
                 if ($server->fieldsUpdated($index)) {
-                  _search_api_index_reindex($index->machine_name);
+                  _search_api_index_reindex($index->id);
                 }
                 break;
               case 'remove':
@@ -500,7 +500,7 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
     }
 
     // We also have to re-index all content
-    _search_api_index_reindex($index->machine_name);
+    _search_api_index_reindex($index->id);
   }
 
   $old_fields = $index->original->options + array('fields' => array());
@@ -509,7 +509,7 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
   $new_fields = $new_fields['fields'];
   if ($old_fields != $new_fields) {
     if ($index->server && $index->server()->fieldsUpdated($index)) {
-      _search_api_index_reindex($index->machine_name);
+      _search_api_index_reindex($index->id);
     }
   }
 }
@@ -547,7 +547,7 @@ function search_api_entity_insert($entity, $type) {
   foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
     db_insert('search_api_item')
       ->fields(array(
-        'index_id' => $index->machine_name,
+        'index_id' => $index->id,
         'item_id' => $id,
         'changed' => 1,
       ))
@@ -576,7 +576,7 @@ function search_api_entity_update($entity, $type) {
         'changed' => REQUEST_TIME,
       ))
       ->condition('item_id', $id)
-      ->condition('index_id', $index->machine_name)
+      ->condition('index_id', $index->id)
       ->condition('changed', 0)
       ->execute();
   }
@@ -599,7 +599,7 @@ function search_api_entity_delete($entity, $type) {
   foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
     db_delete('search_api_item')
       ->condition('item_id', $id)
-      ->condition('index_id', $index->machine_name)
+      ->condition('index_id', $index->id)
       ->execute();
     if ($index->server) {
       $server = $index->server();
@@ -715,7 +715,7 @@ function search_api_get_items_to_index(SearchApiIndex $index, $limit = -1) {
   }
   $select = db_select('search_api_item', 'i');
   $select->addField('i', 'item_id');
-  $select->condition('index_id', $index->machine_name);
+  $select->condition('index_id', $index->id);
   $select->condition('changed', 0, '<>');
   $select->orderBy('changed', 'ASC');
   if ($limit > 0) {
@@ -742,7 +742,7 @@ function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
       ->fields(array(
         'changed' => 0,
       ))
-      ->condition('index_id', $index->machine_name)
+      ->condition('index_id', $index->id)
       ->condition('item_id', $ids, 'IN')
       ->execute();
 }
@@ -1413,7 +1413,7 @@ function search_api_index_load_multiple($ids = array(), $conditions = array(), $
  *   - total: The total number of items that have to be indexed for this index.
  */
 function search_api_index_status($index) {
-  $id = is_object($index) ? $index->machine_name : $index;
+  $id = is_object($index) ? $index->id : $index;
   $indexed = db_select('search_api_item', 'i')
     ->condition('index_id', $id)
     ->condition('changed', 0)
@@ -1553,17 +1553,17 @@ function search_api_index_reindex($id) {
 /**
  * Helper method for marking all items on an index as needing re-indexing.
  *
- * @param $machine_name
- *   The machine name of the index to re-index.
+ * @param $id
+ *   The numeric ID of the index to re-index.
  *
  * @return
  *   The number of items affected.
  */
-function _search_api_index_reindex($machine_name) {
+function _search_api_index_reindex($id) {
   return db_update('search_api_item')
     ->fields(array('changed' => REQUEST_TIME))
     ->condition('changed', 0)
-    ->condition('index_id', $machine_name)
+    ->condition('index_id', $id)
     ->execute();
 }
 

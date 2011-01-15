@@ -311,7 +311,7 @@ function hook_search_api_index_update(SearchApiIndex $index) {
 function hook_search_api_index_reindex(SearchApiIndex $index, $clear = FALSE) {
   db_insert('example_search_index_reindexed')
     ->fields(array(
-      'index' => $index->machine_name,
+      'index' => $index->id,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();

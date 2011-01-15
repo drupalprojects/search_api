@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1028042: Change {search_api_item}.index_id back to an INT.
 - #1021664: Paged views results empty when adding facet.
 - #872912: Write tests.
 - #1013018: Make the "Fulltext field" data alteration more useful.

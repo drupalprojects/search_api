@@ -76,12 +76,10 @@ function search_api_page_update_dependencies() {
 }
 
 /**
- * Implements hook_update_N().
- *
  * Make {search_api_page}.index_id the index' machine name.
  */
 function search_api_page_update_7101() {
-  // Update of search_api_item:
+  // Update of search_api_page:
   db_drop_index('search_api_page', 'index_id');
   $spec = array(
     'description' => 'The {search_api_index}.machine_name this page will search on.',

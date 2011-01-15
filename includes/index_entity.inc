@@ -97,7 +97,7 @@ class SearchApiIndex extends Entity {
       $table = $entity_info['base table'];
       $query = db_select($table, 't');
       $query->addField('t', $id_field, 'item_id');
-      $query->addExpression(':index_id', 'index_id', array(':index_id' => $this->machine_name));
+      $query->addExpression(':index_id', 'index_id', array(':index_id' => $this->id));
       $query->addExpression('1', 'changed');
 
       db_insert('search_api_item')->from($query)->execute();
@@ -109,7 +109,7 @@ class SearchApiIndex extends Entity {
       foreach ($entities as $item_id => $entity) {
         $query->values(array(
           'item_id' => $item_id,
-          'index_id' => $this->machine_name,
+          'index_id' => $this->id,
           'changed' => 1,
         ));
       }
@@ -148,7 +148,7 @@ class SearchApiIndex extends Entity {
     }
 
     db_delete('search_api_item')
-      ->condition('index_id', $this->machine_name)
+      ->condition('index_id', $this->id)
       ->execute();
   }
 
@@ -216,7 +216,7 @@ class SearchApiIndex extends Entity {
     if (!$this->server) {
       return TRUE;
     }
-    $ret = _search_api_index_reindex($this->machine_name);
+    $ret = _search_api_index_reindex($this->id);
     if($ret) {
       module_invoke_all('search_api_index_reindex', $this, FALSE);
     }
@@ -249,7 +249,7 @@ class SearchApiIndex extends Entity {
       }
     }
 
-    $ret = _search_api_index_reindex($this->machine_name);
+    $ret = _search_api_index_reindex($this->id);
     if($ret) {
       module_invoke_all('search_api_index_reindex', $this, TRUE);
     }
