@@ -534,6 +534,7 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#description' => t('Select the type of entity that will be indexed in this index. ' .
         'This setting cannot be changed afterwards.'),
     '#options' => array(),
+    '#required' => TRUE,
   );
   foreach (entity_get_info() as $name => $entity) {
     if (entity_get_property_info($name)) {

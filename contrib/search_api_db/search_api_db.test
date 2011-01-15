@@ -94,8 +94,10 @@ class SearchApiDbTest extends DrupalWebTestCase {
   }
 
   protected function createServer() {
+    $this->server_id = 'database_search_server';
     $values = array(
       'name' => 'Database search server',
+      'machine_name' => $this->server_id,
       'enabled' => 1,
       'description' => 'A server used for testing.',
       'class' => 'search_api_db_service',
@@ -108,14 +110,15 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->drupalPost(NULL, $values2, t('Create server'));
 
     $this->assertText(t('The server was successfully created.'));
-    $found = preg_match('#admin/config/search/search_api/server/(\d+)#', $this->getUrl(), $m);
+    $found = strpos($this->getUrl(), '/admin/config/search/search_api/server/' . $this->server_id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
-    $this->server_id = $m[1];
   }
 
   protected function createIndex() {
+    $this->index_id = $id = 'test_index';
     $values = array(
       'name' => 'Test index',
+      'machine_name' => 'test_index',
       'entity_type' => 'search_api_test',
       'enabled' => 1,
       'description' => 'An index used for testing.',
@@ -125,9 +128,8 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $this->drupalPost('admin/config/search/search_api/add_index', $values, t('Create index'));
 
     $this->assertText(t('The index was successfully created. Please set up its workflow now.'), t('The index was successfully created.'));
-    $found = preg_match('#admin/config/search/search_api/index/(\d+)#', $this->getUrl(), $m);
+    $found = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
-    $this->index_id = $id = $m[1];
 
     $this->drupalPost(NULL, array(), t('Save configuration'));
     $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));

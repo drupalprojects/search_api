@@ -39,6 +39,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
 
   public function testFramework() {
     $this->drupalLogin($this->drupalCreateUser(array('administer search_api')));
+    $this->deleteDefaultIndex();
     $this->insertItems();
     $this->checkOverview1();
     $this->createIndex();
@@ -53,6 +54,10 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->clearIndex();
     $this->searchNoResults();
     $this->deleteServer();
+  }
+
+  protected function deleteDefaultIndex() {
+    $this->drupalPost('admin/config/search/search_api/index/default_node_index/delete', array(), t('Confirm'));
   }
 
   protected function insertItems($offset = 0) {
@@ -137,12 +142,17 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertEqual($index->options['cron_limit'], $values['cron_limit'], t('Cron limit correctly inserted.'));
 
     $values = array(
-      'callbacks[search_api_alter_prepare_view][status]' => 1,
-      'callbacks[search_api_alter_prepare_view][weight]' => -10,
       'callbacks[search_api_alter_add_url][status]' => 1,
       'callbacks[search_api_alter_add_url][weight]' => 0,
       'callbacks[search_api_alter_add_fulltext][status]' => 1,
       'callbacks[search_api_alter_add_fulltext][weight]' => 10,
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][name]' => 'Test fulltext field',
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][]' => array(
+        'title',
+        'body',
+        'parent:title',
+        'parent:body',
+      ),
       'processors[search_api_case_ignore][status]' => 1,
       'processors[search_api_case_ignore][weight]' => 0,
       'processors[search_api_case_ignore][settings][strings]' => 0,
@@ -153,14 +163,12 @@ class SearchApiWebTest extends DrupalWebTestCase {
     );
     $this->drupalPost(NULL, $values, t('Save configuration'));
     $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
-
-    $this->drupalPost("admin/config/search/search_api/index/$id/workflow", $values, t('Save configuration'));
-    $this->assertText(t('No values were changed.'));
+    $this->assertText('Test fulltext field', t('Fulltext field correctly added.'));
 
     $values = array(
       'additional[field]' => 'parent',
     );
-    $this->drupalPost(NULL, $values, t('Add fields'));
+    $this->drupalPost("admin/config/search/search_api/index/$id/fields", $values, t('Add fields'));
     $this->assertText(t('The available fields were successfully changed.'), t('Successfully added fields.'));
     $this->assertText('Parent » ID', t('!field displayed.', array('!field' => t('Added fields are'))));
 
@@ -177,9 +185,9 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'fields[type][type]' => 'string',
       'fields[type][boost]' => '1.0',
       'fields[type][indexed]' => 1,
-      'fields[search_api_fulltext][type]' => 'text',
-      'fields[search_api_fulltext][boost]' => '1.0',
-      'fields[search_api_fulltext][indexed]' => 1,
+      'fields[search_api_fulltext_1][type]' => 'text',
+      'fields[search_api_fulltext_1][boost]' => '1.0',
+      'fields[search_api_fulltext_1][indexed]' => 1,
       'fields[search_api_url][type]' => 'uri',
       'fields[search_api_url][boost]' => '1.0',
       'fields[search_api_url][indexed]' => 1,
