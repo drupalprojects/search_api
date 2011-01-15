@@ -291,7 +291,7 @@ function search_api_facets_block_view($delta = '') {
 
   // Get active facet filters for this query.
   $num = count(search_api_current_search());
-  $params = drupal_get_query_parameters();
+  $params = drupal_get_query_parameters($_GET, array('q', 'page'));
   $filter_name = $num > 1 ? 'filter_' . $search_id : 'filter';
   $filters = isset($params[$filter_name]) ? $params[$filter_name] : array();
   if (!$filters && $num == 1 && isset($params['filter_' . $search_id])) {
@@ -466,7 +466,7 @@ function search_api_facets_block_current_search_view() {
     'ids_list' => array(),
   );
   $ids_list = drupal_map_assoc($options['ids_list']);
-  $params = drupal_get_query_parameters();
+  $params = drupal_get_query_parameters($_GET, array('q', 'page'));
   $num = count(search_api_current_search());
   $path = $_GET['q'];
 
