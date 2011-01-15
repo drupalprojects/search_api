@@ -270,8 +270,10 @@ Included components
   * URL field
     Provides a field with the URL for displaying the entity.
   * Fulltext field
-    Aggregates the contents of all fields set to the "Fulltext" type, for
-    searching an entity's complete fulltext data in a single field.
+    Offers the ability to add additional fulltext fields to the entity,
+    containing the data from one or more other fields. Use this, e.g., to have a
+    single field containing all data that should be searchable, or to make the
+    text from a string field, like a taxonomy term, also fulltext-searchable.
 
 - Processors
 

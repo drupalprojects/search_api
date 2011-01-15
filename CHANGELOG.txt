@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1013018: Make the "Fulltext field" data alteration more useful.
 - #1024514: Error when preprocessing muli-valued fulltext fields.
 - #1020372: CSS classes for facets.
 

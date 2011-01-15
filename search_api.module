@@ -625,10 +625,8 @@ function search_api_search_api_alter_callback_info() {
     'class' => 'SearchApiAlterAddUrl',
   );
   $callbacks['search_api_alter_add_fulltext'] = array(
-    'name' => t('Fulltext field'),
-    'description' => t("Adds a fulltext summary field to the data, incorporating all of the item's fulltext data. " .
-        'Note that this will aggregate <em>all</em> fields whose type is "@type", not only those configured as indexed.',
-        array('@type' => t('Fulltext'))),
+    'name' => t('Fulltext fields'),
+    'description' => t('Gives you the ability to define additional fulltext fields, containing the text data from one or more other fields.'),
     'class' => 'SearchApiAlterAddFulltext',
   );
 
@@ -1066,6 +1064,9 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
       $info['original_type'] = $info['type'];
       try {
         $info['value'] = $wrapper->$field->value($value_options);
+        if (search_api_is_text_type($info['type']) && $wrapper->$field->optionsList()) {
+          _search_api_add_option_values($info['value'], $wrapper->$field->optionsList());
+        }
         $property_info = $wrapper->$field->info();
         $info['original_type'] = $property_info['type'];
       }
@@ -1095,6 +1096,21 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
     }
   }
   return $fields;
+}
+
+/**
+ * Helper method for adding additional text data to fields with an option list.
+ */
+function _search_api_add_option_values(&$value, array $options) {
+  if (is_array($value)) {
+    foreach ($value as &$v) {
+      _search_api_add_option_values($v, $options);
+    }
+    return;
+  }
+  if (isset($options[$value])) {
+    $value .= ' ' . $options[$value];
+  }
 }
 
 /**

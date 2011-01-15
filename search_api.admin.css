@@ -34,3 +34,10 @@ div.search-api-edit-menu.collapsed {
 input.search-api-cron-limit {
   text-align: right;
 }
+
+/* Workaround for http://drupal.org/node/1015798 */
+.vertical-tabs fieldset div.fieldset-wrapper fieldset legend {
+  display: block;
+  margin-bottom: 2em;
+}
+
