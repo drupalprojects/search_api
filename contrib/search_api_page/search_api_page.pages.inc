@@ -43,64 +43,6 @@ function search_api_page_view($id, $keys = NULL) {
 }
 
 /**
- * Display a search form.
- *
- * @param stdClass $page
- *   The search page for which this form is displayed.
- * @param $keys
- *   The search keys.
- * @param $compact
- *   Whether to display a compact form (e.g. for blocks) instead of a normal one.
- */
-function search_api_page_search_form(array $form, array &$form_state, stdClass $page, $keys = NULL, $compact = FALSE) {
-  $form['keys'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Enter your keywords'),
-    '#default_value' => $keys,
-  );
-  $form['base'] = array(
-    '#type' => 'value',
-    '#value' => $page->path,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Search'),
-  );
-
-  if (!$compact) {
-    $form = array(
-      '#type' => 'fieldset',
-      '#title' => $page->name,
-      'form' => $form,
-    );
-    if ($page->description) {
-      $form['text']['#markup'] = $page->description;
-      $form['text']['#weight'] = -5;
-    }
-  }
-
-  return $form;
-}
-
-/**
- * Validation callback for search_api_page_search_form().
- */
-function search_api_page_search_form_validate(array $form, array &$form_state) {
-  if (!trim($form_state['values']['keys'])) {
-    form_set_error('keys', t('Please enter at least one keyword.'));
-  }
-}
-
-/**
- * Submit callback for search_api_page_search_form().
- */
-function search_api_page_search_form_submit(array $form, array &$form_state) {
-  $keys = trim($form_state['values']['keys']);
-  // @todo Take care of "/"s in the keys
-  $form_state['redirect'] = $form_state['values']['base'] . '/' . $keys;
-}
-
-/**
  * Executes a search.
  *
  * @param stdClass $page

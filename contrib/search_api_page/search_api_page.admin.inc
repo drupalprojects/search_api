@@ -37,7 +37,7 @@ function search_api_page_admin_overview() {
   $delete = '/delete';
 
   $indexes = search_api_index_load_multiple(FALSE);
-  foreach (entity_load('search_api_page', FALSE) as $page) {
+  foreach (search_api_page_load_multiple() as $page) {
     $url = $pre . $page->id;
     $index = $indexes[$page->index_id];
     $rows[] = array(
@@ -186,7 +186,7 @@ function search_api_page_admin_add(array $form, array &$form_state) {
 function search_api_page_admin_add_validate(array $form, array &$form_state) {
   if (empty($form_state['step_one'])) {
     $form_state['values']['path'] = drupal_strtolower(trim($form_state['values']['path']));
-    if (entity_load('search_api_page', FALSE, array('path' => $form_state['values']['path']))) {
+    if (search_api_page_load_multiple(FALSE, array('path' => $form_state['values']['path']))) {
       form_set_error('path', t('The entered path is already in use. Please enter a unique path.'));
     }
   }
@@ -338,7 +338,7 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
 function search_api_page_admin_edit_validate(array $form, array &$form_state) {
   if ($form_state['values']['op'] == t('Save changes')) {
     $form_state['values']['path'] = drupal_strtolower(trim($form_state['values']['path']));
-    $pages = entity_load('search_api_page', FALSE, array('path' => $form_state['values']['path']));
+    $pages = search_api_page_load_multiple(FALSE, array('path' => $form_state['values']['path']));
     if (count($pages) > 1 || (($page = array_shift($pages)) && $page->id != $form_state['page']->id)) {
       form_set_error('path', t('The entered path is already in use. Please enter a unique path.'));
     }

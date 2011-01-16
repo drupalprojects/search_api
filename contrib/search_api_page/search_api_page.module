@@ -34,7 +34,7 @@ function search_api_page_menu() {
 
   // During uninstallation, this would lead to a fatal error otherwise.
   if (module_exists('search_api_page')) {
-    foreach (entity_load('search_api_page', FALSE, array('enabled' => 1), TRUE) as $page) {
+    foreach (search_api_page_load_multiple(FALSE, array('enabled' => TRUE)) as $page) {
       $items[$page->path] = array(
         'title' => $page->name,
         'description' => $page->description ? $page->description : '',
@@ -49,21 +49,6 @@ function search_api_page_menu() {
 
   return $items;
 }
-
-// @todo Implement a search block like provided by the search module.
-///**
-// * Implements hook_block_info().
-// */
-//function search_api_page_block_info() {
-//  return array();
-//}
-//
-///**
-// * Implements hook_block_view().
-// */
-//function search_api_page_block_view() {
-//  return array();
-//}
 
 /**
  * Implements hook_theme().
@@ -101,6 +86,45 @@ function search_api_page_permission() {
       'description' => t('Execute searches using the Search pages module.'),
     ),
   );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function search_api_page_block_info() {
+  foreach (search_api_page_load_multiple(FALSE, array('enabled' => TRUE)) as $page) {
+    $blocks[$page->id] = array(
+      'info' => t('Search block: !name', array('!name' => $page->name)),
+    );
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function search_api_page_block_view($delta) {
+  $pages = search_api_page_load_multiple(FALSE, array('enabled' => TRUE));
+  if (isset($pages[$delta])) {
+    $block = array();
+    $block['subject'] = t($pages[$delta]->name);
+    $block['content'] = drupal_get_form('search_api_page_search_form_' . $delta, $pages[$delta], NULL, TRUE);
+    return $block;
+  }
+}
+
+/**
+ * Implements hook_forms().
+ */
+function search_api_page_forms($form_id, $args) {
+  $forms = array();
+  foreach (search_api_page_load_multiple(FALSE, array('enabled' => TRUE)) as $page) {
+    $forms['search_api_page_search_form_' . $page->id] = array(
+      'callback' => 'search_api_page_search_form',
+      'callback arguments' => array(),
+    );
+  }
+  return $forms;
 }
 
 /**
@@ -167,7 +191,7 @@ function search_api_page_entity_property_info() {
  */
 function search_api_page_search_api_index_update(SearchApiIndex $index) {
   if (!$index->enabled && $index->original->enabled) {
-    foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
+    foreach (search_api_page_load_multiple(FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
       search_api_page_edit($page->id, array('enabled' => 0));
     }
   }
@@ -177,7 +201,7 @@ function search_api_page_search_api_index_update(SearchApiIndex $index) {
  * Implements hook_search_api_index_delete().
  */
 function search_api_page_search_api_index_delete(SearchApiIndex $index) {
-  foreach (entity_load('search_api_page', FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
+  foreach (search_api_page_load_multiple(FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
     search_api_page_delete($page->id);
   }
 }
@@ -203,13 +227,22 @@ function search_api_page_get_index(stdClass $page) {
  *   The page's ID.
  */
 function search_api_page_load($id, $reset = FALSE) {
-  $ret = entity_load('search_api_page', array($id), array(), $reset);
-  if (!$ret) {
-    return FALSE;
-  }
-  $ret = array_shift($ret);
-  if (is_string($ret->options)) {
-    $ret->options = unserialize($ret->options);
+  $ret = search_api_page_load_multiple(array($id), array(), $reset);
+  return $ret ? reset($ret) : FALSE;
+}
+
+/**
+ * Loads multiple / all search_api_page objects.
+ *
+ * @param array $id
+ *   An array of search page IDs, or FALSE to load all entities.
+ */
+function search_api_page_load_multiple($ids = FALSE, array $conditions = array(), $reset = FALSE) {
+  $ret = entity_load('search_api_page', $ids, $conditions, $reset);
+  foreach ($ret as $page) {
+    if (is_string($page->options)) {
+      $page->options = unserialize($page->options);
+    }
   }
   return $ret;
 }
@@ -330,4 +363,67 @@ function search_api_page_delete($id) {
   module_invoke_all('entity_delete', $page, 'search_api_page');
 
   return TRUE;
+}
+
+/**
+ * Display a search form.
+ *
+ * @param stdClass $page
+ *   The search page for which this form is displayed.
+ * @param $keys
+ *   The search keys.
+ * @param $compact
+ *   Whether to display a compact form (e.g. for blocks) instead of a normal one.
+ */
+function search_api_page_search_form(array $form, array &$form_state, stdClass $page, $keys = NULL, $compact = FALSE) {
+  $form['keys_' . $page->id] = array(
+    '#type' => 'textfield',
+    '#title' => $compact ? '' : t('Enter your keywords'),
+    '#default_value' => $keys,
+    '#size' => $compact ? 15 : 30,
+  );
+  $form['base_' . $page->id] = array(
+    '#type' => 'value',
+    '#value' => $page->path,
+  );
+  $form['id'] = array(
+    '#type' => 'hidden',
+    '#value' => $page->id,
+  );
+  $form['submit_' . $page->id] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+
+  if (!$compact) {
+    $form = array(
+      '#type' => 'fieldset',
+      '#title' => $page->name,
+      'form' => $form,
+    );
+    if ($page->description) {
+      $form['text']['#markup'] = '<p>' . nl2br(check_plain($page->description)) . '</p>';
+      $form['text']['#weight'] = -5;
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Validation callback for search_api_page_search_form().
+ */
+function search_api_page_search_form_validate(array $form, array &$form_state) {
+  if (!trim($form_state['values']['keys_' . $form_state['values']['id']])) {
+    form_set_error('keys_' . $form_state['values']['id'], t('Please enter at least one keyword.'));
+  }
+}
+
+/**
+ * Submit callback for search_api_page_search_form().
+ */
+function search_api_page_search_form_submit(array $form, array &$form_state) {
+  $keys = trim($form_state['values']['keys_' . $form_state['values']['id']]);
+  // @todo Take care of "/"s in the keys
+  $form_state['redirect'] = $form_state['values']['base_' . $form_state['values']['id']] . '/' . $keys;
 }
