@@ -351,6 +351,12 @@ class SearchApiIndex extends Entity {
     $ret = array_keys($items);
     $this->dataAlter($items);
     $ret = array_diff($ret, array_keys($items));
+
+    // Items that are rejected should also be deleted from the server.
+    if ($ret) {
+      $this->server()->deleteItems($ret, $this);
+    }
+
     if (!$items) {
       watchdog('search_api', t('Indexing the items of type "!type" with the following IDs was rejected by data-alter callbacks: !list.', array('type' => $this->entity_type, '!list' => implode(', ', $ret))));
       return $ret;
