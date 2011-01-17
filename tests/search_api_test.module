@@ -255,6 +255,13 @@ class SearchApiTestService extends SearchApiAbstractService {
     return $ids;
   }
 
+  /**
+   * Override so deleteItems() isn't called which would otherwise lead to the
+   * server being updated and, eventually, to a notice because there is no
+   * server to be updated anymore.
+   */
+  public function preDelete() {}
+
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
     if ($ids == 'all') {
       if ($index) {

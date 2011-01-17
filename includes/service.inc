@@ -97,6 +97,10 @@ interface SearchApiServiceInterface {
   /**
    * Notifies this server that it is about to be deleted from the database and
    * should therefore clean up, if appropriate.
+   *
+   * Note that you shouldn't call the server's save() method, or any
+   * methods that might do that, from inside of this method as the server isn't
+   * present in the database anymore at this point.
    */
   public function preDelete();
 
@@ -372,6 +376,10 @@ abstract class SearchApiAbstractService implements SearchApiServiceInterface {
   /**
    * Notifies this server that it is about to be deleted from the database and
    * should therefore clean up, if appropriate.
+   *
+   * Note that you shouldn't call the server's save() method, or any
+   * methods that might do that, from inside of this method as the server isn't
+   * present in the database anymore at this point.
    *
    * By default, deletes all indexes from this server.
    */
