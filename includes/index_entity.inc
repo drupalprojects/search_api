@@ -76,6 +76,15 @@ class SearchApiIndex extends Entity {
   public $enabled;
 
   /**
+   * Will be set by the Entity CRUD API for entities in code.
+   */
+  public $module;
+  /**
+   * Will be set by the Entity CRUD API.
+   */
+  public $status = ENTITY_CUSTOM;
+
+  /**
    * Constructor as a helper to the parent constructor.
    */
   public function __construct(array $values = array()) {

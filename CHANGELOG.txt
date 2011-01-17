@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1026496: status doesn't get set properly when creating entities.
 - #1027992 by TimLeytens: Filter indexed items based on bundle.
 - #1024194 by TimLeytens: Provide a search block for each page.
 - #1028042: Change {search_api_item}.index_id back to an INT.
