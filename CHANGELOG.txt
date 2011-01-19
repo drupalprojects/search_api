@@ -5,6 +5,8 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1032032 by pillarsdotnet: search_api_enable() aborts with a database error
+  on install.
 - #1026496: status doesn't get set properly when creating entities.
 - #1027992 by TimLeytens: Filter indexed items based on bundle.
 - #1024194 by TimLeytens: Provide a search block for each page.

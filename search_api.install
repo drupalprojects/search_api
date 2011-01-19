@@ -432,7 +432,7 @@ function search_api_enable() {
     ->execute();
   $types = array();
   foreach (search_api_index_load_multiple(FALSE) as $index) {
-    $types[$index->entity_type][] = $index->machine_name;
+    $types[$index->entity_type][] = $index->id;
   }
   if (!$types) {
     return;
