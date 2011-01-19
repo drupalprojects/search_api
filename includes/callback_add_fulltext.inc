@@ -108,13 +108,15 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
 
   public function propertyInfo() {
     $ret = array();
-    foreach ($this->options['fields'] as $name => $field) {
-      if ($field['name']) {
-        $ret[$name] = array(
-          'label' => $field['name'],
-          'description' => $this->fieldDescription($field),
-          'type' => 'text',
-        );
+    if (isset($this->options['fields'])) {
+      foreach ($this->options['fields'] as $name => $field) {
+        if ($field['name']) {
+          $ret[$name] = array(
+            'label' => $field['name'],
+            'description' => $this->fieldDescription($field),
+            'type' => 'text',
+          );
+        }
       }
     }
     return $ret;

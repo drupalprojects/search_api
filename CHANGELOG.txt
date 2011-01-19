@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1032404 by larskleiner: Notice: Undefined index: fields.
 - #1032032 by pillarsdotnet: search_api_enable() aborts with a database error
   on install.
 - #1026496: status doesn't get set properly when creating entities.
