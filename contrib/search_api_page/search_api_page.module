@@ -92,6 +92,7 @@ function search_api_page_permission() {
  * Implements hook_block_info().
  */
 function search_api_page_block_info() {
+  $blocks = array();
   foreach (search_api_page_load_multiple(FALSE, array('enabled' => TRUE)) as $page) {
     $blocks[$page->id] = array(
       'info' => t('Search block: !name', array('!name' => $page->name)),
