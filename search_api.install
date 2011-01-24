@@ -589,7 +589,8 @@ function search_api_update_7102() {
   db_change_field('search_api_item', 'index_id', 'index_id', $spec, $keys_new);
 
   foreach ($indexes as $index) {
-    // We explicitly forbid numeric machine names, therefore we don't have to worry about conflicts here.
+    // We explicitly forbid numeric machine names, therefore we don't have to
+    // worry about conflicts here.
     db_update('search_api_item')
       ->fields(array(
         'index_id' => $index->machine_name,
@@ -619,7 +620,8 @@ function search_api_update_7103() {
 function search_api_update_7104() {
   $select = db_select('search_api_index', 'i')->fields('i');
   foreach ($select->execute() as $index) {
-    // We explicitly forbid numeric machine names, therefore we don't have to worry about conflicts here.
+    // We explicitly forbid numeric machine names, therefore we don't have to
+    // worry about conflicts here.
     db_update('search_api_item')
       ->fields(array(
         'index_id' => $index->id,
