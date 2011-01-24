@@ -617,7 +617,8 @@ function search_api_update_7103() {
  * Change {search_api_item}.index_id back to the index' numeric ID.
  */
 function search_api_update_7104() {
-  foreach (search_api_index_load_multiple(FALSE) as $index) {
+  $select = db_select('search_api_index', 'i')->fields('i');
+  foreach ($select->execute() as $index) {
     // We explicitly forbid numeric machine names, therefore we don't have to worry about conflicts here.
     db_update('search_api_item')
       ->fields(array(
@@ -627,6 +628,7 @@ function search_api_update_7104() {
       ->execute();
   }
 
+  // Update primary key and index.
   db_drop_index('search_api_item', 'indexing');
   db_drop_primary_key('search_api_item');
   $spec = array(
