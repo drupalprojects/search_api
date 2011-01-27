@@ -61,24 +61,26 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
       return;
     }
     $required_fields = array();
-    foreach ($this->options['fields'] as $name => $field) {
-      if ($field['name']) {
-        foreach ($field['fields'] as $f) {
-          if (!isset($required_fields[$f])) {
-            $required_fields[$f]['type'] = 'text';
+    if (isset($this->options['fields'])) {
+      foreach ($this->options['fields'] as $name => $field) {
+        if ($field['name']) {
+          foreach ($field['fields'] as $f) {
+            if (!isset($required_fields[$f])) {
+              $required_fields[$f]['type'] = 'text';
+            }
           }
         }
       }
-    }
-    foreach ($items as $item) {
-      $wrapper = $this->index->entityWrapper($item);
-      $fields = search_api_extract_fields($wrapper, $required_fields);
-      foreach ($this->options['fields'] as $name => $field) {
-        if ($field['name']) {
-          $item->$name = '';
-          foreach ($field['fields'] as $f) {
-            if (isset($fields[$f]['value'])) {
-              $item->$name .= ($item->$name ? "\n\n" : '') . $this->collapseArray($fields[$f]['value']);
+      foreach ($items as $item) {
+        $wrapper = $this->index->entityWrapper($item);
+        $fields = search_api_extract_fields($wrapper, $required_fields);
+        foreach ($this->options['fields'] as $name => $field) {
+          if ($field['name']) {
+            $item->$name = '';
+            foreach ($field['fields'] as $f) {
+              if (isset($fields[$f]['value'])) {
+                $item->$name .= ($item->$name ? "\n\n" : '') . $this->collapseArray($fields[$f]['value']);
+              }
             }
           }
         }
