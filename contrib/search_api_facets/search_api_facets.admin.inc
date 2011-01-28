@@ -38,7 +38,6 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     '#title' => t('Select the available facet blocks'),
     '#description' => t('<p>All enabled blocks will be shown, along with their names, on the block administration page. ' .
         'For your own convenience, choose unique names. ' .
-        'The names will also be displayed to normal users, unless manually changed in the block settings. ' .
         'By cloning blocks, you can have multiple facet blocks with seperate configurations for a single index field.</p>' .
         "<p>When you won't be using a disabled facet anymore, you can delete all its settings permanently, reducing database size. " .
         "This won't influence other facets. You can enable it again later, but without the previously stored settings.</p>" .
@@ -94,7 +93,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
         $facets[$key][] = new SearchApiFacet(array(
           'index_id' => $index->machine_name,
           'field' => $key,
-          'name' => t('!index: Filter on !field', array('!field' => $field['name'], '!index' => $index->name)),
+          'name' => t('!index: !field', array('!field' => $field['name'], '!index' => $index->name)),
           'enabled' => 0,
           'options' => array(),
           'status' => 0,
@@ -218,7 +217,7 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
     if ($v['clone']) {
       $f = $v['facet'];
       unset($f->id, $f->delta);
-      $f->name = t('!index: Filter on !field #!num',
+      $f->name = t('!index: !field #!num',
           array('!field' => $index->options['fields'][$f->field]['name'], '!index' => $index->name, '!num' => $c + 1));
       $f->save();
       ++$clone_count;

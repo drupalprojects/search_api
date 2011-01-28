@@ -67,6 +67,10 @@ class SearchApiFacet extends Entity {
       'ids_list'     => array(),
       'type'         => '',
     );
+    if (empty($this->options['field_name'])) {
+      $index = search_api_index_load($this->index_id);
+      $this->options['field_name'] = isset($index->options['fields'][$this->field]['name']) ? $index->options['fields'][$this->field]['name'] : $this->field;
+    }
 
     if (empty($this->delta)) {
       // The facet should be newly created if save() is invoked with $this->delta being empty.

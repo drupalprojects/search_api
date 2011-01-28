@@ -5,6 +5,7 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 
 Others:
+- #1039250: Improve facet block titles.
 - #1043492: Problems with default (exported) entities.
 - #1037916 by fago: Updates must not call API functions.
 - #1032708 by larskleiner: Notice: Undefined variable: blocks.

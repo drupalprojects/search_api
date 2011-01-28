@@ -374,7 +374,7 @@ function search_api_facets_block_view($delta = '') {
   }
 
   return array(
-    'subject' => $facet->name,
+    'subject' => $facet->options['field_name'],
     'content' => $theme,
   );
 }
