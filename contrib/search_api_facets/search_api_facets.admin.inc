@@ -81,7 +81,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
         t('Clone block'),
         t('Delete data'),
       );
-      $empty_status = '<span title="' . t('There is no saved facet for this field yet.') . '">' . t('Undefined') . '</span>';
+      $empty_status = '';
     }
     $types = search_api_field_types();
     foreach ($index->options['fields'] as $key => $field) {
