@@ -94,10 +94,13 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
     elseif($this->value) {
       if ($this->operator == '=') {
         $filter = $this->query->createFilter('OR');
-        foreach ($this->value as $v) {
-          $filter->condition($this->real_field, $v, '=');
+        // $filter will be NULL if there were errors in the query.
+        if ($filter) {
+          foreach ($this->value as $v) {
+            $filter->condition($this->real_field, $v, '=');
+          }
+          $this->query->filter($filter);
         }
-        $this->query->filter($filter);
       }
       else {
         foreach ($this->value as $v) {
