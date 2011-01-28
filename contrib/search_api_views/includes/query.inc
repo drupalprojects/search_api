@@ -253,6 +253,8 @@ class SearchApiViewsQuery extends views_plugin_query {
     if (!$this->errors) {
       return $this->query->getKeys();
     }
+    $ret = NULL;
+    return $ret;
   }
 
   public function getOriginalKeys() {
@@ -265,6 +267,8 @@ class SearchApiViewsQuery extends views_plugin_query {
     if (!$this->errors) {
       return $this->query->getFields();
     }
+    $ret = NULL;
+    return $ret;
   }
 
   public function getFilter() {
@@ -277,12 +281,16 @@ class SearchApiViewsQuery extends views_plugin_query {
     if (!$this->errors) {
       return $this->query->getSort();
     }
+    $ret = NULL;
+    return $ret;
   }
 
   public function &getOptions() {
     if (!$this->errors) {
       return $this->query->getOptions();
     }
+    $ret = NULL;
+    return $ret;
   }
 
 }
