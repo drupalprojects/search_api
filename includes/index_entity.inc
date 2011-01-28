@@ -76,15 +76,6 @@ class SearchApiIndex extends Entity {
   public $enabled;
 
   /**
-   * Will be set by the Entity CRUD API for entities in code.
-   */
-  public $module;
-  /**
-   * Will be set by the Entity CRUD API.
-   */
-  public $status = ENTITY_CUSTOM;
-
-  /**
    * Constructor as a helper to the parent constructor.
    */
   public function __construct(array $values = array()) {
@@ -250,10 +241,10 @@ class SearchApiIndex extends Entity {
     else {
       $tasks = variable_get('search_api_tasks', array());
       // If the index was cleared or newly added since the server was last enabled, we don't need to do anything.
-      if (!isset($tasks[$server->machine_name][$id])
-          || (array_search('add', $tasks[$server->machine_name][$id]) === FALSE
-              && array_search('clear', $tasks[$server->machine_name][$id]) === FALSE)) {
-        $tasks[$server->machine_name][$id][] = 'clear';
+      if (!isset($tasks[$server->machine_name][$this->id])
+          || (array_search('add', $tasks[$server->machine_name][$this->id]) === FALSE
+              && array_search('clear', $tasks[$server->machine_name][$this->id]) === FALSE)) {
+        $tasks[$server->machine_name][$this->id][] = 'clear';
         variable_set('search_api_tasks', $tasks);
       }
     }

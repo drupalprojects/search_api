@@ -47,15 +47,6 @@ class SearchApiServer extends Entity {
   public $enabled = 1;
 
   /**
-   * Will be set by the Entity CRUD API for entities in code.
-   */
-  public $module;
-  /**
-   * Will be set by the Entity CRUD API.
-   */
-  public $status = ENTITY_CUSTOM;
-
-  /**
    * Proxy object for invoking service methods.
    *
    * @var SearchApiServiceInterface

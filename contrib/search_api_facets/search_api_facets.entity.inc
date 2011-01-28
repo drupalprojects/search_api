@@ -44,15 +44,6 @@ class SearchApiFacet extends Entity {
   public $options = array();
 
   /**
-   * Will be set by the Entity CRUD API for exporting.
-   */
-  public $module;
-  /**
-   * Will be set by the Entity CRUD API for exporting.
-   */
-  public $status;
-
-  /**
    * Constructor as a helper to the parent constructor.
    */
   public function __construct(array $values = array()) {
