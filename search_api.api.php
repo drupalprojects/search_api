@@ -136,6 +136,29 @@ function hook_search_api_processor_info() {
 }
 
 /**
+ * Allows you to log or alter the items that are indexed.
+ *
+ * Please be aware that generally preventing the indexing of certain items is
+ * deprecated. This is better done with data alterations, which can easily be
+ * configured and only added to indexes where this behaviour is wanted.
+ * If your module will use this hook to reject certain items from indexing,
+ * please document this clearly to avoid confusion.
+ *
+ * @param array $items
+ *   The entities that will be indexed (before calling any data alterations).
+ * @param SearchApiIndex $index
+ *   The search index on which items will be indexed.
+ */
+function hook_search_api_index_items_alter(array &$items, SearchApiIndex $index) {
+  foreach ($items as $id => $item) {
+    if ($id % 5 == 0) {
+      unset($items[$id]);
+    }
+  }
+  example_store_indexed_entity_ids($index->entity_type, array_keys($items));
+}
+
+/**
  * Lets modules alter a search query before executing it.
  *
  * @param SearchApiQueryInterface $query

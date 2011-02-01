@@ -347,20 +347,22 @@ class SearchApiIndex extends Entity {
       throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
     }
 
-    // Mark all items that are rejected by a data-alter callback as indexed.
+    // Mark all items that are rejected as indexed.
     $ret = array_keys($items);
-    $this->dataAlter($items);
+    drupal_alter('search_api_index_items', $items, $this);
+    if ($items) {
+      $this->dataAlter($items);
+    }
     $ret = array_diff($ret, array_keys($items));
 
     // Items that are rejected should also be deleted from the server.
     if ($ret) {
       $this->server()->deleteItems($ret, $this);
     }
-
     if (!$items) {
-      watchdog('search_api', t('Indexing the items of type "!type" with the following IDs was rejected by data-alter callbacks: !list.', array('type' => $this->entity_type, '!list' => implode(', ', $ret))));
       return $ret;
     }
+
     $wrappers = array();
     foreach ($items as $id => $item) {
       $wrappers[$id] = $this->entityWrapper($item);
