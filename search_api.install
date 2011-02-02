@@ -177,8 +177,11 @@ function search_api_install() {
       'cron_limit' => '50',
       'data_alter_callbacks' => array(
         'search_api_alter_add_fulltext' => array(
-          'status' => 1,
+          'status' => 0,
           'weight' => '0',
+          'settings' => array(
+            'fields' => array(),
+          ),
         ),
         'search_api_alter_add_url' => array(
           'status' => 0,
