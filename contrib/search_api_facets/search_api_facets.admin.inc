@@ -80,7 +80,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
         t('Clone block'),
         t('Delete data'),
       );
-      $empty_status = '';
+      $empty_status = ' ';
     }
     $types = search_api_field_types();
     foreach ($index->options['fields'] as $key => $field) {
