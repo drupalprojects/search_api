@@ -147,6 +147,13 @@ function theme_search_api_page_result(array $variables) {
 
   $url = entity_uri($index->entity_type, $entity);
   $name = entity_label($index->entity_type, $entity);
+  
+  if ($index->entity_type == 'file') {
+    $url = array(
+      'path' => file_create_url($url),
+      'options' => array(),
+    );
+  }
 
   $fields = $index->options['fields'];
   $fields = array_intersect_key($fields, drupal_map_assoc($index->getFulltextFields()));
