@@ -67,7 +67,7 @@ function search_api_views_views_data() {
             continue;
           }
           if (isset($types[$inner_type])) {
-            if ($value->optionsList()) {
+            if ($value->optionsList('view')) {
               $inner_type = 'options';
               $type = search_api_nest_type('options', $type);
             }
@@ -80,7 +80,7 @@ function search_api_views_views_data() {
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
             if ($inner_type == 'options') {
-              $table[$key]['field']['options'] = $value->optionsList();
+              $table[$key]['field']['options'] = $value->optionsList('view');
             }
 
             // If field is indexed, also add additional handlers.
@@ -204,9 +204,9 @@ function _search_api_views_add_handlers($field, $wrapper) {
 
   $ret = array();
 
-  if ($wrapper->optionsList()) {
+  if ($wrapper->optionsList('view')) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
-    $ret['filter']['options'] = $wrapper->optionsList();
+    $ret['filter']['options'] = $wrapper->optionsList('view');
   }
   elseif ($inner_type == 'boolean') {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterBoolean';

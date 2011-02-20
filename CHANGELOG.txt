@@ -6,6 +6,7 @@ API changes:
 - #1048032: Add a hook for altering the indexed items.
 
 Others:
+- #1005532: Adaption to Entity API change (new optionsList() parameter).
 - #1057224 by TimLeytens: Problem with entity_uri('file').
 - #1051286: Show type/boost options only for indexed fields.
 - #1049978: Provide a "More" link for facets.

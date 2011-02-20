@@ -864,9 +864,9 @@ function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options)
       $wrapper = $wrapper[0];
     }
   }
-  if ($wrapper->optionsList()) {
+  if ($wrapper->optionsList('view')) {
     $options['type'] = 'options';
-    $options['options'] = $wrapper->optionsList();
+    $options['options'] = $wrapper->optionsList('view');
   }
 }
 

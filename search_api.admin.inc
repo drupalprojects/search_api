@@ -1540,7 +1540,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         $type = search_api_extract_inner_type($info['type']);
         // Treat Entity API type "token" as our "string" type.
         // Also let text fields with limited options be of type "string" by default.
-        if ($type == 'token' || ($type == 'text' && $value->optionsList())) {
+        if ($type == 'token' || ($type == 'text' && $value->optionsList('view'))) {
           // Inner type is changed to "string".
           $type = 'string';
           // Set the field type accordingly.
