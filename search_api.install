@@ -655,7 +655,7 @@ function search_api_update_7104() {
  * Remove all empty aggregated fields for the search_api_alter_add_fulltext data
  * alterations.
  */
-function search_api_update_7104() {
+function search_api_update_7105() {
   $rows = db_select('search_api_index', 'i')
     ->fields('i', array('id', 'options'))
     ->execute()
