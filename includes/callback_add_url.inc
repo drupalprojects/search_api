@@ -9,7 +9,15 @@ class SearchApiAlterAddUrl extends SearchApiAbstractAlterCallback {
   public function alterItems(array &$items) {
     $type = $this->index->entity_type;
     foreach ($items as $id => &$item) {
-      $url = entity_uri($type, $item);
+      if ($type == 'file') {
+        $url = array(
+          'path' => file_create_url($url),
+          'options' => array(),
+        );
+      }
+      else {
+        $url = entity_uri($type, $item);
+      }
       if (!$url) {
         $item->search_api_url = NULL;
         continue;
