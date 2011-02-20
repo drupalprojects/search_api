@@ -625,7 +625,7 @@ function search_api_search_api_alter_callback_info() {
     'class' => 'SearchApiAlterAddUrl',
   );
   $callbacks['search_api_alter_add_fulltext'] = array(
-    'name' => t('Fulltext fields'),
+    'name' => t('Aggregated fulltext fields'),
     'description' => t('Gives you the ability to define additional fulltext fields, containing the text data from one or more other fields.'),
     'class' => 'SearchApiAlterAddFulltext',
   );

@@ -17,20 +17,18 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
       $field_options[$name] = $field['name'];
     }
     $additional = empty($this->options['fields']) ? array() : $this->options['fields'];
-    foreach ($additional as $name => $field) {
-      if (!$field['name']) {
-        unset($additional[$name]);
-        if (!isset($first_free_name)) {
-          $first_free_name = $name;
-        }
-      }
+    for ($i = 1; isset($this->options['fields']['search_api_fulltext_' . $i]); ++$i) {
     }
-    $additional[isset($first_free_name) ? $first_free_name : 'search_api_fulltext_' . (count($additional) + 1)] = array(
+    $additional['search_api_fulltext_' . $i] = array(
       'name' => '',
-      'fields' => array(),
+      'fields' => $this->index->getFulltextFields(),
     );
     $form['description'] = array(
-      '#markup' => '<p>' . t('Change the name or aggregated fields of one of the additional fulltext fields below, or add a new one by filling out the "New field" form. By deleting a name, you can remove previously added fields.') . '</p>',
+      '#markup' => t('<p>This data alteration lets you define additional fields that will be added to this index. ' .
+        'Each of these new fields will be a fulltext aggregation of one or more existing fields.</p>' .
+        '<p>To add a new aggregated field, fill out the "New field" form below.</p>' .
+        '<p>To remove a previously defined field, simply delete its name.</p>' .
+        '<p>You can also change the names or contained fields of existing aggregated fields.</p>'),
     );
     foreach ($additional as $name => $field) {
       $form['fields'][$name] = array(
@@ -41,19 +39,36 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
       );
       $form['fields'][$name]['name'] = array(
         '#type' => 'textfield',
-        '#title' => t('Field name'),
+        '#title' => t('New field name'),
         '#default_value' => $field['name'],
       );
       $form['fields'][$name]['fields'] = array(
-        '#type' => 'select',
+        '#type' => 'checkboxes',
         '#title' => t('Contained fields'),
         '#options' => $field_options,
-        '#size' => min(count($field_options), 5),
-        '#multiple' => TRUE,
         '#default_value' => $field['fields'],
+        '#attributes' => array('class' => array('search-api-alter-add-fulltext-fields')),
       );
     }
     return $form;
+  }
+
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    foreach ($values['fields'] as $name => $field) {
+      if ($field['name'] && !$field['fields']) {
+        form_error($form['fields'][$name]['fields'], t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.'));
+      }
+    }
+  }
+
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+    foreach ($values['fields'] as $name => $field) {
+      if (!$field['name']) {
+        unset($values['fields'][$name]);
+      }
+    }
+    $this->options = $values;
+    return $values;
   }
 
   public function alterItems(array &$items) {
@@ -63,11 +78,9 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
     $required_fields = array();
     if (isset($this->options['fields'])) {
       foreach ($this->options['fields'] as $name => $field) {
-        if ($field['name']) {
-          foreach ($field['fields'] as $f) {
-            if (!isset($required_fields[$f])) {
-              $required_fields[$f]['type'] = 'text';
-            }
+        foreach ($field['fields'] as $f) {
+          if (!isset($required_fields[$f])) {
+            $required_fields[$f]['type'] = 'text';
           }
         }
       }
@@ -112,13 +125,11 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
     $ret = array();
     if (isset($this->options['fields'])) {
       foreach ($this->options['fields'] as $name => $field) {
-        if ($field['name']) {
-          $ret[$name] = array(
-            'label' => $field['name'],
-            'description' => $this->fieldDescription($field),
-            'type' => 'text',
-          );
-        }
+        $ret[$name] = array(
+          'label' => $field['name'],
+          'description' => $this->fieldDescription($field),
+          'type' => 'text',
+        );
       }
     }
     return $ret;

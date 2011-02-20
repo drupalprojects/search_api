@@ -650,3 +650,33 @@ function search_api_update_7104() {
   );
   db_change_field('search_api_item', 'index_id', 'index_id', $spec, $keys_new);
 }
+
+/**
+ * Remove all empty aggregated fields for the search_api_alter_add_fulltext data
+ * alterations.
+ */
+function search_api_update_7104() {
+  $rows = db_select('search_api_index', 'i')
+    ->fields('i', array('id', 'options'))
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($rows as $id => $options) {
+    $opt = unserialize($options);
+    if (isset($opt['data_alter_callbacks']['search_api_alter_add_fulltext']['settings']['fields'])) {
+      foreach ($opt['data_alter_callbacks']['search_api_alter_add_fulltext']['settings']['fields'] as $name => $field) {
+        if (empty($field['name']) || empty($field['fields'])) {
+          unset($opt['data_alter_callbacks']['search_api_alter_add_fulltext']['settings']['fields'][$name]);
+        }
+      }
+    }
+    $opt = serialize($opt);
+    if ($opt != $options) {
+      db_update('search_api_index')
+        ->fields(array(
+          'options' => $opt,
+        ))
+        ->condition('id', $id)
+        ->execute();
+    }
+  }
+}

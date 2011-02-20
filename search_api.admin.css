@@ -35,6 +35,11 @@ input.search-api-cron-limit {
   text-align: right;
 }
 
+.search-api-alter-add-fulltext-fields {
+  max-height: 12em;
+  overflow: auto;
+}
+
 /* Workaround for http://drupal.org/node/1015798 */
 .vertical-tabs fieldset div.fieldset-wrapper fieldset legend {
   display: block;
