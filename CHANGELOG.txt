@@ -3,6 +3,7 @@ $Id$
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
+- #1043456: Form validation/submission for plugins.
 - #1048032: Add a hook for altering the indexed items.
 
 Others:

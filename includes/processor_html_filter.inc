@@ -28,7 +28,7 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
     );
     $this->tags = drupal_parse_info_format($this->options['tags']);
     // Specifying empty tags doesn't make sense.
-    unset($this->tags['img'], $this->tags['br'], $this->tags['hr']);
+    unset($this->tags['br'], $this->tags['hr']);
   }
 
   public function configurationForm() {
@@ -59,13 +59,35 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
     return $form;
   }
 
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    if (empty($values['tags'])) {
+      return;
+    }
+    $tags = drupal_parse_info_format($values['tags']);
+    $errors = array();
+    foreach ($tags as $key => $value) {
+      if (is_array($value)) {
+        $errors[] = t("Boost value for tag &lt;@tag&gt; can't be an array.", array('@tag' => $key));
+      }
+      elseif (!is_numeric($value)) {
+        $errors[] = t("Boost value for tag &lt;@tag&gt; must be numeric.", array('@tag' => $key));
+      }
+      elseif ($value < 0) {
+        $errors[] = t('Boost value for tag &lt;@tag&gt; must be non-negative.', array('@tag' => $key));
+      }
+    }
+    if ($errors) {
+      form_error($form['tags'], implode("<br />\n", $errors));
+    }
+  }
+
   protected function processFieldValue(&$value) {
     $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
     if ($this->options['title']) {
       $text = preg_replace('/(<[-a-z_]+[^>]+)\btitle\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>)/i', '$1 $5 $3$4 ', $text);
     }
     if ($this->options['alt']) {
-      $text = preg_replace('/<img\b[^>]+\balt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' $2$3 ', $text);
+      $text = preg_replace('/<img\b[^>]+\balt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' <img>$2$3</img> ', $text);
     }
     if ($this->tags) {
       $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');

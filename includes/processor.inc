@@ -37,6 +37,35 @@ interface SearchApiProcessorInterface {
   public function configurationForm();
 
   /**
+   * Validation callback for the form returned by configurationForm().
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   */
+  public function configurationFormValidate(array $form, array &$values, array &$form_state);
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   *
+   * This method should both return the new options and set them internally.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   *
+   * @return array
+   *   The new options array for this callback.
+   */
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state);
+
+  /**
    * Preprocess data items for indexing.
    *
    * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
@@ -107,7 +136,16 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
     $this->options = $options;
   }
 
-  public function configurationForm() { }
+  public function configurationForm() {
+    return array();
+  }
+
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) { }
+
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+    $this->options = $values;
+    return $values;
+  }
 
   /**
    * Calls processField() for all appropriate fields.

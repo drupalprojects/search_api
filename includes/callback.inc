@@ -28,6 +28,35 @@ interface SearchApiAlterCallbackInterface {
   public function configurationForm();
 
   /**
+   * Validation callback for the form returned by configurationForm().
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   */
+  public function configurationFormValidate(array $form, array &$values, array &$form_state);
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   *
+   * This method should both return the new options and set them internally.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   *
+   * @return array
+   *   The new options array for this callback.
+   */
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state);
+
+  /**
    * Alter items before indexing.
    *
    * Items which are removed from the array won't be indexed, but will be marked
@@ -102,7 +131,39 @@ abstract class SearchApiAbstractAlterCallback implements SearchApiAlterCallbackI
    *   is possible.
    */
   public function configurationForm() {
-    return FALSE;
+    return array();
+  }
+
+  /**
+   * Validation callback for the form returned by configurationForm().
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   */
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) { }
+
+  /**
+   * Submit callback for the form returned by configurationForm().
+   *
+   * This method should both return the new options and set them internally.
+   *
+   * @param array $form
+   *   The form returned by configurationForm().
+   * @param array $values
+   *   The part of the $form_state['values'] array corresponding to this form.
+   * @param array $form_state
+   *   The complete form state.
+   *
+   * @return array
+   *   The new options array for this callback.
+   */
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+    $this->options = $values;
+    return $values;
   }
 
   /**

@@ -116,22 +116,22 @@ function search_api_menu() {
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
-  $items[$pre . '/index/%search_api_index/workflow'] = array(
-    'title' => 'Workflow',
-    'description' => 'Edit index workflow.',
+  $items[$pre . '/index/%search_api_index/fields'] = array(
+    'title' => 'Fields',
+    'description' => 'Select indexed fields.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('search_api_admin_index_workflow', 5),
+    'page arguments' => array('search_api_admin_index_fields', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'weight' => -4,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
-  $items[$pre . '/index/%search_api_index/fields'] = array(
-    'title' => 'Fields',
-    'description' => 'Select indexed fields.',
+  $items[$pre . '/index/%search_api_index/workflow'] = array(
+    'title' => 'Workflow',
+    'description' => 'Edit index workflow.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('search_api_admin_index_fields', 5),
+    'page arguments' => array('search_api_admin_index_workflow', 5),
     'access arguments' => array('administer search_api'),
     'file' => 'search_api.admin.inc',
     'weight' => -2,

@@ -22,16 +22,14 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
       'spaces' => array(
         '#type' => 'textfield',
         '#title' => t('Whitespace characters'),
-        '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
-            'Specify the characters as a <a href="@link">PCRE character class</a>.',
+        '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. Specify the characters as a <a href="@link">PCRE character class</a>.',
             array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
         '#default_value' => '[^\p{L}\p{N}]',
       ),
       'ignorable' => array(
         '#type' => 'textfield',
         '#title' => t('Ignorable characters'),
-        '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). ' .
-            'The same format as above is used.'),
+        '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). The same format as above is used.'),
         '#default_value' => '[-]',
       ),
     );
@@ -42,6 +40,19 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
     }
 
     return $form;
+  }
+
+  function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    $spaces = str_replace('/', '\/', $values['spaces']);
+    $ignorable = str_replace('/', '\/', $values['ignorable']);
+    if (@preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
+      $el = $form['spaces'];
+      form_error($el, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+    }
+    if (@preg_match('/(' . $ignorable . ')+/u', '') === FALSE) {
+      $el = $form['ignorable'];
+      form_error($el, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+    }
   }
 
   protected function processFieldValue(&$value) {

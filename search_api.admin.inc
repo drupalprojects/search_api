@@ -617,8 +617,8 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
   // Trying to create an enabled index on a disabled server is handled elsewhere
   $id = search_api_index_insert($values);
 
-  drupal_set_message(t('The index was successfully created. Please set up its workflow now.'));
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $values['machine_name'] . '/workflow';
+  drupal_set_message(t('The index was successfully created. Please set up its indexed fields now.'));
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $values['machine_name'] . '/fields';
 }
 
 /**
@@ -1285,6 +1285,66 @@ function theme_search_api_admin_item_order(array $variables) {
 }
 
 /**
+ * Validation callback for search_api_admin_index_workflow.
+ */
+function search_api_admin_index_workflow_validate(array $form, array &$form_state) {
+  $index = $form_state['index'];
+
+  // Load plugin objects.
+  $callbacks_info = search_api_get_alter_callbacks();
+  $callback_options = isset($index->options['data_alter_callbacks']) ? $index->options['data_alter_callbacks'] : array();
+  $callbacks = array();
+  foreach ($form_state['values']['callbacks'] as $name => $callback) {
+    if (empty($callbacks_info[$name])) {
+      // Would only happen in very rare circumstances (module update between
+      // form creation and submission).
+      continue;
+    }
+    if (class_exists($callbacks_info[$name]['class'])) {
+      $settings = empty($callback_options[$name]['settings']) ? array() : $callback_options[$name]['settings'];
+      $callbacks[$name] = new $callbacks_info[$name]['class']($index, $settings);
+    }
+    if (!(isset($callbacks[$name]) && $callbacks[$name] instanceof SearchApiAlterCallbackInterface)) {
+      watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $callbacks_info[$name]['class'])), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+  }
+
+  $processors_info = search_api_get_processors();
+  $processors = array();
+  foreach ($form_state['values']['processors'] as $name => $processor) {
+    if (empty($processors_info[$name])) {
+      // Would only happen in very rare circumstances (module update between
+      // form creation and submission).
+      continue;
+    }
+    if (class_exists($processors_info[$name]['class'])) {
+      $settings = empty($index->options['processors'][$name]['settings']) ? array() : $index->options['processors'][$name]['settings'];
+      $processors[$name] = new $processors_info[$name]['class']($index, $settings);
+    }
+    if (!(isset($processors[$name]) && $processors[$name] instanceof SearchApiProcessorInterface)) {
+      watchdog('search api', t('Data alteration !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processors_info[$name]['class'])), NULL, WATCHDOG_WARNING);
+      continue;
+    }
+  }
+
+  $form_state['callbacks'] = $callbacks;
+  $form_state['processors'] = $processors;
+
+  // Call validation functions.
+  foreach ($callbacks as $name => $callback) {
+    if (isset($form['callbacks']['settings'][$name]) && isset($form_state['values']['callbacks'][$name]['settings'])) {
+      $callback->configurationFormValidate($form['callbacks']['settings'][$name], $form_state['values']['callbacks'][$name]['settings'], $form_state);
+    }
+  }
+  foreach ($processors as $name => $processor) {
+    if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
+      $processor->configurationFormValidate($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
+    }
+  }
+}
+
+/**
  * Submit callback for search_api_admin_index_workflow.
  */
 function search_api_admin_index_workflow_submit(array $form, array &$form_state) {
@@ -1296,23 +1356,23 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   $options = empty($index->options) ? array() : $index->options;
   $fields_set = !empty($options['fields']);
 
+  // Store callback and processor settings.
+  foreach ($form_state['callbacks'] as $name => $callback) {
+    $callback_form = isset($form['callbacks']['settings'][$name]) ? $form['callbacks']['settings'][$name] : array();
+    $values['callbacks'][$name] += array('settings' => array());
+    $values['callbacks'][$name]['settings'] = $callback->configurationFormSubmit($callback_form, $values['callbacks'][$name]['settings'], $form_state);
+  }
+  foreach ($form_state['processors'] as $name => $processor) {
+    $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
+    $values['processors'][$name] += array('settings' => array());
+    $values['processors'][$name]['settings'] = $processor->configurationFormSubmit($processor_form, $values['processors'][$name]['settings'], $form_state);
+  }
+
   // Set default indexed status for newly added fields.
   $types = search_api_field_types();
-  foreach ($values['callbacks'] as $name => $callback) {
-    if ($callback['status'] && empty($options['callbacks'][$name]['status'])) {
-      $info = search_api_get_alter_callbacks();
-      if (empty($info[$name])) {
-        // Would only happen in very rare circumstances (module update between form creation and submission).
-        continue;
-      }
-      if (class_exists($info[$name]['class'])) {
-        $obj = new $info[$name]['class']($index, empty($callback['settings']) ? array() : $callback['settings']);
-      }
-      if (!(class_exists($info[$name]['class']) && $obj instanceof SearchApiAlterCallbackInterface)) {
-        watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $info[$name]['class'])), NULL, WATCHDOG_WARNING);
-        continue;
-      }
-      $properties = $obj->propertyInfo();
+  foreach ($form_state['callbacks'] as $name => $callback) {
+    if ($values['callbacks'][$name]['status'] && empty($options['callbacks'][$name]['status'])) {
+      $properties = $callback->propertyInfo();
       if ($properties) {
         foreach ($properties as $key => $field) {
           $type = $field['type'];
@@ -1357,13 +1417,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     drupal_set_message(t('No values were changed.'));
   }
 
-  if (!$fields_set) {
-    drupal_set_message(t('Please set the fields that should be indexed.'));
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
-  }
-  else {
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
-  }
+  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/workflow';
 }
 
 /**
@@ -1643,13 +1697,19 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     $options['fields'] = $fields;
     $ret = $index->update(array('options' => $options));
 
-    $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
     if ($ret) {
       drupal_set_message(t('The indexed fields were successfully changed. ' .
           'The index was cleared and will have to be re-indexed with the new settings.'));
     }
     else {
       drupal_set_message(t('No values were changed.'));
+    }
+    if (isset($index->options['data_alter_callbacks']) || isset($index->options['processors'])) {
+      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
+    }
+    else {
+      drupal_set_message(t('Please set up the index workflow.'));
+      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/workflow';
     }
     return;
   }
