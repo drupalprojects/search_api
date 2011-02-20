@@ -6,6 +6,8 @@ API changes:
 - #1048032: Add a hook for altering the indexed items.
 
 Others:
+- #1051286: Show type/boost options only for indexed fields.
+- #1049978: Provide a "More" link for facets.
 - #1039250: Improve facet block titles.
 - #1043492: Problems with default (exported) entities.
 - #1037916 by fago: Updates must not call API functions.
