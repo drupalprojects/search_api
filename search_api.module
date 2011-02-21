@@ -1046,16 +1046,21 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
       $info['original_type'] = $info['type'];
     }
     unset($info);
-    foreach ($wrapper as $i => $w) {
-      $nested_fields = search_api_extract_fields($w, $fields);
-      foreach ($nested_fields as $field => $info) {
-        if (isset($info['value'])) {
-          $fields[$field]['value'][] = $info['value'];
-        }
-        if (isset($info['original_type'])) {
-          $fields[$field]['original_type'] = $info['original_type'];
+    try {
+      foreach ($wrapper as $i => $w) {
+        $nested_fields = search_api_extract_fields($w, $fields);
+        foreach ($nested_fields as $field => $info) {
+          if (isset($info['value'])) {
+            $fields[$field]['value'][] = $info['value'];
+          }
+          if (isset($info['original_type'])) {
+            $fields[$field]['original_type'] = $info['original_type'];
+          }
         }
       }
+    }
+    catch (EntityMetadataWrapperException $e) {
+      // Catch exceptions caused by not set list values.
     }
     return $fields;
   }
@@ -1075,8 +1080,9 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
         $property_info = $wrapper->$field->info();
         $info['original_type'] = $property_info['type'];
       }
-      catch (Exception $e) {
-        // This might happen for entity-typed properties that are NULL, e.g., for comments without parent.
+      catch (EntityMetadataWrapperException $e) {
+        // This might happen for entity-typed properties that are NULL, e.g.,
+        // for comments without parent.
       }
     }
     else {
