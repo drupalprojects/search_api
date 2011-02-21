@@ -130,7 +130,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     );
     $this->drupalPost(NULL, $values, t('Create index'));
 
-    $this->assertText(t('The index was successfully created. Please set up its workflow now.'), t('The index was successfully created.'));
+    $this->assertText(t('The index was successfully created. Please set up its indexed fields now.'), t('The index was successfully created.'));
     $found = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
     $index = search_api_index_load($id, TRUE);
@@ -140,30 +140,6 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertEqual($index->description, $values['description'], t('Description correctly inserted.'));
     $this->assertNull($index->server, t('Index server correctly inserted.'));
     $this->assertEqual($index->options['cron_limit'], $values['cron_limit'], t('Cron limit correctly inserted.'));
-
-    $values = array(
-      'callbacks[search_api_alter_add_url][status]' => 1,
-      'callbacks[search_api_alter_add_url][weight]' => 0,
-      'callbacks[search_api_alter_add_fulltext][status]' => 1,
-      'callbacks[search_api_alter_add_fulltext][weight]' => 10,
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][name]' => 'Test fulltext field',
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][]' => array(
-        'title',
-        'body',
-        'parent:title',
-        'parent:body',
-      ),
-      'processors[search_api_case_ignore][status]' => 1,
-      'processors[search_api_case_ignore][weight]' => 0,
-      'processors[search_api_case_ignore][settings][strings]' => 0,
-      'processors[search_api_tokenizer][status]' => 1,
-      'processors[search_api_tokenizer][weight]' => 20,
-      'processors[search_api_tokenizer][settings][spaces]' => '[^\p{L}\p{N}]',
-      'processors[search_api_tokenizer][settings][ignorable]' => '[-]',
-    );
-    $this->drupalPost(NULL, $values, t('Save configuration'));
-    $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
-    $this->assertText('Test fulltext field', t('Fulltext field correctly added.'));
 
     $values = array(
       'additional[field]' => 'parent',
@@ -185,12 +161,6 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'fields[type][type]' => 'string',
       'fields[type][boost]' => '1.0',
       'fields[type][indexed]' => 1,
-      'fields[search_api_fulltext_1][type]' => 'text',
-      'fields[search_api_fulltext_1][boost]' => '1.0',
-      'fields[search_api_fulltext_1][indexed]' => 1,
-      'fields[search_api_url][type]' => 'uri',
-      'fields[search_api_url][boost]' => '1.0',
-      'fields[search_api_url][indexed]' => 1,
       'fields[parent:id][type]' => 'integer',
       'fields[parent:id][boost]' => '1.0',
       'fields[parent:id][indexed]' => 1,
@@ -206,6 +176,29 @@ class SearchApiWebTest extends DrupalWebTestCase {
     );
     $this->drupalPost(NULL, $values, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'), t('Field settings saved.'));
+
+    $values = array(
+      'callbacks[search_api_alter_add_url][status]' => 1,
+      'callbacks[search_api_alter_add_url][weight]' => 0,
+      'callbacks[search_api_alter_add_fulltext][status]' => 1,
+      'callbacks[search_api_alter_add_fulltext][weight]' => 10,
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][name]' => 'Test fulltext field',
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][title]' => 1,
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][body]' => 1,
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][parent:title]' => 1,
+      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][parent:body]' => 1,
+      'processors[search_api_case_ignore][status]' => 1,
+      'processors[search_api_case_ignore][weight]' => 0,
+      'processors[search_api_case_ignore][settings][strings]' => 0,
+      'processors[search_api_tokenizer][status]' => 1,
+      'processors[search_api_tokenizer][weight]' => 20,
+      'processors[search_api_tokenizer][settings][spaces]' => '[^\p{L}\p{N}]',
+      'processors[search_api_tokenizer][settings][ignorable]' => '[-]',
+    );
+    $this->drupalPost(NULL, $values, t('Save configuration'));
+    $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
+
+    $this->drupalGet("admin/config/search/search_api/index/$id");
     $this->assertTitle('Search API test index | Drupal', t('Correct title when viewing index.'));
     $this->assertText('An index used for testing.', t('!field displayed.', array('!field' => t('Description'))));
     $this->assertText('Search API test entity', t('!field displayed.', array('!field' => t('Entity type'))));

@@ -127,12 +127,9 @@ class SearchApiDbTest extends DrupalWebTestCase {
     );
     $this->drupalPost('admin/config/search/search_api/add_index', $values, t('Create index'));
 
-    $this->assertText(t('The index was successfully created. Please set up its workflow now.'), t('The index was successfully created.'));
+    $this->assertText(t('The index was successfully created. Please set up its indexed fields now.'), t('The index was successfully created.'));
     $found = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $id) !== FALSE;
     $this->assertTrue($found, t('Correct redirect.'));
-
-    $this->drupalPost(NULL, array(), t('Save configuration'));
-    $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
 
     $values = array(
       'fields[id][type]' => 'integer',
@@ -150,6 +147,9 @@ class SearchApiDbTest extends DrupalWebTestCase {
     );
     $this->drupalPost(NULL, $values, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'), t('Field settings saved.'));
+
+    $this->drupalPost(NULL, array(), t('Save configuration'));
+    $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
 
     $this->drupalGet("admin/config/search/search_api/index/$id/status");
     $this->assertText(t('The index is currently enabled.'), t('"Enabled" status displayed.'));
