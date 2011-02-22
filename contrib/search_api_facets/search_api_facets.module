@@ -490,8 +490,8 @@ function search_api_facets_block_current_search_view() {
     elseif (((string) $keys) === '') {
       $keys = '[' . t('All items') . ']';
     }
-    $query_options = $params;
-    unset($query_options[$filter_name]);
+    $base_params = $params;
+    unset($base_params[$filter_name]);
     $filter_links = array();
     foreach ($filters as $field => $field_filters) {
       $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'field' => $field));
@@ -532,7 +532,7 @@ function search_api_facets_block_current_search_view() {
       '#keys' => $keys,
       '#count' => $results['result count'],
       '#path' => $path,
-      '#options' => $query_options,
+      '#options' => array('query' => $base_params),
       '#filters' => $filter_links,
     );
   }
