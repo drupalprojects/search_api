@@ -1,4 +1,5 @@
 <?php
+// $Id: search_api.admin.inc,v 1.1.2.76 2011/02/20 12:44:15 drunkenmonkey Exp $
 
 /**
  * Page callback that shows an overview of defined servers and indexes.
@@ -1716,8 +1717,8 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $wrapper = $orig_wrapper = $index->entityWrapper();
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
+  $name_prefix = '';
 
-  $type_prefix = $type_suffix = '';
   foreach (explode(':', $prefix) as $element) {
     if (!isset($wrapper->$element)) {
       $wrapper = NULL;
@@ -1728,10 +1729,11 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     $level = search_api_list_nesting_level($wrapper_info['type']);
     for ($i = 0; $i < $level; ++$i) {
       $wrapper = $wrapper[0];
-      // For each nesting level, wrap the field types in an additional "list<%>".
-      $type_prefix .= str_repeat('list<', $level);
-      $type_suffix .= str_repeat('>', $level);
     }
+    // For each nesting level, wrap the field types in an additional "list<%>".
+    $type_prefix = str_repeat('list<', $level);
+    $type_suffix = str_repeat('>', $level);
+    $name_prefix .= $wrapper_info['label'] . ' » ';
   }
   if (!$wrapper) {
     drupal_set_message(t("An error occurred while trying to add the related entity's fields."), 'error');
@@ -1753,7 +1755,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     $key = $prefix . $field;
     if (isset($types[$info['type']]) && empty($fields[$key])) {
       $fields[$key] = array(
-        'name' => $info['label'],
+        'name' => $name_prefix . $info['label'],
         'type' => $type,
         'boost' => '1.0',
         'indexed' => 0,
