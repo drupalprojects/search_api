@@ -140,7 +140,9 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
   protected function fieldDescription(array $field) {
     $fields = array();
     foreach ($field['fields'] as $f) {
-      $fields[] = isset($this->index->options['fields'][$f]) ? $this->index->options['fields'][$f]['name'] : $f;
+      if ($f !== 0) {
+        $fields[] = isset($this->index->options['fields'][$f]) ? $this->index->options['fields'][$f]['name'] : $f;
+      }
     }
     return t('A fulltext aggregation of the following fields: @fields.', array('@fields' => implode(', ', $fields)));
   }
