@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Processor for stripping HTML from indexed fulltext data. Supports assigning

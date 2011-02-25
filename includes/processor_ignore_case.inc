@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Processor for making searches case-insensitive.

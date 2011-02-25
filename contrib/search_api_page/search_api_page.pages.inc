@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Displays a search page.

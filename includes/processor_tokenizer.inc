@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Processor for tokenizing fulltext data by replacing (configurable)

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Default number of items indexed at each cron run for each enabled index.

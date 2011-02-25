@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Search API data alteration callback that filters out items based on their

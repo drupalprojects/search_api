@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Class for sorting results according to a specified field.

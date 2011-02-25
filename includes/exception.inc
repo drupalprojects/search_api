@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Represents an exception or error that occurred in some part of the Search API

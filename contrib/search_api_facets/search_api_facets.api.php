@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Dummy interface for explaining all additions to the query class that the

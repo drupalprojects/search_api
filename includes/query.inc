@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Interface representing a search query on an Search API index.

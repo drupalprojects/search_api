@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Interface representing a Search API data-alter callback.

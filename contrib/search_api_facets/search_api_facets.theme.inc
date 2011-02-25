@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Theme a list of facet links.

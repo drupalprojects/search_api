@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Views query class using a Search API index as the data source.

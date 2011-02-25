@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Views filter handler class for handling fields with a limited set of possible

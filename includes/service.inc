@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Interface defining the methods search services have to implement.

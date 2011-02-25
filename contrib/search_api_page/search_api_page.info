@@ -1,4 +1,3 @@
-; $Id$
 
 name = Search pages
 description = "Create search pages using Search API indexes."

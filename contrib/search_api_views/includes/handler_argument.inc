@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Views argument handler class for handling all non-fulltext types.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Displays a form for selecting the indexed fields for which facets should be

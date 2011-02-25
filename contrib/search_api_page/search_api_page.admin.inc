@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Displays an overview of all defined search pages.

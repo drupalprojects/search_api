@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Page callback that shows an overview of defined servers and indexes.

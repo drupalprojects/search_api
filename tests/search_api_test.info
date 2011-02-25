@@ -1,4 +1,3 @@
-; $Id$
 
 name = Search API test
 description = "Some dummy implementations for testing the Search API."

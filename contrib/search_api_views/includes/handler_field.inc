@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Views field handler base class for this module, handling all fields that

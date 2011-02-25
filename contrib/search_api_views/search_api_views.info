@@ -1,4 +1,3 @@
-; $Id$
 
 name = Search views
 description = Integrates the Search API with Views, enabling users to create views with searches as filters or arguments.

@@ -1,4 +1,3 @@
-// $Id$
 
 // Copied from filter.admin.js
 (function ($) {

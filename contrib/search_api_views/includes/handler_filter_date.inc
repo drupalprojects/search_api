@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Views filter handler base class for handling all "normal" cases.

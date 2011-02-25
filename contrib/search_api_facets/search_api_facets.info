@@ -1,4 +1,3 @@
-; $Id$
 
 name = Search facets
 description = "Create facets for search queries executed via the Search API."

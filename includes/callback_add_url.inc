@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Search API data alteration callback that adds an URL field for all items.

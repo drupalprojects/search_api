@@ -1,4 +1,3 @@
-; $Id$
 
 name = Search API
 description = "Provides a generic API for modules offering search capabilites."

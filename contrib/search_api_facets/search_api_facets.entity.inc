@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Class representing a search facet.
