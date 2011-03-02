@@ -20,6 +20,7 @@ function search_api_page_view($id, $keys = NULL) {
     $ret['results']['#theme'] = 'search_api_page_results';
     $ret['results']['#index'] = search_api_index_load($page->index_id);
     $ret['results']['#results'] = $results = search_api_page_search_execute($page, $keys);
+    $ret['results']['#view_mode'] = isset($page->options['view_mode']) ? $page->options['view_mode'] : 'search_api_page_result';
     $ret['results']['#keys'] = $keys;
 
     if ($results['result count'] > $page->options['per_page']) {
@@ -94,6 +95,9 @@ function template_preprocess_search_api_page_results(array &$variables) {
  *   - results: An array of search results, as returned by
  *     SearchApiQueryInterface::execute().
  *   - entities: The loaded entities for all results, in an array keyed by ID.
+ *   - "view_mode": The view mode to use for displaying the individual results,
+ *     or the special mode "search_api_page_result" to use the theme function
+ *     of the same name.
  *   - keys: The keywords of the executed search.
  */
 function theme_search_api_page_results(array $variables) {
@@ -103,9 +107,6 @@ function theme_search_api_page_results(array $variables) {
   $results = $variables['results'];
   $entities = $variables['entities'];
   $keys = $variables['keys'];
-
-  $index->dataAlter($entities);
-  entity_prepare_view($index->entity_type, $entities);
 
   $output = '<p class="search-performance">' . format_plural($results['result count'],
       'The search found 1 result in @sec seconds.',
@@ -118,11 +119,21 @@ function theme_search_api_page_results(array $variables) {
   }
 
   $output .= "\n<h2>" . t('Search results') . "</h2>\n";
-  $output .= '<ol class="search-results">';
-  foreach ($results['results'] as $item) {
-    $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'entity' => isset($entities[$item['id']]) ? $entities[$item['id']] : NULL, 'keys' => $keys)) . '</li>';
+
+  if ($variables['view_mode'] == 'search_api_page_result') {
+    entity_prepare_view($index->entity_type, $entities);
+    $output .= '<ol class="search-results">';
+    foreach ($results['results'] as $item) {
+      $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'entity' => isset($entities[$item['id']]) ? $entities[$item['id']] : NULL, 'keys' => $keys)) . '</li>';
+    }
+    $output .= '</ol>';
   }
-  $output .= '</ol>';
+  else {
+    $output .= '<div class="search-results">';
+    $output .= render(entity_view($index->entity_type, $entities, $variables['view_mode']));
+    $output .= '</div>';
+  }
+
   return $output;
 }
 
@@ -146,7 +157,7 @@ function theme_search_api_page_result(array $variables) {
 
   $url = entity_uri($index->entity_type, $entity);
   $name = entity_label($index->entity_type, $entity);
-  
+
   if ($index->entity_type == 'file') {
     $url = array(
       'path' => file_create_url($url),
@@ -154,25 +165,33 @@ function theme_search_api_page_result(array $variables) {
     );
   }
 
-  $fields = $index->options['fields'];
-  $fields = array_intersect_key($fields, drupal_map_assoc($index->getFulltextFields()));
-  $fields = search_api_extract_fields($wrapper, $fields);
-  $text = '';
-  $length = 0;
-  foreach ($fields as $field) {
-    if (search_api_is_list_type($field['type'])) {
-      continue;
+  if (!empty($variables['result']['excerpt'])) {
+    $text = $variables['result']['excerpt'];
+  }
+  else {
+    $fields = $index->options['fields'];
+    $fields = array_intersect_key($fields, drupal_map_assoc($index->getFulltextFields()));
+    $fields = search_api_extract_fields($wrapper, $fields);
+    $text = '';
+    $length = 0;
+    foreach ($fields as $field) {
+      if (search_api_is_list_type($field['type'])) {
+        continue;
+      }
+      $val_length = drupal_strlen($field['value']);
+      if ($val_length > $length) {
+        $text = $field['value'];
+        $length = $val_length;
+      }
     }
-    $val_length = drupal_strlen($field['value']);
-    if ($val_length > $length) {
-      $text = $field['value'];
-      $length = $val_length;
+    if ($text && function_exists('text_summary')) {
+      $text = text_summary($text);
     }
   }
 
   $output = '<h3>' . ($url ? l($name, $url['path'], $url['options']) : check_plain($name)) . "</h3>\n";
-  if ($text && function_exists('text_summary')) {
-    $output .= text_summary($text);
+  if ($text) {
+    $output .= $text;
   }
 
   return $output;

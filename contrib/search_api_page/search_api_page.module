@@ -58,6 +58,7 @@ function search_api_page_theme() {
       'index' => NULL,
       'results' => array('result count' => 0),
       'entities' => array(),
+      'view_mode' => 'search_api_page_result',
       'keys' => '',
     ),
     'file' => 'search_api_page.pages.inc',

@@ -6,6 +6,7 @@ API changes:
 - #1048032: Add a hook for altering the indexed items.
 
 Others:
+- #1058410 by drunken monkey: Added overhauled display of search results.
 - #1013632 by drunken monkey: Added facet support for the database backend.
 - #1069184: "Current search" block passes query parameters wrongly.
 - #1038016 by fago: Error upon indexing inaccessible list properties.

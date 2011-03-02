@@ -171,6 +171,30 @@ function search_api_page_admin_add(array $form, array &$form_state) {
     '#default_value' => 10,
   );
 
+  $entity_info = entity_get_info($index->entity_type);
+  $view_modes = array(
+    'search_api_page_result' => t('Themed as search results'),
+  );
+  foreach ($entity_info['view modes'] as $mode => $mode_info) {
+    $view_modes[$mode] = $mode_info['label'];
+  }
+  if (count($view_modes) > 1) {
+    $form['view_mode'] = array(
+      '#type' => 'select',
+      '#title' => t('View mode'),
+      '#options' => $view_modes,
+      '#description' => t('Select how search results will be displayed.'),
+      '#size' => 1,
+      '#default_value' => 'search_api_page_result',
+    );
+  }
+  else {
+    $form['view_mode'] = array(
+      '#type' => 'value',
+      '#value' => reset($view_modes),
+    );
+  }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Create page'),
@@ -310,6 +334,30 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
     '#options' => drupal_map_assoc(array(5, 10, 20, 30, 40, 50, 60, 80, 100)),
     '#default_value' => $page->options['per_page'],
   );
+
+  $entity_info = entity_get_info($index->entity_type);
+  $view_modes = array(
+    'search_api_page_result' => t('Themed as search results'),
+  );
+  foreach ($entity_info['view modes'] as $mode => $mode_info) {
+    $view_modes[$mode] = $mode_info['label'];
+  }
+  if (count($view_modes) > 1) {
+    $form['options']['view_mode'] = array(
+      '#type' => 'select',
+      '#title' => t('View mode'),
+      '#options' => $view_modes,
+      '#description' => t('Select how search results will be displayed.'),
+      '#size' => 1,
+      '#default_value' => isset($page->options['view_mode']) ? $page->options['view_mode'] : 'search_api_page_result',
+    );
+  }
+  else {
+    $form['options']['view_mode'] = array(
+      '#type' => 'value',
+      '#value' => reset($view_modes),
+    );
+  }
 
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
