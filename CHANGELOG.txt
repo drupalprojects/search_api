@@ -2,8 +2,9 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
-- #1043456: Form validation/submission for plugins.
-- #1048032: Add a hook for altering the indexed items.
+- #1075810 by drunken monkey: Added API function for marking entities as dirty.
+- #1043456 by drunken monkey: Form validation/submission for plugins.
+- #1048032 by drunken monkey: Add a hook for altering the indexed items.
 
 Others:
 - #1018366 by drunken monkey: Added option to hide active facet links.

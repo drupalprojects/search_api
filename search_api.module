@@ -569,16 +569,7 @@ function search_api_entity_update($entity, $type) {
   $id = $info['entity keys']['id'];
   $id = $entity->$id;
 
-  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
-    db_update('search_api_item')
-      ->fields(array(
-        'changed' => REQUEST_TIME,
-      ))
-      ->condition('item_id', $id)
-      ->condition('index_id', $index->id)
-      ->condition('changed', 0)
-      ->execute();
-  }
+  search_api_mark_dirty($type, array($id));
 }
 
 /**
@@ -664,6 +655,29 @@ function search_api_search_api_processor_info() {
   );
 
   return $processors;
+}
+
+/**
+ * Mark the entities with the specified IDs as "dirty", i.e., as needing to be
+ * reindexed.
+ *
+ * @param $entity_type
+ *   The type of entity, e.g., 'node'.
+ * @param array $ids
+ *   The entity IDs of the entities to be marked dirty.
+ */
+function search_api_mark_dirty($entity_type, array $ids) {
+  $query = db_select('search_api_index', 'i')
+    ->fields('i', array('id'))
+    ->condition('entity_type' , $entity_type);
+  db_update('search_api_item')
+    ->fields(array(
+      'changed' => REQUEST_TIME,
+    ))
+    ->condition('item_id', $ids, 'IN')
+    ->condition('index_id', $query, 'IN')
+    ->condition('changed', 0)
+    ->execute();
 }
 
 /**
