@@ -16,6 +16,13 @@ split, as searching for phrases is currently not supported.
 
 Due to SQL limitations, fulltext searches are always case-insensitive.
 
+Supported optional features
+---------------------------
+
+Regarding third-party features, this module supports the "search_api_facets"
+feature, introduced by the module of the same name. This lets you create
+facetted searches for any index lying on a database server.
+
 If you feel some service option is missing, or have other ideas for improving
 this implementation, please file a feature request in the project's issue queue,
 at [http://drupal.org/project/issues/search_api], using the "Database search"

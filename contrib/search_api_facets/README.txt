@@ -5,7 +5,8 @@ Search facets
 This module allows you to create facetted searches for any search executed via
 the Search API, no matter if executed by a search page, a view or any other
 module. The only thing you'll need is a search service class that supports the
-"search_api_facets" feature. Currently, only the "Solr search" supports this.
+"search_api_facets" feature. Currently, the "Database search" and "Solr search"
+modules supports this.
 
 
 

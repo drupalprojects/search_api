@@ -68,6 +68,10 @@ class SearchApiDbService extends SearchApiAbstractService {
     return $form;
   }
 
+  public function supportsFeature($feature) {
+    return $feature == 'search_api_facets';
+  }
+
   public function postUpdate() {
     return $this->server->options != $this->server->original->options;
   }
@@ -561,6 +565,10 @@ class SearchApiDbService extends SearchApiAbstractService {
     $results['result count'] = $count_query->execute()->fetchField();
 
     if ($results['result count']) {
+      if ($query->getOption('search_api_facets')) {
+        $results['search_api_facets'] = $this->getFacets($query, clone $db_query);
+      }
+
       $query_options = $query->getOptions();
       if (isset($query_options['offset']) || isset($query_options['limit'])) {
         $offset = isset($query_options['offset']) ? $query_options['offset'] : 0;
@@ -977,6 +985,89 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
     }
     return $db_query->join($field['table'], 't', 't.item_id = %alias.item_id');
+  }
+
+  /**
+   * Helper method for getting the facet values for a query.
+   */
+  protected function getFacets(SearchApiQueryInterface $query, SelectQueryInterface $db_query) {
+    // We only need the id field, not the score.
+    if (count($db_query->getFields()) != 1) {
+      throw new SearchApiException('Doch nicht.');//DEBUG
+    }
+    $expressions = &$db_query->getExpressions();
+    $expressions = array();
+    $group_by = &$db_query->getGroupBy();
+    $group_by = array();
+    $db_query->distinct();
+    if (!$db_query->preExecute()) {
+      return array();
+    }
+    $args = $db_query->getArguments();
+    $table = db_query_temporary((string) $db_query, $args, $this->query_options);
+
+    $fields = $this->options['indexes'][$query->getIndex()->machine_name];
+    $ret = array();
+    foreach ($query->getOption('search_api_facets') as $key => $facet) {
+      if (empty($fields[$facet['field']])) {
+        $this->warnings[] = t('Unknown facet field @field.', array('@field' => $facet['field']));
+        continue;
+      }
+      $field = $fields[$facet['field']];
+
+      $select = db_select($table, 't');
+      $alias = $this->getTableAlias($field, $select);
+      $select->addField($alias, search_api_is_text_type($field['type']) ? 'word' : 'value', 'value');
+      $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
+      $select->groupBy('value');
+      $select->orderBy('num', 'DESC');
+
+      $limit = $facet['limit'];
+      if ($limit) {
+        $select->range(0, $limit);
+      }
+      if ($facet['min_count'] > 1) {
+        $select->having('num >= :count', array(':count' => $facet['min_count']));
+      }
+      if ($facet['missing']) {
+        $inner_query = db_select($field['table'], 't1')
+          ->fields('t1', array('item_id'));
+        $missing_count = db_select($table, 't');
+        $missing_count->addExpression('COUNT(item_id)');
+        $missing_count->condition('item_id', $inner_query, 'NOT IN');
+        $missing_count = $missing_count->execute()->fetchField();
+        $missing_count = $missing_count >= $facet['min_count'] ? $missing_count : 0;
+      }
+      else {
+        $missing_count = 0;
+      }
+
+      $terms = array();
+      foreach ($select->execute() as $row) {
+        if ($missing_count && $missing_count > $row->num) {
+          $terms[] = array(
+            'count'  => $missing_count,
+            'filter' => '!',
+          );
+          $missing_count = 0;
+          if ($limit && count($terms) == $limit) {
+            break;
+          }
+        }
+        $terms[] = array(
+          'count' => $row->num,
+          'filter' => '"' . $row->value . '"',
+        );
+      }
+      if ($missing_count && (!$limit || count($terms) < $limit)) {
+        $terms[] = array(
+          'count'  => $missing_count,
+          'filter' => '!',
+        );
+      }
+      $ret[$key] = $terms;
+    }
+    return $ret;
   }
 
   /**
