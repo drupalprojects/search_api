@@ -183,6 +183,12 @@ function search_api_facets_block_configure($delta = '') {
     '#description' => t('Include a facet term for all results without a value for this field.'),
     '#default_value' => $options['missing'],
   );
+  $form['show_active'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show active facet links'),
+    '#description' => t('Display the facet links that were already clicked for this facet.'),
+    '#default_value' => $options['show_active'],
+  );
 
   $search_ids = variable_get('search_api_facets_search_ids', array());
   if (empty($search_ids[$index->machine_name]) || count($search_ids[$index->machine_name]) <= 1) {
@@ -227,9 +233,6 @@ function search_api_facets_block_configure($delta = '') {
  * Validation function for search_api_facets_block_configure().
  */
 function search_api_facets_block_configure_validate(array $element, array &$form_state) {
-  if ($delta == 'current-search') {
-    return;
-  }
   $limit = $element['limit']['#value'];
   if ($limit && (!is_numeric($limit) || $limit < 0 || strpos($limit, '.') !== FALSE)) {
     form_error($element['limit'], t('The number of terms has to be a non-negative integer, or left blank.'));
@@ -300,7 +303,7 @@ function search_api_facets_block_view($delta = '') {
   $filters = empty($filters[$facet->field]) ? array() : $filters[$facet->field];
 
   // Bail early if there is nothing to do.
-  if (empty($results['search_api_facets'][$delta]) && empty($filters)) {
+  if (empty($results['search_api_facets'][$delta]) && (empty($filters) || !$options['show_active'])) {
     return;
   }
 
@@ -333,12 +336,18 @@ function search_api_facets_block_view($delta = '') {
 
   // Process active facet filters.
   $active = array();
-  foreach ($filters as $i => $v) {
-    $filter = new stdClass();
-    $filter->name = _search_api_create_filter_name($v, $type, $values);
-    $filter->params = $params;
-    unset($filter->params[$filter_name][$facet->field][$i]);
-    $active[] = $filter;
+  if ($options['show_active']) {
+    foreach ($filters as $i => $v) {
+      $filter = new stdClass();
+      $filter->name = _search_api_create_filter_name($v, $type, $values);
+      $filter->params = $params;
+      unset($filter->params[$filter_name][$facet->field][$i]);
+      $active[] = $filter;
+    }
+  }
+
+  if (!($terms || $active)) {
+    return;
   }
 
   $theme_suffix  = '';

@@ -153,3 +153,26 @@ function search_api_facets_update_7103() {
     db_add_field('search_api_facet', $field, $spec);
   }
 }
+
+/**
+ * Add a "show_active" option for all facets.
+ */
+function search_api_facets_update_7104() {
+  $rows = db_select('search_api_facet', 'f')
+    ->fields('f', array('id', 'options'))
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($rows as $id => $options) {
+    $opt = unserialize($options);
+    $opt += array('show_active' => TRUE);
+    $opt = serialize($opt);
+    if ($opt != $options) {
+      db_update('search_api_facet')
+        ->fields(array(
+          'options' => $opt,
+        ))
+        ->condition('id', $id)
+        ->execute();
+    }
+  }
+}

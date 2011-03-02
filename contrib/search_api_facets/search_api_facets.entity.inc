@@ -62,6 +62,7 @@ class SearchApiFacet extends Entity {
       'min_count'    => 1,
       'sort'         => 'count',
       'missing'      => FALSE,
+      'show_active'  => TRUE,
       'default_true' => TRUE,
       'ids_list'     => array(),
       'type'         => '',
