@@ -233,7 +233,7 @@ function _search_api_views_add_handlers($field, $wrapper) {
  * Implements hook_views_plugins().
  */
 function search_api_views_views_plugins() {
-  return array(
+  $ret = array(
     'query' => array(
       'search_api_views_query' => array(
         'title' => t('Search API Query'),
@@ -242,4 +242,20 @@ function search_api_views_views_plugins() {
       ),
     ),
   );
+
+  if (module_exists('search_api_facets')) {
+    $ret['display']['search_api_views_facets_block'] = array(
+      'title' => t('Facets block'),
+      'help' => t('Display facets for this search as a block anywhere on the site.'),
+      'handler' => 'SearchApiViewsFacetsBlockDisplay',
+      'uses hook block' => TRUE,
+      'use ajax' => FALSE,
+      'use pager' => FALSE,
+      'use more' => TRUE,
+      'accept attachments' => TRUE,
+      'admin' => t('Facets block'),
+    );
+  }
+
+  return $ret;
 }

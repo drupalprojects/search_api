@@ -34,6 +34,13 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $query;
 
   /**
+   * The results returned by the query, after it was executed.
+   *
+   * @var array
+   */
+  protected $search_api_results = array();
+
+  /**
    * Array of all encountered errors. Each of these is fatal, meaning that a
    * non-empty $errors property will result in an empty result being returned.
    *
@@ -114,14 +121,17 @@ class SearchApiViewsQuery extends views_plugin_query {
 
     try {
       $start = microtime(TRUE);
-      // Add range and search ID
+      // Add range and search ID (if it wasn't already set).
       $this->query->range($this->offset, $this->limit);
-      $this->query->setOption('search id', 'search_api_views:' . $view->name);
+      if ($this->query->getOption('search id') == get_class($this->query)) {
+        $this->query->setOption('search id', 'search_api_views:' . $view->name);
+      }
 
-      // Execute the search
+      // Execute the search.
       $results = $this->query->execute();
+      $this->search_api_results = $results;
 
-      // Store the results
+      // Store the results.
       $this->pager->total_items = $view->total_rows = $results['result count'];
       $this->pager->update_page_info();
       $view->result = array();
@@ -144,7 +154,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    * view.
    */
   protected function addResults(array $results, $view) {
-    // Maybe the service class or a postprocessor already set the entities
+    // Maybe the service class or a postprocessor already set the entities.
     foreach ($results as $id => $result) {
       if (!empty($result['entity']) && ($fields = $this->extractFields($result['entity']))) {
         $view->result[$id] = $fields;
@@ -190,6 +200,28 @@ class SearchApiViewsQuery extends views_plugin_query {
       $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
     }
     return $ret;
+  }
+
+  /**
+   * API function for accessing the raw Search API query object.
+   *
+   * @return SearchApiQueryInterface
+   *   An associative array containing the search results, as specified by
+   *   SearchApiQueryInterface::execute().
+   */
+  public function getSearchApiQuery() {
+    return $this->query;
+  }
+
+  /**
+   * API function for accessing the raw Search API results.
+   *
+   * @return array
+   *   An associative array containing the search results, as specified by
+   *   SearchApiQueryInterface::execute().
+   */
+  public function getSearchApiResults() {
+    return $this->search_api_results;
   }
 
   //
