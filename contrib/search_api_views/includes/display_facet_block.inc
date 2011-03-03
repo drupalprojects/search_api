@@ -9,6 +9,12 @@
  * Plugin class for displaying search facets in a block.
  */
 class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
+  public function displays_exposed() {
+    return FALSE;
+  }
+  public function uses_exposed() {
+    return FALSE;
+  }
 
   public function option_definition() {
     $options = parent::option_definition();
