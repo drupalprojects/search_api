@@ -1,4 +1,3 @@
-
 Search API 1.0, dev (xx/xx/xxxx):
 ------------------------------------
 API changes:
@@ -7,6 +6,7 @@ API changes:
 - #1048032 by drunken monkey: Add a hook for altering the indexed items.
 
 Others:
+- #1071894 by drunken monkey: Fixed incorrect handling of boolean facets.
 - #1078590 by fago: Added check to skip default index creation when installed
   via installation profile.
 - #1018366 by drunken monkey: Added option to hide active facet links.

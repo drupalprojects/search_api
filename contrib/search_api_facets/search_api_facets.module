@@ -607,7 +607,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
       }
       elseif ($filter[0] = '"') {
         $filter = substr($filter, 1, -1);
-        if ($filter) {
+        if (strlen($filter)) {
           $query->condition($field, $filter);
         }
       }
@@ -916,7 +916,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
 function _search_api_create_value_name($value, $type, array $values = array()) {
   switch ($type) {
     case 'boolean':
-      return $value == 'true' ? t('True') : t('False');
+      return $value ? t('True') : t('False');
     case 'date':
       // @todo Implement something really clever here. hook_date_types()?
       return format_date($value, 'short');
