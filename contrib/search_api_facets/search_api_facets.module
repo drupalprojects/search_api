@@ -539,7 +539,7 @@ function search_api_facets_block_current_search_view() {
       }
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();
-      $field_name = $options['field_name'] ? $index->options['fields'][$field]['name'] : '';
+      $field_name = $options['field_name'] ? $facet->name : '';
 
       $theme_suffix  = '';
       $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->entity_type);
