@@ -10,15 +10,15 @@ Drupal.behaviors.searchApiFacetsMore = {
         .attr('title', Drupal.t('Show additional facet terms.'))
         .click(function() {
           $link = $(this);
-          if ($link.attr('class').indexOf('less') < 0) {
-            $('#' + $link.attr('id').replace(/-more-link$/, '') + ' li.search-api-facet-link-additional', context).removeClass('element-hidden');
-            $link.text(Drupal.t('less'));
-            $link.addClass('less');
-          }
-          else {
+          if ($link.hasClass('less')) {
             $('#' + $link.attr('id').replace(/-more-link$/, '') + ' li.search-api-facet-link-additional', context).addClass('element-hidden');
             $link.text(Drupal.t('more'));
             $link.removeClass('less');
+          }
+          else {
+            $('#' + $link.attr('id').replace(/-more-link$/, '') + ' li.search-api-facet-link-additional', context).removeClass('element-hidden');
+            $link.text(Drupal.t('less'));
+            $link.addClass('less');
           }
           return false;
         })
