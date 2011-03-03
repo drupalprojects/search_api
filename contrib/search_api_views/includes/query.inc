@@ -165,9 +165,9 @@ class SearchApiViewsQuery extends views_plugin_query {
           continue;
         }
         $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
-        $view->result[$id] = $this->extractFields($wrapper, $this->fields);
-        $view->result[$id]['search_api_views_entity'] = $entity;
+        $view->result[$id]['entity'] = $entity;
         $view->result[$id]['search_api_relevance'] = $results[$id]['score'];
+        $view->result[$id] += $this->extractFields($wrapper, $this->fields);
       }
       catch (Exception $e) {
         continue;

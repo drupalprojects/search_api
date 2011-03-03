@@ -17,6 +17,8 @@ function search_api_views_views_data() {
       'title' => $index->name,
       'help' => t('Use the %name search index for filtering and retrieving data.', array('%name' => $index->name)),
       'query class' => 'search_api_views_query',
+      'entity type' => $index->entity_type,
+      'skip entity load' => TRUE,
     );
 
     // Add all available fields
