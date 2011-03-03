@@ -20,7 +20,7 @@ function theme_search_api_facets_list(array $variables) {
   foreach ($variables['hidden'] as $term) {
     $items[] = array(
       'data' => render($term),
-      'class' => array('element-hidden'),
+      'class' => array('element-hidden', 'search-api-facet-link-additional'),
     );
   }
   return $items ? theme('item_list', array('items' => $items, 'attributes' => array('class' => array('search-api-facets')))) : '';
