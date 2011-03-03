@@ -6,7 +6,7 @@ Drupal.behaviors.searchApiFacetsMore = {
   attach: function (context, settings) {
     $('.block-search-api-facets', context).has('ul.search-api-facets > li.element-hidden').each(function() {
       $block = $(this);
-      $('.content', $block).append($('<a href="#" id="' + $block.attr('id') + '-more-link" class="search-api-facet-more-link">' + Drupal.t('More') + '</a>')
+      $('.content', $block).append($('<a href="#" id="' + $block.attr('id') + '-more-link" class="search-api-facet-more-link">' + Drupal.t('more') + '</a>')
         .attr('title', Drupal.t('Show additional facet terms.'))
         .click(function() {
           $link = $(this);
