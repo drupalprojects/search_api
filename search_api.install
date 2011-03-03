@@ -162,9 +162,15 @@ function search_api_schema() {
 /**
  * Implements hook_install().
  *
- * Creates a default node index.
+ * Creates a default node index if the module is installed manually.
  */
 function search_api_install() {
+  // In case the module is installed via an installation profile, a batch is
+  // active and we skip that.
+  if (batch_get()) {
+    return;
+  }
+
   $name = t('Default node index');
   $values = array(
     'name' => $name,

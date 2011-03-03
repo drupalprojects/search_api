@@ -7,6 +7,8 @@ API changes:
 - #1048032 by drunken monkey: Add a hook for altering the indexed items.
 
 Others:
+- #1078590 by fago: Added check to skip default index creation when installed
+  via installation profile.
 - #1018366 by drunken monkey: Added option to hide active facet links.
 - #1058410 by drunken monkey: Added overhauled display of search results.
 - #1013632 by drunken monkey: Added facet support for the database backend.
