@@ -493,10 +493,7 @@ function search_api_facets_block_current_search_view() {
     $keys = $query->getOriginalKeys();
     if (is_array($keys)) {
       // We could also create a text representation of any complex query without too much effort.
-      $keys = '[' . t('Complex query') . ']';
-    }
-    elseif (((string) $keys) === '') {
-      $keys = '[' . t('All items') . ']';
+      $keys = '[' . t('complex query') . ']';
     }
     $base_params = $params;
     unset($base_params[$filter_name]);
@@ -884,12 +881,12 @@ function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options)
  */
 function _search_api_create_filter_name($filter, $type, array $values = array()) {
   if ($filter == '!') {
-    return t('None');
+    return t('none');
   }
   if ($filter[0] == '"') {
     $filter = substr($filter, 1, -1);
     if ($filter == '' || $filter == '*') {
-      return t('Any');
+      return t('any');
     }
     return _search_api_create_value_name($filter, $type, $values);
   }
@@ -898,7 +895,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
   $filter = substr($filter, 1, -1);
   $filter = explode(' ', $filter, 2);
   if ($filter[0] == '*' && $filter[1] == '*') {
-    return t('Any');
+    return t('any');
   }
   if ($filter[0] == '*') {
     return ($uptype == ']' ? '< ' : '≤ ') . _search_api_create_value_name($filter[1], $type, $values);
@@ -916,7 +913,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
 function _search_api_create_value_name($value, $type, array $values = array()) {
   switch ($type) {
     case 'boolean':
-      return $value ? t('True') : t('False');
+      return $value ? t('true') : t('false');
     case 'date':
       // @todo Implement something really clever here. hook_date_types()?
       return format_date($value, 'short');

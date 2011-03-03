@@ -6,6 +6,7 @@ API changes:
 - #1048032 by drunken monkey: Add a hook for altering the indexed items.
 
 Others:
+- #1080004 by drunken monkey: Fixed confusing "Current search" block layout.
 - #1071894 by drunken monkey: Fixed incorrect handling of boolean facets.
 - #1078590 by fago: Added check to skip default index creation when installed
   via installation profile.
