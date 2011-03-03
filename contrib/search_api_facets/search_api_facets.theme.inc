@@ -6,6 +6,7 @@
  * @param array $variables
  *   An associative array containing:
  *   - terms: An array of available facet terms, as render arrays (or HTML).
+ *   - hidden: An array of available facet terms that should initially be hidden.
  *   - active: An array of active facet filters, as render arrays (or HTML).
  */
 function theme_search_api_facets_list(array $variables) {
@@ -15,6 +16,12 @@ function theme_search_api_facets_list(array $variables) {
   }
   foreach ($variables['terms'] as $term) {
     $items[] = render($term);
+  }
+  foreach ($variables['hidden'] as $term) {
+    $items[] = array(
+      'data' => render($term),
+      'class' => array('element-hidden'),
+    );
   }
   return $items ? theme('item_list', array('items' => $items, 'attributes' => array('class' => array('search-api-facets')))) : '';
 }

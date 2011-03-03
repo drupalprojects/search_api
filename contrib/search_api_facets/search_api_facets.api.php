@@ -13,7 +13,8 @@ interface SearchApiFacetsQueryInterface extends SearchApiQueryInterface {
    *     with the results. The array is keyed by the unique identifier of the
    *     facet, the values are arrays with the following keys:
    *     - field: The field to construct facets for.
-   *     - limit: The maximum number of facet terms to return.
+   *     - limit: The maximum number of facet terms to return. 0 or an empty
+   *       value means no limit.
    *     - min_count: The minimum number of results a facet value has to have in
    *       order to be returned.
    *     - missing: If TRUE, a facet for all items with no value for this field

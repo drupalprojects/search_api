@@ -41,6 +41,7 @@ function search_api_facets_theme() {
   $themes['search_api_facets_list'] = array(
     'variables' => array(
       'terms' => array(),
+      'hidden' => array(),
       'active' => array(),
     ),
     'file' => 'search_api_facets.theme.inc',
@@ -159,8 +160,24 @@ function search_api_facets_block_configure($delta = '') {
   $form['limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Number of terms'),
-    '#description' => t('The maximum number of facet terms to be displayed in this block. Leave blank or set to 0 for no limit.'),
+    '#description' => t('The maximum number of facet terms to be initially displayed in this block. Leave blank or set to 0 for no limit.'),
     '#default_value' => $options['limit'],
+  );
+  $form['display_more_link'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display "More" link for showing additional facet terms'),
+    '#default_value' => $options['display_more_link'],
+  );
+  $form['more_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Total number of terms'),
+    '#description' => t('The maximum number of facet terms to be displayed in this block after the "More" link is clicked. Leave blank or set to 0 for no limit.'),
+    '#states' => array(
+      'invisible' => array(
+        'input[name="display_more_link"]' => array('checked' => FALSE),
+      ),
+    ),
+    '#default_value' => $options['more_limit'],
   );
   $form['min_count'] = array(
     '#type' => 'textfield',
@@ -240,6 +257,11 @@ function search_api_facets_block_configure_validate(array $element, array &$form
   $min_count = $element['min_count']['#value'];
   if (!$min_count || !is_numeric($min_count) || $min_count <= 0 || strpos($min_count, '.') !== FALSE) {
     form_error($element['min_count'], t('The minimum count has to be a positive integer.'));
+  }
+  $display_more_link = $element['display_more_link']['#value'];
+  $more_limit = $element['more_limit']['#value'];
+  if ($display_more_link && $more_limit && (!is_numeric($more_limit) || $more_limit <= 0 || strpos($more_limit, '.') !== FALSE)) {
+    form_error($element['limit'], t('The total number of terms has to be a non-negative integer, or left blank.'));
   }
 }
 
@@ -357,11 +379,15 @@ function search_api_facets_block_view($delta = '') {
   $theme = array(
     '#theme'  => 'search_api_facets_list' . $theme_suffix,
     '#terms'  => array(),
+    '#hidden' => array(),
     '#active' => array(),
   );
 
+  $count = 0;
+  $limit = $options['limit'];
   foreach ($terms as $term) {
-    $theme['#terms'][] = array(
+    $key = ++$count > $limit ? '#hidden' : '#terms';
+    $theme[$key][] = array(
       '#theme'   => 'search_api_facets_facet' . $theme_suffix,
       '#name'    => $term->name,
       '#count'   => $term->count,
@@ -369,6 +395,9 @@ function search_api_facets_block_view($delta = '') {
       '#options' => array('query' => $term->params),
       '#active'  => FALSE,
     );
+  }
+  if ($theme['#hidden']) {
+    drupal_add_js(drupal_get_path('module', 'search_api_facets') . '/search_api_facets.js');
   }
   foreach ($active as $filter) {
     $theme['#active'][] = array(
@@ -583,7 +612,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
     $active[$facet->delta] = $search_id;
     $fields[$facet->delta] = array(
       'field'     => $facet->field,
-      'limit'     => $facet->options['limit'],
+      'limit'     => $facet->options['display_more_link'] ? $facet->options['more_limit'] : $facet->options['limit'],
       'min_count' => $facet->options['min_count'],
       'missing'   => $facet->options['missing'],
     );

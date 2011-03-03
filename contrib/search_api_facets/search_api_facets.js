@@ -1,0 +1,22 @@
+// $Id: search_api.admin.js,v 1.1.2.4 2010/11/07 17:24:16 drunkenmonkey Exp $
+
+(function($) {
+
+Drupal.behaviors.searchApiFacetsMore = {
+  attach: function (context, settings) {
+    $('.block-search-api-facets', context).has('ul.search-api-facets > li.element-hidden').each(function() {
+      $block = $(this);
+      $('.content', $block).append($('<a href="#" id="' + $block.attr('id') + '-more-link" class="search-api-facet-more-link">' + Drupal.t('More') + '</a>')
+        .attr('title', Drupal.t('Show additional facet terms.'))
+        .click(function() {
+          $link = $(this);
+          $('#' + $link.attr('id').replace(/-more-link$/, '') + ' li.element-hidden', context).removeClass('element-hidden');
+          $link.hide();
+          return false;
+        })
+      );
+    });
+  }
+};
+
+})(jQuery);
