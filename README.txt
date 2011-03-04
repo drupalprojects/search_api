@@ -273,6 +273,14 @@ Included components
     containing the data from one or more other fields. Use this, e.g., to have a
     single field containing all data that should be searchable, or to make the
     text from a string field, like a taxonomy term, also fulltext-searchable.
+  * Bundle filter
+    Enables the admin to prevent entities from being indexed based on their
+    bundle (content type for nodes, vocabulary for taxonomy terms, etc.).
+  * Complete entity view 
+    Adds a field containing the whole HTML content of the entity as it is viewed
+    on the site. The view mode used can be selected.
+    Note, however, that this might not work for entities of all types. All core
+    entities except files are supported, though.
 
 - Processors
 

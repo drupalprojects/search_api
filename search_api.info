@@ -9,6 +9,7 @@ files[] = search_api.test
 files[] = includes/callback.inc
 files[] = includes/callback_add_fulltext.inc
 files[] = includes/callback_add_url.inc
+files[] = includes/callback_add_viewed_entity.inc
 files[] = includes/callback_bundle_filter.inc
 files[] = includes/exception.inc
 files[] = includes/index_entity.inc

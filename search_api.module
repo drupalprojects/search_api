@@ -619,6 +619,11 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Gives you the ability to define additional fulltext fields, containing the text data from one or more other fields.'),
     'class' => 'SearchApiAlterAddFulltext',
   );
+  $callbacks['search_api_alter_add_viewed_entity'] = array(
+    'name' => t('Complete entity view'),
+    'description' => t('Adds an additional field containing the whole HTML content of the entity when viewed.'),
+    'class' => 'SearchApiAlterAddViewedEntity',
+  );
   $callbacks['search_api_alter_bundle_filter'] = array(
     'name' => t('Bundle filter'),
     'description' => t('Exclude items from indexing based on their bundle (content type, vocabulary, …).'),

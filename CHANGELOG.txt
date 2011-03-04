@@ -6,6 +6,8 @@ API changes:
 - #1048032 by drunken monkey: Add a hook for altering the indexed items.
 
 Others:
+- #1068334 by drunken monkey: Added a data alteration for indexing the viewed
+  entity.
 - #1080376 by drunken monkey: Fixed "Current search" block field names.
 - #1076170 by drunken monkey: Added a Views display plugin for facet blocks.
 - #1064518 by drunken monkey: Added support for entity-based Views handlers.
