@@ -1,4 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
+---------------------------------
+
+Search API 1.0, Beta 6 (03/04/2011):
 ------------------------------------
 API changes:
 - #1075810 by drunken monkey: Added API function for marking entities as dirty.
