@@ -17,8 +17,6 @@ interface SearchApiAlterCallbackInterface {
 
   /**
    * Display a form for configuring this callback.
-   * Since forcing users to specify options for disabled callbacks makes no
-   * sense, none of the form elements should have the '#required' attribute set.
    *
    * @return array
    *   A form array for configuring this callback, or FALSE if no configuration
@@ -122,8 +120,6 @@ abstract class SearchApiAbstractAlterCallback implements SearchApiAlterCallbackI
 
   /**
    * Display a form for configuring this callback.
-   * Since forcing users to specify options for disabled callbacks makes no
-   * sense, none of the form elements should have the '#required' attribute set.
    *
    * @return array
    *   A form array for configuring this callback, or FALSE if no configuration

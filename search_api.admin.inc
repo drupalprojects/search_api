@@ -1073,13 +1073,14 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   // Callbacks
 
   $callbacks = empty($options['data_alter_callbacks']) ? array() : $options['data_alter_callbacks'];
+  $callback_objects = isset($form_state['callbacks']) ? $form_state['callbacks'] : array();
   foreach ($callback_info as $name => $callback) {
     if (!isset($callbacks[$name])) {
       $callbacks[$name]['status'] = 0;
       $callbacks[$name]['weight'] = $callback['weight'];
     }
     $settings = empty($callbacks[$name]['settings']) ? array() : $callbacks[$name]['settings'];
-    if (class_exists($callback['class'])) {
+    if (empty($callback_objects[$name]) && class_exists($callback['class'])) {
       $callback_objects[$name] = new $callback['class']($index, $settings);
     }
     if (!(class_exists($callback['class']) && $callback_objects[$name] instanceof SearchApiAlterCallbackInterface)) {
@@ -1090,6 +1091,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       continue;
     }
   }
+  $form_state['callbacks'] = $callback_objects;
   $form['#callbacks'] = $callbacks;
   $form['callbacks'] = array(
     '#type' => 'fieldset',
@@ -1161,14 +1163,14 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   // Processors
 
   $processors = empty($options['processors']) ? array() : $options['processors'];
-  $processor_objects = array();
+  $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
   foreach ($processor_info as $name => $processor) {
     if (!isset($processors[$name])) {
       $processors[$name]['status'] = 0;
       $processors[$name]['weight'] = $processor['weight'];
     }
     $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
-    if (class_exists($processor['class'])) {
+    if (empty($processor_objects[$name]) && class_exists($processor['class'])) {
       $processor_objects[$name] = new $processor['class']($index, $settings);
     }
     if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof SearchApiProcessorInterface)) {
@@ -1179,6 +1181,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       continue;
     }
   }
+  $form_state['processors'] = $processor_objects;
   $form['#processors'] = $processors;
   $form['processors'] = array(
     '#type' => 'fieldset',
@@ -1288,56 +1291,13 @@ function theme_search_api_admin_item_order(array $variables) {
  * Validation callback for search_api_admin_index_workflow.
  */
 function search_api_admin_index_workflow_validate(array $form, array &$form_state) {
-  $index = $form_state['index'];
-
-  // Load plugin objects.
-  $callbacks_info = search_api_get_alter_callbacks();
-  $callback_options = isset($index->options['data_alter_callbacks']) ? $index->options['data_alter_callbacks'] : array();
-  $callbacks = array();
-  foreach ($form_state['values']['callbacks'] as $name => $callback) {
-    if (empty($callbacks_info[$name])) {
-      // Would only happen in very rare circumstances (module update between
-      // form creation and submission).
-      continue;
-    }
-    if (class_exists($callbacks_info[$name]['class'])) {
-      $settings = empty($callback_options[$name]['settings']) ? array() : $callback_options[$name]['settings'];
-      $callbacks[$name] = new $callbacks_info[$name]['class']($index, $settings);
-    }
-    if (!(isset($callbacks[$name]) && $callbacks[$name] instanceof SearchApiAlterCallbackInterface)) {
-      watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $callbacks_info[$name]['class'])), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-  }
-
-  $processors_info = search_api_get_processors();
-  $processors = array();
-  foreach ($form_state['values']['processors'] as $name => $processor) {
-    if (empty($processors_info[$name])) {
-      // Would only happen in very rare circumstances (module update between
-      // form creation and submission).
-      continue;
-    }
-    if (class_exists($processors_info[$name]['class'])) {
-      $settings = empty($index->options['processors'][$name]['settings']) ? array() : $index->options['processors'][$name]['settings'];
-      $processors[$name] = new $processors_info[$name]['class']($index, $settings);
-    }
-    if (!(isset($processors[$name]) && $processors[$name] instanceof SearchApiProcessorInterface)) {
-      watchdog('search api', t('Data alteration !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processors_info[$name]['class'])), NULL, WATCHDOG_WARNING);
-      continue;
-    }
-  }
-
-  $form_state['callbacks'] = $callbacks;
-  $form_state['processors'] = $processors;
-
   // Call validation functions.
-  foreach ($callbacks as $name => $callback) {
+  foreach ($form_state['callbacks'] as $name => $callback) {
     if (isset($form['callbacks']['settings'][$name]) && isset($form_state['values']['callbacks'][$name]['settings'])) {
       $callback->configurationFormValidate($form['callbacks']['settings'][$name], $form_state['values']['callbacks'][$name]['settings'], $form_state);
     }
   }
-  foreach ($processors as $name => $processor) {
+  foreach ($form_state['processors'] as $name => $processor) {
     if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
       $processor->configurationFormValidate($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
     }

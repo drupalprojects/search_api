@@ -7,7 +7,7 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
 
   public function configurationForm() {
     // Workaround for http://drupal.org/node/1015798
-    drupal_add_css(drupal_get_path('module', 'search_api') . '/search_api.admin.css');
+    $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
     $fields = empty($this->index->options['fields']) ? _search_api_admin_get_fields($this->index, $this->index->entityWrapper()) : $this->index->options;
     $fields = $fields['fields'];
@@ -16,19 +16,20 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
       $field_options[$name] = $field['name'];
     }
     $additional = empty($this->options['fields']) ? array() : $this->options['fields'];
-    for ($i = 1; isset($this->options['fields']['search_api_fulltext_' . $i]); ++$i) {
-    }
-    $additional['search_api_fulltext_' . $i] = array(
-      'name' => '',
-      'fields' => $this->index->getFulltextFields(),
-    );
+
+    $form['#id'] = 'edit-callbacks-search-api-alter-add-fulltext-settings';
     $form['description'] = array(
       '#markup' => t('<p>This data alteration lets you define additional fields that will be added to this index. ' .
         'Each of these new fields will be a fulltext aggregation of one or more existing fields.</p>' .
-        '<p>To add a new aggregated field, fill out the "New field" form below.</p>' .
-        '<p>To remove a previously defined field, simply delete its name.</p>' .
+        '<p>To add a new aggregated field, click the "Add new field" button and then fill out the form.</p>' .
+        '<p>To remove a previously defined field, click the "Remove field" button.</p>' .
         '<p>You can also change the names or contained fields of existing aggregated fields.</p>'),
     );
+    if (isset($this->changes)) {
+      $form['description']['#markup'] .= '<div class="messages warning">All changes in the form will not be saved until the <em>Save configuration</em> button at the form bottom is clicked.</div>';
+    }
+    $form['fields']['#prefix'] = '<div id="search-api-alter-add-fulltext-field-settings">';
+    $form['fields']['#suffix'] = '</div>';
     foreach ($additional as $name => $field) {
       $form['fields'][$name] = array(
         '#type' => 'fieldset',
@@ -40,6 +41,7 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
         '#type' => 'textfield',
         '#title' => t('New field name'),
         '#default_value' => $field['name'],
+        '#required' => TRUE,
       );
       $form['fields'][$name]['fields'] = array(
         '#type' => 'checkboxes',
@@ -47,8 +49,34 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
         '#options' => $field_options,
         '#default_value' => $field['fields'],
         '#attributes' => array('class' => array('search-api-alter-add-fulltext-fields')),
+        '#required' => TRUE,
+      );
+      $form['fields'][$name]['actions'] = array(
+        '#type' => 'actions',
+        'remove' => array(
+          '#type' => 'submit',
+          '#value' => t('Remove field'),
+          '#submit' => array('_search_api_add_fulltext_field_submit'),
+          '#limit_validation_errors' => array(),
+          '#name' => 'search_api_add_fulltext_remove_' . $name,
+          '#ajax' => array(
+            'callback' => '_search_api_add_fulltext_field_ajax',
+            'wrapper' => 'search-api-alter-add-fulltext-field-settings',
+          ),
+        ),
       );
     }
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['add_field'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add new field'),
+      '#submit' => array('_search_api_add_fulltext_field_submit'),
+      '#limit_validation_errors' => array(),
+      '#ajax' => array(
+        'callback' => '_search_api_add_fulltext_field_ajax',
+        'wrapper' => 'search-api-alter-add-fulltext-field-settings',
+      ),
+    );
     return $form;
   }
 
@@ -147,4 +175,39 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
     return t('A fulltext aggregation of the following fields: @fields.', array('@fields' => implode(', ', $fields)));
   }
 
+  /**
+   * Submit helper callback for buttons in the callback's configuration form.
+   */
+  public function formButtonSubmit(array $form, array &$form_state) {
+    $button_name = $form_state['triggering_element']['#name'];
+    if ($button_name == 'op') {
+      for ($i = 1; isset($this->options['fields']['search_api_fulltext_' . $i]); ++$i) {
+      }
+      $this->options['fields']['search_api_fulltext_' . $i] = array(
+        'name' => '',
+        'fields' => $form_state['index']->getFulltextFields(),
+      );
+    }
+    else {
+      $field = substr($button_name, 31);
+      unset($this->options['fields'][$field]);
+    }
+    $form_state['rebuild'] = TRUE;
+    $this->changes = TRUE;
+  }
+
+}
+
+/**
+ * Submit function for buttons in the callback's configuration form.
+ */
+function _search_api_add_fulltext_field_submit(array $form, array &$form_state) {
+  $form_state['callbacks']['search_api_alter_add_fulltext']->formButtonSubmit($form, $form_state);
+}
+
+/**
+ * AJAX submit function for buttons in the callback's configuration form.
+ */
+function _search_api_add_fulltext_field_ajax(array $form, array &$form_state) {
+  return $form['callbacks']['settings']['search_api_alter_add_fulltext']['fields'];
 }
