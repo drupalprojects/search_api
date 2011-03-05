@@ -992,8 +992,12 @@ class SearchApiDbService extends SearchApiAbstractService {
    */
   protected function getFacets(SearchApiQueryInterface $query, SelectQueryInterface $db_query) {
     // We only need the id field, not the score.
-    if (count($db_query->getFields()) != 1) {
-      throw new SearchApiException('Doch nicht.');//DEBUG
+    $fields = &$db_query->getFields();
+    unset($fields['score']);
+    if (count($fields) != 1 || !isset($fields['item_id'])) {
+      $this->warnings[] = t('Error while adding facets: only "item_id" field should be used, used are: @fields.',
+          array('@fields' => implode(', ', array_keys($fields))));
+      return array();
     }
     $expressions = &$db_query->getExpressions();
     $expressions = array();
