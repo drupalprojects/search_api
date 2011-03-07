@@ -3,18 +3,16 @@ Search API
 ----------
 
 This module provides a framework for easily creating searches on any entity
-known to Drupal, using any kind of search engine. The module on its own is
-pretty much useless and needs at least another module that defines an actual
-search backend (called "service class"). Its use lies primarily in enabling
-developers to easily create new service classes, while this module takes care of
-all generic tasks. It also enables site administrators to seperate the
-definition of indexed content from the search server it lies on, thus enabling
-almost complete backend-independence.
+known to Drupal, using any kind of search engine. For site administrators, it is
+a great alternative to other search solutions, since it already incorporates
+facetting support and the ability to use the Views module for displaying search
+results, filters, etc. Also, with the Apache Solr integration [1], a high-performance
+search engine is available for use with the Search API.
 
+If you need help with the module, please post to the project's issue queue [2].
 
-If you need help with the module, please post to the project's issue queue [1].
-
-[1] http://drupal.org/project/issues/search_api
+[1] http://drupal.org/project/search_api_solr
+[2] http://drupal.org/project/issues/search_api
 
 
 Content:
@@ -181,6 +179,12 @@ Information for developers
  | searchable with the Search API, your module will need to implement
  | hook_entity_property_info() in addition to the normal hook_entity_info().
  | hook_entity_property_info() is documented in the entity module.
+ | For custom field types to be available for indexing, provide a
+ | "property_type" key in hook_field_info(), and optionally a callback at the
+ | "property_callbacks" key.
+ | Both processes are explained in [1].
+ |
+ | [1] http://drupal.org/node/1021466
 
 Apart from improving the module itself, developers can extend search
 capabilities provided by the Search API by providing implementations for one (or
@@ -303,11 +307,11 @@ Included components
   * Search pages
     This module lets you create simple search pages for indexes.
   * Search views
-    This integrates the Search API with the Views module [2], enabling the user
+    This integrates the Search API with the Views module [1], enabling the user
     to create views which display search results from any Search API index.
   * Search facets
     For service classes supporting this feature (e.g. Solr search), this module
     automatically provides configurable facet blocks on pages that execute
     a search query.
     
-[2] http://drupal.org/project/views
+[1] http://drupal.org/project/views

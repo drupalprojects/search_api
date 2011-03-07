@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1083828 by drunken monkey: Add documentation on indexing custom data.
 - #1081244 by drunken monkey: Debug line still contained in database backend.
 
 Search API 1.0, Beta 6 (03/04/2011):
