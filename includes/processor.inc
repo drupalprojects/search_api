@@ -165,7 +165,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   public function preprocessSearchQuery(SearchApiQuery $query) {
     $keys = &$query->getKeys();
     $this->processKeys($keys);
-    $filter = &$query->getFilter();
+    $filter = $query->getFilter();
     $filters = &$filter->getFilters();
     $this->processFilters($filters);
   }
