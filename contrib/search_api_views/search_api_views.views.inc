@@ -55,6 +55,8 @@ function search_api_views_views_data() {
         // Now look at all properties.
         foreach ($wrapper as $property => $value) {
           $info = $value->info();
+          // Some fields of contrib entities might have incomplete definitions.
+          $info += array('label' => $key);
           $type = $type_prefix . $info['type'] . $type_suffix;
           $inner_type = search_api_extract_inner_type($info['type']);
           if ($inner_type == 'token') {

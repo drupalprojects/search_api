@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1081666 by danielnolde: Fixed PHP notices when property labels are missing.
 
 Search API 1.0, Beta 7 (03/08/2011):
 ------------------------------------
