@@ -589,7 +589,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
   }
   // Add facet fields to query.
   $index_id = $query->getIndex()->machine_name;
-  $facets = search_api_facet_load_multiple(search_api_facets_by_block_status(), array('index_id' => $index_id));
+  $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index_id, 'enabled' => TRUE));
   $fields = array();
   // Save the active facets for later retrieval when generating blocks.
   $active = &drupal_static(__FUNCTION__, array());
@@ -787,32 +787,6 @@ function search_api_facet_load($id, $reset = FALSE) {
  */
 function search_api_facet_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('search_api_facet', $ids, $conditions, $reset);
-}
-
-/**
- * Return the deltas of facet blocks with the specified status.
- *
- * @param $status
- *   The {block}.status to search for (1 for enabled, 0 for disabled).
- * @param $reset
- *   Whether to reset the internal cache.
- *
- * @return array
- *   The deltas of all search facet blocks with the specified status.
- */
-function search_api_facets_by_block_status($status = 1, $reset = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
-  if (!isset($cache[$status]) || $reset) {
-    global $theme;
-    $cache[$status] = db_select('block', 'b')
-    ->fields('b', array('delta'))
-    ->condition('module', 'search_api_facets')
-    ->condition('theme', $theme)
-    ->condition('status', $status)
-    ->execute()
-    ->fetchCol();
-  }
-  return $cache[$status];
 }
 
 /**
