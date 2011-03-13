@@ -1497,7 +1497,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       'add' => array(
         '#type' => 'submit',
         '#value' => t('Add fields'),
-      )
+      ),
     );
   }
 
@@ -1586,7 +1586,17 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             $nesting_levels[$key . ':'] = search_api_list_nesting_level($info['type']);
           }
           else {
-            $additional[$key] = $prefix_name . $info['label'];
+            $name = $prefix_name . $info['label'];
+            // Add machine names to discern fields with identical labels.
+            if (isset($used_names[$name])) {
+              if ($used_names[$name] !== FALSE) {
+                $additional[$used_names[$name]] .= ' [' . $used_names[$name] . ']';
+                $used_names[$name] = FALSE;
+              }
+              $name .= ' [' . $key . ']';
+            }
+            $additional[$key] = $name;
+            $used_names[$name] = $key;
           }
         }
       }

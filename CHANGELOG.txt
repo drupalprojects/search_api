@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1091074 by drunken monkey, ygerasimov: Added machine names to "related
+  entities" list.
 - #1066278 by ygerasimov, drunken monkey: Removed
   search_api_facets_by_block_status().
 - #1081666 by danielnolde: Fixed PHP notices when property labels are missing.
