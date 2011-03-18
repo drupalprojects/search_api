@@ -631,7 +631,7 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
       if ($filter == '!') {
         $query->condition($field, NULL);
       }
-      elseif ($filter[0] = '"') {
+      elseif ($filter[0] == '"') {
         $filter = substr($filter, 1, -1);
         if (strlen($filter)) {
           $query->condition($field, $filter);
