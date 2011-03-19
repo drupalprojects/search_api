@@ -8,15 +8,15 @@ Search API 1.0, dev (xx/xx/xxxx):
 
 Search API 1.0, Beta 7 (03/08/2011):
 ------------------------------------
-- #1083828 by drunken monkey: Add documentation on indexing custom data.
-- #1081244 by drunken monkey: Debug line still contained in database backend.
+- #1083828 by drunken monkey: Added documentation on indexing custom data.
+- #1081244 by drunken monkey: Fixed debug line still contained in DB backend.
 
 Search API 1.0, Beta 6 (03/04/2011):
 ------------------------------------
 API changes:
 - #1075810 by drunken monkey: Added API function for marking entities as dirty.
-- #1043456 by drunken monkey: Form validation/submission for plugins.
-- #1048032 by drunken monkey: Add a hook for altering the indexed items.
+- #1043456 by drunken monkey: Added form validation/submission for plugins.
+- #1048032 by drunken monkey: Added a hook for altering the indexed items.
 
 Others:
 - #1068334 by drunken monkey: Added a data alteration for indexing the viewed
