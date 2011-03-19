@@ -1409,6 +1409,8 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
 
   // An array of option arrays for types, keyed by nesting level.
   $types = array(0 => search_api_field_types());
+  $fulltext_type = array(0 => 'text');
+  $entity_types = entity_get_info();
   $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
   $form_state['index'] = $index;
@@ -1448,20 +1450,33 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
         // We use the singular name for list types, since the user usually doesn't care about the nesting level.
         $types[$level][$type_prefix . $type . $type_suffix] = $name;
       }
+      $fulltext_type[$level] = $type_prefix . 'text' . $type_suffix;
     }
+    $form['fields'][$key]['indexed'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => $info['indexed'],
+    );
+    $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
     $form['fields'][$key]['type'] = array(
       '#type' => 'select',
       '#options' => $types[$level],
       '#default_value' => $info['type'],
+      '#states' => array(
+        'visible' => array(
+          $css_key . '-indexed' => array('checked' => TRUE),
+        ),
+      ),
     );
     $form['fields'][$key]['boost'] = array(
       '#type' => 'select',
       '#options' => $boosts,
       '#default_value' => $info['boost'],
-    );
-    $form['fields'][$key]['indexed'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => $info['indexed'],
+      '#states' => array(
+        'visible' => array(
+          $css_key . '-indexed' => array('checked' => TRUE),
+          $css_key . '-type' => array('value' => $fulltext_type[$level]),
+        ),
+      ),
     );
     if ($key == 'search_api_language') {
       // Is treated specially to always index the language.
@@ -1619,7 +1634,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
-  $header = array(t('Field'), t('Type'), t('Boost'), t('Indexed'));
+  $header = array(t('Field'), t('Indexed'), t('Type'), t('Boost'));
 
   $rows = array();
   foreach (element_children($form['fields']) as $name) {
