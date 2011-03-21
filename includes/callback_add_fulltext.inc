@@ -81,6 +81,9 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
   }
 
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    if (empty($values['fields'])) {
+      return;
+    }
     foreach ($values['fields'] as $name => $field) {
       if ($field['name'] && !$field['fields']) {
         form_error($form['fields'][$name]['fields'], t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.'));
@@ -89,6 +92,9 @@ class SearchApiAlterAddFulltext extends SearchApiAbstractAlterCallback {
   }
 
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+    if (empty($values['fields'])) {
+      return;
+    }
     foreach ($values['fields'] as $name => $field) {
       if (!$field['name']) {
         unset($values['fields'][$name]);

@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1081084 by drunken monkey: Fixed notices in add_fulltext_field alteration.
 - #1091074 by drunken monkey, ygerasimov: Added machine names to "related
   entities" list.
 - #1066278 by ygerasimov, drunken monkey: Removed
