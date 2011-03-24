@@ -156,9 +156,16 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected function addResults(array $results, $view) {
     // Maybe the service class or a postprocessor already set the entities.
     foreach ($results as $id => $result) {
-      if (!empty($result['entity']) && ($fields = $this->extractFields($result['entity']))) {
-        $view->result[$id] = $fields;
-        $view->result[$id]['search_api_relevance'] = $result['score'];
+      if (!empty($result['entity'])) {
+        $wrapper = entity_metadata_wrapper($this->index->entity_type, $result['entity']);
+        $fields = $this->extractFields($wrapper, $this->fields);
+        if ($fields) {
+          $view->result[$id] = $fields;
+          $view->result[$id]['search_api_relevance'] = $result['score'];
+        }
+        else {
+          $ids[] = $id;
+        }
       }
       else {
         $ids[] = $id;
