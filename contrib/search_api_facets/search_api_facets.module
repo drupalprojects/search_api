@@ -530,12 +530,25 @@ function search_api_facets_block_current_search_view() {
     foreach ($filters as $field => $field_filters) {
       $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'field' => $field));
       if (!$facets) {
-        continue;
-      }
-      $facet = reset($facets);
-      if (empty($facet->options['type'])) {
+        $field_options = isset($index->options['fields'][$field]) ? $index->options['fields'][$field] : array();
+        $field_options += array(
+          'name' => $field,
+          'type' => 'string',
+        );
+        $facet = new SearchApiFacet(array(
+          'name' => $field_options['name'],
+          'index_id' => $index->machine_name,
+          'field' => $field,
+          'options' => array(),
+        ));
         _search_api_facets_refresh_type($facet, $facet->options);
-        $facet->save();
+      }
+      else {
+        $facet = reset($facets);
+        if (empty($facet->options['type'])) {
+          _search_api_facets_refresh_type($facet, $facet->options);
+          $facet->save();
+        }
       }
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();

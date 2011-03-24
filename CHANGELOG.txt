@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1104056 by drunken monkey: Added "Current search" support for non-facet
+  filters.
 - #1103814 by drunken monkey: Fixed missing argument for extractFields().
 - #1081084 by drunken monkey: Fixed notices in add_fulltext_field alteration.
 - #1091074 by drunken monkey, ygerasimov: Added machine names to "related
