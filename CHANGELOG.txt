@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1105704 by drunken monkey: Fixed exposed sorts always sort on 'top' sort.
 - #1104056 by drunken monkey: Added "Current search" support for non-facet
   filters.
 - #1103814 by drunken monkey: Fixed missing argument for extractFields().
