@@ -54,20 +54,16 @@ function search_api_views_views_data() {
         }
         // Now look at all properties.
         foreach ($wrapper as $property => $value) {
+          $field = $prefix . $property;
+          $key = _search_api_views_field_identifier($field, $table);
           $info = $value->info();
           // Some fields of contrib entities might have incomplete definitions.
-          $info += array('label' => $key);
+          $info += array('label' => $field);
           $type = $type_prefix . $info['type'] . $type_suffix;
           $inner_type = search_api_extract_inner_type($info['type']);
           if ($inner_type == 'token') {
             $inner_type = 'string';
             $type = search_api_nest_type('string', $type);
-          }
-          $key = $prefix . $property;
-          if ($key == 'table') {
-            // We can't add a "table" field since that would overwrite the table
-            // information. For the moment, we just don't add such a field.
-            continue;
           }
           if (isset($types[$inner_type])) {
             if ($value->optionsList('view')) {
@@ -79,6 +75,9 @@ function search_api_views_views_data() {
               $table[$key]['group'] = $prefix_name;
             }
             $table[$key]['title'] = $info['label'];
+            if ($key != $field) {
+              $table[$key]['real field'] = $field;
+            }
             $table[$key]['help'] = empty($info['description']) ? t('(No information available)') : $info['description'];
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
@@ -87,23 +86,23 @@ function search_api_views_views_data() {
             }
 
             // If field is indexed, also add additional handlers.
-            if (!empty($fields[$key]['indexed'])) {
+            if (!empty($fields[$field]['indexed'])) {
               // Discern between original and indexed type
               $table[$key]['field']['type'] = $table[$key]['type'];
-              $table[$key]['type'] = $fields[$key]['type'];
-              $table[$key] += _search_api_views_add_handlers($fields[$key], $value);
+              $table[$key]['type'] = $fields[$field]['type'];
+              $table[$key] += _search_api_views_add_handlers($fields[$field], $value);
               if (!empty($table[$key]['sort'])) {
                 $table[$key]['field']['click sortable'] = TRUE;
               }
             }
-            unset($fields[$key]);
+            unset($fields[$field]);
           }
           elseif ($depth < $max_depth) {
             // Visit this entity/struct in a later iteration.
-            $key .= ':';
-            $wrappers[$key] = $value;
-            $prefix_names[$key] = $prefix_name ? $prefix_name . ' » ' . $info['label'] : $info['label'];
-            $nesting_levels[$key] = search_api_list_nesting_level($type);
+            $field .= ':';
+            $wrappers[$field] = $value;
+            $prefix_names[$field] = $prefix_name ? $prefix_name . ' » ' . $info['label'] : $info['label'];
+            $nesting_levels[$field] = search_api_list_nesting_level($type);
           }
         }
         unset($wrappers[$prefix]);
@@ -135,13 +134,14 @@ function search_api_views_views_data() {
           }
         }
       }
+      $id = _search_api_views_field_identifier($key, $table);
       if ($group) {
-        $table[$key]['group'] = $group;
+        $table[$id]['group'] = $group;
       }
-      $table[$key]['title'] = $name;
-      $table[$key]['help'] = empty($info['description']) ? NULL : $info['description'];
-      $table[$key]['type'] = $field['type'];
-      $table[$key] += _search_api_views_add_handlers($field, $tmp);
+      $table[$id]['title'] = $name;
+      $table[$id]['help'] = empty($info['description']) ? NULL : $info['description'];
+      $table[$id]['type'] = $field['type'];
+      $table[$id] += _search_api_views_add_handlers($field, $tmp);
     }
 
     // Special handlers
@@ -166,6 +166,21 @@ function search_api_views_views_data() {
     $table['search_api_views_fulltext']['argument']['handler'] = 'SearchApiViewsHandlerArgumentFulltext';
   }
   return $data;
+}
+
+/**
+ * Helper function for creating valid Views field identifiers out of Search API field names.
+ *
+ * @return string
+ *   A valid Views field identifier that isn't yet used as a key in $table.
+ */
+function _search_api_views_field_identifier($field, array $table) {
+  $key = $base = preg_replace('/[^a-zA-Z0-9]+/S', '_', $field);
+  $i = 0;
+  while (isset($table[$key])) {
+    $key = $base . '_' . ++$i;
+  }
+  return $key;
 }
 
 /**
