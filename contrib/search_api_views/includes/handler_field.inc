@@ -44,8 +44,8 @@ class SearchApiViewsHandlerField extends views_handler_field {
   public function option_definition() {
     $options = parent::option_definition();
     $options['link_to_entity'] = array('default' => FALSE);
-    $options['list']['mode'] = array('default' => 'collapse');
-    $options['list']['glue'] = array('default' => ', ');
+    $options['list']['contains']['mode'] = array('default' => 'collapse');
+    $options['list']['contains']['glue'] = array('default' => ', ');
     return $options;
   }
 
@@ -129,10 +129,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   public function render(array $values) {
     $value = $values[$this->real_field];
     if (is_array($value)) {
-      $value = $this->renderArray($value);
-    }
-    else {
-      $value = $this->renderValue($value);
+      return $this->renderArray($value, $values);
     }
     return $this->renderLink($value, $values);
   }
@@ -140,15 +137,15 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render a list of values.
    */
-  protected function renderArray($value) {
+  protected function renderArray($value, array $values) {
     if (isset($this->options['list']['mode'])) {
       if ($this->options['list']['mode'] == 'first') {
         $value = count($value) ? array_shift($value) : NULL;
         if (is_array($value)) {
-          return $this->renderArray($value);
+          return $this->renderLink($value, $values);
         }
         elseif (isset($value)) {
-          return $this->renderValue($value);
+          return $this->renderLink($value, $values);
         }
         return NULL;
       }
@@ -158,7 +155,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
     }
     $vs = array();
     foreach ($value as $v) {
-      $vs[] = is_array($v) ? $this->renderArray($v) : $this->renderValue($v);
+      $vs[] = is_array($v) ? $this->renderArray($v, $values) : $this->renderLink($v, $values);
     }
     $glue = isset($this->options['list']['glue']) ? $this->options['list']['glue'] : ', ';
     return implode($glue, $vs);
@@ -169,13 +166,14 @@ class SearchApiViewsHandlerField extends views_handler_field {
    */
   // @todo Let e.g. author:name be linked to author instead
   protected function renderLink($value, array $values) {
+    $render = $this->renderValue($value, $values);
     if (!$this->options['link_to_entity']) {
-      return $value;
+      return $render;
     }
     $entity = $values['entity'];
     $type = isset($values['search_api_views_entity_type']) ? $values['search_api_views_entity_type'] : $this->query->getIndex()->entity_type;
     $url = entity_uri($type, $entity);
-    return l($value, $url['path'], array('html' => TRUE) + $url['options']);
+    return l($render, $url['path'], array('html' => TRUE) + $url['options']);
   }
 
   /**

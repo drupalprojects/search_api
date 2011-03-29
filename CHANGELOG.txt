@@ -1,5 +1,9 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+API changes:
+- #1109130 by drunken monkey: Added better structure for Views field rendering.
+
+Others:
 - #1018384 by drunken monkey: Fixed Views field names to not contain colons.
 - #1105704 by drunken monkey: Fixed exposed sorts always sort on 'top' sort.
 - #1104056 by drunken monkey: Added "Current search" support for non-facet
