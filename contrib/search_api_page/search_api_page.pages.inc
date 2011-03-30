@@ -175,7 +175,7 @@ function theme_search_api_page_result(array $variables) {
     $text = '';
     $length = 0;
     foreach ($fields as $field) {
-      if (search_api_is_list_type($field['type'])) {
+      if (search_api_is_list_type($field['type']) || !isset($field['value'])) {
         continue;
       }
       $val_length = drupal_strlen($field['value']);
