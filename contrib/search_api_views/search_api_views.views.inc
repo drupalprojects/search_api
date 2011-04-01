@@ -5,6 +5,7 @@
  */
 function search_api_views_views_data() {
   $data = array();
+  $entity_types = entity_get_info();
   foreach (search_api_index_load_multiple(FALSE) as $index) {
     // Base data
     $key = 'search_api_index_' . $index->machine_name;
@@ -65,8 +66,9 @@ function search_api_views_views_data() {
             $inner_type = 'string';
             $type = search_api_nest_type('string', $type);
           }
-          if (isset($types[$inner_type])) {
-            if ($value->optionsList('view')) {
+
+          if (isset($types[$inner_type]) || isset($entity_types[$inner_type])) {
+            if (isset($types[$inner_type]) && $value->optionsList('view')) {
               $inner_type = 'options';
               $type = search_api_nest_type('options', $type);
             }
@@ -81,6 +83,7 @@ function search_api_views_views_data() {
             $table[$key]['help'] = empty($info['description']) ? t('(No information available)') : $info['description'];
             $table[$key]['type'] = $type;
             $table[$key]['field']['handler'] = _search_api_views_field_handler($type, $inner_type);
+            $table[$key]['field']['type'] = $type;
             if ($inner_type == 'options') {
               $table[$key]['field']['options'] = $value->optionsList('view');
             }
@@ -97,7 +100,7 @@ function search_api_views_views_data() {
             }
             unset($fields[$field]);
           }
-          elseif ($depth < $max_depth) {
+          if (!isset($types[$inner_type]) && $depth < $max_depth) {
             // Visit this entity/struct in a later iteration.
             $field .= ':';
             $wrappers[$field] = $value;
@@ -198,6 +201,9 @@ function _search_api_views_field_handler($type, $inner_type) {
       return 'SearchApiViewsHandlerFieldOptions';
 
     default:
+      if (entity_get_info($inner_type)) {
+        return 'SearchApiViewsHandlerFieldEntity';
+      }
       return 'SearchApiViewsHandlerField';
   }
 }

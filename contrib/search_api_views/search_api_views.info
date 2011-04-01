@@ -15,6 +15,7 @@ files[] = includes/handler_field.inc
 files[] = includes/handler_field_boolean.inc
 files[] = includes/handler_field_date.inc
 files[] = includes/handler_field_duration.inc
+files[] = includes/handler_field_entity.inc
 files[] = includes/handler_field_options.inc
 files[] = includes/handler_filter.inc
 files[] = includes/handler_filter_boolean.inc

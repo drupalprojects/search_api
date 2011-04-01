@@ -1,4 +1,3 @@
-
 Search API
 ----------
 
@@ -145,7 +144,7 @@ available for searches. Select the "Fulltext" data type for fields which you
 want search for keywords, and other data types when you want to use the field
 for filtering (e.g., as facets). The "Item language" field will always be
 indexed as it contains important information for processors and hooks.
-You can also add fields of related entities here, via the "Add related entity"
+You can also add fields of related entities here, via the "Add related fields"
 form at the bottom of the page. For instance, you might want to index the
 author's username to the indexed data of a node, and you need to add the "Body"
 entity to the node when you want to index the actual text it contains.
@@ -280,7 +279,7 @@ Included components
   * Bundle filter
     Enables the admin to prevent entities from being indexed based on their
     bundle (content type for nodes, vocabulary for taxonomy terms, etc.).
-  * Complete entity view 
+  * Complete entity view
     Adds a field containing the whole HTML content of the entity as it is viewed
     on the site. The view mode used can be selected.
     Note, however, that this might not work for entities of all types. All core
@@ -301,7 +300,7 @@ Included components
     This processor allows you to specify how indexed fulltext content is split
     into seperate tokens – which characters are ignored and which treated as
     white-space that seperates words.
-    
+
 - Additional modules
 
   * Search pages
@@ -313,5 +312,5 @@ Included components
     For service classes supporting this feature (e.g. Solr search), this module
     automatically provides configurable facet blocks on pages that execute
     a search query.
-    
+
 [1] http://drupal.org/project/views

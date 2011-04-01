@@ -1440,44 +1440,77 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
         '#value' => $info['description'],
       );
     }
-    // Determine the correct type options (i.e., with the correct nesting level).
-    $level = search_api_list_nesting_level($info['type']);
-    if (empty($types[$level])) {
-      $type_prefix = str_repeat('list<', $level);
-      $type_suffix = str_repeat('>', $level);
-      $types[$level] = array();
-      foreach ($types[0] as $type => $name) {
-        // We use the singular name for list types, since the user usually doesn't care about the nesting level.
-        $types[$level][$type_prefix . $type . $type_suffix] = $name;
-      }
-      $fulltext_type[$level] = $type_prefix . 'text' . $type_suffix;
-    }
     $form['fields'][$key]['indexed'] = array(
       '#type' => 'checkbox',
       '#default_value' => $info['indexed'],
     );
-    $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
-    $form['fields'][$key]['type'] = array(
-      '#type' => 'select',
-      '#options' => $types[$level],
-      '#default_value' => $info['type'],
-      '#states' => array(
-        'visible' => array(
-          $css_key . '-indexed' => array('checked' => TRUE),
+    $inner_type = search_api_extract_inner_type($info['type']);
+    if (isset($types[0][$inner_type])) {
+      // Determine the correct type options (i.e., with the correct nesting level).
+      $level = search_api_list_nesting_level($info['type']);
+      if (empty($types[$level])) {
+        $type_prefix = str_repeat('list<', $level);
+        $type_suffix = str_repeat('>', $level);
+        $types[$level] = array();
+        foreach ($types[0] as $type => $name) {
+          // We use the singular name for list types, since the user usually doesn't care about the nesting level.
+          $types[$level][$type_prefix . $type . $type_suffix] = $name;
+        }
+        $fulltext_type[$level] = $type_prefix . 'text' . $type_suffix;
+      }
+      $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
+      $form['fields'][$key]['type'] = array(
+        '#type' => 'select',
+        '#options' => $types[$level],
+        '#default_value' => $info['type'],
+        '#states' => array(
+          'visible' => array(
+            $css_key . '-indexed' => array('checked' => TRUE),
+          ),
         ),
-      ),
-    );
-    $form['fields'][$key]['boost'] = array(
-      '#type' => 'select',
-      '#options' => $boosts,
-      '#default_value' => $info['boost'],
-      '#states' => array(
-        'visible' => array(
-          $css_key . '-indexed' => array('checked' => TRUE),
-          $css_key . '-type' => array('value' => $fulltext_type[$level]),
+      );
+      $form['fields'][$key]['boost'] = array(
+        '#type' => 'select',
+        '#options' => $boosts,
+        '#default_value' => $info['boost'],
+        '#states' => array(
+          'visible' => array(
+            $css_key . '-indexed' => array('checked' => TRUE),
+            $css_key . '-type' => array('value' => $fulltext_type[$level]),
+          ),
         ),
-      ),
-    );
+      );
+    }
+    else {
+      // This is an entity.
+      if (!isset($entity_description_added)) {
+        $form['description']['#description'] .= '<p>' .
+            t('Note that indexing an entity-valued field (like %field, which has type %type) directly will only index the entity ID. ' .
+            'This will be used for filtering and also sorting (which might not be what you expect). ' .
+            'The entity label will usually be used when displaying the field, though. ' .
+            'Use the "Add related fields" option at the bottom for indexing other fields of related entities.',
+            array('%field' => $info['name'], '%type' => $entity_types[$inner_type]['label'])) . '</p>';
+        $entity_description_added = TRUE;
+      }
+      $form['fields'][$key]['type'] = array(
+        '#type' => 'value',
+        '#value' => search_api_nest_type('integer', $info['type']),
+      );
+      $form['fields'][$key]['entity_type'] = array(
+        '#type' => 'value',
+        '#value' => search_api_extract_inner_type($info['type']),
+      );
+      $form['fields'][$key]['type_name'] = array(
+        '#markup' => check_plain($entity_types[$inner_type]['label']),
+      );
+      $form['fields'][$key]['boost'] = array(
+        '#type' => 'value',
+        '#value' => $info['boost'],
+      );
+      $form['fields'][$key]['boost_text'] = array(
+        '#markup' => '&nbsp;',
+      );
+    }
     if ($key == 'search_api_language') {
       // Is treated specially to always index the language.
       $form['fields'][$key]['type']['#default_value'] = 'string';
@@ -1498,7 +1531,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
     reset($additional);
     $form['additional'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Add related entity'),
+      '#title' => t('Add related fields'),
       '#description' => t('There are entities related to entities of this type. ' .
           'You can add their fields to the list above so they can be indexed too.') . '<br />',
       '#collapsible' => TRUE,
@@ -1527,6 +1560,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
 function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapper $wrapper) {
   $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
   $additional = array();
+  $entity_types = entity_get_info();
 
   // First we need all already added prefixes.
   $added = array();
@@ -1577,11 +1611,14 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         }
         $info['type'] = $type_prefix . $info['type'] . $type_suffix;
         $key = $prefix . $property;
-        if (isset($types[$type])) {
+        if (isset($types[$type]) || isset($entity_types[$type])) {
           if (isset($fields[$key])) {
             $fields[$key]['name'] = $prefix_name . $info['label'];
             $fields[$key]['description'] = empty($info['description']) ? NULL : $info['description'];
             $flat[$key] = $fields[$key];
+            if (isset($entity_types[$type])) {
+              $flat[$key]['type'] = $info['type'];
+            }
           }
           else {
             $flat[$key] = array(
@@ -1593,7 +1630,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             );
           }
         }
-        else {
+        if (empty($types[$type])) {
           if (isset($added[$key])) {
             // Visit this entity/struct in a later iteration.
             $wrappers[$key . ':'] = $value;
@@ -1650,7 +1687,7 @@ function theme_search_api_admin_fields_table($variables) {
     else {
       $rows[] = array(
         'data' => $row,
-        'title' => $form['fields'][$name]['description']['#value'],
+        'title' => strip_tags($form['fields'][$name]['description']['#value']),
       );
     }
   }

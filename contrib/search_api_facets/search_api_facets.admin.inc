@@ -82,12 +82,18 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
       $empty_status = ' ';
     }
     $types = search_api_field_types();
+    $entity_types = entity_get_info();
     foreach ($index->options['fields'] as $key => $field) {
       if (!$field['indexed']) {
         continue;
       }
-      $type = search_api_extract_inner_type($field['type']);
-      $type = isset($types[$type]) ? $types[$type] : $type;
+      if (isset($field['entity_type']) && isset($entity_types[$field['entity_type']]['label'])) {
+        $type = $entity_types[$field['entity_type']]['label'];
+      }
+      else {
+        $type = search_api_extract_inner_type($field['type']);
+        $type = isset($types[$type]) ? $types[$type] : $type;
+      }
       if (empty($facets[$key])) {
         $facets[$key][] = new SearchApiFacet(array(
           'index_id' => $index->machine_name,

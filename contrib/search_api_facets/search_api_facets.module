@@ -328,6 +328,7 @@ function search_api_facets_block_view($delta = '') {
   if (empty($results['search_api_facets'][$delta]) && (empty($filters) || !$options['show_active'])) {
     return;
   }
+  $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
 
   // Get type information for later name-generation.
   if (empty($options['type'])) {
@@ -337,9 +338,34 @@ function search_api_facets_block_view($delta = '') {
   }
   $type = $options['type'];
   $values = isset($options['options']) ? $options['options'] : array();
+  if (!$values && isset($options['entity_type']) && entity_get_info($options['entity_type'])) {
+    $ids = array();
+    foreach ($terms as $term) {
+      if ($term['filter'][0] == '"') {
+        $ids[] = substr($term['filter'], 1, -1);
+      }
+    }
+    foreach ($filters as $filter) {
+      if ($filter[0] == '"') {
+        $ids[] = substr($filter, 1, -1);
+      }
+    }
+    if ($ids) {
+      $entities = entity_load($options['entity_type'], $ids);
+      if ($entities) {
+        $values = array();
+        foreach ($entities as $id => $entity) {
+          $label = entity_label($options['entity_type'], $entity);
+          if ($label) {
+            $values[$id] = $label;
+          }
+        }
+        $facet->options['options'] = $values;
+      }
+    }
+  }
 
   // Process available facet terms.
-  $terms = empty($results['search_api_facets'][$delta]) ? array() : $results['search_api_facets'][$delta];
   foreach ($terms as $i => &$term) {
     $term = (object) $term;
     $term->name = _search_api_create_filter_name($term->filter, $type, $values);
@@ -553,6 +579,27 @@ function search_api_facets_block_current_search_view() {
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();
       $field_name = $options['field_name'] ? $facet->name : '';
+
+      if (!$values && isset($facet->options['entity_type'])) {
+        $ids = array();
+        foreach ($field_filters as $i => $v) {
+          if ($v[0] == '"') {
+            $ids[] = substr($v, 1, -1);
+          }
+        }
+        if ($ids) {
+          $entities = entity_load($facet->options['entity_type'], $ids);
+          if ($entities) {
+            $values = array();
+            foreach ($entities as $id => $entity) {
+              $label = entity_label($facet->options['entity_type'], $entity);
+              if ($label) {
+                $values[$id] = $label;
+              }
+            }
+          }
+        }
+      }
 
       $theme_suffix  = '';
       $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->entity_type);
@@ -866,11 +913,18 @@ function search_api_facets_get_filters(SearchApiQueryInterface $query) {
  * @param stdClass $facet
  *   The facet whose type information should be refreshed.
  * @param array $options
- *   An array for which 'type' and, if applicable, 'options' will be set.
+ *   An array for which 'type' and, if applicable, 'options' and 'entity_type'
+ *   will be set.
  */
 function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options) {
+  unset($options['options'], $options['entity_type']);
   $index = search_api_index_load($facet->index_id);
-  $type = $index->options['fields'][$facet->field]['type'];
+  $field_info = $index->options['fields'][$facet->field];
+  $type = $field_info['type'];
+  if (isset($field_info['entity_type']) && entity_get_info($field_info['entity_type'])) {
+    $options['entity_type'] = $field_info['entity_type'];
+    return;
+  }
   $options['type'] = search_api_extract_inner_type($type);
   $wrapper = $index->entityWrapper();
   foreach (explode(':', $facet->field) as $part) {
@@ -901,7 +955,7 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
   }
   if ($filter[0] == '"') {
     $filter = substr($filter, 1, -1);
-    if ($filter == '' || $filter == '*') {
+    if ($filter == '') {
       return t('any');
     }
     return _search_api_create_value_name($filter, $type, $values);
@@ -923,10 +977,12 @@ function _search_api_create_filter_name($filter, $type, array $values = array())
 }
 
 /**
- * Creates a human-readable name for a single filter value. $values is only
- * needed if $type is "options".
+ * Creates a human-readable name for a single filter value.
  */
 function _search_api_create_value_name($value, $type, array $values = array()) {
+  if (isset($values[$value])) {
+    return $values[$value];
+  }
   switch ($type) {
     case 'boolean':
       return $value ? t('true') : t('false');
@@ -935,8 +991,6 @@ function _search_api_create_value_name($value, $type, array $values = array()) {
       return format_date($value, 'short');
     case 'duration':
       return format_interval($value);
-    case 'options':
-      return empty($values[$value]) ? $value : $values[$value];
 
     default:
       // Nothing we can do about it.

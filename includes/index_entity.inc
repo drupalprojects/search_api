@@ -65,6 +65,37 @@ class SearchApiIndex extends Entity {
   public $entity_type;
 
   /**
+   * An array of options for configuring this index. The layout is as follows:
+   * - cron_limit: The maximum number of items to be indexed per cron run.
+   * - fields: An array of all known fields for this index. Keys are the field
+   *   identifiers, the values are arrays for specifying the field settings. The
+   *   structure of those arrays looks like this:
+   *   - name: The human-readable name for the field.
+   *   - indexed: Boolean indicating whether the field is indexed or not.
+   *   - type: The type set for this field. One of the types returned by
+   *     search_api_field_types().
+   *   - boost: A boost value for terms found in this field during searches.
+   *     Usually only relevant for fulltext fields.
+   *   - entity_type (optional): If set, the type of this field is really an
+   *     entity. The "type" key will then contain "integer", meaning that
+   *     servers will ignore this and merely index the entity's ID. Components
+   *     displaying this field, though, are advised to use the entity label
+   *     instead of the ID.
+   * - data_alter_callbacks: An array of all data alterations available. Keys
+   *   are the alteration identifiers, the values are arrays containing the
+   *   settings for that data alteration. The inner structure looks like this:
+   *   - status: Boolean indicating whether the data alteration is enabled.
+   *   - weight: Used for sorting the data alterations.
+   *   - settings: Alteration-specific settings, configured via the alteration's
+   *     configuration form.
+   * - processors: An array of all processors available for the index. The keys
+   *   are the processor identifiers, the values are arrays containing the
+   *   settings for that processor. The inner structure looks like this:
+   *   - status: Boolean indicating whether the processor is enabled.
+   *   - weight: Used for sorting the processors.
+   *   - settings: Processor-specific settings, configured via the processor's
+   *     configuration form.
+   *
    * @var array
    */
   public $options;
