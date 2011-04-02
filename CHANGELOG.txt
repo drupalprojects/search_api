@@ -1,5 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.0, Beta 8 (04/02/2011):
+------------------------------------
 API changes:
 - #1012878 by drunken monkey: Added a way to index an entity directly.
 - #1109130 by drunken monkey: Added better structure for Views field rendering.
