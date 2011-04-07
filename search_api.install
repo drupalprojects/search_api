@@ -322,6 +322,13 @@ function search_api_install() {
           'boost' => '1.0',
           'indexed' => 1,
         ),
+        'author' => array(
+          'name' => 'Author',
+          'type' => 'integer',
+          'entity_type' => 'user',
+          'boost' => '1.0',
+          'indexed' => 1,
+        ),
         'log' => array(
           'name' => 'Revision log message',
           'type' => 'text',
@@ -361,54 +368,6 @@ function search_api_install() {
         'search_api_fulltext' => array(
           'name' => 'Fulltext',
           'type' => 'text',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'author:uid' => array(
-          'name' => 'Author » User ID',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:name' => array(
-          'name' => 'Author » Name',
-          'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'author:mail' => array(
-          'name' => 'Author » Email',
-          'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:url' => array(
-          'name' => 'Author » URL',
-          'type' => 'uri',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:edit_url' => array(
-          'name' => 'Author » Edit URL',
-          'type' => 'uri',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:login' => array(
-          'name' => 'Author » Last login',
-          'type' => 'date',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:created' => array(
-          'name' => 'Author » Created',
-          'type' => 'date',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'author:roles' => array(
-          'name' => 'Author » User roles',
-          'type' => 'list<integer>',
           'boost' => '1.0',
           'indexed' => 1,
         ),
