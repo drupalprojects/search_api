@@ -48,11 +48,11 @@ class SearchApiViewsHandlerFieldEntity extends SearchApiViewsHandlerField {
    */
   protected function renderLink($value, array $values) {
     $render = $this->renderValue($value, $values);
-    if (!$this->options['link_to_entity']) {
+    if (!$this->options['link_to_entity'] || !is_numeric($value)) {
       return $render;
     }
     $entity = entity_load($this->entity_type, array($value));
-    if (!$entity) {
+    if (!isset($entity[$value])) {
       return $render;
     }
     $entity = $entity[$value];
@@ -71,8 +71,9 @@ class SearchApiViewsHandlerFieldEntity extends SearchApiViewsHandlerField {
    */
   protected function renderValue($value) {
     if ($this->options['format_name']) {
+      $value = (int) $value;
       $entity = entity_load($this->entity_type, array($value));
-      if ($entity) {
+      if (isset($entity[$value])) {
         $entity = $entity[$value];
         $label = entity_label($this->entity_type, $entity);
         if ($label) {
