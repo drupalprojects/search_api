@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1120850 by drunken monkey, fangel: Fixed type of related entities in nested
+  lists.
 
 Search API 1.0, Beta 8 (04/02/2011):
 ------------------------------------

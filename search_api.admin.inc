@@ -1740,6 +1740,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $prefix = $form_state['values']['additional']['field'];
   $types = search_api_field_types();
   $name_prefix = '';
+  $type_prefix = $type_suffix = '';
 
   foreach (explode(':', $prefix) as $element) {
     if (!isset($wrapper->$element)) {
@@ -1753,8 +1754,8 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
       $wrapper = $wrapper[0];
     }
     // For each nesting level, wrap the field types in an additional "list<%>".
-    $type_prefix = str_repeat('list<', $level);
-    $type_suffix = str_repeat('>', $level);
+    $type_prefix .= str_repeat('list<', $level);
+    $type_suffix .= str_repeat('>', $level);
     $name_prefix .= $wrapper_info['label'] . ' » ';
   }
   if (!$wrapper) {
