@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1109308 by drunken monkey : Added option to choose between display of field
+  or facet name in "Current search" block.
 - #1120850 by drunken monkey, fangel: Fixed type of related entities in nested
   lists.
 

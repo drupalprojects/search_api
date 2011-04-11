@@ -446,16 +446,16 @@ function search_api_facets_block_view($delta = '') {
  * Block configuration form for the "Current search" block.
  */
 function search_api_facets_block_current_search_configure() {
-  $options = variable_get('search_api_facets_current_search_options', array());
-  $options += array(
-    'field_name' => TRUE,
-    'default_true' => TRUE,
-    'ids_list' => array(),
-  );
-  $form['field_name'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display field name for active filters'),
-    '#default_value' => $options['field_name'],
+  $options = search_api_facets_current_search_options();
+  $form['label'] = array(
+    '#type' => 'select',
+    '#title' => t('Label for active filters'),
+    '#options' => array(
+      'field' => t('Field name'),
+      'facet' => t('Facet name'),
+      'none' => t('None'),
+    ),
+    '#default_value' => $options['label'],
   );
   $search_ids = variable_get('search_api_facets_search_ids', array());
   $ids = array();
@@ -499,12 +499,7 @@ function search_api_facets_block_current_search_configure() {
  * Save the configuration form for the "Current search" block.
  */
 function search_api_facets_block_current_search_save(array $edit = array()) {
-  $options = variable_get('search_api_facets_current_search_options', array());
-  $options += array(
-    'field_name' => TRUE,
-    'default_true' => TRUE,
-    'ids_list' => array(),
-  );
+  $options = search_api_facets_current_search_options();
   foreach ($options as $key => $value) {
     if (isset($edit[$key])) {
       $options[$key] = $edit[$key];
@@ -522,12 +517,7 @@ function search_api_facets_block_current_search_view() {
     return;
   }
   $theme = array();
-  $options = variable_get('search_api_facets_current_search_options', array());
-  $options += array(
-    'field_name' => TRUE,
-    'default_true' => TRUE,
-    'ids_list' => array(),
-  );
+  $options = search_api_facets_current_search_options();
   $ids_list = drupal_map_assoc($options['ids_list']);
   $params = drupal_get_query_parameters($_GET, array('q', 'page'));
   $num = count(search_api_current_search());
@@ -556,11 +546,7 @@ function search_api_facets_block_current_search_view() {
     foreach ($filters as $field => $field_filters) {
       $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'field' => $field));
       if (!$facets) {
-        $field_options = isset($index->options['fields'][$field]) ? $index->options['fields'][$field] : array();
-        $field_options += array(
-          'name' => $field,
-          'type' => 'string',
-        );
+        $name = isset($index->options['fields'][$field]['name']) ? $index->options['fields'][$field]['name'] : $field;
         $facet = new SearchApiFacet(array(
           'name' => $field_options['name'],
           'index_id' => $index->machine_name,
@@ -578,7 +564,13 @@ function search_api_facets_block_current_search_view() {
       }
       $type = $facet->options['type'];
       $values = isset($facet->options['options']) ? $facet->options['options'] : array();
-      $field_name = $options['field_name'] ? $facet->name : '';
+      $field_name = '';
+      if ($options['label'] == 'field') {
+        $field_name = isset($index->options['fields'][$field]['name']) ? $index->options['fields'][$field]['name'] : $field;
+      }
+      elseif ($options['label'] == 'facet') {
+        $field_name = $facet->name;
+      }
 
       if (!$values && isset($facet->options['entity_type'])) {
         $ids = array();
@@ -638,6 +630,24 @@ function search_api_facets_block_current_search_view() {
     'subject' => t('Current search'),
     'content' => $theme,
   );
+}
+
+/**
+ * Helper function for getting the options for the "Current search" block.
+ */
+function search_api_facets_current_search_options() {
+  $options = variable_get('search_api_facets_current_search_options', array());
+  $options += array(
+    'label' => 'field',
+    'default_true' => TRUE,
+    'ids_list' => array(),
+  );
+  if (isset($options['field_name'])) {
+    $options['label'] = $options['field_name'] ? 'facet' : 'none';
+    unset($options['field_name']);
+    variable_set('search_api_facets_current_search_options', $options);
+  }
+  return $options;
 }
 
 /**
