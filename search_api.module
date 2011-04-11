@@ -1102,16 +1102,8 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
         // For entities, we extract the entity ID instead of the whole object.
         $t = search_api_extract_inner_type($property_info['type']);
         if (isset($entity_infos[$t])) {
-          if (!search_api_is_list_type($property_info['type'])) {
-            // If no object is set, set this field to NULL.
-            $info['value'] = $info['value'] ? $wrapper->$field->getIdentifier() : NULL;
-          }
-          else {
-            $id_key = $entity_infos[$t]['entity keys']['id'];
-            $tmp_fields["$field:$id_key"]['type'] = 'integer';
-            $tmp_fields = search_api_extract_fields($wrapper, $tmp_fields, $value_options);
-            $info['value'] = $tmp_fields["$field:$id_key"]['value'];
-          }
+          // If no object is set, set this field to NULL.
+          $info['value'] = $info['value'] ? _search_api_extract_entity_value($wrapper->$field, search_api_is_text_type($info['type'])) : NULL;
         }
       }
       catch (EntityMetadataWrapperException $e) {
@@ -1153,9 +1145,34 @@ function _search_api_add_option_values(&$value, array $options) {
     }
     return;
   }
-  if (isset($options[$value])) {
+  if (is_scalar($value) && isset($options[$value])) {
     $value .= ' ' . $options[$value];
   }
+}
+
+/**
+ * Helper method for extracting the ID (and possibly label) of an entity-valued field.
+ */
+function _search_api_extract_entity_value(EntityMetadataWrapper $wrapper, $fulltext = FALSE) {
+  $v = $wrapper->value();
+  if (is_array($v)) {
+    $ret = array();
+    foreach ($wrapper as $item) {
+      $values = _search_api_extract_entity_value($item, $fulltext);
+      if ($values) {
+        $ret[] = $values;
+      }
+    }
+    return $ret;
+  }
+  if ($v) {
+    $ret = $wrapper->getIdentifier();
+    if ($fulltext && ($label = $wrapper->label())) {
+      $ret .= ' ' . $label;
+    }
+    return $ret;
+  }
+  return NULL;
 }
 
 /**
