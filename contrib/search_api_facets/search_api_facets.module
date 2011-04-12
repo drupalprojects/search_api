@@ -548,7 +548,7 @@ function search_api_facets_block_current_search_view() {
       if (!$facets) {
         $name = isset($index->options['fields'][$field]['name']) ? $index->options['fields'][$field]['name'] : $field;
         $facet = new SearchApiFacet(array(
-          'name' => $field_options['name'],
+          'name' => $name,
           'index_id' => $index->machine_name,
           'field' => $field,
           'options' => array(),
