@@ -98,7 +98,14 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
 
   protected function getFieldOptions() {
     if (!isset($this->field_options)) {
-      $index = search_api_index_load(substr($this->view->base_table, 17));
+      $index_id = substr($this->view->base_table, 17);
+      if (!($index_id && ($index = search_api_index_load($index_id)))) {
+        $table = views_fetch_data($this->view->base_table);
+        $table = empty($table['table']['base']['title']) ? $this->view->base_table : $table['table']['base']['title'];
+        throw new SearchApiException(t('The "Facets block" display cannot be used with a view for !basetable. ' .
+            'Please only use this display with base tables representing search indexes.',
+            array('!basetable' => $table)));
+      }
       $this->field_options = array();
       if (!empty($index->options['fields'])) {
         foreach ($index->options['fields'] as $key => $field) {
