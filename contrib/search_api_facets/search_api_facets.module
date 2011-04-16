@@ -673,11 +673,11 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
         variable_set('search_api_facets_search_ids', $search_ids);
       }
       if (!$facet->options['default_true']) {
-        break; // Facet doesn't match.
+        continue; // Facet doesn't match.
       }
     }
     elseif ($facet->options['default_true']) {
-      break; // Facet doesn't match.
+      continue; // Facet doesn't match.
     }
     $active[$facet->delta] = $search_id;
     $fields[$facet->delta] = array(
