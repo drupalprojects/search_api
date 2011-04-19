@@ -644,3 +644,37 @@ function search_api_update_7105() {
     }
   }
 }
+
+/**
+ * Update the settings for the "Aggregated fields" data alteration.
+ */
+function search_api_update_7106() {
+  $rows = db_select('search_api_index', 'i')
+    ->fields('i', array('id', 'options'))
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($rows as $id => $options) {
+    $opt = unserialize($options);
+    $callbacks = &$opt['data_alter_callbacks'];
+    if (isset($callbacks['search_api_alter_add_fulltext'])) {
+      $callbacks['search_api_alter_add_aggregation'] = $callbacks['search_api_alter_add_fulltext'];
+      unset($callbacks['search_api_alter_add_fulltext']);
+      if (!empty($callbacks['search_api_alter_add_aggregation']['settings']['fields'])) {
+        foreach ($callbacks['search_api_alter_add_aggregation']['settings']['fields'] as $field => &$info) {
+          if (!isset($info['type'])) {
+            $info['type'] = 'fulltext';
+          }
+        }
+      }
+    }
+    $opt = serialize($opt);
+    if ($opt != $options) {
+      db_update('search_api_index')
+        ->fields(array(
+          'options' => $opt,
+        ))
+        ->condition('id', $id)
+        ->execute();
+    }
+  }
+}

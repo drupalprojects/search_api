@@ -34,7 +34,7 @@ input.search-api-cron-limit {
   text-align: right;
 }
 
-.search-api-alter-add-fulltext-fields {
+.search-api-alter-add-aggregation-fields {
   max-height: 12em;
   overflow: auto;
 }

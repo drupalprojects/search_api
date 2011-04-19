@@ -614,10 +614,10 @@ function search_api_search_api_alter_callback_info() {
     'description' => t("Adds the item's URL to the indexed data."),
     'class' => 'SearchApiAlterAddUrl',
   );
-  $callbacks['search_api_alter_add_fulltext'] = array(
-    'name' => t('Aggregated fulltext fields'),
-    'description' => t('Gives you the ability to define additional fulltext fields, containing the text data from one or more other fields.'),
-    'class' => 'SearchApiAlterAddFulltext',
+  $callbacks['search_api_alter_add_aggregation'] = array(
+    'name' => t('Aggregated fields'),
+    'description' => t('Gives you the ability to define additional fields, containing data from one or more other fields.'),
+    'class' => 'SearchApiAlterAddAggregation',
   );
   $callbacks['search_api_alter_add_viewed_entity'] = array(
     'name' => t('Complete entity view'),

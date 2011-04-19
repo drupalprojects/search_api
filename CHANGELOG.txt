@@ -1,8 +1,9 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1123604 by drunken monkey: Added generalized "aggregation" data alteration.
 - #1129226 by drunken monkey: Fixed incorrect handling of facets deactivated for
   some search IDs.
-- #1086492 by drunken monkey: Fixed nadequate warnings when using the "Facets
+- #1086492 by drunken monkey: Fixed inadequate warnings when using the "Facets
   block" display with wrong base table.
 - #1109308 by drunken monkey : Added option to choose between display of field
   or facet name in "Current search" block.
