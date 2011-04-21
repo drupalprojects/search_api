@@ -410,9 +410,11 @@ class SearchApiDbService extends SearchApiAbstractService {
       $type = substr($type, 5, -1);
       $original_type = search_api_extract_inner_type($original_type);
       $ret = array();
-      foreach ($value as $v) {
-        $v = $this->convert($v, $type, $original_type);
-        $ret = array_merge($ret, is_array($v) ? $v : array($v));
+      if (is_array($value)) {
+        foreach ($value as $v) {
+          $v = $this->convert($v, $type, $original_type);
+          $ret = array_merge($ret, is_array($v) ? $v : array($v));
+        }
       }
       return $ret;
     }
