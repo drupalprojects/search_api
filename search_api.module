@@ -1242,7 +1242,7 @@ function search_api_server_load($id, $reset = FALSE) {
  * @see entity_load()
  *
  * @param $ids
- *   An array of server IDs or machine names.
+ *   An array of server IDs or machine names, or FALSE to load all servers.
  * @param $conditions
  *   An array of conditions on the {search_api_server} table in the form
  *   'field' => $value.
@@ -1449,7 +1449,7 @@ function search_api_index_load($id, $reset = FALSE) {
  * @see entity_load()
  *
  * @param $ids
- *   An array of index IDs or machine names.
+ *   An array of index IDs or machine names, or FALSE to load all indexes.
  * @param $conditions
  *   An array of conditions on the {search_api_index} table in the form
  *   'field' => $value.
