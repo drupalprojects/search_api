@@ -1753,7 +1753,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     for ($i = 0; $i < $level; ++$i) {
       $wrapper = $wrapper[0];
     }
-    // For each nesting level, wrap the field types in an additional "list<%>".
+    // For each nesting level, wrap the field types in an additional "list<*>".
     $type_prefix .= str_repeat('list<', $level);
     $type_suffix .= str_repeat('>', $level);
     $name_prefix .= $wrapper_info['label'] . ' » ';
