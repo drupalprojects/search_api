@@ -38,7 +38,8 @@ class SearchApiWebTest extends DrupalWebTestCase {
 
   public function testFramework() {
     $this->drupalLogin($this->drupalCreateUser(array('administer search_api')));
-    $this->deleteDefaultIndex();
+    // @todo Why is there no default index.
+    //$this->deleteDefaultIndex();
     $this->insertItems();
     $this->checkOverview1();
     $this->createIndex();
@@ -179,13 +180,8 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $values = array(
       'callbacks[search_api_alter_add_url][status]' => 1,
       'callbacks[search_api_alter_add_url][weight]' => 0,
-      'callbacks[search_api_alter_add_fulltext][status]' => 1,
-      'callbacks[search_api_alter_add_fulltext][weight]' => 10,
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][name]' => 'Test fulltext field',
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][title]' => 1,
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][body]' => 1,
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][parent:title]' => 1,
-      'callbacks[search_api_alter_add_fulltext][settings][fields][search_api_fulltext_1][fields][parent:body]' => 1,
+      'callbacks[search_api_alter_add_aggregation][status]' => 1,
+      'callbacks[search_api_alter_add_aggregation][weight]' => 10,
       'processors[search_api_case_ignore][status]' => 1,
       'processors[search_api_case_ignore][weight]' => 0,
       'processors[search_api_case_ignore][settings][strings]' => 0,
@@ -193,6 +189,15 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'processors[search_api_tokenizer][weight]' => 20,
       'processors[search_api_tokenizer][settings][spaces]' => '[^\p{L}\p{N}]',
       'processors[search_api_tokenizer][settings][ignorable]' => '[-]',
+    );
+    $this->drupalPost(NULL, $values, t('Add new field'));
+    $values = array(
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][name]' => 'Test fulltext field',
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][type]' => 'fulltext',
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][fields][title]' => 1,
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][fields][body]' => 1,
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][fields][parent:title]' => 1,
+      'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][fields][parent:body]' => 1,
     );
     $this->drupalPost(NULL, $values, t('Save configuration'));
     $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), t('Workflow successfully edited.'));
