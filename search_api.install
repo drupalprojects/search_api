@@ -207,13 +207,13 @@ function search_api_install() {
           'settings' => array(
             'title' => 0,
             'alt' => 1,
-            'tags' => 'h1 = 5
-            h2 = 3
-            h3 = 2
-            strong = 2
-            b = 2
-            em = 1.5
-            u = 1.5',
+            'tags' => "h1 = 5\n" .
+                "h2 = 3\n" .
+                "h3 = 2\n" .
+                "strong = 2\n" .
+                "b = 2\n" .
+                "em = 1.5\n" .
+                "u = 1.5",
           ),
         ),
         'search_api_tokenizer' => array(
