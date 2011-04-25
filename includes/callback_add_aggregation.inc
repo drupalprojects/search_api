@@ -6,7 +6,6 @@
 class SearchApiAlterAddAggregation extends SearchApiAbstractAlterCallback {
 
   public function configurationForm() {
-    // Workaround for http://drupal.org/node/1015798
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
     $fields = empty($this->index->options['fields']) ? _search_api_admin_get_fields($this->index, $this->index->entityWrapper()) : $this->index->options;
