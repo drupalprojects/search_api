@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1117074 by drunken monkey: Fixed handling of overlong tokens by DB backend.
 - #1124548 by drunken monkey: Fixed syntax error in search_api.admin.inc.
 - #1134296 by klausi: Fixed check for NULL in SearchApiDbService->convert().
 - #1123604 by drunken monkey: Added generalized "aggregation" data alteration.

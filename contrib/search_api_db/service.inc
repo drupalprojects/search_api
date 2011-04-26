@@ -324,7 +324,7 @@ class SearchApiDbService extends SearchApiAbstractService {
             ->condition('item_id', $id)
             ->execute();
         $type = $field['type'];
-        $value = $this->convert($field['value'], $type, $field['original_type']);
+        $value = $this->convert($field['value'], $type, $field['original_type'], $index);
 
         if (search_api_is_text_type($type, array('text', 'tokens'))) {
           $words = array();
@@ -405,14 +405,14 @@ class SearchApiDbService extends SearchApiAbstractService {
     return TRUE;
   }
 
-  protected function convert($value, $type, $original_type) {
+  protected function convert($value, $type, $original_type, SearchApiIndex $index) {
     if (search_api_is_list_type($type)) {
       $type = substr($type, 5, -1);
       $original_type = search_api_extract_inner_type($original_type);
       $ret = array();
       if (is_array($value)) {
         foreach ($value as $v) {
-          $v = $this->convert($v, $type, $original_type);
+          $v = $this->convert($v, $type, $original_type, $index);
           $ret = array_merge($ret, is_array($v) ? $v : array($v));
         }
       }
@@ -429,9 +429,50 @@ class SearchApiDbService extends SearchApiAbstractService {
             );
           }
         }
-        return $ret;
-
+        $value = $ret;
+        // FALL-THROUGH!
       case 'tokens':
+        while (TRUE) {
+          foreach ($value as $i => $v) {
+            // Check for over-long tokens.
+            $score = $v['score'];
+            $v = $v['value'];
+            if (drupal_strlen($v) > 50) {
+              $words = preg_split('/[^\p{L}\p{N}]+/u', $v, -1, PREG_SPLIT_NO_EMPTY);
+              if (count($words) > 1 && max(array_map('drupal_strlen', $words)) <= 50) {
+                // Overlong token is due to bad tokenizing.
+                // Check for "Tokenizer" preprocessor on index.
+                if (empty($index->options['processors']['search_api_tokenizer']['status'])) {
+                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .
+                      'It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. ' .
+                      'Otherwise, the service class has to use its own, fixed tokenizing.', array(), WATCHDOG_WARNING);
+                }
+                else {
+                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .
+                      'Please check your settings for the "Tokenizer" preprocessor to ensure that data is tokenized correctly.',
+                      array(), WATCHDOG_WARNING);
+                }
+              }
+
+              $tokens = array();
+              foreach ($words as $word) {
+                if (drupal_strlen($word) > 50) {
+                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing: %word.<br />' .
+                      'Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.',
+                      array('%word' => $word), WATCHDOG_WARNING);
+                  $word = drupal_substr($word, 0, 50);
+                }
+                $tokens[] = array(
+                  'value' => $word,
+                  'score' => $score,
+                );
+              }
+              array_splice($value, $i, 1, $tokens);
+              continue 2;
+            }
+          }
+          break;
+        }
         return $value;
 
       case 'string':
@@ -439,6 +480,10 @@ class SearchApiDbService extends SearchApiAbstractService {
         // For non-dates, PHP can handle this well enough
         if ($original_type == 'date') {
           return date('%c', $value);
+        }
+        if (drupal_strlen($value) > 255) {
+          throw new SearchApiException(t('A string value longer than 255 characters was encountered. ' .
+              "Such values currently aren't supported by the database backend."));
         }
         return $value;
 
