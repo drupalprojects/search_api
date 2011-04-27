@@ -732,30 +732,11 @@ function search_api_facets_search_api_query_alter(SearchApiQueryInterface $query
  * Implements hook_search_api_index_update().
  */
 function search_api_facets_search_api_index_update(SearchApiIndex $index) {
-  $id = $index->machine_name;
-  if ($index->enabled != $index->original->enabled) {
-    if ($index->enabled) {
-      if (search_api_facet_load_multiple(FALSE, array('index_id' => $id))) {
-        drupal_set_message(t('There are saved facets for this index. ' .
-            'Go to the <a href="!url">facet page</a> to enable them.',
-            array('!url' => 'admin/config/search/search_api/index/' . $id . '/facets')));
-      }
-    }
-    else {
-      foreach (search_api_facet_load_multiple(FALSE, array('index_id' => $id, 'enabled' => TRUE)) as $facet) {
-        $facet->enabled = FALSE;
-        $facet->save();
-      }
-      if (isset($facet)) {
-        drupal_set_message(t('The disabled index still had active facet blocks. They were deactivated.'), 'status', FALSE);
-      }
-    }
-  }
   $options = $index->options + array('fields' => array());
   $original_options = $index->original->options + array('fields' => array());
   if ($options['fields'] != $original_options['fields']) {
     $fields = $options['fields'];
-    $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $id, 'enabled' => 1));
+    $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'enabled' => 1));
     foreach ($facets as $facet) {
       if (empty($fields[$facet->field]['indexed'])) {
         $facet->enabled = FALSE;
