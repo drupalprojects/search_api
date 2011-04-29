@@ -26,7 +26,7 @@ function search_api_page_view($id, $keys = NULL) {
     if ($results['result count'] > $page->options['per_page']) {
       pager_default_initialize($results['result count'], $page->options['per_page']);
       $ret['pager']['#theme'] = 'pager';
-      $ret['pager']['#quantity'] = (int) ceil($results['result count'] / $page->options['per_page']);
+      $ret['pager']['#quantity'] = 9;
     }
 
     if (!empty($results['ignored'])) {

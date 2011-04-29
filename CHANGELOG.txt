@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1141206 by drunken monkey : Fixed "quantity" variable for Search page pager.
 - #1117074 by drunken monkey: Fixed handling of overlong tokens by DB backend.
 - #1124548 by drunken monkey: Fixed syntax error in search_api.admin.inc.
 - #1134296 by klausi: Fixed check for NULL in SearchApiDbService->convert().
