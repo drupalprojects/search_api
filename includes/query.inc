@@ -201,7 +201,12 @@ interface SearchApiQueryInterface {
    *   type, and search strings or nested expression arrays at numeric keys.
    *   Additionally, a '#negation' key might be present, which means – unless it
    *   maps to a FALSE value – that the search keys contained in that array
-   *   should be negated, i.e. not be present in returned results.
+   *   should be negated, i.e. not be present in returned results. The negation
+   *   works on the whole array, not on each contained term individually – i.e.,
+   *   with the "AND" conjunction and negation, only results that contain all
+   *   the terms in the array should be excluded; with the "OR" conjunction and
+   *   negation, all results containing one or more of the terms in the array
+   *   should be excluded.
    */
   public function &getKeys();
 
@@ -756,7 +761,12 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   type, and search strings or nested expression arrays at numeric keys.
    *   Additionally, a '#negation' key might be present, which means – unless it
    *   maps to a FALSE value – that the search keys contained in that array
-   *   should be negated, i.e. not be present in returned results.
+   *   should be negated, i.e. not be present in returned results. The negation
+   *   works on the whole array, not on each contained term individually – i.e.,
+   *   with the "AND" conjunction and negation, only results that contain all
+   *   the terms in the array should be excluded; with the "OR" conjunction and
+   *   negation, all results containing one or more of the terms in the array
+   *   should be excluded.
    */
   public function &getKeys() {
     return $this->keys;
