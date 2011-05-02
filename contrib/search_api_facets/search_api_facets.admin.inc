@@ -101,7 +101,6 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           'name' => t('!index: !field', array('!field' => $field['name'], '!index' => $index->name)),
           'enabled' => 0,
           'options' => array(),
-          'status' => 0,
         ));
       }
       foreach ($facets[$key] as $i => $facet) {
@@ -116,7 +115,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           '#disabled' => $disabled,
         );
         if ($show_status) {
-          $form['facets'][$k]['status']['#markup'] = $facet->status ? theme('entity_status', array('status' => $facet->status)) : $empty_status;
+          $form['facets'][$k]['status']['#markup'] = isset($facet->status) ? theme('entity_status', array('status' => $facet->status)) : $empty_status;
         }
         $form['facets'][$k]['field'] = array(
           '#markup' => $field['name'],
@@ -133,7 +132,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
           '#type' => 'checkbox',
           '#default_value' => FALSE,
         );
-        if (($facet->enabled && $facet->status != ENTITY_OVERRIDDEN) || empty($facet->delta) || !($facet->status & ENTITY_CUSTOM)) {
+        if (($facet->enabled && $facet->status != ENTITY_OVERRIDDEN) || empty($facet->delta) || !(isset($facet->status) && $facet->status & ENTITY_CUSTOM)) {
           $form['facets'][$k]['delete'] = array(
             '#markup' => '&nbsp;',
           );
@@ -143,7 +142,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
             '#type' => 'checkbox',
             '#default_value' => FALSE,
           );
-          if ($facet->status & ENTITY_IN_CODE) {
+          if (isset($facet->status) && $facet->status & ENTITY_IN_CODE) {
             $form['facets'][$k]['delete']['#title'] = '*';
           }
         }
@@ -202,7 +201,7 @@ function search_api_facets_index_select_submit(array $form, array &$form_state) 
       // Field is not stored, what use would cloning or deleting be?
       continue;
     }
-    if ((empty($v['enabled']) && empty($v['clone'])) || $v['facet']->status == ENTITY_OVERRIDDEN) {
+    if ((empty($v['enabled']) && empty($v['clone'])) || (isset($v['facet']->status) && $v['facet']->status == ENTITY_OVERRIDDEN)) {
       // This is the only case in which a "delete" makes sense.
       if (!empty($v['delete'])) {
         $v['facet']->delete();
