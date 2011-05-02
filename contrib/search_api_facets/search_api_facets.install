@@ -51,7 +51,20 @@ function search_api_facets_schema() {
         'serialize' => TRUE,
         'not null' => TRUE,
       ),
-    ) + entity_exportable_schema_fields(),
+      'status' => array(
+        'description' => 'The exportable status of the entity.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0x01,
+        'size' => 'tiny',
+      ),
+      'module' => array(
+        'description' => 'The name of the providing module if the entity has been defined in code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
     'indexes' => array(
       'field' => array('index_id', array('field', 50)),
       'enabled' => array('enabled'),

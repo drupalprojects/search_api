@@ -54,7 +54,20 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
-    ) + entity_exportable_schema_fields(),
+      'status' => array(
+        'description' => 'The exportable status of the entity.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0x01,
+        'size' => 'tiny',
+      ),
+      'module' => array(
+        'description' => 'The name of the providing module if the entity has been defined in code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
     'indexes' => array(
       'enabled' => array('enabled'),
     ),
@@ -115,7 +128,20 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
-    ) + entity_exportable_schema_fields(),
+      'status' => array(
+        'description' => 'The exportable status of the entity.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0x01,
+        'size' => 'tiny',
+      ),
+      'module' => array(
+        'description' => 'The name of the providing module if the entity has been defined in code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
       'server' => array('server'),
