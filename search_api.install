@@ -128,6 +128,13 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
+      'read_only' => array(
+        'description' => 'A flag indicating whether to write to this index.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'status' => array(
         'description' => 'The exportable status of the entity.',
         'type' => 'int',
@@ -433,20 +440,58 @@ function search_api_enable() {
   $insert = db_insert('search_api_item')
     ->fields(array('item_id', 'index_id', 'changed'));
   foreach ($types as $type => $indexes) {
-    $info = entity_get_info($type);
-    $id_key = $info['entity keys']['id'];
-    foreach (entity_load($type, FALSE) as $entity) {
-      $id = $entity->$id_key;
-      foreach ($indexes as $index_id) {
-        $insert->values(array(
-          'item_id' => $id,
-          'index_id' => $index_id,
-          'changed' => 1,
-        ));
+    // Partly copied from SearchApiIndex::queueItems().
+
+    $entity_info = entity_get_info($type);
+
+    // If the entity info specifies a base table, use that to add all items
+    // directly in an INSERT ... SELECT. Otherwise, use entity_load() and add
+    // the values to the outer $insert query.
+    if (!empty($entity_info['base table'])) {
+      // Use a subselect, which will probably be much faster than entity_load().
+
+      // Assumes that all entities use the "base table" property and the
+      // "entity keys[id]" in the same way as the default controller.
+      $id_field = $entity_info['entity keys']['id'];
+      $table = $entity_info['base table'];
+
+      // Select all entity ids and all relevant indexes.
+      $query = db_select($table, 't');
+      $query->join('search_api_index', 'i', 'i.entity_type = :type AND i.read_only = :read_only AND i.enabled = :enabled',
+          array(':type' => $type, ':read_only' => 0, ':enabled' => 1));
+      $query->addField('t', $id_field, 'item_id');
+      $query->addField('i', 'id', 'index_id');
+      $query->addExpression('1', 'changed');
+
+      // INSERT ... SELECT ...
+      db_insert('search_api_item')
+        ->from($query)
+        ->execute();
+    }
+    else {
+      foreach (entity_load($type) as $id => $entity) {
+        foreach ($indexes as $index_id) {
+          $insert->values(array(
+            'item_id' => $id,
+            'index_id' => $index_id,
+            'changed' => 1,
+          ));
+        }
       }
     }
   }
-  $insert->execute();
+  // Only execute this query if we added any values to it.
+  if (isset($index_id)) {
+    $insert->execute();
+  }
+}
+
+/**
+ * Implements hook_disable().
+ */
+function search_api_disable() {
+  db_delete('search_api_item')
+    ->execute();
 }
 
 /**
@@ -703,4 +748,19 @@ function search_api_update_7106() {
         ->execute();
     }
   }
+}
+
+/**
+ * Add "read only" property to Search API index entities.
+ */
+function search_api_update_7108() {
+  $db_field = array(
+    'description' => 'A flag indicating whether to write to this index.',
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('search_api_index', 'read_only', $db_field);
+  return t('Added a "read only" property to index entities.');
 }

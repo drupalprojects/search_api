@@ -661,6 +661,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     '#server' => $index->server(),
     '#options' => $index->options,
     '#status' => $index->status,
+    '#read_only' => $index->read_only,
   );
 
   return $ret;
@@ -684,9 +685,11 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
  *   - total_items: The total number of items that have to be indexed for this
  *     index.
  *   - status: The entity configuration status (in database, in code, etc.).
+ *   - read_only: Boolean indicating whether this index is read only.
  */
 function theme_search_api_index(array $variables) {
   extract($variables);
+
   $output = '';
 
   $output .= '<h3>' . check_plain($name) . '</h3>' . "\n";
@@ -728,7 +731,7 @@ function theme_search_api_index(array $variables) {
     $output .= '</dd>' . "\n";
   }
 
-  if (!empty($options)) {
+  if (!$read_only && !empty($options)) {
     $output .= '<dt>' . t('Index options') . '</dt>' . "\n";
     $output .= '<dd><dl>' . "\n";
     $output .= '<dt>' . t('Cron limit') . '</dt>' . "\n";
@@ -761,6 +764,10 @@ function theme_search_api_index(array $variables) {
     }
 
     $output .= '</dl></dd>' . "\n";
+  }
+  elseif ($read_only) {
+    $output .= '<dt>' . t('Read only') . '</dt>' . "\n";
+    $output .= '<dd>' . t('This index is read-only.') . '</dd>' . "\n";
   }
 
   $output .= '<dt>' . t('Configuration status') . '</dt>' . "\n";
@@ -799,55 +806,68 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
     );
   }
 
-  $form['progress'] = array(
-    '#type' => 'item',
-    '#title' => t('Progress'),
-  );
-  $all = ($status['indexed'] == $status['total']);
-  if ($all) {
-    $form['progress']['#description'] = t('All items have been indexed (@total / @total).',
-        array('@total' => $status['total']));
-  }
-  elseif (!$status['indexed']) {
-    $form['progress']['#description'] = t('All items still need to be indexed (@total total).',
-        array('@total' => $status['total']));
-  }
-  else {
-    $percentage = (int) (100 * $status['indexed'] / $status['total']);
-    $form['progress']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
-        array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' => $percentage));
+  if ($index->read_only) {
+    $form['read_only'] = array(
+      '#type' => 'item',
+      '#title' => t('Read only'),
+      '#description' => t('The index is currently in read-only mode. ' .
+          'No new items will be indexed, nor will old ones be deleted.'),
+    );
+
+    return $form;
   }
 
-  if ($enabled && !$all) {
-    $form['index'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Index now'),
-      '#attributes' => array('class' => array('container-inline')),
-      '#collapsible' => TRUE,
+  if ($enabled) {
+    $form['progress'] = array(
+      '#type' => 'item',
+      '#title' => t('Progress'),
     );
-    $form['index']['limit'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Number of items:'),
-      '#default_value' => empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'],
-      '#size' => 4,
-      '#attributes' => array('class' => array('search-api-cron-limit')),
-    );
-    $form['index']['button'] = array(
-      '#type' => 'submit',
-      '#value' => t('Index now'),
-    );
-    $form['index']['total'] = array(
-      '#type' => 'value',
-      '#value' => $status['total'],
-    );
-    $form['index']['remaining'] = array(
-      '#type' => 'value',
-      '#value' => $status['total'] - $status['indexed'],
-    );
+    $all = ($status['indexed'] == $status['total']);
+    if ($all) {
+      $form['progress']['#description'] = t('All items have been indexed (@total / @total).',
+          array('@total' => $status['total']));
+    }
+    elseif (!$status['indexed']) {
+      $form['progress']['#description'] = t('All items still need to be indexed (@total total).',
+          array('@total' => $status['total']));
+    }
+    else {
+      $percentage = (int) (100 * $status['indexed'] / $status['total']);
+      $form['progress']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
+          array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' => $percentage));
+    }
+
+    if (!$all) {
+      $form['index'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Index now'),
+        '#attributes' => array('class' => array('container-inline')),
+        '#collapsible' => TRUE,
+      );
+      $form['index']['limit'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of items:'),
+        '#default_value' => empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'],
+        '#size' => 4,
+        '#attributes' => array('class' => array('search-api-cron-limit')),
+      );
+      $form['index']['button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Index now'),
+      );
+      $form['index']['total'] = array(
+        '#type' => 'value',
+        '#value' => $status['total'],
+      );
+      $form['index']['remaining'] = array(
+        '#type' => 'value',
+        '#value' => $status['total'] - $status['indexed'],
+      );
+    }
   }
 
   if ($server) {
-    if ($status['indexed'] > 0) {
+    if ($enabled && $status['indexed'] > 0) {
       $form['reindex'] = array(
         '#type' => 'fieldset',
         '#title' => t('Re-indexing'),
@@ -1002,6 +1022,12 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
       $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
+  $form['read_only'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Read only'),
+    '#description' => t('Do not write to this index or track ids of entities in this index.'),
+    '#default_value' => $index->read_only,
+  );
   $form['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
@@ -1010,6 +1036,10 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => isset($index->options['cron_limit']) ? $index->options['cron_limit'] : SEARCH_API_DEFAULT_CRON_LIMIT,
     '#size' => 4,
     '#attributes' => array('class' => array('search-api-cron-limit')),
+    '#element_validate' => array('_element_validate_integer'),
+    '#states' => array(
+      'invisible' => array(':input[name="read_only"]' => array('checked' => TRUE)),
+    ),
   );
 
   $form['submit'] = array(
@@ -1018,17 +1048,6 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
   );
 
   return $form;
-}
-
-/**
- * Validation callback for search_api_admin_index_edit.
- */
-function search_api_admin_index_edit_validate(array $form, array &$form_state) {
-  $cron_limit = $form_state['values']['cron_limit'];
-  if ($cron_limit != '' . ((int) $cron_limit)) {
-    // We don't enforce stricter rules and treat all negative values as -1.
-    form_set_error('cron_limit', t('The cron limit must be a number.'));
-  }
 }
 
 /**

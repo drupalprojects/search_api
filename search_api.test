@@ -210,7 +210,6 @@ class SearchApiWebTest extends DrupalWebTestCase {
 
     $this->drupalGet("admin/config/search/search_api/index/$id/status");
     $this->assertText(t('The index is currently disabled.'), t('"Disabled" status displayed.'));
-    $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 5)), t('!field displayed.', array('!field' => t('Correct index status'))));
   }
 
   protected function createServer() {

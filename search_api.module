@@ -184,6 +184,7 @@ function search_api_theme() {
       'indexed_items' => 0,
       'total_items' => 0,
       'status' => ENTITY_CUSTOM,
+      'read_only' => 0,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -359,6 +360,11 @@ function search_api_entity_property_info() {
       'type' => 'boolean',
       'description' => t('A flag indicating whether the index is enabled.'),
     ),
+    'read_only' => array(
+      'label' => t('Read only'),
+      'type' => 'boolean',
+      'description' => t('A flag indicating whether the index is read-only.'),
+    ),
   );
 
   return $info;
@@ -511,6 +517,25 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
       _search_api_index_reindex($index->id);
     }
   }
+
+  // If the index's enabled or read-only status is being changed, queue or
+  // dequeue entities for indexing.
+  if ($index->enabled != $index->original->enabled) {
+    if ($index->enabled) {
+      $index->queueItems();
+    }
+    else {
+      $index->dequeueItems();
+    }
+  }
+  elseif ($index->read_only != $index->original->read_only) {
+    if ($index->read_only) {
+      $index->dequeueItems();
+    }
+    else {
+      $index->queueItems();
+    }
+  }
 }
 
 /**
@@ -543,15 +568,17 @@ function search_api_entity_insert($entity, $type) {
   $id = $info['entity keys']['id'];
   $id = $entity->$id;
 
-  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
-    db_insert('search_api_item')
-      ->fields(array(
-        'index_id' => $index->id,
-        'item_id' => $id,
-        'changed' => 1,
-      ))
-      ->execute();
-  }
+  $query = db_select('search_api_index', 'i')
+    ->condition('entity_type', $type)
+    ->condition('enabled', 1)
+    ->condition('read_only', 0);
+  $query->addField('i', 'id', 'index_id');
+  $query->addExpression(':item_id', 'item_id', array(':item_id' => $id));
+  $query->addExpression(':changed', 'changed', array(':changed' => 1));
+
+  db_insert('search_api_item')
+    ->from($query)
+    ->execute();
 }
 
 /**
@@ -674,7 +701,8 @@ function search_api_search_api_processor_info() {
 function search_api_mark_dirty($entity_type, array $ids) {
   $query = db_select('search_api_index', 'i')
     ->fields('i', array('id'))
-    ->condition('entity_type' , $entity_type);
+    ->condition('entity_type', $entity_type)
+    ->condition('read_only', 0);
   db_update('search_api_item')
     ->fields(array(
       'changed' => REQUEST_TIME,
@@ -705,6 +733,11 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
   // Safety check if entity type is known (prevent failing of whole cron run/page request)
   if (!entity_get_info($index->entity_type)) {
     throw new SearchApiException(t("Couldn't index values for '!name' index (unknown entity type '!type')", array('!name' => $index->name, '!type' => $index->entity_type)));
+  }
+
+  // Don't try to index read-only indexes.
+  if ($index->read_only) {
+    return 0;
   }
 
   $items = search_api_get_items_to_index($index, $limit);

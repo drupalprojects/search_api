@@ -106,6 +106,11 @@ class SearchApiIndex extends Entity {
   public $enabled;
 
   /**
+   * @var integer
+   */
+  public $read_only;
+
+  /**
    * Constructor as a helper to the parent constructor.
    */
   public function __construct(array $values = array()) {
@@ -117,35 +122,7 @@ class SearchApiIndex extends Entity {
    * database, or for the first time loaded from code).
    */
   public function postCreate() {
-    // Remember items to index.
-    $entity_info = entity_get_info($this->entity_type);
-    if (!empty($entity_info['base table'])) {
-      // Use a subselect, which will probably be much faster than entity_load().
-      // We just assume that no module/entity type will be stupid enough to use "base table" and
-      // "entity_keys[id]" in a different way than the default controller.
-      $id_field = $entity_info['entity keys']['id'];
-      $table = $entity_info['base table'];
-      $query = db_select($table, 't');
-      $query->addField('t', $id_field, 'item_id');
-      $query->addExpression(':index_id', 'index_id', array(':index_id' => $this->id));
-      $query->addExpression('1', 'changed');
-
-      db_insert('search_api_item')->from($query)->execute();
-    }
-    else {
-      // We have to use the slow entity_load().
-      $entities = entity_load($this->entity_type, FALSE);
-      $query = db_insert('search_api_item')->fields(array('item_id', 'index_id', 'changed'));
-      foreach ($entities as $item_id => $entity) {
-        $query->values(array(
-          'item_id' => $item_id,
-          'index_id' => $this->id,
-          'changed' => 1,
-        ));
-      }
-      $query->execute();
-    }
-
+    $this->queueItems();
     $server = $this->server();
     if ($server) {
       // Tell the server about the new index.
@@ -177,7 +154,66 @@ class SearchApiIndex extends Entity {
       }
     }
 
-    db_delete('search_api_item')
+    // Stop tracking entities for indexing.
+    $this->dequeueItems();
+  }
+
+  /**
+   * Record entities to index.
+   */
+  public function queueItems() {
+		$this->dequeueItems();
+		
+    if (!$this->read_only) {
+      $entity_info = entity_get_info($this->entity_type);
+
+      if (!empty($entity_info['base table'])) {
+        // Use a subselect, which will probably be much faster than entity_load().
+
+        // Assumes that all entities use the "base table" property and the
+        // "entity keys[id]" in the same way as the default controller.
+        $id_field = $entity_info['entity keys']['id'];
+        $table = $entity_info['base table'];
+
+        // Select all entity ids.
+        $query = db_select($table, 't');
+        $query->addField('t', $id_field, 'item_id');
+        $query->addExpression(':index_id', 'index_id', array(':index_id' => $this->id));
+        $query->addExpression('1', 'changed');
+
+        // INSERT ... SELECT ...
+        db_insert('search_api_item')
+          ->from($query)
+          ->execute();
+      }
+      else {
+        // In the absence of a 'base table', use the slow entity_load().
+
+        // Get an array of all entities using entity_load().
+        $entities = entity_load($this->entity_type, FALSE);
+
+        $query = db_insert('search_api_item')
+          ->fields(array('item_id', 'index_id', 'changed'));
+
+        // Add each entity to the query.
+        foreach ($entities as $item_id => $entity) {
+          $query->values(array(
+            'item_id' => $item_id,
+            'index_id' => $this->id,
+            'changed' => 1,
+          ));
+        }
+
+        $query->execute();
+      }
+    }
+  }
+
+  /**
+   * Remove all records of entities to index.
+   */
+  public function dequeueItems() {
+    $query = db_delete('search_api_item')
       ->condition('index_id', $this->id)
       ->execute();
   }
@@ -221,7 +257,7 @@ class SearchApiIndex extends Entity {
    *   the specified values.
    */
   public function update(array $fields) {
-    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'server' => 1, 'options' => 1);
+    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'server' => 1, 'options' => 1, 'read_only' => 1);
     $changed = FALSE;
     foreach ($fields as $field => $value) {
       if (isset($changeable[$field]) && $value !== $this->$field) {
@@ -229,6 +265,7 @@ class SearchApiIndex extends Entity {
         $changed = TRUE;
       }
     }
+
     // If there are no new values, just return 0.
     if (!$changed) {
       return 0;
@@ -243,7 +280,7 @@ class SearchApiIndex extends Entity {
    *   TRUE on success, FALSE on failure.
    */
   public function reindex() {
-    if (!$this->server) {
+    if (!$this->server || $this->read_only) {
       return TRUE;
     }
     $ret = _search_api_index_reindex($this->id);
@@ -260,7 +297,7 @@ class SearchApiIndex extends Entity {
    *   TRUE on success, FALSE on failure.
    */
   public function clear() {
-    if (!$this->server) {
+    if (!$this->server || $this->read_only) {
       return TRUE;
     }
 
@@ -359,6 +396,9 @@ class SearchApiIndex extends Entity {
    *   An array of the IDs of all items that should be marked as indexed.
    */
   public function index(array $items) {
+    if ($this->read_only) {
+      return array();
+    }
     if (!$this->enabled) {
       throw new SearchApiException(t("Couldn't index values on '!name' index (index is disabled)", array('!name' => $this->name)));
     }

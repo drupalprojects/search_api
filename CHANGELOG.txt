@@ -1,5 +1,9 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+API changes:
+- #1138992 by becw, drunken monkey: Added read-only indexes.
+
+Others:
 - #1144400 by drunken monkey: Fixed use of entity_exportable_schema_fields() in
   hook_schema().
 - #1141206 by drunken monkey: Fixed "quantity" variable for Search page pager.
