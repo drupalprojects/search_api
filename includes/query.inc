@@ -166,10 +166,15 @@ interface SearchApiQueryInterface {
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
    *     - score: A float measuring how well the item fits the search.
-   *     - entity (optional): If set, the fully loaded entity. This field should
+   *     - fields: (optional) If set, an array containing some field values
+   *       already ready-to-use. This allows search engines (or postprocessors)
+   *       to store extracted fields so other modules don't have to extract them
+   *       again. This fields should always be checked by modules that want to
+   *       use field contents of the result entities.
+   *     - entity: (optional) If set, the fully loaded entity. This field should
    *       always be used by modules using search results, to avoid duplicate
    *       entity loads.
-   *     - excerpt (optional): If set, an HTML text containing highlighted
+   *     - excerpt: (optional) If set, an HTML text containing highlighted
    *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
@@ -624,10 +629,15 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
    *     - score: A float measuring how well the item fits the search.
-   *     - entity (optional): If set, the fully loaded entity. This field should
+   *     - fields: (optional) If set, an array containing some field values
+   *       already ready-to-use. This allows search engines (or postprocessors)
+   *       to store extracted fields so other modules don't have to extract them
+   *       again. This fields should always be checked by modules that want to
+   *       use field contents of the result entities.
+   *     - entity: (optional) If set, the fully loaded entity. This field should
    *       always be used by modules using search results, to avoid duplicate
    *       entity loads.
-   *     - excerpt (optional): If set, an HTML text containing highlighted
+   *     - excerpt: (optional) If set, an HTML text containing highlighted
    *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be
    *     displayed to the user.
@@ -636,12 +646,12 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   - performance: An associative array with the time taken (as floats, in
    *     seconds) for specific parts of the search execution:
    *     - complete: The complete runtime of the query.
-   *     - hooks: Hook invocations and other server-independent processing.
+   *     - hooks: Hook invocations and other client-side preprocessing.
    *     - preprocessing: Preprocessing of the service class.
    *     - execution: The actual query to the search server, in whatever form.
    *     - postprocessing: Preparing the results for returning.
    *   Additional metadata may be returned in other keys. Only 'result count'
-   *   and 'results' always have to be set, all other entries are optional.
+   *   and 'result' always have to be set, all other entries are optional.
    */
   public final function execute() {
     $start = microtime(TRUE);
