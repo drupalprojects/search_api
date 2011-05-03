@@ -721,11 +721,11 @@ function search_api_update_7105() {
  */
 function search_api_update_7106() {
   $rows = db_select('search_api_index', 'i')
-    ->fields('i', array('id', 'options'))
+    ->fields('i')
     ->execute()
-    ->fetchAllKeyed();
-  foreach ($rows as $id => $options) {
-    $opt = unserialize($options);
+    ->fetchAll();
+  foreach ($rows as $row) {
+    $opt = unserialize($row->options);
     $callbacks = &$opt['data_alter_callbacks'];
     if (isset($callbacks['search_api_alter_add_fulltext'])) {
       $callbacks['search_api_alter_add_aggregation'] = $callbacks['search_api_alter_add_fulltext'];
@@ -739,12 +739,16 @@ function search_api_update_7106() {
       }
     }
     $opt = serialize($opt);
-    if ($opt != $options) {
+    if ($opt != $row->options) {
+      // Mark the entity as overridden, in case it has been defined in code
+      // only.
+      $row->status |= 0x01;
       db_update('search_api_index')
         ->fields(array(
           'options' => $opt,
+          'status' => $row->status,
         ))
-        ->condition('id', $id)
+        ->condition('id', $row->id)
         ->execute();
     }
   }

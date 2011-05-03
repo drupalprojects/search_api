@@ -10,7 +10,8 @@ Others:
 - #1117074 by drunken monkey: Fixed handling of overlong tokens by DB backend.
 - #1124548 by drunken monkey: Fixed syntax error in search_api.admin.inc.
 - #1134296 by klausi: Fixed check for NULL in SearchApiDbService->convert().
-- #1123604 by drunken monkey: Added generalized "aggregation" data alteration.
+- #1123604 by drunken monkey, fago: Added generalized "aggregation" data
+  alteration.
 - #1129226 by drunken monkey: Fixed incorrect handling of facets deactivated for
   some search IDs.
 - #1086492 by drunken monkey: Fixed inadequate warnings when using the "Facets
