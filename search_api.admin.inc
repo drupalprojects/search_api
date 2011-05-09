@@ -1109,6 +1109,12 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       unset($callback_objects[$name]);
       continue;
     }
+    if (!$callback_objects[$name]->supportsIndex($index)) {
+      unset($callback_info[$name]);
+      unset($callbacks[$name]);
+      unset($callback_objects[$name]);
+      continue;
+    }
   }
   $form_state['callbacks'] = $callback_objects;
   $form['#callbacks'] = $callbacks;
@@ -1194,6 +1200,12 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
     }
     if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof SearchApiProcessorInterface)) {
       watchdog('search api', t('Processor !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processor['class'])), NULL, WATCHDOG_WARNING);
+      unset($processor_info[$name]);
+      unset($processors[$name]);
+      unset($processor_objects[$name]);
+      continue;
+    }
+    if (!$processor_objects[$name]->supportsIndex($index)) {
       unset($processor_info[$name]);
       unset($processors[$name]);
       unset($processor_objects[$name]);

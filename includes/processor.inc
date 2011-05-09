@@ -25,6 +25,24 @@ interface SearchApiProcessorInterface {
   public function __construct(SearchApiIndex $index, array $options = array());
 
   /**
+   * Check whether this processor is applicable for a certain index.
+   *
+   * This can be used for hiding the processor on the index's "Workflow" tab. To
+   * avoid confusion, you should only use criteria that are immutable, such as
+   * the index's entity type. Also, since this is only used for UI purposes, you
+   * should not completely rely on this to ensure certain index configurations
+   * and at least throw an exception with a descriptive error message if this is
+   * violated on runtime.
+   *
+   * @param SearchApiIndex $index
+   *   The index to check for.
+   *
+   * @return boolean
+   *   TRUE if the processor can run on the given index; FALSE otherwise.
+   */
+  public function supportsIndex(SearchApiIndex $index);
+
+  /**
    * Display a form for configuring this processor.
    * Since forcing users to specify options for disabled processors makes no
    * sense, none of the form elements should have the '#required' attribute set.
@@ -133,6 +151,10 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   public function __construct(SearchApiIndex $index, array $options = array()) {
     $this->index   = $index;
     $this->options = $options;
+  }
+
+  public function supportsIndex(SearchApiIndex $index) {
+    return TRUE;
   }
 
   public function configurationForm() {

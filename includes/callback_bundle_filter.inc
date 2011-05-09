@@ -6,6 +6,10 @@
  */
 class SearchApiAlterBundleFilter extends SearchApiAbstractAlterCallback {
 
+  public function supportsIndex(SearchApiIndex $index) {
+    return self::hasBundles(entity_get_info($index->entity_type));
+  }
+
   public function alterItems(array &$items) {
     $info = entity_get_info($this->index->entity_type);
     if (self::hasBundles($info) && isset($this->options['bundles'])) {

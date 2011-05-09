@@ -1,6 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
 API changes:
+- #1150260 by drunken monkey: Added a way to let processors and data alterations
+  decide on which indexes they can run.
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:

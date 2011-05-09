@@ -16,6 +16,24 @@ interface SearchApiAlterCallbackInterface {
   public function __construct(SearchApiIndex $index, array $options = array());
 
   /**
+   * Check whether this data-alter callback is applicable for a certain index.
+   *
+   * This can be used for hiding the callback on the index's "Workflow" tab. To
+   * avoid confusion, you should only use criteria that are immutable, such as
+   * the index's entity type. Also, since this is only used for UI purposes, you
+   * should not completely rely on this to ensure certain index configurations
+   * and at least throw an exception with a descriptive error message if this is
+   * violated on runtime.
+   *
+   * @param SearchApiIndex $index
+   *   The index to check for.
+   *
+   * @return boolean
+   *   TRUE if the callback can run on the given index; FALSE otherwise.
+   */
+  public function supportsIndex(SearchApiIndex $index);
+
+  /**
    * Display a form for configuring this callback.
    *
    * @return array
@@ -116,6 +134,28 @@ abstract class SearchApiAbstractAlterCallback implements SearchApiAlterCallbackI
   public function __construct(SearchApiIndex $index, array $options = array()) {
     $this->index = $index;
     $this->options = $options;
+  }
+
+  /**
+   * Check whether this data-alter callback is applicable for a certain index.
+   *
+   * This can be used for hiding the callback on the index's "Workflow" tab. To
+   * avoid confusion, you should only use criteria that are immutable, such as
+   * the index's entity type. Also, since this is only used for UI purposes, you
+   * should not completely rely on this to ensure certain index configurations
+   * and at least throw an exception with a descriptive error message if this is
+   * violated on runtime.
+   *
+   * The default implementation always returns TRUE.
+   *
+   * @param SearchApiIndex $index
+   *   The index to check for.
+   *
+   * @return boolean
+   *   TRUE if the callback can run on the given index; FALSE otherwise.
+   */
+  public function supportsIndex(SearchApiIndex $index) {
+    return TRUE;
   }
 
   /**
