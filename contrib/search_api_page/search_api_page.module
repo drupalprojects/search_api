@@ -105,11 +105,11 @@ function search_api_page_block_info() {
  * Implements hook_block_view().
  */
 function search_api_page_block_view($delta) {
-  $pages = search_api_page_load_multiple(FALSE, array('enabled' => TRUE));
-  if (isset($pages[$delta])) {
+  $page = search_api_page_load($delta);
+  if ($page) {
     $block = array();
-    $block['subject'] = t($pages[$delta]->name);
-    $block['content'] = drupal_get_form('search_api_page_search_form_' . $delta, $pages[$delta], NULL, TRUE);
+    $block['subject'] = t($page->name);
+    $block['content'] = drupal_get_form('search_api_page_search_form_' . $delta, $page, NULL, TRUE);
     return $block;
   }
 }
