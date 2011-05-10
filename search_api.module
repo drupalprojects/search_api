@@ -520,7 +520,7 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
 
   // If the index's enabled or read-only status is being changed, queue or
   // dequeue entities for indexing.
-  if ($index->enabled != $index->original->enabled) {
+  if (!$index->read_only && $index->enabled != $index->original->enabled) {
     if ($index->enabled) {
       $index->queueItems();
     }
@@ -613,7 +613,7 @@ function search_api_entity_delete($entity, $type) {
   $info = entity_get_info($type);
   $id_field = $info['entity keys']['id'];
   $id = $entity->$id_field;
-  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type)) as $index) {
+  foreach (search_api_index_load_multiple(FALSE, array('entity_type' => $type, 'read_only' => 0)) as $index) {
     db_delete('search_api_item')
       ->condition('item_id', $id)
       ->condition('index_id', $index->id)
@@ -625,7 +625,7 @@ function search_api_entity_delete($entity, $type) {
       }
       else {
         $tasks = variable_get('search_api_tasks', array());
-        $tasks[$server->machine_name][$index->machine_name] = array('delete-' . $id);
+        $tasks[$server->machine_name][$index->machine_name][] = 'delete-' . $id;
         variable_set('search_api_tasks', $tasks);
       }
     }
@@ -702,6 +702,7 @@ function search_api_mark_dirty($entity_type, array $ids) {
   $query = db_select('search_api_index', 'i')
     ->fields('i', array('id'))
     ->condition('entity_type', $entity_type)
+    ->condition('enabled', 1)
     ->condition('read_only', 0);
   db_update('search_api_item')
     ->fields(array(
