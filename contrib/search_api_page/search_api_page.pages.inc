@@ -130,7 +130,8 @@ function theme_search_api_page_results(array $variables) {
   }
   else {
     $output .= '<div class="search-results">';
-    $output .= render(entity_view($index->entity_type, $entities, $variables['view_mode']));
+    $render = entity_view($index->entity_type, $entities, $variables['view_mode']);
+    $output .= render($render);
     $output .= '</div>';
   }
 
