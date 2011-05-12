@@ -6,6 +6,7 @@ API changes:
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:
+- #1147466 by awolfey: Added excerpt Views field.
 - #1152432 by morningtime: Fixed strict warnings in render() functions.
 - #1144400 by drunken monkey: Fixed use of entity_exportable_schema_fields() in
   hook_schema().
