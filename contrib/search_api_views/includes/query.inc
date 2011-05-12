@@ -326,6 +326,18 @@ class SearchApiViewsQuery extends views_plugin_query {
     return $ret;
   }
 
+  public function getOption($name) {
+    if (!$this->errors) {
+      return $this->query->getOption($name);
+    }
+  }
+
+  public function setOption($name, $value) {
+    if (!$this->errors) {
+      return $this->query->setOption($name, $value);
+    }
+  }
+
   public function &getOptions() {
     if (!$this->errors) {
       return $this->query->getOptions();
