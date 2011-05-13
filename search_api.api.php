@@ -201,25 +201,6 @@ function hook_search_api_server_insert(SearchApiServer $server) {
 }
 
 /**
- * New servers have become available – either because they were created in the
- * database, or because they were for the first time loaded from code.
- *
- * @param array $servers
- *   An array of SearchApiServer objects representing the newly available
- *   servers.
- */
-function hook_search_api_server_enabled(array $servers) {
-  foreach ($servers as $server) {
-    db_insert('example_search_server')
-      ->fields(array(
-        'server' => $server->machine_name,
-        'insert_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
-}
-
-/**
  * A search server was edited, enabled or disabled.
  *
  * @param SearchApiServer $server
@@ -255,6 +236,35 @@ function hook_search_api_server_delete(SearchApiServer $server) {
 }
 
 /**
+* Define default search servers.
+*
+* @return array
+*   An array of default search servers, keyed by machine names.
+*
+* @see hook_default_search_api_server_alter()
+*/
+function hook_default_search_api_server() {
+  $defaults['main'] = entity_create('search_api_server', array(
+    'name' => 'Main server',
+    'machine_name' => 'main',// Must be same as the used array key.
+    // Other properties ...
+  ));
+  return $defaults;
+}
+
+/**
+* Alter default search servers.
+*
+* @param array $defaults
+*   An array of default search servers, keyed by machine names.
+*
+* @see hook_default_search_api_server()
+*/
+function hook_default_search_api_server_alter(array &$defaults) {
+  $defaults['main']->name = 'Customized main server';
+}
+
+/**
  * Act on search indexes when they are loaded.
  *
  * @param array $indexes
@@ -284,25 +294,6 @@ function hook_search_api_index_insert(SearchApiIndex $index) {
       'insert_time' => REQUEST_TIME,
     ))
     ->execute();
-}
-
-/**
- * New indexes have become available – either because they were created in the
- * database, or because they were for the first time loaded from code.
- *
- * @param array $indexes
- *   An array of SearchApiIndex objects representing the newly available
- *   indexes.
- */
-function hook_search_api_index_enabled(array $indexes) {
-  foreach ($indexes as $index) {
-    db_insert('example_search_index')
-      ->fields(array(
-        'index' => $index->machine_name,
-        'insert_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
 }
 
 /**
@@ -355,6 +346,35 @@ function hook_search_api_index_delete(SearchApiIndex $index) {
   db_delete('example_search_index')
     ->condition('index', $index->machine_name)
     ->execute();
+}
+
+/**
+* Define default search indexes.
+*
+* @return array
+*   An array of default search indexes, keyed by machine names.
+*
+* @see hook_default_search_api_index_alter()
+*/
+function hook_default_search_api_index() {
+  $defaults['main'] = entity_create('search_api_index', array(
+    'name' => 'Main index',
+    'machine_name' => 'main',// Must be same as the used array key.
+    // Other properties ...
+  ));
+  return $defaults;
+}
+
+/**
+* Alter default search indexes.
+*
+* @param array $defaults
+*   An array of default search indexes, keyed by machine names.
+*
+* @see hook_default_search_api_index()
+*/
+function hook_default_search_api_index_alter(array &$defaults) {
+  $defaults['main']->name = 'Customized main index';
 }
 
 /**

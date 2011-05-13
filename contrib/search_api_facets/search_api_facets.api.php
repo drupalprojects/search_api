@@ -45,3 +45,108 @@ interface SearchApiFacetsQueryInterface extends SearchApiQueryInterface {
   public function execute();
 
 }
+
+/**
+ * @addtogroup hooks
+ * @{
+ */
+
+/**
+ * Act on search facets when they are loaded.
+ *
+ * @param array $facets
+ *   An array of loaded SearchApiFacet objects.
+ */
+function hook_search_api_facet_load(array $facets) {
+  foreach ($facets as $facet) {
+    db_insert('example_search_facet_access')
+      ->fields(array(
+        'facet' => $facet->delta,
+        'access_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A new search facet was created.
+ *
+ * @param SearchApiFacet $facet
+ *   The new facet.
+ */
+function hook_search_api_facet_insert(SearchApiFacet $facet) {
+  db_insert('example_search_facet')
+    ->fields(array(
+      'facet' => $facet->delta,
+      'insert_time' => REQUEST_TIME,
+    ))
+    ->execute();
+}
+
+/**
+ * A search facet was edited, enabled or disabled.
+ *
+ * @param SearchApiFacet $facet
+ *   The edited facet.
+ */
+function hook_search_api_facet_update(SearchApiFacet $facet) {
+  if ($facet->name != $facet->original->name) {
+    db_insert('example_search_facet_name_update')
+      ->fields(array(
+        'facet' => $facet->delta,
+        'update_time' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
+}
+
+/**
+ * A search facet was deleted.
+ *
+ * @param SearchApiFacet $facet
+ *   The deleted facet.
+ */
+function hook_search_api_facet_delete(SearchApiFacet $facet) {
+  db_insert('example_search_facet_update')
+    ->fields(array(
+      'facet' => $facet->delta,
+      'update_time' => REQUEST_TIME,
+    ))
+    ->execute();
+  db_delete('example_search_facet')
+    ->condition('facet', $facet->delta)
+    ->execute();
+}
+
+/**
+* Define default search facets.
+*
+* @return array
+*   An array of default search facets, keyed by machine names.
+*
+* @see hook_default_search_api_facet_alter()
+*/
+function hook_default_search_api_facet() {
+  $defaults['main'] = entity_create('search_api_facet', array(
+    'name' => 'Main facet',
+    'delta' => 'main',// Must be same as the used array key.
+    // Other properties ...
+  ));
+  return $defaults;
+}
+
+/**
+* Alter default search facets.
+*
+* @param array $defaults
+*   An array of default search facets, keyed by machine names.
+*
+* @see hook_default_search_api_facet()
+*/
+function hook_default_search_api_facet_alter(array &$defaults) {
+  $defaults['main']->name = 'Customized main facet';
+}
+
+/**
+ * @} End of "addtogroup hooks".
+ */
