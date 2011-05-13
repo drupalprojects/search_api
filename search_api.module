@@ -1048,7 +1048,7 @@ function search_api_list_nesting_level($type) {
  */
 function search_api_nest_type($type, $nested_type) {
   while (search_api_is_list_type($nested_type)) {
-    $nested_type = substr($type, 5, -1);
+    $nested_type = substr($nested_type, 5, -1);
     $type = "list<$type>";
   }
   return $type;
