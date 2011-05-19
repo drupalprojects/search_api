@@ -570,6 +570,13 @@ function search_api_admin_add_index(array $form, array &$form_state) {
       $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
+  $form['index_directly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Index items immediately'),
+    '#description' => t('Immediately index new or updated items instead of waiting for the next cron run. ' .
+        'This might have serious performance drawbacks and is generally not advised for larger sites.'),
+    '#default_value' => FALSE,
+  );
   $form['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
@@ -611,7 +618,10 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
-  $values['options'] = array('cron_limit' => $values['cron_limit']);
+  $values['options'] = array(
+    'cron_limit' => $values['cron_limit'],
+    'index_directly' => $values['index_directly'],
+  );
   unset($values['cron_limit']);
 
   // Trying to create an enabled index on a disabled server is handled elsewhere
@@ -1028,6 +1038,16 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#description' => t('Do not write to this index or track ids of entities in this index.'),
     '#default_value' => $index->read_only,
   );
+  $form['index_directly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Index items immediately'),
+    '#description' => t('Immediately index new or updated items instead of waiting for the next cron run. ' .
+        'This might have serious performance drawbacks and is generally not advised for larger sites.'),
+    '#default_value' => !empty($index->options['index_directly']),
+    '#states' => array(
+      'invisible' => array(':input[name="read_only"]' => array('checked' => TRUE)),
+    ),
+  );
   $form['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
@@ -1061,6 +1081,8 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
   $values['options'] = $index->options;
   $values['options']['cron_limit'] = $values['cron_limit'];
   unset($values['cron_limit']);
+  $values['options']['index_directly'] = $values['index_directly'];
+  unset($values['index_directly']);
 
   $ret = $index->update($values);
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;

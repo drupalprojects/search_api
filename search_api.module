@@ -218,7 +218,7 @@ function search_api_permission() {
  * Will index $options['cron-limit'] items for each enabled index.
  */
 function search_api_cron() {
-  foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE)) as $index) {
+  foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE, 'read_only' => 0)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
@@ -559,26 +559,32 @@ function search_api_search_api_index_delete(SearchApiIndex $index) {
  *   The entity's type.
  */
 function search_api_entity_insert($entity, $type) {
-  if ($type == 'search_api_index') {
+  if ($type != 'search_api_index') {
     // When inserting a new search index, the new index was already inserted into search_api_item.
     // This would lead to a duplicate-key issue, if we would continue.
-    return;
+    $info = entity_get_info($type);
+    $id = $info['entity keys']['id'];
+    $id = $entity->$id;
+
+    $query = db_select('search_api_index', 'i')
+      ->condition('entity_type', $type)
+      ->condition('enabled', 1)
+      ->condition('read_only', 0);
+    $query->addField('i', 'id', 'index_id');
+    $query->addExpression(':item_id', 'item_id', array(':item_id' => $id));
+    $query->addExpression(':changed', 'changed', array(':changed' => 1));
+
+    db_insert('search_api_item')
+      ->from($query)
+      ->execute();
   }
-  $info = entity_get_info($type);
-  $id = $info['entity keys']['id'];
-  $id = $entity->$id;
 
-  $query = db_select('search_api_index', 'i')
-    ->condition('entity_type', $type)
-    ->condition('enabled', 1)
-    ->condition('read_only', 0);
-  $query->addField('i', 'id', 'index_id');
-  $query->addExpression(':item_id', 'item_id', array(':item_id' => $id));
-  $query->addExpression(':changed', 'changed', array(':changed' => 1));
-
-  db_insert('search_api_item')
-    ->from($query)
-    ->execute();
+  foreach (search_api_index_load_multiple(FALSE, array('enabled' => 1, 'entity_type' => $type, 'read_only' => 0)) as $index) {
+    if (!empty($index->options['index_directly'])) {
+      $item = clone $entity;
+      search_api_index_specific_items($index, array($id => $item));
+    }
+  }
 }
 
 /**
@@ -690,8 +696,10 @@ function search_api_search_api_processor_info() {
 }
 
 /**
- * Mark the entities with the specified IDs as "dirty", i.e., as needing to be
- * reindexed.
+ * Mark the entities with the specified IDs as "dirty", i.e., as needing to be reindexed.
+ *
+ * For indexes for which items should be indexed immediately, the items are
+ * indexed directly, instead.
  *
  * @param $entity_type
  *   The type of entity, e.g., 'node'.
@@ -699,19 +707,39 @@ function search_api_search_api_processor_info() {
  *   The entity IDs of the entities to be marked dirty.
  */
 function search_api_mark_dirty($entity_type, array $ids) {
-  $query = db_select('search_api_index', 'i')
-    ->fields('i', array('id'))
-    ->condition('entity_type', $entity_type)
-    ->condition('enabled', 1)
-    ->condition('read_only', 0);
-  db_update('search_api_item')
-    ->fields(array(
-      'changed' => REQUEST_TIME,
-    ))
-    ->condition('item_id', $ids, 'IN')
-    ->condition('index_id', $query, 'IN')
-    ->condition('changed', 0)
-    ->execute();
+  $index_ids = array();
+  foreach (search_api_index_load_multiple(FALSE, array('enabled' => 1, 'entity_type' => $entity_type, 'read_only' => 0)) as $index) {
+    if (empty($index->options['index_directly'])) {
+      $index_ids[] = $index->id;
+    }
+    else {
+      // For indexes with the index_directly set, index the items right away.
+      $items = entity_load($entity_type, $ids, array(), TRUE);
+      $indexed = search_api_index_specific_items($index, $items);
+      if (count($indexed) < count($ids)) {
+        // If indexing failed for some items, mark those as dirty.
+        $diff = array_diff($ids, $indexed);
+        db_update('search_api_item')
+          ->fields(array(
+            'changed' => REQUEST_TIME,
+          ))
+          ->condition('item_id', $ids, 'IN')
+          ->condition('index_id', $index->id)
+          ->condition('changed', 0)
+          ->execute();
+      }
+    }
+  }
+  if ($index_ids) {
+    db_update('search_api_item')
+      ->fields(array(
+        'changed' => REQUEST_TIME,
+      ))
+      ->condition('item_id', $ids, 'IN')
+      ->condition('index_id', $index_ids, 'IN')
+      ->condition('changed', 0)
+      ->execute();
+  }
 }
 
 /**
@@ -746,12 +774,33 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
     return 0;
   }
 
-  $indexed = $index->index($items);
+  return count(search_api_index_specific_items($index, $items));
+}
 
+/**
+ * Indexes the given items on the specified index.
+ *
+ * Items which were successfully indexed are marked as such afterwards.
+ *
+ * @param SearchApiIndex $index
+ *   The index on which items should be indexed.
+ * @param array $items
+ *   The items which should be indexed. Have to be entities of the appropriate
+ *   type.
+ *
+ * @throws SearchApiException
+ *   If the index' entity type is unknown or another error occurs during
+ *   indexing.
+ *
+ * @return
+ *   The IDs of all successfully indexed items.
+ */
+function search_api_index_specific_items(SearchApiIndex $index, array $items) {
+  $indexed = $index->index($items);
   if (!empty($indexed)) {
     search_api_set_items_indexed($index, $indexed);
   }
-  return count($indexed);
+  return $indexed;
 }
 
 /**
@@ -780,7 +829,7 @@ function search_api_get_items_to_index(SearchApiIndex $index, $limit = -1) {
   }
 
   $ids = $select->execute()->fetchCol();
-  return entity_load($index->entity_type, $ids);
+  return entity_load($index->entity_type, $ids, array(), TRUE);
 }
 
 /**
@@ -796,12 +845,12 @@ function search_api_get_items_to_index(SearchApiIndex $index, $limit = -1) {
  */
 function search_api_set_items_indexed(SearchApiIndex $index, array $ids) {
   return db_update('search_api_item')
-      ->fields(array(
-        'changed' => 0,
-      ))
-      ->condition('index_id', $index->id)
-      ->condition('item_id', $ids, 'IN')
-      ->execute();
+    ->fields(array(
+      'changed' => 0,
+    ))
+    ->condition('index_id', $index->id)
+    ->condition('item_id', $ids, 'IN')
+    ->execute();
 }
 
 /**

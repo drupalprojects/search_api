@@ -6,6 +6,8 @@ API changes:
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:
+- #1118416 by drunken monkey: Added option to index entities instantly after
+  they are saved.
 - #1153298 by JoeMcGuire, drunken monkey: Added option getter and setter to
   Views query handler.
 - #1147466 by awolfey: Added excerpt Views field.

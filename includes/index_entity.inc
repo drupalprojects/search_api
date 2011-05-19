@@ -67,6 +67,8 @@ class SearchApiIndex extends Entity {
   /**
    * An array of options for configuring this index. The layout is as follows:
    * - cron_limit: The maximum number of items to be indexed per cron run.
+   * - index_directly: Boolean setting whether entities are indexed immediately
+   *   after they are created or updated.
    * - fields: An array of all known fields for this index. Keys are the field
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
@@ -162,8 +164,8 @@ class SearchApiIndex extends Entity {
    * Record entities to index.
    */
   public function queueItems() {
-		$this->dequeueItems();
-		
+    $this->dequeueItems();
+
     if (!$this->read_only) {
       $entity_info = entity_get_info($this->entity_type);
 
