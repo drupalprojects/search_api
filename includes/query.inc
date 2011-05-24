@@ -417,7 +417,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *   The parsed keys. Either a string or an array.
    */
   protected function parseKeys($keys, $mode) {
-    if ($keys == NULL || is_array($keys)) {
+    if ($keys === NULL || is_array($keys)) {
       return $keys;
     }
     $keys = '' . $keys;
@@ -430,7 +430,6 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
       case 'terms':
         $ret = explode(' ', $keys);
-        $ret['#conjunction'] = $this->options['conjunction'];
         $quoted = FALSE;
         $str = '';
         foreach ($ret as $k => $v) {
@@ -464,6 +463,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
         if ($quoted) {
           $ret[] = $str;
         }
+        $ret['#conjunction'] = $this->options['conjunction'];
         return array_filter($ret);
     }
   }

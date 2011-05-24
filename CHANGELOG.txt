@@ -6,6 +6,7 @@ API changes:
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:
+- #1166514 by drunken monkey: Fixed parseKeys() to handle incomplete quoting.
 - #1161966 by JoeMcGuire: Added Search API Spellcheck support for Pages.
 - #1118416 by drunken monkey: Added option to index entities instantly after
   they are saved.
