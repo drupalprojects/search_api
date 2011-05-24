@@ -17,9 +17,22 @@ function search_api_page_view($id, $keys = NULL) {
   $ret['form'] = drupal_get_form('search_api_page_search_form', $page, $keys);
 
   if ($keys) {
+    $results = search_api_page_search_execute($page, $keys);
+
+    // If spellcheck results are returned then add them to the render array.
+    if (isset($results['search_api_spellcheck'])) {
+      $ret['search_api_spellcheck']['#theme'] = 'search_api_spellcheck';
+      $ret['search_api_spellcheck']['#spellcheck'] = $results['search_api_spellcheck'];
+      // Let the theme function know where the key is stored by passing its arg
+      // number. We can work this out from the number of args in the page path.
+      $ret['search_api_spellcheck']['#options'] = array(
+        'arg' => array(count(arg(NULL, $page->path))),
+      );
+    }
+
     $ret['results']['#theme'] = 'search_api_page_results';
     $ret['results']['#index'] = search_api_index_load($page->index_id);
-    $ret['results']['#results'] = $results = search_api_page_search_execute($page, $keys);
+    $ret['results']['#results'] = $results;
     $ret['results']['#view_mode'] = isset($page->options['view_mode']) ? $page->options['view_mode'] : 'search_api_page_result';
     $ret['results']['#keys'] = $keys;
 
@@ -60,6 +73,11 @@ function search_api_page_search_execute(stdClass $page, $keys) {
     'search id' => 'search_api_page:' . $page->path,
     'parse mode' => $page->options['mode'],
   );
+
+  if (!empty($page->options['search_api_spellcheck'])) {
+    $options['search_api_spellcheck'] = TRUE;
+  }
+
   $query = search_api_query($page->index_id, $options)
     ->keys($keys)
     ->range($offset, $limit);

@@ -35,10 +35,9 @@ function search_api_page_admin_overview() {
   $edit = '/edit';
   $delete = '/delete';
 
-  $indexes = search_api_index_load_multiple(FALSE);
   foreach (search_api_page_load_multiple() as $page) {
     $url = $pre . $page->id;
-    $index = $indexes[$page->index_id];
+    $index = search_api_index_load($page->index_id);
     $rows[] = array(
       $page->enabled ? $t_enabled : $t_disabled,
       l($page->name, $page->path),
@@ -192,6 +191,15 @@ function search_api_page_admin_add(array $form, array &$form_state) {
     $form['view_mode'] = array(
       '#type' => 'value',
       '#value' => reset($view_modes),
+    );
+  }
+
+  if (module_exists('search_api_spellcheck') && ($server = $index->server()) && $server->supportsFeature('search_api_spellcheck')) {
+    $form['search_api_spellcheck'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable spell check'),
+      '#description' => t('Display "Did you mean … ?" above search results.'),
+      '#default_value' => TRUE,
     );
   }
 
@@ -356,6 +364,15 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
     $form['options']['view_mode'] = array(
       '#type' => 'value',
       '#value' => reset($view_modes),
+    );
+  }
+
+  if (module_exists('search_api_spellcheck') && ($server = $index->server()) && $server->supportsFeature('search_api_spellcheck')) {
+    $form['options']['search_api_spellcheck'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable spell check'),
+      '#description' => t('Display "Did you mean … ?" above search results.'),
+      '#default_value' => !empty($page->options['search_api_spellcheck']),
     );
   }
 
