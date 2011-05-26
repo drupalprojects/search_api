@@ -39,3 +39,13 @@ display will potentially trigger other facet blocks to be displayed for that
 search. To prevent this, set the other facet blocks to either not display on the
 pages where the Views facet block is shown, or to ignore the search executed by
 the block (recognizable by the "-facet_block" suffix).
+
+Make fields in greater depths available
+---------------------------------------
+Currently, field handlers are only generated up to a nesting level of 2. E.g.,
+for an index of nodes, you can display fields from the author's profile, but not
+the URL of an image in that profile.
+There are currently plans to solve this problem by providing proper
+"relationships" to nested entities. However, until then, you can circumvent this
+problem by setting the "search_api_views_max_fields_depth" variable to the
+maximum level to generate field handlers for. The default behaviour is 2.
