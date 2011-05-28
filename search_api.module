@@ -691,6 +691,13 @@ function search_api_search_api_processor_info() {
     'class' => 'SearchApiTokenizer',
     'weight' => 20,
   );
+  $processors['search_api_stopwords'] = array(
+    'name' => t('Stopwords'),
+    'description' => t('This processor prevents certain words from being indexed and removes them from search terms. ' .
+        'For best results, it should only be executed after tokenizing.'),
+    'class' => 'SearchApiStopWords',
+    'weight' => 30,
+  );
 
   return $processors;
 }

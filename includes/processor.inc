@@ -284,6 +284,9 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
       foreach ($keys as $key => &$v) {
         if (element_child($key)) {
           $this->processKeys($v);
+          if (!$v && !is_numeric($v)) {
+            unset($keys[$key]);
+          }
         }
       }
     }
