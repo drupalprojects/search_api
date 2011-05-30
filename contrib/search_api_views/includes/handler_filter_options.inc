@@ -9,24 +9,96 @@
  */
 class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
 
+  protected $value_form_type = 'checkboxes';
+
   /**
    * Provide a list of options for the operator form.
    */
   public function operator_options() {
     return array(
-      '=' => t('is one of'),
-      '<>' => t('is not one of'),
+      '=' => t('Is one of'),
+      '<>' => t('Is not one of'),
     );
+  }
+
+  /**
+   * Set "reduce" option to FALSE by default.
+   */
+  public function expose_options() {
+    parent::expose_options();
+    $this->options['expose']['reduce'] = FALSE;
+  }
+
+  /**
+   * Add the "reduce" option to the exposed form.
+   */
+  public function expose_form(&$form, &$form_state) {
+    parent::expose_form($form, $form_state);
+    $form['expose']['reduce'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit list to selected items'),
+      '#description' => t('If checked, the only items presented to the user will be the ones selected here.'),
+      '#default_value' => !empty($this->options['expose']['reduce']),
+    );
+  }
+
+  /**
+   * Define "reduce" option.
+   */
+  public function option_definition() {
+    $options = parent::option_definition();
+    $options['expose']['contains']['reduce'] = array('default' => FALSE);
+    return $options;
+  }
+
+  /**
+   * Reduce the options according to the selection.
+   */
+  protected function reduce_value_options() {
+    $options = array();
+    foreach ($this->definition['options'] as $id => $option) {
+      if (isset($this->options['value'][$id])) {
+        $options[$id] = $option;
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Save set checkboxes.
+   */
+  public function value_submit($form, &$form_state) {
+    // Drupal's FAPI system automatically puts '0' in for any checkbox that
+    // was not set, and the key to the checkbox if it is set.
+    // Unfortunately, this means that if the key to that checkbox is 0,
+    // we are unable to tell if that checkbox was set or not.
+
+    // Luckily, the '#value' on the checkboxes form actually contains
+    // *only* a list of checkboxes that were set, and we can use that
+    // instead.
+
+    $form_state['values']['options']['value'] = $form['value']['#value'];
   }
 
   /**
    * Provide a form for setting options.
    */
   public function value_form(&$form, &$form_state) {
+    $options = array();
+    if (empty($form_state['exposed'])) {
+      // Add a select all option to the value form.
+      $options = array('all' => t('Select all'));
+    }
+    if (!empty($this->options['expose']['reduce']) && !empty($form_state['exposed'])) {
+      $options += $this->reduce_value_options($form_state);
+    }
+    else {
+      $options += $this->definition['options'];
+    }
     $form['value'] = array(
-      '#type' => 'select',
+      '#type' => $this->value_form_type,
       '#title' => empty($form_state['exposed']) ? t('Value') : '',
-      '#options' => $this->definition['options'],
+      '#options' => $options,
       '#multiple' => TRUE,
       '#size' => min(4, count($this->definition['options'])),
       '#default_value' => isset($this->value) ? $this->value : array(),
