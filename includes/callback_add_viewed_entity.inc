@@ -43,6 +43,14 @@ class SearchApiAlterAddViewedEntity extends SearchApiAbstractAlterCallback {
   }
 
   public function alterItems(array &$items) {
+    // Prevent session information from being saved while indexing.
+    drupal_save_session(FALSE);
+
+    // Force the current user to anonymous to prevent access bypass in search
+    // indexes.
+    $original_user = $GLOBALS['user'];
+    $GLOBALS['user'] = drupal_anonymous_user();
+
     $type = $this->index->entity_type;
     $mode = empty($this->options['mode']) ? 'full' : $this->options['mode'];
     foreach ($items as $id => &$item) {
@@ -61,6 +69,10 @@ class SearchApiAlterAddViewedEntity extends SearchApiAbstractAlterCallback {
         $item->search_api_viewed = NULL;
       }
     }
+
+    // Restore the user.
+    $GLOBALS['user'] = $original_user;
+    drupal_save_session(TRUE);
   }
 
   public function propertyInfo() {
