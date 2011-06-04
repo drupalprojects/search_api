@@ -46,7 +46,7 @@ class SearchApiViewsHandlerFieldEntity extends SearchApiViewsHandlerField {
   /**
    * Render a value as a link to the entity, if applicable.
    */
-  protected function renderLink($value, array $values) {
+  protected function renderLink($value, $values) {
     $render = $this->renderValue($value, $values);
     if (!$this->options['link_to_entity'] || !is_numeric($value)) {
       return $render;

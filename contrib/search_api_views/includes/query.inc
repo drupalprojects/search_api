@@ -89,6 +89,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    */
   public function addField($field) {
     $this->fields[$field] = TRUE;
+    return $field;
   }
 
   /**
@@ -154,44 +155,67 @@ class SearchApiViewsQuery extends views_plugin_query {
    * view.
    */
   protected function addResults(array $results, $view) {
-    // Maybe the service class or a postprocessor already set the entities.
+    $rows = array();
+    $missing = array();
+    $entities = array();
+    $entity_type = $this->index->entity_type;
+
+    // First off, we try to gather as much field values as possible without
+    // loading any entities.
     foreach ($results as $id => $result) {
+      $row = array('search_api_views_entity_type' => $entity_type);
+
+      // Include the loaded entity for this result row, if present, or the
+      // entity ID.
       if (!empty($result['entity'])) {
-        $wrapper = entity_metadata_wrapper($this->index->entity_type, $result['entity']);
-        $fields = $this->extractFields($wrapper, $this->fields);
-        if ($fields) {
-          $view->result[$id] = $fields;
-          $view->result[$id]['search_api_relevance'] = $result['score'];
+        $row['entity'] = $result['entity'];
+      }
+      else {
+        $row['entity'] = $id;
+      }
+
+      $row['search_api_relevance'] = $result['score'];
+      if (!empty($this->fields['search_api_excerpt'])) {
+        $row['search_api_excerpt'] = empty($result['excerpt']) ? '' : $result['excerpt'];
+      }
+
+      // Gather any fields from the search results.
+      if (!empty($result['fields'])) {
+        $row += $result['fields'];
+      }
+
+      // Check whether we need to extract any properties from the Drupal entity.
+      $missing_fields = array_diff_key($this->fields, $row);
+      if (!empty($missing_fields)) {
+        $missing[$id] = $missing_fields;
+        if (is_object($row['entity'])) {
+          $entities[$id] = $row['entity'];
         }
         else {
           $ids[] = $id;
         }
       }
-      else {
-        $ids[] = $id;
-      }
-    }
-    if (empty($ids)) {
-      return;
+
+      // Save the row values for adding them to the Views result afterwards.
+      $rows[$id] = $row;
     }
 
-    $entities = entity_load($this->index->entity_type, $ids);
-    foreach ($entities as $id => $entity) {
-      try {
-        if (!is_object($entity)) {
-          continue;
-        }
-        $wrapper = entity_metadata_wrapper($this->index->entity_type, $entity);
-        $view->result[$id]['entity'] = $entity;
-        $view->result[$id]['search_api_relevance'] = $results[$id]['score'];
-        if (isset($results[$id]['excerpt']) && !empty($this->fields['search_api_excerpt'])) {
-          $view->result[$id]['search_api_excerpt'] = $results[$id]['excerpt'];
-        }
-        $view->result[$id] += $this->extractFields($wrapper, $this->fields);
+    // Load entities of those rows which haven't got all field values, yet.
+    if (!empty($ids)) {
+      $entities += entity_load($entity_type, $ids);
+      // $entities now includes loaded entities, and those already passed in the
+      // search results.
+      foreach ($entities as $id => $entity) {
+        // Extract entity properties.
+        $wrapper = entity_metadata_wrapper($entity_type, $entity);
+        $rows[$id] += $this->extractFields($wrapper, $missing[$id]);
+        $rows[$id]['entity'] = $entity;
       }
-      catch (Exception $e) {
-        continue;
-      }
+    }
+
+    // Finally, add all rows to the Views result set.
+    foreach ($rows as $id => $row) {
+      $view->result[$id] = (object) $row;
     }
   }
 

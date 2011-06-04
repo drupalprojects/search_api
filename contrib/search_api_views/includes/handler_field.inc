@@ -84,7 +84,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
    */
   public function query() {
     // Add the field.
-    $this->query->addField($this->real_field);
+    $this->field_alias = $this->query->addField($this->real_field);
     $this->addAdditionalFields();
   }
 
@@ -108,7 +108,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
     }
     if (!empty($fields) && is_array($fields)) {
       foreach ($fields as $identifier => $info) {
-        $this->query->addField(is_array($info) ? $info['field'] : $info);
+        $this->aliases[$identifier] = $this->query->addField(is_array($info) ? $info['field'] : $info);
       }
     }
   }
@@ -126,8 +126,8 @@ class SearchApiViewsHandlerField extends views_handler_field {
    * @param array $values
    *   The values retrieved from the database.
    */
-  public function render(array $values) {
-    $value = $values[$this->real_field];
+  public function render($values) {
+    $value = $this->get_value($values);
     if (is_array($value)) {
       return $this->renderArray($value, $values);
     }
@@ -137,7 +137,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render a list of values.
    */
-  protected function renderArray($value, array $values) {
+  protected function renderArray($value, $values) {
     if (isset($this->options['list']['mode'])) {
       if ($this->options['list']['mode'] == 'first') {
         $value = count($value) ? array_shift($value) : NULL;
@@ -164,16 +164,24 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render a value as a link to the entity, if applicable.
    */
-  // @todo Let e.g. author:name be linked to author instead
-  protected function renderLink($value, array $values) {
+  protected function renderLink($value, $values) {
     $render = $this->renderValue($value, $values);
     if (!$this->options['link_to_entity']) {
       return $render;
     }
-    $entity = $values['entity'];
-    $type = isset($values['search_api_views_entity_type']) ? $values['search_api_views_entity_type'] : $this->query->getIndex()->entity_type;
-    $url = entity_uri($type, $entity);
-    return l($render, $url['path'], array('html' => TRUE) + $url['options']);
+    $type = isset($values->search_api_views_entity_type) ? $values->search_api_views_entity_type : $this->query->getIndex()->entity_type;
+    $entity = $values->entity;
+    // $values->entity can either be the fully loaded entity, or just its ID.
+    if (!is_object($entity)) {
+      $entity = entity_load($type, array($entity));
+      if ($entity) {
+        $entity = reset($entity);
+      }
+    }
+    if (is_object($entity) && ($url = entity_uri($type, $entity))) {
+      return l($render, $url['path'], array('html' => TRUE) + $url['options']);
+    }
+    return $render;
   }
 
   /**
