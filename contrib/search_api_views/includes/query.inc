@@ -59,7 +59,7 @@ class SearchApiViewsQuery extends views_plugin_query {
   /**
    * Create the basic query object and fill with default values.
    */
-  public function init($base_table, $base_field, array $options) {
+  public function init($base_table, $base_field, $options) {
     try {
       $this->errors = array();
       parent::init($base_table, $base_field, $options);
@@ -95,7 +95,7 @@ class SearchApiViewsQuery extends views_plugin_query {
   /**
    * Builds the necessary info to execute the query.
    */
-  public function build($view) {
+  public function build(&$view) {
     $view->init_pager();
 
     // Let the pager modify the query to add limits.
@@ -109,7 +109,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Values to set: $view->result, $view->total_rows, $view->execute_time,
    * $view->pager['current_page'].
    */
-  public function execute($view) {
+  public function execute(&$view) {
     if ($this->errors) {
       foreach ($this->errors as $msg) {
         drupal_set_message($msg, 'error');

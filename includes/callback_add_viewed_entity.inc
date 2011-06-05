@@ -58,7 +58,8 @@ class SearchApiAlterAddViewedEntity extends SearchApiAbstractAlterCallback {
       // we use try/catch. This will at least prevent some errors, even though
       // it's no protection against fatal errors and the like.
       try {
-        $text = render(entity_view($type, array(entity_id($type, $item) => $item), $mode));
+        $render = entity_view($type, array(entity_id($type, $item) => $item), $mode);
+        $text = render($render);
         if (!$text) {
           $item->search_api_viewed = NULL;
           continue;

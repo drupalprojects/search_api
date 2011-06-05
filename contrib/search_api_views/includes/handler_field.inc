@@ -32,7 +32,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Initialize this field handler.
    */
-  public function init($view, array &$options) {
+  public function init(&$view, &$options) {
     parent::init($view, $options);
 
     $this->is_list_type = empty($this->definition['type']) ? FALSE : search_api_is_list_type($this->definition['type']);
@@ -52,7 +52,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Provide "Link to entity" option, and list handling options if applicable.
    */
-  public function options_form(array &$form, array &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     if ($this->is_list_type) {
       $form['list']['mode'] = array(
@@ -123,7 +123,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
   /**
    * Render the field.
    *
-   * @param array $values
+   * @param $values
    *   The values retrieved from the database.
    */
   public function render($values) {

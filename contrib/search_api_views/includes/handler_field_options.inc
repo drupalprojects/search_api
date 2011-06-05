@@ -17,7 +17,7 @@ class SearchApiViewsHandlerFieldOptions extends SearchApiViewsHandlerField {
   /**
    * Returns an option form for setting this handler's options.
    */
-  public function options_form(array &$form, array &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $form['format_name'] = array(

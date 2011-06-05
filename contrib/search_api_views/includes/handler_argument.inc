@@ -70,7 +70,7 @@ class SearchApiViewsHandlerArgument extends views_handler_argument {
    * The argument sent may be found at $this->argument.
    */
   // @todo Provide options to select the operator, instead of always using '='?
-  public function query() {
+  public function query($group_by = FALSE) {
     $this->query->condition($this->real_field, $this->argument);
   }
 

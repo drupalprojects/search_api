@@ -8,6 +8,7 @@ API changes:
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:
+- #1138650 by klausi, Amitaibu, drunken monkey: Fixed PHP strict warnings.
 - #1111852 by miiimooo, drunken monkey: Added a 'More like this' feature.
 - #1171360 by jbguerraz, drunken monkey: Added possibility to restrict the
   options to display in an exposed options filter.

@@ -52,7 +52,7 @@ class SearchApiViewsHandlerArgumentFulltext extends SearchApiViewsHandlerArgumen
    *
    * The argument sent may be found at $this->argument.
    */
-  public function query() {
+  public function query($group_by = FALSE) {
     if ($this->options['fields']) {
       $this->query->fields($this->options['fields']);
     }
