@@ -7,6 +7,23 @@ on any search index.
 
 [1] http://drupal.org/project/views
 
+"More like this" feature
+------------------------
+This module defines the "More like this" feature (feature key: "search_api_mlt")
+that search service classes can implement. With a server supporting this, you
+can use the "More like this" contextual filter to display a list of items
+related to a given item (usually, nodes similar to the node currently viewed).
+
+For developers:
+A service class that wants to support this feature has to check for a
+"search_api_mlt" option in the search() method. When present, it will be an
+array containing two keys:
+- id: The entity ID of the item to which related items should be searched.
+- fields: An array of indexed fields to use for testing the similarity of items.
+When these are present, the normal keywords should be ignored and the related
+items be returned as results instead. Sorting, filtering and range restriction
+should all work normally.
+
 "Facets block" display
 ----------------------
 Most features should be clear to users of Views. However, the module also

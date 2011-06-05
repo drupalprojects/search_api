@@ -10,6 +10,7 @@ package = Search
 files[] = includes/display_facet_block.inc
 files[] = includes/handler_argument.inc
 files[] = includes/handler_argument_fulltext.inc
+files[] = includes/handler_argument_more_like_this.inc
 files[] = includes/handler_argument_text.inc
 files[] = includes/handler_field.inc
 files[] = includes/handler_field_boolean.inc

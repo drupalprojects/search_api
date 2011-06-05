@@ -125,7 +125,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       // Add range and search ID (if it wasn't already set).
       $this->query->range($this->offset, $this->limit);
       if ($this->query->getOption('search id') == get_class($this->query)) {
-        $this->query->setOption('search id', 'search_api_views:' . $view->name);
+        $this->query->setOption('search id', 'search_api_views:' . $view->name . ':' . $view->current_display);
       }
 
       // Execute the search.

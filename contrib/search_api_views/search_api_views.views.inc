@@ -173,6 +173,12 @@ function search_api_views_views_data() {
     $table['search_api_views_fulltext']['type'] = 'text';
     $table['search_api_views_fulltext']['filter']['handler'] = 'SearchApiViewsHandlerFilterFulltext';
     $table['search_api_views_fulltext']['argument']['handler'] = 'SearchApiViewsHandlerArgumentFulltext';
+
+    $table['search_api_views_more_like_this']['group'] = t('Search');
+    $table['search_api_views_more_like_this']['title'] = t('More like this');
+    $table['search_api_views_more_like_this']['help'] = t('Find similar content.');
+    $table['search_api_views_more_like_this']['type'] = 'text';
+    $table['search_api_views_more_like_this']['argument']['handler'] = 'SearchApiViewsHandlerArgumentMoreLikeThis';
   }
   return $data;
 }
