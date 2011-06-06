@@ -412,7 +412,9 @@ function search_api_facets_block_view($delta = '') {
   $count = 0;
   $limit = $options['limit'];
   foreach ($terms as $term) {
-    $key = ++$count > $limit ? '#hidden' : '#terms';
+    ++$count;
+    // When limit is set blank or to 0, we want to display all terms.
+    $key = ($limit > 0 && $count > $limit) ? '#hidden' : '#terms';
     $theme[$key][] = array(
       '#theme'   => 'search_api_facets_facet' . $theme_suffix,
       '#name'    => $term->name,

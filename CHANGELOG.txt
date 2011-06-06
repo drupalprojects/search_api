@@ -8,6 +8,8 @@ API changes:
 - #1138992 by becw, drunken monkey: Added read-only indexes.
 
 Others:
+- #1179990 by j0rd: Fixed facet blocks don't correctly respect the "unlimited"
+  setting.
 - #1138650 by klausi, Amitaibu, drunken monkey: Fixed PHP strict warnings.
 - #1111852 by miiimooo, drunken monkey: Added a 'More like this' feature.
 - #1171360 by jbguerraz, drunken monkey: Added possibility to restrict the
