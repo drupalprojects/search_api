@@ -1,5 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.0, Beta 9 (06/06/2011):
+------------------------------------
 API changes:
 - #1089758 by becw, drunken monkey: Updated Views field handlers to utilize new
   features.
