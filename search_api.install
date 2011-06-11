@@ -653,6 +653,47 @@ function search_api_update_7103() {
 }
 
 /**
+ * Initialize the "Fields to run on" settings for processors.
+ */
+function search_api_update_7107() {
+  $rows = db_select('search_api_index', 'i')
+    ->fields('i', array('id', 'options'))
+    ->execute()
+    ->fetchAllKeyed();
+  foreach ($rows as $id => $options) {
+    $opt = unserialize($options);
+    $processors = &$opt['processors'];
+    // Only update our own processors, don't mess with others.
+    $check_processors = array(
+      'search_api_case_ignore' => 1,
+      'search_api_html_filter' => 1,
+      'search_api_tokenizer' => 1,
+    );
+    foreach (array_intersect_key($processors, $check_processors) as $name => $info) {
+      $types = array('text');
+      if (!empty($info['settings']['strings'])) {
+        $types[] = 'string';
+        unset($processors[$name]['settings']['strings']);
+      }
+      foreach ($opt['fields'] as $field => $info) {
+        if ($info['indexed'] && search_api_is_text_type($info['type'], $types)) {
+          $processors[$name]['settings']['fields'][$field] = $field;
+        }
+      }
+    }
+    $opt = serialize($opt);
+    if ($opt != $options) {
+      db_update('search_api_index')
+        ->fields(array(
+          'options' => $opt,
+        ))
+        ->condition('id', $id)
+        ->execute();
+    }
+  }
+}
+
+/**
  * Change {search_api_item}.index_id back to the index' numeric ID.
  */
 function search_api_update_7104() {

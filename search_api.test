@@ -184,11 +184,18 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'callbacks[search_api_alter_add_aggregation][weight]' => 10,
       'processors[search_api_case_ignore][status]' => 1,
       'processors[search_api_case_ignore][weight]' => 0,
-      'processors[search_api_case_ignore][settings][strings]' => 0,
+      'processors[search_api_case_ignore][settings][fields][title]' => 1,
+      'processors[search_api_case_ignore][settings][fields][body]' => 1,
+      'processors[search_api_case_ignore][settings][fields][parent:title]' => 1,
+      'processors[search_api_case_ignore][settings][fields][parent:body]' => 1,
       'processors[search_api_tokenizer][status]' => 1,
       'processors[search_api_tokenizer][weight]' => 20,
       'processors[search_api_tokenizer][settings][spaces]' => '[^\p{L}\p{N}]',
       'processors[search_api_tokenizer][settings][ignorable]' => '[-]',
+      'processors[search_api_tokenizer][settings][fields][title]' => 1,
+      'processors[search_api_tokenizer][settings][fields][body]' => 1,
+      'processors[search_api_tokenizer][settings][fields][parent:title]' => 1,
+      'processors[search_api_tokenizer][settings][fields][parent:body]' => 1,
     );
     $this->drupalPost(NULL, $values, t('Add new field'));
     $values = array(
@@ -472,7 +479,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
   public function checkIgnoreCaseProcessor() {
     $types = search_api_field_types();
     $orig = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
-    $processed = 'foo bar baz, äöüàá<>»«.';
+    $processed = drupal_strtolower($orig);
     $items = array(
       1 => array(
         'name' => array(
@@ -507,11 +514,11 @@ class SearchApiUnitTest extends DrupalWebTestCase {
       array('mail', 'bar', '='),
     );
 
-    $processor = new SearchApiIgnoreCase($this->index, array('strings' => FALSE));
+    $processor = new SearchApiIgnoreCase($this->index, array('fields' => array('name' => 'name')));
     $tmp = $items;
     $processor->preprocessIndexItems($tmp);
-    $this->assertEqual($tmp[1]['name']['value'], $processed, t('!type field was processed.', array('!type' => $types['text'])));
-    $this->assertEqual($tmp[1]['mail']['value'], $orig, t("!type field wasn't processed.", array('!type' => $types['string'])));
+    $this->assertEqual($tmp[1]['name']['value'], $processed, t('!type field was processed.', array('!type' => 'name')));
+    $this->assertEqual($tmp[1]['mail']['value'], $orig, t("!type field wasn't processed.", array('!type' => 'mail')));
 
     $query = new SearchApiQuery($this->index);
     $query->keys('Foo "baR BaZ" fOObAr1');
@@ -521,11 +528,11 @@ class SearchApiUnitTest extends DrupalWebTestCase {
     $this->assertEqual($query->getKeys(), $keys1, t('Search keys were processed correctly.'));
     $this->assertEqual($query->getFilter()->getFilters(), $filters1, t('Filters were processed correctly.'));
 
-    $processor = new SearchApiIgnoreCase($this->index, array('strings' => TRUE));
+    $processor = new SearchApiIgnoreCase($this->index, array('fields' => array('name' => 'name', 'mail' => 'mail')));
     $tmp = $items;
     $processor->preprocessIndexItems($tmp);
-    $this->assertEqual($tmp[1]['name']['value'], $processed, t('!type field was processed.', array('!type' => $types['text'])));
-    $this->assertEqual($tmp[1]['mail']['value'], $processed, t('!type field was processed.', array('!type' => $types['string'])));
+    $this->assertEqual($tmp[1]['name']['value'], $processed, t('!type field was processed.', array('!type' => 'name')));
+    $this->assertEqual($tmp[1]['mail']['value'], $processed, t('!type field was processed.', array('!type' => 'mail')));
 
     $query = new SearchApiQuery($this->index);
     $query->keys('Foo "baR BaZ" fOObAr1');
@@ -597,7 +604,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
       ),
     );
 
-    $processor = new SearchApiTokenizer($this->index, array('spaces' => '[^\p{L}\p{N}]', 'ignorable' => '[-]'));
+    $processor = new SearchApiTokenizer($this->index, array('fields' => array('name' => 'name'), 'spaces' => '[^\p{L}\p{N}]', 'ignorable' => '[-]'));
     $tmp = $items;
     $processor->preprocessIndexItems($tmp);
     $this->assertEqual($tmp[1]['name']['value'], $processed1, t('Value was correctly tokenized with default settings.'));
@@ -607,7 +614,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
     $processor->preprocessSearchQuery($query);
     $this->assertEqual($query->getKeys(), 'foo barbaz foobar1', t('Search keys were processed correctly.'));
 
-    $processor = new SearchApiTokenizer($this->index, array('spaces' => '[-a]', 'ignorable' => '\s'));
+    $processor = new SearchApiTokenizer($this->index, array('fields' => array('name' => 'name'), 'spaces' => '[-a]', 'ignorable' => '\s'));
     $tmp = $items;
     $processor->preprocessIndexItems($tmp);
     $this->assertEqual($tmp[1]['name']['value'], $processed2, t('Value was correctly tokenized with custom settings.'));
@@ -676,9 +683,9 @@ END;
     );
 
     $tmp = $items;
-    $processor = new SearchApiHtmlFilter($this->index, array('title' => TRUE, 'alt' => TRUE, 'tags' => $tags));
+    $processor = new SearchApiHtmlFilter($this->index, array('fields' => array('name' => 'name'), 'title' => TRUE, 'alt' => TRUE, 'tags' => $tags));
     $processor->preprocessIndexItems($tmp);
-    $processor = new SearchApiTokenizer($this->index, array('spaces' => '[\s.:]', 'ignorable' => ''));
+    $processor = new SearchApiTokenizer($this->index, array('fields' => array('name' => 'name'), 'spaces' => '[\s.:]', 'ignorable' => ''));
     $processor->preprocessIndexItems($tmp);
     $this->assertEqual($tmp[1]['name']['value'], $processed1, t('Text was correctly processed.'));
   }
