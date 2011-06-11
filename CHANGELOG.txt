@@ -3,6 +3,10 @@ Search API 1.0, dev (xx/xx/xxxx):
 API changes:
 - #1068342 by drunken monkey: Added a 'fields to run on' option for processors.
 
+Others:
+- #1133864 by agentrickard, awolfey, greg.1.anderson, drunken monkey: Added
+  Drush integration.
+
 Search API 1.0, Beta 9 (06/06/2011):
 ------------------------------------
 API changes:
