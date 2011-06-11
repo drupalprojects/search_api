@@ -227,6 +227,8 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       $old_type = $field['type'];
       $new_type = $new_fields[$name]['type'];
+      $fields[$name]['type'] = $new_type;
+      $fields[$name]['boost'] = $new_fields[$name]['boost'];
       if ($old_type != $new_type) {
         if ($old_type == 'text' || $new_type == 'text') {
           // A change in fulltext status necessitates completely clearing the index.

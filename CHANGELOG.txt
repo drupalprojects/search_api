@@ -4,6 +4,8 @@ API changes:
 - #1068342 by drunken monkey: Added a 'fields to run on' option for processors.
 
 Others:
+- #1163096 by drunken monkey: Fixed cached types for DB servers aren't correctly
+  updated.
 - #1133864 by agentrickard, awolfey, greg.1.anderson, drunken monkey: Added
   Drush integration.
 
