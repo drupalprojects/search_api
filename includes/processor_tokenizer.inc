@@ -17,13 +17,16 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
   protected $ignorable;
 
   public function configurationForm() {
-    $form = array(
+    $form = parent::configurationForm();
+    $form += array(
       'spaces' => array(
         '#type' => 'textfield',
         '#title' => t('Whitespace characters'),
-        '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. Specify the characters as a <a href="@link">PCRE character class</a>.',
+        '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
+            'Specify the characters as a <a href="@link">PCRE character class</a>. ' .
+            'Note: For non-English content, the default setting might not be suitable.',
             array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
-        '#default_value' => '[^\p{L}\p{N}]',
+        '#default_value' => "[^\\p{L}\\p{N}^']",
       ),
       'ignorable' => array(
         '#type' => 'textfield',

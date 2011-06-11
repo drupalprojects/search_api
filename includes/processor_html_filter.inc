@@ -31,7 +31,8 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
   }
 
   public function configurationForm() {
-    $form = array(
+    $form = parent::configurationForm();
+    $form += array(
       'title' => array(
         '#type' => 'checkbox',
         '#title' => t('Index title attribute'),

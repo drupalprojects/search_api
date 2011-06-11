@@ -158,7 +158,30 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   }
 
   public function configurationForm() {
-    return array();
+    $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+
+    $fields = empty($this->index->options['fields']) ? _search_api_admin_get_fields($this->index, $this->index->entityWrapper()) : $this->index->options;
+    $fields = $fields['fields'];
+    $field_options = array();
+    $default_fields = isset($this->options['fields']) ? $this->options['fields'] : array();
+    foreach ($fields as $name => $field) {
+      if ($field['indexed']) {
+        $field_options[$name] = $field['name'];
+        if (!isset($this->options['fields']) && $this->testField($name, $field)) {
+          $default_fields[$name] = $name;
+        }
+      }
+    }
+
+    $form['fields'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Fields to run on'),
+      '#options' => $field_options,
+      '#default_value' => $default_fields,
+      '#attributes' => array('class' => array('search-api-checkboxes-list')),
+    );
+
+    return $form;
   }
 
   public function configurationFormValidate(array $form, array &$values, array &$form_state) { }
@@ -323,7 +346,10 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
    *   TRUE, iff the field should be processed.
    */
   protected function testField($name, array $field) {
-    return $this->testType($field['type']);
+    if (empty($this->options['fields'])) {
+      return $this->testType($field['type']);
+    }
+    return !empty($this->options['fields'][$name]);
   }
 
   /**
