@@ -4,6 +4,7 @@ API changes:
 - #1068342 by drunken monkey: Added a 'fields to run on' option for processors.
 
 Others:
+- #1190324 by drunken monkey: Adapted to API change in Entity API.
 - #1168684 by drunken monkey: Added improved tokenizer defaults for English.
 - #1163096 by drunken monkey: Fixed cached types for DB servers aren't correctly
   updated.

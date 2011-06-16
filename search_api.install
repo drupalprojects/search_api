@@ -809,3 +809,10 @@ function search_api_update_7108() {
   db_add_field('search_api_index', 'read_only', $db_field);
   return t('Added a "read only" property to index entities.');
 }
+
+/**
+ * Clear entity info cache, as entity controller classes hae changed.
+ */
+function search_api_update_7109() {
+  cache_clear_all('entity_info:', 'cache', TRUE);
+}

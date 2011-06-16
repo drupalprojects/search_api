@@ -78,7 +78,7 @@ function search_api_facets_theme() {
 function search_api_facets_entity_info() {
   $info['search_api_facet'] = array(
     'label' => t('Search facet'),
-    'controller class' => 'EntityAPIController',
+    'controller class' => 'EntityAPIControllerExportable',
     'entity class' => 'SearchApiFacet',
     'base table' => 'search_api_facet',
     'uri callback' => 'search_api_facet_url',
@@ -839,7 +839,7 @@ function search_api_facet_load($id, $reset = FALSE) {
  *   An array of SearchApiFacet objects keyed by machine name.
  */
 function search_api_facet_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  return entity_load('search_api_facet', $ids, $conditions, $reset);
+  return entity_load_multiple_by_name('search_api_facet', $ids, $conditions, $reset);
 }
 
 /**
