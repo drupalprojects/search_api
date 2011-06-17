@@ -246,11 +246,13 @@ interface SearchApiQueryInterface {
   /**
    * @param $name string
    *   The name of an option.
+   * @param $default mixed
+   *   The value to return if the specified option is not set.
    *
    * @return mixed
    *   The value of the option with the specified name, if set. NULL otherwise.
    */
-  public function getOption($name);
+  public function getOption($name, $default = NULL);
 
   /**
    * @param string $name
@@ -825,8 +827,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * @return mixed
    *   The option with the specified name, if set, or NULL otherwise.
    */
-  public function getOption($name) {
-    return isset($this->options[$name]) ? $this->options[$name] : NULL;
+  public function getOption($name, $default = NULL) {
+    return array_key_exists($name, $this->options) ? $this->options[$name] : $default;
   }
 
   /**
