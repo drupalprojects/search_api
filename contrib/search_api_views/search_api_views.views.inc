@@ -240,9 +240,9 @@ function _search_api_views_add_handlers($field, $wrapper) {
 
   $ret = array();
 
-  if ($wrapper->optionsList('view')) {
+  if (empty($field['entity_type']) && $options = $wrapper->optionsList('view')) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
-    $ret['filter']['options'] = $wrapper->optionsList('view');
+    $ret['filter']['options'] = $options;
   }
   elseif ($inner_type == 'boolean') {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterBoolean';

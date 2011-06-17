@@ -18,7 +18,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
   /**
    * Extend the options form a bit.
    */
-  public function options_form(array &$form, array &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $index = search_api_index_load(substr($this->table, 17));
@@ -54,7 +54,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
    *
    * The argument sent may be found at $this->argument.
    */
-  public function query() {
+  public function query($group_by = FALSE) {
     $server = $this->query->getIndex()->server();
     if (!$server->supportsFeature("search_api_mlt")) {
       $class = search_api_get_service_info($server->class);
