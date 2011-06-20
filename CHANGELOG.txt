@@ -1,5 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.0, Beta 10 (06/20/2011):
+------------------------------------
 API changes:
 - #1068342 by drunken monkey: Added a 'fields to run on' option for processors.
 
