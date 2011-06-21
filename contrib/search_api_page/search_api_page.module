@@ -202,6 +202,11 @@ function search_api_page_search_api_index_update(SearchApiIndex $index) {
  * Implements hook_search_api_index_delete().
  */
 function search_api_page_search_api_index_delete(SearchApiIndex $index) {
+  // Only react on real delete, not revert.
+  if ($index->status & ENTITY_IN_CODE) {
+    return;
+  }
+
   foreach (search_api_page_load_multiple(FALSE, array('index_id' => $index->machine_name, 'enabled' => 1)) as $page) {
     search_api_page_delete($page->id);
   }

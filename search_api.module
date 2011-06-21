@@ -449,8 +449,12 @@ function search_api_search_api_server_update(SearchApiServer $server) {
 function search_api_search_api_server_delete(SearchApiServer $server) {
   $server->preDelete();
 
-  foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
-    $index->update(array('server' => NULL, 'enabled' => FALSE));
+
+  // Only react on real delete, not revert.
+  if ($server->status & ENTITY_IN_CODE == 0) {
+    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+      $index->update(array('server' => NULL, 'enabled' => FALSE));
+    }
   }
 
   $tasks = variable_get('search_api_tasks', array());
