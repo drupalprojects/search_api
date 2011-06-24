@@ -85,10 +85,6 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
    */
   public function value_form(&$form, &$form_state) {
     $options = array();
-    if (empty($form_state['exposed'])) {
-      // Add a select all option to the value form.
-      $options = array('all' => t('Select all'));
-    }
     if (!empty($this->options['expose']['reduce']) && !empty($form_state['exposed'])) {
       $options += $this->reduce_value_options($form_state);
     }
