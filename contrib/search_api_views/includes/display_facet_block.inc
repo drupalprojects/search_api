@@ -167,6 +167,7 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
     if (empty($results['search_api_facets']['search_api_views_facets_block'])) {
       return NULL;
     }
+    $terms = $results['search_api_facets']['search_api_views_facets_block'];
 
     $facet = new SearchApiFacet(array(
       'index_id' => substr($this->view->base_table, 17),
@@ -174,7 +175,29 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
       'options' => array(),
     ));
     _search_api_facets_refresh_type($facet, $facet->options);
-    $facet->options += array('options' => array());
+
+    $values = isset($facet->options['options']) ? $facet->options['options'] : array();
+    if (!$values && isset($facet->options['entity_type']) && entity_get_info($facet->options['entity_type'])) {
+      $ids = array();
+      foreach ($terms as $term) {
+        if ($term['filter'][0] == '"') {
+          $ids[] = substr($term['filter'], 1, -1);
+        }
+      }
+      if ($ids) {
+        $entities = entity_load($facet->options['entity_type'], $ids);
+        if ($entities) {
+          $values = array();
+          foreach ($entities as $id => $entity) {
+            $label = entity_label($facet->options['entity_type'], $entity);
+            if ($label) {
+              $values[$id] = $label;
+            }
+          }
+          $facet->options['options'] = $values;
+        }
+      }
+    }
 
     $theme_suffix  = '';
     $theme_suffix .= '__' . preg_replace('/\W+/', '_', $this->view->query->getIndex()->entity_type);
@@ -184,12 +207,12 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
       '#theme'  => 'search_api_facets_list' . $theme_suffix,
       '#terms'  => array(),
     );
-    foreach ($results['search_api_facets']['search_api_views_facets_block'] as $term) {
+    foreach ($terms as $term) {
       $query = array();
       $query['filter'][$facet_field][0] = $term['filter'];
       $info['content']['facets']['#terms'][] = array(
         '#theme'   => 'search_api_facets_facet' . $theme_suffix,
-        '#name'    => _search_api_create_filter_name($term['filter'], $facet->options['type'], $facet->options['options']),
+        '#name'    => _search_api_create_filter_name($term['filter'], $facet->options['type'], $values),
         '#count'   => $term['count'],
         '#path'    => $base_path,
         '#options' => array('query' => $query),

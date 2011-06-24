@@ -240,8 +240,7 @@ class SearchApiViewsQuery extends views_plugin_query {
    * API function for accessing the raw Search API query object.
    *
    * @return SearchApiQueryInterface
-   *   An associative array containing the search results, as specified by
-   *   SearchApiQueryInterface::execute().
+   *   The search query object used internally by this handler.
    */
   public function getSearchApiQuery() {
     return $this->query;

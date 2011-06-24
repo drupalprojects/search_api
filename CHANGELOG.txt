@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1191442 by drunken monkey: Fixed facets block view showing only tid.
 - #1161532 by drunken monkey: Fixed discerning between delete and revert in
   hook_*_delete().
 
