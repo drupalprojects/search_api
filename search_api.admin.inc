@@ -496,14 +496,9 @@ function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   }
   unset($values['options']);
 
-  $ret = $server->update($values);
+  $server->update($values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
-  if ($ret) {
-    drupal_set_message(t('The search server was successfully edited.'));
-  }
-  else {
-    drupal_set_message(t('No values were changed.'));
-  }
+  drupal_set_message(t('The search server was successfully edited.'));
 }
 
 /**
