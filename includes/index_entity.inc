@@ -336,7 +336,7 @@ class SearchApiIndex extends Entity {
    */
   public function __sleep() {
     $ret = get_object_vars($this);
-    unset($ret['server_object'], $ret['processors'], $ret['added_properties'], $ret['fulltext_fields'], $ret['status'], $ret['module'], $ret['is_new']);
+    unset($ret['server_object'], $ret['processors'], $ret['added_properties'], $ret['fulltext_fields']);
     return array_keys($ret);
   }
 
