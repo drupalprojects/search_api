@@ -451,7 +451,7 @@ function search_api_search_api_server_delete(SearchApiServer $server) {
 
 
   // Only react on real delete, not revert.
-  if ($server->status & ENTITY_IN_CODE == 0) {
+  if (!$server->hasStatus(ENTITY_IN_CODE)) {
     foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
       $index->update(array('server' => NULL, 'enabled' => FALSE));
     }
@@ -1371,7 +1371,7 @@ function search_api_server_url(SearchApiServer $server) {
  *   A translated version of either "Delete" or "Revert".
  */
 function search_api_title_delete_page(Entity $entity) {
-  return $entity->status == ENTITY_OVERRIDDEN ? t('Revert') : t('Delete');
+  return $entity->hasStatus(ENTITY_OVERRIDDEN) ? t('Revert') : t('Delete');
 }
 
 /**
@@ -1385,7 +1385,7 @@ function search_api_title_delete_page(Entity $entity) {
  *   TRUE if the delete page can be accessed by the user, FALSE otherwise.
  */
 function search_api_access_delete_page(Entity $entity) {
-  return user_access('administer search_api') && $entity->status & ENTITY_CUSTOM;
+  return user_access('administer search_api') && $entity->hasStatus(ENTITY_CUSTOM);
 }
 
 /**
@@ -1398,7 +1398,7 @@ function search_api_access_delete_page(Entity $entity) {
  *   The newly inserted server's id, or FALSE on error.
  */
 function search_api_server_insert(array $values) {
-  $server = new SearchApiServer($values);
+  $server = entity_create('search_api_server', $values);
   $server->is_new = TRUE;
   $server->save();
   return $server->id;
@@ -1618,7 +1618,7 @@ function search_api_index_get_server(SearchApiIndex $index) {
  *   The newly inserted index' id, or FALSE on error.
  */
 function search_api_index_insert(array $values) {
-  $index = new SearchApiIndex($values);
+  $index = entity_create('search_api_index', $values);
   $index->is_new = TRUE;
   $index->save();
   return $index->id;

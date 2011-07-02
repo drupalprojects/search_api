@@ -405,7 +405,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
 
   public function setUp() {
     parent::setUp('entity', 'search_api');
-    $this->index = new SearchApiIndex(array(
+    $this->index = entity_create('search_api_index', array(
       'id' => 1,
       'name' => 'test',
       'enabled' => 1,

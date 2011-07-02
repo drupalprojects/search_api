@@ -138,10 +138,10 @@ function search_api_admin_overview() {
  */
 function _search_api_admin_delete_link(Entity $entity) {
   // Delete link only makes sense if entity is in the database (custom or overridden).
-  if ($entity->status & ENTITY_CUSTOM) {
+  if ($entity->hasStatus(ENTITY_CUSTOM)) {
     $type = $entity instanceof SearchApiServer ? 'server' : 'index';
     $url = 'admin/config/search/search_api/' . $type . '/' . $entity->machine_name . '/delete';
-    $title = $entity->status == ENTITY_CUSTOM ? t('delete') : t('revert');
+    $title = $entity->hasStatus(ENTITY_IN_CODE) ? t('revert') : t('delete');
     return l($title, $url);
   }
   return '';
@@ -154,7 +154,7 @@ function search_api_admin_add_server(array $form, array &$form_state) {
   drupal_set_title(t('Add server'));
 
   $class = empty($form_state['values']['class']) ? '' : $form_state['values']['class'];
-  $form_state['server'] = new SearchApiServer();
+  $form_state['server'] = entity_create('search_api_server', array());
 
   if (empty($form_state['storage']['step_one'])) {
     $form['name'] = array(
@@ -300,7 +300,7 @@ function search_api_admin_add_server_submit(array $form, array &$form_state) {
 
   $options = isset($values['options']['form']) ? $values['options']['form'] : array();
   unset($values['options']);
-  $form_state['server']  = $server = new SearchApiServer($values);
+  $form_state['server']  = $server = entity_create('search_api_server', $values);
   $server->configurationFormSubmit($form['options']['form'], $options, $form_state);
   $server->save();
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
@@ -1867,7 +1867,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
           );
           break;
         case 'delete':
-          if ($entity->status == ENTITY_OVERRIDDEN) {
+          if ($entity->hasStatus(ENTITY_OVERRIDDEN)) {
             $text = array(
               t('Revert server @name', array('@name' => $entity->name)),
               t('Do you really want to revert this server?'),
@@ -1900,7 +1900,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
           );
           break;
         case 'delete':
-          if ($entity->status == ENTITY_OVERRIDDEN) {
+          if ($entity->hasStatus(ENTITY_OVERRIDDEN)) {
             $text = array(
               t('Revert index @name', array('@name' => $entity->name)),
               t('Do you really want to revert this index?'),

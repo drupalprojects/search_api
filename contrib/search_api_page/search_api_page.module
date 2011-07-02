@@ -203,7 +203,7 @@ function search_api_page_search_api_index_update(SearchApiIndex $index) {
  */
 function search_api_page_search_api_index_delete(SearchApiIndex $index) {
   // Only react on real delete, not revert.
-  if ($index->status & ENTITY_IN_CODE) {
+  if ($index->hasStatus(ENTITY_IN_CODE)) {
     return;
   }
 

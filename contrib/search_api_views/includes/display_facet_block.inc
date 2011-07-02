@@ -169,7 +169,7 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
     }
     $terms = $results['search_api_facets']['search_api_views_facets_block'];
 
-    $facet = new SearchApiFacet(array(
+    $facet = entity_create('search_api_facet', array(
       'index_id' => substr($this->view->base_table, 17),
       'field' => $facet_field,
       'options' => array(),
