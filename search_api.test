@@ -395,7 +395,7 @@ class SearchApiUnitTest extends DrupalWebTestCase {
     return empty($second);
   }
 
-  public function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => 'Test search API components',
       'description' => 'Tests some independent components of the Search API, like the processors.',
