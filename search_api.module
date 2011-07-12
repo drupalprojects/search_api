@@ -1757,3 +1757,16 @@ function search_api_index_delete($id) {
   $index->delete();
   return TRUE;
 }
+
+/**
+ * Helper function to be used as a "property info alter" callback.
+ *
+ * If a wrapped entity is passed to this function, all its available properties
+ * and fields, regardless of bundle, are added to the wrapper.
+ */
+function _search_api_wrapper_add_all_properties(EntityMetadataWrapper $wrapper, array $property_info) {
+  if ($properties = entity_get_all_property_info($wrapper->type())) {
+    $property_info['properties'] = $properties;
+  }
+  return $property_info;
+}

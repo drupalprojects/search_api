@@ -693,7 +693,9 @@ class SearchApiIndex extends Entity {
    *   index.
    */
   public function entityWrapper($item = NULL) {
-    return entity_metadata_wrapper($this->entity_type, $item, array('property info alter' => array($this, 'propertyInfoAlter')));
+    $info['property info alter'] = array($this, 'propertyInfoAlter');
+    $info['property defaults']['property info alter'] = '_search_api_wrapper_add_all_properties';
+    return entity_metadata_wrapper($this->entity_type, $item, $info);
   }
 
 }
