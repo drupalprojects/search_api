@@ -10,8 +10,8 @@ modules supports this.
 
 
 
-Information for users
----------------------
+Information for site builders
+-----------------------------
 
 For creating a facetted search, you first need a search. Create or find some
 page displaying search results, either via a search page, a view or by any
@@ -76,6 +76,53 @@ If the index isn't lying on a server that supports facets anymore, you will also
 be given the choice to delete the settings of all of its facet blocks at once.
 Use this, if you are sure that you won't use facets with this index again (or
 won't need the old settings, then).
+
+- Creating facets via the URL
+
+Facets can be added to a search (for which facets are activated) by passing
+appropriate GET parameters in the URL. Assuming you have an indexed field with
+the machine name "field_price", you can filter on it in the following ways:
+
+- Filter for a specific value. For finding only results that have a price of
+  exactly 100, pass the following $options to url() or l():
+
+  $options['query']['filter']['field_price'][] = '"100"';
+
+  Or manually append the following GET parameter to a URL:
+
+  ?filter[field_price][0]=%22100%22
+
+- Search for values in a specified range. The following example will only return
+  items that have a price greater than 100 and lower than or equal to 500.
+
+  Code: $options['query']['filter']['field_price'][] = '(100 500]';
+  URL:  ?filter[field_price][0]=%28100%20500%5D
+
+- Search for values above a value. The next example will find results which have
+  a price greater than 100. The asterisk (*) stands for "unlimited", meaning
+  that there is no upper limit.
+
+  Code: $options['query']['filter']['field_price'][] = '(100 *)';
+  URL:  ?filter[field_price][0]=%28100%20%2A%29
+
+- Search for missing values. This example will filter out all items which have
+  any value at all in the price field, and will therefore only list items on
+  which this field was omitted. (This naturally only makes sense for fields
+  that aren't required.)
+
+  Code: $options['query']['filter']['field_price'][] = '!';
+  URL:  ?filter[field_price][0]=%21
+
+- Search for present values. The following example will only return items which
+  have the price field set (regardless of the actual value). You can see that it
+  is actually just a range filter with unlimited lower and upper bound.
+
+  Code: $options['query']['filter']['field_price'][] = '(* *)';
+  URL:  ?filter[field_price][0]=%28%2A%20%2A%29
+
+For the exact specification of allowed values see the possible filters returned
+by SearchApiFacetsQueryInterface::execute(), documented in
+search_api_facets.api.php.
 
 - Issues
 

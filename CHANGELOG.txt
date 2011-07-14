@@ -1,5 +1,6 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1217702 by Amitaibu, drunken monkey: Added documentation on facet URLs.
 - #1214862 by drunken monkey: Added bundle-specific fields for related entities.
 - #1204964 by klausi: Fixed default index status is not overridden on saving.
 - #1191442 by drunken monkey: Fixed facets block view showing only tid.
