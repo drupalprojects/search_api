@@ -5,8 +5,8 @@ This module provides a framework for easily creating searches on any entity
 known to Drupal, using any kind of search engine. For site administrators, it is
 a great alternative to other search solutions, since it already incorporates
 facetting support and the ability to use the Views module for displaying search
-results, filters, etc. Also, with the Apache Solr integration [1], a high-performance
-search engine is available for use with the Search API.
+results, filters, etc. Also, with the Apache Solr integration [1], a
+high-performance search engine is available for use with the Search API.
 
 If you need help with the module, please post to the project's issue queue [2].
 
@@ -122,18 +122,6 @@ will be indexed for this index when cron runs (and the index is enabled). Items
 can also be indexed manually, so even if this is set to 0, the index can still
 be used.
 
-- Index workflow
-  (Configuration > Search API > [Index name] > Workflow)
-
-This page lets you customize how the created index works, and what metadata will
-be available, by selecting data alterations and processors (see the glossary for
-further explanations).
-Data alterations usually only add one or more fields to the entity and their
-order is mostly irrelevant.
-The order of processors, however, often is important. Read the processors'
-descriptions or consult their documentation for determining how to use them most
-effectively.
-
 - Indexed fields
   (Configuration > Search API > [Index name] > Fields)
 
@@ -148,6 +136,18 @@ You can also add fields of related entities here, via the "Add related fields"
 form at the bottom of the page. For instance, you might want to index the
 author's username to the indexed data of a node, and you need to add the "Body"
 entity to the node when you want to index the actual text it contains.
+
+- Index workflow
+  (Configuration > Search API > [Index name] > Workflow)
+
+This page lets you customize how the created index works, and what metadata will
+be available, by selecting data alterations and processors (see the glossary for
+further explanations).
+Data alterations usually only add one or more fields to the entity and their
+order is mostly irrelevant.
+The order of processors, however, often is important. Read the processors'
+descriptions or consult their documentation for determining how to use them most
+effectively.
 
 - Index status
   (Configuration > Search API > [Index name] > Status)
@@ -230,16 +230,14 @@ you need a custom service class where you override the query() method to return
 an instance of your query class.
 
 - Data-alter callbacks
-  Documented in example_random_alter() in the search_api.api.php file
+  Interface: SearchApiAlterCallbackInterface
+  Base class: SearchApiAbstractAlterCallback
   Hook: hook_search_api_alter_callback_info()
 
-Data alter callbacks aren't objects, but simple functions that take an index
-object and the items to alter (by reference) as parameters and should return
-information on all added fields in the format expected by
-hook_entity_property_info(). They are only called when indexing, or when
-selecting the fields to index (in the latter case, with an empty array). For
-adding additional information to search results, you have to use a processor.
-See the data-alter callbacks in search_api.module for examples.
+Data alter callbacks can be used to change the field data of indexed items, or
+to prevent certain items from being indexed. They are only used when indexing,
+or when selecting the fields to index. For adding additional information to
+search results, you have to use a processor.
 Data-alter callbacks are called "data alterations" in the UI.
 
 - Processors
@@ -271,11 +269,14 @@ Included components
 
   * URL field
     Provides a field with the URL for displaying the entity.
-  * Fulltext field
-    Offers the ability to add additional fulltext fields to the entity,
-    containing the data from one or more other fields. Use this, e.g., to have a
-    single field containing all data that should be searchable, or to make the
-    text from a string field, like a taxonomy term, also fulltext-searchable.
+  * Aggregated fields
+    Offers the ability to add additional fields to the entity, containing the
+    data from one or more other fields. Use this, e.g., to have a single field
+    containing all data that should be searchable, or to make the text from a
+    string field, like a taxonomy term, also fulltext-searchable.
+    The type of aggregation can be selected from a set of values: you can, e.g.,
+    collect the text data of all contained fields, or add them up, count their
+    values, etc.
   * Bundle filter
     Enables the admin to prevent entities from being indexed based on their
     bundle (content type for nodes, vocabulary for taxonomy terms, etc.).
@@ -300,6 +301,10 @@ Included components
     This processor allows you to specify how indexed fulltext content is split
     into seperate tokens – which characters are ignored and which treated as
     white-space that seperates words.
+  * Stopwords
+    Enables the admin to specify a stopwords file, the words contained in which
+    will be filtered out of the text data indexed. This can be used to exclude
+    too common words from indexing, for servers not supporting this natively.
 
 - Additional modules
 
