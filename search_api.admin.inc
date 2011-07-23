@@ -508,6 +508,7 @@ function search_api_admin_add_index(array $form, array &$form_state) {
   drupal_set_title(t('Add index'));
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+  $form['#tree'] = TRUE;
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
@@ -523,18 +524,16 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     ),
   );
 
-  $form['entity_type'] = array(
+  $form['item_type'] = array(
     '#type' => 'select',
-    '#title' => t('Entity type'),
-    '#description' => t('Select the type of entity that will be indexed in this index. ' .
+    '#title' => t('Item type'),
+    '#description' => t('Select the type of items that will be indexed in this index. ' .
         'This setting cannot be changed afterwards.'),
     '#options' => array(),
     '#required' => TRUE,
   );
-  foreach (entity_get_info() as $name => $entity) {
-    if (entity_get_property_info($name)) {
-      $form['entity_type']['#options'][$name] = $entity['label'];
-    }
+  foreach (search_api_get_item_type_info() as $type => $info) {
+    $form['item_type']['#options'][$type] = $info['name'];
   }
   $form['enabled'] = array(
     '#type' => 'checkbox',
@@ -565,14 +564,14 @@ function search_api_admin_add_index(array $form, array &$form_state) {
       $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
-  $form['index_directly'] = array(
+  $form['options']['index_directly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index items immediately'),
     '#description' => t('Immediately index new or updated items instead of waiting for the next cron run. ' .
         'This might have serious performance drawbacks and is generally not advised for larger sites.'),
     '#default_value' => FALSE,
   );
-  $form['cron_limit'] = array(
+  $form['options']['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
     '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
@@ -599,10 +598,10 @@ function search_api_admin_add_index_validate(array $form, array &$form_state) {
     form_set_error('machine_name', t('The machine name must not be a pure number.'));
   }
 
-  $cron_limit = $form_state['values']['cron_limit'];
+  $cron_limit = $form_state['values']['options']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
-    form_set_error('cron_limit', t('The cron limit must be an integer.'));
+    form_set_error('options[cron_limit]', t('The cron limit must be an integer.'));
   }
 }
 
@@ -613,14 +612,10 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
 
   $values = $form_state['values'];
-  $values['options'] = array(
-    'cron_limit' => $values['cron_limit'],
-    'index_directly' => $values['index_directly'],
-  );
-  unset($values['cron_limit']);
 
-  // Trying to create an enabled index on a disabled server is handled elsewhere
-  $id = search_api_index_insert($values);
+  // Validation of whether the server of an enabled index is also enabled is
+  // done in the *_insert() function.
+  search_api_index_insert($values);
 
   drupal_set_message(t('The index was successfully created. Please set up its indexed fields now.'));
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $values['machine_name'] . '/fields';
@@ -661,7 +656,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     '#name' => $index->name,
     '#machine_name' => $index->machine_name,
     '#description' => $index->description,
-    '#entity_type' => $index->entity_type,
+    '#item_type' => $index->item_type,
     '#enabled' => $index->enabled,
     '#server' => $index->server(),
     '#options' => $index->options,
@@ -681,7 +676,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
  *   - name: The index' name.
  *   - machine_name: The index' machine name.
  *   - description: The index' description.
- *   - entity_type: The type of entities stored in this index.
+ *   - item_type: The type of items stored in this index.
  *   - enabled: Boolean indicating whether the index is enabled.
  *   - server: The server this index currently rests on, if any.
  *   - options: The index' options, like cron limit.
@@ -717,9 +712,9 @@ function theme_search_api_index(array $variables) {
   $output .= '<dt>' . t('Machine name') . '</dt>' . "\n";
   $output .= '<dd>' . check_plain($machine_name) . '</dd>' . "\n";
 
-  $output .= '<dt>' . t('Entity type') . '</dt>' . "\n";
-  $type = entity_get_info($entity_type);
-  $type = $type['label'];
+  $output .= '<dt>' . t('Item type') . '</dt>' . "\n";
+  $type = search_api_get_item_type_info($item_type);
+  $type = $type['name'];
   $output .= '<dd>' . check_plain($type) . '</dd>' . "\n";
 
   if (!empty($description)) {
@@ -989,6 +984,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
   $form_state['index'] = $index;
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+  $form['#tree'] = TRUE;
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Index name'),
@@ -1033,7 +1029,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#description' => t('Do not write to this index or track ids of entities in this index.'),
     '#default_value' => $index->read_only,
   );
-  $form['index_directly'] = array(
+  $form['options']['index_directly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index items immediately'),
     '#description' => t('Immediately index new or updated items instead of waiting for the next cron run. ' .
@@ -1043,7 +1039,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
       'invisible' => array(':input[name="read_only"]' => array('checked' => TRUE)),
     ),
   );
-  $form['cron_limit'] = array(
+  $form['options']['cron_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Cron limit'),
     '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
@@ -1073,11 +1069,7 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
 
   $values = $form_state['values'];
   $index = $form_state['index'];
-  $values['options'] = $index->options;
-  $values['options']['cron_limit'] = $values['cron_limit'];
-  unset($values['cron_limit']);
-  $values['options']['index_directly'] = $values['index_directly'];
-  unset($values['index_directly']);
+  $values['options'] += $index->options;
 
   $ret = $index->update($values);
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
@@ -1467,7 +1459,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   $form['description'] = array(
     '#type' => 'item',
     '#title' => t('Select fields to index'),
-    '#description' => t('<p>The datatype of fields determines, how they can be searched or filtered upon. ' .
+    '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering. ' .
         'The boost is used to give additional weight to certain fields, e.g. titles or tags. It only takes effect for fulltext fields.</p>' .
         '<p>Whether detailled field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),

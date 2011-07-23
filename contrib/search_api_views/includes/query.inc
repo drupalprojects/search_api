@@ -157,16 +157,15 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected function addResults(array $results, $view) {
     $rows = array();
     $missing = array();
-    $entities = array();
-    $entity_type = $this->index->entity_type;
+    $items = array();
 
     // First off, we try to gather as much field values as possible without
-    // loading any entities.
+    // loading any items.
     foreach ($results as $id => $result) {
-      $row = array('search_api_views_entity_type' => $entity_type);
+      $row = array();
 
-      // Include the loaded entity for this result row, if present, or the
-      // entity ID.
+      // Include the loaded item for this result row, if present, or the item
+      // ID.
       if (!empty($result['entity'])) {
         $row['entity'] = $result['entity'];
       }
@@ -184,12 +183,12 @@ class SearchApiViewsQuery extends views_plugin_query {
         $row += $result['fields'];
       }
 
-      // Check whether we need to extract any properties from the Drupal entity.
+      // Check whether we need to extract any properties from the result item.
       $missing_fields = array_diff_key($this->fields, $row);
-      if (!empty($missing_fields)) {
+      if ($missing_fields) {
         $missing[$id] = $missing_fields;
         if (is_object($row['entity'])) {
-          $entities[$id] = $row['entity'];
+          $items[$id] = $row['entity'];
         }
         else {
           $ids[] = $id;
@@ -200,16 +199,16 @@ class SearchApiViewsQuery extends views_plugin_query {
       $rows[$id] = $row;
     }
 
-    // Load entities of those rows which haven't got all field values, yet.
+    // Load items of those rows which haven't got all field values, yet.
     if (!empty($ids)) {
-      $entities += entity_load($entity_type, $ids);
-      // $entities now includes loaded entities, and those already passed in the
+      $items += $this->index->loadItems($ids);
+      // $items now includes loaded items, and those already passed in the
       // search results.
-      foreach ($entities as $id => $entity) {
-        // Extract entity properties.
-        $wrapper = entity_metadata_wrapper($entity_type, $entity);
+      foreach ($items as $id => $item) {
+        // Extract item properties.
+        $wrapper = $this->index->entityWrapper($item, FALSE);
         $rows[$id] += $this->extractFields($wrapper, $missing[$id]);
-        $rows[$id]['entity'] = $entity;
+        $rows[$id]['entity'] = $item;
       }
     }
 
@@ -220,7 +219,7 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   /**
-   * Helper function for extracting all necessary fields from an entity.
+   * Helper function for extracting all necessary fields from a result item.
    */
   // @todo Optimize
   protected function extractFields(EntityMetadataWrapper $wrapper, array $all_fields) {

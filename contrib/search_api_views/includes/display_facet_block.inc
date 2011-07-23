@@ -200,7 +200,7 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
     }
 
     $theme_suffix  = '';
-    $theme_suffix .= '__' . preg_replace('/\W+/', '_', $this->view->query->getIndex()->entity_type);
+    $theme_suffix .= '__' . preg_replace('/\W+/', '_', $this->view->query->getIndex()->item_type);
     $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet_field);
     $theme_suffix .= '__search_api_views_facets_block';
     $info['content']['facets'] = array(

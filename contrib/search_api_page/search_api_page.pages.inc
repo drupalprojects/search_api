@@ -100,7 +100,7 @@ function search_api_page_search_execute(stdClass $page, $keys) {
  */
 function template_preprocess_search_api_page_results(array &$variables) {
   if (!empty($variables['results']['results'])) {
-    $variables['entities'] = entity_load($variables['index']->entity_type, array_keys($variables['results']['results']));
+    $variables['items'] = $variables['index']->loadItems(array_keys($variables['results']['results']));
   }
 }
 
@@ -112,8 +112,8 @@ function template_preprocess_search_api_page_results(array &$variables) {
  *   - index: The index this search was executed on.
  *   - results: An array of search results, as returned by
  *     SearchApiQueryInterface::execute().
- *   - entities: The loaded entities for all results, in an array keyed by ID.
- *   - "view_mode": The view mode to use for displaying the individual results,
+ *   - items: The loaded items for all results, in an array keyed by ID.
+ *   - view_mode: The view mode to use for displaying the individual results,
  *     or the special mode "search_api_page_result" to use the theme function
  *     of the same name.
  *   - keys: The keywords of the executed search.
@@ -123,7 +123,7 @@ function theme_search_api_page_results(array $variables) {
 
   $index = $variables['index'];
   $results = $variables['results'];
-  $entities = $variables['entities'];
+  $items = $variables['items'];
   $keys = $variables['keys'];
 
   $output = '<p class="search-performance">' . format_plural($results['result count'],
@@ -139,16 +139,16 @@ function theme_search_api_page_results(array $variables) {
   $output .= "\n<h2>" . t('Search results') . "</h2>\n";
 
   if ($variables['view_mode'] == 'search_api_page_result') {
-    entity_prepare_view($index->entity_type, $entities);
     $output .= '<ol class="search-results">';
     foreach ($results['results'] as $item) {
-      $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'entity' => isset($entities[$item['id']]) ? $entities[$item['id']] : NULL, 'keys' => $keys)) . '</li>';
+      $output .= '<li class="search-result">' . theme('search_api_page_result', array('index' => $index, 'result' => $item, 'item' => isset($items[$item['id']]) ? $items[$item['id']] : NULL, 'keys' => $keys)) . '</li>';
     }
     $output .= '</ol>';
   }
   else {
+    // This option can only be set when the items are entities.
     $output .= '<div class="search-results">';
-    $render = entity_view($index->entity_type, $entities, $variables['view_mode']);
+    $render = entity_view($index->item_type, $items, $variables['view_mode']);
     $output .= render($render);
     $output .= '</div>';
   }
@@ -164,25 +164,19 @@ function theme_search_api_page_results(array $variables) {
  *   - index: The index this search was executed on.
  *   - result: One item of the search results, an array containing the keys
  *     'id' and 'score'.
- *   - entity: The loaded entity corresponding to the result.
+ *   - item: The loaded item corresponding to the result.
  *   - keys: The keywords of the executed search.
  */
 function theme_search_api_page_result(array $variables) {
   $index = $variables['index'];
   $id = $variables['result']['id'];
-  $entity = $variables['entity'];
+  $item = $variables['item'];
 
-  $wrapper = entity_metadata_wrapper($index->entity_type, $entity);
+  $wrapper = $index->entityWrapper($item, FALSE);
+  $index = new SearchApiIndex();
 
-  $url = entity_uri($index->entity_type, $entity);
-  $name = entity_label($index->entity_type, $entity);
-
-  if ($index->entity_type == 'file') {
-    $url = array(
-      'path' => file_create_url($url),
-      'options' => array(),
-    );
-  }
+  $url = $index->datasource()->getItemUrl($item);
+  $name = $index->datasource()->getItemLabel($item);
 
   if (!empty($variables['result']['excerpt'])) {
     $text = $variables['result']['excerpt'];

@@ -33,6 +33,7 @@ class SearchApiViewsHandlerFieldEntity extends SearchApiViewsHandlerField {
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    $form['link_to_entity']['#description'] = t('Link this field to its entity');
 
     $form['format_name'] = array(
       '#title' => t('Display label instead of ID'),

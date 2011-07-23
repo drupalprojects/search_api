@@ -10,29 +10,34 @@ function search_api_views_views_data() {
     // Base data
     $key = 'search_api_index_' . $index->machine_name;
     $table = &$data[$key];
-    $entity_info = entity_get_info($index->entity_type);
-    $table['table']['group'] = $entity_info['label'];
+    $type_info = search_api_get_item_type_info($index->item_type);
+    $table['table']['group'] = $type_info['name'];
     $table['table']['base'] = array(
       'field' => 'search_api_id',
       'index' => $index->machine_name,
       'title' => $index->name,
       'help' => t('Use the %name search index for filtering and retrieving data.', array('%name' => $index->name)),
       'query class' => 'search_api_views_query',
-      'entity type' => $index->entity_type,
-      'skip entity load' => TRUE,
     );
+    if (isset($entity_types[$index->item_type])) {
+      $table['table']['base'] += array(
+        'entity type' => $index->item_type,
+        'skip entity load' => TRUE,
+      );
+    }
 
     // Add all available fields
     // This is largely copied from _search_api_admin_get_fields().
     $max_depth = variable_get('search_api_views_max_fields_depth', 2);
-    $orig_wrapper = $index->entityWrapper();
+    $orig_wrapper = $index->entityWrapper(NULL, FALSE);
     $fields = empty($index->options['fields']) ? array() : $index->options['fields'];
 
-    // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
+    // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the
+    // user wrapper.
     $wrappers = array('' => $orig_wrapper);
-    // Display names for the prefixes
+    // Display names for the prefixes.
     $prefix_names = array('' => '');
-    // The list nesting level for entities with a certain prefix
+    // The list nesting level for structures with a certain prefix.
     $nesting_levels = array('' => 0);
 
     $types = search_api_field_types();
@@ -41,7 +46,7 @@ function search_api_views_views_data() {
       foreach ($wrappers as $prefix => $wrapper) {
         $prefix_name = $prefix_names[$prefix];
         $depth = substr_count($prefix, ':');
-        // Deal with lists of entities.
+        // Deal with lists of items.
         $nesting_level = $nesting_levels[$prefix];
         $type_prefix = str_repeat('list<', $nesting_level);
         $type_suffix = str_repeat('>', $nesting_level);
@@ -240,7 +245,7 @@ function _search_api_views_add_handlers($field, $wrapper) {
 
   $ret = array();
 
-  if (empty($field['entity_type']) && $options = $wrapper->optionsList('view')) {
+  if ($options = $wrapper->optionsList('view')) {
     $ret['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
     $ret['filter']['options'] = $options;
   }

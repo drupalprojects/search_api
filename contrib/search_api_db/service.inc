@@ -108,7 +108,7 @@ class SearchApiDbService extends SearchApiAbstractService {
         continue;
       }
       $table = $this->findFreeTable($prefix, $name);
-      $this->createFieldTable($field, $table);
+      $this->createFieldTable($index, $field, $table);
       $indexes[$index->machine_name][$name]['table'] = $table;
       $indexes[$index->machine_name][$name]['type']  = $field['type'];
       $indexes[$index->machine_name][$name]['boost'] = $field['boost'];
@@ -137,19 +137,25 @@ class SearchApiDbService extends SearchApiAbstractService {
   /**
    * Helper method for creating the table for a field.
    */
-  protected function createFieldTable($field, $name) {
+  protected function createFieldTable(SearchApiIndex $index, $field, $name) {
     $table = array(
       'name' => $name,
       'module' => 'search_api_db',
       'fields' => array(
         'item_id' => array(
-          'description' => 'The primary identifier of the entity.',
-          'type' => 'int',
-          'unsigned' => TRUE,
+          'description' => 'The primary identifier of the item.',
           'not null' => TRUE,
         ),
       ),
     );
+    // The type of the item_id field depends on the ID field's type.
+    $id_field = $index->datasource()->getIdFieldInfo();
+    $table['fields']['item_id'] += $this->sqlType($id_field['type'] == 'text' ? 'string' : $id_field['type']);
+    if (isset($table['fields']['item_id']['length'])) {
+      // A length of 255 is overkill for IDs. 50 should be more than enough.
+      $table['fields']['item_id']['length'] = 50;
+    }
+
     $type = search_api_extract_inner_type($field['type']);
     if ($type == 'text') {
       $table['fields']['word'] = array(
@@ -238,7 +244,7 @@ class SearchApiDbService extends SearchApiAbstractService {
             $this->deleteItems('all', $index);
           }
           db_drop_table($field['table']);
-          $this->createFieldTable($new_fields[$name], $field['table']);
+          $this->createFieldTable($index, $new_fields[$name], $field['table']);
         }
         elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
           // There is a change in SQL type. We don't have to clear the index, since types can be converted.
@@ -263,7 +269,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     foreach ($new_fields as $name => $field) {
       $reindex = TRUE;
       $table = $this->findFreeTable($prefix, $name);
-      $this->createFieldTable($field, $table);
+      $this->createFieldTable($index, $field, $table);
       $fields[$name]['table'] = $table;
       $fields[$name]['type']  = $field['type'];
       $fields[$name]['boost'] = $field['boost'];
@@ -331,9 +337,11 @@ class SearchApiDbService extends SearchApiAbstractService {
         if (search_api_is_text_type($type, array('text', 'tokens'))) {
           $words = array();
           foreach ($value as $token) {
-            // Taken from core search to reflect less importance of words later in the text.
-            // Focus is a decaying value in terms of the amount of unique words up to this point.
-            // From 100 words and more, it decays, to e.g. 0.5 at 500 words and 0.3 at 1000 words.
+            // Taken from core search to reflect less importance of words later
+            // in the text.
+            // Focus is a decaying value in terms of the amount of unique words
+            // up to this point. From 100 words and more, it decays, to e.g. 0.5
+            // at 500 words and 0.3 at 1000 words.
             $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
 
             $value = &$token['value'];
@@ -807,7 +815,7 @@ class SearchApiDbService extends SearchApiAbstractService {
     $negated = array();
     $db_query = NULL;
     $mul_words = FALSE;
-    $not_nested = FALSE; // If the query will nest UNIONed subqueries or just leave them that way.
+    $not_nested = FALSE;
 
     foreach ($keys as $i => $key) {
       if (!element_child($i)) {
@@ -818,7 +826,9 @@ class SearchApiDbService extends SearchApiAbstractService {
       }
       elseif (empty($key['#negation'])) {
         if ($neg) {
-          $key['#negation'] = TRUE; // If this query is negated, we also only need item_ids from subqueries.
+          // If this query is negated, we also only need item_ids from
+          // subqueries.
+          $key['#negation'] = TRUE;
         }
         $nested[] = $key;
       }

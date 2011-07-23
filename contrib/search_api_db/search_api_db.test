@@ -118,11 +118,11 @@ class SearchApiDbTest extends DrupalWebTestCase {
     $values = array(
       'name' => 'Test index',
       'machine_name' => 'test_index',
-      'entity_type' => 'search_api_test',
+      'item_type' => 'search_api_test',
       'enabled' => 1,
       'description' => 'An index used for testing.',
       'server' => $this->server_id,
-      'cron_limit' => 5,
+      'options[cron_limit]' => 5,
     );
     $this->drupalPost('admin/config/search/search_api/add_index', $values, t('Create index'));
 

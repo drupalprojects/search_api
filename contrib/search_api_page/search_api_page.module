@@ -57,7 +57,7 @@ function search_api_page_theme() {
     'variables' => array(
       'index' => NULL,
       'results' => array('result count' => 0),
-      'entities' => array(),
+      'items' => array(),
       'view_mode' => 'search_api_page_result',
       'keys' => '',
     ),
@@ -67,7 +67,7 @@ function search_api_page_theme() {
     'variables' => array(
       'index' => NULL,
       'result' => NULL,
-      'entity' => NULL,
+      'item' => NULL,
       'keys' => '',
     ),
     'file' => 'search_api_page.pages.inc',
@@ -153,11 +153,14 @@ function search_api_page_entity_property_info() {
       'label' => t('ID'),
       'type' => 'integer',
       'description' => t('The primary identifier for a search page.'),
+      'schema field' => 'id',
+      'validation callback' => 'entity_metadata_validate_integer_positive',
     ),
     'index_id' => array(
       'label' => t('Index ID'),
       'type' => 'token',
-      'description' => t('The ID of the index this search page uses.'),
+      'description' => t('The machine name of the index this search page uses.'),
+      'schema field' => 'index_id',
     ),
     'index' => array(
       'label' => t('Index'),
@@ -169,18 +172,21 @@ function search_api_page_entity_property_info() {
       'label' => t('Name'),
       'type' => 'text',
       'description' => t('The displayed name for a search page.'),
+      'schema field' => 'name',
       'required' => TRUE,
     ),
     'description' => array(
       'label' => t('Description'),
       'type' => 'text',
       'description' => t('The displayed description for a search page.'),
+      'schema field' => 'description',
       'sanitize' => 'filter_xss',
     ),
     'enabled' => array(
       'label' => t('Enabled'),
       'type' => 'boolean',
       'description' => t('A flag indicating whether the search page is enabled.'),
+      'schema field' => 'enabled',
     ),
   );
 

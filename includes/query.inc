@@ -127,7 +127,7 @@ interface SearchApiQueryInterface {
    *
    * @param $field
    *   The field to sort by. The special fields 'search_api_relevance' (sort by
-   *   relevance) and 'search_api_id' (sort by entity id) may be used.
+   *   relevance) and 'search_api_id' (sort by item id) may be used.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
@@ -170,10 +170,10 @@ interface SearchApiQueryInterface {
    *       already ready-to-use. This allows search engines (or postprocessors)
    *       to store extracted fields so other modules don't have to extract them
    *       again. This fields should always be checked by modules that want to
-   *       use field contents of the result entities.
-   *     - entity: (optional) If set, the fully loaded entity. This field should
-   *       always be used by modules using search results, to avoid duplicate
-   *       entity loads.
+   *       use field contents of the result items.
+   *     - entity: (optional) If set, the fully loaded result item. This field
+   *       should always be used by modules using search results, to avoid
+   *       duplicate item loads.
    *     - excerpt: (optional) If set, an HTML text containing highlighted
    *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be
@@ -571,7 +571,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param $field
    *   The field to sort by. The special fields 'search_api_relevance' (sort by
-   *   relevance) and 'search_api_id' (sort by entity id) may be used.
+   *   relevance) and 'search_api_id' (sort by item id) may be used.
    * @param $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
@@ -635,10 +635,10 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *       already ready-to-use. This allows search engines (or postprocessors)
    *       to store extracted fields so other modules don't have to extract them
    *       again. This fields should always be checked by modules that want to
-   *       use field contents of the result entities.
-   *     - entity: (optional) If set, the fully loaded entity. This field should
-   *       always be used by modules using search results, to avoid duplicate
-   *       entity loads.
+   *       use field contents of the result items.
+   *     - entity: (optional) If set, the fully loaded result item. This field
+   *       should always be used by modules using search results, to avoid
+   *       duplicate item loads.
    *     - excerpt: (optional) If set, an HTML text containing highlighted
    *       portions of the fulltext that match the query.
    *   - warnings: A numeric array of translated warning messages that may be

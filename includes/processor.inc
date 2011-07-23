@@ -29,7 +29,7 @@ interface SearchApiProcessorInterface {
    *
    * This can be used for hiding the processor on the index's "Workflow" tab. To
    * avoid confusion, you should only use criteria that are immutable, such as
-   * the index's entity type. Also, since this is only used for UI purposes, you
+   * the index's item type. Also, since this is only used for UI purposes, you
    * should not completely rely on this to ensure certain index configurations
    * and at least throw an exception with a descriptive error message if this is
    * violated on runtime.

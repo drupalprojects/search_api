@@ -399,7 +399,7 @@ function search_api_facets_block_view($delta = '') {
   }
 
   $theme_suffix  = '';
-  $theme_suffix .= '__' . preg_replace('/\W+/', '_', $query->getIndex()->entity_type);
+  $theme_suffix .= '__' . preg_replace('/\W+/', '_', $query->getIndex()->item_type);
   $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->field);
   $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->delta);
   $theme = array(
@@ -596,7 +596,7 @@ function search_api_facets_block_current_search_view() {
       }
 
       $theme_suffix  = '';
-      $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->entity_type);
+      $theme_suffix .= '__' . preg_replace('/\W+/', '_', $index->item_type);
       $theme_suffix .= '__' . preg_replace('/\W+/', '_', $field);
       $theme_suffix .= '__' . preg_replace('/\W+/', '_', $facet->delta);
       foreach ($field_filters as $i => $v) {

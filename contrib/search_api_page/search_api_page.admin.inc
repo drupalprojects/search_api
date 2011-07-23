@@ -170,12 +170,14 @@ function search_api_page_admin_add(array $form, array &$form_state) {
     '#default_value' => 10,
   );
 
-  $entity_info = entity_get_info($index->entity_type);
   $view_modes = array(
     'search_api_page_result' => t('Themed as search results'),
   );
-  foreach ($entity_info['view modes'] as $mode => $mode_info) {
-    $view_modes[$mode] = $mode_info['label'];
+  // For entities, we also add all entity view modes.
+  if ($entity_info = entity_get_info($index->item_type)) {
+    foreach ($entity_info['view modes'] as $mode => $mode_info) {
+      $view_modes[$mode] = $mode_info['label'];
+    }
   }
   if (count($view_modes) > 1) {
     $form['view_mode'] = array(
@@ -343,12 +345,14 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
     '#default_value' => $page->options['per_page'],
   );
 
-  $entity_info = entity_get_info($index->entity_type);
   $view_modes = array(
     'search_api_page_result' => t('Themed as search results'),
   );
-  foreach ($entity_info['view modes'] as $mode => $mode_info) {
-    $view_modes[$mode] = $mode_info['label'];
+  // For entities, we also add all entity view modes.
+  if ($entity_info = entity_get_info($index->item_type)) {
+    foreach ($entity_info['view modes'] as $mode => $mode_info) {
+      $view_modes[$mode] = $mode_info['label'];
+    }
   }
   if (count($view_modes) > 1) {
     $form['options']['view_mode'] = array(

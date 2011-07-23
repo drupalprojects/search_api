@@ -35,11 +35,15 @@ Terms as used in this module.
   e.g. be some tables in a database, a connection to a Solr server or other
   external services, etc.
 - Index:
-  One set of data for searching a specific entity. What and how data is
-  indexed is determined by its settings. Also keeps track of which items still
-  need to be indexed (or re-indexed, if they were updated). Needs to lie on a
-  server in order to be really used (although configuration is independent of a
-  server).
+  A configuration object for indexing data of a specific type. What and how data
+  is indexed is determined by its settings. Also keeps track of which items
+  still need to be indexed (or re-indexed, if they were updated). Needs to lie
+  on a server in order to be really used (although configuration is independent
+  of a server).
+- Item type:
+  A type of data which can be indexed (i.e., for which indexes can be created).
+  Most entity types (like Content, User, Taxonomy term, etc.) are available, but
+  possibly also other types provided by contrib modules.
 - Entity:
   One object of data, usually stored in the database. Might for example
   be a node, a user or a file.
@@ -178,6 +182,7 @@ Information for developers
  | searchable with the Search API, your module will need to implement
  | hook_entity_property_info() in addition to the normal hook_entity_info().
  | hook_entity_property_info() is documented in the entity module.
+ | For making certain non-entities searchable, see "Item type" below.
  | For custom field types to be available for indexing, provide a
  | "property_type" key in hook_field_info(), and optionally a callback at the
  | "property_callbacks" key.
@@ -228,6 +233,25 @@ suitable for your service.
 For the query class to become available (other than through manual creation),
 you need a custom service class where you override the query() method to return
 an instance of your query class.
+
+- Item type
+  Interface: SearchApiDataSourceControllerInterface
+  Base class: SearchApiAbstractDataSourceController
+  Hook: hook_search_api_item_type_info()
+
+If you want to index some data which is not defined as an entity, you can
+specify it as a new item type here. For defining a new item type, you have to
+create a data source controller for the type and track new, changed and deleted
+items of the type by calling the search_api_track_item_*() functions.
+An instance of the data source controller class will then be used by indexes
+when handling items of your newly-defined type.
+
+If you want to make external data that is indexed on some search server
+available to the Search API, there is a handy base class for your data source
+controller (SearchApiExternalDataSourceController in
+includes/datasource_external.inc) which you can extend. For a minimal use case,
+you will then only have to define the available fields that can be retrieved by
+the server.
 
 - Data-alter callbacks
   Interface: SearchApiAlterCallbackInterface

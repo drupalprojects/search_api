@@ -73,7 +73,7 @@ class SearchApiViewsHandlerField extends views_handler_field {
     }
     $form['link_to_entity'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Link this field to its entity'),
+      '#title' => t('Link this field to the result item'),
       '#description' => t('This will override any other link you have set.'),
       '#default_value' => $this->options['link_to_entity'],
     );
@@ -169,16 +169,16 @@ class SearchApiViewsHandlerField extends views_handler_field {
     if (!$this->options['link_to_entity']) {
       return $render;
     }
-    $type = isset($values->search_api_views_entity_type) ? $values->search_api_views_entity_type : $this->query->getIndex()->entity_type;
-    $entity = $values->entity;
+    $index = $this->query->getIndex();
+    $item = $values->entity;
     // $values->entity can either be the fully loaded entity, or just its ID.
-    if (!is_object($entity)) {
-      $entity = entity_load($type, array($entity));
-      if ($entity) {
-        $entity = reset($entity);
+    if (!is_object($item)) {
+      $items = $index->loadItems(array($item));
+      if ($items) {
+        $item = reset($items);
       }
     }
-    if (is_object($entity) && ($url = entity_uri($type, $entity))) {
+    if (is_object($item) && ($url = $index->datasource()->getItemUrl($item))) {
       return l($render, $url['path'], array('html' => TRUE) + $url['options']);
     }
     return $render;

@@ -155,8 +155,8 @@ interface SearchApiServiceInterface {
    *   array with the following keys:
    *   - type: One of the data types recognized by the Search API, or the
    *     special type "tokens" for fulltext fields.
-   *   - original_type: The original type of the property as defined through a
-   *     hook_entity_property_info().
+   *   - original_type: The original type of the property, as defined by the
+   *     datasource controller for the index's item type.
    *   - value: The value to index.
    *
    *   The special field "search_api_language" contains the item's language and

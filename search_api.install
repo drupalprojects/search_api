@@ -109,8 +109,8 @@ function search_api_schema() {
         'length' => 50,
         'not null' => FALSE,
       ),
-      'entity_type' => array(
-        'description' => 'The entity type of items stored in this index.',
+      'item_type' => array(
+        'description' => 'The type of items stored in this index.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
@@ -150,7 +150,7 @@ function search_api_schema() {
       ),
     ),
     'indexes' => array(
-      'entity_type' => array('entity_type'),
+      'item_type' => array('item_type'),
       'server' => array('server'),
       'enabled' => array('enabled'),
     ),
@@ -210,7 +210,7 @@ function search_api_install() {
     'machine_name' => preg_replace('/[^a-z0-9]+/', '_', drupal_strtolower($name)),
     'description' => t('An automatically created search index for indexing node data. Might be configured to specific needs.'),
     'server' => NULL,
-    'entity_type' => 'node',
+    'item_type' => 'node',
     'options' => array(
       'cron_limit' => '50',
       'data_alter_callbacks' => array(
@@ -815,4 +815,25 @@ function search_api_update_7108() {
  */
 function search_api_update_7109() {
   cache_clear_all('entity_info:', 'cache', TRUE);
+}
+
+/**
+ * Rename the "entity_type" field to "item_type" in the {search_api_index} table.
+ */
+function search_api_update_7110() {
+  $table = 'search_api_index';
+  // This index isn't used anymore.
+  db_drop_index($table, 'entity_type');
+  // Rename the "item_type" field (and change the description).
+  $item_type = array(
+    'description' => 'The type of items stored in this index.',
+    'type' => 'varchar',
+    'length' => 50,
+    'not null' => TRUE,
+  );
+  // Also add the new "item_type" index, while we're at it.
+  $keys_new['indexes']['item_type'] = array('item_type');
+  db_change_field($table, 'entity_type', 'item_type', $item_type, $keys_new);
+  // Clear entity info caches.
+  cache_clear_all('*', 'cache', TRUE);
 }

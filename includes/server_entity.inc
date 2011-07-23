@@ -11,36 +11,50 @@ class SearchApiServer extends Entity {
   /* Database values that will be set when object is loaded: */
 
   /**
+   * The primary identifier for a server.
+   *
    * @var integer
    */
   public $id = 0;
 
   /**
+   * The displayed name for a server.
+   *
    * @var string
    */
   public $name = '';
 
   /**
+   * The machine name for a server.
+   *
    * @var string
    */
   public $machine_name = '';
 
   /**
+   * The displayed description for a server.
+   *
    * @var string
    */
   public $description = '';
 
   /**
+   * The id of the service class to use for this server.
+   *
    * @var string
    */
   public $class = '';
 
   /**
+   * The options used to configure the service object.
+   *
    * @var array
    */
   public $options = array();
 
   /**
+   * A flag indicating whether the server is enabled.
+   *
    * @var integer
    */
   public $enabled = 1;

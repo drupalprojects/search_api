@@ -56,7 +56,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
    */
   public function query($group_by = FALSE) {
     $server = $this->query->getIndex()->server();
-    if (!$server->supportsFeature("search_api_mlt")) {
+    if (!$server->supportsFeature('search_api_mlt')) {
       $class = search_api_get_service_info($server->class);
       throw new SearchApiException(t('The search service "!class" does not offer "More like this" functionality.',
           array('!class' => $class['name'])));
@@ -74,6 +74,6 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
       'id' => $this->argument,
       'fields' => $fields,
     );
-    $this->query->getSearchApiQuery()->setOption("search_api_mlt", $mlt);
+    $this->query->getSearchApiQuery()->setOption('search_api_mlt', $mlt);
   }
 }
