@@ -227,7 +227,7 @@ function hook_search_api_index_items_alter(array &$items, SearchApiIndex $index)
       unset($items[$id]);
     }
   }
-  example_store_indexed_entity_ids($index->entity_type, array_keys($items));
+  example_store_indexed_entity_ids($index->item_type, array_keys($items));
 }
 
 /**
@@ -237,7 +237,7 @@ function hook_search_api_index_items_alter(array &$items, SearchApiIndex $index)
  *   The SearchApiQueryInterface object representing the search query.
  */
 function hook_search_api_query_alter(SearchApiQueryInterface $query) {
-  $info = entity_get_info($index->entity_type);
+  $info = entity_get_info($index->item_type);
   $query->condition($info['entity keys']['id'], 0, '!=');
 }
 
