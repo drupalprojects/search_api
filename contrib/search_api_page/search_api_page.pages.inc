@@ -173,7 +173,6 @@ function theme_search_api_page_result(array $variables) {
   $item = $variables['item'];
 
   $wrapper = $index->entityWrapper($item, FALSE);
-  $index = new SearchApiIndex();
 
   $url = $index->datasource()->getItemUrl($item);
   $name = $index->datasource()->getItemLabel($item);
