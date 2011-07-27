@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Default number of items indexed at each cron run for each enabled index.
+ * Default number of items indexed per cron batch for each enabled index.
  */
 define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
 
@@ -218,22 +218,46 @@ function search_api_permission() {
  * Will index $options['cron-limit'] items for each enabled index.
  */
 function search_api_cron() {
+  $queue = DrupalQueue::get('search_api_indexing_queue');
   foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE, 'read_only' => 0)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
     if ($limit) {
       try {
-        $num = search_api_index_items($index, $limit);
-        if ($num) {
-          watchdog('search_api', t('Indexed !num items for index !name', array('!num' => $num, '!name' => $index->name)), NULL, WATCHDOG_INFO);
+        $task = array('index' => $index->machine_name);
+        $ids = search_api_get_items_to_index($index, -1);
+        if (!$ids) {
+          continue;
         }
+        $batches = $limit > 0 ? array_chunk($ids, $limit, TRUE) : array($ids);
+        foreach ($batches as $batch) {
+          $task['items'] = $batch;
+          $queue->createItem($task);
+        }
+        // Mark items as queued so they won't be inserted into the queue again
+        // on the next cron run.
+        search_api_track_item_queued($index, $ids);
       }
       catch (SearchApiException $e) {
         watchdog('search_api', $e->getMessage(), NULL, WATCHDOG_WARNING);
       }
     }
   }
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ *
+ * Defines a queue for saved searches that should be checked for new items.
+ */
+function search_api_cron_queue_info() {
+  return array(
+    'search_api_indexing_queue' => array(
+      'worker callback' => '_search_api_indexing_queue_process',
+      'time' => variable_get('search_api_index_worker_callback_runtime', 15),
+    ),
+  );
 }
 
 /**
@@ -783,6 +807,18 @@ function search_api_track_item_change($type, array $item_ids) {
 }
 
 /**
+ * Marks items as queued for indexing for the specified index.
+ *
+ * @param SearchApiIndex $index
+ *   The index on which items were queued.
+ * @param array $item_ids
+ *   The ids of the queued items.
+ */
+function search_api_track_item_queued(SearchApiIndex $index, array $item_ids) {
+  $index->datasource()->trackItemQueued($item_ids, $index);
+}
+
+/**
  * Marks items as successfully indexed for the specified index.
  *
  * @param SearchApiIndex $index
@@ -862,7 +898,7 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
  */
 function search_api_index_specific_items(SearchApiIndex $index, array $ids) {
   $items = $index->loadItems($ids);
-  $indexed = $index->index($items);
+  $indexed = $items ? $index->index($items) : array();
   if ($indexed) {
     search_api_track_item_indexed($index, $indexed);
   }
@@ -1685,7 +1721,7 @@ function search_api_index_reindex($id) {
  *   The index whose items should be re-indexed.
  */
 function _search_api_index_reindex(SearchApiIndex $index) {
-  $index->datasource()->trackItemChange(FALSE, array($index));
+  $index->datasource()->trackItemChange(FALSE, array($index), TRUE);
 }
 
 /**
@@ -1718,6 +1754,33 @@ function search_api_index_delete($id) {
   }
   $index->delete();
   return TRUE;
+}
+
+/**
+ * Cron queue worker callback for indexing some items.
+ *
+ * @param array $task
+ *   An associative array containing:
+ *   - index: The ID of the index on which items should be indexed.
+ *   - items: The items that should be indexed.
+ */
+function _search_api_indexing_queue_process(array $task) {
+  $index = search_api_index_load($task['index']);
+  if ($index && $index->enabled && !$index->read_only && $task['items']) {
+    $indexed = search_api_index_specific_items($index, $task['items']);
+    $num = count($indexed);
+    // If some items couldn't be indexed, mark them as dirty again.
+    if ($num < count($task['items'])) {
+      // Believe it or not but this is actually quite faster than the equivalent
+      // $diff = array_diff($task['items'], $indexed);
+      $diff = array_keys(array_diff_key(array_flip($task['items']), array_flip($indexed)));
+      // Mark the items as dirty again.
+      $index->datasource()->trackItemChange($diff, array($index), TRUE);
+    }
+    if ($num) {
+      watchdog('search_api', t('Indexed !num items for index !name', array('!num' => $num, '!name' => $index->name)), NULL, WATCHDOG_INFO);
+    }
+  }
 }
 
 /**

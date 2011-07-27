@@ -178,7 +178,7 @@ function search_api_schema() {
       'changed' => array(
         'description' => 'Either a flag or a timestamp to indicate if or when the item was changed since it was last indexed.',
         'type' => 'int',
-        'unsigned' => TRUE,
+        'size' => 'big',
         'not null' => TRUE,
         'default' => 1,
       ),
@@ -499,6 +499,7 @@ function search_api_disable() {
  */
 function search_api_uninstall() {
   variable_del('search_api_tasks');
+  variable_del('search_api_index_worker_callback_runtime');
 }
 
 /**
@@ -836,4 +837,18 @@ function search_api_update_7110() {
   db_change_field($table, 'entity_type', 'item_type', $item_type, $keys_new);
   // Clear entity info caches.
   cache_clear_all('*', 'cache', TRUE);
+}
+
+/**
+ * Change the definition of the {search_api_item}.changed field.
+ */
+function search_api_update_7111() {
+  $spec = array(
+    'description' => 'Either a flag or a timestamp to indicate if or when the item was changed since it was last indexed.',
+    'type' => 'int',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 1,
+  );
+  db_change_field('search_api_item', 'changed', 'changed', $spec);
 }

@@ -102,7 +102,7 @@ class SearchApiIndex extends Entity {
 
   /**
    * An array of options for configuring this index. The layout is as follows:
-   * - cron_limit: The maximum number of items to be indexed per cron run.
+   * - cron_limit: The maximum number of items to be indexed per cron batch.
    * - index_directly: Boolean setting whether entities are indexed immediately
    *   after they are created or updated.
    * - fields: An array of all known fields for this index. Keys are the field

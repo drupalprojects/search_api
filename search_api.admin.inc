@@ -573,8 +573,8 @@ function search_api_admin_add_index(array $form, array &$form_state) {
   );
   $form['options']['cron_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cron limit'),
-    '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
+    '#title' => t('Cron batch size'),
+    '#description' => t('Set how many items will be indexed at once when indexing items during a cron run. ' .
         '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
     '#default_value' => SEARCH_API_DEFAULT_CRON_LIMIT,
     '#size' => 4,
@@ -601,7 +601,7 @@ function search_api_admin_add_index_validate(array $form, array &$form_state) {
   $cron_limit = $form_state['values']['options']['cron_limit'];
   if ($cron_limit != '' . ((int) $cron_limit)) {
     // We don't enforce stricter rules and treat all negative values as -1.
-    form_set_error('options[cron_limit]', t('The cron limit must be an integer.'));
+    form_set_error('options[cron_limit]', t('The cron batch size must be an integer.'));
   }
 }
 
@@ -734,7 +734,7 @@ function theme_search_api_index(array $variables) {
   if (!$read_only && !empty($options)) {
     $output .= '<dt>' . t('Index options') . '</dt>' . "\n";
     $output .= '<dd><dl>' . "\n";
-    $output .= '<dt>' . t('Cron limit') . '</dt>' . "\n";
+    $output .= '<dt>' . t('Cron batch size') . '</dt>' . "\n";
     if (empty($options['cron_limit'])) {
       $output .= '<dd>' . t("Don't index during cron runs") . '</dd>' . "\n";
     }
@@ -742,7 +742,7 @@ function theme_search_api_index(array $variables) {
       $output .= '<dd>' . t('Unlimited') . '</dd>' . "\n";
     }
     else {
-      $output .= '<dd>' . format_plural($options['cron_limit'], '1 item per cron run.', '@count items per cron run.') . '</dd>' . "\n";
+      $output .= '<dd>' . format_plural($options['cron_limit'], '1 item per cron batch.', '@count items per cron batch.') . '</dd>' . "\n";
     }
 
     if (!empty($options['fields'])) {
@@ -1041,8 +1041,8 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
   );
   $form['options']['cron_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cron limit'),
-    '#description' => t('Set how many items will be indexed at most during each run of cron. ' .
+    '#title' => t('Cron batch size'),
+    '#description' => t('Set how many items will be indexed at once when indexing items during a cron run. ' .
         '"0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
     '#default_value' => isset($index->options['cron_limit']) ? $index->options['cron_limit'] : SEARCH_API_DEFAULT_CRON_LIMIT,
     '#size' => 4,

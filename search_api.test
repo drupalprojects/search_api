@@ -139,7 +139,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertFalse($index->enabled, t('Status correctly inserted.'));
     $this->assertEqual($index->description, $values['description'], t('Description correctly inserted.'));
     $this->assertNull($index->server, t('Index server correctly inserted.'));
-    $this->assertEqual($index->options['cron_limit'], $values['options[cron_limit]'], t('Cron limit correctly inserted.'));
+    $this->assertEqual($index->options['cron_limit'], $values['options[cron_limit]'], t('Cron batch size correctly inserted.'));
 
     $values = array(
       'additional[field]' => 'parent',
@@ -213,7 +213,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertTitle('Search API test index | Drupal', t('Correct title when viewing index.'));
     $this->assertText('An index used for testing.', t('!field displayed.', array('!field' => t('Description'))));
     $this->assertText('Search API test entity', t('!field displayed.', array('!field' => t('Item type'))));
-    $this->assertText(format_plural(5, '1 item per cron run.', '@count items per cron run.'), t('!field displayed.', array('!field' => t('Cron limit'))));
+    $this->assertText(format_plural(5, '1 item per cron batch.', '@count items per cron batch.'), t('!field displayed.', array('!field' => t('Cron batch size'))));
 
     $this->drupalGet("admin/config/search/search_api/index/$id/status");
     $this->assertText(t('The index is currently disabled.'), t('"Disabled" status displayed.'));

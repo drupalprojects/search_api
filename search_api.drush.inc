@@ -47,7 +47,7 @@ function search_api_drush_command() {
     ),
     'arguments' => array(
       'index_id' => dt('The numeric ID or machine name of an index.'),
-      'limit' => dt("The number of items to index. Use 0 to index all items. Defaults to the index's cron limit."),
+      'limit' => dt("The number of items to index. Use 0 to index all items. Defaults to the index's cron batch size."),
     ),
     'aliases' => array('sapi-i'),
   );

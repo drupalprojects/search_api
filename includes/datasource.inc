@@ -144,16 +144,38 @@ interface SearchApiDataSourceControllerInterface {
   /**
    * Set the tracking status of the given items to "changed"/"dirty".
    *
+   * Unless $dequeue is set to TRUE, this operation is ignored for items whose
+   * status is not "indexed".
+   *
    * @param $item_ids
    *   Either an array with the IDs of the changed items. Or FALSE to mark all
    *   items as changed for the given indexes.
    * @param array $indexes
    *   The indexes for which the change should be tracked.
+   * @param $dequeue
+   *   If set to TRUE, also change the status of queued items.
    *
    * @throws SearchApiDataSourceException
    *   If any of the indexes doesn't use the same item type as this controller.
    */
-  public function trackItemChange($item_ids, array $indexes);
+  public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE);
+
+  /**
+   * Set the tracking status of the given items to "queued".
+   *
+   * Queued items are not marked as "dirty" even when they are changed, and they
+   * are not returned by the getChangedItems() method.
+   *
+   * @param $item_ids
+   *   Either an array with the IDs of the queued items. Or FALSE to mark all
+   *   items as queued for the given indexes.
+   * @param SearchApiIndex $index
+   *   The index for which the items were queued.
+   *
+   * @throws SearchApiDataSourceException
+   *   If any of the indexes doesn't use the same item type as this controller.
+   */
+  public function trackItemQueued($item_ids, SearchApiIndex $index);
 
   /**
    * Set the tracking status of the given items to "indexed".
@@ -477,16 +499,21 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
   /**
    * Set the tracking status of the given items to "changed"/"dirty".
    *
+   * Unless $dequeue is set to TRUE, this operation is ignored for items whose
+   * status is not "indexed".
+   *
    * @param $item_ids
    *   Either an array with the IDs of the changed items. Or FALSE to mark all
    *   items as changed for the given indexes.
    * @param array $indexes
    *   The indexes for which the change should be tracked.
+   * @param $dequeue
+   *   If set to TRUE, also change the status of queued items.
    *
    * @throws SearchApiDataSourceException
    *   If any of the indexes doesn't use the same item type as this controller.
    */
-  public function trackItemChange($item_ids, array $indexes) {
+  public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE) {
     // Types that set "track index status" to FALSE should override this method
     // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
@@ -502,8 +529,38 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
         $this->changedColumn => REQUEST_TIME,
       ))
       ->condition($this->indexIdColumn, $index_ids, 'IN')
-      ->condition($this->changedColumn, 0);
-    if (is_array($item_ids)) {
+      ->condition($this->changedColumn, 0, $dequeue ? '<=' : '=');
+    if ($item_ids !== FALSE) {
+      $update->condition($this->itemIdColumn, $item_ids, 'IN');
+    }
+    $update->execute();
+  }
+
+  /**
+   * Set the tracking status of the given items to "queued".
+   *
+   * Queued items are not marked as "dirty" even when they are changed, and they
+   * are not returned by the getChangedItems() method.
+   *
+   * @param $item_ids
+   *   Either an array with the IDs of the queued items. Or FALSE to mark all
+   *   items as queued for the given indexes.
+   * @param SearchApiIndex $index
+   *   The index for which the items were queued.
+   *
+   * @throws SearchApiDataSourceException
+   *   If any of the indexes doesn't use the same item type as this controller.
+   */
+  public function trackItemQueued($item_ids, SearchApiIndex $index) {
+    if (!$this->table) {
+      return;
+    }
+    $update = db_update($this->table)
+      ->fields(array(
+        $this->changedColumn => -1,
+      ))
+      ->condition($this->indexIdColumn, $index->id);
+    if ($item_ids !== FALSE) {
       $update->condition($this->itemIdColumn, $item_ids, 'IN');
     }
     $update->execute();
@@ -586,7 +643,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     $select = db_select($this->table, 't');
     $select->addField('t', 'item_id');
     $select->condition($this->indexIdColumn, $index->id);
-    $select->condition($this->changedColumn, 0, '<>');
+    $select->condition($this->changedColumn, 0, '>');
     $select->orderBy($this->itemIdColumn, 'ASC');
     if ($limit > 0) {
       $select->range(0, $limit);

@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #946624 by drunken monkey: Adapted to use a cron queue for indexing.
 - #1217702 by Amitaibu, drunken monkey: Added documentation on facet URLs.
 - #1214862 by drunken monkey: Added bundle-specific fields for related entities.
 - #1204964 by klausi: Fixed default index status is not overridden on saving.

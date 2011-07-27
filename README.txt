@@ -121,10 +121,18 @@ indexed again. You can also select a server that is at the moment disabled, or
 choose to let the index lie on no server at all, for the time being. Note,
 however, that you can only create enabled indexes on an enabled server. Also,
 disabling a server will disable all indexes that lie on it.
-Lastly, the cron limit option allows you to set whether, and how many, items
-will be indexed for this index when cron runs (and the index is enabled). Items
-can also be indexed manually, so even if this is set to 0, the index can still
-be used.
+The "Index items immediately" option specifies that you want items to be
+directly re-indexed after being changed, instead of waiting for the next cron
+run. Use this if it is important that users see no stale data in searches, and
+only when your setup enables relatively fast indexing.
+Lastly, the "Cron batch size" option allows you to set whether items will be
+indexed when cron runs (as long as the index is enabled), and how many items
+will be indexed in a single batch. The best value for this setting depends on
+how time-consuming indexing is for your setup, which in turn depends mostly on
+the server used and the enabled data alterations. You should set it to a number
+of items which can easily be indexed in 10 seconds' time. Items can also be
+indexed manually, or directly when they are changed, so even if this is set to
+0, the index can still be used.
 
 - Indexed fields
   (Configuration > Search API > [Index name] > Fields)
@@ -160,7 +168,7 @@ On this page you can view how much of the entities are already indexed and also
 control indexing. With the "Index now" button (displayed only when there are
 still unindexed items) you can directly index a certain number of "dirty" items
 (i.e., items not yet indexed in their current state). Setting "-1" as the number
-will index all of those items, similar to the cron limit setting.
+will index all of those items, similar to the cron batch size setting.
 When you change settings that could affect indexing, and the index is not
 automatically marked for re-indexing, you can do this manually with the
 "Re-index content" button. All items in the index will be marked as dirty and be
@@ -172,6 +180,13 @@ searches won't show any results until items are re-indexed, after clearing an
 index. Use this only if completely wrong data has been indexed. It is also done
 automatically when the index scheme or server settings change too drastically to
 keep on using the old data.
+
+- Hidden settings
+
+search_api_index_worker_callback_runtime:
+  By changing this variable, you can determine the time (in seconds) the Search
+  API will spend indexing (for all indexes combined) in each cron run. The
+  default is 15 seconds.
 
 
 Information for developers
