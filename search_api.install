@@ -835,6 +835,13 @@ function search_api_update_7110() {
   // Also add the new "item_type" index, while we're at it.
   $keys_new['indexes']['item_type'] = array('item_type');
   db_change_field($table, 'entity_type', 'item_type', $item_type, $keys_new);
+  // Mark all indexes in code as "OVERRIDDEN".
+  db_update($table)
+    ->fields(array(
+      'status' => 0x03,
+    ))
+    ->condition('status', 0x02)
+    ->execute();
   // Clear entity info caches.
   cache_clear_all('*', 'cache', TRUE);
 }
