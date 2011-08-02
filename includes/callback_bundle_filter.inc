@@ -37,8 +37,8 @@ class SearchApiAlterBundleFilter extends SearchApiAbstractAlterCallback {
           '#title' => t('Which items should be indexed?'),
           '#default_value' => isset($this->options['default']) ? $this->options['default'] : 1,
           '#options' => array(
-            1 => t('All but those from one of the listed bundles.'),
-            0 => t('Only those from the listed bundles.'),
+            1 => t('All but those from one of the selected bundles'),
+            0 => t('Only those from the selected bundles'),
           ),
         ),
         'bundles' => array(
