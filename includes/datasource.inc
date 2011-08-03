@@ -644,7 +644,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     $select->addField('t', 'item_id');
     $select->condition($this->indexIdColumn, $index->id);
     $select->condition($this->changedColumn, 0, '>');
-    $select->orderBy($this->itemIdColumn, 'ASC');
+    $select->orderBy($this->changedColumn, 'ASC');
     if ($limit > 0) {
       $select->range(0, $limit);
     }
