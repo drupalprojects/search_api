@@ -761,9 +761,12 @@ function search_api_facets_search_api_index_delete(SearchApiIndex $index) {
     return;
   }
 
-  db_delete('search_api_facet')
+  $ids = db_select('search_api_facet', 'f')
+    ->fields('f', array('id'))
     ->condition('index_id', $index->machine_name)
-    ->execute();
+    ->execute()
+    ->fetchCol();
+  entity_delete_multiple('search_api_facet', $ids);
   if (search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name), TRUE)) {
     drupal_set_message(t('A module defines default search facets for the deleted index. You should update the module code or disable it.'), 'warning');
   }
