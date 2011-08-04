@@ -505,7 +505,8 @@ function search_api_search_api_server_delete(SearchApiServer $server) {
 /**
  * Implements hook_search_api_index_insert().
  *
- * Populates {search_api_item} for new indexes.
+ * Adds the index to its server (if any) and starts tracking indexed items (if
+ * the index is enabled).
  */
 function search_api_search_api_index_insert(SearchApiIndex $index) {
   $index->postCreate();
@@ -604,7 +605,7 @@ function search_api_search_api_index_delete(SearchApiIndex $index) {
  */
 function search_api_entity_insert($entity, $type) {
   // When inserting a new search index, the new index was already inserted into
-  // search_api_item. This would lead to a duplicate-key issue, if we would
+  // the tracking table. This would lead to a duplicate-key issue, if we would
   // continue.
   if ($type == 'search_api_index') {
     return;

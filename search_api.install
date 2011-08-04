@@ -425,64 +425,19 @@ function search_api_install() {
 
 /**
  * Implements hook_enable().
+ *
+ * Mark all items as "dirty", since we can't know whether they are.
  */
 function search_api_enable() {
-  // Mark all items as "dirty", since we can't know whether they are.
-  db_delete('search_api_item')
-    ->execute();
   $types = array();
   foreach (search_api_index_load_multiple(FALSE) as $index) {
-    $types[$index->entity_type][] = $index->id;
+    if ($index->enabled) {
+      $types[$index->item_type][] = $index;
+    }
   }
-  if (!$types) {
-    return;
-  }
-  $insert = db_insert('search_api_item')
-    ->fields(array('item_id', 'index_id', 'changed'));
   foreach ($types as $type => $indexes) {
-    // Partly copied from SearchApiIndex::queueItems().
-
-    $entity_info = entity_get_info($type);
-
-    // If the entity info specifies a base table, use that to add all items
-    // directly in an INSERT ... SELECT. Otherwise, use entity_load() and add
-    // the values to the outer $insert query.
-    if (!empty($entity_info['base table'])) {
-      // Use a subselect, which will probably be much faster than entity_load().
-
-      // Assumes that all entities use the "base table" property and the
-      // "entity keys[id]" in the same way as the default controller.
-      $id_field = $entity_info['entity keys']['id'];
-      $table = $entity_info['base table'];
-
-      // Select all entity ids and all relevant indexes.
-      $query = db_select($table, 't');
-      $query->join('search_api_index', 'i', 'i.entity_type = :type AND i.read_only = :read_only AND i.enabled = :enabled',
-          array(':type' => $type, ':read_only' => 0, ':enabled' => 1));
-      $query->addField('t', $id_field, 'item_id');
-      $query->addField('i', 'id', 'index_id');
-      $query->addExpression('1', 'changed');
-
-      // INSERT ... SELECT ...
-      db_insert('search_api_item')
-        ->from($query)
-        ->execute();
-    }
-    else {
-      foreach (entity_load($type) as $id => $entity) {
-        foreach ($indexes as $index_id) {
-          $insert->values(array(
-            'item_id' => $id,
-            'index_id' => $index_id,
-            'changed' => 1,
-          ));
-        }
-      }
-    }
-  }
-  // Only execute this query if we added any values to it.
-  if (isset($index_id)) {
-    $insert->execute();
+    $controller = search_api_get_datasource_controller($type);
+    $controller->startTracking($indexes);
   }
 }
 
@@ -490,8 +445,14 @@ function search_api_enable() {
  * Implements hook_disable().
  */
 function search_api_disable() {
-  db_delete('search_api_item')
-    ->execute();
+  $types = array();
+  foreach (search_api_index_load_multiple(FALSE) as $index) {
+    $types[$index->item_type][] = $index;
+  }
+  foreach ($types as $type => $indexes) {
+    $controller = search_api_get_datasource_controller($type);
+    $controller->stopTracking($indexes);
+  }
 }
 
 /**

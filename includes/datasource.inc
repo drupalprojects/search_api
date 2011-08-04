@@ -413,8 +413,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function startTracking(array $indexes) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return;
     }
@@ -449,8 +447,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function stopTracking(array $indexes) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return;
     }
@@ -476,8 +472,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function trackItemInsert(array $item_ids, array $indexes) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return;
     }
@@ -514,8 +508,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return;
     }
@@ -603,8 +595,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function trackItemDelete(array $item_ids, array $indexes) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return;
     }
@@ -664,8 +654,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *     index.
    */
   public function getIndexStatus(SearchApiIndex $index) {
-    // Types that set "track index status" to FALSE should override this method
-    // in their data source controller and provide their own logic, if possible.
     if (!$this->table) {
       return array('indexed' => 0, 'total' => 0);
     }

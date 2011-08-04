@@ -160,11 +160,12 @@ class SearchApiIndex extends Entity {
   }
 
   /**
-   * Execute necessary tasks for a newly created index (either created in the
-   * database, or for the first time loaded from code).
+   * Execute necessary tasks for a newly created index.
    */
   public function postCreate() {
-    $this->queueItems();
+    if ($this->enabled) {
+      $this->queueItems();
+    }
     $server = $this->server();
     if ($server) {
       // Tell the server about the new index.
