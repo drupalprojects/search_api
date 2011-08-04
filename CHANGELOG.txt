@@ -4,6 +4,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1232478 by Damien Tournoud, drunken monkey: Fixed update of field type
+  settings for DB backend and index.
 - #1229772 by drunken monkey: Fixed order in which items are indexed.
 - #946624 by drunken monkey: Adapted to use a cron queue for indexing.
 - #1217702 by Amitaibu, drunken monkey: Added documentation on facet URLs.

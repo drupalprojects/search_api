@@ -235,9 +235,13 @@ class SearchApiDbService extends SearchApiAbstractService {
       $new_type = $new_fields[$name]['type'];
       $fields[$name]['type'] = $new_type;
       $fields[$name]['boost'] = $new_fields[$name]['boost'];
+      $old_inner_type = search_api_extract_inner_type($old_type);
+      $new_inner_type = search_api_extract_inner_type($new_type);
       if ($old_type != $new_type) {
-        if ($old_type == 'text' || $new_type == 'text') {
-          // A change in fulltext status necessitates completely clearing the index.
+        if ($old_inner_type == 'text' || $new_inner_type == 'text'
+            || search_api_list_nesting_level($old_type) != search_api_list_nesting_level($new_type)) {
+          // A change in fulltext or list status necessitates completely
+          // clearing the index.
           $reindex = TRUE;
           if (!$cleared) {
             $cleared = TRUE;
@@ -246,17 +250,17 @@ class SearchApiDbService extends SearchApiAbstractService {
           db_drop_table($field['table']);
           $this->createFieldTable($index, $new_fields[$name], $field['table']);
         }
-        elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
+        elseif ($this->sqlType($old_inner_type) != $this->sqlType($new_inner_type)) {
           // There is a change in SQL type. We don't have to clear the index, since types can be converted.
           db_change_field($field['table'], 'value', 'value', $this->sqlType($new_type) + array('description' => "The field's value for this item."));
           $reindex = TRUE;
         }
-        elseif ($old_type == 'date' || $new_type == 'date') {
+        elseif ($old_inner_type == 'date' || $new_inner_type == 'date') {
           // Even though the SQL type stays the same, we have to reindex since conversion rules change.
           $reindex = TRUE;
         }
       }
-      elseif (!$reindex && $new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
+      elseif (!$reindex && $new_inner_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
         $multiplier = $new_fields[$name]['boost'] / $field['boost'];
         db_update($field['table'], $this->query_options)
           ->expression('score', 'score * :mult', array(':mult' => $multiplier))

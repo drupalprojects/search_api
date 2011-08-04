@@ -1653,11 +1653,18 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         $key = $prefix . $property;
         if (isset($types[$type]) || isset($entity_types[$type])) {
           if (isset($fields[$key])) {
+            // This field is already known in the index configuration.
             $fields[$key]['name'] = $prefix_name . $info['label'];
             $fields[$key]['description'] = empty($info['description']) ? NULL : $info['description'];
             $flat[$key] = $fields[$key];
+            // Update its type.
             if (isset($entity_types[$type])) {
+              // Always enforce the proper entity type.
               $flat[$key]['type'] = $info['type'];
+            }
+            else {
+              // Else, only update the nesting level.
+              $flat[$key]['type'] = search_api_nest_type(search_api_extract_inner_type($flat[$key]['type']), $info['type']);
             }
           }
           else {
