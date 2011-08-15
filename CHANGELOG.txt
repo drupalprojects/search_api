@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1237348 by drunken monkey: Added a "Language control" data alteration.
 - #1214846 by drunken monkey, Kender: Fixed overlong table names when DB prefix
   is used.
 - #1232478 by Damien Tournoud, drunken monkey: Fixed update of field type

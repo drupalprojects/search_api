@@ -502,7 +502,8 @@ class SearchApiIndex extends Entity {
         'search_api_language' => array(
           'label' => t('Item language'),
           'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
-          'type' => 'string',
+          'type' => 'token',
+          'options list' => 'entity_metadata_language_list',
         ),
       );
       // We use the reverse order here so the hierarchy for overwriting property infos is the same

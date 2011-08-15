@@ -694,6 +694,11 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Exclude items from indexing based on their bundle (content type, vocabulary, …).'),
     'class' => 'SearchApiAlterBundleFilter',
   );
+  $callbacks['search_api_alter_language_control'] = array(
+    'name' => t('Language control'),
+    'description' => t('Lets you determine the language of items in the index.'),
+    'class' => 'SearchApiAlterLanguageControl',
+  );
 
   return $callbacks;
 }
