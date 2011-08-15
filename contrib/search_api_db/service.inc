@@ -125,11 +125,18 @@ class SearchApiDbService extends SearchApiAbstractService {
    * characters long.
    */
   protected function findFreeTable($prefix, $name) {
-    $base = $table = drupal_substr($prefix . drupal_strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, 63);
+    // A DB prefix might further reduce the maximum length of the table name.
+    $maxlen = 63;
+    list($key, $target) = explode(':', $this->options['database'], 2);
+    if ($db_prefix = Database::getConnection($target, $key)->tablePrefix()) {
+      $maxlen -= drupal_strlen($db_prefix);
+    }
+
+    $base = $table = drupal_substr($prefix . drupal_strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, $maxlen);
     $i = 0;
     while (db_table_exists($table)) {
       $suffix = '_' . ++$i;
-      $table = drupal_substr($base, 0, 63 - drupal_strlen($suffix)) . $suffix;
+      $table = drupal_substr($base, 0, $maxlen - drupal_strlen($suffix)) . $suffix;
     }
     return $table;
   }
