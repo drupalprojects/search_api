@@ -4,6 +4,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1236642 by jsacksick, drunken monkey: Fixed stale static cache of
+  search_api_get_item_type_info().
 - #1237348 by drunken monkey: Added a "Language control" data alteration.
 - #1214846 by drunken monkey, Kender: Fixed overlong table names when DB prefix
   is used.

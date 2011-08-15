@@ -607,7 +607,9 @@ function search_api_entity_insert($entity, $type) {
   // When inserting a new search index, the new index was already inserted into
   // the tracking table. This would lead to a duplicate-key issue, if we would
   // continue.
-  if ($type == 'search_api_index') {
+  // We also only react on entity operations for types with property
+  // information, as we don't provide search integration for the others.
+  if ($type == 'search_api_index' || !entity_get_property_info($type)) {
     return;
   }
   list($id) = entity_extract_ids($type, $entity);
@@ -627,6 +629,11 @@ function search_api_entity_insert($entity, $type) {
  *   The entity's type.
  */
 function search_api_entity_update($entity, $type) {
+  // We only react on entity operations for types with property information, as
+  // we don't provide search integration for the others.
+  if (!entity_get_property_info($type)) {
+    return;
+  }
   list($id) = entity_extract_ids($type, $entity);
   if (isset($id)) {
     search_api_track_item_change($type, array($id));
@@ -644,6 +651,11 @@ function search_api_entity_update($entity, $type) {
  *   The entity's type.
  */
 function search_api_entity_delete($entity, $type) {
+  // We only react on entity operations for types with property information, as
+  // we don't provide search integration for the others.
+  if (!entity_get_property_info($type)) {
+    return;
+  }
   list($id) = entity_extract_ids($type, $entity);
   if (isset($id)) {
     search_api_track_item_delete($type, array($id));
@@ -668,6 +680,24 @@ function search_api_search_api_item_type_info() {
   }
 
   return $types;
+}
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function search_api_modules_enabled(array $modules) {
+  // New modules might offer additional entity types, invalidating the cached
+  // item type information.
+  drupal_static_reset('search_api_get_item_type_info');
+}
+
+/**
+ * Implements hook_modules_disabled().
+ */
+function search_api_modules_disabled(array $modules) {
+  // The disabled modules might have offered entity types, which are now
+  // invalid. Therefore, clear the cached item type informaiton.
+  drupal_static_reset('search_api_get_item_type_info');
 }
 
 /**
@@ -748,8 +778,6 @@ function search_api_search_api_processor_info() {
  *   The IDs of the new items.
  */
 function search_api_track_item_insert($type, array $item_ids) {
-  $datasource = search_api_get_datasource_controller($type);
-
   $conditions = array(
     'enabled' => 1,
     'item_type' => $type,
@@ -759,7 +787,9 @@ function search_api_track_item_insert($type, array $item_ids) {
   if (!$indexes) {
     return;
   }
-  $datasource->trackItemInsert($item_ids, $indexes);
+
+  search_api_get_datasource_controller($type)->trackItemInsert($item_ids, $indexes);
+
   foreach ($indexes as $index) {
     if (!empty($index->options['index_directly'])) {
       $indexed = search_api_index_specific_items($index, $item_ids);
@@ -780,7 +810,6 @@ function search_api_track_item_insert($type, array $item_ids) {
  */
 function search_api_track_item_change($type, array $item_ids) {
   $indexes = array();
-  $datasource = search_api_get_datasource_controller($type);
   $conditions = array(
     'enabled' => 1,
     'item_type' => $type,
@@ -803,12 +832,12 @@ function search_api_track_item_change($type, array $item_ids) {
       if (count($indexed) < count($item_ids)) {
         // If indexing failed for some items, mark those as dirty.
         $diff = array_diff($item_ids, $indexed);
-        $datasource->trackItemChange($diff, array($index));
+        search_api_get_datasource_controller($type)->trackItemChange($diff, array($index));
       }
     }
   }
   if ($indexes) {
-    $datasource->trackItemChange($item_ids, $indexes);
+    search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
   }
 }
 
@@ -845,7 +874,6 @@ function search_api_track_item_indexed(SearchApiIndex $index, array $item_ids) {
  *   The IDs of the deleted items.
  */
 function search_api_track_item_delete($type, array $item_ids) {
-  $datasource = search_api_get_datasource_controller($type);
   $conditions = array(
     'enabled' => 1,
     'item_type' => $type,
@@ -853,7 +881,7 @@ function search_api_track_item_delete($type, array $item_ids) {
   );
   $indexes = search_api_index_load_multiple(FALSE, $conditions);
   if ($indexes) {
-    $datasource->trackItemDelete($item_ids, $indexes);
+    search_api_get_datasource_controller($type)->trackItemDelete($item_ids, $indexes);
   }
 }
 
