@@ -874,6 +874,7 @@ function search_api_track_item_indexed(SearchApiIndex $index, array $item_ids) {
  *   The IDs of the deleted items.
  */
 function search_api_track_item_delete($type, array $item_ids) {
+  // First, delete the item from the tracking table.
   $conditions = array(
     'enabled' => 1,
     'item_type' => $type,
@@ -882,6 +883,25 @@ function search_api_track_item_delete($type, array $item_ids) {
   $indexes = search_api_index_load_multiple(FALSE, $conditions);
   if ($indexes) {
     search_api_get_datasource_controller($type)->trackItemDelete($item_ids, $indexes);
+  }
+
+  // Then, delete it from all servers. Servers of disabled indexes have to be
+  // considered, too!
+  unset($conditions['enabled']);
+  foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
+    if ($index->server) {
+      $server = $index->server();
+      if ($server->enabled) {
+        $server->deleteItems($item_ids, $index);
+      }
+      else {
+        $tasks = variable_get('search_api_tasks', array());
+        foreach ($item_ids as $id) {
+          $tasks[$server->machine_name][$index->machine_name][] = 'delete-' . $id;
+        }
+        variable_set('search_api_tasks', $tasks);
+      }
+    }
   }
 }
 
