@@ -146,10 +146,11 @@ function drush_search_api_status($index_id = NULL) {
   ));
   foreach ($indexes as $index) {
     $status = search_api_index_status($index);
+    $complete = ($status['total'] > 0) ? 100 * round($status['indexed'] / $status['total'], 3) . '%' : '-';
     $row = array(
       $index->id,
       $index->name,
-      100 * round($status['indexed'] / $status['total'], 3) . '%',
+      $complete,
       $status['indexed'],
       $status['total'],
     );

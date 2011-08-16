@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1242614 by jsacksick: Fixed division by zero in drush_search_api_status().
 - #1250168 by drunken monkey: Fixed deleted items aren't removed from servers.
 - #1236642 by jsacksick, drunken monkey: Fixed stale static cache of
   search_api_get_item_type_info().
