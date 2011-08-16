@@ -564,6 +564,12 @@ function search_api_admin_add_index(array $form, array &$form_state) {
       $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
     }
   }
+  $form['read_only'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Read only'),
+    '#description' => t('Do not write to this index or track the status of items in this index.'),
+    '#default_value' => FALSE,
+  );
   $form['options']['index_directly'] = array(
     '#type' => 'checkbox',
     '#title' => t('Index items immediately'),
@@ -1026,7 +1032,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
   $form['read_only'] = array(
     '#type' => 'checkbox',
     '#title' => t('Read only'),
-    '#description' => t('Do not write to this index or track ids of entities in this index.'),
+    '#description' => t('Do not write to this index or track the status of items in this index.'),
     '#default_value' => $index->read_only,
   );
   $form['options']['index_directly'] = array(
