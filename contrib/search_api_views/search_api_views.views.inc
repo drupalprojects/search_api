@@ -118,6 +118,7 @@ function search_api_views_views_data() {
     }
 
     // Add handlers for all indexed fields which weren't processed yet.
+    $orig_wrapper = $index->entityWrapper(NULL, TRUE);
     foreach ($fields as $key => $field) {
       if (empty($field['indexed'])) {
         continue;
@@ -153,6 +154,8 @@ function search_api_views_views_data() {
     }
 
     // Special handlers
+    $table['search_api_language']['filter']['handler'] = 'SearchApiViewsHandlerFilterLanguage';
+
     $table['search_api_id']['title'] = t('Entity ID');
     $table['search_api_id']['help'] = t("The entity's ID.");
     $table['search_api_id']['type'] = 'integer';

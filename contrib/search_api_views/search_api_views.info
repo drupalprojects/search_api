@@ -22,6 +22,7 @@ files[] = includes/handler_filter.inc
 files[] = includes/handler_filter_boolean.inc
 files[] = includes/handler_filter_date.inc
 files[] = includes/handler_filter_fulltext.inc
+files[] = includes/handler_filter_language.inc
 files[] = includes/handler_filter_options.inc
 files[] = includes/handler_filter_text.inc
 files[] = includes/handler_sort.inc

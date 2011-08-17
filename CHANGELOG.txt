@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1224564 by drunken monkey: Added user language as a filter in Views.
 - #1242614 by jsacksick: Fixed division by zero in drush_search_api_status().
 - #1250168 by drunken monkey: Fixed deleted items aren't removed from servers.
 - #1236642 by jsacksick, drunken monkey: Fixed stale static cache of
