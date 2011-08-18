@@ -390,6 +390,12 @@ function search_api_facets_block_view($delta = '') {
       $filter->name = _search_api_create_filter_name($v, $type, $values);
       $filter->params = $params;
       unset($filter->params[$filter_name][$facet->field][$i]);
+      if (empty($filter->params[$filter_name][$facet->field])) {
+        unset($filter->params[$filter_name][$facet->field]);
+      }
+      if (empty($filter->params[$filter_name])) {
+        unset($filter->params[$filter_name]);
+      }
       $active[] = $filter;
     }
   }
@@ -610,6 +616,12 @@ function search_api_facets_block_current_search_view() {
           '#active'  => TRUE,
         );
         unset($filter['#options']['query'][$filter_name][$field][$i]);
+        if (empty($filter['#options']['query'][$filter_name][$field])) {
+          unset($filter['#options']['query'][$filter_name][$field]);
+        }
+        if (empty($filter['#options']['query'][$filter_name])) {
+          unset($filter['#options']['query'][$filter_name]);
+        }
         $filter_links[] = $filter;
       }
     }
