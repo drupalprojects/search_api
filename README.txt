@@ -324,6 +324,11 @@ Included components
     on the site. The view mode used can be selected.
     Note, however, that this might not work for entities of all types. All core
     entities except files are supported, though.
+  * Index hierarchy
+    Allows to index a hierarchical field along with all its parents. Most
+    importantly, this can be used to index taxonomy term references along with
+    all parent terms. This way, when an item, e.g., has the term "New York", it
+    will also be matched when filtering for "USA" or "North America".
 
 - Processors
 

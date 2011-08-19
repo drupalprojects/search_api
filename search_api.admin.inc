@@ -1377,7 +1377,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   // Set default indexed status for newly added fields.
   $types = search_api_field_types();
   foreach ($form_state['callbacks'] as $name => $callback) {
-    if ($values['callbacks'][$name]['status'] && empty($options['callbacks'][$name]['status'])) {
+    if ($values['callbacks'][$name]['status'] && empty($options['data_alter_callbacks'][$name]['status'])) {
       $properties = $callback->propertyInfo();
       if ($properties) {
         foreach ($properties as $key => $field) {
@@ -1406,15 +1406,15 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     }
   }
 
-  $options['data_alter_callbacks'] = $values['callbacks'];
-  $options['processors'] = $values['processors'];
+  if ($options['data_alter_callbacks'] != $values['callbacks'] || $options['processors'] != $values['processors']) {
+    $index->options['data_alter_callbacks'] = $values['callbacks'];
+    $index->options['processors'] = $values['processors'];
 
-  // Save the already sorted arrays to avoid having to sort them at each use.
-  uasort($options['data_alter_callbacks'], 'search_api_admin_element_compare');
-  uasort($options['processors'], 'search_api_admin_element_compare');
+    // Save the already sorted arrays to avoid having to sort them at each use.
+    uasort($index->options['data_alter_callbacks'], 'search_api_admin_element_compare');
+    uasort($index->options['processors'], 'search_api_admin_element_compare');
 
-  $ret = $index->update(array('options' => $options));
-  if ($ret) {
+    $index->save();
     $index->reindex();
     drupal_set_message(t("The search index' workflow was successfully edited. " .
         'All content was scheduled for re-indexing so the new settings can take effect.'));

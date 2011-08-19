@@ -442,19 +442,14 @@ class SearchApiIndex extends Entity {
       return $ret;
     }
 
-    $wrappers = array();
+    $data = array();
     foreach ($items as $id => $item) {
-      $wrappers[$id] = $this->entityWrapper($item);
+      $data[$id] = search_api_extract_fields($this->entityWrapper($item), $fields);
     }
 
-    $items = array();
-    foreach ($wrappers as $id => $wrapper) {
-      $items[$id] = search_api_extract_fields($wrapper, $fields);
-    }
+    $this->preprocessIndexItems($data);
 
-    $this->preprocessIndexItems($items);
-
-    return array_merge($ret, $this->server()->indexItems($this, $items));
+    return array_merge($ret, $this->server()->indexItems($this, $data));
   }
 
   /**
@@ -516,7 +511,7 @@ class SearchApiIndex extends Entity {
       }
     }
     // Let fields added by data-alter callbacks override default fields.
-    $property_info['properties'] = $this->added_properties + $property_info['properties'];
+    $property_info['properties'] = array_merge($property_info['properties'], $this->added_properties);
 
     return $property_info;
   }

@@ -8,6 +8,7 @@ package = Search
 files[] = search_api.test
 files[] = includes/callback.inc
 files[] = includes/callback_add_aggregation.inc
+files[] = includes/callback_add_hierarchy.inc
 files[] = includes/callback_add_url.inc
 files[] = includes/callback_add_viewed_entity.inc
 files[] = includes/callback_bundle_filter.inc

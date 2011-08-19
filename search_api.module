@@ -704,6 +704,13 @@ function search_api_modules_disabled(array $modules) {
  * Implements hook_search_api_alter_callback_info().
  */
 function search_api_search_api_alter_callback_info() {
+  $callbacks['search_api_alter_bundle_filter'] = array(
+    'name' => t('Bundle filter'),
+    'description' => t('Exclude items from indexing based on their bundle (content type, vocabulary, …).'),
+    'class' => 'SearchApiAlterBundleFilter',
+    // Filters should be executed first.
+    'weight' => -10,
+  );
   $callbacks['search_api_alter_add_url'] = array(
     'name' => t('URL field'),
     'description' => t("Adds the item's URL to the indexed data."),
@@ -719,10 +726,10 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Adds an additional field containing the whole HTML content of the entity when viewed.'),
     'class' => 'SearchApiAlterAddViewedEntity',
   );
-  $callbacks['search_api_alter_bundle_filter'] = array(
-    'name' => t('Bundle filter'),
-    'description' => t('Exclude items from indexing based on their bundle (content type, vocabulary, …).'),
-    'class' => 'SearchApiAlterBundleFilter',
+  $callbacks['search_api_alter_add_hierarchy'] = array(
+    'name' => t('Index hierarchy'),
+    'description' => t('Allows to index hierarchical fields along with all their ancestors.'),
+    'class' => 'SearchApiAlterAddHierarchy',
   );
   $callbacks['search_api_alter_language_control'] = array(
     'name' => t('Language control'),
@@ -1360,6 +1367,7 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
         $property_info = $wrapper->$field->info();
         $info['original_type'] = $property_info['type'];
         // For entities, we extract the entity ID instead of the whole object.
+        // @todo Use 'identifier' => TRUE instead of always loading the object.
         $t = search_api_extract_inner_type($property_info['type']);
         if (isset($entity_infos[$t])) {
           // If no object is set, set this field to NULL.
