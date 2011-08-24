@@ -136,7 +136,6 @@ class SearchApiAlterLanguageControl extends SearchApiAbstractAlterCallback {
         if (isset($wrapper->$field)) {
           try {
             $item->search_api_language = $wrapper->$field->value();
-            dpm('Set item language to ' . $item->search_api_language);
           }
           catch (EntityMetadataWrapperException $e) {
             // Something went wrong while accessing the language field. Probably
@@ -147,7 +146,6 @@ class SearchApiAlterLanguageControl extends SearchApiAbstractAlterCallback {
       // Filter out items according to language, if any were selected.
       if ($languages = $this->options['languages']) {
         if (empty($languages[$item->search_api_language])) {
-          dpm("unset \$items[$i].");
           unset($items[$i]);
         }
       }
