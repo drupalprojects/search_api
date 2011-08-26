@@ -1406,7 +1406,9 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     }
   }
 
-  if ($options['data_alter_callbacks'] != $values['callbacks'] || $options['processors'] != $values['processors']) {
+  if (!isset($options['data_alter_callbacks']) || !isset($options['processors'])
+      || $options['data_alter_callbacks'] != $values['callbacks']
+      || $options['processors'] != $values['processors']) {
     $index->options['data_alter_callbacks'] = $values['callbacks'];
     $index->options['processors'] = $values['processors'];
 
