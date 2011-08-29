@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1258240 by drunken monkey: Fixed more overlooked entity type assumptions.
 - #1213698 by drunken monkey: Added a data alteration for indexing complete
   hierarchies.
 - #1252208 by tedfordgif: Fixed superfluous query chars in active facet links.
