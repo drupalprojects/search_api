@@ -606,7 +606,6 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     db_delete($this->table)
       ->condition($this->itemIdColumn, $item_ids, 'IN')
       ->condition($this->indexIdColumn, $index_ids, 'IN')
-      ->condition($this->changedColumn, 0)
       ->execute();
   }
 
