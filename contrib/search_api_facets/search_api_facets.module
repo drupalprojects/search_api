@@ -923,7 +923,7 @@ function search_api_facets_get_filters(SearchApiQueryInterface $query) {
 /**
  * Refresh the type information in the given options array.
  *
- * @param stdClass $facet
+ * @param SearchApiFacet $facet
  *   The facet whose type information should be refreshed.
  * @param array $options
  *   An array for which 'type' and, if applicable, 'options' and 'entity_type'
@@ -932,6 +932,10 @@ function search_api_facets_get_filters(SearchApiQueryInterface $query) {
 function _search_api_facets_refresh_type(SearchApiFacet $facet, array &$options) {
   unset($options['options'], $options['entity_type']);
   $index = search_api_index_load($facet->index_id);
+  if (!$index) {
+    watchdog('search_api_facets', 'Facet !delta specifies an unknown index !index_id.', array('!delta' => $facet->delta, '!index_id' => $facet->index_id), WATCHDOG_WARNING);
+    return;
+  }
   $field_info = $index->options['fields'][$facet->field];
   $type = $field_info['type'];
   if (isset($field_info['entity_type']) && entity_get_info($field_info['entity_type'])) {

@@ -4,6 +4,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1262362 by drunken monkey: Fixed error handling for orphaned facets.
 - #1233426 by atlea: Fixed dirty and queued items don't get removed from the
   tracking table when deleted.
 - #1258240 by drunken monkey: Fixed more overlooked entity type assumptions.
