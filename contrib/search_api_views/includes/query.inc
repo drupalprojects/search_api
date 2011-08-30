@@ -93,6 +93,35 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   /**
+   * Defines the options used by this query plugin.
+   *
+   * Adds an option to bypass access checks.
+   */
+  public function option_definition() {
+    return parent::option_definition() + array(
+      'search_api_bypass_access' => array(
+        'default' => FALSE,
+      ),
+    );
+  }
+
+  /**
+   * Add settings for the UI.
+   *
+   * Adds an option for bypassing access checks.
+   */
+  public function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+
+    $form['search_api_bypass_access'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Bypass access checks'),
+      '#description' => t('If the underlying search index has access checks enabled, this option allows to disable them for this view.'),
+      '#default_value' => $this->options['search_api_bypass_access'],
+    );
+  }
+
+  /**
    * Builds the necessary info to execute the query.
    */
   public function build(&$view) {
@@ -100,6 +129,11 @@ class SearchApiViewsQuery extends views_plugin_query {
 
     // Let the pager modify the query to add limits.
     $this->pager->query();
+
+    // Add the "search_api_bypass_access" option to the query, if desired.
+    if (!empty($this->options['search_api_bypass_access'])) {
+      $this->query->setOption('search_api_bypass_access', TRUE);
+    }
   }
 
   /**

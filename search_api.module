@@ -736,6 +736,11 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Lets you determine the language of items in the index.'),
     'class' => 'SearchApiAlterLanguageControl',
   );
+  $callbacks['search_api_alter_node_access'] = array(
+    'name' => t('Node access'),
+    'description' => t('Add node access information to the index.'),
+    'class' => 'SearchApiAlterNodeAccess',
+  );
 
   return $callbacks;
 }
@@ -1210,6 +1215,79 @@ function search_api_get_processors() {
   }
 
   return $processors;
+}
+
+/**
+ * Implements hook_search_api_query_alter().
+ *
+ * Adds node access to the query, if enabled.
+ *
+ * @param SearchApiQueryInterface $query
+ *   The SearchApiQueryInterface object representing the search query.
+ */
+function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
+  $index = $query->getIndex();
+  // Only add node access if the "search_api_access_node" field is indexed for
+  // the index, and unless disabled explicitly by the query.
+  if (!empty($index->options['fields']['search_api_access_node']['indexed']) && !$query->getOption('search_api_bypass_access')) {
+    $account = $query->getOption('search_api_access_account', $GLOBALS['user']);
+    if (is_numeric($account)) {
+      $account = user_load($account);
+    }
+    if (is_object($account)) {
+      try {
+        _search_api_query_add_node_access($account, $query);
+      }
+      catch (SearchApiException $e) {
+        watchdog('search_api', 'An error occurred while altering node access to a search query: @message.', array('@message' => $e->getMessage()), WATCHDOG_WARNING);
+      }
+    }
+    else {
+      watchdog('search_api', 'An illegal user UID was given for node access: @uid.', array('@uid' => $query->getOption('search_api_access_account', $GLOBALS['user'])), WATCHDOG_WARNING);
+    }
+  }
+}
+
+/**
+  * Build a node access subquery.
+  *
+  * @param $account
+  *   The user object, who searches.
+  *
+  * @return SearchApiQueryFilter
+  */
+function _search_api_query_add_node_access($account, SearchApiQueryInterface $query) {
+  if (!user_access('access content', $account)) {
+    // Simple hack for returning no results.
+    $query->condition('status', 0);
+    $query->condition('status', 1);
+    watchdog('search_api', 'User !name tried to execute a search, but cannot access content.', array('!name' => theme('username', array('account' => $account))), WATCHDOG_);
+    return;
+  }
+
+  // Only filter for user which don't have full node access.
+  if (!user_access('bypass node access', $account)) {
+    // Filter by node "published" status.
+    if (user_access('view own unpublished content')) {
+      $filter = $query->createFilter('OR');
+      $filter->condition('status', NODE_PUBLISHED);
+      $filter->condition('uid', $account->uid);
+      $query->filter($filter);
+    }
+    else {
+      $query->condition('status', NODE_PUBLISHED);
+    }
+    // Filter by node access grants.
+    $filter = $query->createFilter('OR');
+    $grants = node_access_grants('view', $account);
+    foreach ($grants as $realm => $gids) {
+      foreach ($gids as $gid) {
+        $filter->condition('search_api_access_node', "node_access_$realm:$gid");
+      }
+    }
+    $filter->condition('search_api_access_node', 'node_access__all');
+    $query->filter($filter);
+  }
 }
 
 /**

@@ -84,6 +84,18 @@ Terms as used in this module.
 Information for users
 ---------------------
 
+IMPORTANT: Access checks
+  In general, the Search API doesn't contain any access checks for search
+  results. It is your responsibility to ensure that only accessible search
+  results are displayed – either by only indexing such items, or by filtering
+  appropriately at search time.
+  However, this doesn't apply to searches on general site content (item type
+  "Node") – for these, correct entity access checks are implemented, so you
+  don't have to take care of that in any way yourself. Permissions on field
+  level aren't checked in any case, however. Also note that some search types
+  (e.g., search views) might provide the option to disable this access feature
+  for individual searches.
+
 As stated above, you will need at least one other module to use the Search API,
 namely one that defines a service class (e.g. search_api_db ("Database search"),
 provided with this module).

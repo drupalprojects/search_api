@@ -1395,7 +1395,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
               $type = "list<$type>";
             }
           }
-          $options['fields'][$key] = array(
+          $index->options['fields'][$key] = array(
             'name' => $field['label'],
             'type' => $type,
             'boost' => '1.0',

@@ -33,7 +33,12 @@ interface SearchApiQueryInterface {
    *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
-   *   All options are optional.
+   *   - search_api_access_account: The account which will be used for entity
+   *     access checks, if available and enabled for the index.
+   *   - search_api_bypass_access: If set to TRUE, entity access checks will be
+   *     skipped, even if enabled for the index.
+   *   All options are optional. Third-party modules might define and use other
+   *   options not listed here.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
@@ -356,7 +361,12 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
-   *   All options are optional.
+   *   - search_api_access_account: The account which will be used for entity
+   *     access checks, if available and enabled for the index.
+   *   - search_api_bypass_access: If set to TRUE, entity access checks will be
+   *     skipped, even if enabled for the index.
+   *   All options are optional. Third-party modules might define and use other
+   *   options not listed here.
    *
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
