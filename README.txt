@@ -89,12 +89,20 @@ IMPORTANT: Access checks
   results. It is your responsibility to ensure that only accessible search
   results are displayed – either by only indexing such items, or by filtering
   appropriately at search time.
-  However, this doesn't apply to searches on general site content (item type
-  "Node") – for these, correct entity access checks are implemented, so you
-  don't have to take care of that in any way yourself. Permissions on field
-  level aren't checked in any case, however. Also note that some search types
-  (e.g., search views) might provide the option to disable this access feature
-  for individual searches.
+  For search on general site content (item type "Node"), this is already
+  supported by the Search API. To enable this, go to the index's "Workflow" tab
+  and activate the "Node access" data alteration. This will add the necessary
+  field, "Node access information", to the index (which you have to leave as
+  "indexed"). If this field is present, access checks will automatically be
+  executed at search time, showing only those results that a user can view. Some
+  search types (e.g., search views) also provide the option to disable these
+  access checks for individual searches.
+  Please note, however, that these access checks use the indexed data, while
+  usually the current data is displayed to users. Therefore, users might still
+  see inappropriate content as long as items aren't indexed in their latest
+  state. If you can't allow this for your site, please use the index's "Index
+  immediately" feature (explained below) or possibly custom solutions for
+  specific search types, if available.
 
 As stated above, you will need at least one other module to use the Search API,
 namely one that defines a service class (e.g. search_api_db ("Database search"),
