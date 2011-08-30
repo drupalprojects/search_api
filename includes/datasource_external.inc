@@ -184,11 +184,13 @@ class SearchApiExternalDataSourceController extends SearchApiAbstractDataSourceC
    *   items as changed for the given indexes.
    * @param array $indexes
    *   The indexes for which the change should be tracked.
+   * @param $dequeue
+   *   If set to TRUE, also change the status of queued items.
    *
    * @throws SearchApiDataSourceException
    *   If any of the indexes doesn't use the same item type as this controller.
    */
-  public function trackItemChange($item_ids, array $indexes) {
+  public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE) {
     return;
   }
 

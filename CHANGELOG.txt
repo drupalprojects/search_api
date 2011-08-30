@@ -5,6 +5,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1264164 by das-peter: Fixed the definition of the external data source
+  controller's trackItemChange() method.
 - #1262362 by drunken monkey: Fixed error handling for orphaned facets.
 - #1233426 by atlea: Fixed dirty and queued items don't get removed from the
   tracking table when deleted.
