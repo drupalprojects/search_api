@@ -1036,7 +1036,7 @@ class SearchApiDbService extends SearchApiAbstractService {
           $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'NOT IN' : 'IN');
         }
         else {
-          $alias = $this->getTableAlias($fields[$f[0]], $db_query);
+          $alias = $this->getTableAlias($fields[$f[0]], $db_query, search_api_is_list_type($fields[$f[0]]['type']));
           $cond->condition($alias . '.value', $f[1], $f[2]);
         }
       }
@@ -1046,12 +1046,23 @@ class SearchApiDbService extends SearchApiAbstractService {
 
   /**
    * Helper method for adding a field's table to a database query.
+   *
+   * @param array $field
+   *   The field information array. The "table" key should contain the table
+   *   name to which a join should be made.
+   * @param SelectQueryInterface $db_query
+   *   The database query used.
+   * @param $newjoin
+   *   If TRUE, a join is done even if the table was already joined to in the
+   *   query.
    */
-  protected function getTableAlias(array $field, SelectQueryInterface $db_query) {
-    foreach ($db_query->getTables() as $alias => $info) {
-      $table = $info['table'];
-      if (is_scalar($table) && $table == $field['table']) {
-        return $alias;
+  protected function getTableAlias(array $field, SelectQueryInterface $db_query, $newjoin = FALSE) {
+    if(!$newjoin) {
+      foreach ($db_query->getTables() as $alias => $info) {
+        $table = $info['table'];
+        if (is_scalar($table) && $table == $field['table']) {
+          return $alias;
+        }
       }
     }
     return $db_query->join($field['table'], 't', 't.item_id = %alias.item_id');
@@ -1090,7 +1101,7 @@ class SearchApiDbService extends SearchApiAbstractService {
       $field = $fields[$facet['field']];
 
       $select = db_select($table, 't');
-      $alias = $this->getTableAlias($field, $select);
+      $alias = $this->getTableAlias($field, $select, TRUE);
       $select->addField($alias, search_api_is_text_type($field['type']) ? 'word' : 'value', 'value');
       $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
       $select->groupBy('value');
