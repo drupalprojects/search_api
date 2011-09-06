@@ -68,16 +68,16 @@ function search_api_page_schema() {
  */
 function search_api_page_requirements($phase) {
   $t = get_t();
-  $ret['search_api_facets']['title'] = $t('Search pages');
+  $ret['search_api_page']['title'] = $t('Search pages');
   if ($phase == 'runtime') {
-    $ret['search_api_facets']['value'] = $t('deprecated');
+    $ret['search_api_page']['value'] = $t('deprecated');
   }
-  $ret['search_api_facets']['description'] = $t('This module was moved out of the core Search API project. ' .
+  $ret['search_api_page']['description'] = $t('This module was moved out of the core Search API project. ' .
       'To keep using it, please download the separate module from <a href="@url">its project page</a>. ' .
       'To get rid of this error message delete the old module under @path after downloading the new one.' .
       'The legacy module used now will soon be removed.',
       array('@url' => url('http://drupal.org/project/search_api_page'), '@path' => DRUPAL_ROOT . drupal_get_path('module', 'search_api_page')));
-  $ret['search_api_facets']['severity'] = REQUIREMENT_ERROR;
+  $ret['search_api_page']['severity'] = REQUIREMENT_ERROR;
 
   return $ret;
 }

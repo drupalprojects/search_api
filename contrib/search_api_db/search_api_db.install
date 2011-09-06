@@ -1,6 +1,25 @@
 <?php
 
 /**
+ * Implements hook_requirements().
+ */
+function search_api_db_requirements($phase) {
+  $t = get_t();
+  $ret['search_api_db']['title'] = $t('Search pages');
+  if ($phase == 'runtime') {
+    $ret['search_api_db']['value'] = $t('deprecated');
+  }
+  $ret['search_api_db']['description'] = $t('This module was moved out of the core Search API project. ' .
+      'To keep using it, please download the separate module from <a href="@url">its project page</a>. ' .
+      'To get rid of this error message delete the old module under @path after downloading the new one.' .
+      'The legacy module used now will soon be removed.',
+      array('@url' => url('http://drupal.org/project/search_api_db'), '@path' => DRUPAL_ROOT . drupal_get_path('module', 'search_api_db')));
+  $ret['search_api_db']['severity'] = REQUIREMENT_ERROR;
+
+  return $ret;
+}
+
+/**
  * Implements hook_uninstall().
  */
 function search_api_db_uninstall() {
