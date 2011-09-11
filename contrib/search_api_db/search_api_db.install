@@ -5,10 +5,8 @@
  */
 function search_api_db_requirements($phase) {
   $t = get_t();
-  $ret['search_api_db']['title'] = $t('Search pages');
-  if ($phase == 'runtime') {
-    $ret['search_api_db']['value'] = $t('deprecated');
-  }
+  $ret['search_api_db']['title'] = $t('Database search');
+  $ret['search_api_db']['value'] = $t('deprecated');
   $ret['search_api_db']['description'] = $t('This module was moved out of the core Search API project. ' .
       'To keep using it, please download the separate module from <a href="@url">its project page</a>. ' .
       'To get rid of this error message delete the old module under @path after downloading the new one.' .

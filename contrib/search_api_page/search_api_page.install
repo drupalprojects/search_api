@@ -69,9 +69,7 @@ function search_api_page_schema() {
 function search_api_page_requirements($phase) {
   $t = get_t();
   $ret['search_api_page']['title'] = $t('Search pages');
-  if ($phase == 'runtime') {
-    $ret['search_api_page']['value'] = $t('deprecated');
-  }
+  $ret['search_api_page']['value'] = $t('deprecated');
   $ret['search_api_page']['description'] = $t('This module was moved out of the core Search API project. ' .
       'To keep using it, please download the separate module from <a href="@url">its project page</a>. ' .
       'To get rid of this error message delete the old module under @path after downloading the new one.' .
