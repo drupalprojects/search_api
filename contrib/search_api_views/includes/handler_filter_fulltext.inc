@@ -63,6 +63,10 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
     while (is_array($this->value)) {
       $this->value = $this->value ? array_shift($this->value) : NULL;
     }
+    // Catch empty strings entered by the user, but not "0".
+    if ($this->value === '') {
+      return;
+    }
     $fields = $this->options['fields'];
     $fields = $fields ? $fields : array_keys($this->getFulltextFields());
 

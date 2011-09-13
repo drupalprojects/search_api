@@ -5,6 +5,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1251674 by Nick_vh: Fixed handling of empty fulltext keys in Views.
 - #1145306 by Nick_vh, drunken monkey: Fixed handling of multiple filters in the
   database service class.
 - #1264164 by das-peter: Fixed the definition of the external data source
