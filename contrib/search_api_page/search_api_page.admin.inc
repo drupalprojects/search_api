@@ -367,7 +367,7 @@ function search_api_page_admin_edit(array $form, array &$form_state, stdClass $p
   else {
     $form['options']['view_mode'] = array(
       '#type' => 'value',
-      '#value' => reset($view_modes),
+      '#value' => key($view_modes),
     );
   }
 
