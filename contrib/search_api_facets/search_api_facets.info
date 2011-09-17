@@ -1,6 +1,6 @@
 
-name = Search facets
-description = "Create facets for search queries executed via the Search API."
+name = Old search facets (deprecated)
+description = "Use the new 'Search facets' module integrating with the Facet API instead."
 dependencies[] = search_api
 dependencies[] = block
 core = 7.x

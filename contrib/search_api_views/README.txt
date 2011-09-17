@@ -11,7 +11,7 @@ on any search index.
 ------------------------
 This module defines the "More like this" feature (feature key: "search_api_mlt")
 that search service classes can implement. With a server supporting this, you
-can use the "More like this" contextual filter to display a list of items
+can use the „More like this“ contextual filter to display a list of items
 related to a given item (usually, nodes similar to the node currently viewed).
 
 For developers:
@@ -28,7 +28,7 @@ should all work normally.
 ----------------------
 Most features should be clear to users of Views. However, the module also
 provides a new display type, "Facets block", that might need some explanation.
-This display type is only available, if the Search facets module is also
+This display type is only available, if the „Search facets“ module is also
 enabled.
 
 The basic use of the block is to provide a list of links to the most popular
@@ -40,22 +40,28 @@ Please note that, due to limitations in Views, this display mode is shown for
 views of all base tables, even though it only works for views based on Search
 API indexes. For views of other base tables, this will just print an error
 message.
-The display will also always ignore the view's "Style" setting.
+The display will also always ignore the view's "Style" setting, selected fields
+and sorts, etc.
 
 To use the display, specify the base path of the search you want to link to
 (this enables you to also link to searches that aren't based on Views) and the
 facet field to use (any indexed field can be used here, there needn't be a facet
 defined for it). You'll then have the block available in the blocks
 administration and can enable and move it at leisure.
+Note, however, that the facet in question has to be enabled for the search page
+linked to for the filter to have an effect.
 
-You should note two things, though: First, if you want to display the block not
-only on a few pages, you should in any case take care that it isn't displayed
-on the search page, since that might confuse users.
-Also, since the block executes a search query to retrieve the facets, its
-display will potentially trigger other facet blocks to be displayed for that
-search. To prevent this, set the other facet blocks to either not display on the
-pages where the Views facet block is shown, or to ignore the search executed by
-the block (recognizable by the "-facet_block" suffix).
+Since the block will trigger a search on pages where it is set to appear, you
+can also enable additional „normal“ facet blocks for that search, via the
+„Facets“ tab for the index. They will automatically also point to the same
+search that you specified for the display. The Search ID of the „Facets blocks“
+display can easily be recognized by the "-facet_block" suffix.
+If you want to use only the normal facets and not display anything at all in
+the Views block, just activate the display's „Hide block“ option.
+
+Note: If you want to display the block not only on a few pages, you should in
+any case take care that it isn't displayed on the search page, since that might
+confuse users.
 
 Make fields in greater depths available
 ---------------------------------------

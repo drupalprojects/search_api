@@ -15,8 +15,8 @@ function search_api_facets_help($path, array $arg) {
  * Implements hook_menu().
  */
 function search_api_facets_menu() {
-  $items['admin/config/search/search_api/index/%search_api_index/facets'] = array(
-    'title' => 'Facets',
+  $items['admin/config/search/search_api/index/%search_api_index/old_facets'] = array(
+    'title' => 'Old facets',
     'description' => 'Select the facet blocks to display.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_facets_index_select', 5),
@@ -1020,4 +1020,72 @@ function _search_api_create_value_name($value, $type, array $values = array()) {
  */
 function _search_api_facets_compare_iname(stdClass $term1, stdClass $term2) {
   return strcmp($term1->iname, $term2->iname);
+}
+
+/**
+ * Helper function for exporting facets to the Facet API.
+ *
+ * Writes the settings for the given facets (or all facets of the index) into
+ * the global Facet API settings.
+ *
+ * CAUTION: Existing colliding settings in the Facet API will be overwritten!
+ *
+ * @param SearchApiIndex $index
+ *   The index for which the exported facets are defined.
+ * @param $facets
+ *   The facets that should be exported, or NULL to export all saved facets of
+ *   the index.
+ * @param
+ *   An array of realms to which realm-specific settings should be written; or
+ *   NULL to write to all available realms.
+ */
+function search_api_facets_export_to_facetapi(SearchApiIndex $index, $facets = NULL, $realms = NULL) {
+  if (!isset($facets)) {
+    $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name));
+  }
+  if (!isset($realms)) {
+    $realms = facetapi_get_realm_info();
+  }
+  $searcher = 'search_api@' . $index->machine_name;
+  $adapter = facetapi_adapter_load($searcher);
+  foreach ($facets as $facet) {
+    $options = $facet->options;
+    $f = facetapi_facet_load($facet->field, $searcher);
+    if ($f) {
+      $f = $adapter->getFacet($f);
+      // Export to global Facet API facet settings.
+      $settings = $f->getSettings();
+      $settings->settings['hard_limit'] = max($options['limit'], $options['more_limit']);
+      $settings->settings['facet_mincount'] = $options['min_count'];
+      $settings->settings['facet_missing'] = $options['missing'] ? 1 : 0;
+      $settings->settings['default_true'] = $options['default_true'];
+      $settings->settings['facet_search_ids'] = $options['ids_list'];
+      ctools_export_crud_save('facetapi', $settings);
+
+      // Export to realm-specific Facet API facet settings.
+      foreach ($realms as $realm) {
+        $settings = $f->getSettings($realm);
+        $settings->enabled = $facet->enabled ? 1 : 0;
+        $settings->settings['active_sorts'] = drupal_map_assoc(array('active', 'count', 'display'));
+        $settings->settings['sort_weight'] = array(
+          'active' => -50,
+          'count' => -49,
+          'display' => -48,
+          'indexed' => -47,
+        );
+        $settings->settings['sort_weight'] = array(
+          'active' => SORT_DESC,
+          'count' => SORT_DESC,
+          'display' => SORT_ASC,
+          'indexed' => SORT_ASC,
+        );
+        if ($options['sort'] != 'count') {
+          unset($settings->settings['active_sorts']['count']);
+        }
+        $settings->settings['soft_limit'] = $options['limit'];
+        $settings->settings['filters']['active_items']['status'] = !$options['show_active'];
+        ctools_export_crud_save('facetapi', $settings);
+      }
+    }
+  }
 }

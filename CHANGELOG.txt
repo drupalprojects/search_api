@@ -5,6 +5,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1182614 by katbailey, cpliakas, drunken monkey, thegreat, das-peter: Added
+  Facet API integration.
 - #1278592 by das-peter: Fixed default view mode for non-entites or entities
   without view modes.
 - #1251674 by Nick_vh: Fixed handling of empty fulltext keys in Views.

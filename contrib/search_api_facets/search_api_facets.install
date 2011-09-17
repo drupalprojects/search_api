@@ -1,6 +1,22 @@
 <?php
 
 /**
+ * Implements hook_requirements().
+ */
+function search_api_facets_requirements($phase) {
+  $t = get_t();
+  $ret['search_api_facets']['title'] = $t('Old search facets');
+  $ret['search_api_facets']['value'] = $t('deprecated');
+  $ret['search_api_facets']['description'] = $t('This module is deprecated. ' .
+      'Please use the new "Search facets" module along with the <a href="@url">Facet API</a> instead. ' .
+      'Easy migration functionality is available on the "Old facets" tab of indexes when both modules are enabled.',
+      array('@url' => url('http://drupal.org/project/facetapi')));
+  $ret['search_api_facets']['severity'] = REQUIREMENT_WARNING;
+
+  return $ret;
+}
+
+/**
  * Implements hook_schema().
  */
 function search_api_facets_schema() {
@@ -83,7 +99,6 @@ function search_api_facets_schema() {
  */
 function search_api_facets_uninstall() {
   variable_del('search_api_facets_search_ids');
-  variable_del('search_api_facets_current_search_options');
 }
 
 /**

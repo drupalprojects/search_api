@@ -11,12 +11,89 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
   module_load_include('admin.inc', 'search_api');
   drupal_set_title(search_api_admin_item_title($index));
   $form_state['index'] = $index;
+  $index_facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name));
+
+  if ($index_facets && module_exists('search_api_facetapi')) {
+    $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+    $form['export'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Export settings to new module'),
+      '#description' => t('<p>This way of defining facets has been deprecated. ' .
+          'You can use this form to export your existing facet definitions to the <a href="@url">new settings</a>.</p>' .
+          '<p>Once you have migrated the settings for all indexes, you should disable the "Old search facets" module.</p>' .
+          '<p><strong>Note:</strong> In case of collisions, the new settings will be overwritten with ' .
+          'settings defined here (and in the accompanying block configurations)!</p>',
+          array('@url' => url('admin/config/search/search_api/index/' . $index->machine_name . '/facets'))),
+      '#tree' => TRUE,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['export']['method'] = array(
+      '#type' => 'select',
+      '#title' => t('Facets to export'),
+      '#options' => array(
+        'all' => t('All saved facets'),
+        'enabled' => t('All enabled facets'),
+        'custom' => t('Manual'),
+      ),
+      '#default_value' => 'all',
+    );
+    $form['export']['facets'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Select facets to export'),
+      '#description' => t('If you select "Manual" above, you can manually select the facets to export for this index here.'),
+      '#options' => array(),
+      '#attributes' => array('class' => array('search-api-checkboxes-list')),
+    );
+    $form['export']['facets']['#states']['visible'][':input[name="export[method]"]']['value'] = 'custom';
+    foreach ($index_facets as $facet) {
+      if (!empty($fields[$facet->field])) {
+        $form['export']['#description'] .= '<p>' . t('<strong>Warning</strong>: ' .
+            'Multiple facets for the same field are currently not supported by the Facet API. ' .
+            'Therefore, they cannot be exported. If having multiple facets for the same field is crucial for your site, ' .
+            'please ask for help in the <a href="@url">issue queue</a>.',
+            array('@url' => 'http://drupal.org/project/issues/search_api')) . '</p>';
+      }
+      $form['export']['facets']['#options'][$facet->delta] = $facet->name;
+      $fields[$facet->field] = TRUE;
+    }
+    $form['export']['realms'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Export to realms'),
+      '#description' => t('Select the realms to which realm-specific settings will be exported. ' .
+          'Global settings will be exported in any case.'),
+      '#options' => array(),
+      '#default_value' => array(),
+      '#attributes' => array('class' => array('search-api-checkboxes-list')),
+    );
+    foreach (facetapi_get_realm_info() as $key => $realm) {
+      $form['export']['realms']['#options'][$key] = $realm['label'];
+      $form['export']['realms']['#default_value'][$key] = $key;
+    }
+
+    $form['export']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Export settings'),
+      '#submit' => array('_search_api_facets_index_export_submit'),
+    );
+  }
+  elseif (!module_exists('search_api_facetapi')) {
+    $msg = '<p>' . t('This module has been deprecated in favor of the new "Search facets" module. To switch:') . '</p>';
+    $msg .= '<ul>';
+    $msg .= '<li>' . t('Download and enable the <a href="@url">Facet API</a> module.', array('@url' => url('http://drupal.org/project/facetapi'))) . '</li>';
+    $msg .= '<li>' . t('Enable the new "Search facets" module (which depends on the Facet API).') . '</li>';
+    $msg .= '<li>' . t('Come back to this page to export your facet settings  to the new modules.') . '</li>';
+    $msg .= '<li>' . t('Possibly do the same for other indexes with defined facets.') . '</li>';
+    $msg .= '<li>' . t('Disable the "Old search facets" module.') . '</li>';
+    $msg .= '</ul>';
+    drupal_set_message($msg, 'warning');
+  }
 
   if (!$index->server() || !$index->server()->supportsFeature('search_api_facets')) {
     // We can't offer any facets, but maybe the user can delete old facet data.
     drupal_set_message(t("The server this index currently lies on doesn't support facets. " .
         'To use facets, you will have to move this index to a server supporting this feature.'), 'error');
-    if (search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name))) {
+    if ($index_facets) {
       $form['description'] = array(
         '#type' => 'item',
         '#title' => t('Delete facet settings'),
@@ -63,7 +140,7 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
       drupal_set_message('Since this index is at the moment disabled, no facet blocks can be activated.', 'warning');
     }
     $show_status = FALSE;
-    foreach (search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name)) as $facet) {
+    foreach ($index_facets as $facet) {
       $facets[$facet->field][] = $facet;
       if ($facet->hasStatus(ENTITY_IN_CODE)) {
         $show_status = TRUE;
@@ -259,6 +336,49 @@ function search_api_facets_index_select_submit_delete(array $form, array &$form_
     drupal_set_message(t('There was no data to delete.'), 'warning');
   }
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name;
+}
+
+/**
+ * Submit callback for search_api_facets_index_select(), for exporting settings.
+ */
+function _search_api_facets_index_export_submit(array $form, array &$form_state) {
+  $index = $form_state['index'];
+  $method = $form_state['values']['export']['method'];
+
+  // Load appropriate facets.
+  $ids = ($method == 'custom') ? array_filter($form_state['values']['export']['facets']) : NULL;
+  $conditions = ($method == 'enabled') ? array('enabled' => 1) : array();
+  $conditions['index_id'] = $index->machine_name;
+  $facets = $facets = search_api_facet_load_multiple(FALSE, $method == 'all' ? array() : array('enabled' => 1));
+
+  // Don't include two facets for the same field.
+  foreach ($facets as $delta => $facet) {
+    if (!empty($fields[$facet->field])) {
+      unset($facets[$delta]);
+    }
+    else {
+      $fields[$facet->field] = TRUE;
+    }
+  }
+
+  // Load realms.
+  $realms = array();
+  foreach (array_filter($form_state['values']['export']['realms']) as $realm) {
+    $realms[$realm] = facetapi_realm_load($realm);
+  }
+  $realms = array_filter($realms);
+
+  // Export settings.
+  search_api_facets_export_to_facetapi($index, $facets, $realms);
+
+  // Show success message.
+  $items = array();
+  foreach ($facets as $facet) {
+    $items[] = $facet->name;
+  }
+  drupal_set_message('<p>' . t('Successfully exported the settings of the following facets for this index:') . '</p>' .
+      theme('item_list', array('items' => $items)));
+
 }
 
 /**

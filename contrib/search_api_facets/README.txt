@@ -1,4 +1,3 @@
-
 Search facets
 -------------
 
@@ -7,6 +6,16 @@ the Search API, no matter if executed by a search page, a view or any other
 module. The only thing you'll need is a search service class that supports the
 "search_api_facets" feature. Currently, the "Database search" and "Solr search"
 modules supports this.
+
+IMPORTANT: This module has been deprecated in favor of the search_api_facetapi
+module (also contained in this project). It won't receive any further updates
+and will most likely be removed in the future, before a stable release of the
+Search API module is created. Please move to the other module as soon as
+possible.
+
+To ease migration, there is a simple form for moving facets to the new settings
+on the "Old facets" tab of indexes for which there are saved facets.
+You can also use the search_api_facets_export_to_facetapi() function directly.
 
 
 

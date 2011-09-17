@@ -286,7 +286,7 @@ function search_api_views_views_plugins() {
     ),
   );
 
-  if (module_exists('search_api_facets')) {
+  if (module_exists('search_api_facetapi')) {
     $ret['display']['search_api_views_facets_block'] = array(
       'title' => t('Facets block'),
       'help' => t('Display facets for this search as a block anywhere on the site.'),
