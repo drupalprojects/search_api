@@ -93,10 +93,10 @@ IMPORTANT: Access checks
   supported by the Search API. To enable this, go to the index's "Workflow" tab
   and activate the "Node access" data alteration. This will add the necessary
   field, "Node access information", to the index (which you have to leave as
-  "indexed"). If this field is present, access checks will automatically be
-  executed at search time, showing only those results that a user can view. Some
-  search types (e.g., search views) also provide the option to disable these
-  access checks for individual searches.
+  "indexed"). If both this field and "Published" are set to be indexed, access
+  checks will automatically be executed at search time, showing only those
+  results that a user can view. Some search types (e.g., search views) also
+  provide the option to disable these access checks for individual searches.
   Please note, however, that these access checks use the indexed data, while
   usually the current data is displayed to users. Therefore, users might still
   see inappropriate content as long as items aren't indexed in their latest

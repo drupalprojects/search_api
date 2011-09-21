@@ -90,4 +90,20 @@ class SearchApiAlterNodeAccess extends SearchApiAbstractAlterCallback {
     }
   }
 
+  /**
+   * If the data alteration is being enabled, sets "Published" to "indexed".
+   */
+  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+    parent::configurationFormSubmit($form, $values, $form_state);
+
+    $old_status = !empty($form_state['index']->options['data_alter_callbacks']['search_api_alter_node_access']['status']);
+    $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
+
+    if (!$old_status && $new_status) {
+      $form_state['index']->options['fields']['status']['indexed'] = TRUE;
+    }
+
+    return $values;
+  }
+
 }

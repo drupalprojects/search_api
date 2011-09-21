@@ -1229,7 +1229,8 @@ function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
   $index = $query->getIndex();
   // Only add node access if the "search_api_access_node" field is indexed for
   // the index, and unless disabled explicitly by the query.
-  if (!empty($index->options['fields']['search_api_access_node']['indexed']) && !$query->getOption('search_api_bypass_access')) {
+  $fields = $index->options['fields'];
+  if (!empty($fields['search_api_access_node']['indexed']) && !empty($fields['status']['indexed']) && !$query->getOption('search_api_bypass_access')) {
     $account = $query->getOption('search_api_access_account', $GLOBALS['user']);
     if (is_numeric($account)) {
       $account = user_load($account);
@@ -1261,7 +1262,7 @@ function _search_api_query_add_node_access($account, SearchApiQueryInterface $qu
     // Simple hack for returning no results.
     $query->condition('status', 0);
     $query->condition('status', 1);
-    watchdog('search_api', 'User !name tried to execute a search, but cannot access content.', array('!name' => theme('username', array('account' => $account))), WATCHDOG_);
+    watchdog('search_api', 'User !name tried to execute a search, but cannot access content.', array('!name' => theme('username', array('account' => $account))), WATCHDOG_NOTICE);
     return;
   }
 
