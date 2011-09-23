@@ -61,7 +61,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
    */
   public function query() {
     while (is_array($this->value)) {
-      $this->value = $this->value ? array_shift($this->value) : NULL;
+      $this->value = $this->value ? reset($this->value) : '';
     }
     // Catch empty strings entered by the user, but not "0".
     if ($this->value === '') {

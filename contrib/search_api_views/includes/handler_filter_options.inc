@@ -153,10 +153,10 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
    */
   public function query() {
     while (is_array($this->value) && count($this->value) == 1) {
-      $this->value = array_shift($this->value);
+      $this->value = reset($this->value);
     }
     if (is_scalar($this->value) && $this->value !== '') {
-      $this->query->condition($this->real_field, $this->value, $this->operator);
+      $this->query->condition($this->real_field, $this->value, $this->operator, $this->options['group']);
     }
     elseif($this->value) {
       if ($this->operator == '=') {
@@ -166,12 +166,12 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
           foreach ($this->value as $v) {
             $filter->condition($this->real_field, $v, '=');
           }
-          $this->query->filter($filter);
+          $this->query->filter($filter, $this->options['group']);
         }
       }
       else {
         foreach ($this->value as $v) {
-          $this->query->condition($this->real_field, $v, $this->operator);
+          $this->query->condition($this->real_field, $v, $this->operator, $this->options['group']);
         }
       }
     }
