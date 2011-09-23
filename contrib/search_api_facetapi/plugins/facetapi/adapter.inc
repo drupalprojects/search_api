@@ -194,7 +194,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
   public function settingsForm(&$form, &$form_state) {
     $facet = $form['#facetapi']['facet'];
     $realm = $form['#facetapi']['realm'];
-    $facet_settings = $this->getFacet($facet)->getSettings($realm);
+    $facet_settings = $this->getFacet($facet)->getSettings();
     $options = $facet_settings->settings;
     $search_ids = variable_get('search_api_facets_search_ids', array());
     $search_ids = isset($search_ids[$this->info['instance']]) ? $search_ids[$this->info['instance']] : array();

@@ -5,6 +5,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1286500 by drunken monkey: Fixed „Search IDs” setting for facets not saved.
 - #1278780 by dereine, drunken monkey: Fixed status field requirement for node
   access.
 - #1182614 by katbailey, cpliakas, drunken monkey, thegreat, das-peter: Added
