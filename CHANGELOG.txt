@@ -1,6 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
 API changes:
+- #1291346 by drunken monkey: Expose SearchApiQuery::preExecute() and
+  postExecute().
 - #955088 by dereine, drunken monkey: Provide (additional) access functionality.
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 

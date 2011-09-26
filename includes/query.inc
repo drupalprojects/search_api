@@ -198,6 +198,25 @@ interface SearchApiQueryInterface {
   public function execute();
 
   /**
+   * Prepares the query object for the search.
+   *
+   * This method should always be called by execute() and contain all necessary
+   * operations before the query is passed to the server's search() method.
+   */
+  public function preExecute();
+
+  /**
+   * Postprocess the search results before they are returned.
+   *
+   * This method should always be called by execute() and contain all necessary
+   * operations after the results are returned from the server.
+   *
+   * @param array $results
+   *   The results returned by the server, which may be altered.
+   */
+  public function postExecute(array &$results);
+
+  /**
    * @return SearchApiIndex
    *   The search index this query should be executed on.
    */
@@ -668,24 +687,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
   public final function execute() {
     $start = microtime(TRUE);
 
-    // Add filter for languages.
-    if (isset($this->options['languages'])) {
-      $this->addLanguages($this->options['languages']);
-    }
-
-    // Add fulltext fields, unless set
-    if ($this->fields === NULL) {
-      $this->fields = $this->index->getFulltextFields();
-    }
-
-    // Call pre-execute hook.
+    // Prepare the query for execution by the server.
     $this->preExecute();
-
-    // Preprocess query.
-    $this->index->preprocessSearchQuery($this);
-
-    // Let modules alter the query.
-    drupal_alter('search_api_query', $this);
 
     $pre_search = microtime(TRUE);
 
@@ -694,11 +697,8 @@ class SearchApiQuery implements SearchApiQueryInterface {
 
     $post_search = microtime(TRUE);
 
-    // Call post-execute hook.
+    // Postprocess the search results.
     $this->postExecute($response);
-
-    // Postprocess results.
-    $this->index->postprocessSearchResults($response, $this);
 
     $end = microtime(TRUE);
     $response['performance']['complete'] = $end - $start;
@@ -755,17 +755,42 @@ class SearchApiQuery implements SearchApiQueryInterface {
   }
 
   /**
-   * Pre-execute hook for modifying search behaviour.
+   * Prepares the query object for the search.
+   *
+   * This method should always be called by execute() and contain all necessary
+   * operations before the query is passed to the server's search() method.
    */
-  protected function preExecute() {}
+  public function preExecute() {
+    // Add filter for languages.
+    if (isset($this->options['languages'])) {
+      $this->addLanguages($this->options['languages']);
+    }
+
+    // Add fulltext fields, unless set
+    if ($this->fields === NULL) {
+      $this->fields = $this->index->getFulltextFields();
+    }
+
+    // Preprocess query.
+    $this->index->preprocessSearchQuery($this);
+
+    // Let modules alter the query.
+    drupal_alter('search_api_query', $this);
+  }
 
   /**
-   * Post-execute hook for modifying search behaviour.
+   * Postprocess the search results before they are returned.
+   *
+   * This method should always be called by execute() and contain all necessary
+   * operations after the results are returned from the server.
    *
    * @param array $results
    *   The results returned by the server, which may be altered.
    */
-  protected function postExecute(array &$results) {}
+  public function postExecute(array &$results) {
+    // Postprocess results.
+    $this->index->postprocessSearchResults($results, $this);
+  }
 
   /**
    * @return SearchApiIndex
