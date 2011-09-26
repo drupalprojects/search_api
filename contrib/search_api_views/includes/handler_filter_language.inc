@@ -27,7 +27,7 @@ class SearchApiViewsHandlerFilterLanguage extends SearchApiViewsHandlerFilterOpt
   /**
    * Provides a summary of this filter's value for the admin UI.
    */
-  function admin_summary() {
+  public function admin_summary() {
     $tmp = $this->definition['options'];
     $this->definition['options']['current'] = t('current');
     $this->definition['options']['default'] = t('default');

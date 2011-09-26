@@ -104,7 +104,7 @@ class SearchApiViewsHandlerFilterOptions extends SearchApiViewsHandlerFilter {
   /**
    * Provides a summary of this filter's value for the admin UI.
    */
-  function admin_summary() {
+  public function admin_summary() {
     if (!empty($this->options['exposed'])) {
       return t('exposed');
     }

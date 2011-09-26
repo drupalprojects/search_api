@@ -51,7 +51,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
    * @param mixed $query
    *   The backend's native object.
    */
-  function initActiveFilters($query) {
+  public function initActiveFilters($query) {
     $search_id = $query->getOption('search id');
     $index_id = $this->info['instance'];
     $facets = facetapi_get_enabled_facets($this->info['name']);
