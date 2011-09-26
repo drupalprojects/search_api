@@ -117,7 +117,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
    *   The first matching current search, in the form specified by
    *   search_api_current_search(). Or NULL, if no match was found.
    */
-  protected function getCurrentSearch() {
+  public function getCurrentSearch() {
     if (!isset($this->current_search)) {
       $this->current_search = FALSE;
       $index_id = $this->info['instance'];

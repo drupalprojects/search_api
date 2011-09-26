@@ -5,6 +5,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1291376 by drunken monkey: Expose
+  SearchApiFacetapiAdapter::getCurrentSearch().
 - #1198764 by morningtime, drunken monkey: Fixed handling of Views filter
   groups.
 - #1286500 by drunken monkey: Fixed „Search IDs” setting for facets not saved.
