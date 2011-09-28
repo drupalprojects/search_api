@@ -20,7 +20,7 @@ function search_api_views_views_data() {
       'query class' => 'search_api_views_query',
     );
     if (isset($entity_types[$index->item_type])) {
-      $table['table']['base'] += array(
+      $table['table'] += array(
         'entity type' => $index->item_type,
         'skip entity load' => TRUE,
       );
