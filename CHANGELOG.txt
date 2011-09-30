@@ -7,6 +7,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1294828 by drunken monkey: Fixed accidental presence of good OOP coding
+  standards in Views integration.
 - #1291376 by drunken monkey: Expose
   SearchApiFacetapiAdapter::getCurrentSearch().
 - #1198764 by morningtime, drunken monkey: Fixed handling of Views filter
