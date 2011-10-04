@@ -172,6 +172,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
       // without keys.
       $keys = '[' . t('all items') . ']';
     }
+    drupal_alter('search_api_facetapi_keys', $keys, $search[0]);
     return $keys;
   }
 
