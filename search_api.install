@@ -44,6 +44,7 @@ function search_api_schema() {
       'options' => array(
         'description' => 'The options used to configure the service object.',
         'type' => 'text',
+        'size' => 'medium',
         'serialize' => TRUE,
         'not null' => TRUE,
       ),
@@ -118,6 +119,7 @@ function search_api_schema() {
       'options' => array(
         'description' => 'An array of additional arguments configuring this index.',
         'type' => 'text',
+        'size' => 'medium',
         'serialize' => TRUE,
         'not null' => TRUE,
       ),
@@ -819,4 +821,26 @@ function search_api_update_7111() {
     'default' => 1,
   );
   db_change_field('search_api_item', 'changed', 'changed', $spec);
+}
+
+/**
+ * Changes the size of the {search_api_index}.options and {search_api_server}.options fields to "medium".
+ */
+function search_api_update_7112() {
+  $spec = array(
+    'description' => 'The options used to configure the service object.',
+    'type' => 'text',
+    'size' => 'medium',
+    'serialize' => TRUE,
+    'not null' => TRUE,
+  );
+  db_change_field('search_api_server', 'options', 'options', $spec);
+  $spec = array(
+    'description' => 'An array of additional arguments configuring this index.',
+    'type' => 'text',
+    'size' => 'medium',
+    'serialize' => TRUE,
+    'not null' => TRUE,
+  );
+  db_change_field('search_api_index', 'options', 'options', $spec);
 }

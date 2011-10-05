@@ -7,6 +7,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1228726 by drunken monkey, mh86: Increased size of 'options' fields in
+  database.
 - #1295144 by katbailey: Added alter hook for Facet API search keys.
 - #1294828 by drunken monkey: Fixed accidental presence of good OOP coding
   standards in Views integration.
