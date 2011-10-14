@@ -67,6 +67,13 @@ class SearchApiViewsQuery extends views_plugin_query {
   protected $filters = array();
 
   /**
+   * The conjunction with which multiple filter groups are combined.
+   *
+   * @var string
+   */
+  public $group_operator = 'AND';
+
+  /**
    * Create the basic query object and fill with default values.
    */
   public function init($base_table, $base_field, $options) {

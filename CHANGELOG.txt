@@ -7,6 +7,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1305736 by drunken monkey: Fixed notice for unset Views group operator.
 - #1263214 by drunken monkey: Fixed indexing with „Index items immediately“
   indexes old entity state.
 - #1228726 by drunken monkey, mh86: Increased size of 'options' fields in
