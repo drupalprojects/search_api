@@ -821,35 +821,27 @@ function search_api_track_item_insert($type, array $item_ids) {
  *   The IDs of the items to be marked dirty.
  */
 function search_api_track_item_change($type, array $item_ids) {
-  $indexes = array();
   $conditions = array(
     'enabled' => 1,
     'item_type' => $type,
     'read_only' => 0,
   );
-  foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
-    if (empty($index->options['index_directly'])) {
-      $indexes[] = $index;
-    }
-    else {
-      // For indexes with the index_directly option set, index the items right
-      // away.
-      $indexed = array();
+  $indexes = search_api_index_load_multiple(FALSE, $conditions);
+  if (!$indexes) {
+    return;
+  }
+  search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
+  foreach ($indexes as $index) {
+    if (!empty($index->options['index_directly'])) {
+      // For indexes with the index_directly option set, queue the items to be
+      // indexed at the end of the request.
       try {
-        $indexed = search_api_index_specific_items($index, $item_ids);
+        search_api_index_specific_items_delayed($index, $item_ids);
       }
       catch (SearchApiException $e) {
         watchdog('search_api', $e->getMessage(), NULL, WATCHDOG_ERROR);
       }
-      if (count($indexed) < count($item_ids)) {
-        // If indexing failed for some items, mark those as dirty.
-        $diff = array_diff($item_ids, $indexed);
-        search_api_get_datasource_controller($type)->trackItemChange($diff, array($index));
-      }
     }
-  }
-  if ($indexes) {
-    search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
   }
 }
 
@@ -969,6 +961,40 @@ function search_api_index_specific_items(SearchApiIndex $index, array $ids) {
     search_api_track_item_indexed($index, $indexed);
   }
   return $indexed;
+}
+
+/**
+ * Queues items for indexing at the end of the page request.
+ *
+ * @param SearchApiIndex $index
+ *   The index on which items should be indexed.
+ * @param array $ids
+ *   The IDs of the items which should be indexed.
+ *
+ * @return array
+ *   The current contents of the queue, as a reference.
+ *
+ * @see search_api_index_specific_items()
+ * @see _search_api_index_queued_items()
+ */
+function &search_api_index_specific_items_delayed(SearchApiIndex $index = NULL, array $ids = array()) {
+  // We cannot use drupal_static() here because the static cache is reset during
+  // batch processing, which breaks batch handling.
+  static $queue = array();
+
+  // Only register the shutdown function once.
+  if (empty($queue)) {
+    drupal_register_shutdown_function('_search_api_index_queued_items');
+  }
+
+  // Allow for empty call to just retrieve the queue.
+  if ($index && $ids) {
+    $index_id = $index->machine_name;
+    $queue += array($index_id => array());
+    $queue[$index_id] += drupal_map_assoc($ids);
+  }
+
+  return $queue;
 }
 
 /**
@@ -1922,6 +1948,23 @@ function _search_api_indexing_queue_process(array $task) {
       watchdog('search_api', t('Indexed !num items for index !name', array('!num' => $num, '!name' => $index->name)), NULL, WATCHDOG_INFO);
     }
   }
+}
+
+/**
+ * Shutdown function which indexes all queued items, if any.
+ */
+function _search_api_index_queued_items() {
+  $queue = &search_api_index_specific_items_delayed();
+
+  if ($queue) {
+    $indexes = search_api_index_load_multiple(array_keys($queue));
+    foreach ($indexes as $index_id => $index) {
+      search_api_index_specific_items($index, $queue[$index_id]);
+    }
+  }
+
+  // Reset the queue so we don't index the items twice by accident.
+  $queue = array();
 }
 
 /**
