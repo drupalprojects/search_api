@@ -75,6 +75,14 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
       }
       else {
         if ($lower != '*') {
+          // Iff we have a range with two finite boundaries, we set two
+          // conditions (larger than the lower bound and less than the upper
+          // bound) and therefore have to make sure that we have an AND
+          // conjunction for those.
+          if ($upper != '*' && !($query_filter instanceof SearchApiQueryInterface || $query_filter->getConjunction() === 'AND')) {
+            $original_query_filter = $query_filter;
+            $query_filter = new SearchApiQueryFilter('AND');
+          }
           $query_filter->condition($field, $lower, '>=');
         }
         if ($upper != '*') {
@@ -84,6 +92,9 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
     }
     else {
       $query_filter->condition($field, $filter);
+    }
+    if (isset($original_query_filter)) {
+      $original_query_filter->filter($query_filter);
     }
   }
 
