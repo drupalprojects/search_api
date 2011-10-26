@@ -55,7 +55,16 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
    *   The loaded items, keyed by ID.
    */
   public function loadItems(array $ids) {
-    return entity_load($this->type, $ids);
+    $items = entity_load($this->type, $ids);
+    // If some items couldn't be loaded, remove them from tracking.
+    if (count($items) != count($ids)) {
+      $ids = array_flip($ids);
+      $unknown = array_keys(array_diff_key($ids, $items));
+      if ($unknown) {
+        search_api_track_item_delete($this->type, $unknown);
+      }
+    }
+    return $items;
   }
 
   /**
