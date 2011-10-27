@@ -7,6 +7,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1287602 by drunken monkey: Fixed „Index items immediately“ to delay indexing
+  on insert, too.
 - #1319500 by drunken monkey: Remove items after unsuccessful loads.
 - #1297958 by drunken monkey: Fixed wrong facet operator used for range facets.
 - #1305736 by drunken monkey: Fixed notice for unset Views group operator.

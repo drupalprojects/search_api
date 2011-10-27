@@ -804,7 +804,7 @@ function search_api_track_item_insert($type, array $item_ids) {
 
   foreach ($indexes as $index) {
     if (!empty($index->options['index_directly'])) {
-      $indexed = search_api_index_specific_items($index, $item_ids);
+      $indexed = search_api_index_specific_items_delayed($index, $item_ids);
     }
   }
 }
