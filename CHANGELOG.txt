@@ -1,6 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
 API changes:
+- #1308638 by drunken monkey: Reduce size of stored index settings.
 - #1291346 by drunken monkey: Expose SearchApiQuery::preExecute() and
   postExecute().
 - #955088 by dereine, drunken monkey: Provide (additional) access functionality.

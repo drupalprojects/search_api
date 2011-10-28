@@ -414,18 +414,12 @@ class SearchApiUnitTest extends DrupalWebTestCase {
         'fields' => array(
           'name' => array(
             'type' => 'text',
-            'boost' => 1.0,
-            'indexed' => 1,
           ),
           'mail' => array(
             'type' => 'string',
-            'boost' => 1.0,
-            'indexed' => 1,
           ),
           'search_api_language' => array(
             'type' => 'string',
-            'boost' => 1.0,
-            'indexed' => 1,
           ),
         ),
       ),

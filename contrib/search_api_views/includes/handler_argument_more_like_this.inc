@@ -25,9 +25,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
     if (!empty($index->options['fields'])) {
       $fields = array();
       foreach ($index->options['fields'] as $key => $field) {
-        if ($field['indexed']) {
-          $fields[$key] = $field['name'];
-        }
+        $fields[$key] = $field['name'];
       }
     }
     if (!empty($fields)) {
@@ -65,9 +63,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
     $fields = $this->options['fields'] ? $this->options['fields'] : array();
     if (empty($fields)) {
       foreach($this->query->getIndex()->options['fields'] as $key => $field) {
-        if ($field['indexed']) {
-          $fields[] = $key;
-        }
+        $fields[] = $key;
       }
     }
     $mlt = array(

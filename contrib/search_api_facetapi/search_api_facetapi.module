@@ -103,11 +103,7 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
 
       // Iterate through the indexed fields to set the facetapi settings for
       // each one.
-      foreach ($index->options['fields'] as $key => $field) {
-        if (!$field['indexed']) {
-          continue;
-        }
-
+      foreach ($index->getFields() as $key => $field) {
         $field['key'] = $key;
         // Determine which, if any, of the field type-specific options will be
         // used for this field.

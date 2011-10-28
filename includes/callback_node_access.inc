@@ -100,7 +100,7 @@ class SearchApiAlterNodeAccess extends SearchApiAbstractAlterCallback {
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
     if (!$old_status && $new_status) {
-      $form_state['index']->options['fields']['status']['indexed'] = TRUE;
+      $form_state['index']->options['fields']['status']['type'] = 'boolean';
     }
 
     return $values;

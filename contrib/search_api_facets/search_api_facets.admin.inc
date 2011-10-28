@@ -161,9 +161,6 @@ function search_api_facets_index_select(array $form, array &$form_state, SearchA
     $types = search_api_field_types();
     $entity_types = entity_get_info();
     foreach ($index->options['fields'] as $key => $field) {
-      if (!$field['indexed']) {
-        continue;
-      }
       if (isset($field['entity_type']) && isset($entity_types[$field['entity_type']]['label'])) {
         $type = $entity_types[$field['entity_type']]['label'];
       }

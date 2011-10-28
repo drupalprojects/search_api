@@ -45,6 +45,8 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
   }
 
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    parent::configurationFormValidate($form, $values, $form_state);
+
     $spaces = str_replace('/', '\/', $values['spaces']);
     $ignorable = str_replace('/', '\/', $values['ignorable']);
     if (@preg_match('/(' . $spaces . ')+/u', '') === FALSE) {

@@ -181,6 +181,7 @@ function search_api_theme() {
       'enabled' => NULL,
       'server' => NULL,
       'options' => array(),
+      'fields' => array(),
       'indexed_items' => 0,
       'total_items' => 0,
       'status' => ENTITY_CUSTOM,
@@ -1253,10 +1254,10 @@ function search_api_get_processors() {
  */
 function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
   $index = $query->getIndex();
-  // Only add node access if the "search_api_access_node" field is indexed for
-  // the index, and unless disabled explicitly by the query.
+  // Only add node access if the necessary fields are indexed in the index, and
+  // unless disabled explicitly by the query.
   $fields = $index->options['fields'];
-  if (!empty($fields['search_api_access_node']['indexed']) && !empty($fields['status']['indexed']) && !$query->getOption('search_api_bypass_access')) {
+  if (!empty($fields['search_api_access_node']) && !empty($fields['status']) && !$query->getOption('search_api_bypass_access')) {
     $account = $query->getOption('search_api_access_account', $GLOBALS['user']);
     if (is_numeric($account)) {
       $account = user_load($account);

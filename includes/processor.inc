@@ -160,16 +160,13 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
   public function configurationForm() {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
-    $fields = empty($this->index->options['fields']) ? _search_api_admin_get_fields($this->index, $this->index->entityWrapper()) : $this->index->options;
-    $fields = $fields['fields'];
+    $fields = $this->index->getFields();
     $field_options = array();
     $default_fields = isset($this->options['fields']) ? $this->options['fields'] : array();
     foreach ($fields as $name => $field) {
-      if ($field['indexed']) {
-        $field_options[$name] = $field['name'];
-        if (!isset($this->options['fields']) && $this->testField($name, $field)) {
-          $default_fields[$name] = $name;
-        }
+      $field_options[$name] = $field['name'];
+      if (!isset($this->options['fields']) && $this->testField($name, $field)) {
+        $default_fields[$name] = $name;
       }
     }
 
@@ -184,7 +181,13 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
     return $form;
   }
 
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) { }
+  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+    $fields = array_filter($values['fields']);
+    if ($fields) {
+      $fields = array_combine($fields, array_fill(0, count($fields), TRUE));
+    }
+    $values['fields'] = $fields;
+  }
 
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     $this->options = $values;

@@ -77,7 +77,6 @@ class SearchApiAlterAddHierarchy extends SearchApiAbstractAlterCallback {
         list($key, $prop) = explode(':', $field);
         if (empty($previous[$field]) && isset($fields[$key]['type'])) {
           $fields[$key]['type'] = 'list<' . search_api_extract_inner_type($fields[$key]['type']) . '>';
-          $fields[$key]['indexed'] = 1;
           $change = TRUE;
         }
       }

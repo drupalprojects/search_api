@@ -752,7 +752,7 @@ function search_api_facets_search_api_index_update(SearchApiIndex $index) {
     $fields = $options['fields'];
     $facets = search_api_facet_load_multiple(FALSE, array('index_id' => $index->machine_name, 'enabled' => 1));
     foreach ($facets as $facet) {
-      if (empty($fields[$facet->field]['indexed'])) {
+      if (empty($fields[$facet->field])) {
         $facet->enabled = FALSE;
         $facet->save();
       }

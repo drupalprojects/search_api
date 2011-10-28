@@ -94,7 +94,7 @@ function search_api_views_views_data() {
             }
 
             // If field is indexed, also add additional handlers.
-            if (!empty($fields[$field]['indexed'])) {
+            if (!empty($fields[$field])) {
               // Discern between original and indexed type
               $table[$key]['field']['type'] = $table[$key]['type'];
               $table[$key]['type'] = $fields[$field]['type'];
@@ -120,9 +120,6 @@ function search_api_views_views_data() {
     // Add handlers for all indexed fields which weren't processed yet.
     $orig_wrapper = $index->entityWrapper(NULL, TRUE);
     foreach ($fields as $key => $field) {
-      if (empty($field['indexed'])) {
-        continue;
-      }
       $tmp = $orig_wrapper;
       $group = '';
       $name = '';

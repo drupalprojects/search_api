@@ -261,162 +261,40 @@ function search_api_install() {
         ),
       ),
       'fields' => array(
-        'nid' => array(
-          'name' => 'Node ID',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'vid' => array(
-          'name' => 'Revision ID',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'tnid' => array(
-          'name' => 'Translation set ID',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'uid' => array(
-          'name' => 'User ID',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'is_new' => array(
-          'name' => 'Is new',
-          'type' => 'boolean',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
         'type' => array(
-          'name' => 'Content type',
           'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'type_name' => array(
-          'name' => 'Content type name',
-          'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 0,
         ),
         'title' => array(
-          'name' => 'Title',
           'type' => 'text',
           'boost' => '5.0',
-          'indexed' => 1,
-        ),
-        'language' => array(
-          'name' => 'Language',
-          'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'url' => array(
-          'name' => 'URL',
-          'type' => 'uri',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'edit_url' => array(
-          'name' => 'Edit URL',
-          'type' => 'uri',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'status' => array(
-          'name' => 'Published',
-          'type' => 'boolean',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'promote' => array(
-          'name' => 'Promoted to frontpage',
           'type' => 'boolean',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'sticky' => array(
-          'name' => 'Sticky in lists',
           'type' => 'boolean',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'created' => array(
-          'name' => 'Date created',
           'type' => 'date',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'changed' => array(
-          'name' => 'Date changed',
           'type' => 'date',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'author' => array(
-          'name' => 'Author',
           'type' => 'integer',
           'entity_type' => 'user',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'log' => array(
-          'name' => 'Revision log message',
-          'type' => 'text',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'revision' => array(
-          'name' => 'Creates revision',
-          'type' => 'boolean',
-          'boost' => '1.0',
-          'indexed' => 0,
-        ),
-        'comment' => array(
-          'name' => 'Comments allowed',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
         ),
         'comment_count' => array(
-          'name' => 'Comment count',
           'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'comment_count_new' => array(
-          'name' => 'New comment count',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
         ),
         'search_api_language' => array(
-          'name' => 'Item language',
           'type' => 'string',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'search_api_fulltext' => array(
-          'name' => 'Fulltext',
           'type' => 'text',
-          'boost' => '1.0',
-          'indexed' => 1,
         ),
         'body:value' => array(
-          'name' => 'Body » Text',
           'type' => 'text',
-          'boost' => '1.0',
-          'indexed' => 1,
-        ),
-        'body:format' => array(
-          'name' => 'Body » Text format',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => 0,
         ),
       ),
     ),
@@ -843,4 +721,72 @@ function search_api_update_7112() {
     'not null' => TRUE,
   );
   db_change_field('search_api_index', 'options', 'options', $spec);
+}
+
+/**
+ * Removes superfluous data from the stored index options.
+ */
+function search_api_update_7113() {
+  $indexes = db_select('search_api_index', 'i')
+    ->fields('i')
+    ->execute();
+  foreach ($indexes as $index) {
+    $options = unserialize($index->options);
+    // Weed out fields settings.
+    if (!empty($options['fields'])) {
+      foreach ($options['fields'] as $key => $field) {
+        if (isset($field['indexed']) && !$field['indexed']) {
+          unset($options['fields'][$key]);
+          continue;
+        }
+        unset($options['fields'][$key]['name'], $options['fields'][$key]['indexed']);
+        if (isset($field['boost']) && $field['boost'] == '1.0') {
+          unset($options['fields'][$key]['boost']);
+        }
+      }
+    }
+    // Weed out processor settings.
+    if (!empty($options['processors'])) {
+      // Only weed out settings for our own processors.
+      $processors = array('search_api_case_ignore', 'search_api_html_filter', 'search_api_tokenizer', 'search_api_stopwords');
+      foreach ($processors as $key) {
+        if (empty($options['processors'][$key])) {
+          continue;
+        }
+        $processor = $options['processors'][$key];
+        if (empty($processor['settings']['fields'])) {
+          continue;
+        }
+        $fields = array_filter($processor['settings']['fields']);
+        if ($fields) {
+          $fields = array_combine($fields, array_fill(0, count($fields), TRUE));
+        }
+        $options['processors'][$key]['settings']['fields'] = $fields;
+      }
+    }
+    // Weed out settings for the „Aggregated fields“ data alteration.
+    if (!empty($options['data_alter_callbacks']['search_api_alter_add_aggregation']['settings']['fields'])) {
+      unset($options['data_alter_callbacks']['search_api_alter_add_aggregation']['settings']['actions']);
+      $aggregated_fields = &$options['data_alter_callbacks']['search_api_alter_add_aggregation']['settings']['fields'];
+      foreach ($aggregated_fields as $key => $field) {
+        unset($aggregated_fields[$key]['actions']);
+        if (!empty($field['fields'])) {
+          $aggregated_fields[$key]['fields'] = array_values(array_filter($field['fields']));
+        }
+      }
+    }
+    $options = serialize($options);
+    if ($options != $index->options) {
+      // Mark the entity as overridden, in case it has been defined in code
+      // only.
+      $index->status |= 0x01;
+      db_update('search_api_index')
+        ->fields(array(
+          'options' => $options,
+          'status' => $index->status,
+        ))
+        ->condition('id', $index->id)
+        ->execute();
+    }
+  }
 }
