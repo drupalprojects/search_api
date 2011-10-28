@@ -1,8 +1,0 @@
-
-name = Search pages
-description = "Create search pages using Search API indexes."
-dependencies[] = search_api
-core = 7.x
-package = Search
-
-configure = admin/config/search/search_api/page
