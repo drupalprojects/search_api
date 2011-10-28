@@ -8,6 +8,7 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1260812 by drunken monkey: Move "Database search" into its own project.
 - #1287602 by drunken monkey: Fixed „Index items immediately“ to delay indexing
   on insert, too.
 - #1319500 by drunken monkey: Remove items after unsuccessful loads.
