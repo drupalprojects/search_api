@@ -120,7 +120,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
     $fields = array();
     $index = search_api_index_load(substr($this->table, 17));
     if (!empty($index->options['fields'])) {
-      $f = $index->options['fields'];
+      $f = $index->getFields();
       foreach ($index->getFulltextFields() as $name) {
         $fields[$name] = $f[$name]['name'];
       }

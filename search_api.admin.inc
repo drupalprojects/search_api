@@ -1483,8 +1483,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       '#type' => 'checkbox',
       '#default_value' => $info['indexed'],
     );
-    $inner_type = search_api_extract_inner_type($info['type']);
-    if (isset($types[0][$inner_type])) {
+    if (empty($info['entity_type'])) {
       // Determine the correct type options (i.e., with the correct nesting level).
       $level = search_api_list_nesting_level($info['type']);
       if (empty($types[$level])) {
@@ -1522,25 +1521,26 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
     }
     else {
       // This is an entity.
+      $label = $entity_types[$info['entity_type']]['label'];
       if (!isset($entity_description_added)) {
         $form['description']['#description'] .= '<p>' .
             t('Note that indexing an entity-valued field (like %field, which has type %type) directly will only index the entity ID. ' .
             'This will be used for filtering and also sorting (which might not be what you expect). ' .
             'The entity label will usually be used when displaying the field, though. ' .
             'Use the "Add related fields" option at the bottom for indexing other fields of related entities.',
-            array('%field' => $info['name'], '%type' => $entity_types[$inner_type]['label'])) . '</p>';
+            array('%field' => $info['name'], '%type' => $label)) . '</p>';
         $entity_description_added = TRUE;
       }
       $form['fields'][$key]['type'] = array(
         '#type' => 'value',
-        '#value' => search_api_nest_type('integer', $info['type']),
+        '#value' => $info['type'],
       );
       $form['fields'][$key]['entity_type'] = array(
         '#type' => 'value',
-        '#value' => search_api_extract_inner_type($info['type']),
+        '#value' => $info['entity_type'],
       );
       $form['fields'][$key]['type_name'] = array(
-        '#markup' => check_plain($entity_types[$inner_type]['label']),
+        '#markup' => check_plain($label),
       );
       $form['fields'][$key]['boost'] = array(
         '#type' => 'value',

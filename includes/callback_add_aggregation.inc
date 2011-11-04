@@ -118,9 +118,13 @@ class SearchApiAlterAddAggregation extends SearchApiAbstractAlterCallback {
     if (empty($values['fields'])) {
       return array();
     }
+    $index_fields = $this->index->getFields(FALSE);
     foreach ($values['fields'] as $name => $field) {
       if (!$field['name']) {
         unset($values['fields'][$name]);
+      }
+      else {
+        $values['fields'][$name]['description'] = $this->fieldDescription($field, $index_fields);
       }
     }
     $this->options = $values;
@@ -205,12 +209,11 @@ class SearchApiAlterAddAggregation extends SearchApiAbstractAlterCallback {
   public function propertyInfo() {
     $types = $this->getTypes('type');
     $ret = array();
-    $index_fields = $this->index->getFields(FALSE);
     if (isset($this->options['fields'])) {
       foreach ($this->options['fields'] as $name => $field) {
         $ret[$name] = array(
           'label' => $field['name'],
-          'description' => $this->fieldDescription($field, $index_fields),
+          'description' => empty($field['description']) ? '' : $field['description'],
           'type' => $types[$field['type']],
         );
       }

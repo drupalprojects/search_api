@@ -751,11 +751,8 @@ class SearchApiIndex extends Entity {
           }
           $info['type'] = $type_prefix . $info['type'] . $type_suffix;
           $key = $prefix . $property;
-          if (isset($types[$type]) || isset($entity_types[$type])) {
-            if ($only_indexed && empty($fields[$key])) {
-              continue;
-            }
-            if (isset($fields[$key])) {
+          if ((isset($types[$type]) || isset($entity_types[$type])) && (!$only_indexed || !empty($fields[$key]))) {
+            if (!empty($fields[$key])) {
               // This field is already known in the index configuration.
               $fields[$key] += array(
                 'name' => $prefix_name . $info['label'],
@@ -782,6 +779,10 @@ class SearchApiIndex extends Entity {
                 'boost' => '1.0',
                 'indexed' => FALSE,
               );
+            }
+            if (isset($entity_types[$type])) {
+              $flat[$key]['type'] = search_api_nest_type('integer', $flat[$key]['type']);
+              $flat[$key]['entity_type'] = $type;
             }
           }
           if (empty($types[$type])) {
