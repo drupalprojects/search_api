@@ -110,6 +110,20 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   /**
+   * Add a sort to the query.
+   *
+   * @param $selector
+   *   The field to sort on. All indexed fields of the index are valid values.
+   *   In addition, the special fields 'search_api_relevance' (sort by
+   *   relevance) and 'search_api_id' (sort by item id) may be used.
+   * @param $order
+   *   The order to sort items in - either 'ASC' or 'DESC'. Defaults to 'ASC'.
+   */
+  public function add_selector_orderby($selector, $order = 'ASC') {
+    $this->query->sort($selector, $order);
+  }
+
+  /**
    * Defines the options used by this query plugin.
    *
    * Adds an option to bypass access checks.
@@ -142,6 +156,8 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   public function build(&$view) {
+    $this->view = $view;
+
     // Setup the nested filter structure for this query.
     if (!empty($this->where)) {
       // If the different groups are combined with the OR operator, we have to
@@ -260,14 +276,12 @@ class SearchApiViewsQuery extends views_plugin_query {
         $row['entity'] = $id;
       }
 
-      $row['search_api_relevance'] = $result['score'];
-      if (!empty($this->fields['search_api_excerpt'])) {
-        $row['search_api_excerpt'] = empty($result['excerpt']) ? '' : $result['excerpt'];
-      }
+      $row['_entity_properties']['search_api_relevance'] = $result['score'];
+      $row['_entity_properties']['search_api_excerpt'] = empty($result['excerpt']) ? '' : $result['excerpt'];
 
       // Gather any fields from the search results.
       if (!empty($result['fields'])) {
-        $row += $result['fields'];
+        $row['_entity_properties'] += $result['fields'];
       }
 
       // Check whether we need to extract any properties from the result item.
@@ -294,7 +308,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       foreach ($items as $id => $item) {
         // Extract item properties.
         $wrapper = $this->index->entityWrapper($item, FALSE);
-        $rows[$id] += $this->extractFields($wrapper, $missing[$id]);
+        $rows[$id]['_entity_properties'] += $this->extractFields($wrapper, $missing[$id]);
         $rows[$id]['entity'] = $item;
       }
     }
@@ -307,8 +321,10 @@ class SearchApiViewsQuery extends views_plugin_query {
 
   /**
    * Helper function for extracting all necessary fields from a result item.
+   *
+   * Usually, this method isn't needed anymore as the properties are now
+   * extracted by the field handlers themselves.
    */
-  // @todo Optimize
   protected function extractFields(EntityMetadataWrapper $wrapper, array $all_fields) {
     $fields = array();
     foreach ($all_fields as $key => $true) {
@@ -320,6 +336,77 @@ class SearchApiViewsQuery extends views_plugin_query {
       $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
     }
     return $ret;
+  }
+
+  /**
+   * Returns the according entity objects for the given query results.
+   *
+   * This is necessary to support generic entity handlers and plugins with this
+   * query backend.
+   *
+   * If the current query isn't based on an entity type, the method will return
+   * an empty array.
+   */
+  public function get_result_entities($results, $relationship = NULL, $field = NULL) {
+    list($type, $wrappers) = $this->get_result_wrappers($results, $relationship, $field);
+    $return = array();
+    foreach ($wrappers as $id => $wrapper) {
+      try {
+        $return[$id] = $wrapper->value();
+      }
+      catch (EntityMetadataWrapperException $e) {
+        // Ignore.
+      }
+    }
+    return array($type, $return);
+  }
+
+  /**
+   * Returns the according metadata wrappers for the given query results.
+   *
+   * This is necessary to support generic entity handlers and plugins with this
+   * query backend.
+   */
+  public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
+    $entity_info = entity_get_info($this->index->item_type);
+    $wrappers = array();
+    foreach ($results as $id => $row) {
+      if (isset($row->entity) && is_object($row->entity)) {
+        $wrappers[$id] = $this->index->entityWrapper($row->entity);
+      }
+      elseif ($entity_info) {
+        $wrappers[$id] = $this->index->entityWrapper($id);
+      }
+    }
+
+    // If the results are entities, we pre-load them to make use of a multiple
+    // load. (Otherwise, each result would be loaded individually.)
+    // However, we don't do this if results aren't statically cached, as it
+    // would be pointless then.
+    if ($entity_info && !empty($entity_info['static cache'])) {
+      entity_load($this->index->item_type, array_keys($wrappers));
+    }
+
+    // Apply the relationship, if necessary.
+    $type = $this->index->item_type;
+    $selector_suffix = '';
+    if ($field && ($pos = strrpos($field, ':'))) {
+      $selector_suffix = substr($field, 0, $pos);
+    }
+    if ($selector_suffix || ($relationship && !empty($this->view->relationship[$relationship]))) {
+      // Use EntityFieldHandlerHelper to compute the correct data selector for
+      // the relationship.
+      $handler = (object) array(
+        'view' => $this->view,
+        'relationship' => $relationship,
+        'real_field' => '',
+      );
+      $selector = EntityFieldHandlerHelper::construct_property_selector($handler);
+      $selector .= ($selector ? ':' : '') . $selector_suffix;
+      list($type, $wrappers) = EntityFieldHandlerHelper::extract_property_multiple($wrappers, $selector);
+    }
+
+    return array($type, $wrappers);
   }
 
   /**

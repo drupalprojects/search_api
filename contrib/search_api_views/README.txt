@@ -62,13 +62,3 @@ the Views block, just activate the display's „Hide block“ option.
 Note: If you want to display the block not only on a few pages, you should in
 any case take care that it isn't displayed on the search page, since that might
 confuse users.
-
-Make fields in greater depths available
----------------------------------------
-Currently, field handlers are only generated up to a nesting level of 2. E.g.,
-for an index of nodes, you can display fields from the author's profile, but not
-the URL of an image in that profile.
-There are currently plans to solve this problem by providing proper
-"relationships" to nested entities. However, until then, you can circumvent this
-problem by setting the "search_api_views_max_fields_depth" variable to the
-maximum level to generate field handlers for. The default behaviour is 2.

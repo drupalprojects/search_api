@@ -8,6 +8,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1231512 by drunken monkey: Use real Relationships instead of level magic in
+  Views integration.
 - #1260768 by drunken monkey: Move "Search pages" into its own project.
 - #1260812 by drunken monkey: Move "Database search" into its own project.
 - #1287602 by drunken monkey: Fixed „Index items immediately“ to delay indexing
