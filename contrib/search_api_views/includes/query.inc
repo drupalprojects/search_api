@@ -368,23 +368,25 @@ class SearchApiViewsQuery extends views_plugin_query {
    * query backend.
    */
   public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
-    $entity_info = entity_get_info($this->index->item_type);
+    $is_entity = (boolean) entity_get_info($this->index->item_type);
     $wrappers = array();
     foreach ($results as $id => $row) {
       if (isset($row->entity) && is_object($row->entity)) {
         $wrappers[$id] = $this->index->entityWrapper($row->entity);
       }
-      elseif ($entity_info) {
+      elseif ($is_entity) {
+        $load_entities = TRUE;
         $wrappers[$id] = $this->index->entityWrapper($id);
       }
     }
 
     // If the results are entities, we pre-load them to make use of a multiple
     // load. (Otherwise, each result would be loaded individually.)
-    // However, we don't do this if results aren't statically cached, as it
-    // would be pointless then.
-    if ($entity_info && !empty($entity_info['static cache'])) {
-      entity_load($this->index->item_type, array_keys($wrappers));
+    if (isset($load_entities)) {
+      $entities = entity_load($this->index->item_type, array_keys($wrappers));
+      foreach ($entities as $id => $entity) {
+        $wrappers[$id] = $this->index->entityWrapper($entity);
+      }
     }
 
     // Apply the relationship, if necessary.
