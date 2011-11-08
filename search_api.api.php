@@ -129,12 +129,60 @@ function hook_search_api_item_type_info() {
  * @see hook_search_api_item_type_info()
  */
 function hook_search_api_item_type_info_alter(array &$infos) {
-  hook_entity_info_alter();
   // Adds a boolean value is_entity to all type options telling whether the item
   // type represents an entity type.
   foreach ($infos as $type => $info) {
     $info['is_entity'] = (bool) entity_get_info($type);
   }
+}
+
+/**
+ * Define new data types for indexed properties.
+ *
+ * New data types will appear as new option for the „Type“ field on indexes'
+ * „Fields“ tabs. Whether choosing a custom data type will have any effect
+ * depends on the server on which the data is indexed.
+ *
+ * @return array
+ *   An array containing custom data type definitions, keyed by their type
+ *   identifier and containing the following keys:
+ *   - name: The human-readable name of the type.
+ *   - fallback: (optional) One of the default data types (the keys from
+ *     search_api_default_field_types()) which should be used as a fallback if
+ *     the server doesn't support this data type. Defaults to "string".
+ *   - conversion callback: (optional) If specified, a callback function for
+ *     converting raw values to the given type, if possible. For the contract
+ *     of such a callback, see example_data_type_conversion().
+ *
+ * @see hook_search_api_data_type_info_alter()
+ * @see search_api_get_data_type_info()
+ * @see example_data_type_conversion()
+ */
+function hook_search_api_data_type_info() {
+  return array(
+    'example_type' => array(
+      'name' => t('Example type'),
+      // Could be omitted, as "string" is the default.
+      'fallback' => 'string',
+      'conversion callback' => 'example_data_type_conversion',
+    ),
+  );
+}
+
+/**
+ * Alter the data type info.
+ *
+ * Modules may implement this hook to alter the information that defines a data
+ * type, or to add/remove some entirely. All properties that are available in
+ * hook_search_api_data_type_info() can be altered here.
+ *
+ * @param array $infos
+ *   The data type info array, keyed by type identifier.
+ *
+ * @see hook_search_api_data_type_info()
+ */
+function hook_search_api_data_type_info_alter(array &$infos) {
+  $infos['example_type']['name'] .= ' 2';
 }
 
 /**
@@ -453,3 +501,35 @@ function hook_default_search_api_index_alter(array &$defaults) {
 /**
  * @} End of "addtogroup hooks".
  */
+
+/**
+ * Convert a raw value from an entity to a custom data type.
+ *
+ * This function will be called for fields of the specific data type to convert
+ * all individual values of the field to the correct format.
+ *
+ * @param $value
+ *   The raw, single value, as extracted from an entity wrapper.
+ * @param $original_type
+ *   The original Entity API type of the value.
+ * @param $type
+ *   The custom data type to which the value should be converted. Can be ignored
+ *   if the callback is only used for a single data type.
+ *
+ * @return
+ *   The converted value, if a conversion could be executed. NULL otherwise.
+ *
+ * @see hook_search_api_data_type_info()
+ */
+function example_data_type_conversion($value, $original_type, $type) {
+  if ($type === 'example_type') {
+    // The example_type type apparently requires a rather complex data format.
+    return array(
+      'value' => $value,
+      'original' => $original_type,
+    );
+  }
+  // Someone used this callback for another, unknown type. Return NULL.
+  // (Normally, you can just assume that the/a correct type is given.)
+  return NULL;
+}

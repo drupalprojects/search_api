@@ -1454,6 +1454,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   $types = array(0 => search_api_field_types());
   $fulltext_type = array(0 => 'text');
   $entity_types = entity_get_info();
+  $default_types = search_api_default_field_types();
   $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
   $form_state['index'] = $index;
@@ -1500,7 +1501,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       $form['fields'][$key]['type'] = array(
         '#type' => 'select',
         '#options' => $types[$level],
-        '#default_value' => $info['type'],
+        '#default_value' => isset($info['real_type']) ? $info['real_type'] : $info['type'],
         '#states' => array(
           'visible' => array(
             $css_key . '-indexed' => array('checked' => TRUE),
@@ -1618,7 +1619,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
     // The list nesting level for entities with a certain prefix
   $nesting_levels = array('' => 0);
 
-  $types = search_api_field_types();
+  $types = search_api_default_field_types();
   $flat = array();
   while ($wrappers) {
     foreach ($wrappers as $prefix => $wrapper) {
@@ -1642,7 +1643,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         $type = search_api_extract_inner_type($info['type']);
         // Treat Entity API type "token" as our "string" type.
         // Also let text fields with limited options be of type "string" by default.
-        if ($type == 'token' || ($type == 'text' && $value->optionsList('view'))) {
+        if ($type == 'token' || ($type == 'text' && !empty($info['options list']))) {
           // Inner type is changed to "string".
           $type = 'string';
           // Set the field type accordingly.
@@ -1663,7 +1664,9 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
             }
             else {
               // Else, only update the nesting level.
-              $flat[$key]['type'] = search_api_nest_type(search_api_extract_inner_type($flat[$key]['type']), $info['type']);
+              $set_type = search_api_extract_inner_type(isset($flat[$key]['real_type']) ? $flat[$key]['real_type'] : $flat[$key]['type']);
+              $flat[$key]['type'] = $info['type'];
+              $flat[$key]['real_type'] = search_api_nest_type($set_type, $info['type']);
             }
           }
           else {
@@ -1759,13 +1762,24 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $options = isset($index->options) ? $index->options : array();
   if ($form_state['values']['op'] == t('Save changes')) {
     $fields = $form_state['values']['fields'];
+    $default_types = search_api_default_field_types();
+    $custom_types = search_api_get_data_type_info();
     foreach ($fields as $name => $field) {
       if (empty($field['indexed'])) {
         unset($fields[$name]);
       }
       else {
+        // Don't store the description. "indexed" is implied.
         unset($fields[$name]['description'], $fields[$name]['indexed']);
-        if (!search_api_is_text_type($field['type']) || $field['boost'] == '1.0') {
+        // For non-default types, set type to the fallback and only real_type to
+        // the custom type.
+        $inner_type = search_api_extract_inner_type($field['type']);
+        if (!isset($default_types[$inner_type])) {
+          $fields[$name]['real_type'] = $field['type'];
+          $fields[$name]['type'] = search_api_nest_type($custom_types[$inner_type]['fallback'], $field['type']);
+        }
+        // Boost defaults to 1.0.
+        if ($field['boost'] == '1.0') {
           unset($fields[$name]['boost']);
         }
       }

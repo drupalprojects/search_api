@@ -1098,8 +1098,26 @@ function search_api_current_search($search_id = NULL, SearchApiQuery $query = NU
  * @return array
  *   An associative array with all recognized types as keys, mapped to their
  *   translated display names.
+ *
+ * @see search_api_default_field_types()
+ * @see search_api_get_data_type_info()
  */
 function search_api_field_types() {
+  $types = search_api_default_field_types();
+  foreach (search_api_get_data_type_info() as $id => $type) {
+    $types[$id] = $type['name'];
+  }
+  return $types;
+}
+
+/**
+ * Returns the default field types recognized by the Search API framework.
+ *
+ * @return array
+ *   An associative array with the default types as keys, mapped to their
+ *   translated display names.
+ */
+function search_api_default_field_types() {
   return array(
     'text' => t('Fulltext'),
     'string' => t('String'),
@@ -1110,6 +1128,38 @@ function search_api_field_types() {
     'boolean' => t('Boolean'),
     'uri' => t('URI'),
   );
+}
+
+/**
+ * Returns either all custom field type definitions, or a specific one.
+ *
+ * @param $type
+ *   If specified, the type whose definition should be returned.
+ *
+ * @return array
+ *   If $type was not given, an array containing all custom data types, in the
+ *   format specified by hook_search_api_data_type_info().
+ *   Otherwise, the definition for the given type, or NULL if it is unknown.
+ *
+ * @see hook_search_api_data_type_info()
+ */
+function search_api_get_data_type_info($type = NULL) {
+  $types = &drupal_static(__FUNCTION__);
+  if (!isset($types)) {
+    $default_types = search_api_default_field_types();
+    $types = module_invoke_all('search_api_data_type_info');
+    $types = $types ? $types : array();
+    foreach ($types as &$type_info) {
+      if (!isset($type_info['fallback']) || !isset($default_types[$type_info['fallback']])) {
+        $type_info['fallback'] = 'string';
+      }
+    }
+    drupal_alter('search_api_data_type_info', $types);
+  }
+  if (isset($type)) {
+    return isset($types[$type]) ? $types[$type] : NULL;
+  }
+  return $types;
 }
 
 /**
@@ -1979,4 +2029,25 @@ function _search_api_wrapper_add_all_properties(EntityMetadataWrapper $wrapper, 
     $property_info['properties'] = $properties;
   }
   return $property_info;
+}
+
+/**
+ * Helper function for converting data to a custom type.
+ */
+function _search_api_convert_custom_type($callback, $value, $original_type, $type, $nesting_level) {
+  if ($nesting_level == 0) {
+    return call_user_func($callback, $value, $original_type, $type);
+  }
+  if (!is_array($value)) {
+    return NULL;
+  }
+  --$nesting_level;
+  $values = array();
+  foreach ($value as $v) {
+    $v = _search_api_convert_custom_type($callback, $v, $original_type, $type, $nesting_level);
+    if (isset($v) && !(is_array($v) && !$v)) {
+      $values[] = $v;
+    }
+  }
+  return $values;
 }

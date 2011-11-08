@@ -109,7 +109,10 @@ class SearchApiIndex extends Entity {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - type: The type set for this field. One of the types returned by
-   *     search_api_field_types().
+   *     search_api_default_field_types().
+   *   - real_type: (optional) If a custom data type was selected for this
+   *     field, this type will be stored here, and "type" contain the fallback
+   *     default data type.
    *   - boost: (optional) A boost value for terms found in this field during
    *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
    *   - entity_type (optional): If set, the type of this field is really an
@@ -415,6 +418,19 @@ class SearchApiIndex extends Entity {
       throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
     }
     $fields = $this->options['fields'];
+    $custom_type_fields = array();
+    foreach ($fields as $field => $info) {
+      if (isset($info['real_type'])) {
+        $custom_type = search_api_extract_inner_type($info['real_type']);
+        if ($this->server()->supportsFeature('search_api_data_type_' . $custom_type)) {
+          $fields[$field]['type'] = $info['real_type'];
+          $custom_type_fields[$custom_type][$field] = search_api_list_nesting_level($info['real_type']);
+        }
+      }
+    }
+    if (empty($fields)) {
+      throw new SearchApiException(t("Couldn't index values on '!name' index (no fields selected)", array('!name' => $this->name)));
+    }
 
     // Mark all items that are rejected as indexed.
     $ret = array_keys($items);
@@ -435,6 +451,19 @@ class SearchApiIndex extends Entity {
     $data = array();
     foreach ($items as $id => $item) {
       $data[$id] = search_api_extract_fields($this->entityWrapper($item), $fields);
+      foreach ($custom_type_fields as $type => $type_fields) {
+        $info = search_api_get_data_type_info($type);
+        if (isset($info['conversion callback']) && is_callable($info['conversion callback'])) {
+          $callback = $info['conversion callback'];
+          foreach ($type_fields as $field => $nesting_level) {
+            if (isset($data[$id][$field]['value'])) {
+              $value = $data[$id][$field]['value'];
+              $original_type = $data[$id][$field]['original_type'];
+              $data[$id][$field]['value'] = _search_api_convert_custom_type($callback, $value, $original_type, $type, $nesting_level);
+            }
+          }
+        }
+      }
     }
 
     $this->preprocessIndexItems($data);
@@ -669,7 +698,10 @@ class SearchApiIndex extends Entity {
    *   - description: A description of the field, if available.
    *   - indexed: Boolean indicating whether the field is indexed or not.
    *   - type: The type set for this field. One of the types returned by
-   *     search_api_field_types().
+   *     search_api_default_field_types().
+   *   - real_type: (optional) If a custom data type was selected for this
+   *     field, this type will be stored here, and "type" contain the fallback
+   *     default data type.
    *   - boost: A boost value for terms found in this field during searches.
    *     Usually only relevant for fulltext fields.
    *   - entity_type (optional): If set, the type of this field is really an
@@ -719,7 +751,7 @@ class SearchApiIndex extends Entity {
       // The list nesting level for entities with a certain prefix
     $nesting_levels = array('' => 0);
 
-    $types = search_api_field_types();
+    $types = search_api_default_field_types();
     $flat = array();
     while ($wrappers) {
       foreach ($wrappers as $prefix => $wrapper) {
@@ -743,7 +775,7 @@ class SearchApiIndex extends Entity {
           $type = search_api_extract_inner_type($info['type']);
           // Treat Entity API type "token" as our "string" type.
           // Also let text fields with limited options be of type "string" by default.
-          if ($type == 'token' || ($type == 'text' && $value->optionsList('view'))) {
+          if ($type == 'token' || ($type == 'text' && !empty($info['options list']))) {
             // Inner type is changed to "string".
             $type = 'string';
             // Set the field type accordingly.
@@ -754,21 +786,19 @@ class SearchApiIndex extends Entity {
           if ((isset($types[$type]) || isset($entity_types[$type])) && (!$only_indexed || !empty($fields[$key]))) {
             if (!empty($fields[$key])) {
               // This field is already known in the index configuration.
-              $fields[$key] += array(
+              $flat[$key] = $fields[$key] + array(
                 'name' => $prefix_name . $info['label'],
                 'description' => empty($info['description']) ? NULL : $info['description'],
                 'boost' => '1.0',
                 'indexed' => TRUE,
               );
-              $flat[$key] = $fields[$key];
-              // Update its type.
-              if (isset($entity_types[$type])) {
-                // Always enforce the proper entity type.
-                $flat[$key]['type'] = $info['type'];
-              }
-              else {
-                // Else, only update the nesting level.
+              // Update the type and its nesting level for non-entity properties.
+              if (!isset($entity_types[$type])) {
                 $flat[$key]['type'] = search_api_nest_type(search_api_extract_inner_type($flat[$key]['type']), $info['type']);
+                if (isset($flat[$key]['real_type'])) {
+                  $real_type = search_api_extract_inner_type($flat[$key]['real_type']);
+                  $flat[$key]['real_type'] = search_api_nest_type($real_type, $info['type']);
+                }
               }
             }
             else {
@@ -781,7 +811,7 @@ class SearchApiIndex extends Entity {
               );
             }
             if (isset($entity_types[$type])) {
-              $flat[$key]['type'] = search_api_nest_type('integer', $flat[$key]['type']);
+              $flat[$key]['type'] = search_api_nest_type('integer', $info['type']);
               $flat[$key]['entity_type'] = $type;
             }
           }

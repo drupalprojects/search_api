@@ -288,6 +288,25 @@ includes/datasource_external.inc) which you can extend. For a minimal use case,
 you will then only have to define the available fields that can be retrieved by
 the server.
 
+- Data type
+  Hook: hook_search_api_data_type_info()
+
+You can specify new data types for indexing fields. These new types can then be
+selected on indexes' „Fields“ tabs. You just have to implement the hook,
+returning some information on your data type, and specify in your module's
+documentation the format of your data type and how it should be used.
+
+For a custom data type to have an effect, in most cases the server's service
+class has to support that data type. A service class can advertize its support
+of a data type by declaring support for the "search_api_data_type_TYPE" feature
+in its supportsFeature() method. If this support isn't declared, a fallback data
+type is automatically used instead of the custom one.
+
+If a field is indexed with a custom data type, its entry in the index's options
+array will have the selected type in "real_type", while "type" contains the
+fallback type (which is always one of the default data types, as returned by
+search_api_default_field_types().
+
 - Data-alter callbacks
   Interface: SearchApiAlterCallbackInterface
   Base class: SearchApiAbstractAlterCallback
