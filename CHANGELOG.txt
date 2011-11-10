@@ -1,5 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.0, RC 1 (11/10/2011):
+----------------------------------
 API changes:
 - #1260834 by drunken monkey: Added a way to define custom data types.
 - #1308638 by drunken monkey: Reduce size of stored index settings.
