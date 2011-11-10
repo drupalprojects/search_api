@@ -9,6 +9,8 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
+- #1304026 by drunken monkey: Utilize Facet API's 'include default facets' key
+  in searcher definitions.
 - #1231512 by drunken monkey: Use real Relationships instead of level magic in
   Views integration.
 - #1260768 by drunken monkey: Move "Search pages" into its own project.

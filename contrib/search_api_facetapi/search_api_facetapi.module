@@ -63,6 +63,7 @@ function search_api_facetapi_facetapi_searcher_info() {
         'path' => '',
         'supports facet missing' => TRUE,
         'supports facet mincount' => TRUE,
+        'include default facets' => FALSE,
       );
     }
   }
@@ -75,13 +76,6 @@ function search_api_facetapi_facetapi_searcher_info() {
 function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
   $facet_info = array();
   if ('search_api' == $searcher_info['adapter']) {
-    // We store our facet info statically so that we can then make sure that
-    // only the facets created here are available as facets for this index.
-    // See search_api_facetapi_facet_info_alter() below.
-    $facets = &drupal_static(__FUNCTION__, array());
-    if (!empty($facets[$searcher_info['instance']])) {
-      return $facets[$searcher_info['instance']];
-    }
     $index = search_api_index_load($searcher_info['instance']);
     if (!empty($index->options['fields'])) {
       $wrapper = $index->entityWrapper();
@@ -140,25 +134,8 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
         }
       }
     }
-    $facets[$searcher_info['instance']] = $facet_info;
   }
   return $facet_info;
-}
-
-/**
- * Implements hook_facetapi_facet_info_alter().
- */
-function search_api_facetapi_facetapi_facet_info_alter(array &$facet_info, array $searcher) {
-  if ($searcher['adapter'] == 'search_api') {
-    $facets = drupal_static('search_api_facetapi_facetapi_facet_info');
-    // Unset any facets that were not created by Search API because they will
-    // not be in the index.
-    foreach ($facet_info as $name => $info) {
-      if (!isset($facets[$searcher['instance']][$name])) {
-        unset($facet_info[$name]);
-      }
-    }
-  }
 }
 
 /**
