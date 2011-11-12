@@ -27,6 +27,9 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
    *   An object containing the query in the backend's native API.
    */
   public function execute($query) {
+    // Return terms for this facet.
+    $this->adapter->addFacet($this->facet, $query);
+
     $settings = $this->adapter->getFacet($this->facet)->getSettings();
     // Adds the operator parameter.
     $operator = $settings->settings['operator'];

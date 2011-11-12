@@ -35,6 +35,9 @@ class SearchApiFacetapiDate extends SearchApiFacetapiTerm implements FacetapiQue
    *   An object containing the query in the backend's native API.
    */
   public function execute($query) {
+    // Return terms for this facet.
+    $this->adapter->addFacet($this->facet, $query);
+
     if ($active = $this->adapter->getActiveItems($this->facet)) {
       $item = end($active);
       $field = $this->facet['field'];

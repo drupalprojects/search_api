@@ -20,6 +20,13 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
   protected $current_search;
 
   /**
+   * The active facet fields for the current search.
+   *
+   * @var array
+   */
+  protected $fields = array();
+
+  /**
    * Returns the path to the admin settings for a given realm.
    *
    * @param $realm_name
@@ -55,7 +62,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
     $search_id = $query->getOption('search id');
     $index_id = $this->info['instance'];
     $facets = facetapi_get_enabled_facets($this->info['name']);
-    $fields = array();
+    $this->fields = array();
 
     // We statically store the current search per facet so that we can correctly
     // assign it when building the facets. See the build() method in the query
@@ -86,7 +93,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
         continue; // The 'facet_search_ids' in the settings are to be excluded.
       }
       $active[$facet['name']] = $search_id;
-      $fields[$facet['name']] = array(
+      $this->fields[$facet['name']] = array(
         'field'             => $facet['field'],
         'limit'             => $options['hard_limit'],
         'operator'          => $options['operator'],
@@ -94,12 +101,15 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
         'missing'           => $options['facet_missing'],
       );
     }
+  }
 
-    if ($fields) {
-      $old = $query->setOption('search_api_facets', $fields);
-      if ($old) { // This will only happen if other modules add facets of their own.
-        $query->setOption('search_api_facets', $fields + $old);
-      }
+  /**
+   * Add the given facet to the query.
+   */
+  public function addFacet(array $facet, SearchApiQueryInterface $query) {
+    if (isset($this->fields[$facet['name']])) {
+      $options = &$query->getOptions();
+      $options['search_api_facets'][$facet['name']] = $this->fields[$facet['name']];
     }
   }
 
