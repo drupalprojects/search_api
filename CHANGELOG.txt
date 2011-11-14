@@ -1,5 +1,8 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1215526 by cpliakas, drunken monkey: Added support for the "Bundle" facet
+  dependency plugin.
+- #1337292 by drunken monkey: Fixed facet dependency system.
 
 Search API 1.0, RC 1 (11/10/2011):
 ----------------------------------
@@ -12,7 +15,6 @@ API changes:
 - #1064884 by drunken monkey: Added support for indexing non-entities.
 
 Others:
-- #1337292 by drunken monkey: Fixed facet dependency system.
 - #1304026 by drunken monkey: Utilize Facet API's 'include default facets' key
   in searcher definitions.
 - #1231512 by drunken monkey: Use real Relationships instead of level magic in

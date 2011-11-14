@@ -79,6 +79,10 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
     $index = search_api_index_load($searcher_info['instance']);
     if (!empty($index->options['fields'])) {
       $wrapper = $index->entityWrapper();
+      $bundle_key = NULL;
+      if (($entity_info = entity_get_info($index->item_type)) && !empty($entity_info['bundle keys']['bundle'])) {
+        $bundle_key = $entity_info['bundle keys']['bundle'];
+      }
 
       // Some type-specific settings. Allowing to set some additional callbacks
       // (and other settings) in the map options allows for easier overriding by
@@ -130,6 +134,18 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
             if (!empty($property_info['field'])) {
               $facet_info[$key]['field api name'] = $key;
             }
+          }
+        }
+
+        // Add bundle information, if applicable.
+        if ($bundle_key) {
+          if ($key === $bundle_key) {
+            // Set entity type this field contains bundle information for.
+            $facet_info[$key]['field api bundles'][] = $index->item_type;
+          }
+          else {
+            // Add "bundle" as possible dependency plugin.
+            $facet_info[$key]['dependency plugins'][] = 'bundle';
           }
         }
       }
