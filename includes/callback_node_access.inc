@@ -65,45 +65,45 @@ class SearchApiAlterNodeAccess extends SearchApiAbstractAlterCallback {
       $account = drupal_anonymous_user();
     }
 
-    if ($this->index->item_type == 'node') {
-      // Load all notes as once.
-      foreach ($items as $nid => &$item) {
-        // Check whether all users have access to the node.
-        if (!node_access('view', $item, $account)) {
-          // Get node access grants.
-          $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $item->nid));
+    foreach ($items as $nid => &$item) {
+      // Check whether all users have access to the node.
+      if (!node_access('view', $item, $account)) {
+        // Get node access grants.
+        $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $item->nid));
 
-          // Store all grants together with it's realms in the item.
-          foreach ($result as $grant) {
-            if (!isset($items[$nid]->search_api_access_node)) {
-              $items[$nid]->search_api_access_node = array();
-            }
-            $items[$nid]->search_api_access_node[] = "node_access_$grant->realm:$grant->gid";
+        // Store all grants together with it's realms in the item.
+        foreach ($result as $grant) {
+          if (!isset($items[$nid]->search_api_access_node)) {
+            $items[$nid]->search_api_access_node = array();
           }
+          $items[$nid]->search_api_access_node[] = "node_access_$grant->realm:$grant->gid";
         }
-        else {
-          // Add the generic view grant if we are not using node access or the
-          // node is viewable by anonymous users.
-          $items[$nid]->search_api_access_node = array('node_access__all');
-        }
+      }
+      else {
+        // Add the generic view grant if we are not using node access or the
+        // node is viewable by anonymous users.
+        $items[$nid]->search_api_access_node = array('node_access__all');
       }
     }
   }
 
   /**
-   * If the data alteration is being enabled, sets "Published" to "indexed".
+   * Submit callback for the configuration form.
+   *
+   * If the data alteration is being enabled, set "Published" and "Author" to
+   * "indexed", because both are needed for the node access filter.
    */
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
-    parent::configurationFormSubmit($form, $values, $form_state);
-
     $old_status = !empty($form_state['index']->options['data_alter_callbacks']['search_api_alter_node_access']['status']);
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
     if (!$old_status && $new_status) {
       $form_state['index']->options['fields']['status']['type'] = 'boolean';
+      $form_state['index']->options['fields']['author']['type'] = 'integer';
+      $form_state['index']->options['fields']['author']['entity_type'] = 'user';
     }
 
-    return $values;
+    return parent::configurationFormSubmit($form, $values, $form_state);
   }
 
 }

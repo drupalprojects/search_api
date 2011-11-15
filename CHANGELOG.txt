@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1324182 by dereine, drunken monkey: Fixed indexing author when node access is
+  enabled.
 - #1215526 by cpliakas, drunken monkey: Added support for the "Bundle" facet
   dependency plugin.
 - #1337292 by drunken monkey: Fixed facet dependency system.

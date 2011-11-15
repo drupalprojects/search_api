@@ -1307,7 +1307,7 @@ function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
   // Only add node access if the necessary fields are indexed in the index, and
   // unless disabled explicitly by the query.
   $fields = $index->options['fields'];
-  if (!empty($fields['search_api_access_node']) && !empty($fields['status']) && !$query->getOption('search_api_bypass_access')) {
+  if (!empty($fields['search_api_access_node']) && !empty($fields['status']) && !empty($fields['author']) && !$query->getOption('search_api_bypass_access')) {
     $account = $query->getOption('search_api_access_account', $GLOBALS['user']);
     if (is_numeric($account)) {
       $account = user_load($account);
@@ -1349,7 +1349,7 @@ function _search_api_query_add_node_access($account, SearchApiQueryInterface $qu
     if (user_access('view own unpublished content')) {
       $filter = $query->createFilter('OR');
       $filter->condition('status', NODE_PUBLISHED);
-      $filter->condition('uid', $account->uid);
+      $filter->condition('author', $account->uid);
       $query->filter($filter);
     }
     else {
