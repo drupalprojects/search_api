@@ -24,7 +24,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
     $index = search_api_index_load(substr($this->table, 17));
     if (!empty($index->options['fields'])) {
       $fields = array();
-      foreach ($index->options['fields'] as $key => $field) {
+      foreach ($index->getFields() as $key => $field) {
         $fields[$key] = $field['name'];
       }
     }
