@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1345972 by Krasnyj, drunken monkey: Added handling of large item amounts to
+  trackItemInsert().
 - #1324182 by dereine, drunken monkey: Fixed indexing author when node access is
   enabled.
 - #1215526 by cpliakas, drunken monkey: Added support for the "Bundle" facet

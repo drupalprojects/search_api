@@ -475,19 +475,24 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     if (!$this->table) {
       return;
     }
-    $insert = db_insert($this->table)
-      ->fields(array($this->itemIdColumn, $this->indexIdColumn, $this->changedColumn));
-    foreach ($item_ids as $item_id) {
-      foreach ($indexes as $index) {
-        $this->checkIndex($index);
-        $insert->values(array(
-          $this->itemIdColumn => $item_id,
-          $this->indexIdColumn => $index->id,
-          $this->changedColumn => 1,
-        ));
+
+    // Since large amounts of items can overstrain the database, only add items
+    // in chunks.
+    foreach (array_chunk($item_ids, 1000) as $chunk) {
+      $insert = db_insert($this->table)
+        ->fields(array($this->itemIdColumn, $this->indexIdColumn, $this->changedColumn));
+      foreach ($chunk as $item_id) {
+        foreach ($indexes as $index) {
+          $this->checkIndex($index);
+          $insert->values(array(
+            $this->itemIdColumn => $item_id,
+            $this->indexIdColumn => $index->id,
+            $this->changedColumn => 1,
+          ));
+        }
       }
+      $insert->execute();
     }
-    $insert->execute();
   }
 
   /**
