@@ -252,6 +252,7 @@ function search_api_facetapi_facet_map_callback(array $values, array $options = 
   $mappable_values = array();
   $ranges = array();
   foreach ($values as $value) {
+    $value = (string) $value;
     if (isset($map[$value])) {
       continue;
     }
@@ -261,7 +262,8 @@ function search_api_facetapi_facet_map_callback(array $values, array $options = 
       $map['!'] = isset($options['missing label']) ? $options['missing label'] : '(' . t('none') . ')';
       continue;
     }
-    if ($value[0] == '[' && $value[strlen($value) - 1] == ']' && ($pos = strpos($value, ' TO '))) {
+    $length = strlen($value);
+    if ($length > 5 && $value[0] == '[' && $value[$length - 1] == ']' && ($pos = strpos($value, ' TO '))) {
       // This is a range filter.
       $lower = trim(substr($value, 1, $pos));
       $upper = trim(substr($value, $pos + 4, -1));
