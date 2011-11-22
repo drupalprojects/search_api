@@ -126,7 +126,7 @@ class SearchApiViewsFacetsBlockDisplay extends views_plugin_display_block {
       }
       $this->field_options = array();
       if (!empty($index->options['fields'])) {
-        foreach ($index->options['fields'] as $key => $field) {
+        foreach ($index->getFields() as $key => $field) {
           $this->field_options[$key] = $field['name'];
         }
       }
