@@ -370,22 +370,24 @@ class SearchApiViewsQuery extends views_plugin_query {
   public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
     $is_entity = (boolean) entity_get_info($this->index->item_type);
     $wrappers = array();
-    foreach ($results as $id => $row) {
-      if (isset($row->entity) && is_object($row->entity)) {
-        $wrappers[$id] = $this->index->entityWrapper($row->entity);
-      }
-      elseif ($is_entity) {
-        $load_entities = TRUE;
-        $wrappers[$id] = $this->index->entityWrapper($id);
+    $load_entities = array();
+    foreach ($results as $row_index => $row) {
+      if ($is_entity && isset($row->entity)) {
+        // If this entity isn't load, register it for pre-loading.
+        if (!is_object($row->entity)) {
+          $load_entities[$row->entity] = $row_index;
+        }
+
+        $wrappers[$row_index] = $this->index->entityWrapper($row->entity);
       }
     }
 
     // If the results are entities, we pre-load them to make use of a multiple
     // load. (Otherwise, each result would be loaded individually.)
-    if (isset($load_entities)) {
-      $entities = entity_load($this->index->item_type, array_keys($wrappers));
-      foreach ($entities as $id => $entity) {
-        $wrappers[$id] = $this->index->entityWrapper($entity);
+    if (!empty($load_entities)) {
+      $entities = entity_load($this->index->item_type, array_keys($load_entities));
+      foreach ($entities as $entity_id => $entity) {
+        $wrappers[$load_entities[$entity_id]] = $this->index->entityWrapper($entity);
       }
     }
 
