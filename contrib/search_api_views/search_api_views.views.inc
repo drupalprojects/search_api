@@ -153,7 +153,9 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
   // We can only sort according to single-valued fields.
   if ($type == $inner_type) {
     $table[$id]['sort']['handler'] = 'SearchApiViewsHandlerSort';
-    $table[$id]['field']['click sortable'] = TRUE;
+    if (isset($table[$id]['field'])) {
+      $table[$id]['field']['click sortable'] = TRUE;
+    }
   }
 }
 
