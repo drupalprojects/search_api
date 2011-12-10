@@ -62,3 +62,10 @@ the Views block, just activate the display's „Hide block“ option.
 Note: If you want to display the block not only on a few pages, you should in
 any case take care that it isn't displayed on the search page, since that might
 confuse users.
+
+FAQ: Why „*Indexed* Node“?
+--------------------------
+The group name used for the search result itself (in fields, filters, etc.) is
+prefixed with „Indexed“ in order to be distinguishable from fields on referenced
+nodes (or other entities). The data displayed normally still comes from the
+entity, not from the search index.

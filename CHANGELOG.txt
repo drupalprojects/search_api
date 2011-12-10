@@ -1,5 +1,7 @@
 Search API 1.0, dev (xx/xx/xxxx):
 ---------------------------------
+- #1352292 by das-peter, drunken monkey: Use Search API specific table groups in
+  Views integration.
 - #1351524 by das-peter: Made Views result row indexing more robust.
 - #1194362 by Damien Tournoud: Fixed click sort added to non-existent Views
   fields.
