@@ -1,4 +1,7 @@
-Search API 1.0, dev (xx/xx/xxxx):
+Search API 1.x, dev (xx/xx/xxxx):
+---------------------------------
+
+Search API 1.0 (12/15/2011):
 ---------------------------------
 - #1350322 by drunken monkey: Fixed regressions introduced with cron queue
   indexing.
