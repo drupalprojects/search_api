@@ -850,16 +850,33 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
         '#attributes' => array('class' => array('container-inline')),
         '#collapsible' => TRUE,
       );
-      $form['index']['limit'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Number of items:'),
-        '#default_value' => empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'],
-        '#size' => 4,
-        '#attributes' => array('class' => array('search-api-cron-limit')),
-      );
+      $limit = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
+      if ($limit > 0) {
+        $form['index']['limit'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Number of batches:'),
+          '#default_value' => -1,
+          '#size' => 4,
+          '#attributes' => array('class' => array('search-api-cron-limit')),
+        );
+        $desc = format_plural($limit,
+              'Each batch contains 1 item. Set to -1 for no limit.',
+              'Each batch contains @count items. Set to -1 for no limit.');
+      }
+      else {
+        $form['index']['limit'] = array(
+          '#type' => 'value',
+          '#value' => -1,
+        );
+        $desc = t("This will immediately index all items that haven't been indexed in their latest version yet.");
+      }
       $form['index']['button'] = array(
         '#type' => 'submit',
         '#value' => t('Index now'),
+      );
+      $form['index']['description'] = array(
+        '#type' => 'item',
+        '#description' => '<br />' . $desc,
       );
       $form['index']['total'] = array(
         '#type' => 'value',
@@ -935,9 +952,10 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       break;
     case t('Index now'):
       $limit = $values['limit'];
+      $batch_size = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
       // @todo Batch API?
       try {
-        $ret = search_api_index_items($index, $limit);
+        $ret = search_api_index_items($index, ($limit < 0 || $batch_size < 0) ? -1 : $limit * $batch_size);
       }
       catch (SearchApiException $e) {
         $ret = FALSE;

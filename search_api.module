@@ -517,6 +517,8 @@ function search_api_search_api_index_insert(SearchApiIndex $index) {
  * Implements hook_search_api_index_update().
  */
 function search_api_search_api_index_update(SearchApiIndex $index) {
+  // If the server was changed, we have to call the appropriate service class
+  // hook methods.
   if ($index->server != $index->original->server) {
     // Server changed - inform old and new ones.
     if ($index->original->server) {
@@ -554,6 +556,8 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
     _search_api_index_reindex($index);
   }
 
+  // If the fields were changed, call the appropriate service class hook method
+  // and re-index the content, if necessary.
   $old_fields = $index->original->options + array('fields' => array());
   $old_fields = $old_fields['fields'];
   $new_fields = $index->options + array('fields' => array());
@@ -581,6 +585,15 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
     else {
       $index->queueItems();
     }
+  }
+
+  // If the cron batch size changed, empty the cron queue for this index.
+  $old_cron = $index->original->options + array('cron_limit' => NULL);
+  $old_cron = $old_cron['cron_limit'];
+  $new_cron = $index->options + array('cron_limit' => NULL);
+  $new_cron = $new_cron['cron_limit'];
+  if ($old_cron !== $new_cron) {
+    _search_api_empty_cron_queue($index, TRUE);
   }
 }
 
@@ -931,12 +944,33 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
     return 0;
   }
 
-  $ids = search_api_get_items_to_index($index, $limit);
-  if (!$ids) {
-    return 0;
+  $queue = DrupalQueue::get('search_api_indexing_queue');
+  $queue->createQueue();
+  $indexed = 0;
+  $unlimited = $limit < 0;
+  $release_items = array();
+  while (($unlimited || $indexed < $limit) && ($item = $queue->claimItem(30))) {
+    if ($item->data['index'] === $index->machine_name) {
+      $indexed += _search_api_indexing_queue_process($item->data);
+      $queue->deleteItem($item);
+    }
+    else {
+      $release_items[] = $item;
+    }
   }
 
-  return count(search_api_index_specific_items($index, $ids));
+  foreach ($release_items as $item) {
+    $queue->releaseItem($item);
+  }
+
+  if ($unlimited || $indexed < $limit) {
+    $ids = search_api_get_items_to_index($index, $unlimited ? -1 : $limit - $indexed);
+    if ($ids) {
+      $indexed += count(search_api_index_specific_items($index, $ids));
+    }
+  }
+
+  return $indexed;
 }
 
 /**
@@ -1940,6 +1974,42 @@ function search_api_index_reindex($id) {
  */
 function _search_api_index_reindex(SearchApiIndex $index) {
   $index->datasource()->trackItemChange(FALSE, array($index), TRUE);
+  _search_api_empty_cron_queue($index);
+}
+
+/**
+ * Helper method for removing all of an index's jobs from the cron queue.
+ *
+ * @param SearchApiIndex $index
+ *   The index whose jobs should be removed.
+ * @param $mark_changed
+ *   If TRUE, mark all items in the queue as "changed" again. Defaults to FALSE.
+ */
+function _search_api_empty_cron_queue(SearchApiIndex $index, $mark_changed = FALSE) {
+  $index_id = $index->machine_name;
+  $queue = DrupalQueue::get('search_api_indexing_queue');
+  $queue->createQueue();
+  $ids = array();
+  $release_items = array();
+  while ($item = $queue->claimItem()) {
+    if ($item->data['index'] === $index_id) {
+      $queue->deleteItem($item);
+      if ($mark_changed) {
+        $ids = array_merge($ids, $item->data['items']);
+      }
+    }
+    else {
+      $release_items[] = $item;
+    }
+  }
+
+  foreach ($release_items as $item) {
+    $queue->releaseItem($item);
+  }
+
+  if ($ids) {
+    $index->datasource()->trackItemChange($ids, array($index), TRUE);
+  }
 }
 
 /**
@@ -1981,6 +2051,9 @@ function search_api_index_delete($id) {
  *   An associative array containing:
  *   - index: The ID of the index on which items should be indexed.
  *   - items: The items that should be indexed.
+ *
+ * @return
+ *   The number of successfully indexed items.
  */
 function _search_api_indexing_queue_process(array $task) {
   $index = search_api_index_load($task['index']);
@@ -1998,6 +2071,7 @@ function _search_api_indexing_queue_process(array $task) {
     if ($num) {
       watchdog('search_api', t('Indexed !num items for index !name', array('!num' => $num, '!name' => $index->name)), NULL, WATCHDOG_INFO);
     }
+    return $num;
   }
 }
 

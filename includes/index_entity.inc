@@ -217,6 +217,7 @@ class SearchApiIndex extends Entity {
    */
   public function dequeueItems() {
     $this->datasource()->stopTracking(array($this));
+    _search_api_empty_cron_queue($this);
   }
 
   /**

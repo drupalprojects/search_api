@@ -126,7 +126,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'enabled' => 1,
       'description' => 'An index used for testing.',
       'server' => '',
-      'options[cron_limit]' => 5,
+      'options[cron_limit]' => 1,
     );
     $this->drupalPost(NULL, $values, t('Create index'));
 
@@ -213,7 +213,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertTitle('Search API test index | Drupal', t('Correct title when viewing index.'));
     $this->assertText('An index used for testing.', t('!field displayed.', array('!field' => t('Description'))));
     $this->assertText('Search API test entity', t('!field displayed.', array('!field' => t('Item type'))));
-    $this->assertText(format_plural(5, '1 item per cron batch.', '@count items per cron batch.'), t('!field displayed.', array('!field' => t('Cron batch size'))));
+    $this->assertText(format_plural(1, '1 item per cron batch.', '@count items per cron batch.'), t('!field displayed.', array('!field' => t('Cron batch size'))));
 
     $this->drupalGet("admin/config/search/search_api/index/$id/status");
     $this->assertText(t('The index is currently disabled.'), t('"Disabled" status displayed.'));
