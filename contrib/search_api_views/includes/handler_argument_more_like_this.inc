@@ -11,6 +11,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
    */
   public function option_definition() {
     $options = parent::option_definition();
+    unset($options['break_phrase']);
     $options['fields'] = array('default' => array());
     return $options;
   }
@@ -20,6 +21,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
    */
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    unset($form['break_phrase']);
 
     $index = search_api_index_load(substr($this->table, 17));
     if (!empty($index->options['fields'])) {

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1141488 by moonray, drunken monkey: Added option to use multiple values with
+  contextual filters.
 - #1535726 by bojanz: Ensure argument 2 passed to configurationFormValidate()
   of SearchApiAbstractService is an array.
 - #1400882 by mh86: Fix Index hierarchy with all parents may result in loops.
