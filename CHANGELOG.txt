@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1504318 by peximo: Fixed Views pager offset.
 - #1141488 by moonray, drunken monkey: Added option to use multiple values with
   contextual filters.
 - #1535726 by bojanz: Ensure argument 2 passed to configurationFormValidate()
