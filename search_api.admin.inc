@@ -1,5 +1,4 @@
 <?php
-// $Id: search_api.admin.inc,v 1.1.2.76 2011/02/20 12:44:15 drunkenmonkey Exp $
 
 /**
  * Page callback that shows an overview of defined servers and indexes.
