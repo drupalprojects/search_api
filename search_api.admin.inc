@@ -187,7 +187,7 @@ function search_api_admin_add_server(array $form, array &$form_state) {
       '#type' => 'select',
       '#title' => t('Service class'),
       '#description' => t('Choose a service class to use for this server.'),
-      '#options' => array('' => '< '. t('Choose a service class') .' >'),
+      '#options' => array('' => '< ' . t('Choose a service class') . ' >'),
       '#required' => TRUE,
       '#default_value' => $class,
       '#ajax' => array(

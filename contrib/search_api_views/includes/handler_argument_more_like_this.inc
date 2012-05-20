@@ -64,7 +64,7 @@ class SearchApiViewsHandlerArgumentMoreLikeThis extends SearchApiViewsHandlerArg
     }
     $fields = $this->options['fields'] ? $this->options['fields'] : array();
     if (empty($fields)) {
-      foreach($this->query->getIndex()->options['fields'] as $key => $field) {
+      foreach ($this->query->getIndex()->options['fields'] as $key => $field) {
         $fields[] = $key;
       }
     }
