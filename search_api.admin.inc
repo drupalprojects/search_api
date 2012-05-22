@@ -214,7 +214,7 @@ function search_api_admin_add_server(array $form, array &$form_state) {
       $service = new $info['class']($form_state['server']);
     }
     if (!($service instanceof SearchApiServiceInterface)) {
-      watchdog('search_api', t('Service class !id specifies an illegal class: !class', array('!id' => $id, '!class' => $info['class'])), NULL, WATCHDOG_ERROR);
+      watchdog('search_api', t('Service class @id specifies an illegal class: @class', array('@id' => $id, '@class' => $info['class'])), NULL, WATCHDOG_ERROR);
       continue;
     }
     $service_form = isset($form['options']['form']) ? $form['options']['form'] : array();
@@ -959,13 +959,11 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       }
       catch (SearchApiException $e) {
         $ret = FALSE;
-        watchdog('search_api', t('An error occurred while trying to index items on index !name: !message',
-            array('!name' => $index->machine_name, '!message' => $e->getMessage())), NULL, WATCHDOG_ERROR);
+        watchdog('search_api', t('An error occurred while trying to index items on index @name: @message', array('@name' => $index->machine_name, '@message' => $e->getMessage())), NULL, WATCHDOG_ERROR);
       }
       if ($ret) {
         drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
-        if (($limit > 0 && $ret < min(array($limit, $values['remaining'])))
-            || ($limit < 0 && $ret < $values['remaining'])) {
+        if (($limit > 0 && $ret < min(array($limit, $values['remaining']))) || ($limit < 0 && $ret < $values['remaining'])) {
           drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
         }
       }
@@ -1136,7 +1134,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       $callback_objects[$name] = new $callback['class']($index, $settings);
     }
     if (!(class_exists($callback['class']) && $callback_objects[$name] instanceof SearchApiAlterCallbackInterface)) {
-      watchdog('search api', t('Data alteration !id specifies illegal callback class !class.', array('!id' => $name, '!class' => $callback['class'])), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Data alteration @id specifies illegal callback class @class.', array('@id' => $name, '@class' => $callback['class'])), NULL, WATCHDOG_WARNING);
       unset($callback_info[$name]);
       unset($callbacks[$name]);
       unset($callback_objects[$name]);
@@ -1232,7 +1230,7 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
       $processor_objects[$name] = new $processor['class']($index, $settings);
     }
     if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof SearchApiProcessorInterface)) {
-      watchdog('search api', t('Processor !id specifies illegal processor class !class.', array('!id' => $name, '!class' => $processor['class'])), NULL, WATCHDOG_WARNING);
+      watchdog('search_api', t('Processor @id specifies illegal processor class @class.', array('@id' => $name, '@class' => $processor['class'])), NULL, WATCHDOG_WARNING);
       unset($processor_info[$name]);
       unset($processors[$name]);
       unset($processor_objects[$name]);
