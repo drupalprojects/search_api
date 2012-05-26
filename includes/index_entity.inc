@@ -116,10 +116,10 @@ class SearchApiIndex extends Entity {
    *   - boost: (optional) A boost value for terms found in this field during
    *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
    *   - entity_type (optional): If set, the type of this field is really an
-   *     entity. The "type" key will then contain "integer", meaning that
-   *     servers will ignore this and merely index the entity's ID. Components
-   *     displaying this field, though, are advised to use the entity label
-   *     instead of the ID.
+   *     entity. The "type" key will then just contain the primitive data type
+   *     of the ID field, meaning that servers will ignore this and merely index
+   *     the entity's ID. Components displaying this field, though, are advised
+   *     to use the entity label instead of the ID.
    * - additional fields: An associative array with keys and values being the
    *   field identifiers of related entities whose fields should be displayed.
    * - data_alter_callbacks: An array of all data alterations available. Keys
@@ -811,7 +811,8 @@ class SearchApiIndex extends Entity {
               );
             }
             if (isset($entity_types[$type])) {
-              $flat[$key]['type'] = search_api_nest_type('integer', $info['type']);
+              $base_type = isset($entity_types[$type]['entity keys']['name']) ? 'string' : 'integer';
+              $flat[$key]['type'] = search_api_nest_type($base_type, $info['type']);
               $flat[$key]['entity_type'] = $type;
             }
           }
