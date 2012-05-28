@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1569874 by cpliakas: Fixed removal/adding of facets when indexed fields are
+  changed.
 - #1528436 by jsacksick, drunken monkey: Fixed handling of exportable entities.
 
 Search API 1.1 (05/23/2012):
