@@ -666,7 +666,7 @@ class SearchApiIndex extends Entity {
    *
    * @param array $response
    *   An array containing the search results. See
-   *   SearchApiServiceInterface->search() for the detailled format.
+   *   SearchApiServiceInterface->search() for the detailed format.
    * @param SearchApiQuery $query
    *   The object representing the executed query.
    *
