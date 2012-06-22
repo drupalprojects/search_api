@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1580780 by drunken monkey: Fixed default regexps of the Tokenizer.
 - #1468678 by znerol: Fixed erroneous use of Drupal multibyte wrapper functions.
 - #1600986 by DamienMcKenna: Fixed dependencies of exported search servers.
 - #1569874 by cpliakas: Fixed removal/adding of facets when indexed fields are
