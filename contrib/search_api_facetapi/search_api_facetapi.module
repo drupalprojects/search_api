@@ -122,6 +122,9 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
           'map options' => array(),
           'field type' => $type,
         );
+        if ($type === 'date') {
+          $facet_info[$key]['description'] .= ' ' . t('(Caution: This may perform very poorly for large result sets.)');
+        }
         $facet_info[$key]['map options'] += array(
           'field' => $field,
           'index id' => $index->machine_name,
