@@ -451,6 +451,7 @@ class SearchApiIndex extends Entity {
     $data = array();
     foreach ($items as $id => $item) {
       $data[$id] = search_api_extract_fields($this->entityWrapper($item), $fields);
+      unset($items[$id]);
       foreach ($custom_type_fields as $type => $type_fields) {
         $info = search_api_get_data_type_info($type);
         if (isset($info['conversion callback']) && is_callable($info['conversion callback'])) {

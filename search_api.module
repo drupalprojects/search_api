@@ -1027,7 +1027,12 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
  */
 function search_api_index_specific_items(SearchApiIndex $index, array $ids) {
   $items = $index->loadItems($ids);
-  $indexed = $items ? $index->index($items) : array();
+  // Clone items because data alterations may alter them.
+  $cloned_items = array();
+  foreach ($items as $id => $item) {
+    $cloned_items[$id] = clone $item;
+  }
+  $indexed = $items ? $index->index($cloned_items) : array();
   if ($indexed) {
     search_api_track_item_indexed($index, $indexed);
   }
