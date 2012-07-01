@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1368548 by das-peter: Do not index views results by entity id.
 - #1422750 by drunken monkey, sepgil: Fixed illegal modification of entity
   objects.
 - #1363114 by nbucknor: Fixed inclusion of upper bound in range facets.
