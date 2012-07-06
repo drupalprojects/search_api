@@ -1,5 +1,8 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.2 (07/07/2012):
+----------------------------
 - #1368548 by das-peter: Do not index views results by entity id.
 - #1422750 by drunken monkey, sepgil: Fixed illegal modification of entity
   objects.
