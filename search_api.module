@@ -241,7 +241,7 @@ function search_api_cron() {
         search_api_track_item_queued($index, $ids);
       }
       catch (SearchApiException $e) {
-        watchdog('search_api', $e->getMessage(), NULL, WATCHDOG_WARNING);
+        watchdog_exception('search_api', $e);
       }
     }
   }
@@ -889,7 +889,7 @@ function search_api_track_item_change($type, array $item_ids) {
         search_api_index_specific_items_delayed($index, $item_ids);
       }
       catch (SearchApiException $e) {
-        watchdog('search_api', $e->getMessage(), NULL, WATCHDOG_ERROR);
+        watchdog_exception('search_api', $e);
       }
     }
   }
@@ -1391,7 +1391,7 @@ function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
         _search_api_query_add_node_access($account, $query);
       }
       catch (SearchApiException $e) {
-        watchdog('search_api', 'An error occurred while altering node access to a search query: @message.', array('@message' => $e->getMessage()), WATCHDOG_WARNING);
+        watchdog_exception('search_api', $e);
       }
     }
     else {
@@ -2097,21 +2097,26 @@ function search_api_index_delete($id) {
  */
 function _search_api_indexing_queue_process(array $task) {
   $index = search_api_index_load($task['index']);
-  if ($index && $index->enabled && !$index->read_only && $task['items']) {
-    $indexed = search_api_index_specific_items($index, $task['items']);
-    $num = count($indexed);
-    // If some items couldn't be indexed, mark them as dirty again.
-    if ($num < count($task['items'])) {
-      // Believe it or not but this is actually quite faster than the equivalent
-      // $diff = array_diff($task['items'], $indexed);
-      $diff = array_keys(array_diff_key(array_flip($task['items']), array_flip($indexed)));
-      // Mark the items as dirty again.
-      $index->datasource()->trackItemChange($diff, array($index), TRUE);
+  try {
+    if ($index && $index->enabled && !$index->read_only && $task['items']) {
+      $indexed = search_api_index_specific_items($index, $task['items']);
+      $num = count($indexed);
+      // If some items couldn't be indexed, mark them as dirty again.
+      if ($num < count($task['items'])) {
+        // Believe it or not but this is actually quite faster than the equivalent
+        // $diff = array_diff($task['items'], $indexed);
+        $diff = array_keys(array_diff_key(array_flip($task['items']), array_flip($indexed)));
+        // Mark the items as dirty again.
+        $index->datasource()->trackItemChange($diff, array($index), TRUE);
+      }
+      if ($num) {
+        watchdog('search_api', t('Indexed @num items for index @name', array('@num' => $num, '@name' => $index->name)), NULL, WATCHDOG_INFO);
+      }
+      return $num;
     }
-    if ($num) {
-      watchdog('search_api', t('Indexed @num items for index @name', array('@num' => $num, '@name' => $index->name)), NULL, WATCHDOG_INFO);
-    }
-    return $num;
+  }
+  catch (SearchApiException $e) {
+    watchdog_exception('search_api', $e);
   }
 }
 
@@ -2121,15 +2126,20 @@ function _search_api_indexing_queue_process(array $task) {
 function _search_api_index_queued_items() {
   $queue = &search_api_index_specific_items_delayed();
 
-  if ($queue) {
-    $indexes = search_api_index_load_multiple(array_keys($queue));
-    foreach ($indexes as $index_id => $index) {
-      search_api_index_specific_items($index, $queue[$index_id]);
+  try {
+    if ($queue) {
+      $indexes = search_api_index_load_multiple(array_keys($queue));
+      foreach ($indexes as $index_id => $index) {
+        search_api_index_specific_items($index, $queue[$index_id]);
+      }
     }
-  }
 
-  // Reset the queue so we don't index the items twice by accident.
-  $queue = array();
+    // Reset the queue so we don't index the items twice by accident.
+    $queue = array();
+  }
+  catch (SearchApiException $e) {
+    watchdog_exception('search_api', $e);
+  }
 }
 
 /**

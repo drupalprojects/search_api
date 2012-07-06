@@ -959,7 +959,7 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       }
       catch (SearchApiException $e) {
         $ret = FALSE;
-        watchdog('search_api', t('An error occurred while trying to index items on index @name: @message', array('@name' => $index->machine_name, '@message' => $e->getMessage())), NULL, WATCHDOG_ERROR);
+        watchdog_exception('search_api', $e);
       }
       if ($ret) {
         drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
