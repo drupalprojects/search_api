@@ -1390,31 +1390,44 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     $values['processors'][$name]['settings'] = $processor->configurationFormSubmit($processor_form, $values['processors'][$name]['settings'], $form_state);
   }
 
-  // Set default indexed status for newly added fields.
   $types = search_api_field_types();
   foreach ($form_state['callbacks'] as $name => $callback) {
-    if ($values['callbacks'][$name]['status'] && empty($options['data_alter_callbacks'][$name]['status'])) {
-      $properties = $callback->propertyInfo();
-      if ($properties) {
-        foreach ($properties as $key => $field) {
-          $type = $field['type'];
-          $inner = search_api_extract_inner_type($type);
-          if ($inner != 'token' && empty($types[$inner])) {
-            // Someone apparently added a structure or entity as a property in a data-alter callback.
-            continue;
-          }
-          if ($inner == 'token' || (search_api_is_text_type($inner) && !empty($field['options list']))) {
-            $old = $type;
-            $type = 'string';
-            while (search_api_is_list_type($old)) {
-              $old = substr($old, 5, -1);
-              $type = "list<$type>";
+    // Check whether callback status has changed.
+    if ($values['callbacks'][$name]['status'] == empty($options['data_alter_callbacks'][$name]['status'])) {
+      if ($values['callbacks'][$name]['status']) {
+        // Callback was just enabled, add its fields.
+        $properties = $callback->propertyInfo();
+        if ($properties) {
+          foreach ($properties as $key => $field) {
+            $type = $field['type'];
+            $inner = search_api_extract_inner_type($type);
+            if ($inner != 'token' && empty($types[$inner])) {
+              // Someone apparently added a structure or entity as a property in a data-alter callback.
+              continue;
             }
+            if ($inner == 'token' || (search_api_is_text_type($inner) && !empty($field['options list']))) {
+              $old = $type;
+              $type = 'string';
+              while (search_api_is_list_type($old)) {
+                $old = substr($old, 5, -1);
+                $type = "list<$type>";
+              }
+            }
+            $index->options['fields'][$key] = array(
+              'type' => $type,
+            );
           }
-          $index->options['fields'][$key] = array(
-            'type' => $type,
-          );
         }
+      }
+      else {
+        // Callback was just disabled, remove its fields.
+        $properties = $callback->propertyInfo();
+        if ($properties) {
+          foreach ($properties as $key => $field) {
+            unset($index->options['fields'][$key]);
+          }
+        }
+
       }
     }
   }
@@ -1428,6 +1441,10 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
     // Save the already sorted arrays to avoid having to sort them at each use.
     uasort($index->options['data_alter_callbacks'], 'search_api_admin_element_compare');
     uasort($index->options['processors'], 'search_api_admin_element_compare');
+
+    // Reset the index's internal property cache to correctly incorporate the
+    // new data alterations.
+    $index->resetCaches();
 
     $index->save();
     $index->reindex();

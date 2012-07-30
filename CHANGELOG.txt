@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1414138 by drunken monkey: Fixed internal static index property cache.
 - #1253320 by drunken monkey, fago: Fixed improper error handling.
 
 Search API 1.2 (07/07/2012):
