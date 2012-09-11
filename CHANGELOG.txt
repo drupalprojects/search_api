@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1777710 by dasjo: Remove dependency on $_GET['q'] for determining base paths.
 - #1715238 by jsacksick: Fixed fulltext argument handler field list is broken.
 - #1414138 by drunken monkey: Fixed internal static index property cache.
 - #1253320 by drunken monkey, fago: Fixed improper error handling.
