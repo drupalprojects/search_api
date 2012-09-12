@@ -847,36 +847,34 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
       $form['index'] = array(
         '#type' => 'fieldset',
         '#title' => t('Index now'),
-        '#attributes' => array('class' => array('container-inline')),
         '#collapsible' => TRUE,
       );
-      $limit = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
-      if ($limit > 0) {
-        $form['index']['limit'] = array(
-          '#type' => 'textfield',
-          '#title' => t('Number of batches:'),
-          '#default_value' => -1,
-          '#size' => 4,
-          '#attributes' => array('class' => array('search-api-cron-limit')),
-        );
-        $desc = format_plural($limit,
-              'Each batch contains 1 item. Set to -1 for no limit.',
-              'Each batch contains @count items. Set to -1 for no limit.');
-      }
-      else {
-        $form['index']['limit'] = array(
-          '#type' => 'value',
-          '#value' => -1,
-        );
-        $desc = t("This will immediately index all items that haven't been indexed in their latest version yet.");
-      }
+      $form['index']['settings'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced settings'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['index']['settings']['limit'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of items to index'),
+        '#default_value' => -1,
+        '#size' => 4,
+        '#attributes' => array('class' => array('search-api-limit')),
+        '#description' => t('Number of items to index. Set to -1 for all items.'),
+      );
+      $batch_size = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
+      $form['index']['settings']['batch_size'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number of items per batch run'),
+        '#default_value' => $batch_size,
+        '#size' => 4,
+        '#attributes' => array('class' => array('search-api-batch-size')),
+        '#description' => t('Number of items per batch run. Set to -1 for all items at once (not recommended). Defaults to the cron batch size of the index.'),
+      );
       $form['index']['button'] = array(
         '#type' => 'submit',
         '#value' => t('Index now'),
-      );
-      $form['index']['description'] = array(
-        '#type' => 'item',
-        '#description' => '<br />' . $desc,
       );
       $form['index']['total'] = array(
         '#type' => 'value',
@@ -951,24 +949,8 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       $redirect = $pre . '/disable';
       break;
     case t('Index now'):
-      $limit = $values['limit'];
-      $batch_size = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
-      // @todo Batch API?
-      try {
-        $ret = search_api_index_items($index, ($limit < 0 || $batch_size < 0) ? -1 : $limit * $batch_size);
-      }
-      catch (SearchApiException $e) {
-        $ret = FALSE;
-        watchdog_exception('search_api', $e);
-      }
-      if ($ret) {
-        drupal_set_message(format_plural($ret, 'Successfully indexed 1 item.', 'Successfully indexed @count items.'));
-        if (($limit > 0 && $ret < min(array($limit, $values['remaining']))) || ($limit < 0 && $ret < $values['remaining'])) {
-          drupal_set_message(t("Some items couldn't be indexed. Check the logs for details."), 'warning');
-        }
-      }
-      else {
-        drupal_set_message(t("Couldn't index items. Check the logs for details."), 'error');
+      if (!_search_api_batch_indexing_create($index, $values['batch_size'], $values['limit'], $values['remaining'])) {
+        drupal_set_message(t("Couldn't create a batch, please check the batch_sise and limit."), 'warning');
       }
       $redirect = $pre . '/status';
       break;
