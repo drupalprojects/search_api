@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1507882 by jsacksick: Added "Exclude unpublished nodes" data alteration.
 - #1225620 by drunken monkey: Added Batch API integration for the "Index now"
   functionality.
 - #1777710 by dasjo: Remove dependency on $_GET['q'] for determining base paths.

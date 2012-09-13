@@ -791,6 +791,11 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Add node access information to the index.'),
     'class' => 'SearchApiAlterNodeAccess',
   );
+  $callbacks['search_api_alter_node_status'] = array(
+    'name' => t('Exclude unpublished nodes'),
+    'description' => t('Exclude unpublished nodes from the index.'),
+    'class' => 'SearchApiAlterNodeStatus',
+  );
 
   return $callbacks;
 }
