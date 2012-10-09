@@ -2100,6 +2100,23 @@ function search_api_index_delete($id) {
 }
 
 /**
+ * Options list callback for search indexes.
+ *
+ * @return array
+ *   An array of search index machine names mapped to their human-readable
+ *   names.
+ */
+function search_api_index_options_list() {
+  $ret = array(
+    NULL => '- ' . t('All') . ' -',
+  );
+  foreach (search_api_index_load_multiple(FALSE) as $id => $index) {
+    $ret[$id] = $index->name;
+  }
+  return $ret;
+}
+
+/**
  * Cron queue worker callback for indexing some items.
  *
  * @param array $task
