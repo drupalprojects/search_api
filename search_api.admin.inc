@@ -64,7 +64,7 @@ function search_api_admin_overview() {
     }
     $row[] = $t_server;
     $row[] = l($server->name, $url);
-    $row[] = $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable);
+    $row[] = $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable, array('query' => array('token' => drupal_get_token($server->machine_name))));
     $row[] = l($t_edit, $url . $edit);
     $row[] = _search_api_admin_delete_link($server);
     $rows[] = $row;
@@ -81,7 +81,7 @@ function search_api_admin_overview() {
         $row[] = l($index->name, $url);
         $row[] = $index->enabled
             ? l($t_disable, $url . $disable)
-            : ($server->enabled ? l($t_enable, $url . $enable) : '');
+            : ($server->enabled ? l($t_enable, $url . $enable, array('query' => array('token' => drupal_get_token($index->machine_name)))) : '');
         $row[] = l($t_edit, $url . $edit, $edit_link_options) .
             '<div class="search-api-edit-menu collapsed">' .
             theme('links', array('links' => menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)))) .
@@ -325,13 +325,18 @@ function search_api_admin_item_title($object) {
 function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
   if (!empty($action)) {
     if ($action == 'enable') {
-      if ($server->update(array('enabled' => 1))) {
-        drupal_set_message(t('The server was successfully enabled.'));
+      if (isset($_GET['token']) && drupal_valid_token($_GET['token'], $server->machine_name)) {
+        if ($server->update(array('enabled' => 1))) {
+          drupal_set_message(t('The server was successfully enabled.'));
+        }
+        else {
+          drupal_set_message(t('The server could not be enabled. Check the logs for details.'), 'error');
+        }
+        drupal_goto('admin/config/search/search_api/server/' . $server->machine_name);
       }
       else {
-        drupal_set_message(t('The server could not be enabled. Check the logs for details.'), 'error');
+        return MENU_ACCESS_DENIED;
       }
-      drupal_goto('admin/config/search/search_api/server/' . $server->machine_name);
     }
     else {
       $ret = drupal_get_form('search_api_admin_confirm', 'server', $action, $server);
@@ -388,7 +393,7 @@ function theme_search_api_server(array $variables) {
     $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/server/' . $machine_name . '/disable')));
   }
   else {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/server/' . $machine_name . '/enable')));
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/server/' . $machine_name . '/enable', array('query' => array('token' => drupal_get_token($machine_name))))));
   }
   $output .= '</dd>' . "\n";
 
@@ -640,13 +645,18 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
 
   if (!empty($action)) {
     if ($action == 'enable') {
-      if ($index->update(array('enabled' => 1))) {
-        drupal_set_message(t('The index was successfully enabled.'));
+      if (isset($_GET['token']) && drupal_valid_token($_GET['token'], $index->machine_name)) {
+        if ($index->update(array('enabled' => 1))) {
+          drupal_set_message(t('The index was successfully enabled.'));
+        }
+        else {
+          drupal_set_message(t('The index could not be enabled. Check the logs for details.'), 'error');
+        }
+        drupal_goto('admin/config/search/search_api/index/' . $index->machine_name);
       }
       else {
-        drupal_set_message(t('The index could not be enabled. Check the logs for details.'), 'error');
+        return MENU_ACCESS_DENIED;
       }
-      drupal_goto('admin/config/search/search_api/index/' . $index->machine_name);
     }
     else {
       $ret = drupal_get_form('search_api_admin_confirm', 'index', $action, $index);
@@ -710,7 +720,7 @@ function theme_search_api_index(array $variables) {
     $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $machine_name . '/disable')));
   }
   elseif ($server && $server->enabled) {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $machine_name . '/enable')));
+    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $machine_name . '/enable', array('query' => array('token' => drupal_get_token($machine_name))))));
   }
   else {
     $output .= t('disabled');

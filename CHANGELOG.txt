@@ -1,5 +1,9 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.3 (10/10/2012):
+----------------------------
+- Patch by mr.baileys: Fixed "enable" function doesn't use security tokens.
 - #1318904 by becw, das-peter, orakili, drunken monkey: Added improved handling
   for NULL values in Views.
 - #1306008 by Damien Tournoud, drunken monkey: Fixed handling of negative
