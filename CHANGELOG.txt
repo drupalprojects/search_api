@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1318904 by becw, das-peter, orakili, drunken monkey: Added improved handling
+  for NULL values in Views.
 - #1306008 by Damien Tournoud, drunken monkey: Fixed handling of negative
   facets.
 - #1182912 by drunken monkey, sepgil: Added Rules action for indexing entities.
