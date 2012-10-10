@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1306008 by Damien Tournoud, drunken monkey: Fixed handling of negative
+  facets.
 - #1182912 by drunken monkey, sepgil: Added Rules action for indexing entities.
 - #1507882 by jsacksick: Added "Exclude unpublished nodes" data alteration.
 - #1225620 by drunken monkey: Added Batch API integration for the "Index now"
