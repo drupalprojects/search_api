@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1823916 by aschiwi: Fixed batch_sise typos.
 
 Search API 1.3 (10/10/2012):
 ----------------------------

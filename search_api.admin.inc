@@ -960,7 +960,7 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       break;
     case t('Index now'):
       if (!_search_api_batch_indexing_create($index, $values['batch_size'], $values['limit'], $values['remaining'])) {
-        drupal_set_message(t("Couldn't create a batch, please check the batch_sise and limit."), 'warning');
+        drupal_set_message(t("Couldn't create a batch, please check the batch size and limit."), 'warning');
       }
       $redirect = $pre . '/status';
       break;
