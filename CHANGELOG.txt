@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1818948 by das-peter: Fixed endless loop in
+  search_api_index_specific_items_delayed().
 - #1406808 by Haza, drunken monkey: Added support for date popup in exposed
   filters.
 - #1823916 by aschiwi: Fixed batch_sise typos.
