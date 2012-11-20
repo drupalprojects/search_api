@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1827272 by drunken monkey: Fixed regression introduced by #1777710.
 - #1807622 by drunken monkey: Fixed definition of the default node index.
 - #1818948 by das-peter: Fixed endless loop in
   search_api_index_specific_items_delayed().
