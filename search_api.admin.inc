@@ -770,7 +770,7 @@ function theme_search_api_index(array $variables) {
           $fields_list[] = t('@field (@boost x)', array('@field' => $field['name'], '@boost' => $field['boost']));
         }
         else {
-          $fields_list[] = $field['name'];
+          $fields_list[] = check_plain($field['name']);
         }
       }
       if ($fields_list) {
