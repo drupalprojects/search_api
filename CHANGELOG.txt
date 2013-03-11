@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1702604 by JvE, slucero: Added option for maximum date facet depth.
 
 Search API 1.4 (01/09/2013):
 ----------------------------
