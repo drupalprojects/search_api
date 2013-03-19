@@ -1617,25 +1617,27 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
       // Set "defaults" in case an error occurs later.
       $info['value'] = NULL;
       $info['original_type'] = $info['type'];
-      try {
-        $info['value'] = $wrapper->$field->value($value_options);
-        // For fulltext fields with options, also include the option labels.
-        if (search_api_is_text_type($info['type']) && $wrapper->$field->optionsList('view')) {
-          _search_api_add_option_values($info['value'], $wrapper->$field->optionsList('view'));
+      if (isset($wrapper->$field)) {
+        try {
+          $info['value'] = $wrapper->$field->value($value_options);
+          // For fulltext fields with options, also include the option labels.
+          if (search_api_is_text_type($info['type']) && $wrapper->$field->optionsList('view')) {
+            _search_api_add_option_values($info['value'], $wrapper->$field->optionsList('view'));
+          }
+          $property_info = $wrapper->$field->info();
+          $info['original_type'] = $property_info['type'];
+          // For entities, we extract the entity ID instead of the whole object.
+          // @todo Use 'identifier' => TRUE instead of always loading the object.
+          $t = search_api_extract_inner_type($property_info['type']);
+          if (isset($entity_infos[$t])) {
+            // If no object is set, set this field to NULL.
+            $info['value'] = $info['value'] ? _search_api_extract_entity_value($wrapper->$field, search_api_is_text_type($info['type'])) : NULL;
+          }
         }
-        $property_info = $wrapper->$field->info();
-        $info['original_type'] = $property_info['type'];
-        // For entities, we extract the entity ID instead of the whole object.
-        // @todo Use 'identifier' => TRUE instead of always loading the object.
-        $t = search_api_extract_inner_type($property_info['type']);
-        if (isset($entity_infos[$t])) {
-          // If no object is set, set this field to NULL.
-          $info['value'] = $info['value'] ? _search_api_extract_entity_value($wrapper->$field, search_api_is_text_type($info['type'])) : NULL;
+        catch (EntityMetadataWrapperException $e) {
+          // This might happen for entity-typed properties that are NULL, e.g.,
+          // for comments without parent.
         }
-      }
-      catch (EntityMetadataWrapperException $e) {
-        // This might happen for entity-typed properties that are NULL, e.g.,
-        // for comments without parent.
       }
     }
     else {
