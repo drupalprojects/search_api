@@ -537,8 +537,8 @@ class SearchApiIndex extends Entity {
           'options list' => 'entity_metadata_language_list',
         ),
       );
-      // We use the reverse order here so the hierarchy for overwriting property infos is the same
-      // as for actually overwriting the properties.
+      // We use the reverse order here so the hierarchy for overwriting property
+      // infos is the same as for actually overwriting the properties.
       foreach (array_reverse($this->getAlterCallbacks()) as $callback) {
         $props = $callback->propertyInfo();
         if ($props) {
@@ -552,16 +552,14 @@ class SearchApiIndex extends Entity {
     return $property_info;
   }
 
-   /**
-   * Fills the $processors array for use by the pre-/postprocessing functions.
+  /**
+   * Loads all enabled data alterations for this index in proper order.
    *
-   * @return SearchApiIndex
-   *   The called object.
    * @return array
    *   All enabled callbacks for this index, as SearchApiAlterCallbackInterface
    *   objects.
    */
-  protected function getAlterCallbacks() {
+  public function getAlterCallbacks() {
     if (isset($this->callbacks)) {
       return $this->callbacks;
     }
@@ -594,11 +592,13 @@ class SearchApiIndex extends Entity {
   }
 
   /**
+   * Loads all enabled processors for this index in proper order.
+   *
    * @return array
    *   All enabled processors for this index, as SearchApiProcessorInterface
    *   objects.
    */
-  protected function getProcessors() {
+  public function getProcessors() {
     if (isset($this->processors)) {
       return $this->processors;
     }
