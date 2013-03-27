@@ -934,6 +934,7 @@ function search_api_track_item_queued(SearchApiIndex $index, array $item_ids) {
  */
 function search_api_track_item_indexed(SearchApiIndex $index, array $item_ids) {
   $index->datasource()->trackItemIndexed($item_ids, $index);
+  module_invoke_all('search_api_items_indexed', $index, $item_ids);
 }
 
 /**

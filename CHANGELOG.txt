@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1838134 by das-peter, drunken monkey: Added hook_search_api_items_indexed().
 - #1471310 by drunken monkey: Fixed handling of unset fields when indexing.
 - #1594762 by drunken monkey, alanom, esclapes: Fixed detection of deleted items
   in the Hierarchy data alteration.
