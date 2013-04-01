@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1407844 by nbucknor: Added "exclude" option for Views contextual filters.
 - #1278942 by Simon Georges, drunken monkey: Added an option to apply
   entity_access() to Views results.
 - #1819412 by drunken monkey: Added clean way for retrieving an index's data
