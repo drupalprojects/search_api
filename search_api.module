@@ -154,6 +154,42 @@ function search_api_menu() {
 }
 
 /**
+ * Implements hook_hook_info().
+ */
+function search_api_hook_info() {
+  // We use the same group for all hooks, so save code lines.
+  $hook_info = array(
+    'group' => 'search_api',
+  );
+  return array(
+    'search_api_service_info' => $hook_info,
+    'search_api_service_info_alter' => $hook_info,
+    'search_api_item_type_info' => $hook_info,
+    'search_api_item_type_info_alter' => $hook_info,
+    'search_api_data_type_info' => $hook_info,
+    'search_api_data_type_info_alter' => $hook_info,
+    'search_api_alter_callback_info' => $hook_info,
+    'search_api_processor_info' => $hook_info,
+    'search_api_index_items_alter' => $hook_info,
+    'search_api_items_indexed' => $hook_info,
+    'search_api_query_alter' => $hook_info,
+    'search_api_server_load' => $hook_info,
+    'search_api_server_insert' => $hook_info,
+    'search_api_server_update' => $hook_info,
+    'search_api_server_delete' => $hook_info,
+    'default_search_api_server' => $hook_info,
+    'default_search_api_server_alter' => $hook_info,
+    'search_api_index_load' => $hook_info,
+    'search_api_index_insert' => $hook_info,
+    'search_api_index_update' => $hook_info,
+    'search_api_index_reindex' => $hook_info,
+    'search_api_index_delete' => $hook_info,
+    'default_search_api_index' => $hook_info,
+    'default_search_api_index_alter' => $hook_info,
+  );
+}
+
+/**
  * Implements hook_theme().
  */
 function search_api_theme() {
