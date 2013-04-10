@@ -120,13 +120,4 @@ class SearchApiViewsHandlerArgument extends views_handler_argument {
     }
   }
 
-  /**
-   * Get the title this argument will assign the view, given the argument.
-   *
-   * This usually needs to be overridden to provide a proper title.
-   */
-  public function title() {
-    return t('Search @field for "@arg"', array('@field' => $this->definition['title'], '@arg' => $this->argument));
-  }
-
 }

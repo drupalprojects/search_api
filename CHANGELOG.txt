@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1959088 by drunken monkey: Fixed titles for contextual filters.
 - #1792296 by andrewbelcher, drunken monkey: Added a group for Search API hooks.
 - #1407844 by nbucknor: Added "exclude" option for Views contextual filters.
 - #1278942 by Simon Georges, drunken monkey: Added an option to apply
