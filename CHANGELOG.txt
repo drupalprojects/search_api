@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1760706 by jgraham, das-peter, drunken monkey: Added a flexible way for
+  determining whether an index contains entities.
 
 Search API 1.5 (05/04/2013):
 ----------------------------

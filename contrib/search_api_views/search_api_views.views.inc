@@ -20,9 +20,9 @@ function search_api_views_views_data() {
         'help' => t('Use the %name search index for filtering and retrieving data.', array('%name' => $index->name)),
         'query class' => 'search_api_views_query',
       );
-      if (isset($entity_types[$index->item_type])) {
+      if (isset($entity_types[$index->getEntityType()])) {
         $table['table'] += array(
-          'entity type' => $index->item_type,
+          'entity type' => $index->getEntityType(),
           'skip entity load' => TRUE,
         );
       }

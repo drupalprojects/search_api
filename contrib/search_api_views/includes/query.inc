@@ -388,11 +388,11 @@ class SearchApiViewsQuery extends views_plugin_query {
    * query backend.
    */
   public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
-    $is_entity = (boolean) entity_get_info($this->index->item_type);
+    $entity_type = $this->index->getEntityType();
     $wrappers = array();
     $load_entities = array();
     foreach ($results as $row_index => $row) {
-      if ($is_entity && isset($row->entity)) {
+      if ($entity_type && isset($row->entity)) {
         // If this entity isn't load, register it for pre-loading.
         if (!is_object($row->entity)) {
           $load_entities[$row->entity] = $row_index;
@@ -405,14 +405,14 @@ class SearchApiViewsQuery extends views_plugin_query {
     // If the results are entities, we pre-load them to make use of a multiple
     // load. (Otherwise, each result would be loaded individually.)
     if (!empty($load_entities)) {
-      $entities = entity_load($this->index->item_type, array_keys($load_entities));
+      $entities = entity_load($entity_type, array_keys($load_entities));
       foreach ($entities as $entity_id => $entity) {
         $wrappers[$load_entities[$entity_id]] = $this->index->entityWrapper($entity);
       }
     }
 
     // Apply the relationship, if necessary.
-    $type = $this->index->item_type;
+    $type = $entity_type ? $entity_type : $this->index->item_type;
     $selector_suffix = '';
     if ($field && ($pos = strrpos($field, ':'))) {
       $selector_suffix = substr($field, 0, $pos);
