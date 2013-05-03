@@ -865,6 +865,14 @@ function search_api_search_api_processor_info() {
     'class' => 'SearchApiHtmlFilter',
     'weight' => 10,
   );
+  if (module_exists('transliteration')) {
+    $processors['search_api_transliteration'] = array(
+      'name' => t('Transliteration'),
+      'description' => t('This processor will make searches insensitive to accents and other non-ASCII characters.'),
+      'class' => 'SearchApiTransliteration',
+      'weight' => 15,
+    );
+  }
   $processors['search_api_tokenizer'] = array(
     'name' => t('Tokenizer'),
     'description' => t('Tokenizes fulltext data by stripping whitespace. ' .

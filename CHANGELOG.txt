@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1169254 by cslavoie, drunken monkey, DYdave: Added transliteration processor.
 - #1959088 by drunken monkey: Fixed titles for contextual filters.
 - #1792296 by andrewbelcher, drunken monkey: Added a group for Search API hooks.
 - #1407844 by nbucknor: Added "exclude" option for Views contextual filters.

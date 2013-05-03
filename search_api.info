@@ -24,6 +24,7 @@ files[] = includes/processor_html_filter.inc
 files[] = includes/processor_ignore_case.inc
 files[] = includes/processor_stopwords.inc
 files[] = includes/processor_tokenizer.inc
+files[] = includes/processor_transliteration.inc
 files[] = includes/query.inc
 files[] = includes/server_entity.inc
 files[] = includes/service.inc
