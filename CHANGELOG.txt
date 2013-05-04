@@ -1,5 +1,8 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.5 (05/04/2013):
+----------------------------
 - #1169254 by cslavoie, drunken monkey, DYdave: Added transliteration processor.
 - #1959088 by drunken monkey: Fixed titles for contextual filters.
 - #1792296 by andrewbelcher, drunken monkey: Added a group for Search API hooks.
