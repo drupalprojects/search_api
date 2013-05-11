@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #872912 by drunken monkey: Expanded and fixed test cases.
 - #1760706 by jgraham, das-peter, drunken monkey: Added a flexible way for
   determining whether an index contains entities.
 
