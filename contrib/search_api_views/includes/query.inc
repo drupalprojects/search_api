@@ -370,12 +370,21 @@ class SearchApiViewsQuery extends views_plugin_query {
   public function get_result_entities($results, $relationship = NULL, $field = NULL) {
     list($type, $wrappers) = $this->get_result_wrappers($results, $relationship, $field);
     $return = array();
-    foreach ($wrappers as $id => $wrapper) {
+    foreach ($wrappers as $i => $wrapper) {
       try {
-        $return[$id] = $wrapper->value();
+        // Get the entity ID beforehand for possible watchdog messages.
+        $id = $wrapper->value(array('identifier' => TRUE));
+
+        // Only add results that exist.
+        if ($entity = $wrapper->value()) {
+          $return[$i] = $entity;
+        }
+        else {
+          watchdog('search_api_views', 'The search index returned a reference to an entity with ID @id, which does not exist in the database. Your index may be out of sync and should be rebuilt.', array('@id' => $id), WATCHDOG_ERROR);
+        }
       }
       catch (EntityMetadataWrapperException $e) {
-        // Ignore.
+        watchdog_exception('search_api_views', $e, "%type while trying to load search result entity with ID @id: !message in %function (line %line of %file).", array('@id' => $id), WATCHDOG_ERROR);
       }
     }
     return array($type, $return);
