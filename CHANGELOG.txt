@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1696434 by orakili, ldweeks, drunken monkey: Added Views argument handler for
+  all indexed taxonomy term fields.
 - #1988238 by esbenvb, drunken monkey: Fixed Views result display for deleted
   entities.
 - #872912 by drunken monkey: Expanded and fixed test cases.

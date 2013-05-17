@@ -11,6 +11,7 @@ files[] = includes/display_facet_block.inc
 files[] = includes/handler_argument.inc
 files[] = includes/handler_argument_fulltext.inc
 files[] = includes/handler_argument_more_like_this.inc
+files[] = includes/handler_argument_taxonomy_term.inc
 files[] = includes/handler_filter.inc
 files[] = includes/handler_filter_boolean.inc
 files[] = includes/handler_filter_date.inc
