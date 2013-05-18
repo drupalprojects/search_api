@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1992228 by drunken monkey: Fixed current search block for empty keys.
 - #1696434 by orakili, ldweeks, drunken monkey: Added Views argument handler for
   all indexed taxonomy term fields.
 - #1988238 by esbenvb, drunken monkey: Fixed Views result display for deleted
