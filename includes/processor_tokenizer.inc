@@ -76,12 +76,15 @@ class SearchApiTokenizer extends SearchApiAbstractProcessor {
   }
 
   protected function process(&$value) {
-    $this->prepare();
-    if ($this->ignorable) {
-      $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
-    }
-    if ($this->spaces) {
-      $value = preg_replace('/' . $this->spaces . '+/u', ' ', $value);
+    // We don't touch integers, NULL values or the like.
+    if (is_string($value)) {
+      $this->prepare();
+      if ($this->ignorable) {
+        $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
+      }
+      if ($this->spaces) {
+        $value = preg_replace('/' . $this->spaces . '+/u', ' ', $value);
+      }
     }
   }
 

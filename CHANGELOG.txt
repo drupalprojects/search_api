@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1993536 by drunken monkey, jpieck: Fixed handling of empty values in
+  processors.
 - #1992228 by drunken monkey: Fixed current search block for empty keys.
 - #1696434 by orakili, ldweeks, drunken monkey: Added Views argument handler for
   all indexed taxonomy term fields.

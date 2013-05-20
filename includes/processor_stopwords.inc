@@ -57,7 +57,7 @@ class SearchApiStopWords extends SearchApiAbstractProcessor {
 
   public function process(&$value) {
     $stopwords = $this->getStopWords();
-    if (empty($stopwords)) {
+    if (empty($stopwords) && !is_string($value)) {
       return;
     }
     $words = preg_split('/\s+/', $value);
