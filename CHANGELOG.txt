@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1697246 by drunken monkey: Added 'Parse mode' option to views.
 - #1993536 by drunken monkey, jpieck: Fixed handling of empty values in
   processors.
 - #1992228 by drunken monkey: Fixed current search block for empty keys.
