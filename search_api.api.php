@@ -112,6 +112,7 @@ function hook_search_api_item_type_info() {
       $types[$type] = array(
         'name' => $info['label'],
         'datasource controller' => 'SearchApiEntityDataSourceController',
+        'entity_type' => $type,
       );
     }
   }
