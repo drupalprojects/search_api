@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1649976 by Berdir, ilari.stenroth, drunken monkey: Fixed memory error during
+  crons run for large indexes.
 - #1346276 by drunken monkey: Fixed Tokenizer should only run on fulltext
   fields.
 - #1697246 by drunken monkey: Added 'Parse mode' option to views.
