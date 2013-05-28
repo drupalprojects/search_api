@@ -61,16 +61,9 @@ class SearchApiExternalDataSourceController extends SearchApiAbstractDataSourceC
   }
 
   /**
-   * Helper method that can be used by subclasses to specify the property
-   * information to use when creating a metadata wrapper.
+   * Overrides SearchApiAbstractDataSourceController::getPropertyInfo().
    *
-   * For most use cases, you will have to override this method to provide the
-   * real property information for your item type.
-   *
-   * @return array
-   *   Property information as specified by hook_entity_property_info().
-   *
-   * @see hook_entity_property_info()
+   * Only returns a single string ID field.
    */
   protected function getPropertyInfo() {
     $info['property info']['id'] = array(

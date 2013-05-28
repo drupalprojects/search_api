@@ -369,15 +369,51 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
   }
 
   /**
-   * Helper method that can be used by subclasses to specify the property
-   * information to use when creating a metadata wrapper.
+   * Get the property info for this item type.
+   *
+   * This is a helper method for getMetadataWrapper() that can be used by
+   * subclasses to specify the property information to use when creating a
+   * metadata wrapper.
+   *
+   * The data structure uses largely the format specified in
+   * hook_entity_property_info(). However, the first level of keys (containing
+   * the entity types) is omitted, and the "property" key is called
+   * "property info" instead. So, an example return value would look like this:
+   *
+   * @code
+   * return array(
+   *   'property info' => array(
+   *     'foo' => array(
+   *       'label' => t('Foo'),
+   *       'type' => 'text',
+   *     ),
+   *     'bar' => array(
+   *       'label' => t('Bar'),
+   *       'type' => 'list<integer>',
+   *     ),
+   *   ),
+   * );
+   * @endcode
+   *
+   * SearchApiExternalDataSourceController::getPropertyInfo() contains a working
+   * example of this method.
+   *
+   * If the item type is an entity type, no additional property information is
+   * required, the method will thus just return an empty array. You can still
+   * use this to append additional properties to the entities, or the like,
+   * though.
    *
    * @return array
-   *   Property information as specified by hook_entity_property_info().
+   *   Property information as specified by entity_metadata_wrapper().
    *
+   * @see getMetadataWrapper()
    * @see hook_entity_property_info()
    */
   protected function getPropertyInfo() {
+    // If this is an entity type, no additional property info is needed.
+    if ($this->entityType) {
+      return array();
+    }
     throw new SearchApiDataSourceException(t('No known property information for type @type.', array('@type' => $this->type)));
   }
 
