@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1694832 by drunken monkey: Fixed index field settings getting stale when
+  Field API field settings change.
 - #1285794 by drunken monkey: Fixed "All" option in Views' exposed "Items per
   page" setting.
 
