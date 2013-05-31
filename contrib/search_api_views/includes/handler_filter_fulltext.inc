@@ -6,6 +6,25 @@
 class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterText {
 
   /**
+   * Displays the operator form, adding a description.
+   */
+  public function show_operator_form(&$form, &$form_state) {
+    $this->operator_form($form, $form_state);
+    $form['operator']['#description'] = t('This operator is only useful when using \'Search keys\'.');
+  }
+
+  /**
+   * Provide a list of options for the operator form.
+   */
+  public function operator_options() {
+    return array(
+      'AND' => t('Contains all of these words'),
+      'OR' => t('Contains any of these words'),
+      'NOT' => t('Contains none of these words'),
+    );
+  }
+
+  /**
    * Specify the options this filter uses.
    */
   public function option_definition() {
@@ -87,10 +106,16 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
       return;
     }
 
+    // If the operator was set to OR, set it as the conjunction. (AND is set by
+    // default.)
+    if ($this->operator === 'OR') {
+      $this->query->setOption('conjunction', $this->operator);
+    }
+
     $this->query->fields($fields);
     $old = $this->query->getOriginalKeys();
     $this->query->keys($this->value);
-    if ($this->operator != '=') {
+    if ($this->operator == 'NOT') {
       $keys = &$this->query->getKeys();
       if (is_array($keys)) {
         $keys['#negation'] = TRUE;
