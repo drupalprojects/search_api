@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2013581 by drunken monkey: Added multi-valued field to test module.
 - #1288724 by brunodbo, drunken monkey, fearlsgroove: Added option for using OR
   in Views fulltext search.
 - #1694832 by drunken monkey: Fixed index field settings getting stale when
