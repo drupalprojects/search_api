@@ -178,7 +178,12 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilter';
   }
 
-  $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgument';
+  if ($inner_type == 'string') {
+    $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgumentString';
+  }
+  else {
+    $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgument';
+  }
 
   // We can only sort according to single-valued fields.
   if ($type == $inner_type) {
