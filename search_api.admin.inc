@@ -1499,6 +1499,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   }
   foreach ($fields as $key => $info) {
     $form['fields'][$key]['title']['#markup'] = check_plain($info['name']);
+    $form['fields'][$key]['machine_name']['#markup'] = check_plain($key);
     if (isset($info['description'])) {
       $form['fields'][$key]['description'] = array(
         '#type' => 'value',
@@ -1745,7 +1746,7 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
-  $header = array(t('Field'), t('Indexed'), t('Type'), t('Boost'));
+  $header = array(t('Field'), t('Machine name'), t('Indexed'), t('Type'), t('Boost'));
 
   $rows = array();
   foreach (element_children($form['fields']) as $name) {
