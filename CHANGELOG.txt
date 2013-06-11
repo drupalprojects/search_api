@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2010116 by drunken monkey: Enabled "Index items immediately" for the default
+  node index.
 - #2013581 by drunken monkey: Added multi-valued field to test module.
 - #1288724 by brunodbo, drunken monkey, fearlsgroove: Added option for using OR
   in Views fulltext search.
