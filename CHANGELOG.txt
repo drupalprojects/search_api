@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1879102 by fearlsgroove: Fixed Drush attempting to index 0 items.
 - #1999858 by drunken monkey: Cleaned up API documentation for data alterations.
 - #2010116 by drunken monkey: Enabled "Index items immediately" for the default
   node index.
