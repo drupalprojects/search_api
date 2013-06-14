@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2012706 by drunken monkey: Fixed $reset parameter for load functions.
 - #1851204 by mvc: Fixed exception when indexing book hierarchy.
 - #1926030 by stella: Added field machine name to indexes' "Fields" tabs.
 - #1879102 by fearlsgroove: Fixed Drush attempting to index 0 items.
