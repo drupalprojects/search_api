@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1382170 by orakili, lliss, drunken monkey: Added OR filtering for Views
+  option filter.
 - #2012706 by drunken monkey: Fixed $reset parameter for load functions.
 - #1851204 by mvc: Fixed exception when indexing book hierarchy.
 - #1926030 by stella: Added field machine name to indexes' "Fields" tabs.

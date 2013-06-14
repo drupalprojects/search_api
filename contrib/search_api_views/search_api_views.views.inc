@@ -167,6 +167,7 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
   if ($options = $wrapper->optionsList('view')) {
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilterOptions';
     $table[$id]['filter']['options'] = $options;
+    $table[$id]['filter']['multi-valued'] = search_api_is_list_type($type);
   }
   elseif ($inner_type == 'boolean') {
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilterBoolean';
