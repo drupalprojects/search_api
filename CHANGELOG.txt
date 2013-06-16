@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1837782 by drunken monkey: Fixed enabling of indexes through the Status tab.
 - #1382170 by orakili, lliss, drunken monkey: Added OR filtering for Views
   option filter.
 - #2012706 by drunken monkey: Fixed $reset parameter for load functions.

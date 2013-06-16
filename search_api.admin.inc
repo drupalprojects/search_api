@@ -953,7 +953,10 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
   $pre = 'admin/config/search/search_api/index/' . $index->machine_name;
   switch ($values['op']) {
     case t('Enable'):
-      $redirect = $pre . '/enable';
+      $redirect = array(
+        $pre . '/enable',
+        array('query' => array('token' => drupal_get_token($index->machine_name))),
+      );
       break;
     case t('Disable'):
       $redirect = $pre . '/disable';
