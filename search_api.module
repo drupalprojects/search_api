@@ -838,6 +838,13 @@ function search_api_search_api_alter_callback_info() {
     // Filters should be executed first.
     'weight' => -10,
   );
+  $callbacks['search_api_alter_role_filter'] = array(
+    'name' => t('Role filter'),
+    'description' => t('Exclude users from indexing based on their role.'),
+    'class' => 'SearchApiAlterRoleFilter',
+    // Filters should be executed first.
+    'weight' => -10,
+  );
   $callbacks['search_api_alter_add_url'] = array(
     'name' => t('URL field'),
     'description' => t("Adds the item's URL to the indexed data."),

@@ -14,6 +14,7 @@ files[] = includes/callback_bundle_filter.inc
 files[] = includes/callback_language_control.inc
 files[] = includes/callback_node_access.inc
 files[] = includes/callback_node_status.inc
+files[] = includes/callback_role_filter.inc
 files[] = includes/datasource.inc
 files[] = includes/datasource_entity.inc
 files[] = includes/datasource_external.inc
