@@ -390,11 +390,6 @@ class SearchApiQuery implements SearchApiQueryInterface {
   protected $options;
 
   /**
-   * Count for providing a unique ID.
-   */
-  protected static $count = 0;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(SearchApiIndex $index, array $options = array()) {
@@ -749,6 +744,26 @@ class SearchApiQuery implements SearchApiQueryInterface {
    */
   public function &getOptions() {
     return $this->options;
+  }
+
+  /**
+   * Implements the magic __sleep() method to avoid serializing the index.
+   */
+  public function __sleep() {
+    $this->index_id = $this->index->machine_name;
+    $keys = get_object_vars($this);
+    unset($keys['index']);
+    return array_keys($keys);
+  }
+
+  /**
+   * Implements the magic __wakeup() method to reload the query's index.
+   */
+  public function __wakeup() {
+    if (!isset($this->index) && !empty($this->index_id)) {
+      $this->index = search_api_index_load($this->index_id);
+      unset($this->index_id);
+    }
   }
 
 }
