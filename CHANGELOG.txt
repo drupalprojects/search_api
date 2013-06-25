@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1311260 by drunken monkey: Fixed tokenizing of string fields.
 - #1246998 by drunken monkey: Fixed deletion of items in read-only indexes.
 - #1310970 by drunken monkey: Added improved UI help for determining which
   fields are available for sorting.
