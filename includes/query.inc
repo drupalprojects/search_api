@@ -390,6 +390,13 @@ class SearchApiQuery implements SearchApiQueryInterface {
   protected $options;
 
   /**
+   * Flag for whether preExecute() was already called for this query.
+   *
+   * @var bool
+   */
+  protected $pre_execute = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(SearchApiIndex $index, array $options = array()) {
@@ -576,8 +583,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /**
    * {@inheritdoc}
    */
-  // @todo Remove "final"?
-  public final function execute() {
+  public function execute() {
     $start = microtime(TRUE);
 
     // Prepare the query for execution by the server.
@@ -656,21 +662,25 @@ class SearchApiQuery implements SearchApiQueryInterface {
    * {@inheritdoc}
    */
   public function preExecute() {
-    // Add filter for languages.
-    if (isset($this->options['languages'])) {
-      $this->addLanguages($this->options['languages']);
+    // Make sure to only execute this once per query.
+    if (!$this->pre_execute) {
+      $this->pre_execute = TRUE;
+      // Add filter for languages.
+      if (isset($this->options['languages'])) {
+        $this->addLanguages($this->options['languages']);
+      }
+
+      // Add fulltext fields, unless set
+      if ($this->fields === NULL) {
+        $this->fields = $this->index->getFulltextFields();
+      }
+
+      // Preprocess query.
+      $this->index->preprocessSearchQuery($this);
+
+      // Let modules alter the query.
+      drupal_alter('search_api_query', $this);
     }
-
-    // Add fulltext fields, unless set
-    if ($this->fields === NULL) {
-      $this->fields = $this->index->getFulltextFields();
-    }
-
-    // Preprocess query.
-    $this->index->preprocessSearchQuery($this);
-
-    // Let modules alter the query.
-    drupal_alter('search_api_query', $this);
   }
 
   /**

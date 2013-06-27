@@ -199,12 +199,27 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
  * Implements hook_views_plugins().
  */
 function search_api_views_views_plugins() {
+  // Collect all base tables provided by this module.
+  $bases = array();
+  foreach (search_api_index_load_multiple(FALSE) as $index) {
+    $bases[] = 'search_api_index_' . $index->machine_name;
+  }
+
   $ret = array(
     'query' => array(
       'search_api_views_query' => array(
         'title' => t('Search API Query'),
         'help' => t('Query will be generated and run using the Search API.'),
-        'handler' => 'SearchApiViewsQuery'
+        'handler' => 'SearchApiViewsQuery',
+      ),
+    ),
+    'cache' => array(
+      'search_api_views_cache' => array(
+        'title' => t('Search-specific'),
+        'help' => t("Cache Search API views. (Other methods probably won't work with search views.)"),
+        'base' => $bases,
+        'handler' => 'SearchApiViewsCache',
+        'uses options' => TRUE,
       ),
     ),
   );
