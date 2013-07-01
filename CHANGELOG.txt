@@ -1,5 +1,8 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.7 (07/01/2013):
+----------------------------
 - #1612708 by drunken monkey: Fixed Views caching with facet blocks.
 - #2024189 by drunken monkey: Improved serialization of the query class.
 - #1311260 by drunken monkey: Fixed tokenizing of string fields.
