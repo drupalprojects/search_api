@@ -890,7 +890,7 @@ function search_api_search_api_alter_callback_info() {
 function search_api_search_api_processor_info() {
   $processors['search_api_case_ignore'] = array(
     'name' => t('Ignore case'),
-    'description' => t('This processor will make searches case-insensitive for all fulltext fields (and, optionally, also for filters on string fields).'),
+    'description' => t('This processor will make searches case-insensitive for fulltext or string fields.'),
     'class' => 'SearchApiIgnoreCase',
   );
   $processors['search_api_html_filter'] = array(
@@ -923,6 +923,12 @@ function search_api_search_api_processor_info() {
         'For best results, it should only be executed after tokenizing.'),
     'class' => 'SearchApiStopWords',
     'weight' => 30,
+  );
+  $processors['search_api_highlighting'] = array(
+    'name' => t('Highlighting'),
+    'description' => t('Adds highlighting for search results.'),
+    'class' => 'SearchApiHighlight',
+    'weight' => 35,
   );
 
   return $processors;
