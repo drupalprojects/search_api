@@ -1211,7 +1211,21 @@ function search_api_index_specific_items(SearchApiIndex $index, array $ids) {
   // Clone items because data alterations may alter them.
   $cloned_items = array();
   foreach ($items as $id => $item) {
-    $cloned_items[$id] = clone $item;
+    if (is_object($item)) {
+      $cloned_items[$id] = clone $item;
+    }
+    else {
+      // Normally, items that can't be loaded shouldn't be returned by
+      // entity_load (and other loadItems() implementations). Therefore, this is
+      // an extremely rare case, which seems to happen during installation for
+      // some specific setups.
+      $type = search_api_get_item_type_info($index->item_type);
+      $type = $type ? $type['name'] : $index->item_type;
+      watchdog('search_api',
+          "Error during indexing: invalid item loaded for @type with ID @id.",
+          array('@id' => $id, '@type' => $type),
+          WATCHDOG_WARNING);
+    }
   }
   $indexed = $items ? $index->index($cloned_items) : array();
   if ($indexed) {
