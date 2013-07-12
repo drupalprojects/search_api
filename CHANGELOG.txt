@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2040111 by arpieb: Fixed Views URL argument handler to allow multiple values.
 - #1064520 by drunken monkey: Added a processor for highlighting.
 
 Search API 1.7 (07/01/2013):

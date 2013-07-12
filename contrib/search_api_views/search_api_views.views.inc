@@ -179,7 +179,7 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilter';
   }
 
-  if ($inner_type == 'string') {
+  if ($inner_type == 'string' || $inner_type == 'uri') {
     $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgumentString';
   }
   else {
