@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1959506 by jantoine, drunken monkey: Fixed "search id" for Views facets
+  block display.
 - #1902168 by rbruhn, drunken monkey, mpv: Fixed fatal error during Features
   import.
 - #2040111 by arpieb: Fixed Views URL argument handler to allow multiple values.
