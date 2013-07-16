@@ -1,0 +1,8 @@
+name: 'Search API test'
+description: 'Some dummy implementations for testing the Search API.'
+core: 8.x
+package: Testing
+hidden: true
+
+dependencies:
+  - search_api
