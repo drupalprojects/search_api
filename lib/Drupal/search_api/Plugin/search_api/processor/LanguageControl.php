@@ -11,7 +11,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
  * Search API data alteration callback that filters out items based on their
  * bundle.
  */
-class LanguageControl extends SearchApiAbstractAlterCallback {
+class LanguageControl extends ProcessorPluginBase {
 
   /**
    * Construct a data-alter callback.

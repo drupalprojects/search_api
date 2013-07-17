@@ -11,7 +11,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
  * Search API data alteration callback that filters out items based on their
  * bundle.
  */
-class BundleFilter extends SearchApiAbstractAlterCallback {
+class BundleFilter extends ProcessorPluginBase {
 
   public function supportsIndex(Index $index) {
     return $index->getEntityType() && ($info = entity_get_info($index->getEntityType())) && self::hasBundles($info);

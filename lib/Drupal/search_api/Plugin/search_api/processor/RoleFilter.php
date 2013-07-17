@@ -10,10 +10,10 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Data alteration that filters out users based on their role.
  */
-class RoleFilter extends SearchApiAbstractAlterCallback {
+class RoleFilter extends ProcessorPluginBase {
 
   /**
-   * Overrides SearchApiAbstractAlterCallback::supportsIndex().
+   * Overrides ProcessorPluginBase::supportsIndex().
    *
    * This plugin only supports indexes containing users.
    */
@@ -36,7 +36,7 @@ class RoleFilter extends SearchApiAbstractAlterCallback {
   }
 
   /**
-   * Overrides SearchApiAbstractAlterCallback::configurationForm().
+   * Overrides ProcessorPluginBase::configurationForm().
    *
    * Add option for the roles to include/exclude.
    */

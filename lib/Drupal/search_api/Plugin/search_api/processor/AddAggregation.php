@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Search API data alteration callback that adds an URL field for all items.
  */
-class AddAggregation extends SearchApiAbstractAlterCallback {
+class AddAggregation extends ProcessorPluginBase {
 
   public function configurationForm() {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';

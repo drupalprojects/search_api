@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Search API data alteration callback that adds an URL field for all items.
  */
-class AddHierarchy extends SearchApiAbstractAlterCallback {
+class AddHierarchy extends ProcessorPluginBase {
 
   /**
    * Cached value for the hierarchical field options.

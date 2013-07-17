@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Search API data alteration callback that adds an URL field for all items.
  */
-class AddViewedEntity extends SearchApiAbstractAlterCallback {
+class AddViewedEntity extends ProcessorPluginBase {
 
   /**
    * Only support indexes containing entities.

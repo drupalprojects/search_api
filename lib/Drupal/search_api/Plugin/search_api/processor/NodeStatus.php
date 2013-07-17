@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Exclude unpublished nodes from node indexes.
  */
-class NodeStatus extends SearchApiAbstractAlterCallback {
+class NodeStatus extends ProcessorPluginBase {
 
   /**
    * Check whether this data-alter callback is applicable for a certain index.

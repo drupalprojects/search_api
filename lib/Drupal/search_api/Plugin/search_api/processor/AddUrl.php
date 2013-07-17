@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Search API data alteration callback that adds an URL field for all items.
  */
-class AddUrl extends SearchApiAbstractAlterCallback {
+class AddUrl extends ProcessorPluginBase {
 
   public function alterItems(array &$items) {
     foreach ($items as $id => &$item) {

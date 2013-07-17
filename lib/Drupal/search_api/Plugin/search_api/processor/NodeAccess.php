@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 /**
  * Adds node access information to node indexes.
  */
-class NodeAccess extends SearchApiAbstractAlterCallback {
+class NodeAccess extends ProcessorPluginBase {
 
   /**
    * Check whether this data-alter callback is applicable for a certain index.
