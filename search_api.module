@@ -2544,3 +2544,18 @@ function _search_api_batch_indexing_finished($success, $results, $operations) {
   }
 
 }
+
+/**
+ * Submit function for buttons in the "Add aggregated field" callback's configuration form.
+ */
+function _search_api_add_aggregation_field_submit(array $form, array &$form_state) {
+  $form_state['callbacks']['search_api_alter_add_aggregation']->formButtonSubmit($form, $form_state);
+}
+
+/**
+ * AJAX submit function for buttons in the "Add aggregated field" callback's configuration form.
+ */
+function _search_api_add_aggregation_field_ajax(array $form, array &$form_state) {
+  return $form['callbacks']['settings']['search_api_alter_add_aggregation']['fields'];
+}
+
