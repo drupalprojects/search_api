@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1411712 by Krasnyj, drunken monkey: Fixed notices in Views with groups.
 - #1959506 by jantoine, drunken monkey: Fixed "search id" for Views facets
   block display.
 - #1902168 by rbruhn, drunken monkey, mpv: Fixed fatal error during Features
