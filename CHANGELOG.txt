@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2044711 by stBorchert, drunken monkey: Fixed facet adapter's
+  getCurrentSearch() method to not cache failed attempts.
 - #1411712 by Krasnyj, drunken monkey: Fixed notices in Views with groups.
 - #1959506 by jantoine, drunken monkey: Fixed "search id" for Views facets
   block display.
