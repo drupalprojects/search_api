@@ -209,6 +209,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       // Add a nested filter for each filter group, with its set conjunction.
       foreach ($this->where as $group_id => $group) {
         if (!empty($group['conditions']) || !empty($group['filters'])) {
+          $group += array('type' => 'AND');
           // For filters without a group, we want to always add them directly to
           // the query.
           $filter = ($group_id === '') ? $this->query : $this->query->createFilter($group['type']);
