@@ -194,10 +194,10 @@ class Index extends ConfigEntityBase {
         $server->addIndex($this);
       }
       else {
-        $tasks = variable_get('search_api_tasks', array());
+        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
         // When we add or remove an index, we can ignore all other tasks.
         $tasks[$server->machine_name][$this->machine_name] = array('add');
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
   }
@@ -215,9 +215,9 @@ class Index extends ConfigEntityBase {
       // the server method at all if the index is read-only and the server
       // currently disabled.
       elseif (empty($this->read_only)) {
-        $tasks = variable_get('search_api_tasks', array());
+        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
         $tasks[$server->machine_name][$this->machine_name] = array('remove');
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
 
@@ -333,13 +333,14 @@ class Index extends ConfigEntityBase {
       $server->deleteItems('all', $this);
     }
     else {
-      $tasks = variable_get('search_api_tasks', array());
-      // If the index was cleared or newly added since the server was last enabled, we don't need to do anything.
+      $tasks = Drupal::state()->get('search_api_tasks') ?: array();
+      // If the index was cleared or newly added since the server was last
+      // enabled, we don't need to do anything.
       if (!isset($tasks[$server->machine_name][$this->machine_name])
           || (array_search('add', $tasks[$server->machine_name][$this->machine_name]) === FALSE
               && array_search('clear', $tasks[$server->machine_name][$this->machine_name]) === FALSE)) {
         $tasks[$server->machine_name][$this->machine_name][] = 'clear';
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
 

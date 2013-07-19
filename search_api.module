@@ -473,7 +473,7 @@ function search_api_search_api_server_update(SearchApiServer $server) {
   if ($server->enabled != $server->original->enabled) {
     if ($server->enabled) {
       // Were there any changes in the server's indexes while it was disabled?
-      $tasks = variable_get('search_api_tasks', array());
+      $tasks = Drupal::state()->get('search_api_tasks') ?: array();
       if (isset($tasks[$server->machine_name])) {
         foreach ($tasks[$server->machine_name] as $index_id => $index_tasks) {
           $index = search_api_index_load($index_id);
@@ -509,7 +509,7 @@ function search_api_search_api_server_update(SearchApiServer $server) {
           }
         }
         unset($tasks[$server->machine_name]);
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
     else {
@@ -536,9 +536,9 @@ function search_api_search_api_server_delete(SearchApiServer $server) {
     }
   }
 
-  $tasks = variable_get('search_api_tasks', array());
+  $tasks = Drupal::state()->get('search_api_tasks') ?: array();
   unset($tasks[$server->machine_name]);
-  variable_set('search_api_tasks', $tasks);
+  Drupal::state()->set('search_api_tasks', $tasks);
 }
 
 /**
@@ -567,10 +567,10 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
           $old_server->removeIndex($index);
         }
         else {
-          $tasks = variable_get('search_api_tasks', array());
+          $tasks = Drupal::state()->get('search_api_tasks') ?: array();
           // When we add or remove an index, we can ignore all other tasks.
           $tasks[$old_server->machine_name][$index->machine_name] = array('remove');
-          variable_set('search_api_tasks', $tasks);
+          Drupal::state()->set('search_api_tasks', $tasks);
         }
       }
     }
@@ -582,10 +582,10 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
         $new_server->addIndex($index);
       }
       else {
-        $tasks = variable_get('search_api_tasks', array());
+        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
         // When we add or remove an index, we can ignore all other tasks.
         $tasks[$new_server->machine_name][$index->machine_name] = array('add');
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
         unset($new_server);
       }
     }
@@ -1053,11 +1053,11 @@ function search_api_track_item_delete($type, array $item_ids) {
         $server->deleteItems($item_ids, $index);
       }
       else {
-        $tasks = variable_get('search_api_tasks', array());
+        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
         foreach ($item_ids as $id) {
           $tasks[$server->machine_name][$index->machine_name][] = 'delete-' . $id;
         }
-        variable_set('search_api_tasks', $tasks);
+        Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
   }

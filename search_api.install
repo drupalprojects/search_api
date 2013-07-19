@@ -331,7 +331,7 @@ function search_api_disable() {
  * Implements hook_uninstall().
  */
 function search_api_uninstall() {
-  variable_del('search_api_tasks');
+  Drupal::state()->delete('search_api_tasks');
   variable_del('search_api_index_worker_callback_runtime');
 }
 
@@ -806,4 +806,13 @@ function search_api_update_7114() {
       throw new DrupalUpdateException(t('An exception occurred during the update: @msg.', array('@msg' => $e->getMessage())));
     }
   }
+}
+
+/**
+ * Update the "search_api_tasks" variable to use the State API.
+ */
+function search_api_update_8000() {
+  update_variables_to_state(array(
+    'search_api_tasks' => 'search_api_tasks',
+  ));
 }
