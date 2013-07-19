@@ -34,14 +34,14 @@ function search_api_admin_overview() {
   $t_index = t('Index');
   $t_enabled['data'] = array(
     '#theme' => 'image',
-    '#path' => $base_path . 'enabled.png',
+    '#path' => DRUPAL_ROOT . '/core/misc/watchdog-ok.png',
     '#alt' => t('enabled'),
     '#title' => t('enabled'),
   );
   $t_enabled['class'] = array('search-api-status');
   $t_disabled['data'] = array(
     '#theme' => 'image',
-    '#path' => $base_path . 'disabled.png',
+    '#path' => DRUPAL_ROOT . '/core/misc/watchdog-error.png',
     '#alt' => t('disabled'),
     '#title' => t('disabled'),
   );
