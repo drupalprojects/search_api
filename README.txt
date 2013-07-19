@@ -201,15 +201,18 @@ index. Use this only if completely wrong data has been indexed. It is also done
 automatically when the index scheme or server settings change too drastically to
 keep on using the old data.
 
-- Hidden settings
+- Hidden configuration
 
-search_api_index_worker_callback_runtime:
-  By changing this variable, you can determine the time (in seconds) the Search
+These settings can be found in this module's config files but cannot be set via
+the user interface.
+
+search_api.cron:worker_runtime:
+  By changing this setting, you can determine the time (in seconds) the Search
   API will spend indexing (for all indexes combined) in each cron run. The
   default is 15 seconds.
 
-search_api_batch_per_cron:
-  By changing this variable, you can define how many batch items are created on
+search_api.cron:batch_count:
+  By changing this setting, you can define how many batch items are created on
   a single cron run. The value is per index, so on a site with 5 indexes with a
   cron limit of 100 each, the default value of 10 will load and queue up to 5000
   search items in up to 50 batch items.

@@ -332,7 +332,6 @@ function search_api_disable() {
  */
 function search_api_uninstall() {
   Drupal::state()->delete('search_api_tasks');
-  variable_del('search_api_index_worker_callback_runtime');
 }
 
 /**
@@ -809,9 +808,13 @@ function search_api_update_7114() {
 }
 
 /**
- * Update the "search_api_tasks" variable to use the State API.
+ * Update variables to use the config storage or the State API.
  */
 function search_api_update_8000() {
+  update_variables_to_config('search_api.cron', array(
+    'search_api_batch_per_cron' => 'batch_count',
+    'search_api_index_worker_callback_runtime' => 'worker_runtime',
+  ));
   update_variables_to_state(array(
     'search_api_tasks' => 'search_api_tasks',
   ));

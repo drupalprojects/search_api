@@ -256,6 +256,7 @@ function search_api_permission() {
  */
 function search_api_cron() {
   $queue = DrupalQueue::get('search_api_indexing_queue');
+  $batch_size = config('search_api.cron')->get('batch_count');
   foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE, 'read_only' => 0)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
@@ -265,7 +266,7 @@ function search_api_cron() {
         $task = array('index' => $index->machine_name);
         // Fetch items to index, do not fetch more than the configured amount
         // of batches to be created per cron run to avoid timeouts.
-        $ids = search_api_get_items_to_index($index, $limit > 0 ? $limit * variable_get('search_api_batch_per_cron', 10) : -1);
+        $ids = search_api_get_items_to_index($index, $limit > 0 ? $limit * $batch_count : -1);
         if (!$ids) {
           continue;
         }
@@ -294,7 +295,7 @@ function search_api_cron_queue_info() {
   return array(
     'search_api_indexing_queue' => array(
       'worker callback' => '_search_api_indexing_queue_process',
-      'time' => variable_get('search_api_index_worker_callback_runtime', 15),
+      'time' => config('search_api.cron')->get('worker_runtime'),
     ),
   );
 }
