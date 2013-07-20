@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2041365 by drunken monkey: Fixed error reporting for the MLT contextual
+  filter.
 - #2044711 by stBorchert, drunken monkey: Fixed facet adapter's
   getCurrentSearch() method to not cache failed attempts.
 - #1411712 by Krasnyj, drunken monkey: Fixed notices in Views with groups.
