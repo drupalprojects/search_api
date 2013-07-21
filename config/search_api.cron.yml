@@ -1,2 +1,2 @@
-batch_count: 10
-worker_runtime: 15
+batch_count: '10'
+worker_runtime: '15'

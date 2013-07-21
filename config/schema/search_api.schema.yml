@@ -1,0 +1,12 @@
+# Schema for the configuration files of the Search API module.
+
+search_api.cron:
+  type: mapping
+  label: 'Search API cron settings'
+  mapping:
+    batch_count:
+      type: integer
+      label: 'Number of batches to create per cron run'
+    worker_runtime:
+      type: integer
+      label: 'Maximum working time per cron batch'
