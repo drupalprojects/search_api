@@ -328,7 +328,7 @@ class WebTest extends DrupalWebTestCase {
     $this->assertText(t("Couldn't index items. Check the logs for details."), t('Index error is displayed.'));
 
     // Here we test the indexing of all the remaining items.
-    Drupal::state()->set('search_api_test_index_all', TRUE);
+    \Drupal::state()->set('search_api_test_index_all', TRUE);
     $values = array(
       'limit' => -1,
     );

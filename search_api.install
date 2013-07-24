@@ -331,7 +331,7 @@ function search_api_disable() {
  * Implements hook_uninstall().
  */
 function search_api_uninstall() {
-  Drupal::state()->delete('search_api_tasks');
+  \Drupal::state()->delete('search_api_tasks');
 }
 
 /**
@@ -818,4 +818,12 @@ function search_api_update_8000() {
   update_variables_to_state(array(
     'search_api_tasks' => 'search_api_tasks',
   ));
+}
+
+/**
+ * Update search indexes to be stored in the configuration.
+ */
+function search_api_update_8001() {
+  // remove id
+  // add uuid
 }

@@ -8,78 +8,49 @@
 namespace Drupal\search_api\Plugin\Core\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\search_api\IndexInterface;
 
 /**
- * Class representing a search index.
+ * Defines a search index configuration entity class.
+ *
+ * @EntityType(
+ *   id = "search_api_index",
+ *   label = @Translation("Search index"),
+ *   module = "search_api",
+ *   controllers = {
+ *     "storage" = "Drupal\search_api\IndexStorageController",
+ *     "access" = "Drupal\search_api\IndexAccessController",
+ *     "render" = "Drupal\search_api\IndexRenderController",
+ *     "form" = {
+ *       "default" = "Drupal\search_api\IndexFormController",
+ *       "delete" = "Drupal\search_api\Form\IndexDeleteForm"
+ *     }
+ *   },
+ *   config_prefix = "search_api.index",
+ *   fieldable = FALSE,
+ *   entity_keys = {
+ *     "id" = "machine_name",
+ *     "label" = "name",
+ *     "uuid" = "uuid",
+ *     "status" = "enabled"
+ *   },
+ *   links = {
+ *     "canonical" = "/admin/config/search/search_api/index/{search_api_index}",
+ *     "edit-form" = "/admin/config/search/search_api/index/{search_api_index}/edit",
+ *   }
+ * )
  */
-class Index extends ConfigEntityBase {
-
-  // Cache values, set when the corresponding methods are called for the first
-  // time.
-
-  /**
-   * Cached return value of datasource().
-   *
-   * @var DatasourceInterface
-   */
-  protected $datasource = NULL;
-
-  /**
-   * Cached return value of server().
-   *
-   * @var Server
-   */
-  protected $server_object = NULL;
-
-  /**
-   * All enabled data alterations for this index.
-   *
-   * @var array
-   */
-  protected $callbacks = NULL;
-
-  /**
-   * All enabled processors for this index.
-   *
-   * @var array
-   */
-  protected $processors = NULL;
-
-  /**
-   * The properties added by data alterations on this index.
-   *
-   * @var array
-   */
-  protected $added_properties = NULL;
-
-  /**
-   * Static cache for the results of getFields().
-   *
-   * Can be accessed as follows: $this->fields[$only_indexed][$get_additional].
-   *
-   * @var array
-   */
-  protected $fields = array();
-
-  /**
-   * An array containing two arrays.
-   *
-   * At index 0, all fulltext fields of this index. At index 1, all indexed
-   * fulltext fields of this index.
-   *
-   * @var array
-   */
-  protected $fulltext_fields = array();
+class Index extends ConfigEntityBase implements IndexInterface {
 
   // Database values that will be set when object is loaded.
 
   /**
-   * An integer identifying the index.
-   * Immutable.
+   * The machine name of the index.
    *
-   * @var integer
+   * @var string
    */
-  public $id;
+  public $machine_name;
 
   /**
    * A name to be displayed for the index.
@@ -89,12 +60,11 @@ class Index extends ConfigEntityBase {
   public $name;
 
   /**
-   * The machine name of the index.
-   * Immutable.
+   * A Universally Unique Identifier for the index.
    *
    * @var string
    */
-  public $machine_name;
+  public $uuid;
 
   /**
    * A string describing the index' use to users.
@@ -173,85 +143,84 @@ class Index extends ConfigEntityBase {
    */
   public $read_only = 0;
 
-  /**
-   * Constructor as a helper to the parent constructor.
-   */
-  public function __construct(array $values = array()) {
-    parent::__construct($values, 'search_api_index');
-  }
+  // Cache values, set when the corresponding methods are called for the first
+  // time.
 
   /**
-   * Execute necessary tasks for a newly created index.
-   */
-  public function postCreate() {
-    if ($this->enabled) {
-      $this->queueItems();
-    }
-    $server = $this->server();
-    if ($server) {
-      // Tell the server about the new index.
-      if ($server->enabled) {
-        $server->addIndex($this);
-      }
-      else {
-        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
-        // When we add or remove an index, we can ignore all other tasks.
-        $tasks[$server->machine_name][$this->machine_name] = array('add');
-        Drupal::state()->set('search_api_tasks', $tasks);
-      }
-    }
-  }
-
-  /**
-   * Execute necessary tasks when the index is removed from the database.
-   */
-  public function postDelete() {
-    if ($server = $this->server()) {
-      if ($server->enabled) {
-        $server->removeIndex($this);
-      }
-      // Once the index is deleted, servers won't be able to tell whether it was
-      // read-only. Therefore, we prefer to err on the safe side and don't call
-      // the server method at all if the index is read-only and the server
-      // currently disabled.
-      elseif (empty($this->read_only)) {
-        $tasks = Drupal::state()->get('search_api_tasks') ?: array();
-        $tasks[$server->machine_name][$this->machine_name] = array('remove');
-        Drupal::state()->set('search_api_tasks', $tasks);
-      }
-    }
-
-    // Stop tracking entities for indexing.
-    $this->dequeueItems();
-  }
-
-  /**
-   * Record entities to index.
-   */
-  public function queueItems() {
-    if (!$this->read_only) {
-      $this->datasource()->startTracking(array($this));
-    }
-  }
-
-  /**
-   * Remove all records of entities to index.
-   */
-  public function dequeueItems() {
-    $this->datasource()->stopTracking(array($this));
-    _search_api_empty_cron_queue($this);
-  }
-
-  /**
-   * Saves this index to the database, either creating a new record or updating
-   * an existing one.
+   * Cached return value of datasource().
    *
-   * @return
-   *   Failure to save the index will return FALSE. Otherwise, SAVED_NEW or
-   *   SAVED_UPDATED is returned depending on the operation performed. $this->id
-   *   will be set if a new index was inserted.
+   * @var \Drupal\search_api\Plugin\search_api\DatasourceInterface
    */
-  public function save() {
+  protected $datasource = NULL;
+
+  /**
+   * Cached return value of server().
+   *
+   * @var \Drupal\search_api\ServerInterface
+   */
+  protected $server_object = NULL;
+
+  /**
+   * All enabled data alterations for this index.
+   *
+   * @var array
+   */
+  protected $callbacks = NULL;
+
+  /**
+   * All enabled processors for this index.
+   *
+   * @var array
+   */
+  protected $processors = NULL;
+
+  /**
+   * The properties added by data alterations on this index.
+   *
+   * @var array
+   */
+  protected $added_properties = NULL;
+
+  /**
+   * Static cache for the results of getFields().
+   *
+   * Can be accessed as follows: $this->fields[$only_indexed][$get_additional].
+   *
+   * @var array
+   */
+  protected $fields = array();
+
+  /**
+   * An array containing two arrays.
+   *
+   * At index 0, all fulltext fields of this index. At index 1, all indexed
+   * fulltext fields of this index.
+   *
+   * @var array
+   */
+  protected $fulltext_fields = array();
+
+  /**
+   * {@inheritdoc}
+   */
+  public function uri() {
+    return array(
+      'path' => 'admin/config/search/search_api/index/' . $this->id(),
+      'options' => array(
+        'entity_type' => $this->entityType,
+        'entity' => $this,
+      ),
+    );
+  }
+
+  /**
+   * Overrides \Drupal\Core\Config\Entity\ConfigEntityBase::preSave().
+   *
+   * Corrects some settings with specific restrictions.
+   */
+  public function preSave(EntityStorageControllerInterface $storage_controller) {
+    parent::preSave($storage_controller);
+
     if (empty($this->description)) {
       $this->description = NULL;
     }
@@ -263,49 +232,195 @@ class Index extends ConfigEntityBase {
     elseif (!$this->server(TRUE)->enabled) {
       $this->enabled = FALSE;
     }
-
-    return parent::save();
   }
 
   /**
-   * Helper method for updating entity properties.
+   * Overrides \Drupal\Core\Entity\Entity::postSave().
    *
-   * NOTE: You shouldn't change any properties of this object before calling
-   * this method, as this might lead to the fields not being saved correctly.
-   *
-   * @param array $fields
-   *   The new field values.
-   *
-   * @return
-   *   SAVE_UPDATED on success, FALSE on failure, 0 if the fields already had
-   *   the specified values.
+   * Executes necessary tasks for newly created indexes.
    */
-  public function update(array $fields) {
-    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'server' => 1, 'options' => 1, 'read_only' => 1);
-    $changed = FALSE;
-    foreach ($fields as $field => $value) {
-      if (isset($changeable[$field]) && $value !== $this->$field) {
-        $this->$field = $value;
-        $changed = TRUE;
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    parent::postSave($storage_controller, $update);
+
+    if (!$update) {
+      if ($this->enabled) {
+        $this->queueItems();
+      }
+      $server = $this->server();
+      if ($server) {
+        // Tell the server about the new index.
+        if ($server->enabled) {
+          $server->addIndex($this);
+        }
+        else {
+          $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
+          // When we add or remove an index, we can ignore all other tasks.
+          $tasks[$server->machine_name][$this->machine_name] = array('add');
+          \Drupal::state()->set('search_api_tasks', $tasks);
+        }
       }
     }
-
-    // If there are no new values, just return 0.
-    if (!$changed) {
-      return 0;
+    else {
+      $this->postUpdate();
     }
+  }
 
+  /**
+   * Handles updates of this index.
+   *
+   * Called from postSave() if it was an update.
+   */
+  protected function postUpdate() {
     // Reset the index's internal property cache to correctly incorporate new
     // settings.
     $this->resetCaches();
 
-    return $this->save();
+    // If the server was changed, we have to call the appropriate service class
+    // hook methods.
+    if ($this->server != $this->original->server) {
+      // Server changed - inform old and new ones.
+      if ($this->original->server) {
+        $old_server = search_api_server_load($this->original->server);
+        // The server might have changed because the old one was deleted:
+        if ($old_server) {
+          if ($old_server->enabled) {
+            $old_server->removeIndex($this);
+          }
+          else {
+            $tasks = \Drupal::state()->get('search_api_tasks') ? : array();
+            // When we add or remove an index, we can ignore all other tasks.
+            $tasks[$old_server->machine_name][$this->machine_name] = array('remove');
+            \Drupal::state()->set('search_api_tasks', $tasks);
+          }
+        }
+      }
+
+      if ($this->server) {
+        $new_server = $this->server(TRUE);
+        // If the server is enabled, we call addIndex(); otherwise, we save the task.
+        if ($new_server->enabled) {
+          $new_server->addIndex($this);
+        }
+        else {
+          $tasks = \Drupal::state()->get('search_api_tasks') ? : array();
+          // When we add or remove an index, we can ignore all other tasks.
+          $tasks[$new_server->machine_name][$this->machine_name] = array('add');
+          \Drupal::state()->set('search_api_tasks', $tasks);
+          unset($new_server);
+        }
+      }
+
+      // We also have to re-index all content.
+      _search_api_index_reindex($this);
+    }
+
+    // If the fields were changed, call the appropriate service class hook method
+    // and re-index the content, if necessary. Also, clear the fields cache.
+    $old_fields = $this->original->options + array('fields' => array());
+    $old_fields = $old_fields['fields'];
+    $new_fields = $this->options + array('fields' => array());
+    $new_fields = $new_fields['fields'];
+    if ($old_fields != $new_fields) {
+      cache_clear_all($this->getCacheId(), 'cache', TRUE);
+      if ($this->server && $this->server()->fieldsUpdated($this)) {
+        _search_api_index_reindex($this);
+      }
+    }
+
+    // If additional fields changed, clear the index's specific cache which
+    // includes them.
+    $old_additional = $this->original->options + array('additional fields' => array());
+    $old_additional = $old_additional['additional fields'];
+    $new_additional = $this->options + array('additional fields' => array());
+    $new_additional = $new_additional['additional fields'];
+    if ($old_additional != $new_additional) {
+      cache_clear_all($this->getCacheId() . '-0-1', 'cache');
+    }
+
+    // If the index's enabled or read-only status is being changed, queue or
+    // dequeue items for indexing.
+    if (!$this->read_only && $this->enabled != $this->original->enabled) {
+      if ($this->enabled) {
+        $this->queueItems();
+      }
+      else {
+        $this->dequeueItems();
+      }
+    }
+    elseif ($this->read_only != $this->original->read_only) {
+      if ($this->read_only) {
+        $this->dequeueItems();
+      }
+      else {
+        $this->queueItems();
+      }
+    }
+
+    // If the cron batch size changed, empty the cron queue for this index.
+    $old_cron = $this->original->options + array('cron_limit' => NULL);
+    $old_cron = $old_cron['cron_limit'];
+    $new_cron = $this->options + array('cron_limit' => NULL);
+    $new_cron = $new_cron['cron_limit'];
+    if ($old_cron !== $new_cron) {
+      _search_api_empty_cron_queue($this, TRUE);
+    }
+  }
+
+  /**
+   * Overrides \Drupal\Core\Entity\Entity::postDelete().
+   *
+   * Executes necessary tasks when the index is removed from the database.
+   */
+  public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    foreach ($entities as $index) {
+      if ($server = $index->server()) {
+        if ($server->enabled) {
+          $server->removeIndex($index);
+        }
+        // Once the index is deleted, servers won't be able to tell whether it was
+        // read-only. Therefore, we prefer to err on the safe side and don't call
+        // the server method at all if the index is read-only and the server
+        // currently disabled.
+        elseif (empty($index->read_only)) {
+          $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
+          $tasks[$server->machine_name][$index->machine_name] = array('remove');
+          \Drupal::state()->set('search_api_tasks', $tasks);
+        }
+      }
+
+      // Stop tracking entities for indexing.
+      $index->dequeueItems();
+
+      // Delete index's cache.
+      cache_clear_all($index->getCacheId(''), 'cache', TRUE);
+    }
+  }
+
+  /**
+   * Puts all of this index's items into the indexing queue.
+   *
+   * Called when the index is created or enabled.
+   */
+  public function queueItems() {
+    if (!$this->read_only) {
+      $this->datasource()->startTracking(array($this));
+    }
+  }
+
+  /**
+   * Clear this index's indexing queue.
+   *
+   * Called when the index is disabled or deleted.
+   */
+  public function dequeueItems() {
+    $this->datasource()->stopTracking(array($this));
+    _search_api_empty_cron_queue($this);
   }
 
   /**
    * Schedules this search index for re-indexing.
    *
-   * @return
+   * @return bool
    *   TRUE on success, FALSE on failure.
    */
   public function reindex() {
@@ -313,14 +428,14 @@ class Index extends ConfigEntityBase {
       return TRUE;
     }
     _search_api_index_reindex($this);
-    module_invoke_all('search_api_index_reindex', $this, FALSE);
+    \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', $this, FALSE);
     return TRUE;
   }
 
   /**
    * Clears this search index and schedules all of its items for re-indexing.
    *
-   * @return
+   * @return bool
    *   TRUE on success, FALSE on failure.
    */
   public function clear() {
@@ -333,14 +448,14 @@ class Index extends ConfigEntityBase {
       $server->deleteItems('all', $this);
     }
     else {
-      $tasks = Drupal::state()->get('search_api_tasks') ?: array();
+      $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
       // If the index was cleared or newly added since the server was last
       // enabled, we don't need to do anything.
       if (!isset($tasks[$server->machine_name][$this->machine_name])
           || (array_search('add', $tasks[$server->machine_name][$this->machine_name]) === FALSE
               && array_search('clear', $tasks[$server->machine_name][$this->machine_name]) === FALSE)) {
         $tasks[$server->machine_name][$this->machine_name][] = 'clear';
-        Drupal::state()->set('search_api_tasks', $tasks);
+        \Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
 

@@ -32,7 +32,7 @@ class TestService extends ServicePluginBase {
   public function indexItems(SearchApiIndex $index, array $items) {
     // Refuse to index items with IDs that are multiples of 8 unless the
     // "search_api_test_index_all" state is set.
-    if (Drupal::state()->get('search_api_test_index_all')) {
+    if (\Drupal::state()->get('search_api_test_index_all')) {
       return $this->index($index, array_keys($items));
     }
     $ret = array();
