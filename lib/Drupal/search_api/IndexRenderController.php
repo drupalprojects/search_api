@@ -11,53 +11,33 @@ use Drupal\Core\Entity\EntityRenderControllerInterface;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Provides a Index render controller.
+ * Provides a search index render controller.
  */
 class IndexRenderController implements EntityRenderControllerInterface {
 
   /**
-   * Implements \Drupal\Core\Entity\EntityRenderControllerInterface::buildContent().
+   * {@inheritdoc}
    */
   public function buildContent(array $entities, array $displays, $view_mode, $langcode = NULL) {
+    // @todo Is there anything we should do here?
     return array();
   }
 
   /**
-   * Implements Drupal\Core\Entity\EntityRenderControllerInterface::view().
+   * {@inheritdoc}
    */
   public function view(EntityInterface $entity, $view_mode = 'full', $langcode = NULL) {
-    $build = $this->viewMultiple(array($entity), $view_mode, $langcode);
+    $build = $this->viewMultiple(array($entity->id() => $entity), $view_mode, $langcode);
     return reset($build);
   }
 
   /**
-   * Implements Drupal\Core\Entity\EntityRenderControllerInterface::viewMultiple().
+   * {@inheritdoc}
    */
   public function viewMultiple(array $entities = array(), $view_mode = 'full', $langcode = NULL) {
     $build = array();
-    foreach ($entities as $entity_id => $entity) {
-      $plugin = $entity->getPlugin();
-      $plugin_id = $plugin->getPluginId();
-
-      if ($content = $plugin->build()) {
-        $configuration = $plugin->getConfig();
-        $build[$entity_id] = array(
-          '#theme' => 'block',
-          'content' => $content,
-          '#configuration' => $configuration,
-          '#plugin_id' => $plugin_id,
-        );
-        $build[$entity_id]['#configuration']['label'] = check_plain($configuration['label']);
-      }
-      else {
-        $build[$entity_id] = array();
-      }
-
-      list($base_id) = explode(':', $plugin_id);
-      drupal_alter(array('block_view', "block_view_$base_id"), $build[$entity_id], $plugin);
-
-      // @todo Remove after fixing http://drupal.org/node/1989568.
-      $build[$entity_id]['#block'] = $entity;
+    foreach ($entities as $entity) {
+      // @todo Implement.
     }
     return $build;
   }
