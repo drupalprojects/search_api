@@ -13,89 +13,70 @@ search_api.cron:
 
 search_api.index.*:
   type: mapping
-  label: 'Block'
+  label: 'Search index'
   mapping:
-    id:
+    machine_name:
       type: string
-      label: 'ID'
+      label: 'Machine name'
+    name:
+      type: label
+      label: Name'
     uuid:
       type: string
       label: 'UUID'
-    region:
+    description:
+      type: text
+      label: 'Description'
+    server:
       type: string
-      label: 'Region'
-    weight:
-      type: integer
-      label: 'Weight'
-    module:
+      label: 'Server'
+    item_type:
       type: string
-      label: 'Module'
-    status:
-      type: boolean
-      label: 'Status'
-    visibility:
+      label: 'Item type'
+    options:
       type: mapping
-      label: 'Visibility settings'
+      label: 'Options'
       mapping:
-        path:
-          type: mapping
-          label: 'Pages'
-          mapping:
-            visibility:
-              type: integer
-              label: 'Visibility'
-            pages:
-              type: string
-              label: 'Show block on specific pages'
-        role:
-          type: mapping
-          label: 'Roles'
-          mapping:
-            roles:
-              type: sequence
-              label: 'Show block for specific roles'
-              sequence:
-                - type: string
-                  label: 'Role'
-        node_type:
-          type: mapping
-          label: 'Content types'
-          mapping:
-            types:
-              type: sequence
-              label: 'Show block for specific content types'
-              sequence:
-               - type: string
-                 label: 'Node type'
-        visibility__active_tab:
-          type: string
-          label: 'Visibility active tab'
-    plugin:
-      type: string
-      label: 'Plugin'
-    settings:
-      type: mapping
-      label: 'Block settings'
-      mapping:
-        label:
-          type: label
-          label: 'Description'
-        label_display:
-          type: string
-          label: 'Display title'
-        cache:
+        cron_limit:
           type: integer
-          label: 'Cache'
-        status:
+          label: 'Cron batch size'
+        index_directly:
           type: boolean
-          label: 'Status'
-        info:
-          type: label
-          label: 'Admin info'
-        view_mode:
-          type: string
-          label: 'View mode'
-    langcode:
-      type: string
-      label: 'Language code'
-
+          label: 'Index items immediately'
+        fields:
+          type: sequence
+          label: 'Fields'
+          sequence:
+            - type: mapping
+              mapping:
+                type:
+                  type: string
+                real_type:
+                  type: string
+                boost:
+                  type: float
+                entity_type:
+                  type: string
+        additional_fields:
+          type: sequence
+          label: 'Additional fields'
+          sequence:
+            - type: string
+        processors:
+          type: sequence
+          label: 'Processors'
+          sequence:
+            - type: mapping
+              mapping:
+                status:
+                  type: boolean
+                weight:
+                  type: integer
+                settings:
+                  type: mapping
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    read_only:
+      type: boolean
+      label: 'Read-only'

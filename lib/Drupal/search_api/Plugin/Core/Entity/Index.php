@@ -7,7 +7,9 @@
 
 namespace Drupal\search_api\Plugin\Core\Entity;
 
+use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\search_api\IndexInterface;
 
@@ -108,7 +110,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *     of the ID field, meaning that servers will ignore this and merely index
    *     the entity's ID. Components displaying this field, though, are advised
    *     to use the entity label instead of the ID.
-   * - additional fields: An associative array with keys and values being the
+   * - additional_fields: An associative array with keys and values being the
    *   field identifiers of related entities whose fields should be displayed.
    * - data_alter_callbacks: An array of all data alterations available. Keys
    *   are the alteration identifiers, the values are arrays containing the
@@ -199,6 +201,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var array
    */
   protected $fulltext_fields = array();
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return isset($this->machine_name) ? $this->machine_name : NULL;
+  }
 
   /**
    * {@inheritdoc}
