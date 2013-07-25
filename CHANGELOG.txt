@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2050117 by izus, drunken monkey: Updated README.txt to reflect removed
+  sub-modules.
 - #2041365 by drunken monkey: Fixed error reporting for the MLT contextual
   filter.
 - #2044711 by stBorchert, drunken monkey: Fixed facet adapter's
