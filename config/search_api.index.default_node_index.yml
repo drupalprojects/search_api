@@ -5,6 +5,7 @@ server: ''
 item_type: node
 enabled: '0'
 read_only: '0'
+langcode: 'en'
 options:
   index_directly: '1'
   cron_limit: '50'

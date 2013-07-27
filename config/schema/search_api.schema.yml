@@ -33,6 +33,9 @@ search_api.index.*:
     item_type:
       type: string
       label: 'Item type'
+    langcode:
+      type: string
+      label: 'Language code'
     options:
       type: mapping
       label: 'Options'
