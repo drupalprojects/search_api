@@ -30,7 +30,6 @@ use Drupal\search_api\IndexInterface;
  *     }
  *   },
  *   config_prefix = "search_api.index",
- *   fieldable = FALSE,
  *   entity_keys = {
  *     "id" = "machine_name",
  *     "label" = "name",
