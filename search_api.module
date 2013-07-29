@@ -455,6 +455,15 @@ function search_api_entity_property_info() {
  * Calls the postCreate() method for the server.
  */
 function search_api_search_api_server_insert(SearchApiServer $server) {
+  // Check whether this is actually part of a revert.
+  $reverts = &drupal_static('search_api_search_api_server_delete', array());
+  if (isset($reverts[$server->machine_name])) {
+    $server->original = $reverts[$server->machine_name];
+    unset($reverts[$server->machine_name]);
+    search_api_search_api_server_update($server);
+    unset($server->original);
+    return;
+  }
   $server->postCreate();
 }
 
@@ -470,7 +479,7 @@ function search_api_search_api_server_update(SearchApiServer $server) {
       $index->reindex();
     }
   }
-  if ($server->enabled != $server->original->enabled) {
+  if (!empty($server->original) && $server->enabled != $server->original->enabled) {
     if ($server->enabled) {
       // Were there any changes in the server's indexes while it was disabled?
       $tasks = variable_get('search_api_tasks', array());
@@ -486,7 +495,8 @@ function search_api_search_api_server_update(SearchApiServer $server) {
                 $server->deleteItems('all', $index);
                 break;
               case 'clear all':
-                // Would normally be used with a fake index ID of "", since it doesn't matter.
+                // Would normally be used with a fake index ID of "", since it
+                // doesn't matter.
                 $server->deleteItems('all');
                 break;
               case 'fields':
@@ -526,14 +536,16 @@ function search_api_search_api_server_update(SearchApiServer $server) {
  * Calls the preDelete() method for the server.
  */
 function search_api_search_api_server_delete(SearchApiServer $server) {
-  $server->preDelete();
-
-
   // Only react on real delete, not revert.
-  if (!$server->hasStatus(ENTITY_IN_CODE)) {
-    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
-      $index->update(array('server' => NULL, 'enabled' => FALSE));
-    }
+  if ($server->hasStatus(ENTITY_IN_CODE)) {
+    $reverts = &drupal_static(__FUNCTION__, array());
+    $reverts[$server->machine_name] = $server;
+    return;
+  }
+
+  $server->preDelete();
+  foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+    $index->update(array('server' => NULL, 'enabled' => FALSE));
   }
 
   $tasks = variable_get('search_api_tasks', array());
@@ -548,6 +560,16 @@ function search_api_search_api_server_delete(SearchApiServer $server) {
  * the index is enabled).
  */
 function search_api_search_api_index_insert(SearchApiIndex $index) {
+  // Check whether this is actually part of a revert.
+  $reverts = &drupal_static('search_api_search_api_index_delete', array());
+  if (isset($reverts[$index->machine_name])) {
+    $index->original = $reverts[$index->machine_name];
+    unset($reverts[$index->machine_name]);
+    search_api_search_api_index_update($index);
+    unset($index->original);
+    return;
+  }
+
   $index->postCreate();
 }
 
@@ -555,6 +577,9 @@ function search_api_search_api_index_insert(SearchApiIndex $index) {
  * Implements hook_search_api_index_update().
  */
 function search_api_search_api_index_update(SearchApiIndex $index) {
+  // Call the datasource update function with the table this module provides.
+  search_api_index_update_datasource($index, 'search_api_item');
+
   // If the server was changed, we have to call the appropriate service class
   // hook methods.
   if ($index->server != $index->original->server) {
@@ -652,6 +677,12 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
  * Removes all data for indexes not available any more.
  */
 function search_api_search_api_index_delete(SearchApiIndex $index) {
+  // Only react on real delete, not revert.
+  if ($index->hasStatus(ENTITY_IN_CODE)) {
+    $reverts = &drupal_static(__FUNCTION__, array());
+    $reverts[$index->machine_name] = $index;
+    return;
+  }
   cache_clear_all($index->getCacheId(''), 'cache', TRUE);
   $index->postDelete();
 }
@@ -1740,6 +1771,38 @@ function search_api_extract_inner_type($type) {
     $type = substr($type, 5, -1);
   }
   return $type;
+}
+
+/**
+ * Helper function for reacting to index updates with regards to the datasource.
+ *
+ * When an overridden index is reverted, its numerical ID will sometimes change.
+ * Since the default datasource implementation uses that for referencing
+ * indexes, the index ID in the items table must be updated accordingly. This is
+ * implemented in this function.
+ *
+ * Modules implementing other datasource controllers, that use a table other
+ * than {search_api_item}, can use this function, too. It should be called
+ * uncoditionally in a hook_search_api_index_update() implementation. If this
+ * function isn't used, similar code should be added there.
+ *
+ * However, note that this is only necessary (and this function should only be
+ * called) if the indexes are referenced by numerical ID in the items table.
+ *
+ * @param SearchApiIndex $index
+ *   The index that was changed.
+ * @param string $table
+ *   The table containing items information, analogous to {search_api_item}.
+ * @param string $column
+ *   The column in $table that holds the index's numerical ID.
+ */
+function search_api_index_update_datasource(SearchApiIndex $index, $table, $column = 'index_id') {
+  if ($index->id != $index->original->id) {
+    db_update($table)
+      ->fields(array($column => $index->id))
+      ->condition($column, $index->original->id)
+      ->execute();
+  }
 }
 
 /**
