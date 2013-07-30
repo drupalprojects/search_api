@@ -557,9 +557,9 @@ function search_api_update_7114() {
  * Update variables to use the config storage or the State API.
  */
 function search_api_update_8000() {
-  update_variables_to_config('search_api.cron', array(
-    'search_api_batch_per_cron' => 'batch_count',
-    'search_api_index_worker_callback_runtime' => 'worker_runtime',
+  update_variables_to_config('search_api.settings', array(
+    'search_api_batch_per_cron' => 'cron_batch_count',
+    'search_api_index_worker_callback_runtime' => 'cron_worker_runtime',
   ));
   update_variables_to_state(array(
     'search_api_tasks' => 'search_api_tasks',

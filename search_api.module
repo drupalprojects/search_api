@@ -263,7 +263,7 @@ function search_api_permission() {
  */
 function search_api_cron() {
   $queue = DrupalQueue::get('search_api_indexing_queue');
-  $batch_count = \Drupal::config('search_api.cron')->get('batch_count');
+  $batch_count = \Drupal::config('search_api.settings')->get('cron_batch_count');
   foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE, 'read_only' => 0)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
@@ -302,7 +302,7 @@ function search_api_cron_queue_info() {
   return array(
     'search_api_indexing_queue' => array(
       'worker callback' => '_search_api_indexing_queue_process',
-      'time' => \Drupal::config('search_api.cron')->get('worker_runtime'),
+      'time' => \Drupal::config('search_api.settings')->get('cron_worker_runtime'),
     ),
   );
 }

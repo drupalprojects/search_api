@@ -1,0 +1,2 @@
+cron_batch_count: '10'
+cron_worker_runtime: '15'
