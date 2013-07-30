@@ -1476,7 +1476,7 @@ function search_api_admin_element_compare($a, $b) {
 function search_api_admin_index_fields(array $form, array &$form_state, SearchApiIndex $index) {
   $options = $index->getFields(FALSE, TRUE);
   $fields = $options['fields'];
-  $additional = $options['additional fields'];
+  $additional = $options['additional_fields'];
 
   // An array of option arrays for types, keyed by nesting level.
   $types = array(0 => search_api_field_types());
@@ -1705,7 +1705,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
       }
     }
     $options['fields'] = $fields;
-    unset($options['additional fields']);
+    unset($options['additional_fields']);
     $ret = $index->update(array('options' => $options));
 
     if ($ret) {
@@ -1726,7 +1726,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   }
   // Adding a related entity's fields.
   $prefix = $form_state['values']['additional']['field'];
-  $options['additional fields'][$prefix] = $prefix;
+  $options['additional_fields'][$prefix] = $prefix;
   $ret = $index->update(array('options' => $options));
 
   if ($ret) {

@@ -8,10 +8,15 @@
 namespace Drupal\search_api\Plugin\Core\Entity;
 
 use Drupal\Core\Annotation\Translation;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\search_api\ProcessorInterface;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
+use Drupal\search_api\SearchApiException;
 
 /**
  * Defines a search index configuration entity class.
@@ -144,6 +149,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public $read_only = 0;
 
+  /**
+   * The old entity version, when saving an update.
+   *
+   * @var \Drupal\search_api\IndexInterface|null
+   */
+  public $original;
+
   // Cache values, set when the corresponding methods are called for the first
   // time.
 
@@ -222,6 +234,78 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function readOnly() {
+    return $this->read_only;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setReadOnly($read_only) {
+    $this->read_only = $read_only;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemType() {
+    return $this->item_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityType() {
+    return $this->datasource()->getEntityType();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function datasource() {
+    if (!isset($this->datasource)) {
+      $this->datasource = search_api_get_datasource_controller($this->item_type);
+    }
+    return $this->datasource;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function serverId() {
+    return $this->server;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function server($reset = FALSE) {
+    if (!isset($this->server_object) || $reset) {
+      $this->server_object = $this->server ? search_api_server_load($this->server) : FALSE;
+      if ($this->server && !$this->server_object) {
+        throw new SearchApiException(t('Unknown server @server specified for index @name.', array('@server' => $this->server, '@name' => $this->machine_name)));
+      }
+    }
+    return $this->server_object ? $this->server_object : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOption($name, $default = NULL) {
+    return array_key_exists($name, $this->options) ? $this->options[$name] : $default;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOptions() {
+    return $this->options;
+  }
+
+  /**
    * Overrides \Drupal\Core\Config\Entity\ConfigEntityBase::preSave().
    *
    * Corrects some settings with specific restrictions.
@@ -237,7 +321,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->enabled = FALSE;
     }
     // This will also throw an exception if the server doesn't exist – which is good.
-    elseif (!$this->server(TRUE)->enabled) {
+    elseif (!$this->server(TRUE)->status()) {
       $this->enabled = FALSE;
     }
   }
@@ -257,13 +341,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $server = $this->server();
       if ($server) {
         // Tell the server about the new index.
-        if ($server->enabled) {
+        if ($server->status()) {
           $server->addIndex($this);
         }
         else {
           $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
           // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$server->machine_name][$this->machine_name] = array('add');
+          $tasks[$server->id()][$this->id()] = array('add');
           \Drupal::state()->set('search_api_tasks', $tasks);
         }
       }
@@ -285,19 +369,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // If the server was changed, we have to call the appropriate service class
     // hook methods.
-    if ($this->server != $this->original->server) {
+    if ($this->server != $this->original->serverId()) {
       // Server changed - inform old and new ones.
-      if ($this->original->server) {
-        $old_server = search_api_server_load($this->original->server);
+      if ($this->original->serverId()) {
+        $old_server = search_api_server_load($this->original->serverId());
         // The server might have changed because the old one was deleted:
         if ($old_server) {
-          if ($old_server->enabled) {
+          if ($old_server->status()) {
             $old_server->removeIndex($this);
           }
           else {
             $tasks = \Drupal::state()->get('search_api_tasks') ? : array();
             // When we add or remove an index, we can ignore all other tasks.
-            $tasks[$old_server->machine_name][$this->machine_name] = array('remove');
+            $tasks[$old_server->id()][$this->id()] = array('remove');
             \Drupal::state()->set('search_api_tasks', $tasks);
           }
         }
@@ -306,13 +390,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($this->server) {
         $new_server = $this->server(TRUE);
         // If the server is enabled, we call addIndex(); otherwise, we save the task.
-        if ($new_server->enabled) {
+        if ($new_server->status()) {
           $new_server->addIndex($this);
         }
         else {
           $tasks = \Drupal::state()->get('search_api_tasks') ? : array();
           // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$new_server->machine_name][$this->machine_name] = array('add');
+          $tasks[$new_server->id()][$this->id()] = array('add');
           \Drupal::state()->set('search_api_tasks', $tasks);
           unset($new_server);
         }
@@ -322,14 +406,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       _search_api_index_reindex($this);
     }
 
-    // If the fields were changed, call the appropriate service class hook method
-    // and re-index the content, if necessary. Also, clear the fields cache.
-    $old_fields = $this->original->options + array('fields' => array());
-    $old_fields = $old_fields['fields'];
-    $new_fields = $this->options + array('fields' => array());
-    $new_fields = $new_fields['fields'];
+    // If the fields were changed, call the appropriate service class hook
+    // method and re-index the content, if necessary. Also, clear the fields
+    // cache.
+    $old_fields = $this->original->getOption('fields', array());
+    $new_fields = $this->getOption('fields', array());
     if ($old_fields != $new_fields) {
-      cache_clear_all($this->getCacheId(), 'cache', TRUE);
+      $this->cache()->deleteTags(array('search_api_index-fields' => $this->id()));
       if ($this->server && $this->server()->fieldsUpdated($this)) {
         _search_api_index_reindex($this);
       }
@@ -337,38 +420,29 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // If additional fields changed, clear the index's specific cache which
     // includes them.
-    $old_additional = $this->original->options + array('additional fields' => array());
-    $old_additional = $old_additional['additional fields'];
-    $new_additional = $this->options + array('additional fields' => array());
-    $new_additional = $new_additional['additional fields'];
+    $old_additional = $this->original->getOption('additional_fields', array());
+    $new_additional = $this->getOption('additional_fields', array());
     if ($old_additional != $new_additional) {
-      cache_clear_all($this->getCacheId() . '-0-1', 'cache');
+      $this->cache()->delete($this->getCacheId() . '-0-1');
     }
 
-    // If the index's enabled or read-only status is being changed, queue or
-    // dequeue items for indexing.
-    if (!$this->read_only && $this->enabled != $this->original->enabled) {
-      if ($this->enabled) {
+    // We only index (and, therefore, track) items if an index is enabled and
+    // not read-only. If this combined state changed, we have to start/stop
+    // tracking.
+    $track_old = $this->original->status() && $this->original->readOnly();
+    $track_new = $this->status() && $this->readOnly();
+    if ($track_old != $track_new) {
+      if ($track_new) {
         $this->queueItems();
       }
       else {
         $this->dequeueItems();
-      }
-    }
-    elseif ($this->read_only != $this->original->read_only) {
-      if ($this->read_only) {
-        $this->dequeueItems();
-      }
-      else {
-        $this->queueItems();
       }
     }
 
     // If the cron batch size changed, empty the cron queue for this index.
-    $old_cron = $this->original->options + array('cron_limit' => NULL);
-    $old_cron = $old_cron['cron_limit'];
-    $new_cron = $this->options + array('cron_limit' => NULL);
-    $new_cron = $new_cron['cron_limit'];
+    $old_cron = $this->original->getOption('cron_limit');
+    $new_cron = $this->getOption('cron_limit');
     if ($old_cron !== $new_cron) {
       _search_api_empty_cron_queue($this, TRUE);
     }
@@ -382,16 +456,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
     foreach ($entities as $index) {
       if ($server = $index->server()) {
-        if ($server->enabled) {
+        if ($server->status()) {
           $server->removeIndex($index);
         }
         // Once the index is deleted, servers won't be able to tell whether it was
         // read-only. Therefore, we prefer to err on the safe side and don't call
         // the server method at all if the index is read-only and the server
         // currently disabled.
-        elseif (empty($index->read_only)) {
+        elseif (!$index->read_only()) {
           $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
-          $tasks[$server->machine_name][$index->machine_name] = array('remove');
+          $tasks[$server->id()][$index->id()] = array('remove');
           \Drupal::state()->set('search_api_tasks', $tasks);
         }
       }
@@ -400,14 +474,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $index->dequeueItems();
 
       // Delete index's cache.
-      cache_clear_all($index->getCacheId(''), 'cache', TRUE);
+      $index->cache()->deleteTags(array('search_api_index' => $index->id()));
     }
   }
 
   /**
-   * Puts all of this index's items into the indexing queue.
-   *
-   * Called when the index is created or enabled.
+   * {@inheritdoc}
    */
   public function queueItems() {
     if (!$this->read_only) {
@@ -416,9 +488,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Clear this index's indexing queue.
-   *
-   * Called when the index is disabled or deleted.
+   * {@inheritdoc}
    */
   public function dequeueItems() {
     $this->datasource()->stopTracking(array($this));
@@ -426,25 +496,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Schedules this search index for re-indexing.
-   *
-   * @return bool
-   *   TRUE on success, FALSE on failure.
+   * {@inheritdoc}
    */
   public function reindex() {
     if (!$this->server || $this->read_only) {
       return TRUE;
     }
     _search_api_index_reindex($this);
-    \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', $this, FALSE);
+    \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, FALSE));
     return TRUE;
   }
 
   /**
-   * Clears this search index and schedules all of its items for re-indexing.
-   *
-   * @return bool
-   *   TRUE on success, FALSE on failure.
+   * {@inheritdoc}
    */
   public function clear() {
     if (!$this->server || $this->read_only) {
@@ -452,23 +516,23 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     $server = $this->server();
-    if ($server->enabled) {
+    if ($server->status()) {
       $server->deleteItems('all', $this);
     }
     else {
       $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
       // If the index was cleared or newly added since the server was last
       // enabled, we don't need to do anything.
-      if (!isset($tasks[$server->machine_name][$this->machine_name])
-          || (array_search('add', $tasks[$server->machine_name][$this->machine_name]) === FALSE
-              && array_search('clear', $tasks[$server->machine_name][$this->machine_name]) === FALSE)) {
-        $tasks[$server->machine_name][$this->machine_name][] = 'clear';
+      if (!isset($tasks[$server->id()][$this->id()])
+          || (array_search('add', $tasks[$server->id()][$this->id()]) === FALSE
+              && array_search('clear', $tasks[$server->id()][$this->id()]) === FALSE)) {
+        $tasks[$server->id()][$this->id()][] = 'clear';
         \Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
 
     _search_api_index_reindex($this);
-    module_invoke_all('search_api_index_reindex', $this, TRUE);
+    \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, TRUE));
     return TRUE;
   }
 
@@ -487,87 +551,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Get the controller object of the data source used by this index.
-   *
-   * @throws SearchApiException
-   *   If the specified item type or data source doesn't exist or is invalid.
-   *
-   * @return DatasourceInterface
-   *   The data source controller for this index.
+   * {@inheritdoc}
    */
-  public function datasource() {
-    if (!isset($this->datasource)) {
-      $this->datasource = search_api_get_datasource_controller($this->item_type);
-    }
-    return $this->datasource;
-  }
-
-  /**
-   * Get the entity type of items in this index.
-   *
-   * @return string|null
-   *   An entity type string if the items in this index are entities; NULL
-   *   otherwise.
-   */
-  public function getEntityType() {
-    return $this->datasource()->getEntityType();
-  }
-
-  /**
-   * Get the server this index lies on.
-   *
-   * @param $reset
-   *   Whether to reset the internal cache. Set to TRUE when the index' $server
-   *   property has just changed.
-   *
-   * @throws SearchApiException
-   *   If $this->server is set, but no server with that machine name exists.
-   *
-   * @return Server
-   *   The server associated with this index, or NULL if this index currently
-   *   doesn't lie on a server.
-   */
-  public function server($reset = FALSE) {
-    if (!isset($this->server_object) || $reset) {
-      $this->server_object = $this->server ? search_api_server_load($this->server) : FALSE;
-      if ($this->server && !$this->server_object) {
-        throw new SearchApiException(t('Unknown server @server specified for index @name.', array('@server' => $this->server, '@name' => $this->machine_name)));
-      }
-    }
-    return $this->server_object ? $this->server_object : NULL;
-  }
-
-  /**
-   * Create a query object for this index.
-   *
-   * @param $options
-   *   Associative array of options configuring this query. See
-   *   QueryInterface::__construct().
-   *
-   * @throws SearchApiException
-   *   If the index is currently disabled.
-   *
-   * @return QueryInterface
-   *   A query object for searching this index.
-   */
-  public function query($options = array()) {
+  public function query(array $options = array()) {
     if (!$this->enabled) {
       throw new SearchApiException(t('Cannot search on a disabled index.'));
     }
-    return $this->server()->query($this, $options);
+    // @todo What to return here?
   }
 
-
   /**
-   * Indexes items on this index. Will return an array of IDs of items that
-   * should be marked as indexed – i.e., items that were either rejected by a
-   * data-alter callback or were successfully indexed.
-   *
-   * @param array $items
-   *   An array of items to index.
-   *
-   * @return array
-   *   An array of the IDs of all items that should be marked as indexed.
+   * {@inheritdoc}
    */
   public function index(array $items) {
     if ($this->read_only) {
@@ -596,10 +590,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Mark all items that are rejected as indexed.
     $ret = array_keys($items);
-    drupal_alter('search_api_index_items', $items, $this);
-    if ($items) {
-      $this->dataAlter($items);
-    }
+    \Drupal::moduleHandler()->alter('search_api_index_items', $items, $this);
     $ret = array_diff($ret, array_keys($items));
 
     // Items that are rejected should also be deleted from the server.
@@ -635,41 +626,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Calls data alteration hooks for a set of items, according to the index
-   * options.
-   *
-   * @param array $items
-   *   An array of items to be altered.
-   *
-   * @return Index
-   *   The called object.
+   * {@inheritdoc}
    */
-  public function dataAlter(array &$items) {
-    // First, execute our own search_api_language data alteration.
-    foreach ($items as &$item) {
-      $item->search_api_language = isset($item->language) ? $item->language : LANGUAGE_NONE;
-    }
-
-    foreach ($this->getAlterCallbacks() as $callback) {
-      $callback->alterItems($items);
-    }
-
-    return $this;
-  }
-
-  /**
-   * Property info alter callback that adds the infos of the properties added by
-   * data alter callbacks.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped data.
-   * @param $property_info
-   *   The original property info.
-   *
-   * @return array
-   *   The altered property info.
-   */
-  public function propertyInfoAlter(EntityMetadataWrapper $wrapper, array $property_info) {
+  public function propertyInfoAlter(ComplexDataInterface $wrapper, array $property_info) {
+    // @todo Adapt to ComplexDataInterface.
     if (entity_get_property_info($wrapper->type())) {
       // Overwrite the existing properties with the list of properties including
       // all fields regardless of the used bundle.
@@ -701,50 +661,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Loads all enabled data alterations for this index in proper order.
-   *
-   * @return array
-   *   All enabled callbacks for this index, as ProcessorInterface
-   *   objects.
-   */
-  public function getAlterCallbacks() {
-    if (isset($this->callbacks)) {
-      return $this->callbacks;
-    }
-
-    $this->callbacks = array();
-    if (empty($this->options['data_alter_callbacks'])) {
-      return $this->callbacks;
-    }
-    $callback_settings = $this->options['data_alter_callbacks'];
-    $infos = search_api_get_alter_callbacks();
-
-    foreach ($callback_settings as $id => $settings) {
-      if (empty($settings['status'])) {
-        continue;
-      }
-      if (empty($infos[$id]) || !class_exists($infos[$id]['class'])) {
-        watchdog('search_api', t('Undefined data alteration @class specified in index @name', array('@class' => $id, '@name' => $this->name)), NULL, WATCHDOG_WARNING);
-        continue;
-      }
-      $class = $infos[$id]['class'];
-      $callback = new $class($this, empty($settings['settings']) ? array() : $settings['settings']);
-      if (!($callback instanceof ProcessorInterface)) {
-        watchdog('search_api', t('Unknown callback class @class specified for data alteration @name', array('@class' => $class, '@name' => $id)), NULL, WATCHDOG_WARNING);
-        continue;
-      }
-
-      $this->callbacks[$id] = $callback;
-    }
-    return $this->callbacks;
-  }
-
-  /**
-   * Loads all enabled processors for this index in proper order.
-   *
-   * @return array
-   *   All enabled processors for this index, as ProcessorInterface
-   *   objects.
+   * {@inheritdoc}
    */
   public function getProcessors() {
     if (isset($this->processors)) {
@@ -779,18 +696,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Preprocess data items for indexing. Data added by data alter callbacks will
-   * be available on the items.
-   *
-   * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
-   * n-grams, word splitting, stripping stop words, etc.) only on the items'
-   * fulltext fields. Other fields should usually be left untouched.
-   *
-   * @param array $items
-   *   An array of items to be preprocessed for indexing.
-   *
-   * @return Index
-   *   The called object.
+   * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($this->getProcessors() as $processor) {
@@ -799,21 +705,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return $this;
   }
 
-
   /**
-   * Preprocess a search query.
-   *
-   * The same applies as when preprocessing indexed items: typically, only the
-   * fulltext search keys should be processed, queries on specific fields should
-   * usually not be altered.
-   *
-   * @param DefaultQuery $query
-   *   The object representing the query to be executed.
-   *
-   * @return Index
-   *   The called object.
+   * {@inheritdoc}
    */
-  public function preprocessSearchQuery(DefaultQuery $query) {
+  public function preprocessSearchQuery(QueryInterface $query) {
     foreach ($this->getProcessors() as $processor) {
       $processor->preprocessSearchQuery($query);
     }
@@ -821,22 +716,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Postprocess search results before display.
-   *
-   * If a class is used for both pre- and post-processing a search query, the
-   * same object will be used for both calls (so preserving some data or state
-   * locally is possible).
-   *
-   * @param array $response
-   *   An array containing the search results. See
-   *   ServiceInterface->search() for the detailed format.
-   * @param DefaultQuery $query
-   *   The object representing the executed query.
-   *
-   * @return Index
-   *   The called object.
+   * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, DefaultQuery $query) {
+  public function postprocessSearchResults(array &$response, QueryInterface $query) {
     // Postprocessing is done in exactly the opposite direction than preprocessing.
     foreach (array_reverse($this->getProcessors()) as $processor) {
       $processor->postprocessSearchResults($response, $query);
@@ -845,46 +727,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Returns a list of all known fields for this index.
-   *
-   * @param $only_indexed (optional)
-   *   Return only indexed fields, not all known fields. Defaults to TRUE.
-   * @param $get_additional (optional)
-   *   Return not only known/indexed fields, but also related entities whose
-   *   fields could additionally be added to the index.
-   *
-   * @return array
-   *   An array of all known fields for this index. Keys are the field
-   *   identifiers, the values are arrays for specifying the field settings. The
-   *   structure of those arrays looks like this:
-   *   - name: The human-readable name for the field.
-   *   - description: A description of the field, if available.
-   *   - indexed: Boolean indicating whether the field is indexed or not.
-   *   - type: The type set for this field. One of the types returned by
-   *     search_api_default_field_types().
-   *   - real_type: (optional) If a custom data type was selected for this
-   *     field, this type will be stored here, and "type" contain the fallback
-   *     default data type.
-   *   - boost: A boost value for terms found in this field during searches.
-   *     Usually only relevant for fulltext fields.
-   *   - entity_type (optional): If set, the type of this field is really an
-   *     entity. The "type" key will then contain "integer", meaning that
-   *     servers will ignore this and merely index the entity's ID. Components
-   *     displaying this field, though, are advised to use the entity label
-   *     instead of the ID.
-   *   If $get_additional is TRUE, this array is encapsulated in another
-   *   associative array, which contains the above array under the "fields" key,
-   *   and a list of related entities (field keys mapped to names) under the
-   *   "additional fields" key.
+   * {@inheritdoc}
    */
   public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
+    // @todo Adapt to ComplexDataInterface.
     $only_indexed = $only_indexed ? 1 : 0;
     $get_additional = $get_additional ? 1 : 0;
 
     // First, try the static cache and the persistent cache bin.
     if (empty($this->fields[$only_indexed][$get_additional])) {
       $cid = $this->getCacheId() . "-$only_indexed-$get_additional";
-      $cache = cache_get($cid);
+      $cache = $this->cache()->get($cid);
       if ($cache) {
         $this->fields[$only_indexed][$get_additional] = $cache->data;
       }
@@ -898,7 +751,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $entity_types = entity_get_info();
 
       // First we need all already added prefixes.
-      $added = ($only_indexed || empty($this->options['additional fields'])) ? array() : $this->options['additional fields'];
+      $added = ($only_indexed || empty($this->options['additional_fields'])) ? array() : $this->options['additional_fields'];
       foreach (array_keys($fields) as $key) {
         $len = strlen($key) + 1;
         $pos = $len;
@@ -1025,10 +878,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       else {
         $options = array();
         $options['fields'] = $flat;
-        $options['additional fields'] = $additional;
+        $options['additional_fields'] = $additional;
         $this->fields[$only_indexed][$get_additional] =  $options;
       }
-      cache_set($cid, $this->fields[$only_indexed][$get_additional]);
+      $tags['search_api_index'] = $this->id();
+      $tags['search_api_index-fields'] = $this->id();
+      $this->cache()->set($cid, $this->fields[$only_indexed][$get_additional],
+          CacheBackendInterface::CACHE_PERMANENT, $tags);
     }
 
     return $this->fields[$only_indexed][$get_additional];
@@ -1059,33 +915,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Get the cache ID prefix used for this index's caches.
-   *
-   * @param $type
-   *   The type of cache. Currently only "fields" is used.
-   *
-   * @return
-   *   The cache ID (prefix) for this index's caches.
+   * {@inheritdoc}
+   */
+  public function cache() {
+    return cache();
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getCacheId($type = 'fields') {
     return 'search_api:index-' . $this->machine_name . '--' . $type;
   }
 
   /**
-   * Helper function for creating an entity metadata wrapper appropriate for
-   * this index.
-   *
-   * @param $item
-   *   Unless NULL, an item of this index's item type which should be wrapped.
-   * @param $alter
-   *   Whether to apply the index's active data alterations on the property
-   *   information used. To also apply the data alteration to the wrapped item,
-   *   execute Index::dataAlter() on it before calling this method.
-   *
-   * @return EntityMetadataWrapper
-   *   A wrapper for the item type of this index, optionally loaded with the
-   *   given data and having additional fields according to the data alterations
-   *   of this index.
+   * {@inheritdoc}
    */
   public function entityWrapper($item = NULL, $alter = TRUE) {
     $info['property info alter'] = $alter ? array($this, 'propertyInfoAlter') : '_search_api_wrapper_add_all_properties';
@@ -1094,25 +938,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Helper method to load items from the type lying on this index.
-   *
-   * @param array $ids
-   *   The IDs of the items to load.
-   *
-   * @return array
-   *   The requested items, as loaded by the data source.
-   *
-   * @see DatasourceInterface::loadItems()
+   * {@inheritdoc}
    */
   public function loadItems(array $ids) {
     return $this->datasource()->loadItems($ids);
   }
 
   /**
-   * Reset internal static caches.
-   *
-   * Should be used when things like fields or data alterations change to avoid
-   * using stale data.
+   * {@inheritdoc}
    */
   public function resetCaches() {
     $this->datasource = NULL;

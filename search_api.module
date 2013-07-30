@@ -1813,19 +1813,18 @@ function _search_api_extract_entity_value(EntityMetadataWrapper $wrapper, $fullt
 }
 
 /**
- * Load the search server with the specified id.
+ * Load the search server with the specified ID.
  *
- * @param $id
- *   The search server's id.
- * @param $reset
+ * @param string $id
+ *   The search server's ID.
+ * @param bool $reset
  *   Whether to reset the internal cache.
  *
- * @return SearchApiServer
+ * @return \Drupal\search_api\ServerInterface|null
  *   An object representing the server with the specified id.
  */
 function search_api_server_load($id, $reset = FALSE) {
-  $ret = search_api_server_load_multiple(array($id), array(), $reset);
-  return $ret ? reset($ret) : FALSE;
+  return entity_load('search_api_server', $id, $reset);
 }
 
 /**

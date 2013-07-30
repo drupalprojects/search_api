@@ -224,11 +224,6 @@ class Server extends ConfigEntityBase {
     return $this->proxy->deleteItems($ids, $index);
   }
 
-  public function query(Index $index, $options = array()) {
-    $this->ensureProxy();
-    return $this->proxy->query($index, $options);
-  }
-
   public function search(QueryInterface $query) {
     $this->ensureProxy();
     return $this->proxy->search($query);
