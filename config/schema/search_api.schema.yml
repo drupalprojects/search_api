@@ -2,7 +2,7 @@
 
 search_api.settings:
   type: mapping
-  label: 'Search API cron settings'
+  label: 'Search API settings'
   mapping:
     cron_batch_count:
       type: integer
