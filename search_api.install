@@ -4,6 +4,8 @@
  * @file
  * Install, update and uninstall functions for the Search API module.
  */
+use Drupal\Component\Uuid\Uuid;
+use Drupal\Core\Language\Language;
 
 /**
  * Implements hook_schema().
@@ -570,6 +572,32 @@ function search_api_update_8000() {
  * Update search indexes to be stored in the configuration.
  */
 function search_api_update_8001() {
-  // remove id
-  // add uuid
+  $uuid = new Uuid();
+  $result = db_query('SELECT * FROM {search_api_index}');
+  $ignored['id'] = TRUE;
+  $ignored['status'] = TRUE;
+  $ignored['module'] = TRUE;
+  foreach ($result as $index) {
+    // Save the config object.
+    $config = \Drupal::config('search_api.index.' . $index->machine_name);
+    $config->set('uuid', $uuid->generate());
+    foreach ($index as $key => $value) {
+      if (isset($ignored[$key])) {
+        continue;
+      }
+      if ($key == 'options') {
+        $value = unserialize($value);
+      }
+      $config->set($key, $value);
+    }
+    $config->set('langcode', Language::LANGCODE_NOT_SPECIFIED);
+    $config->save();
+  }
+}
+
+/**
+ * Drop the {search_api_index} table.
+ */
+function search_api_update_8002() {
+  db_drop_table('search_api_index');
 }
