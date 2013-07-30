@@ -88,7 +88,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
   /**
    * The type of items stored in this index.
-   * Immutable.
    *
    * @var string
    */
@@ -171,7 +170,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var \Drupal\search_api\ServerInterface
    */
-  protected $server_object = NULL;
+  protected $serverObject = NULL;
 
   /**
    * All enabled data alterations for this index.
@@ -192,7 +191,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var array
    */
-  protected $added_properties = NULL;
+  protected $addedProperties = NULL;
 
   /**
    * Static cache for the results of getFields().
@@ -211,7 +210,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var array
    */
-  protected $fulltext_fields = array();
+  protected $fulltextFields = array();
 
   /**
    * {@inheritdoc}
@@ -282,13 +281,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function server($reset = FALSE) {
-    if (!isset($this->server_object) || $reset) {
-      $this->server_object = $this->server ? search_api_server_load($this->server) : FALSE;
-      if ($this->server && !$this->server_object) {
+    if (!isset($this->serverObject) || $reset) {
+      $this->serverObject = $this->server ? search_api_server_load($this->server) : FALSE;
+      if ($this->server && !$this->serverObject) {
         throw new SearchApiException(t('Unknown server @server specified for index @name.', array('@server' => $this->server, '@name' => $this->machine_name)));
       }
     }
-    return $this->server_object ? $this->server_object : NULL;
+    return $this->serverObject ? $this->serverObject : NULL;
   }
 
   /**
@@ -636,8 +635,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $property_info['properties'] = entity_get_all_property_info($wrapper->type());
     }
 
-    if (!isset($this->added_properties)) {
-      $this->added_properties = array(
+    if (!isset($this->addedProperties)) {
+      $this->addedProperties = array(
         'search_api_language' => array(
           'label' => t('Item language'),
           'description' => t("A field added by the search framework to let components determine an item's language. Is always indexed."),
@@ -650,12 +649,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
       foreach (array_reverse($this->getAlterCallbacks()) as $callback) {
         $props = $callback->propertyInfo();
         if ($props) {
-          $this->added_properties += $props;
+          $this->addedProperties += $props;
         }
       }
     }
     // Let fields added by data-alter callbacks override default fields.
-    $property_info['properties'] = array_merge($property_info['properties'], $this->added_properties);
+    $property_info['properties'] = array_merge($property_info['properties'], $this->addedProperties);
 
     return $property_info;
   }
@@ -902,16 +901,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFulltextFields($only_indexed = TRUE) {
     $i = $only_indexed ? 1 : 0;
-    if (!isset($this->fulltext_fields[$i])) {
-      $this->fulltext_fields[$i] = array();
+    if (!isset($this->fulltextFields[$i])) {
+      $this->fulltextFields[$i] = array();
       $fields = $only_indexed ? $this->options['fields'] : $this->getFields(FALSE);
       foreach ($fields as $key => $field) {
         if (search_api_is_text_type($field['type'])) {
-          $this->fulltext_fields[$i][] = $key;
+          $this->fulltextFields[$i][] = $key;
         }
       }
     }
-    return $this->fulltext_fields[$i];
+    return $this->fulltextFields[$i];
   }
 
   /**
@@ -949,12 +948,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function resetCaches() {
     $this->datasource = NULL;
-    $this->server_object = NULL;
+    $this->serverObject = NULL;
     $this->callbacks = NULL;
     $this->processors = NULL;
-    $this->added_properties = NULL;
+    $this->addedProperties = NULL;
     $this->fields = array();
-    $this->fulltext_fields = array();
+    $this->fulltextFields = array();
   }
 
 }
