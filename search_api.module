@@ -302,7 +302,7 @@ function search_api_cron_queue_info() {
   return array(
     'search_api_indexing_queue' => array(
       'worker callback' => '_search_api_indexing_queue_process',
-      'time' => config('search_api.cron')->get('worker_runtime'),
+      'time' => \Drupal::config('search_api.cron')->get('worker_runtime'),
     ),
   );
 }
