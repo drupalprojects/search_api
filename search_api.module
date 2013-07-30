@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * @file
+ * Provides a framework for implementing advanced search functionality.
+ */
+
+use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+
+/**
  * Default number of items indexed per cron batch for each enabled index.
  */
 define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
@@ -1227,7 +1234,7 @@ function search_api_query($id, array $options = array()) {
   if (!$index) {
     throw new SearchApiException(t('Unknown index with ID @id.', array('@id' => $id)));
   }
-  return $index->query($options);
+  return new DefaultQuery($index, $options);
 }
 
 /**

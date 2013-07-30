@@ -556,7 +556,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->enabled) {
       throw new SearchApiException(t('Cannot search on a disabled index.'));
     }
-    // @todo What to return here?
+    return search_api_query($this->id(), $options);
   }
 
   /**
