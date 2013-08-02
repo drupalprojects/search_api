@@ -1985,34 +1985,28 @@ function search_api_server_delete($id) {
  *
  * @return \Drupal\search_api\IndexInterface
  *   A completely loaded index object, or NULL if no such index exists.
+ *
+ * @see entity_load()
  */
 function search_api_index_load($id, $reset = FALSE) {
-  $ret = search_api_index_load_multiple(array($id), array(), $reset);
-  return $ret ? reset($ret) : FALSE;
+  return entity_load('search_api_index', $id, $reset);
 }
 
 /**
- * Load multiple indexes at once, determined by IDs or machine names, or by
- * other conditions.
+ * Load multiple search indexes at once.
  *
- * @see entity_load()
- *
- * @param array|false $ids
- *   An array of index IDs or machine names, or FALSE to load all indexes.
- * @param array $conditions
- *   An array of conditions on the {search_api_index} table in the form
- *   'field' => $value.
+ * @param array $ids
+ *   (optional) An array of machine names. If omitted, all entities are loaded.
  * @param bool $reset
- *   Whether to reset the internal entity_load cache.
+ *   Whether to reset the internal entity cache for search indexes.
  *
  * @return array
- *   An array of index objects keyed by machine name.
+ *   An array of search index objects keyed by machine name.
+ *
+ * @see entity_load_multiple()
  */
-function search_api_index_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  // This line is a workaround for a weird PDO bug in PHP 5.2.
-  // See http://drupal.org/node/889286.
-  $indexes = entity_load('search_api_index', $ids, $conditions, $reset);
-  return entity_key_array_by_property($indexes, 'machine_name');
+function search_api_index_load_multiple(array $ids = NULL, $reset = FALSE) {
+  return entity_load_multiple('search_api_index', $ids, $reset);
 }
 
 /**

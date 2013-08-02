@@ -149,6 +149,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public $read_only = 0;
 
   /**
+   * The language this index was created in.
+   *
+   * @var string
+   */
+  public $langcode;
+
+  /**
    * The old entity version, when saving an update.
    *
    * @var \Drupal\search_api\IndexInterface|null
