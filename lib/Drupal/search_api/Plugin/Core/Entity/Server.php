@@ -7,15 +7,38 @@
 
 namespace Drupal\search_api\Plugin\Core\Entity;
 
+use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\Annotation\EntityType;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
+use Drupal\search_api\Plugin\search_api\ServiceInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Class representing a search server.
  *
- * This can handle the same calls as defined in the ServiceInterface
- * and pass it on to the service implementation appropriate for this server.
+ * @EntityType(
+ *   id = "search_api_server",
+ *   label = @Translation("Search server"),
+ *   controllers = {
+ *     "storage" = "Drupal\search_api\ServerStorageController",
+ *     "access" = "Drupal\search_api\ServerAccessController",
+ *     "form" = {
+ *       "default" = "Drupal\search_api\ServerFormController",
+ *       "delete" = "Drupal\search_api\Form\IndexDeleteForm"
+ *     }
+ *   },
+ *   config_prefix = "search_api.server",
+ *   entity_keys = {
+ *     "id" = "id",
+ *     "label" = "name",
+ *     "uuid" = "uuid"
+ *   }
+ * )
  */
-class Server extends ConfigEntityBase {
+class Server extends ConfigEntityBase implements ServerInterface {
 
   /* Database values that will be set when object is loaded: */
 
@@ -34,11 +57,11 @@ class Server extends ConfigEntityBase {
   public $name = '';
 
   /**
-   * The machine name for a server.
+   * The server UUID.
    *
    * @var string
    */
-  public $machine_name = '';
+  public $uuid;
 
   /**
    * The displayed description for a server.
@@ -71,15 +94,28 @@ class Server extends ConfigEntityBase {
   /**
    * Proxy object for invoking service methods.
    *
-   * @var ServiceInterface
+   * @var \Drupal\search_api\Plugin\search_api\ServiceInterface
    */
   protected $proxy;
 
   /**
-   * Constructor as a helper to the parent constructor.
+   * {@inheritdoc}
    */
-  public function __construct(array $values = array()) {
-    parent::__construct($values, 'search_api_server');
+  public function id() {
+    return $this->id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function uri() {
+    return array(
+     'path' => 'admin/config/search/search_api/server/' . $this->id(),
+      'options' => array(
+        'entity_type' => $this->entityType,
+        'entity' => $this,
+      ),
+    );
   }
 
   /**
@@ -184,7 +220,7 @@ class Server extends ConfigEntityBase {
     return $this->proxy->viewSettings();
   }
 
-  public function postCreate() {
+  public function postCreate(EntityStorageControllerInterface $storage_controller) {
     $this->ensureProxy();
     return $this->proxy->postCreate();
   }
