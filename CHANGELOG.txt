@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1433720 by davidwbarratt, drunken monkey, JvE: Fixed handling of empty
+  selection for checkboxes.
 - #1414078 by drunken monkey, jaxxed: Fixed revert of exportables.
 - #2011396 by drunken monkey: Fixed support for several facets on a single
   field.
