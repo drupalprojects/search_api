@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2052701 by drunken monkey, erdos: Fixed cron queue state when disabling the
+  module.
 - #1878606 by drunken monkey: Fixed labels for boolean facets.
 - #2053171 by drunken monkey: Improved tests.
 - #1433720 by davidwbarratt, drunken monkey, JvE: Fixed handling of empty

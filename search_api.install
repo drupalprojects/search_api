@@ -330,6 +330,7 @@ function search_api_disable() {
       // Modules defining entity or item types might have been disabled. Ignore.
     }
   }
+  DrupalQueue::get('search_api_indexing_queue')->deleteQueue();
 }
 
 /**
