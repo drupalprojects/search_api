@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2053171 by drunken monkey: Improved tests.
 - #1433720 by davidwbarratt, drunken monkey, JvE: Fixed handling of empty
   selection for checkboxes.
 - #1414078 by drunken monkey, jaxxed: Fixed revert of exportables.
