@@ -210,15 +210,3 @@ function search_api_test_list_callback($data) {
   }
   return array_filter($res);
 }
-
-/**
- * Implements hook_search_api_service_info().
- */
-function search_api_test_search_api_service_info() {
-  $services['search_api_test_service'] = array(
-    'name' => 'search_api_test_service',
-    'description' => 'search_api_test_service description',
-    'class' => 'SearchApiTestService',
-  );
-  return $services;
-}

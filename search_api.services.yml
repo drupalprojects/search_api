@@ -1,0 +1,4 @@
+services:
+  plugin.manager.search_api.service:
+    class: Drupal\search_api\Plugin\Type\ServicePluginManager
+    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']

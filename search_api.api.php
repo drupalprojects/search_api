@@ -11,56 +11,17 @@
  */
 
 /**
- * Defines one or more search service classes a module offers.
- *
- * Note: The ids should be valid PHP identifiers.
- *
- * @see hook_search_api_service_info_alter()
- *
- * @return array
- *   An associative array of search service classes, keyed by a unique
- *   identifier and containing associative arrays with the following keys:
- *   - name: The service class' translated name.
- *   - description: A translated string to be shown to administrators when
- *     selecting a service class. Should contain all peculiarities of the
- *     service class, like field type support, supported features (like facets),
- *     the "direct" parse mode and other specific things to keep in mind.
- *   - class: The service class, which has to implement the
- *     SearchApiServiceInterface interface.
- */
-function hook_search_api_service_info() {
-  $services['example_some'] = array(
-    'name' => t('Some Service'),
-    'description' => t('Service for some search engine.'),
-    'class' => 'SomeServiceClass',
-    // Unknown keys can later be read by the object for additional information.
-    'init args' => array('foo' => 'Foo', 'bar' => 42),
-  );
-  $services['example_other'] = array(
-    'name' => t('Other Service'),
-    'description' => t('Service for another search engine.'),
-    'class' => 'OtherServiceClass',
-  );
-
-  return $services;
-}
-
-/**
  * Alter the Search API service info.
  *
  * Modules may implement this hook to alter the information that defines Search
- * API service. All properties that are available in
- * hook_search_api_service_info() can be altered here.
- *
- * @see hook_search_api_service_info()
+ * API service.
  *
  * @param array $service_info
  *   The Search API service info array, keyed by service id.
  */
 function hook_search_api_service_info_alter(array &$service_info) {
   foreach ($service_info as $id => $info) {
-    $service_info[$id]['class'] = 'MyProxyServiceClass';
-    $service_info[$id]['example_original_class'] = $info['class'];
+    $service_info[$id]['name'] = t('Test');
   }
 }
 

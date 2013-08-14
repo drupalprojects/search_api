@@ -7,13 +7,25 @@
 
 namespace Drupal\search_api_test\Plugin\search_api\service;
 
-use Drupal\search_api\Plugin\search_api\service\ServicePluginBase;
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiService;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Service\ServicePluginBase;
 
 /**
  * Test implementation of a Search API service class.
+ *
+ * @SearchApiService(
+ *   id = "search_api_test_service",
+ *   name = @Translation("search_api_test_service"),
+ *   description = @Translation("search_api_test_service description")
+ * )
  */
 class TestService extends ServicePluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationForm(array $form, array &$form_state) {
     $form = array(
       'test' => array(
@@ -29,7 +41,10 @@ class TestService extends ServicePluginBase {
     return $form;
   }
 
-  public function indexItems(SearchApiIndex $index, array $items) {
+  /**
+   * {@inheritdoc}
+   */
+  public function indexItems(IndexInterface $index, array $items) {
     // Refuse to index items with IDs that are multiples of 8 unless the
     // "search_api_test_index_all" state is set.
     if (\Drupal::state()->get('search_api_test_index_all')) {
@@ -44,7 +59,10 @@ class TestService extends ServicePluginBase {
     return $this->index($index, $ret);
   }
 
-  protected function index(SearchApiIndex $index, array $ids) {
+  /**
+   * {@inheritdoc}
+   */
+  protected function index(IndexInterface $index, array $ids) {
     $this->options += array('indexes' => array());
     $this->options['indexes'] += array($index->machine_name => array());
     $this->options['indexes'][$index->machine_name] += drupal_map_assoc($ids);
@@ -60,7 +78,10 @@ class TestService extends ServicePluginBase {
    */
   public function preDelete() {}
 
-  public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems($ids = 'all', IndexInterface $index = NULL) {
     if ($ids == 'all') {
       if ($index) {
         $this->options['indexes'][$index->machine_name] = array();
@@ -77,7 +98,10 @@ class TestService extends ServicePluginBase {
     $this->server->save();
   }
 
-  public function search(SearchApiQueryInterface $query) {
+  /**
+   * {@inheritdoc}
+   */
+  public function search(QueryInterface $query) {
     $options = $query->getOptions();
     $ret = array();
     $index_id = $query->getIndex()->machine_name;
@@ -108,9 +132,11 @@ class TestService extends ServicePluginBase {
     return $ret;
   }
 
-  public function fieldsUpdated(SearchApiIndex $index) {
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldsUpdated(IndexInterface $index) {
     return db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField() > 0;
   }
 
 }
-

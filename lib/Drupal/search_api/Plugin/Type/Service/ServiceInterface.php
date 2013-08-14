@@ -2,10 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\ServiceInterface.
+ * Contains \Drupal\search_api\Plugin\Type\Service\ServiceInterface.
  */
 
-namespace Drupal\search_api\Plugin\search_api;
+namespace Drupal\search_api\Plugin\Type\Service;
+
+use \Drupal\search_api\IndexInterface;
+use \Drupal\search_api\SearchApiException;
+use \Drupal\search_api\ServerInterface;
 
 /**
  * Interface defining the methods search services have to implement.
@@ -20,10 +24,10 @@ interface ServiceInterface {
    *
    * This will set the server configuration used with this service.
    *
-   * @param Server $server
+   * @param \Drupal\search_api\ServerInterface $server
    *   The server object for this service.
    */
-  public function __construct(Server $server);
+  public function __construct(ServerInterface $server);
 
   /**
    * Form callback. Might be called on an uninitialized object - in this case,
@@ -124,10 +128,10 @@ interface ServiceInterface {
    * If the index was already added to the server, the object should treat this
    * as if removeIndex() and then addIndex() were called.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to add.
    */
-  public function addIndex(Index $index);
+  public function addIndex(IndexInterface $index);
 
   /**
    * Notify the server that the field settings for the index have changed.
@@ -135,14 +139,14 @@ interface ServiceInterface {
    * If any user action is necessary as a result of this, the method should
    * use drupal_set_message() to notify the user.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The updated index.
    *
    * @return bool
    *   TRUE, if this change affected the server in any way that forces it to
    *   re-index the content. FALSE otherwise.
    */
-  public function fieldsUpdated(Index $index);
+  public function fieldsUpdated(IndexInterface $index);
 
   /**
    * Remove an index from this server.
@@ -156,16 +160,16 @@ interface ServiceInterface {
    * Implementations of this method should also check whether $index->read_only
    * is set, and don't delete any indexed data if it is.
    *
-   * @param $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   Either an object representing the index to remove, or its machine name
    *   (if the index was completely deleted).
    */
-  public function removeIndex($index);
+  public function removeIndex(IndexInterface $index);
 
   /**
    * Index the specified items.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The search index for which items should be indexed.
    * @param array $items
    *   An array of items to be indexed, keyed by their id. The values are
@@ -188,10 +192,10 @@ interface ServiceInterface {
    * @return array
    *   An array of the ids of all items that were successfully indexed.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If indexing was prevented by a fundamental configuration error.
    */
-  public function indexItems(Index $index, array $items);
+  public function indexItems(IndexInterface $index, array $items);
 
   /**
    * Delete items from an index on this server.
@@ -204,16 +208,16 @@ interface ServiceInterface {
    *   Either an array containing the ids of the items that should be deleted,
    *   or 'all' if all items should be deleted. Other formats might be
    *   recognized by implementing classes, but these are not standardized.
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index from which items should be deleted, or NULL if all indexes on
    *   this server should be cleared (then, $ids has to be 'all').
    */
-  public function deleteItems($ids = 'all', Index $index = NULL);
+  public function deleteItems($ids = 'all', IndexInterface $index = NULL);
 
   /**
    * Create a query object for searching on an index lying on this server.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to search on.
    * @param $options
    *   Associative array of options configuring this query. See
@@ -222,10 +226,10 @@ interface ServiceInterface {
    * @return QueryInterface
    *   An object for searching the given index.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the server is currently disabled.
    */
-  public function query(Index $index, $options = array());
+  public function query(IndexInterface $index, $options = array());
 
   /**
    * Executes a search on the server represented by this object.
@@ -237,7 +241,7 @@ interface ServiceInterface {
    *   An associative array containing the search results, as required by
    *   QueryInterface::execute().
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If an error prevented the search from completing.
    */
   public function search(QueryInterface $query);

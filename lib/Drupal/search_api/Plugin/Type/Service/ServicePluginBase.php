@@ -2,10 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\service\ServicePluginBase.
+ * Contains \Drupal\search_api\Plugin\Type\Service\ServicePluginBase.
  */
 
-namespace Drupal\search_api\Plugin\search_api\service;
+namespace Drupal\search_api\Plugin\Type\Service;
+
+use \Drupal\search_api\IndexInterface;
+use \Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+use \Drupal\search_api\ServerInterface;
 
 /**
  * Abstract class with generic implementation of most service methods.
@@ -17,7 +21,7 @@ namespace Drupal\search_api\Plugin\search_api\service;
 abstract class ServicePluginBase implements ServiceInterface {
 
   /**
-   * @var Server
+   * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
 
@@ -29,38 +33,29 @@ abstract class ServicePluginBase implements ServiceInterface {
   protected $options = array();
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation sets $this->server and $this->options.
+   * {@inheritdoc}
    */
-  public function __construct(Server $server) {
+  public function __construct(ServerInterface $server) {
     $this->server = $server;
     $this->options = &$server->options;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * Returns an empty form by default.
+   * {@inheritdoc}
    */
   public function configurationForm(array $form, array &$form_state) {
     return array();
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * Does nothing by default.
+   * {@inheritdoc}
    */
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     return;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation just ensures that additional elements in
-   * $options, not present in the form, don't get lost at the update.
+   * {@inheritdoc}
    */
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     if (!empty($this->options)) {
@@ -70,19 +65,14 @@ abstract class ServicePluginBase implements ServiceInterface {
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation always returns FALSE.
+   * {@inheritdoc}
    */
   public function supportsFeature($feature) {
     return FALSE;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation does a crude output as a definition list, with
-   * option names taken from the configuration form.
+   * {@inheritdoc}
    */
   public function viewSettings() {
     $output = '';
@@ -105,70 +95,56 @@ abstract class ServicePluginBase implements ServiceInterface {
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * Does nothing, by default.
+   * {@inheritdoc}
    */
   public function postCreate() {
     return;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation always returns FALSE.
+   * {@inheritdoc}
    */
   public function postUpdate() {
     return FALSE;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * By default, deletes all indexes from this server.
+   * {@inheritdoc}
    */
   public function preDelete() {
-    $indexes = search_api_index_load_multiple(FALSE, array('server' => $this->server->machine_name));
+    $indexes = search_api_index_load_multiple(FALSE, array('server' => $this->server->id()));
     foreach ($indexes as $index) {
       $this->removeIndex($index);
     }
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * Does nothing, by default.
+   * {@inheritdoc}
    */
-  public function addIndex(Index $index) {
+  public function addIndex(IndexInterface $index) {
     return;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation always returns FALSE.
+   * {@inheritdoc}
    */
-  public function fieldsUpdated(Index $index) {
+  public function fieldsUpdated(IndexInterface $index) {
     return FALSE;
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * By default, removes all items from that index.
+   * {@inheritdoc}
    */
-  public function removeIndex($index) {
+  public function removeIndex(IndexInterface $index) {
     if (is_object($index) && empty($index->read_only)) {
       $this->deleteItems('all', $index);
     }
   }
 
   /**
-   * Implements ServiceInterface::__construct().
-   *
-   * The default implementation returns a DefaultQuery object.
+   * {@inheritdoc}
    */
-  public function query(Index $index, $options = array()) {
+  public function query(IndexInterface $index, $options = array()) {
     return new DefaultQuery($index, $options);
   }
 
