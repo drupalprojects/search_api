@@ -7,9 +7,9 @@
 
 namespace Drupal\search_api\Plugin\Type\Service;
 
-use \Drupal\search_api\IndexInterface;
-use \Drupal\search_api\Plugin\search_api\query\DefaultQuery;
-use \Drupal\search_api\ServerInterface;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Abstract class with generic implementation of most service methods.

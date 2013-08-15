@@ -2,3 +2,6 @@ services:
   plugin.manager.search_api.service:
     class: Drupal\search_api\Plugin\Type\ServicePluginManager
     arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']
+  plugin.manager.search_api.processor:
+    class: Drupal\search_api\Plugin\Type\ProcessorPluginManager
+    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']

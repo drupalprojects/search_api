@@ -6,9 +6,9 @@
  */
 
 use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
-use \Drupal\search_api\IndexInterface;
-use \Drupal\search_api\SearchApiException;
-use \Drupal\search_api\ServerInterface;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Default number of items indexed per cron batch for each enabled index.
@@ -178,7 +178,6 @@ function search_api_hook_info() {
     'search_api_data_type_info' => $hook_info,
     'search_api_data_type_info_alter' => $hook_info,
     'search_api_alter_callback_info' => $hook_info,
-    'search_api_processor_info' => $hook_info,
     'search_api_index_items_alter' => $hook_info,
     'search_api_items_indexed' => $hook_info,
     'search_api_query_alter' => $hook_info,
@@ -594,56 +593,6 @@ function search_api_search_api_alter_callback_info() {
   );
 
   return $callbacks;
-}
-
-/**
- * Implements hook_search_api_processor_info().
- */
-function search_api_search_api_processor_info() {
-  $processors['search_api_case_ignore'] = array(
-    'name' => t('Ignore case'),
-    'description' => t('This processor will make searches case-insensitive for fulltext or string fields.'),
-    'class' => 'SearchApiIgnoreCase',
-  );
-  $processors['search_api_html_filter'] = array(
-    'name' => t('HTML filter'),
-    'description' => t('Strips HTML tags from fulltext fields and decodes HTML entities. ' .
-        'Use this processor when indexing HTML data, e.g., node bodies for certain text formats.<br />' .
-        'The processor also allows to boost (or ignore) the contents of specific elements.'),
-    'class' => 'SearchApiHtmlFilter',
-    'weight' => 10,
-  );
-  if (module_exists('transliteration')) {
-    $processors['search_api_transliteration'] = array(
-      'name' => t('Transliteration'),
-      'description' => t('This processor will make searches insensitive to accents and other non-ASCII characters.'),
-      'class' => 'SearchApiTransliteration',
-      'weight' => 15,
-    );
-  }
-  $processors['search_api_tokenizer'] = array(
-    'name' => t('Tokenizer'),
-    'description' => t('Tokenizes fulltext data by stripping whitespace. ' .
-        'This processor allows you to specify which characters make up words and which characters should be ignored, using regular expression syntax. ' .
-        'Otherwise it is up to the search server implementation to decide how to split indexed fulltext data.'),
-    'class' => 'SearchApiTokenizer',
-    'weight' => 20,
-  );
-  $processors['search_api_stopwords'] = array(
-    'name' => t('Stopwords'),
-    'description' => t('This processor prevents certain words from being indexed and removes them from search terms. ' .
-        'For best results, it should only be executed after tokenizing.'),
-    'class' => 'SearchApiStopWords',
-    'weight' => 30,
-  );
-  $processors['search_api_highlighting'] = array(
-    'name' => t('Highlighting'),
-    'description' => t('Adds highlighting for search results.'),
-    'class' => 'SearchApiHighlight',
-    'weight' => 35,
-  );
-
-  return $processors;
 }
 
 /**
@@ -1260,21 +1209,15 @@ function search_api_get_alter_callbacks() {
 /**
  * Returns a list of all available pre- and post-processors.
  *
- * @see hook_search_api_processor_info()
- *
  * @return array
  *   An array of all available processors, keyed by id.
  */
 function search_api_get_processors() {
-  $processors = &drupal_static(__FUNCTION__);
+  $processors = Drupal::service('plugin.manager.search_api.processor')->getDefinitions();
 
-  if (!isset($processors)) {
-    $processors = module_invoke_all('search_api_processor_info');
-
-    // Initialization of optional entries with default values
-    foreach ($processors as $id => $processor) {
-      $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE, 'weight' => 0);
-    }
+  // Initialization of optional entries with default values.
+  foreach ($processors as $id => $processor) {
+    $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE, 'weight' => 0);
   }
 
   return $processors;

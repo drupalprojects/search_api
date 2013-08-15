@@ -7,9 +7,9 @@
 
 namespace Drupal\search_api\Plugin\Type\Service;
 
-use \Drupal\search_api\IndexInterface;
-use \Drupal\search_api\SearchApiException;
-use \Drupal\search_api\ServerInterface;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Interface defining the methods search services have to implement.

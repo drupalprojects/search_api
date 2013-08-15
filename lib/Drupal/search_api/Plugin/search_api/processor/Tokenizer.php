@@ -2,14 +2,25 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\Tokenizer.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\Tokenizer.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+
 /**
  * Processor for tokenizing fulltext data by replacing (configurable)
  * non-letters with spaces.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_tokenizer",
+ *   name = @Translation("Tokenizer"),
+ *   description = @Translation("Tokenizes fulltext data by stripping whitespace. This processor allows you to specify which characters make up words and which characters should be ignored, using regular expression syntax. Otherwise it is up to the search server implementation to decide how to split indexed fulltext data."),
+ *   weight = 20
+ * )
  */
 class Tokenizer extends ProcessorPluginBase {
 
@@ -23,6 +34,9 @@ class Tokenizer extends ProcessorPluginBase {
    */
   protected $ignorable;
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationForm() {
     $form = parent::configurationForm();
 
@@ -62,6 +76,9 @@ class Tokenizer extends ProcessorPluginBase {
     return $form;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     parent::configurationFormValidate($form, $values, $form_state);
 
@@ -77,6 +94,9 @@ class Tokenizer extends ProcessorPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function processFieldValue(&$value) {
     $this->prepare();
     if ($this->ignorable) {
@@ -93,6 +113,9 @@ class Tokenizer extends ProcessorPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function process(&$value) {
     // We don't touch integers, NULL values or the like.
     if (is_string($value)) {

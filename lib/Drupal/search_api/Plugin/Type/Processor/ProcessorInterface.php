@@ -2,10 +2,13 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\ProcessorInterface.
+ * Contains \Drupal\search_api\Plugin\Type\Processor\ProcessorInterface.
  */
 
-namespace Drupal\search_api\Plugin\search_api;
+namespace Drupal\search_api\Plugin\Type\Processor;
+
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 
 /**
  * Interface representing a Search API pre- and/or post-processor.
@@ -24,12 +27,12 @@ interface ProcessorInterface {
   /**
    * Construct a processor.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index for which processing is done.
    * @param array $options
    *   The processor options set for this index.
    */
-  public function __construct(Index $index, array $options = array());
+  public function __construct(IndexInterface $index, array $options = array());
 
   /**
    * Check whether this processor is applicable for a certain index.
@@ -41,13 +44,13 @@ interface ProcessorInterface {
    * and at least throw an exception with a descriptive error message if this is
    * violated on runtime.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to check for.
    *
    * @return boolean
    *   TRUE if the processor can run on the given index; FALSE otherwise.
    */
-  public function supportsIndex(Index $index);
+  public function supportsIndex(IndexInterface $index);
 
   /**
    * Display a form for configuring this processor.
@@ -110,7 +113,7 @@ interface ProcessorInterface {
    * fulltext search keys should be processed, queries on specific fields should
    * usually not be altered.
    *
-   * @param DefaultQuery $query
+   * @param \Drupal\search_api\Plugin\search_api\query\DefaultQuery $query
    *   The object representing the query to be executed.
    */
   public function preprocessSearchQuery(DefaultQuery $query);
@@ -125,7 +128,7 @@ interface ProcessorInterface {
    * @param array $response
    *   An array containing the search results. See the return value of
    *   QueryInterface->execute() for the detailed format.
-   * @param DefaultQuery $query
+   * @param \Drupal\search_api\Plugin\search_api\query\DefaultQuery $query
    *   The object representing the executed query.
    */
   public function postprocessSearchResults(array &$response, DefaultQuery $query);

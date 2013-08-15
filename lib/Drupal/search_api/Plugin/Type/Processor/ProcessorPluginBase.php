@@ -2,10 +2,13 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\ProcessorPluginBase.
+ * Contains \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase.
  */
 
-namespace Drupal\search_api\Plugin\search_api\processor;
+namespace Drupal\search_api\Plugin\Type\Processor;
+
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 
 /**
  * Abstract processor implementation that provides an easy framework for only
@@ -18,7 +21,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 abstract class ProcessorPluginBase implements ProcessorInterface {
 
   /**
-   * @var Index
+   * @var \Drupal\search_api\IndexInterface Index
    */
   protected $index;
 
@@ -28,17 +31,23 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   protected $options;
 
   /**
-   * Constructor, saving its arguments into properties.
+   * {@inheritdoc}
    */
-  public function __construct(Index $index, array $options = array()) {
+  public function __construct(IndexInterface $index, array $options = array()) {
     $this->index   = $index;
     $this->options = $options;
   }
 
-  public function supportsIndex(Index $index) {
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsIndex(IndexInterface $index) {
     return TRUE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationForm() {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
@@ -66,6 +75,9 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
     return $form;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     $fields = array_filter($values['fields']);
     if ($fields) {
@@ -74,6 +86,9 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
     $values['fields'] = $fields;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
     $this->options = $values;
     return $values;

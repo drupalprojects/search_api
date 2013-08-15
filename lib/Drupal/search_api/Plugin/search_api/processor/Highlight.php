@@ -2,13 +2,25 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\Highlight.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\Highlight.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+
 /**
  * Processor for highlighting search results.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_highlighting",
+ *   name = @Translation("Highlighting"),
+ *   description = @Translation("Adds highlighting for search results."),
+ *   weight = 35
+ * )
  */
 class Highlight extends ProcessorPluginBase {
 

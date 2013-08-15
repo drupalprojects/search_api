@@ -2,14 +2,28 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\HtmlFilter.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\HtmlFilter.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+use Drupal\search_api\IndexInterface;
+
 /**
  * Processor for stripping HTML from indexed fulltext data. Supports assigning
  * custom boosts for any HTML element.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_html_filter",
+ *   name = @Translation("HTML Filter"),
+ *   description = @Translation("Strips HTML tags from fulltext fields and decodes HTML entities.
+ *   Use this processor when indexing HTML data, e.g., node bodies for certain text formats.<br />
+ *   The processor also allows to boost (or ignore) the contents of specific elements."),
+ *   weight = 10
+ * )
  */
 // @todo Process query?
 class HtmlFilter extends ProcessorPluginBase {
@@ -19,7 +33,10 @@ class HtmlFilter extends ProcessorPluginBase {
    */
   protected $tags;
 
-  public function __construct(Index $index, array $options = array()) {
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(IndexInterface $index, array $options = array()) {
     parent::__construct($index, $options);
     $this->options += array(
       'title' => FALSE,
@@ -37,6 +54,9 @@ class HtmlFilter extends ProcessorPluginBase {
     unset($this->tags['br'], $this->tags['hr']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationForm() {
     $form = parent::configurationForm();
     $form += array(
@@ -66,6 +86,9 @@ class HtmlFilter extends ProcessorPluginBase {
     return $form;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
     parent::configurationFormValidate($form, $values, $form_state);
 
@@ -90,6 +113,9 @@ class HtmlFilter extends ProcessorPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function processFieldValue(&$value) {
     $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
     if ($this->options['title']) {
