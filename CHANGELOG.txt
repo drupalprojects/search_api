@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2069023 by drunken monkey: Fixed reaction to disabled modules.
 - #2057867 by drunken monkey: Fixed multiple values for taxonomy contextual
   filter.
 - #2052701 by drunken monkey, erdos: Fixed cron queue state when disabling the

@@ -724,6 +724,72 @@ function search_api_features_export_alter(&$export, $module_name) {
 }
 
 /**
+ * Implements hook_system_info_alter().
+ *
+ * Checks if the module provides any search item types or service classes. If it
+ * does, and there are search indexes using those item types, respectively
+ * servers using those service classes, the module is set to "required".
+ *
+ * Heavily borrowed from field_system_info_alter().
+ *
+ * @see hook_search_api_item_type_info()
+ */
+function search_api_system_info_alter(&$info, $file, $type) {
+  if ($type != 'module' || $file->name == 'search_api') {
+    return;
+  }
+  // Check for defined item types.
+  if (module_hook($file->name, 'search_api_item_type_info')) {
+    $types = array();
+    foreach (search_api_get_item_type_info() as $type => $type_info) {
+      if ($type_info['module'] == $file->name) {
+        $types[] = $type;
+      }
+    }
+    if ($types) {
+      $sql = 'SELECT machine_name, name FROM {search_api_index} WHERE item_type IN (:types)';
+      $indexes = db_query($sql, array(':types' => $types))->fetchAllKeyed();
+      if ($indexes) {
+        $info['required'] = TRUE;
+
+        $links = array();
+        foreach ($indexes as $id => $name) {
+          $links[] = l($name, "admin/config/search/search_api/index/$id");
+        }
+
+        $args = array('!indexes' => implode(', ', $links));
+        $info['explanation'] = format_plural(count($indexes), 'Item type in use by the following index: !indexes.', 'Item type(s) in use by the following indexes: !indexes.', $args);
+      }
+    }
+  }
+  // Check for defined service classes.
+  if (module_hook($file->name, 'search_api_service_info')) {
+    $classes = array();
+    foreach (search_api_get_service_info() as $class => $class_info) {
+      if ($class_info['module'] == $file->name) {
+        $classes[] = $class;
+      }
+    }
+    if ($classes) {
+      $sql = 'SELECT machine_name, name FROM {search_api_server} WHERE class IN (:classes)';
+      $servers = db_query($sql, array(':classes' => $classes))->fetchAllKeyed();
+      if ($servers) {
+        $info['required'] = TRUE;
+
+        $links = array();
+        foreach ($servers as $id => $name) {
+          $links[] = l($name, "admin/config/search/search_api/server/$id");
+        }
+
+        $args = array('!servers' => implode(', ', $links));
+        $explanation = format_plural(count($servers), 'Service class in use by the following server: !servers.', 'Service class(es) in use by the following servers: !servers.', $args);
+        $info['explanation'] = (!empty($info['explanation']) ? $info['explanation'] . ' ' : '') . $explanation;
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_entity_insert().
  *
  * Marks the new item as to-index for all indexes on entities of the specified
@@ -844,18 +910,20 @@ function search_api_search_api_item_type_info() {
  * Implements hook_modules_enabled().
  */
 function search_api_modules_enabled(array $modules) {
-  // New modules might offer additional entity types, invalidating the cached
-  // item type information.
+  // New modules might offer additional item types or service classes,
+  // invalidating the cached information.
   drupal_static_reset('search_api_get_item_type_info');
+  drupal_static_reset('search_api_get_service_info');
 }
 
 /**
  * Implements hook_modules_disabled().
  */
 function search_api_modules_disabled(array $modules) {
-  // The disabled modules might have offered entity types, which are now
-  // invalid. Therefore, clear the cached item type informaiton.
+  // The disabled modules might have offered item types or service classes,
+  // invalidating the cached information.
   drupal_static_reset('search_api_get_item_type_info');
+  drupal_static_reset('search_api_get_service_info');
 }
 
 /**
@@ -1480,22 +1548,48 @@ function search_api_get_data_type_info($type = NULL) {
  *
  * @see hook_search_api_service_info()
  *
- * @param $id
+ * @param string|null $id
  *   The ID of the service info to retrieve.
  *
  * @return array
  *   If $id was not specified, an array of all available service classes.
  *   Otherwise, either the service info with the specified id (if it exists),
- *   or NULL.
+ *   or NULL. Service class information is formatted as specified by
+ *   hook_search_api_service_info(), with the addition of a "module" key
+ *   specifying the module that adds a certain class.
  */
 function search_api_get_service_info($id = NULL) {
   $services = &drupal_static(__FUNCTION__);
 
   if (!isset($services)) {
-    $services = module_invoke_all('search_api_service_info');
+    // Inlined version of module_invoke_all() to add "module" keys.
+    $services = array();
+    foreach (module_implements('search_api_service_info') as $module) {
+      $function = $module . '_search_api_service_info';
+      if (function_exists($function)) {
+        $new_services = $function();
+        if (isset($new_services) && is_array($new_services)) {
+          foreach ($new_services as $service => $info) {
+            $new_services[$service] += array('module' => $module);
+          }
+        }
+        $services += $new_services;
+      }
+    }
 
-    // Allow other modules to alter definitions
-    drupal_alter('search_api_service_info', $services);
+    // Same for drupal_alter().
+    foreach (module_implements('search_api_service_info_alter') as $module) {
+      $function = $module . '_search_api_service_info_alter';
+      if (function_exists($function)) {
+        $old = $services;
+        $function($services);
+        if ($new_services = array_diff_key($services, $old)) {
+          foreach ($new_services as $service => $info) {
+            $services[$service] += array('module' => $module);
+          }
+        }
+      }
+    }
   }
 
   if (isset($id)) {
@@ -1507,15 +1601,15 @@ function search_api_get_service_info($id = NULL) {
 /**
  * Returns information for either all item types, or a specific one.
  *
- * @param $type
+ * @param string|null $type
  *   If set, the item type whose information should be returned.
  *
- * @return
+ * @return array|null
  *   If $type is given, either an array containing the information of that item
  *   type, or NULL if it is unknown. Otherwise, an array keyed by type IDs
  *   containing the information for all item types. Item type information is
- *   formatted as specified by hook_search_api_item_type_info(), and has all
- *   optional fields filled with the defaults.
+ *   formatted as specified by hook_search_api_item_type_info(), with the
+ *   addition of a "module" key specifying the module that adds a certain type.
  *
  * @see hook_search_api_item_type_info()
  */
@@ -1523,8 +1617,34 @@ function search_api_get_item_type_info($type = NULL) {
   $types = &drupal_static(__FUNCTION__);
 
   if (!isset($types)) {
-    $types = module_invoke_all('search_api_item_type_info');
-    drupal_alter('search_api_item_type_info', $types);
+    // Inlined version of module_invoke_all() to add "module" keys.
+    $types = array();
+    foreach (module_implements('search_api_item_type_info') as $module) {
+      $function = $module . '_search_api_item_type_info';
+      if (function_exists($function)) {
+        $new_types = $function();
+        if (isset($new_types) && is_array($new_types)) {
+          foreach ($new_types as $id => $info) {
+            $new_types[$id] += array('module' => $module);
+          }
+        }
+        $types += $new_types;
+      }
+    }
+
+    // Same for drupal_alter().
+    foreach (module_implements('search_api_item_type_info_alter') as $module) {
+      $function = $module . '_search_api_item_type_info_alter';
+      if (function_exists($function)) {
+        $old = $types;
+        $function($types);
+        if ($new_types = array_diff_key($types, $old)) {
+          foreach ($new_types as $id => $info) {
+            $types[$id] += array('module' => $module);
+          }
+        }
+      }
+    }
   }
 
   if (isset($type)) {
