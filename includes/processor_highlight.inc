@@ -20,12 +20,27 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
   protected static $boundary;
 
   /**
+   * PREG regular expression for splitting words.
+   *
+   * We highlight around non-indexable or CJK characters.
+   *
+   * @var string
+   */
+  protected static $split;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(SearchApiIndex $index, array $options = array()) {
     parent::__construct($index, $options);
 
-    self::$boundary = '(?:(?<=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . '])|(?=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . ']))';
+    $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
+        '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
+        '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
+        '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
+        '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
+    self::$boundary = '(?:(?<=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . '])|(?=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . ']))';
+    self::$split = '/[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . ']+/iu';
   }
 
   /**
@@ -212,7 +227,7 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
       return $this->flattenKeysArray($keys);
     }
 
-    $keywords = preg_split('/[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . ']+/iu', $keys);
+    $keywords = preg_split(self::$split, $keys);
     // Assure there are no duplicates. (This is actually faster than
     // array_unique() by a factor of 3 to 4.)
     $keywords = drupal_map_assoc(array_filter($keywords));
