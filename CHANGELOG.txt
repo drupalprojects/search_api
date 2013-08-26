@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2057867 by drunken monkey: Fixed multiple values for taxonomy contextual
+  filter.
 - #2052701 by drunken monkey, erdos: Fixed cron queue state when disabling the
   module.
 - #1878606 by drunken monkey: Fixed labels for boolean facets.
