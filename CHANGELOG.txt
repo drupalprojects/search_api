@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2077035 by maciej.zgadzaj: Fixed whitespace recognition for search keys.
 - #2071229 by drunken monkey: Fixed use of core search constant.
 - #2069023 by drunken monkey: Fixed reaction to disabled modules.
 - #2057867 by drunken monkey: Fixed multiple values for taxonomy contextual
