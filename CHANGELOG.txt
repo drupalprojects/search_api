@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1921690 by drunken monkey: Fixed stale Views cache when indexed fields
+  change.
 - #2077035 by maciej.zgadzaj: Fixed whitespace recognition for search keys.
 - #2071229 by drunken monkey: Fixed use of core search constant.
 - #2069023 by drunken monkey: Fixed reaction to disabled modules.
