@@ -1,5 +1,8 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.8 (09/01/2013):
+----------------------------
 - #1414048 by drunken monkey: Fixed exception in views.inc removes all Search
   API tables.
 - #1921690 by drunken monkey: Fixed stale Views cache when indexed fields
