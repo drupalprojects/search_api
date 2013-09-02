@@ -5,7 +5,7 @@
  * Contains Drupal\search_api\Plugin\Core\Entity\Index.
  */
 
-namespace Drupal\search_api\Plugin\Core\Entity;
+namespace Drupal\search_api\Entity;
 
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -14,7 +14,7 @@ use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Plugin\search_api\ProcessorInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorInterface;
 use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\SearchApiException;
 

@@ -5,14 +5,15 @@
  * Contains Drupal\search_api\Plugin\Core\Entity\Server.
  */
 
-namespace Drupal\search_api\Plugin\Core\Entity;
+namespace Drupal\search_api\Entity;
 
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Plugin\search_api\QueryInterface;
-use Drupal\search_api\Plugin\search_api\ServiceInterface;
+use Drupal\search_api\Plugin\Type\Service\ServiceInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 
