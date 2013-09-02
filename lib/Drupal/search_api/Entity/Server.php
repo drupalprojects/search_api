@@ -11,7 +11,7 @@ use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
-use Drupal\search_api\Entity\Index;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\Plugin\Type\Service\ServiceInterface;
 use Drupal\search_api\SearchApiException;
@@ -131,10 +131,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $this->ensurePlugin();
     if ($update) {
       if ($this->plugin->postUpdate()) {
-        $query = \Drupal::service('entity.query')->get('search_api_index');
-        $query->condition('server', $this->id());
-        $indexes = search_api_index_load_multiple($query->execute());
-        foreach ($indexes as $index) {
+        foreach ($this->getIndexes() as $index) {
           $index->reindex();
         }
       }
@@ -148,9 +145,37 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public static function preDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    // Call the service classes' preDelete() hooks.
     foreach ($entities as $entity) {
       $entity->plugin->preDelete();
     }
+
+    // Remove all indexes from the servers.
+    $query = \Drupal::entityQuery('search_api_index');
+    $query->condition('server', array_keys($entities), 'IN');
+    foreach (search_api_index_load_multiple($query->execute()) as $index) {
+      $index->server = NULL;
+      $index->save();
+    }
+
+    // Remove tasks associated with the servers.
+    $tasks = \Drupal::state()->get('search_api_tasks') ? : array();
+    foreach ($entities as $server) {
+      unset($tasks[$server->id()]);
+    }
+    \Drupal::state()->set('search_api_tasks', $tasks);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexes(array $conditions = array()) {
+    $query = \Drupal::entityQuery('search_api_index');
+    $query->condition('server', $this->id());
+    foreach ($conditions as $field => $value) {
+      $query->condition($field, $value);
+    }
+    return search_api_index_load_multiple($query->execute());
   }
 
   /**
@@ -165,6 +190,18 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $ret = get_object_vars($this);
     unset($ret['plugin']);
     return array_keys($ret);
+  }
+
+  /**
+   * Implements the magic __call() method to pass on calls to the plugin object.
+   *
+   * If the service class defines additional methods, not specified in the
+   * \Drupal\search_api\Plugin\Type\Service\ServiceInterface interface, then
+   * they are called via this magic method.
+   */
+  public function __call($name, $arguments = array()) {
+    $this->ensurePlugin();
+    return call_user_func_array(array($this->plugin, $name), $arguments);
   }
 
   /**
@@ -184,18 +221,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
         throw new SearchApiException(t('Search server with machine name @name specifies illegal service class @class.', array('@name' => $this->id(), '@class' => $this->class)));
       }
     }
-  }
-
-  /**
-   * Implements the magic __call() method to pass on calls to the plugin object.
-   *
-   * If the service class defines additional methods, not specified in the
-   * \Drupal\search_api\Plugin\Type\Service\ServiceInterface interface, then
-   * they are called via this magic method.
-   */
-  public function __call($name, $arguments = array()) {
-    $this->ensurePlugin();
-    return call_user_func_array(array($this->plugin, $name), $arguments);
   }
 
   // Plugin methods
@@ -228,12 +253,17 @@ class Server extends ConfigEntityBase implements ServerInterface {
     return $this->plugin->viewSettings();
   }
 
-  public function addIndex(Index $index) {
+  public function addIndex(IndexInterface $index) {
     $this->ensurePlugin();
     return $this->plugin->addIndex($index);
   }
 
-  public function fieldsUpdated(Index $index) {
+  public function postUpdate() {
+    $this->ensurePlugin();
+    return $this->plugin->postUpdate();
+  }
+
+  public function fieldsUpdated(IndexInterface $index) {
     $this->ensurePlugin();
     return $this->plugin->fieldsUpdated($index);
   }
@@ -243,12 +273,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
     return $this->plugin->removeIndex($index);
   }
 
-  public function indexItems(Index $index, array $items) {
+  public function indexItems(IndexInterface $index, array $items) {
     $this->ensurePlugin();
     return $this->plugin->indexItems($index, $items);
   }
 
-  public function deleteItems($ids = 'all', Index $index = NULL) {
+  public function deleteItems($ids = 'all', IndexInterface $index = NULL) {
     $this->ensurePlugin();
     return $this->plugin->deleteItems($ids, $index);
   }

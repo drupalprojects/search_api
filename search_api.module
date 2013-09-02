@@ -5,6 +5,7 @@
  * Provides a framework for implementing advanced search functionality.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -211,7 +212,6 @@ function search_api_theme() {
       'class_name' => NULL,
       'class_description' => NULL,
       'options' => array(),
-      'status' => ENTITY_CUSTOM,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -228,7 +228,6 @@ function search_api_theme() {
       'fields' => array(),
       'indexed_items' => 0,
       'total_items' => 0,
-      'status' => ENTITY_CUSTOM,
       'read_only' => 0,
     ),
     'file' => 'search_api.admin.inc',
@@ -271,7 +270,7 @@ function search_api_cron() {
         : SEARCH_API_DEFAULT_CRON_LIMIT;
     if ($limit) {
       try {
-        $task = array('index' => $index->machine_name);
+        $task = array('index' => $index->id());
         // Fetch items to index, do not fetch more than the configured amount
         // of batches to be created per cron run to avoid timeouts.
         $ids = search_api_get_items_to_index($index, $limit > 0 ? $limit * $batch_count : -1);
@@ -315,17 +314,12 @@ function search_api_cron_queue_info() {
  * for reindexing, if necessary.
  */
 function search_api_search_api_server_update(ServerInterface $server) {
-  if ($server->postUpdate()) {
-    foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
-      $index->reindex();
-    }
-  }
-  if (!empty($server->original) && $server->enabled != $server->original->enabled) {
-    if ($server->enabled) {
+  if (!empty($server->original) && $server->status() != $server->original->status()) {
+    if ($server->status()) {
       // Were there any changes in the server's indexes while it was disabled?
       $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
-      if (isset($tasks[$server->machine_name])) {
-        foreach ($tasks[$server->machine_name] as $index_id => $index_tasks) {
+      if (isset($tasks[$server->id()])) {
+        foreach ($tasks[$server->id()] as $index_id => $index_tasks) {
           $index = search_api_index_load($index_id);
           foreach ($index_tasks as $task) {
             switch ($task) {
@@ -354,44 +348,25 @@ function search_api_search_api_server_update(ServerInterface $server) {
                   $server->deleteItems(array($id), $index);
                 }
                 else {
-                  watchdog('search_api', t('Unknown task "@task" for server "@name".', array('@task' => $task, '@name' => $server->machine_name)), NULL, WATCHDOG_WARNING);
+                  watchdog('search_api', t('Unknown task "@task" for server "@name".', array('@task' => $task, '@name' => $server->id())), NULL, WATCHDOG_WARNING);
                 }
             }
           }
         }
-        unset($tasks[$server->machine_name]);
+        unset($tasks[$server->id()]);
         \Drupal::state()->set('search_api_tasks', $tasks);
       }
     }
     else {
-      foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name, 'enabled' => 1)) as $index) {
-        $index->update(array('enabled' => 0));
+      $query = \Drupal::entityQuery('search_api_index');
+      $query->condition('server', $server->id());
+      $query->condition('enabled', 1);
+      foreach (search_api_index_load_multiple($query->execute()) as $index) {
+        $index->enabled = 0;
+        $index->save();
       }
     }
   }
-}
-
-/**
- * Implements hook_search_api_server_delete().
- *
- * Calls the preDelete() method for the server.
- */
-function search_api_search_api_server_delete(ServerInterface $server) {
-  // Only react on real delete, not revert.
-  if ($server->hasStatus(ENTITY_IN_CODE)) {
-    $reverts = &drupal_static(__FUNCTION__, array());
-    $reverts[$server->machine_name] = $server;
-    return;
-  }
-
-  $server->preDelete();
-  foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
-    $index->update(array('server' => NULL, 'enabled' => FALSE));
-  }
-
-  $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
-  unset($tasks[$server->machine_name]);
-  \Drupal::state()->set('search_api_tasks', $tasks);
 }
 
 /**
@@ -399,18 +374,14 @@ function search_api_search_api_server_delete(ServerInterface $server) {
  *
  * Marks the new item as to-index for all indexes on entities of the specified
  * type.
- *
- * @param $entity
- *   The new entity.
- * @param $type
- *   The entity's type.
  */
-function search_api_entity_insert($entity, $type) {
+function search_api_entity_insert(EntityInterface $entity) {
   // When inserting a new search index, the new index was already inserted into
   // the tracking table. This would lead to a duplicate-key issue, if we would
   // continue.
   // We also only react on entity operations for types with property
   // information, as we don't provide search integration for the others.
+  $type = $entity->entityType();
   if ($type == 'search_api_index' || !Drupal::entityManager()->getFieldDefinitions($type)) {
     return;
   }
@@ -421,15 +392,11 @@ function search_api_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  *
  * Marks the item as changed for all indexes on entities of the specified type.
- *
- * @param $entity
- *   The updated entity.
- * @param $type
- *   The entity's type.
  */
-function search_api_entity_update($entity, $type) {
+function search_api_entity_update(EntityInterface $entity) {
   // We only react on entity operations for types with property information, as
   // we don't provide search integration for the others.
+  $type = $entity->entityType();
   if (!Drupal::entityManager()->getFieldDefinitions($type)) {
     return;
   }
@@ -446,9 +413,10 @@ function search_api_entity_update($entity, $type) {
  * @param $type
  *   The entity's type.
  */
-function search_api_entity_delete($entity, $type) {
+function search_api_entity_delete(EntityInterface $entity) {
   // We only react on entity operations for types with property information, as
   // we don't provide search integration for the others.
+  $type = $entity->entityType();
   if (!Drupal::entityManager()->getFieldDefinitions($type)) {
     return;
   }
@@ -692,13 +660,13 @@ function search_api_track_item_delete($type, array $item_ids) {
   foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
     if ($index->server) {
       $server = $index->server();
-      if ($server->enabled) {
+      if ($server->status()) {
         $server->deleteItems($item_ids, $index);
       }
       else {
         $tasks = \Drupal::state()->get('search_api_tasks') ?: array();
         foreach ($item_ids as $id) {
-          $tasks[$server->machine_name][$index->machine_name][] = 'delete-' . $id;
+          $tasks[$server->id()][$index->id()][] = 'delete-' . $id;
         }
         \Drupal::state()->set('search_api_tasks', $tasks);
       }
@@ -810,7 +778,7 @@ function search_api_index_items(IndexInterface $index, $limit = -1) {
   $unlimited = $limit < 0;
   $release_items = array();
   while (($unlimited || $indexed < $limit) && ($item = $queue->claimItem(30))) {
-    if ($item->data['index'] === $index->machine_name) {
+    if ($item->data['index'] === $index->id()) {
       $indexed += _search_api_indexing_queue_process($item->data);
       $queue->deleteItem($item);
     }
@@ -915,7 +883,7 @@ function &search_api_index_specific_items_delayed(IndexInterface $index = NULL, 
 
   // Allow for empty call to just retrieve the queue.
   if ($index && $ids) {
-    $index_id = $index->machine_name;
+    $index_id = $index->id();
     $queue += array($index_id => array());
     $queue[$index_id] += drupal_map_assoc($ids);
   }
@@ -1873,7 +1841,7 @@ function _search_api_index_reindex(\Drupal\search_api\IndexInterface $index) {
  *   If TRUE, mark all items in the queue as "changed" again. Defaults to FALSE.
  */
 function _search_api_empty_cron_queue(\Drupal\search_api\IndexInterface $index, $mark_changed = FALSE) {
-  $index_id = $index->machine_name;
+  $index_id = $index->id();
   $queue = DrupalQueue::get('search_api_indexing_queue');
   $queue->createQueue();
   $ids = array();
@@ -1962,7 +1930,7 @@ function search_api_index_options_list() {
 function _search_api_indexing_queue_process(array $task) {
   $index = search_api_index_load($task['index']);
   try {
-    if ($index && $index->enabled && !$index->read_only && $task['items']) {
+    if ($index && $index->status() && !$index->read_only && $task['items']) {
       $indexed = search_api_index_specific_items($index, $task['items']);
       $num = count($indexed);
       // If some items couldn't be indexed, mark them as dirty again.

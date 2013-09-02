@@ -161,11 +161,11 @@ interface ServiceInterface {
    * Implementations of this method should also check whether $index->read_only
    * is set, and don't delete any indexed data if it is.
    *
-   * @param \Drupal\search_api\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface|string $index
    *   Either an object representing the index to remove, or its machine name
    *   (if the index was completely deleted).
    */
-  public function removeIndex(IndexInterface $index);
+  public function removeIndex($index);
 
   /**
    * Index the specified items.
@@ -214,23 +214,6 @@ interface ServiceInterface {
    *   this server should be cleared (then, $ids has to be 'all').
    */
   public function deleteItems($ids = 'all', IndexInterface $index = NULL);
-
-  /**
-   * Create a query object for searching on an index lying on this server.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The index to search on.
-   * @param $options
-   *   Associative array of options configuring this query. See
-   *   QueryInterface::__construct().
-   *
-   * @return QueryInterface
-   *   An object for searching the given index.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   If the server is currently disabled.
-   */
-  public function query(IndexInterface $index, $options = array());
 
   /**
    * Executes a search on the server represented by this object.

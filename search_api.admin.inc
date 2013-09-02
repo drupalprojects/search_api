@@ -377,7 +377,9 @@ function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
  *   - class_description: The used service class' description.
  *   - options: An HTML string or render array containing information about the
  *     server's service-specific settings.
- *   - status: The entity configuration status (in database, in code, etc.).
+ *
+ * @return string
+ *   Rendered HTML for the server.
  */
 function theme_search_api_server(array $variables) {
   extract($variables);
@@ -420,11 +422,6 @@ function theme_search_api_server(array $variables) {
     $output .= render($options);
     $output .= '</dd>' . "\n";
   }
-
-  $output .= '<dt>' . t('Configuration status') . '</dt>' . "\n";
-  $output .= '<dd>' . "\n";
-  $output .= theme('entity_status', array('status' => $status));
-  $output .= '</dd>' . "\n";
 
   $output .= '</dl>';
 
@@ -702,8 +699,10 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
  *     version on this index.
  *   - total_items: The total number of items that have to be indexed for this
  *     index.
- *   - status: The entity configuration status (in database, in code, etc.).
  *   - read_only: Boolean indicating whether this index is read only.
+ *
+ * @return string
+ *   Rendered HTML for the index.
  */
 function theme_search_api_index(array $variables) {
   extract($variables);
@@ -785,11 +784,6 @@ function theme_search_api_index(array $variables) {
     $output .= '<dt>' . t('Read only') . '</dt>' . "\n";
     $output .= '<dd>' . t('This index is read-only.') . '</dd>' . "\n";
   }
-
-  $output .= '<dt>' . t('Configuration status') . '</dt>' . "\n";
-  $output .= '<dd>' . "\n";
-  $output .= theme('entity_status', array('status' => $status));
-  $output .= '</dd>' . "\n";
 
   $output .= '</dl>';
 
