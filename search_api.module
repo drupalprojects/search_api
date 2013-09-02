@@ -309,24 +309,6 @@ function search_api_cron_queue_info() {
 }
 
 /**
- * Implements hook_search_api_server_insert().
- *
- * Calls the postCreate() method for the server.
- */
-function search_api_search_api_server_insert(ServerInterface $server) {
-  // Check whether this is actually part of a revert.
-  $reverts = &drupal_static('search_api_search_api_server_delete', array());
-  if (isset($reverts[$server->machine_name])) {
-    $server->original = $reverts[$server->machine_name];
-    unset($reverts[$server->machine_name]);
-    search_api_search_api_server_update($server);
-    unset($server->original);
-    return;
-  }
-  $server->postCreate();
-}
-
-/**
  * Implements hook_search_api_server_update().
  *
  * Calls the server's postUpdate() method and marks all of this server's indexes
@@ -1564,8 +1546,6 @@ function _search_api_extract_entity_value(EntityMetadataWrapper $wrapper, $fullt
 
 /**
  * Load the search server with the specified ID.
- *
- * @deprecated use entity_load('search_api_server', $id) instead.
  *
  * @param string $id
  *   The search server's ID.

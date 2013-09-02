@@ -28,27 +28,32 @@ use Drupal\search_api\ServerInterface;
  *     "access" = "Drupal\search_api\ServerAccessController",
  *     "form" = {
  *       "default" = "Drupal\search_api\ServerFormController",
- *       "delete" = "Drupal\search_api\Form\IndexDeleteForm"
+ *       "delete" = "Drupal\search_api\Form\ServerDeleteForm"
  *     }
  *   },
  *   config_prefix = "search_api.server",
  *   entity_keys = {
- *     "id" = "id",
+ *     "id" = "machine_name",
  *     "label" = "name",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
+ *     "status" = "enabled"
+ *   },
+ *   links = {
+ *     "canonical" = "/admin/config/search/search_api/server/{search_api_index}",
+ *     "edit-form" = "/admin/config/search/search_api/server/{search_api_index}/edit",
  *   }
  * )
  */
 class Server extends ConfigEntityBase implements ServerInterface {
 
-  /* Database values that will be set when object is loaded: */
+  // Properties that will be set when object is loaded:
 
   /**
-   * The primary identifier for a server.
+   * The machine name of the server.
    *
-   * @var integer
+   * @var string
    */
-  public $id = 0;
+  public $machine_name;
 
   /**
    * The displayed name for a server.
@@ -93,17 +98,17 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public $enabled = 1;
 
   /**
-   * Proxy object for invoking service methods.
+   * Plugin object for invoking service methods.
    *
-   * @var \Drupal\search_api\Plugin\search_api\ServiceInterface
+   * @var \Drupal\search_api\Plugin\Type\Service\ServiceInterface
    */
-  protected $proxy;
+  protected $plugin;
 
   /**
    * {@inheritdoc}
    */
   public function id() {
-    return $this->id;
+    return $this->machine_name;
   }
 
   /**
@@ -120,150 +125,137 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   /**
-   * Helper method for updating entity properties.
-   *
-   * NOTE: You shouldn't change any properties of this object before calling
-   * this method, as this might lead to the fields not being saved correctly.
-   *
-   * @param array $fields
-   *   The new field values.
-   *
-   * @return
-   *   SAVE_UPDATED on success, FALSE on failure, 0 if the fields already had
-   *   the specified values.
+   * {@inheritdoc}
    */
-  public function update(array $fields) {
-    $changeable = array('name' => 1, 'enabled' => 1, 'description' => 1, 'options' => 1);
-    $changed = FALSE;
-    foreach ($fields as $field => $value) {
-      if (isset($changeable[$field]) && $value !== $this->$field) {
-        $this->$field = $value;
-        $changed = TRUE;
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    $this->ensurePlugin();
+    if ($update) {
+      if ($this->plugin->postUpdate()) {
+        $query = \Drupal::service('entity.query')->get('search_api_index');
+        $query->condition('server', $this->id());
+        $indexes = search_api_index_load_multiple($query->execute());
+        foreach ($indexes as $index) {
+          $index->reindex();
+        }
       }
     }
-    // If there are no new values, just return 0.
-    if (!$changed) {
-      return 0;
+    else {
+      $this->plugin->postCreate();
     }
-    return $this->save();
   }
 
   /**
-   * Magic method for determining which fields should be serialized.
+   * {@inheritdoc}
+   */
+  public static function preDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    foreach ($entities as $entity) {
+      $entity->plugin->preDelete();
+    }
+  }
+
+  /**
+   * Implements the magic __sleep() method for controlling serialization.
    *
-   * Serialize all properties except the proxy object.
+   * Serializes all properties except the plugin object.
    *
    * @return array
    *   An array of properties to be serialized.
    */
   public function __sleep() {
     $ret = get_object_vars($this);
-    unset($ret['proxy'], $ret['status'], $ret['module'], $ret['is_new']);
+    unset($ret['plugin']);
     return array_keys($ret);
   }
 
   /**
-   * Helper method for ensuring the proxy object is set up.
+   * Helper method for ensuring the plugin object is set up.
    */
-  protected function ensureProxy() {
-    if (!isset($this->proxy)) {
+  protected function ensurePlugin() {
+    if (!isset($this->plugin)) {
       $class = search_api_get_service_info($this->class);
       if ($class && class_exists($class['class'])) {
         if (empty($this->options)) {
           // We always have to provide the options.
           $this->options = array();
         }
-        $this->proxy = new $class['class']($this);
+        $this->plugin = new $class['class']($this);
       }
-      if (!($this->proxy instanceof ServiceInterface)) {
-        throw new SearchApiException(t('Search server with machine name @name specifies illegal service class @class.', array('@name' => $this->machine_name, '@class' => $this->class)));
+      if (!($this->plugin instanceof ServiceInterface)) {
+        throw new SearchApiException(t('Search server with machine name @name specifies illegal service class @class.', array('@name' => $this->id(), '@class' => $this->class)));
       }
     }
   }
 
   /**
+   * Implements the magic __call() method to pass on calls to the plugin object.
+   *
    * If the service class defines additional methods, not specified in the
-   * ServiceInterface interface, then they are called via this magic
-   * method.
+   * \Drupal\search_api\Plugin\Type\Service\ServiceInterface interface, then
+   * they are called via this magic method.
    */
   public function __call($name, $arguments = array()) {
-    $this->ensureProxy();
-    return call_user_func_array(array($this->proxy, $name), $arguments);
+    $this->ensurePlugin();
+    return call_user_func_array(array($this->plugin, $name), $arguments);
   }
 
-  // Proxy methods
+  // Plugin methods
 
   // For increased clarity, and since some parameters are passed by reference,
   // we don't use the __call() magic method for those.
 
   public function configurationForm(array $form, array &$form_state) {
-    $this->ensureProxy();
-    return $this->proxy->configurationForm($form, $form_state);
+    $this->ensurePlugin();
+    return $this->plugin->configurationForm($form, $form_state);
   }
 
   public function configurationFormValidate(array $form, array &$values, array &$form_state) {
-    $this->ensureProxy();
-    return $this->proxy->configurationFormValidate($form, $values, $form_state);
+    $this->ensurePlugin();
+    return $this->plugin->configurationFormValidate($form, $values, $form_state);
   }
 
   public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
-    $this->ensureProxy();
-    return $this->proxy->configurationFormSubmit($form, $values, $form_state);
+    $this->ensurePlugin();
+    return $this->plugin->configurationFormSubmit($form, $values, $form_state);
   }
 
   public function supportsFeature($feature) {
-    $this->ensureProxy();
-    return $this->proxy->supportsFeature($feature);
+    $this->ensurePlugin();
+    return $this->plugin->supportsFeature($feature);
   }
 
   public function viewSettings() {
-    $this->ensureProxy();
-    return $this->proxy->viewSettings();
-  }
-
-  public function postCreate(EntityStorageControllerInterface $storage_controller) {
-    $this->ensureProxy();
-    return $this->proxy->postCreate();
-  }
-
-  public function postUpdate() {
-    $this->ensureProxy();
-    return $this->proxy->postUpdate();
-  }
-
-  public function preDelete() {
-    $this->ensureProxy();
-    return $this->proxy->preDelete();
+    $this->ensurePlugin();
+    return $this->plugin->viewSettings();
   }
 
   public function addIndex(Index $index) {
-    $this->ensureProxy();
-    return $this->proxy->addIndex($index);
+    $this->ensurePlugin();
+    return $this->plugin->addIndex($index);
   }
 
   public function fieldsUpdated(Index $index) {
-    $this->ensureProxy();
-    return $this->proxy->fieldsUpdated($index);
+    $this->ensurePlugin();
+    return $this->plugin->fieldsUpdated($index);
   }
 
   public function removeIndex($index) {
-    $this->ensureProxy();
-    return $this->proxy->removeIndex($index);
+    $this->ensurePlugin();
+    return $this->plugin->removeIndex($index);
   }
 
   public function indexItems(Index $index, array $items) {
-    $this->ensureProxy();
-    return $this->proxy->indexItems($index, $items);
+    $this->ensurePlugin();
+    return $this->plugin->indexItems($index, $items);
   }
 
   public function deleteItems($ids = 'all', Index $index = NULL) {
-    $this->ensureProxy();
-    return $this->proxy->deleteItems($ids, $index);
+    $this->ensurePlugin();
+    return $this->plugin->deleteItems($ids, $index);
   }
 
   public function search(QueryInterface $query) {
-    $this->ensureProxy();
-    return $this->proxy->search($query);
+    $this->ensurePlugin();
+    return $this->plugin->search($query);
   }
 
 }

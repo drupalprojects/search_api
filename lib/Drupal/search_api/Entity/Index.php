@@ -49,7 +49,7 @@ use Drupal\search_api\SearchApiException;
  */
 class Index extends ConfigEntityBase implements IndexInterface {
 
-  // Database values that will be set when object is loaded.
+  // Properties that will be set when object is loaded:
 
   /**
    * The machine name of the index.
@@ -505,7 +505,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    if (!$this->server || $this->read_only) {
+    if (!$this->status() || $this->readOnly()) {
       return TRUE;
     }
     _search_api_index_reindex($this);
