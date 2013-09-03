@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\Core\Entity\Server.
+ * Contains Drupal\search_api\Entity\Server.
  */
 
 namespace Drupal\search_api\Entity;

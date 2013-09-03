@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\Core\Entity\Index.
+ * Contains Drupal\search_api\Entity\Index.
  */
 
 namespace Drupal\search_api\Entity;
