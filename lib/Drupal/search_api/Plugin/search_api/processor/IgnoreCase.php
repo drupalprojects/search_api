@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\IgnoreCase.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\IgnoreCase.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;

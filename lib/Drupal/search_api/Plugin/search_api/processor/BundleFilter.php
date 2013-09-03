@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\BundleFilter.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\BundleFilter.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;

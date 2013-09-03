@@ -79,8 +79,8 @@ class Tokenizer extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationFormValidate(array $form, array &form_state) {
-    parent::buildConfigurationFormValidate($form, $values, $form_state);
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    parent::validateConfigurationForm($form, $values, $form_state);
 
     $spaces = str_replace('/', '\/', $values['spaces']);
     $ignorable = str_replace('/', '\/', $values['ignorable']);

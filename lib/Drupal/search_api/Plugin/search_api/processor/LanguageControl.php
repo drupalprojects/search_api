@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\LanguageControl.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\LanguageControl.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
@@ -119,9 +119,9 @@ class LanguageControl extends ProcessorPluginBase {
    * @return array
    *   The new options array for this callback.
    */
-  public function buildConfigurationFormSubmit(array $form, array &form_state) {
+  public function submitConfigurationForm(array &$form, array &$form_state) {
     $values['languages'] = array_filter($values['languages']);
-    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
+    return parent::submitConfigurationForm($form, $values, $form_state);
   }
 
   /**

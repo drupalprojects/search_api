@@ -104,7 +104,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationFormValidate(array $form, array &form_state) {
+  public function validateConfigurationForm(array &$form, array &$form_state) {
     // Overridden so $form['fields'] is not checked.
   }
 

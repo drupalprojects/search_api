@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\AddViewedEntity.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\AddViewedEntity.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;

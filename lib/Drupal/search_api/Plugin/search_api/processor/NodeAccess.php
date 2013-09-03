@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\NodeAccess.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\NodeAccess.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
@@ -96,7 +96,7 @@ class NodeAccess extends ProcessorPluginBase {
    * If the data alteration is being enabled, set "Published" and "Author" to
    * "indexed", because both are needed for the node access filter.
    */
-  public function buildConfigurationFormSubmit(array $form, array &form_state) {
+  public function submitConfigurationForm(array &$form, array &$form_state) {
     $old_status = !empty($form_state['index']->options['data_alter_callbacks']['search_api_alter_node_access']['status']);
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
@@ -106,7 +106,7 @@ class NodeAccess extends ProcessorPluginBase {
       $form_state['index']->options['fields']['author']['entity_type'] = 'user';
     }
 
-    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
+    return parent::submitConfigurationForm($form, $values, $form_state);
   }
 
 }

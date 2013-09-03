@@ -491,63 +491,6 @@ function search_api_modules_disabled(array $modules) {
 }
 
 /**
- * Implements hook_search_api_alter_callback_info().
- */
-function search_api_search_api_alter_callback_info() {
-  $callbacks['search_api_alter_bundle_filter'] = array(
-    'name' => t('Bundle filter'),
-    'description' => t('Exclude items from indexing based on their bundle (content type, vocabulary, …).'),
-    'class' => 'SearchApiAlterBundleFilter',
-    // Filters should be executed first.
-    'weight' => -10,
-  );
-  $callbacks['search_api_alter_role_filter'] = array(
-    'name' => t('Role filter'),
-    'description' => t('Exclude users from indexing based on their role.'),
-    'class' => 'SearchApiAlterRoleFilter',
-    // Filters should be executed first.
-    'weight' => -10,
-  );
-  $callbacks['search_api_alter_add_url'] = array(
-    'name' => t('URL field'),
-    'description' => t("Adds the item's URL to the indexed data."),
-    'class' => 'SearchApiAlterAddUrl',
-  );
-  $callbacks['search_api_alter_add_aggregation'] = array(
-    'name' => t('Aggregated fields'),
-    'description' => t('Gives you the ability to define additional fields, containing data from one or more other fields.'),
-    'class' => 'SearchApiAlterAddAggregation',
-  );
-  $callbacks['search_api_alter_add_viewed_entity'] = array(
-    'name' => t('Complete entity view'),
-    'description' => t('Adds an additional field containing the whole HTML content of the entity when viewed.'),
-    'class' => 'SearchApiAlterAddViewedEntity',
-  );
-  $callbacks['search_api_alter_add_hierarchy'] = array(
-    'name' => t('Index hierarchy'),
-    'description' => t('Allows to index hierarchical fields along with all their ancestors.'),
-    'class' => 'SearchApiAlterAddHierarchy',
-  );
-  $callbacks['search_api_alter_language_control'] = array(
-    'name' => t('Language control'),
-    'description' => t('Lets you determine the language of items in the index.'),
-    'class' => 'SearchApiAlterLanguageControl',
-  );
-  $callbacks['search_api_alter_node_access'] = array(
-    'name' => t('Node access'),
-    'description' => t('Add node access information to the index.'),
-    'class' => 'SearchApiAlterNodeAccess',
-  );
-  $callbacks['search_api_alter_node_status'] = array(
-    'name' => t('Exclude unpublished nodes'),
-    'description' => t('Exclude unpublished nodes from the index.'),
-    'class' => 'SearchApiAlterNodeStatus',
-  );
-
-  return $callbacks;
-}
-
-/**
  * Inserts new unindexed items for all indexes on the specified type.
  *
  * @param $type

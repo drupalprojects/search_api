@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\NodeStatus.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\NodeStatus.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;

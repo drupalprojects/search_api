@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\RoleFilter.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\RoleFilter.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;

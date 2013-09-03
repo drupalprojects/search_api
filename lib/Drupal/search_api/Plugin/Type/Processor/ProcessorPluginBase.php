@@ -236,7 +236,7 @@ abstract class ProcessorPluginBase extends PluginBase implements ProcessorInterf
    * @param array $tokens
    *   The tokens to normalize.
    * @param int $score
-   *   The score multiplier to apply, for internal use.
+   *   (optional) The score multiplier to apply, for internal use.
    *
    * @return array
    *   The normalized tokens.

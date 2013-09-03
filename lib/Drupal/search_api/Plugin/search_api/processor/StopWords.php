@@ -65,8 +65,8 @@ class StopWords extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationFormValidate(array $form, array &form_state) {
-    parent::buildConfigurationFormValidate($form, $values, $form_state);
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    parent::validateConfigurationForm($form, $values, $form_state);
 
     $stopwords = trim($values['stopwords']);
     $uri = $values['file'];

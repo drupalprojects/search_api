@@ -2,13 +2,26 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\AddHierarchy.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\AddHierarchy.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+
 /**
- * Search API data alteration callback that adds an URL field for all items.
+ * Provides a processor for indexing all ancestors of fields with hierarchy.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_add_hierarchy",
+ *   name = @Translation("Index hierarchy"),
+ *   description = @Translation("Allows to index hierarchical fields along with all their ancestors."),
+ *   weight = -10
+ * )
  */
 class AddHierarchy extends ProcessorPluginBase {
 
@@ -19,19 +32,21 @@ class AddHierarchy extends ProcessorPluginBase {
    *
    * @see getHierarchicalFields()
    */
-  protected $field_options;
+  protected static $field_options = array();
 
   /**
+   * Checks whether this processor is applicable for a certain index.
+   *
    * Enable this data alteration only if any hierarchical fields are available.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to check for.
    *
    * @return boolean
    *   TRUE if the callback can run on the given index; FALSE otherwise.
    */
-  public static function supportsIndex(Index $index) {
-    return (bool) $this->getHierarchicalFields();
+  public static function supportsIndex(IndexInterface $index) {
+    return (bool) self::getHierarchicalFields($index);
   }
 
   /**
@@ -42,7 +57,7 @@ class AddHierarchy extends ProcessorPluginBase {
    *   is possible.
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $options = $this->getHierarchicalFields();
+    $options = self::getHierarchicalFields($this->index);
     $this->options += array('fields' => array());
     $form['fields'] = array(
       '#title' => t('Hierarchical fields'),
@@ -61,27 +76,16 @@ class AddHierarchy extends ProcessorPluginBase {
   }
 
   /**
-   * Submit callback for the form returned by buildConfigurationForm().
-   *
-   * This method should both return the new options and set them internally.
-   *
-   * @param array $form
-   *   The form returned by buildConfigurationForm().
-   * @param array $values
-   *   The part of the $form_state['values'] array corresponding to this form.
-   * @param array $form_state
-   *   The complete form state.
-   *
-   * @return array
-   *   The new options array for this callback.
+   * {@inheritdoc}
    */
-  public function buildConfigurationFormSubmit(array $form, array &form_state) {
+  public function submitConfigurationForm(array &$form, array &$form_state) {
     // Change the saved type of fields in the index, if necessary.
-    if (!empty($this->index->options['fields'])) {
-      $fields = &$this->index->options['fields'];
+    $fields = $this->index->getOption('fields', array());
+    if ($fields) {
       $previous = drupal_map_assoc($this->options['fields']);
+      $values = $form_state['values'];
       foreach ($values['fields'] as $field) {
-        list($key, $prop) = explode(':', $field);
+        list($key) = explode(':', $field, 2);
         if (empty($previous[$field]) && isset($fields[$key]['type'])) {
           $fields[$key]['type'] = 'list<' . search_api_extract_inner_type($fields[$key]['type']) . '>';
           $change = TRUE;
@@ -89,7 +93,7 @@ class AddHierarchy extends ProcessorPluginBase {
       }
       $new = drupal_map_assoc($values['fields']);
       foreach ($previous as $field) {
-        list($key, $prop) = explode(':', $field);
+        list($key) = explode(':', $field, 2);
         if (empty($new[$field]) && isset($fields[$key]['type'])) {
           $w = $this->index->entityWrapper(NULL, FALSE);
           if (isset($w->$key)) {
@@ -101,59 +105,16 @@ class AddHierarchy extends ProcessorPluginBase {
         }
       }
       if (isset($change)) {
+        $this->index->options['fields'] = $fields;
         $this->index->save();
       }
     }
 
-    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**
-   * Alter items before indexing.
-   *
-   * Items which are removed from the array won't be indexed, but will be marked
-   * as clean for future indexing. This could for instance be used to implement
-   * some sort of access filter for security purposes (e.g., don't index
-   * unpublished nodes or comments).
-   *
-   * @param array $items
-   *   An array of items to be altered, keyed by item IDs.
-   */
-  public function alterItems(array &$items) {
-    if (empty($this->options['fields'])) {
-      return array();
-    }
-    foreach ($items as $item) {
-      $wrapper = $this->index->entityWrapper($item, FALSE);
-
-      $values = array();
-      foreach ($this->options['fields'] as $field) {
-        list($key, $prop) = explode(':', $field);
-        if (!isset($wrapper->$key)) {
-          continue;
-        }
-        $child = $wrapper->$key;
-
-        $values += array($key => array());
-        $this->extractHierarchy($child, $prop, $values[$key]);
-      }
-      foreach ($values as $key => $value) {
-        $item->$key = $value;
-      }
-    }
-  }
-
-  /**
-   * Declare the properties that are (or can be) added to items with this
-   * callback. If a property with this name already exists for an entity it
-   * will be overridden, so keep a clear namespace by prefixing the properties
-   * with the module name if this is not desired.
-   *
-   * @see hook_entity_property_info()
-   *
-   * @return array
-   *   Information about all additional properties, as specified by
-   *   hook_entity_property_info() (only the inner "properties" array).
+   * {@inheritdoc}
    */
   public function propertyInfo() {
     if (empty($this->options['fields'])) {
@@ -195,16 +156,46 @@ class AddHierarchy extends ProcessorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
+    if (empty($this->options['fields'])) {
+      return;
+    }
+    foreach ($items as $item) {
+      $wrapper = $this->index->entityWrapper($item, FALSE);
+
+      $values = array();
+      foreach ($this->options['fields'] as $field) {
+        list($key, $prop) = explode(':', $field);
+        if (!isset($wrapper->$key)) {
+          continue;
+        }
+        $child = $wrapper->$key;
+
+        $values += array($key => array());
+        $this->extractHierarchy($child, $prop, $values[$key]);
+      }
+      foreach ($values as $key => $value) {
+        $item->$key = $value;
+      }
+    }
+  }
+
+  /**
    * Helper method for finding all hierarchical fields of an index's type.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index whose fields should be checked.
    *
    * @return array
    *   An array containing all hierarchical fields of the index, structured as
    *   an options array grouped by primary field.
    */
-  protected function getHierarchicalFields() {
-    if (!isset($this->field_options)) {
-      $this->field_options = array();
-      $wrapper = $this->index->entityWrapper(NULL, FALSE);
+  protected static function getHierarchicalFields(IndexInterface $index) {
+    if (!isset(self::$field_options[$index->id()])) {
+      self::$field_options[$index->id()] = array();
+      $wrapper = $index->entityWrapper(NULL, FALSE);
       // Only entities can be indexed in hierarchies, as other properties don't
       // have IDs that we can extract and store.
       $entity_info = entity_get_info();
@@ -220,18 +211,18 @@ class AddHierarchy extends ProcessorPluginBase {
         foreach ($child as $key2 => $prop) {
           if (search_api_extract_inner_type($prop->type()) == $type) {
             $prop_info = $prop->info();
-            $this->field_options[$info['label']]["$key1:$key2"] = $prop_info['label'];
+            self::$field_options[$index->id()][$info['label']]["$key1:$key2"] = $prop_info['label'];
           }
         }
       }
     }
-    return $this->field_options;
+    return self::$field_options[$index->id()];
   }
 
   /**
    * Extracts a hierarchy from a metadata wrapper by modifying $values.
    */
-  public function extractHierarchy(EntityMetadataWrapper $wrapper, $property, array &$values) {
+  public function extractHierarchy(TypedDataInterface $wrapper, $property, array &$values) {
     if (search_api_is_list_type($wrapper->type())) {
       foreach ($wrapper as $w) {
         $this->extractHierarchy($w, $property, $values);

@@ -2,16 +2,46 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\processor\AddAggregation.
+ * Contains \Drupal\search_api\Plugin\search_api\processor\AddAggregation.
  */
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+
 /**
- * Search API data alteration callback that adds an URL field for all items.
+ * Provides a processor for adding aggregations of existing fields to the index.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_add_aggregation",
+ *   name = @Translation("Aggregated fields"),
+ *   description = @Translation("Gives you the ability to define additional fields, containing data from one or more other fields."),
+ *   weight = -10
+ * )
  */
 class AddAggregation extends ProcessorPluginBase {
 
+  /**
+   * Whether there are unsaved changes for this processor's configuration.
+   *
+   * @var bool
+   */
+  protected $changes = FALSE;
+
+  /**
+   * The type of reduction used for a certain aggregated field.
+   *
+   * Used in reduce() to decide how to combine the array values.
+   *
+   * @var string
+   */
+  protected $reductionType;
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
@@ -107,7 +137,11 @@ class AddAggregation extends ProcessorPluginBase {
     return $form;
   }
 
-  public function buildConfigurationFormValidate(array $form, array &form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    $values = $form_state['values'];
     unset($values['actions']);
     if (empty($values['fields'])) {
       return;
@@ -121,9 +155,13 @@ class AddAggregation extends ProcessorPluginBase {
     }
   }
 
-  public function buildConfigurationFormSubmit(array $form, array &form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    $values = $form_state['values'];
     if (empty($values['fields'])) {
-      return array();
+      return;
     }
     $index_fields = $this->index->getFields(FALSE);
     foreach ($values['fields'] as $name => $field) {
@@ -135,10 +173,12 @@ class AddAggregation extends ProcessorPluginBase {
       }
     }
     $this->options = $values;
-    return $values;
   }
 
-  public function alterItems(array &$items) {
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
     if (!$items) {
       return;
     }
@@ -175,7 +215,17 @@ class AddAggregation extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for reducing an array to a single value.
+   * Combines two values of an array to a single one.
+   *
+   * Used as the callback function for array_reduce() in alterItems().
+   *
+   * @param mixed $a
+   *   The first value.
+   * @param mixed $b
+   *   The second value.
+   *
+   * @return mixed
+   *   A combined value.
    */
   public function reduce($a, $b) {
     switch ($this->reductionType) {
@@ -195,7 +245,13 @@ class AddAggregation extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for flattening a multi-dimensional array.
+   * Flattens a multi-dimensional array.
+   *
+   * @param array $data
+   *   The array to flatten.
+   *
+   * @return array
+   *   A one-dimensional array.
    */
   protected function flattenArray(array $data) {
     $ret = array();
@@ -213,6 +269,9 @@ class AddAggregation extends ProcessorPluginBase {
     return $ret;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function propertyInfo() {
     $types = $this->getTypes('type');
     $ret = array();
@@ -229,7 +288,14 @@ class AddAggregation extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for creating a field description.
+   * Creates a description for an aggregated field.
+   *
+   * @param array $field
+   *   The configuration of the aggregated fields.
+   * @param array $index_fields
+   *   Information about all fields in the index.
+   *
+   * @return string
    */
   protected function fieldDescription(array $field, array $index_fields) {
     $fields = array();
@@ -242,12 +308,14 @@ class AddAggregation extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for getting all available aggregation types.
+   * Retrieves information about all available aggregation types.
    *
-   * @param $info (optional)
-   *   One of "name", "type" or "description", to indicate what values should be
-   *   returned for the types. Defaults to "name".
+   * @param string $info
+   *   (optional) One of "name", "type" or "description", to indicate what
+   *   values should be returned for the types.
    *
+   * @return array
+   *   The requested information about the field.
    */
   protected function getTypes($info = 'name') {
     switch ($info) {
@@ -282,7 +350,7 @@ class AddAggregation extends ProcessorPluginBase {
   }
 
   /**
-   * Submit helper callback for buttons in the callback's configuration form.
+   * Submit callback for buttons in the processor's configuration form.
    */
   public function formButtonSubmit(array $form, array &$form_state) {
     $button_name = $form_state['triggering_element']['#name'];
