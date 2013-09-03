@@ -13,7 +13,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
  */
 class BundleFilter extends ProcessorPluginBase {
 
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return $index->getEntityType() && ($info = entity_get_info($index->getEntityType())) && self::hasBundles($info);
   }
 
@@ -31,7 +31,7 @@ class BundleFilter extends ProcessorPluginBase {
     }
   }
 
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $info = entity_get_info($this->index->getEntityType());
     if (self::hasBundles($info)) {
       $options = array();

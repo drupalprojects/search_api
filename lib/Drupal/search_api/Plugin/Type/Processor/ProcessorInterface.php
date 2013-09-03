@@ -7,6 +7,9 @@
 
 namespace Drupal\search_api\Plugin\Type\Processor;
 
+use Drupal\Component\Plugin\ConfigurablePluginInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 
@@ -22,20 +25,27 @@ use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
  * search queries, so these two methods should mostly be implemented either both
  * or neither.
  */
-interface ProcessorInterface {
+interface ProcessorInterface extends ConfigurablePluginInterface, PluginFormInterface, PluginInspectionInterface {
 
   /**
-   * Construct a processor.
+   * Constructs a processor.
    *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The index for which processing is done.
-   * @param array $options
-   *   The processor options set for this index.
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   *   Contains the following keys:
+   *   - index: The \Drupal\search_api\IndexInterface object this processor is
+   *     attached to.
+   *   - options: An array of settings entered by the user into the processor's
+   *     configuration form.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param array $plugin_definition
+   *   The plugin implementation definition.
    */
-  public function __construct(IndexInterface $index, array $options = array());
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition);
 
   /**
-   * Check whether this processor is applicable for a certain index.
+   * Checks whether this processor is applicable for a certain index.
    *
    * This can be used for hiding the processor on the index's "Workflow" tab. To
    * avoid confusion, you should only use criteria that are immutable, such as
@@ -50,47 +60,26 @@ interface ProcessorInterface {
    * @return boolean
    *   TRUE if the processor can run on the given index; FALSE otherwise.
    */
-  public function supportsIndex(IndexInterface $index);
+  public static function supportsIndex(IndexInterface $index);
 
   /**
-   * Display a form for configuring this processor.
-   * Since forcing users to specify options for disabled processors makes no
-   * sense, none of the form elements should have the '#required' attribute set.
+   * Declare the properties that are added to items by this processor.
+   *
+   * If one of the specified properties already exists for an entity it will be
+   * overridden, so keep a clear namespace by prefixing the properties with the
+   * module name if this is not desired.
+   *
+   * CAUTION: Since this method is used when calling
+   * \Drupal\search_api\IndexInterface::getFields(), calling that method from
+   * inside propertyInfo() will lead to a recursion and should therefore be
+   * avoided.
+   *
+   * @see hook_entity_property_info()
    *
    * @return array
-   *   A form array for configuring this processor, or FALSE if no configuration
-   *   is possible.
+   *   Information about all additional properties.
    */
-  public function configurationForm();
-
-  /**
-   * Validation callback for the form returned by configurationForm().
-   *
-   * @param array $form
-   *   The form returned by configurationForm().
-   * @param array $values
-   *   The part of the $form_state['values'] array corresponding to this form.
-   * @param array $form_state
-   *   The complete form state.
-   */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state);
-
-  /**
-   * Submit callback for the form returned by configurationForm().
-   *
-   * This method should both return the new options and set them internally.
-   *
-   * @param array $form
-   *   The form returned by configurationForm().
-   * @param array $values
-   *   The part of the $form_state['values'] array corresponding to this form.
-   * @param array $form_state
-   *   The complete form state.
-   *
-   * @return array
-   *   The new options array for this callback.
-   */
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state);
+  public function propertyInfo();
 
   /**
    * Preprocess data items for indexing.

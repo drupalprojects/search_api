@@ -45,7 +45,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $this->options += array(
       'prefix' => '<strong>',
       'suffix' => '</strong>',
@@ -104,7 +104,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormValidate(array $form, array &form_state) {
     // Overridden so $form['fields'] is not checked.
   }
 

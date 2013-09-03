@@ -1101,109 +1101,12 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
  */
 // Copied from filter_admin_format_form
 function search_api_admin_index_workflow(array $form, array &$form_state, SearchApiIndex $index) {
-  $callback_info = search_api_get_alter_callbacks();
   $processor_info = search_api_get_processors();
   $options = empty($index->options) ? array() : $index->options;
 
   $form_state['index'] = $index;
   $form['#tree'] = TRUE;
   $form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
-
-  // Callbacks
-
-  $callbacks = empty($options['data_alter_callbacks']) ? array() : $options['data_alter_callbacks'];
-  $callback_objects = isset($form_state['callbacks']) ? $form_state['callbacks'] : array();
-  foreach ($callback_info as $name => $callback) {
-    if (!isset($callbacks[$name])) {
-      $callbacks[$name]['status'] = 0;
-      $callbacks[$name]['weight'] = $callback['weight'];
-    }
-    $settings = empty($callbacks[$name]['settings']) ? array() : $callbacks[$name]['settings'];
-    if (empty($callback_objects[$name]) && class_exists($callback['class'])) {
-      $callback_objects[$name] = new $callback['class']($index, $settings);
-    }
-    if (!(class_exists($callback['class']) && $callback_objects[$name] instanceof SearchApiAlterCallbackInterface)) {
-      watchdog('search_api', t('Data alteration @id specifies illegal callback class @class.', array('@id' => $name, '@class' => $callback['class'])), NULL, WATCHDOG_WARNING);
-      unset($callback_info[$name]);
-      unset($callbacks[$name]);
-      unset($callback_objects[$name]);
-      continue;
-    }
-    if (!$callback_objects[$name]->supportsIndex($index)) {
-      unset($callback_info[$name]);
-      unset($callbacks[$name]);
-      unset($callback_objects[$name]);
-      continue;
-    }
-  }
-  $form_state['callbacks'] = $callback_objects;
-  $form['#callbacks'] = $callbacks;
-  $form['callbacks'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Data alterations'),
-    '#description' => t('Select the alterations that will be executed on indexed items, and their order.'),
-    '#collapsible' => TRUE,
-  );
-
-  // Callback status.
-  $form['callbacks']['status'] = array(
-    '#type' => 'item',
-    '#title' => t('Enabled data alterations'),
-    '#prefix' => '<div class="search-api-status-wrapper">',
-    '#suffix' => '</div>',
-  );
-  foreach ($callback_info as $name => $callback) {
-    $form['callbacks']['status'][$name] = array(
-      '#type' => 'checkbox',
-      '#title' => $callback['name'],
-      '#default_value' => $callbacks[$name]['status'],
-      '#parents' => array('callbacks', $name, 'status'),
-      '#description' => $callback['description'],
-      '#weight' => $callback['weight'],
-    );
-  }
-
-  // Callback order (tabledrag).
-  $form['callbacks']['order'] = array(
-    '#type' => 'item',
-    '#title' => t('Data alteration processing order'),
-    '#theme' => 'search_api_admin_item_order',
-    '#table_id' => 'search-api-callbacks-order-table',
-  );
-  foreach ($callback_info as $name => $callback) {
-    $form['callbacks']['order'][$name]['item'] = array(
-      '#markup' => $callback['name'],
-    );
-    $form['callbacks']['order'][$name]['weight'] = array(
-      '#type' => 'weight',
-      '#delta' => 50,
-      '#default_value' => $callbacks[$name]['weight'],
-      '#parents' => array('callbacks', $name, 'weight'),
-    );
-    $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['weight'];
-  }
-
-  // Callback settings.
-  $form['callbacks']['settings_title'] = array(
-    '#type' => 'item',
-    '#title' => t('Callback settings'),
-  );
-  $form['callbacks']['settings'] = array(
-    '#type' => 'vertical_tabs',
-  );
-
-  foreach ($callback_info as $name => $callback) {
-    $settings_form = $callback_objects[$name]->configurationForm();
-    if (!empty($settings_form)) {
-      $form['callbacks']['settings'][$name] = array(
-        '#type' => 'fieldset',
-        '#title' => $callback['name'],
-        '#parents' => array('callbacks', $name, 'settings'),
-        '#weight' => $callback['weight'],
-      );
-      $form['callbacks']['settings'][$name] += $settings_form;
-    }
-  }
 
   // Processors
 

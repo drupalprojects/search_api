@@ -57,8 +57,8 @@ class HtmlFilter extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationForm() {
-    $form = parent::configurationForm();
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    $form = parent::buildConfigurationForm();
     $form += array(
       'title' => array(
         '#type' => 'checkbox',
@@ -89,8 +89,8 @@ class HtmlFilter extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
-    parent::configurationFormValidate($form, $values, $form_state);
+  public function buildConfigurationFormValidate(array $form, array &form_state) {
+    parent::buildConfigurationFormValidate($form, $values, $form_state);
 
     if (empty($values['tags'])) {
       return;

@@ -7,21 +7,22 @@
 
 namespace Drupal\search_api\Plugin\Type\Processor;
 
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+use Drupal\search_api\Plugin\Type\ProcessorPluginManager;
 
 /**
- * Abstract processor implementation that provides an easy framework for only
- * processing specific fields.
+ * Defines a base processor implementation that most plugins will extend.
  *
  * Simple processors can just override process(), while others might want to
  * override the other process*() methods, and test*() (for restricting
  * processing to something other than all fulltext data).
  */
-abstract class ProcessorPluginBase implements ProcessorInterface {
+abstract class ProcessorPluginBase extends PluginBase implements ProcessorInterface {
 
   /**
-   * @var \Drupal\search_api\IndexInterface Index
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -31,24 +32,47 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   protected $options;
 
   /**
-   * {@inheritdoc}
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::__construct().
+   *
+   * The default implementation saves the parameters into the object's
+   * properties.
    */
-  public function __construct(IndexInterface $index, array $options = array()) {
-    $this->index   = $index;
-    $this->options = $options;
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->index = $this->configuration['index'];
+    $this->options = &$this->configuration['options'];;
   }
 
   /**
-   * {@inheritdoc}
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::supportsIndex().
+   *
+   * The default implementation always returns TRUE.
    */
-  public function supportsIndex(IndexInterface $index) {
+  public static function supportsIndex(IndexInterface $index) {
     return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function configurationForm() {
+  public function getConfiguration() {
+    return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $this->options = $configuration['options'];
+  }
+
+  /**
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::buildConfigurationForm().
+   *
+   * The default implementation adds a select list for choosing the fields that
+   * should be processed.
+   */
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
     $fields = $this->index->getFields();
@@ -76,26 +100,42 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::validateConfigurationForm().
+   *
+   * The default implementation brings the fields array into a key-based format.
    */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
-    $fields = array_filter($values['fields']);
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    $fields = array_filter($form_state['values']['fields']);
     if ($fields) {
       $fields = array_fill_keys($fields, TRUE);
     }
-    $values['fields'] = $fields;
+    $form_state['values']['fields'] = $fields;
   }
 
   /**
-   * {@inheritdoc}
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::submitConfigurationForm().
+   *
+   * The default implementation saves all values into the $options property.
    */
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
-    $this->options = $values;
-    return $values;
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    $state = $form_state;
+    form_state_values_clean($state);
+    $this->options = $state['values'];
   }
 
   /**
-   * Calls processField() for all appropriate fields.
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::propertyInfo().
+   *
+   * The default implementation does nothing.
+   */
+  public function propertyInfo() {
+    return array();
+  }
+
+  /**
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::preprocessIndexItems().
+   *
+   * The default implementation calls processField() for all appropriate fields.
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
@@ -108,7 +148,10 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Calls processKeys() for the keys and processFilters() for the filters.
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::preprocessSearchQuery().
+   *
+   * The default implementation calls processKeys() for the keys and
+   * processFilters() for the filters.
    */
   public function preprocessSearchQuery(DefaultQuery $query) {
     $keys = &$query->getKeys();
@@ -119,18 +162,25 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Does nothing.
+   * Implements \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::postprocessSearchResults().
+   *
+   * The default implementation does nothing.
    */
   public function postprocessSearchResults(array &$response, DefaultQuery $query) {
     return;
   }
 
   /**
-   * Method for preprocessing field data.
+   * Processes field data.
    *
    * Calls process() either for the whole text, or each token, depending on the
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
+   *
+   * @param $value
+   *   The field's value to process.
+   * @param $type
+   *   The field's type.
    */
   protected function processField(&$value, &$type) {
     if (!isset($value) || $value === '') {
@@ -181,9 +231,17 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Internal helper function for normalizing tokens.
+   * Normalizes tokens into a flat array.
+   *
+   * @param array $tokens
+   *   The tokens to normalize.
+   * @param int $score
+   *   The score multiplier to apply, for internal use.
+   *
+   * @return array
+   *   The normalized tokens.
    */
-  protected function normalizeTokens($tokens, $score = 1) {
+  protected function normalizeTokens(array $tokens, $score = 1) {
     $ret = array();
     foreach ($tokens as $token) {
       if (empty($token['value']) && !is_numeric($token['value'])) {
@@ -235,7 +293,12 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Method for preprocessing search keys.
+   * Processes search keys.
+   *
+   * @param array|string $keys
+   *   The search keys as defined by
+   *   \Drupal\search_api\Plugin\search_api\QueryInterface::getKeys(), passed by
+   *   reference.
    */
   protected function processKeys(&$keys) {
     if (is_array($keys)) {
@@ -254,10 +317,15 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Method for preprocessing query filters.
+   * Processes query filters.
+   *
+   * @param array $filters
+   *   The filter array as defined by
+   *   \Drupal\search_api\Plugin\search_api\FilterInterface::getFilters(),
+   *   passed by reference.
    */
   protected function processFilters(array &$filters) {
-    $fields = $this->index->options['fields'];
+    $fields = $this->index->getOption('fields', array());
     foreach ($filters as $key => &$f) {
       if (is_array($f)) {
         if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
@@ -282,12 +350,14 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * @param $name
+   * Tests whether a certain field should be processed.
+   *
+   * @param string $name
    *   The field's machine name.
    * @param array $field
    *   The field's information.
    *
-   * @return
+   * @return bool
    *   TRUE, iff the field should be processed.
    */
   protected function testField($name, array $field) {
@@ -298,7 +368,12 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * @return
+   * Tests whether fields of a certain type should be processed.
+   *
+   * @param string $type
+   *   The type in question.
+   *
+   * @return bool
    *   TRUE, iff the type should be processed.
    */
   protected function testType($type) {
@@ -306,49 +381,64 @@ abstract class ProcessorPluginBase implements ProcessorInterface {
   }
 
   /**
-   * Called for processing a single text element in a field. The default
-   * implementation just calls process().
+   * Called for processing a single text element in a field.
    *
-   * $value can either be left a string, or changed into an array of tokens. A
-   * token is an associative array containing:
+   * For fulltext fields, $value can either be left a string, or changed into an
+   * array of tokens. A token is an associative array containing:
    * - value: Either the text inside the token, or a nested array of tokens. The
    *   score of nested tokens will be multiplied by their parent's score.
    * - score: The relative importance of the token, as a float, with 1 being
    *   the default.
+   *
+   * The default implementation just calls process().
+   *
+   * @param mixed $value
+   *   The value to process, passed by reference.
    */
   protected function processFieldValue(&$value) {
     $this->process($value);
   }
 
   /**
-   * Called for processing a single search keyword. The default implementation
-   * just calls process().
+   * Called for processing a single search keyword.
    *
    * $value can either be left a string, or be changed into a nested keys array,
-   * as defined by QueryInterface.
+   * as defined by \Drupal\search_api\Plugin\search_api\QueryInterface.
+   *
+   * The default implementation just calls process().
+   *
+   * @param mixed $value
+   *   The value to process, passed by reference.
    */
   protected function processKey(&$value) {
     $this->process($value);
   }
 
   /**
-   * Called for processing a single filter value. The default implementation
-   * just calls process().
+   * Called for processing a single filter value.
    *
-   * $value has to remain a string.
+   * $value has to remain the same type it was passed as.
+   *
+   * The default implementation just calls process().
+   *
+   * @param mixed $value
+   *   The value to process, passed by reference.
    */
   protected function processFilterValue(&$value) {
     $this->process($value);
   }
 
   /**
-   * Function that is ultimately called for all text by the standard
+   * Process a value.
+   *
+   * This method is eventually called for all text by the standard
    * implementation, and does nothing by default.
    *
-   * @param $value
-   *   The value to preprocess as a string. Can be manipulated directly, nothing
-   *   has to be returned. Since this can be called for all value types, $value
-   *   has to remain a string.
+   * Since this is called for values of all types and origins, $value has to
+   * remain the same type it was passed as.
+   *
+   * @param mixed $value
+   *   The value to process, passed by reference.
    */
   protected function process(&$value) {
 

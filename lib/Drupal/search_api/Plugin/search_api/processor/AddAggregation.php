@@ -12,7 +12,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
  */
 class AddAggregation extends ProcessorPluginBase {
 
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
     $fields = $this->index->getFields(FALSE);
@@ -107,7 +107,7 @@ class AddAggregation extends ProcessorPluginBase {
     return $form;
   }
 
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormValidate(array $form, array &form_state) {
     unset($values['actions']);
     if (empty($values['fields'])) {
       return;
@@ -121,7 +121,7 @@ class AddAggregation extends ProcessorPluginBase {
     }
   }
 
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormSubmit(array $form, array &form_state) {
     if (empty($values['fields'])) {
       return array();
     }

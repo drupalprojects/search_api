@@ -42,7 +42,7 @@ class LanguageControl extends ProcessorPluginBase {
    *
    * @see drupal_multilingual()
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return drupal_multilingual();
   }
 
@@ -52,7 +52,7 @@ class LanguageControl extends ProcessorPluginBase {
    * @return array
    *   A form array for configuring this data alteration.
    */
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $form = array();
 
     $wrapper = $this->index->entityWrapper();
@@ -105,12 +105,12 @@ class LanguageControl extends ProcessorPluginBase {
   }
 
   /**
-   * Submit callback for the form returned by configurationForm().
+   * Submit callback for the form returned by buildConfigurationForm().
    *
    * This method should both return the new options and set them internally.
    *
    * @param array $form
-   *   The form returned by configurationForm().
+   *   The form returned by buildConfigurationForm().
    * @param array $values
    *   The part of the $form_state['values'] array corresponding to this form.
    * @param array $form_state
@@ -119,9 +119,9 @@ class LanguageControl extends ProcessorPluginBase {
    * @return array
    *   The new options array for this callback.
    */
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormSubmit(array $form, array &form_state) {
     $values['languages'] = array_filter($values['languages']);
-    return parent::configurationFormSubmit($form, $values, $form_state);
+    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
   }
 
   /**

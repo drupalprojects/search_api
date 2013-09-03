@@ -17,11 +17,11 @@ class AddViewedEntity extends ProcessorPluginBase {
    *
    * @see ProcessorInterface::supportsIndex()
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return (bool) $index->getEntityType();
   }
 
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $view_modes = array();
     if ($entity_type = $this->index->getEntityType()) {
       $info = entity_get_info($entity_type);

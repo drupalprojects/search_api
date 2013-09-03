@@ -23,7 +23,7 @@ class NodeAccess extends ProcessorPluginBase {
    * @return boolean
    *   TRUE if the callback can run on the given index; FALSE otherwise.
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     // Currently only node access is supported.
     return $index->getEntityType() === 'node';
   }
@@ -96,7 +96,7 @@ class NodeAccess extends ProcessorPluginBase {
    * If the data alteration is being enabled, set "Published" and "Author" to
    * "indexed", because both are needed for the node access filter.
    */
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormSubmit(array $form, array &form_state) {
     $old_status = !empty($form_state['index']->options['data_alter_callbacks']['search_api_alter_node_access']['status']);
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
@@ -106,7 +106,7 @@ class NodeAccess extends ProcessorPluginBase {
       $form_state['index']->options['fields']['author']['entity_type'] = 'user';
     }
 
-    return parent::configurationFormSubmit($form, $values, $form_state);
+    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
   }
 
 }

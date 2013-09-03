@@ -8,6 +8,8 @@
 namespace Drupal\search_api\Plugin\search_api\query;
 
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Plugin\search_api\FilterInterface;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -46,7 +48,7 @@ class DefaultQuery implements QueryInterface {
   /**
    * The search filter associated with this query.
    *
-   * @var FilterInterface
+   * @var \Drupal\search_api\Plugin\search_api\FilterInterface
    */
   protected $filter;
 

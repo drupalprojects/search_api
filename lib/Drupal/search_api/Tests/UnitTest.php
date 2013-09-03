@@ -9,9 +9,6 @@ namespace Drupal\search_api\Tests;
 
 /**
  * Class with unit tests testing small fragments of the Search API.
- *
- * Due to severe limitations for "real" unit tests, this still has to be a
- * subclass of DrupalWebTestCase.
  */
 class UnitTest extends DrupalWebTestCase {
 

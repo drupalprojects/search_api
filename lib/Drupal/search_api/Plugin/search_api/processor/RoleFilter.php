@@ -17,7 +17,7 @@ class RoleFilter extends ProcessorPluginBase {
    *
    * This plugin only supports indexes containing users.
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return $index->getEntityType() == 'user';
   }
 
@@ -36,11 +36,11 @@ class RoleFilter extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides ProcessorPluginBase::configurationForm().
+   * Overrides ProcessorPluginBase::buildConfigurationForm().
    *
    * Add option for the roles to include/exclude.
    */
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $options = array_map('check_plain', user_roles());
     $form = array(
       'default' => array(

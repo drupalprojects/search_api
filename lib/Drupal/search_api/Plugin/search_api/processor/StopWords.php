@@ -34,8 +34,8 @@ class StopWords extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationForm() {
-    $form = parent::configurationForm();
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    $form = parent::buildConfigurationForm();
 
     $form += array(
       'help' => array(
@@ -65,8 +65,8 @@ class StopWords extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
-    parent::configurationFormValidate($form, $values, $form_state);
+  public function buildConfigurationFormValidate(array $form, array &form_state) {
+    parent::buildConfigurationFormValidate($form, $values, $form_state);
 
     $stopwords = trim($values['stopwords']);
     $uri = $values['file'];

@@ -37,8 +37,8 @@ class Tokenizer extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationForm() {
-    $form = parent::configurationForm();
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    $form = parent::buildConfigurationForm();
 
     // Only make fulltext fields available as options.
     $fields = $this->index->getFields();
@@ -79,8 +79,8 @@ class Tokenizer extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function configurationFormValidate(array $form, array &$values, array &$form_state) {
-    parent::configurationFormValidate($form, $values, $form_state);
+  public function buildConfigurationFormValidate(array $form, array &form_state) {
+    parent::buildConfigurationFormValidate($form, $values, $form_state);
 
     $spaces = str_replace('/', '\/', $values['spaces']);
     $ignorable = str_replace('/', '\/', $values['ignorable']);

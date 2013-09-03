@@ -30,7 +30,7 @@ class AddHierarchy extends ProcessorPluginBase {
    * @return boolean
    *   TRUE if the callback can run on the given index; FALSE otherwise.
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return (bool) $this->getHierarchicalFields();
   }
 
@@ -41,7 +41,7 @@ class AddHierarchy extends ProcessorPluginBase {
    *   A form array for configuring this callback, or FALSE if no configuration
    *   is possible.
    */
-  public function configurationForm() {
+  public function buildConfigurationForm(array $form, array &$form_state) {
     $options = $this->getHierarchicalFields();
     $this->options += array('fields' => array());
     $form['fields'] = array(
@@ -61,12 +61,12 @@ class AddHierarchy extends ProcessorPluginBase {
   }
 
   /**
-   * Submit callback for the form returned by configurationForm().
+   * Submit callback for the form returned by buildConfigurationForm().
    *
    * This method should both return the new options and set them internally.
    *
    * @param array $form
-   *   The form returned by configurationForm().
+   *   The form returned by buildConfigurationForm().
    * @param array $values
    *   The part of the $form_state['values'] array corresponding to this form.
    * @param array $form_state
@@ -75,7 +75,7 @@ class AddHierarchy extends ProcessorPluginBase {
    * @return array
    *   The new options array for this callback.
    */
-  public function configurationFormSubmit(array $form, array &$values, array &$form_state) {
+  public function buildConfigurationFormSubmit(array $form, array &form_state) {
     // Change the saved type of fields in the index, if necessary.
     if (!empty($this->index->options['fields'])) {
       $fields = &$this->index->options['fields'];
@@ -105,7 +105,7 @@ class AddHierarchy extends ProcessorPluginBase {
       }
     }
 
-    return parent::configurationFormSubmit($form, $values, $form_state);
+    return parent::buildConfigurationFormSubmit($form, $values, $form_state);
   }
 
   /**

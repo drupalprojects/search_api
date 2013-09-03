@@ -6,8 +6,10 @@
  */
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\search_api\Plugin\search_api\DatasourceInterface;
 use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 
@@ -1112,7 +1114,7 @@ function search_api_get_item_type_info($type = NULL) {
  * @param $type
  *   The type whose data source controller should be returned.
  *
- * @return SearchApiDataSourceControllerInterface
+ * @return \Drupal\search_api\Plugin\search_api\DatasourceInterface
  *   The type's data source controller.
  *
  * @throws SearchApiException
@@ -1125,35 +1127,12 @@ function search_api_get_datasource_controller($type) {
     if (isset($info['datasource controller']) && class_exists($info['datasource controller'])) {
       $datasources[$type] = new $info['datasource controller']($type);
     }
-    if (empty($datasources[$type]) || !($datasources[$type] instanceof SearchApiDataSourceControllerInterface)) {
+    if (empty($datasources[$type]) || !($datasources[$type] instanceof DatasourceInterface)) {
       unset($datasources[$type]);
       throw new SearchApiException(t('Unknown or invalid item type @type.', array('@type' => $type)));
     }
   }
   return $datasources[$type];
-}
-
-/**
- * Returns a list of all available data alter callbacks.
- *
- * @see hook_search_api_alter_callback_info()
- *
- * @return array
- *   An array of all available data alter callbacks, keyed by function name.
- */
-function search_api_get_alter_callbacks() {
-  $callbacks = &drupal_static(__FUNCTION__);
-
-  if (!isset($callbacks)) {
-    $callbacks = module_invoke_all('search_api_alter_callback_info');
-
-    // Initialization of optional entries with default values
-    foreach ($callbacks as $id => $callback) {
-      $callbacks[$id] += array('enabled' => TRUE, 'weight' => 0);
-    }
-  }
-
-  return $callbacks;
 }
 
 /**
@@ -1178,10 +1157,10 @@ function search_api_get_processors() {
  *
  * Adds node access to the query, if enabled.
  *
- * @param SearchApiQueryInterface $query
+ * @param \Drupal\search_api\Plugin\search_api\QueryInterface $query
  *   The SearchApiQueryInterface object representing the search query.
  */
-function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
+function search_api_search_api_query_alter(QueryInterface $query) {
   $index = $query->getIndex();
   // Only add node access if the necessary fields are indexed in the index, and
   // unless disabled explicitly by the query.

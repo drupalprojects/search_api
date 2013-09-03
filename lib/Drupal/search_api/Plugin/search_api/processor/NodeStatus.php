@@ -23,7 +23,7 @@ class NodeStatus extends ProcessorPluginBase {
    * @return boolean
    *   TRUE if the callback can run on the given index; FALSE otherwise.
    */
-  public function supportsIndex(Index $index) {
+  public static function supportsIndex(Index $index) {
     return $index->getEntityType() === 'node';
   }
 
