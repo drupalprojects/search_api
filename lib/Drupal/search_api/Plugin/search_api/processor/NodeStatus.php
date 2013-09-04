@@ -7,36 +7,36 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+
 /**
- * Exclude unpublished nodes from node indexes.
+ * Filters out unpublished nodes while indexing.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_node_status",
+ *   name = @Translation("Exclude unpublished nodes"),
+ *   description = @Translation("Exclude unpublished nodes from the index."),
+ *   weight = -20
+ * )
  */
 class NodeStatus extends ProcessorPluginBase {
 
   /**
-   * Check whether this data-alter callback is applicable for a certain index.
+   * Overrides \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::supportsIndex().
    *
    * Returns TRUE only for indexes on nodes.
-   *
-   * @param Index $index
-   *   The index to check for.
-   *
-   * @return boolean
-   *   TRUE if the callback can run on the given index; FALSE otherwise.
    */
-  public static function supportsIndex(Index $index) {
+  public static function supportsIndex(IndexInterface $index) {
     return $index->getEntityType() === 'node';
   }
 
   /**
-   * Alter items before indexing.
-   *
-   * Items which are removed from the array won't be indexed, but will be marked
-   * as clean for future indexing.
-   *
-   * @param array $items
-   *   An array of items to be altered, keyed by item IDs.
+   * {@inheritdoc}
    */
-  public function alterItems(array &$items) {
+  public function preprocessIndexItems(array &$items) {
     foreach ($items as $nid => &$item) {
       if (empty($item->status)) {
         unset($items[$nid]);

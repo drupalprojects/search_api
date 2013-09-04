@@ -7,30 +7,35 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+
 /**
- * Search API data alteration callback that filters out items based on their
- * bundle.
+ * Filters out entities based on their bundle.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_bundle_filter",
+ *   name = @Translation("Bundle filter"),
+ *   description = @Translation("Exclude items from indexing based on their bundle (content type, vocabulary, …)."),
+ *   weight = -20
+ * )
  */
 class BundleFilter extends ProcessorPluginBase {
 
-  public static function supportsIndex(Index $index) {
+  /**
+   * Overrides \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::supportsIndex().
+   *
+   * Only support entities with bundles.
+   */
+  public static function supportsIndex(IndexInterface $index) {
     return $index->getEntityType() && ($info = entity_get_info($index->getEntityType())) && self::hasBundles($info);
   }
 
-  public function alterItems(array &$items) {
-    $info = entity_get_info($this->index->getEntityType());
-    if (self::hasBundles($info) && isset($this->options['bundles'])) {
-      $bundles = array_flip($this->options['bundles']);
-      $default = (bool) $this->options['default'];
-      $bundle_prop = $info['entity keys']['bundle'];
-      foreach ($items as $id => $item) {
-        if (isset($bundles[$item->$bundle_prop]) == $default) {
-          unset($items[$id]);
-        }
-      }
-    }
-  }
-
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $info = entity_get_info($this->index->getEntityType());
     if (self::hasBundles($info)) {
@@ -69,8 +74,30 @@ class BundleFilter extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for figuring out if the entities with the given entity info
-   * can be filtered by bundle.
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
+    $info = entity_get_info($this->index->getEntityType());
+    if (self::hasBundles($info) && isset($this->options['bundles'])) {
+      $bundles = array_flip($this->options['bundles']);
+      $default = (bool) $this->options['default'];
+      $bundle_prop = $info['entity keys']['bundle'];
+      foreach ($items as $id => $item) {
+        if (isset($bundles[$item->$bundle_prop]) == $default) {
+          unset($items[$id]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Determines whether an entity type defines any bundles.
+   *
+   * @param array $entity_info
+   *   The information for the entity type in question.
+   *
+   * @return bool
+   *   TRUE if the type defines bundles, FALSE otherwise.
    */
   protected static function hasBundles(array $entity_info) {
     return !empty($entity_info['entity keys']['bundle']) && !empty($entity_info['bundles']);

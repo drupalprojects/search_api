@@ -12,7 +12,7 @@ use Drupal\search_api\Annotation\SearchApiProcessor;
 use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 
 /**
- * Processor for making searches case-insensitive.
+ * Makes searches case-insensitive by transforming all strings to lowercase.
  *
  * @SearchApiProcessor(
  *   id = "search_api_case_ignore",
@@ -22,6 +22,9 @@ use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
  */
 class IgnoreCase extends ProcessorPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function process(&$value) {
     // We don't touch integers, NULL values or the like.
     if (is_string($value)) {

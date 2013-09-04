@@ -9,9 +9,9 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\search_api\Annotation\SearchApiProcessor;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
-use Drupal\search_api\Annotation\SearchApiProcessor;
 
 /**
  * Provides a processor for indexing all ancestors of fields with hierarchy.

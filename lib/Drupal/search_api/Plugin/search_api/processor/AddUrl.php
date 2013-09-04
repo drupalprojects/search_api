@@ -8,8 +8,8 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Annotation\Translation;
-use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 
 /**
  * Search API data alteration callback that adds an URL field for all items.

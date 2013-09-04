@@ -7,13 +7,14 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Annotation\Translation;
 use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
-use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 
 /**
- * Processor for highlighting search results.
+ * Adds highlighting for search results.
  *
  * @SearchApiProcessor(
  *   id = "search_api_highlighting",
@@ -36,10 +37,16 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(Index $index, array $options = array()) {
-    parent::__construct($index, $options);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    self::$boundary = '(?:(?<=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . '])|(?=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . ']))';
+    $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
+        '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
+        '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
+        '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
+        '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
+    self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
+    self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']+/iu';
   }
 
   /**
@@ -111,7 +118,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, DefaultQuery $query) {
+  public function postprocessSearchResults(array &$response, QueryInterface $query) {
     if (!$response['result count'] || !($keys = $this->getKeywords($query))) {
       return;
     }
@@ -149,9 +156,9 @@ class Highlight extends ProcessorPluginBase {
   /**
    * Retrieves the fulltext data of a result.
    *
-   * @param array $result
+   * @param array $results
    *   All results returned in the search.
-   * @param int|string $i
+   * @param int $i
    *   The index in the results array of the result whose data should be
    *   returned.
    * @param bool $load
@@ -211,13 +218,13 @@ class Highlight extends ProcessorPluginBase {
   /**
    * Extracts the positive keywords used in a search query.
    *
-   * @param DefaultQuery $query
+   * @param QueryInterface $query
    *   The query from which to extract the keywords.
    *
    * @return array
    *   An array of all unique positive keywords used in the query.
    */
-  protected function getKeywords(DefaultQuery $query) {
+  protected function getKeywords(QueryInterface $query) {
     $keys = $query->getKeys();
     if (!$keys) {
       return array();
@@ -226,7 +233,7 @@ class Highlight extends ProcessorPluginBase {
       return $this->flattenKeysArray($keys);
     }
 
-    $keywords = preg_split('/[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . PREG_CLASS_CJK . ']+/iu', $keys);
+    $keywords = preg_split(self::$split, $keys);
     // Assure there are no duplicates. (This is actually faster than
     // array_unique() by a factor of 3 to 4.)
     $keywords = drupal_map_assoc(array_filter($keywords));
@@ -291,7 +298,6 @@ class Highlight extends ProcessorPluginBase {
     // If the sum of all fragments is too short, we look for second occurrences.
     $ranges = array();
     $included = array();
-    $foundkeys = array();
     $length = 0;
     $workkeys = $keys;
     while ($length < $this->options['excerpt_length'] && count($workkeys)) {

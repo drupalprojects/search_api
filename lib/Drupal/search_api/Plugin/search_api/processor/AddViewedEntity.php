@@ -7,20 +7,35 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+
 /**
- * Search API data alteration callback that adds an URL field for all items.
+ * Adds the rendered entity's HTML to the indexed data.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_add_viewed_entity",
+ *   name = @Translation("Complete entity view"),
+ *   description = @Translation("Adds an additional field containing the whole HTML content of the entity when viewed."),
+ *   weight = -10
+ * )
  */
 class AddViewedEntity extends ProcessorPluginBase {
 
   /**
-   * Only support indexes containing entities.
+   * Overrides \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::supportsIndex().
    *
-   * @see ProcessorInterface::supportsIndex()
+   * Only support entities.
    */
-  public static function supportsIndex(Index $index) {
+  public static function supportsIndex(IndexInterface $index) {
     return (bool) $index->getEntityType();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $view_modes = array();
     if ($entity_type = $this->index->getEntityType()) {
@@ -60,7 +75,23 @@ class AddViewedEntity extends ProcessorPluginBase {
     return $form;
   }
 
-  public function alterItems(array &$items) {
+  /**
+   * {@inheritdoc}
+   */
+  public function propertyInfo() {
+    return array(
+      'search_api_viewed' => array(
+        'label' => t('Entity HTML output'),
+        'description' => t('The whole HTML content of the entity when viewed.'),
+        'type' => 'text',
+      ),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
     // Prevent session information from being saved while indexing.
     drupal_save_session(FALSE);
 
@@ -92,16 +123,6 @@ class AddViewedEntity extends ProcessorPluginBase {
     // Restore the user.
     $GLOBALS['user'] = $original_user;
     drupal_save_session(TRUE);
-  }
-
-  public function propertyInfo() {
-    return array(
-      'search_api_viewed' => array(
-        'label' => t('Entity HTML output'),
-        'description' => t('The whole HTML content of the entity when viewed.'),
-        'type' => 'text',
-      ),
-    );
   }
 
 }

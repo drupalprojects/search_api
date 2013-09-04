@@ -12,8 +12,7 @@ use Drupal\search_api\Annotation\SearchApiProcessor;
 use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 
 /**
- * Processor for tokenizing fulltext data by replacing (configurable)
- * non-letters with spaces.
+ * Tokenizes fulltext data by replacing (configurable) non-letters with spaces.
  *
  * @SearchApiProcessor(
  *   id = "search_api_tokenizer",
@@ -25,11 +24,15 @@ use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 class Tokenizer extends ProcessorPluginBase {
 
   /**
+   * PCRE regular expression representing a space.
+   *
    * @var string
    */
   protected $spaces;
 
   /**
+   * PCRE regular expression representing an ignorable character.
+   *
    * @var string
    */
   protected $ignorable;
@@ -38,7 +41,7 @@ class Tokenizer extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = parent::buildConfigurationForm();
+    $form = parent::buildConfigurationForm($form, $form_state);
 
     // Only make fulltext fields available as options.
     $fields = $this->index->getFields();
@@ -129,6 +132,9 @@ class Tokenizer extends ProcessorPluginBase {
     }
   }
 
+  /**
+   * Prepares the $spaces and $ignorable properties on this object.
+   */
   protected function prepare() {
     if (!isset($this->spaces)) {
       $this->spaces = str_replace('/', '\/', $this->options['spaces']);

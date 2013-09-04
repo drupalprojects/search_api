@@ -7,50 +7,49 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Annotation\Translation;
+use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
+
 /**
- * Search API data alteration callback that filters out items based on their
- * bundle.
+ * Adds enahnced language handling to the indexing workflow.
+ *
+ * Allows users to specify which field to use for the field's language, and to
+ * filter out items based on their language.
+ *
+ * @SearchApiProcessor(
+ *   id = "search_api_language_control",
+ *   name = @Translation("Language control"),
+ *   description = @Translation("Lets you determine the language of items in the index."),
+ *   weight = -20
+ * )
  */
 class LanguageControl extends ProcessorPluginBase {
 
   /**
-   * Construct a data-alter callback.
-   *
-   * @param Index $index
-   *   The index whose items will be altered.
-   * @param array $options
-   *   The callback options set for this index.
+   * {@inheritdoc}
    */
-  public function __construct(Index $index, array $options = array()) {
-    $options += array(
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->options += array(
       'lang_field' => '',
       'languages' => array(),
     );
-    parent::__construct($index, $options);
   }
 
   /**
-   * Check whether this data-alter callback is applicable for a certain index.
+   * Overrides \Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase::supportsIndex().
    *
    * Only returns TRUE if the system is multilingual.
-   *
-   * @param Index $index
-   *   The index to check for.
-   *
-   * @return boolean
-   *   TRUE if the callback can run on the given index; FALSE otherwise.
-   *
-   * @see drupal_multilingual()
    */
-  public static function supportsIndex(Index $index) {
+  public static function supportsIndex(IndexInterface $index) {
     return drupal_multilingual();
   }
 
   /**
-   * Display a form for configuring this data alteration.
-   *
-   * @return array
-   *   A form array for configuring this data alteration.
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = array();
@@ -105,37 +104,17 @@ class LanguageControl extends ProcessorPluginBase {
   }
 
   /**
-   * Submit callback for the form returned by buildConfigurationForm().
-   *
-   * This method should both return the new options and set them internally.
-   *
-   * @param array $form
-   *   The form returned by buildConfigurationForm().
-   * @param array $values
-   *   The part of the $form_state['values'] array corresponding to this form.
-   * @param array $form_state
-   *   The complete form state.
-   *
-   * @return array
-   *   The new options array for this callback.
+   * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
-    $values['languages'] = array_filter($values['languages']);
-    return parent::submitConfigurationForm($form, $values, $form_state);
+    $form_state['values']['languages'] = array_filter($form_state['values']['languages']);
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**
-   * Alter items before indexing.
-   *
-   * Items which are removed from the array won't be indexed, but will be marked
-   * as clean for future indexing. This could for instance be used to implement
-   * some sort of access filter for security purposes (e.g., don't index
-   * unpublished nodes or comments).
-   *
-   * @param array $items
-   *   An array of items to be altered, keyed by item IDs.
+   * {@inheritdoc}
    */
-  public function alterItems(array &$items) {
+  public function preprocessIndexItems(array &$items) {
     foreach ($items as $i => &$item) {
       // Set item language, if a custom field was selected.
       if ($field = $this->options['lang_field']) {

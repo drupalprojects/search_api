@@ -13,15 +13,14 @@ use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 use Drupal\search_api\IndexInterface;
 
 /**
- * Processor for stripping HTML from indexed fulltext data. Supports assigning
- * custom boosts for any HTML element.
+ * Strips HTML markup from indexed fulltext data.
+ *
+ * Supports assigning custom boosts for any HTML element.
  *
  * @SearchApiProcessor(
  *   id = "search_api_html_filter",
  *   name = @Translation("HTML Filter"),
- *   description = @Translation("Strips HTML tags from fulltext fields and decodes HTML entities.
- *   Use this processor when indexing HTML data, e.g., node bodies for certain text formats.<br />
- *   The processor also allows to boost (or ignore) the contents of specific elements."),
+ *   description = @Translation("Strips HTML tags from fulltext fields and decodes HTML entities. Use this processor when indexing HTML data, e.g., node bodies for certain text formats.<br />The processor also allows to boost (or ignore) the contents of specific elements."),
  *   weight = 10
  * )
  */
@@ -29,6 +28,8 @@ use Drupal\search_api\IndexInterface;
 class HtmlFilter extends ProcessorPluginBase {
 
   /**
+   * The boost values for HTML tags.
+   *
    * @var array
    */
   protected $tags;
@@ -36,8 +37,9 @@ class HtmlFilter extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(IndexInterface $index, array $options = array()) {
-    parent::__construct($index, $options);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
     $this->options += array(
       'title' => FALSE,
       'alt'   => TRUE,
@@ -58,7 +60,7 @@ class HtmlFilter extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = parent::buildConfigurationForm();
+    $form = parent::buildConfigurationForm($form, $form_state);
     $form += array(
       'title' => array(
         '#type' => 'checkbox',
@@ -90,8 +92,9 @@ class HtmlFilter extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, array &$form_state) {
-    parent::validateConfigurationForm($form, $values, $form_state);
+    parent::validateConfigurationForm($form, $form_state);
 
+    $values = $form_state['values'];
     if (empty($values['tags'])) {
       return;
     }
@@ -133,6 +136,21 @@ class HtmlFilter extends ProcessorPluginBase {
     }
   }
 
+  /**
+   * Parses text for occurrences of the configured HTML tags.
+   *
+   * Splits these into extra token with their configured boost.
+   *
+   * @param $text
+   *   The text to parse.
+   * @param string|null $active_tag
+   *   (optional) The currently active tag. For internal use only.
+   * @param int $boost
+   *   (optional) The currently active boost. For internal use only.
+   *
+   * @return array
+   *   The passed text, split into tokens.
+   */
   protected function parseText(&$text, $active_tag = NULL, $boost = 1) {
     $ret = array();
     while (($pos = strpos($text, '<')) !== FALSE) {

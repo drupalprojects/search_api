@@ -8,8 +8,8 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Annotation\Translation;
-use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
 
 /**
  * Provides a processor for adding aggregations of existing fields to the index.
@@ -217,7 +217,7 @@ class AddAggregation extends ProcessorPluginBase {
   /**
    * Combines two values of an array to a single one.
    *
-   * Used as the callback function for array_reduce() in alterItems().
+   * Used as the callback function for array_reduce() in preprocessIndexItems().
    *
    * @param mixed $a
    *   The first value.

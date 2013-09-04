@@ -9,11 +9,11 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Annotation\Translation;
 use Drupal\search_api\Annotation\SearchApiProcessor;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\Plugin\Type\Processor\ProcessorPluginBase;
-use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 
 /**
- * Processor for removing stopwords from index and search terms.
+ * Removes stopwords from index and search terms.
  *
  * @SearchApiProcessor(
  *   id = "search_api_stopwords",
@@ -25,7 +25,7 @@ use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
 class StopWords extends ProcessorPluginBase {
 
   /**
-   * Holds all words ignored for the last query.
+   * Holds all words that were ignored in the last query.
    *
    * @var array
    */
@@ -35,7 +35,7 @@ class StopWords extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = parent::buildConfigurationForm();
+    $form = parent::buildConfigurationForm($form, $form_state);
 
     $form += array(
       'help' => array(
@@ -66,8 +66,9 @@ class StopWords extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, array &$form_state) {
-    parent::validateConfigurationForm($form, $values, $form_state);
+    parent::validateConfigurationForm($form, $form_state);
 
+    $values = $form_state['values'];
     $stopwords = trim($values['stopwords']);
     $uri = $values['file'];
     if (empty($stopwords) && empty($uri)) {
@@ -101,7 +102,7 @@ class StopWords extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function preprocessSearchQuery(DefaultQuery $query) {
+  public function preprocessSearchQuery(QueryInterface $query) {
     $this->ignored = array();
     parent::preprocessSearchQuery($query);
   }
@@ -109,7 +110,7 @@ class StopWords extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, DefaultQuery $query) {
+  public function postprocessSearchResults(array &$response, QueryInterface $query) {
     if ($this->ignored) {
       if (isset($response['ignored'])) {
         $response['ignored'] = array_merge($response['ignored'], $this->ignored);
@@ -121,7 +122,9 @@ class StopWords extends ProcessorPluginBase {
   }
 
   /**
-   * @return
+   * Retrieves the stopwords configured for this plugin.
+   *
+   * @return array
    *   An array whose keys are the stopwords set in either the file or the text
    *   field.
    */

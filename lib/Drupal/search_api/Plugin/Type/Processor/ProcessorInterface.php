@@ -11,7 +11,7 @@ use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 
 /**
  * Interface representing a Search API pre- and/or post-processor.
@@ -102,10 +102,10 @@ interface ProcessorInterface extends ConfigurablePluginInterface, PluginFormInte
    * fulltext search keys should be processed, queries on specific fields should
    * usually not be altered.
    *
-   * @param \Drupal\search_api\Plugin\search_api\query\DefaultQuery $query
+   * @param \Drupal\search_api\Plugin\search_api\QueryInterface $query
    *   The object representing the query to be executed.
    */
-  public function preprocessSearchQuery(DefaultQuery $query);
+  public function preprocessSearchQuery(QueryInterface $query);
 
   /**
    * Postprocess search results before display.
@@ -117,9 +117,9 @@ interface ProcessorInterface extends ConfigurablePluginInterface, PluginFormInte
    * @param array $response
    *   An array containing the search results. See the return value of
    *   QueryInterface->execute() for the detailed format.
-   * @param \Drupal\search_api\Plugin\search_api\query\DefaultQuery $query
+   * @param \Drupal\search_api\Plugin\search_api\QueryInterface $query
    *   The object representing the executed query.
    */
-  public function postprocessSearchResults(array &$response, DefaultQuery $query);
+  public function postprocessSearchResults(array &$response, QueryInterface $query);
 
 }

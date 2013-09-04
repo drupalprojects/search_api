@@ -9,7 +9,7 @@ namespace Drupal\search_api\Plugin\Type\Processor;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Plugin\search_api\query\DefaultQuery;
+use Drupal\search_api\Plugin\search_api\QueryInterface;
 use Drupal\search_api\Plugin\Type\ProcessorPluginManager;
 
 /**
@@ -153,7 +153,7 @@ abstract class ProcessorPluginBase extends PluginBase implements ProcessorInterf
    * The default implementation calls processKeys() for the keys and
    * processFilters() for the filters.
    */
-  public function preprocessSearchQuery(DefaultQuery $query) {
+  public function preprocessSearchQuery(QueryInterface $query) {
     $keys = &$query->getKeys();
     $this->processKeys($keys);
     $filter = $query->getFilter();
@@ -166,7 +166,7 @@ abstract class ProcessorPluginBase extends PluginBase implements ProcessorInterf
    *
    * The default implementation does nothing.
    */
-  public function postprocessSearchResults(array &$response, DefaultQuery $query) {
+  public function postprocessSearchResults(array &$response, QueryInterface $query) {
     return;
   }
 
