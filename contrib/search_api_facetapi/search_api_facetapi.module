@@ -51,7 +51,7 @@ function search_api_facetapi_menu() {
  */
 function search_api_facetapi_facetapi_searcher_info() {
   $info = array();
-  $indexes = search_api_index_load_multiple(FALSE);
+  $indexes = search_api_index_load_multiple();
   foreach ($indexes as $index) {
     if ($index->enabled && $index->server()->supportsFeature('search_api_facets')) {
       $searcher_name = 'search_api@' . $index->machine_name;

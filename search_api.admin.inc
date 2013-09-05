@@ -8,11 +8,11 @@ function search_api_admin_overview() {
   drupal_add_css($base_path . 'search_api.admin.css');
   drupal_add_js($base_path . 'search_api.admin.js');
 
-  $servers = search_api_server_load_multiple(FALSE);
+  $servers = search_api_server_load_multiple();
   $indexes = array();
   // When any entity was not normally created in the database, then show status for all.
   $show_config_status = FALSE;
-  foreach (search_api_index_load_multiple(FALSE) as $index) {
+  foreach (search_api_index_load_multiple() as $index) {
     $indexes[$index->server][$index->machine_name] = $index;
     if (!$show_config_status && $index->status != ENTITY_CUSTOM) {
       $show_config_status = TRUE;
@@ -554,7 +554,7 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_server_load_multiple(FALSE);
+  $servers = search_api_server_load_multiple();
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {
@@ -1022,7 +1022,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => $index->server,
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_server_load_multiple(FALSE);
+  $servers = search_api_server_load_multiple();
   // List enabled servers first.
   foreach ($servers as $server) {
     if ($server->enabled) {

@@ -266,7 +266,7 @@ function search_api_permission() {
 function search_api_cron() {
   $queue = DrupalQueue::get('search_api_indexing_queue');
   $batch_count = \Drupal::config('search_api.settings')->get('cron_batch_count');
-  foreach (search_api_index_load_multiple(FALSE, array('enabled' => TRUE, 'read_only' => 0)) as $index) {
+  foreach (search_api_index_load_multiple_by_properties(array('enabled' => TRUE, 'read_only' => 0)) as $index) {
     $limit = isset($index->options['cron_limit'])
         ? $index->options['cron_limit']
         : SEARCH_API_DEFAULT_CRON_LIMIT;
@@ -504,7 +504,7 @@ function search_api_track_item_insert($type, array $item_ids) {
     'item_type' => $type,
     'read_only' => 0,
   );
-  $indexes = search_api_index_load_multiple(FALSE, $conditions);
+  $indexes = search_api_index_load_multiple_by_properties($conditions);
   if (!$indexes) {
     return;
   }
@@ -535,7 +535,7 @@ function search_api_track_item_change($type, array $item_ids) {
     'item_type' => $type,
     'read_only' => 0,
   );
-  $indexes = search_api_index_load_multiple(FALSE, $conditions);
+  $indexes = search_api_index_load_multiple_by_properties($conditions);
   if (!$indexes) {
     return;
   }
@@ -594,7 +594,7 @@ function search_api_track_item_delete($type, array $item_ids) {
     'item_type' => $type,
     'read_only' => 0,
   );
-  $indexes = search_api_index_load_multiple(FALSE, $conditions);
+  $indexes = search_api_index_load_multiple_by_properties($conditions);
   if ($indexes) {
     search_api_get_datasource_controller($type)->trackItemDelete($item_ids, $indexes);
   }
@@ -602,7 +602,7 @@ function search_api_track_item_delete($type, array $item_ids) {
   // Then, delete it from all servers. Servers of disabled indexes have to be
   // considered, too!
   unset($conditions['enabled']);
-  foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
+  foreach (search_api_index_load_multiple_by_properties($conditions) as $index) {
     if ($index->server) {
       $server = $index->server();
       if ($server->status()) {
@@ -633,7 +633,7 @@ function search_api_track_item_delete($type, array $item_ids) {
  */
 function search_api_index_recalculate_fields($indexes = FALSE) {
   if (!is_array($indexes)) {
-    $indexes = search_api_index_load_multiple(FALSE);
+    $indexes = search_api_index_load_multiple();
   }
   $stored_keys = drupal_map_assoc(array('type', 'entity_type', 'real_type', 'boost'));
   foreach ($indexes as $index) {
@@ -1444,6 +1444,8 @@ function _search_api_extract_entity_value(EntityMetadataWrapper $wrapper, $fullt
  *
  * @return \Drupal\search_api\ServerInterface|null
  *   An object representing the server with the specified id.
+ *
+ * @see entity_load()
  */
 function search_api_server_load($id, $reset = FALSE) {
   return entity_load('search_api_server', $id, $reset);
@@ -1453,24 +1455,34 @@ function search_api_server_load($id, $reset = FALSE) {
  * Load multiple servers at once, determined by IDs or machine names, or by
  * other conditions.
  *
- * @see entity_load()
- *
- * @deprecated use entity_load_multiple('search_api_server', $ids) instead.
- *
- * @param array|false $ids
+ * @param array $ids
  *   An array of server IDs or machine names, or FALSE to load all servers.
- * @param array $conditions
- *   An array of conditions on the {search_api_server} table in the form
- *   'field' => $value.
  * @param bool $reset
  *   Whether to reset the internal entity_load cache.
  *
  * @return array
  *   An array of server objects keyed by machine name.
+ *
+ * @see entity_load_multiple()
  */
-function search_api_server_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  $servers = entity_load('search_api_server', $ids, $conditions, $reset);
-  return entity_key_array_by_property($servers, 'machine_name');
+function search_api_server_load_multiple(array $ids = NULL, $reset = FALSE) {
+  return entity_load_multiple('search_api_server', $ids, $reset);
+}
+
+/**
+ * Load multiple servers at once, filtered by property values.
+ *
+ * @param array $properties
+ *   An associative array where the keys are the property names and the values
+ *   are the values those properties must have.
+ *
+ * @return array
+ *   An associative array of Server objects, keyed by the machine name.
+ *
+ * @see entity_load_multiple_by_properties()
+ */
+function search_api_server_load_multiple_by_properties(array $properties) {
+  return entity_load_multiple_by_properties('search_api_server', $properties);
 }
 
 /**
@@ -1614,6 +1626,22 @@ function search_api_index_load($id, $reset = FALSE) {
  */
 function search_api_index_load_multiple(array $ids = NULL, $reset = FALSE) {
   return entity_load_multiple('search_api_index', $ids, $reset);
+}
+
+/**
+ * Load multiple search indexes at once, filtered by property values.
+ *
+ * @param array $properties
+ *   An associative array where the keys are the property names and the values
+ *   are the values those properties must have.
+ *
+ * @return array
+ *   An associative array of Index objects, keyed by the machine name.
+ *
+ * @see entity_load_multiple_by_properties()
+ */
+function search_api_index_load_multiple_by_properties(array $properties) {
+  return entity_load_multiple_by_properties('search_api_index', $properties);
 }
 
 /**
@@ -1832,7 +1860,7 @@ function search_api_index_options_list() {
   $ret = array(
     NULL => '- ' . t('All') . ' -',
   );
-  foreach (search_api_index_load_multiple(FALSE) as $id => $index) {
+  foreach (search_api_index_load_multiple() as $id => $index) {
     $ret[$id] = $index->name;
   }
   return $ret;

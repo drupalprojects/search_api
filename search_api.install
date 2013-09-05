@@ -50,7 +50,7 @@ function search_api_schema() {
  */
 function search_api_enable() {
   $types = array();
-  foreach (search_api_index_load_multiple(FALSE) as $index) {
+  foreach (search_api_index_load_multiple() as $index) {
     if ($index->enabled) {
       $types[$index->item_type][] = $index;
     }
@@ -66,7 +66,7 @@ function search_api_enable() {
  */
 function search_api_disable() {
   $types = array();
-  foreach (search_api_index_load_multiple(FALSE) as $index) {
+  foreach (search_api_index_load_multiple() as $index) {
     $types[$index->item_type][] = $index;
   }
   foreach ($types as $type => $indexes) {

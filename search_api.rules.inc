@@ -69,7 +69,7 @@ function _search_api_rules_action_index(EntityDrupalWrapper $wrapper, SearchApiI
       'item_type' => $type,
       'read_only' => 0,
     );
-    $indexes = search_api_index_load_multiple(FALSE, $conditions);
+    $indexes = search_api_index_load_multiple_by_properties($conditions);
     if (!$indexes) {
       return;
     }

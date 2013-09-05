@@ -94,7 +94,7 @@ function drush_search_api_list() {
     return;
   }
   // See search_api_list_indexes()
-  $indexes = search_api_index_load_multiple(FALSE);
+  $indexes = search_api_index_load_multiple();
   if (empty($indexes)) {
     drush_print(dt('There are no indexes present.'));
     return;

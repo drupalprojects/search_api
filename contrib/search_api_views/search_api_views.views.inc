@@ -7,7 +7,7 @@ function search_api_views_views_data() {
   try {
     $data = array();
     $entity_types = entity_get_info();
-    foreach (search_api_index_load_multiple(FALSE) as $index) {
+    foreach (search_api_index_load_multiple() as $index) {
       // Fill in base data.
       $key = 'search_api_index_' . $index->machine_name;
       $table = &$data[$key];
@@ -201,7 +201,7 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
 function search_api_views_views_plugins() {
   // Collect all base tables provided by this module.
   $bases = array();
-  foreach (search_api_index_load_multiple(FALSE) as $index) {
+  foreach (search_api_index_load_multiple() as $index) {
     $bases[] = 'search_api_index_' . $index->machine_name;
   }
 

@@ -112,7 +112,7 @@ abstract class ServicePluginBase implements ServiceInterface {
    * {@inheritdoc}
    */
   public function preDelete() {
-    $indexes = search_api_index_load_multiple(FALSE, array('server' => $this->server->id()));
+    $indexes = search_api_index_load_multiple_by_properties(array('server' => $this->server->id()));
     foreach ($indexes as $index) {
       $this->removeIndex($index);
     }

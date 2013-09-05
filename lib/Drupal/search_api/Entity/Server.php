@@ -131,7 +131,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $this->ensurePlugin();
     if ($update) {
       if ($this->plugin->postUpdate()) {
-        foreach ($this->getIndexes() as $index) {
+        foreach (search_api_index_load_multiple_by_properties(array('server' => $this->id())) as $index) {
           $index->reindex();
         }
       }
@@ -164,18 +164,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
       unset($tasks[$server->id()]);
     }
     \Drupal::state()->set('search_api_tasks', $tasks);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIndexes(array $conditions = array()) {
-    $query = \Drupal::entityQuery('search_api_index');
-    $query->condition('server', $this->id());
-    foreach ($conditions as $field => $value) {
-      $query->condition($field, $value);
-    }
-    return search_api_index_load_multiple($query->execute());
   }
 
   /**
