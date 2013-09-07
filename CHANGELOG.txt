@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2075839 by leeomara, drunken monkey: Added descriptions to field lists for
+  'Aggregated Fields'.
 
 Search API 1.8 (09/01/2013):
 ----------------------------
