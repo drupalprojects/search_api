@@ -754,7 +754,8 @@ function search_api_system_info_alter(&$info, $file, $type) {
 
         $links = array();
         foreach ($indexes as $id => $name) {
-          $links[] = l($name, "admin/config/search/search_api/index/$id");
+          $url = url("admin/config/search/search_api/index/$id");
+          $links[] = '<a href="' . check_plain($url) . '">' . check_plain($name) . '</a>';
         }
 
         $args = array('!indexes' => implode(', ', $links));
@@ -778,7 +779,8 @@ function search_api_system_info_alter(&$info, $file, $type) {
 
         $links = array();
         foreach ($servers as $id => $name) {
-          $links[] = l($name, "admin/config/search/search_api/server/$id");
+          $url = url("admin/config/search/search_api/index/$id");
+          $links[] = '<a href="' . check_plain($url) . '">' . check_plain($name) . '</a>';
         }
 
         $args = array('!servers' => implode(', ', $links));
