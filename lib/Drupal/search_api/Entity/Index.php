@@ -28,7 +28,11 @@ use Drupal\search_api\Exception\SearchApiException;
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\IndexFormController",
  *       "edit" = "Drupal\search_api\Controller\IndexFormController",
- *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm"
+ *       "fields" = "Drupal\search_api\Controller\IndexFieldsFormController",
+ *       "workflow" = "Drupal\search_api\Controller\IndexWorkflowFormController",
+ *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
+ *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
+ *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
  *     },
  *     "list" = "Drupal\search_api\Controller\IndexListController"
  *   },

@@ -45,11 +45,12 @@ function search_api_menu() {
       'title' => 'Edit',
       'route_name' => 'search_api.server_edit_default',
       'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => 0,
     ),
     'admin/config/search/search_api/servers/%/delete' => array(
       'title' => 'Delete',
       'route_name' => 'search_api.server_delete',
-      'type' => MENU_LOCAL_TASK,
+      'type' => MENU_CALLBACK,
     ),
     'admin/config/search/search_api/servers/%/enable' => array(
       'title' => 'Enable',
@@ -80,11 +81,34 @@ function search_api_menu() {
       'title' => 'Edit',
       'route_name' => 'search_api.index_edit_default',
       'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => 0,
+    ),
+    'admin/config/search/search_api/indexes/%/fields' => array(
+      'title' => 'Fields',
+      'route_name' => 'search_api.index_fields',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+    ),
+    'admin/config/search/search_api/indexes/%/workflow' => array(
+      'title' => 'Workflow',
+      'route_name' => 'search_api.index_workflow',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 20,
     ),
     'admin/config/search/search_api/indexes/%/delete' => array(
       'title' => 'Delete',
       'route_name' => 'search_api.index_delete',
-      'type' => MENU_LOCAL_TASK,
+      'type' => MENU_CALLBACK,
+    ),
+    'admin/config/search/search_api/indexes/%/enable' => array(
+      'title' => 'Enable',
+      'route_name' => 'search_api.index_enable',
+      'type' => MENU_CALLBACK,
+    ),
+    'admin/config/search/search_api/indexes/%/disable' => array(
+      'title' => 'Disable',
+      'route_name' => 'search_api.index_disable',
+      'type' => MENU_CALLBACK,
     ),
   );
 }

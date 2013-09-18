@@ -67,6 +67,29 @@ class IndexListController extends ConfigEntityListController {
   /**
    * {@inheritdoc}
    */
+  public function getOperations(\Drupal\Core\Entity\EntityInterface $entity) {
+    // Get the entity URI.
+    $entity_uri = $entity->uri();
+    // Merge the operations with our custom operations.
+    return parent::getOperations($entity) + array(
+      'fields' => array(
+        'title' => $this->t('Fields'),
+        'href' => "{$entity_uri['path']}/fields",
+        'options' => $entity_uri['options'],
+        'weight' => 20,
+      ),
+      'workflow' => array(
+        'title' => $this->t('Workflow'),
+        'href' => "{$entity_uri['path']}/workflow",
+        'options' => $entity_uri['options'],
+        'weight' => 30,
+      ),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function render() {
     // Load the entities.
     $entities = $this->load();
