@@ -1,0 +1,65 @@
+# Schema for configuration files of the Search API module.
+
+search_api.server.*:
+  type: mapping
+  label : 'Search server'
+  mapping:
+    machine_name:
+      type: string
+      label: 'Machine name'
+    name:
+      type: label
+      label: Name'
+    uuid:
+      type: string
+      label: 'UUID'
+    description:
+      type: text
+      label: 'Description'
+    status:
+      type: boolean
+      label: 'Status'
+    servicePluginId:
+      type: string
+      label: 'Service Plugin ID'
+    servicePluginConfig:
+      type: search_api.server.plugin.[%parent.servicePluginId]
+    langcode:
+      type: string
+      label: 'Language code'
+
+search_api.index.*:
+  type: mapping
+  label : 'Search index'
+  mapping:
+    machine_name:
+      type: string
+      label: 'Machine name'
+    name:
+      type: label
+      label: Name'
+    uuid:
+      type: string
+      label: 'UUID'
+    description:
+      type: text
+      label: 'Description'
+    readOnly:
+      type: boolean
+      label: 'Read-only'
+    options:
+      type: mapping
+      label: 'Options'
+      mapping:
+        cron_limit:
+          type: integer
+          label: 'Cron batch size'
+        index_directly:
+          type: boolean
+          label: 'Index items immediately'
+    status:
+      type: boolean
+      label: 'Status'
+    langcode:
+      type: string
+      label: 'Language code'

@@ -1,0 +1,93 @@
+search_api.overview:
+  path: '/admin/config/search/search_api'
+  defaults:
+    _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
+    entity_type: 'search_api_server'
+  requirements:
+    _permission: 'administer search_api'
+
+search_api.index_overview:
+  path: '/admin/config/search/search_api/indexes'
+  defaults:
+    _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
+    entity_type: 'search_api_index'
+  requirements:
+    _permission: 'administer search_api'
+
+search_api.index_add:
+  path: '/admin/config/search/search_api/indexes/add_index'
+  defaults:
+    _entity_form: 'search_api_index.default'
+  requirements:
+    _entity_create_access: 'search_api_index'
+
+search_api.index_edit:
+  path: '/admin/config/search/search_api/indexes/{search_api_index}'
+  defaults:
+    _entity_form: 'search_api_index.edit'
+  requirements:
+    _entity_access: 'search_api_index.edit'
+
+search_api.index_edit_default:
+  path: '/admin/config/search/search_api/indexes/{search_api_index}/edit'
+  defaults:
+    _entity_form: 'search_api_index.edit'
+  requirements:
+    _entity_access: 'search_api_index.edit'
+
+search_api.index_delete:
+  path: '/admin/config/search/search_api/indexes/{search_api_index}/delete'
+  defaults:
+    _entity_form: 'search_api_index.delete'
+  requirements:
+    _entity_access: 'search_api_index.delete'
+
+search_api.server_overview:
+  path: '/admin/config/search/search_api/servers'
+  defaults:
+    _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
+    entity_type: 'search_api_server'
+  requirements:
+    _permission: 'administer search_api'
+
+search_api.server_add:
+  path: '/admin/config/search/search_api/servers/add_server'
+  defaults:
+    _entity_form: 'search_api_server.default'
+  requirements:
+    _entity_create_access: 'search_api_server'
+
+search_api.server_edit:
+  path: '/admin/config/search/search_api/servers/{search_api_server}'
+  defaults:
+    _entity_form: 'search_api_server.edit'
+  requirements:
+    _entity_access: 'search_api_server.edit'
+
+search_api.server_edit_default:
+  path: '/admin/config/search/search_api/servers/{search_api_server}/edit'
+  defaults:
+    _entity_form: 'search_api_server.edit'
+  requirements:
+    _entity_access: 'search_api_server.edit'
+
+search_api.server_delete:
+  path: '/admin/config/search/search_api/servers/{search_api_server}/delete'
+  defaults:
+    _entity_form: 'search_api_server.delete'
+  requirements:
+    _entity_access: 'search_api_server.delete'
+
+search_api.server_enable:
+  path: '/admin/config/search/search_api/servers/{search_api_server}/enable'
+  defaults:
+    _entity_form: 'search_api_server.enable'
+  requirements:
+    _entity_access: 'search_api_server.enable'
+
+search_api.server_disable:
+  path: '/admin/config/search/search_api/servers/{search_api_server}/disable'
+  defaults:
+    _entity_form: 'search_api_server.disable'
+  requirements:
+    _entity_access: 'search_api_server.disable'
