@@ -57,6 +57,12 @@ search_api.index.*:
         index_directly:
           type: boolean
           label: 'Index items immediately'
+    datasourcePluginId:
+      type: string
+      label: 'Datasource plugin ID'
+    serverMachineName:
+      type: string
+      label: 'Server machine name'
     status:
       type: boolean
       label: 'Status'
