@@ -12,11 +12,7 @@ namespace Drupal\search_api\Processor;
 use Drupal\Component\Plugin\PluginBase;
 
 /**
- * Defines a base processor implementation that most plugins will extend.
- *
- * Simple processors can just override process(), while others might want to
- * override the other process*() methods, and test*() (for restricting
- * processing to something other than all fulltext data).
+ * Abstract base class for search processor plugins.
  */
 abstract class ProcessorPluginBase extends PluginBase implements ProcessorInterface {
 

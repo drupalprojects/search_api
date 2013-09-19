@@ -15,7 +15,6 @@ use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Exception\SearchApiException;
 
 /**
  * Class representing a search server.
@@ -156,11 +155,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $service_plugin_manager = Drupal::service('search_api.service.plugin.manager');
       // Create a service plugin instance.
       $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->servicePluginConfig);
-      // Check if the service plugin instance failed to resolve.
-      if (!$this->servicePluginInstance) {
-        // Raise SearchApiException: invalid service plugin.
-        throw new SearchApiException(format_string('Search server with machine name @name specifies an illegal service plugin @plugin', array('@name' => $this->id(), '@plugin' => $service_plugin_id)));
-      }
     }
     return $this->servicePluginInstance;
   }

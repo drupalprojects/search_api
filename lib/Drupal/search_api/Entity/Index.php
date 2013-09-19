@@ -16,7 +16,6 @@ use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Exception\SearchApiException;
 
 /**
  * Class representing a search index.
@@ -102,6 +101,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
   );
 
   /**
+   * The datasource plugin ID.
+   *
+   * @var string
+   */
+  public $datasourcePluginId;
+
+  /**
+   * The datasource plugin instance.
+   *
+   * @var \Drupal\search_api\Datasource\DatasourceInterface
+   */
+  private $datasourcePluginInstance;
+
+  /**
    * The machine name of the server which data should be indexed.
    *
    * @var string
@@ -177,6 +190,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function hasValidDatasource() {
+    // Get the datasource plugin definition.
+    $datasource_plugin_definition = Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
+    // Determine whether the datasource is valid.
+    return !empty($datasource_plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDatasource() {
+    // Check if the datasource plugin instance needs to be resolved.
+    if (!$this->datasourcePluginInstance && $this->hasValidDatasource()) {
+      // Get the ID of the datasource plugin.
+      $datasource_plugin_id = $this->datasourcePluginId;
+      // Get the datasource plugin manager.
+      $datasource_plugin_manager = Drupal::service('search_api.datasource.plugin.manager');
+      // Create a datasource plugin instance.
+      $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id);
+    }
+    return $this->datasourcePluginInstance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasValidServer() {
     return Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
   }
@@ -185,17 +224,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getServer() {
-    // Check if the server needs to be resolved.
+    // Check if the server needs to be resolved. Note we do not use
+    // hasValidServer to prevent duplicate load calls to the storage controller.
     if (!$this->server) {
       // Get the server machine name.
       $server_machine_name = $this->serverMachineName;
       // Get the server from the storage.
       $this->server = Drupal::entityManager()->getStorageController('search_api_server')->load($server_machine_name);
-      // Check if the server was not resolved.
-      if (!$this->server) {
-        // Raise SearchApiException: invalid or missing server.
-        throw new SearchApiException(format_string('Search index with machine name @name specifies an illegal server @server', array('@name' => $this->id(), '@server' => $server_machine_name)));
-      }
     }
     return $this->server;
   }

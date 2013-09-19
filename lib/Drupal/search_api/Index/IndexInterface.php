@@ -53,6 +53,22 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
+   * Determine whether the datasource is valid.
+   *
+   * @return boolean
+   *   TRUE if the datasource is valid, otherwise FALSE.
+   */
+  public function hasValidDatasource();
+
+  /**
+   * Get the datasource.
+   *
+   * @return \Drupal\search_api\Datasource\DatasourceInterface
+   *   An instance of DatasourceInterface.
+   */
+  public function getDatasource();
+
+  /**
    * Determine whether the server is valid.
    *
    * @return boolean

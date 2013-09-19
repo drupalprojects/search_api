@@ -6,3 +6,7 @@ services:
   search_api.service.plugin.manager:
     class: Drupal\search_api\Service\ServicePluginManager
     arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']
+
+  search_api.datasource.plugin.manager:
+    class: Drupal\search_api\Datasource\DatasourcePluginManager
+    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']

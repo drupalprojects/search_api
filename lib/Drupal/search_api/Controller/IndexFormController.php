@@ -13,6 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\Component\Utility\String;
 
 /**
@@ -31,14 +32,27 @@ class IndexFormController extends EntityFormController {
   protected $entityManager;
 
   /**
+   * The search datasource plugin manager.
+   *
+   * This object members must be set to anything other than private in order for
+   * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
+   *
+   * @var \Drupal\search_api\Datasource\DatasourcePluginManager
+   */
+  protected $datasourcePluginManager;
+
+  /**
    * Create an IndexFormController object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
+   * @param \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager
+   *   The search datasource plugin manager.
    */
-  public function __construct(EntityManager $entity_manager) {
+  public function __construct(EntityManager $entity_manager, DatasourcePluginManager $datasource_plugin_manager) {
     // Setup object members.
     $this->entityManager = $entity_manager;
+    $this->datasourcePluginManager = $datasource_plugin_manager;
   }
 
   /**
@@ -49,6 +63,34 @@ class IndexFormController extends EntityFormController {
    */
   protected function getEntityManager() {
     return $this->entityManager;
+  }
+
+  /**
+   * Get the search datasource plugin manager.
+   *
+   * @return \Drupal\search_api\Datasource\DatasourcePluginManager
+   *   An instance of DatasourcePluginManager.
+   */
+  protected function getDatasourcePluginManager() {
+    return $this->datasourcePluginManager;
+  }
+
+  /**
+   * Get a list of datasource plugin definitions for use with a select element.
+   *
+   * @return array
+   *   An associative array of datasource plugin names, keyed by the datasource
+   *   plugin ID.
+   */
+  protected function getDatasourcePluginDefinitionOptions() {
+    // Initialize the options variable to an empty array.
+    $options = array();
+    // Iterate through the datasource plugin definitions.
+    foreach ($this->getDatasourcePluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
+      // Add the plugin to the list.
+      $options[$plugin_id] = String::checkPlain($plugin_definition['name']);
+    }
+    return $options;
   }
 
   /**
@@ -94,7 +136,8 @@ class IndexFormController extends EntityFormController {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager')
+      $container->get('entity.manager'),
+      $container->get('search_api.datasource.plugin.manager')
     );
   }
 
@@ -151,11 +194,21 @@ class IndexFormController extends EntityFormController {
         'source' => array('name'),
       ),
     );
+    // Build the datasource element.
+    $form['datasourcePluginId'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Datasource'),
+      '#description' => $this->t('Select the datasource of items that will be indexed in this index. This setting cannot be changed afterwards.'),
+      '#options' => $this->getDatasourcePluginDefinitionOptions(),
+      '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
+      '#required' => TRUE,
+      '#disabled' => !$index->isNew(),
+    );
     // Build the status element.
     $form['status'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
-      '#description' => $this->t('Select if the index will be enabled.'),
+      '#description' => $this->t('Select if the index will be enabled. This will only take effect if the selected server is also enabled.'),
       '#default_value' => $index->status(),
       // Can't enable an index lying on a disabled server or no server at all.
       '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
