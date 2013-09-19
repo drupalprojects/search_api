@@ -10,6 +10,7 @@ namespace Drupal\search_api\Index;
  * Include required classes and interfaces.
  */
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\search_api\Server\ServerInterface;
 
 /**
  * Defines the interface for index entities.
@@ -67,6 +68,12 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function getServer();
 
-  // @todo: Find out what functionality needs to be added.
+  /**
+   * Set the server.
+   *
+   * @param \Drupal\search_api\Index\ServerInterface|NULL $server
+   *   An instance of ServerInterface or NULL.
+   */
+  public function setServer(ServerInterface $server = NULL);
 
 }

@@ -12,6 +12,7 @@ namespace Drupal\search_api\Entity;
 use Drupal;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\Annotation\EntityType;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Exception\SearchApiException;
@@ -162,6 +163,36 @@ class Server extends ConfigEntityBase implements ServerInterface {
       }
     }
     return $this->servicePluginInstance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    // Perform default entity post save.
+    parent::postSave($storage_controller, $update);
+    // @todo: Needs implementation.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function preDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    // Perform default entity pre delete.
+    parent::preDelete($storage_controller, $entities);
+    // Get the indexes associated with the servers.
+    $index_ids = Drupal::entityQuery('search_api_index')
+      ->condition('serverMachineName', array_keys($entities), 'IN')
+      ->execute();
+    // Load the related indexes.
+    $indexes = Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
+    // Iterate through the indexes.
+    foreach ($indexes as $index) {
+      // Remove the index from the server.
+      $index->setServer(NULL);
+      // Save changes made to the index.
+      $index->save();
+    }
   }
 
 }

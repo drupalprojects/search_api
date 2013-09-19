@@ -13,6 +13,8 @@ use Drupal;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\Annotation\EntityType;
+use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Exception\SearchApiException;
 
@@ -196,6 +198,85 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
     }
     return $this->server;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setServer(ServerInterface $server = NULL) {
+    // Overwrite the current server instance.
+    $this->server = $server;
+    // Overwrite the server machine name.
+    $this->serverMachineName = $server ? $server->id() : '';
+  }
+
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    // Perform default entity post save.
+    parent::postSave($storage_controller, $update);
+    // Check if the index is updated.
+    if ($update) {
+      // @todo: apply update.
+    }
+    else {
+      // Check if the index is enabled.
+      if ($this->status()) {
+        // @todo: Queue items.
+      }
+      // Check if the index has a valid server.
+      if ($this->hasValidServer()) {
+        // Get the server.
+        $server = $this->getServer();
+        // Check if the server is enabled.
+        if ($server->status()) {
+          // @todo: add the index to the server.
+        }
+        else { // @todo: Refractor tasks to a seperate manager.
+          // Get the search API tasks.
+          $tasks = Drupal::state()->get('search_api_tasks') ?: array();
+          // Add an index removal task.
+          $tasks[$server->id()][$index->id()] = array('add');
+          // Save the changes made to the tasks.
+          Drupal::state()->set('search_api_tasks', $tasks);
+        }
+      }
+
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+    // Perform default entity post delete.
+    parent::postDelete($storage_controller, $entities);
+    // Iterate through the entities.
+    foreach ($entities as $index) {
+      // Check if the index has a valid server.
+      if ($index->hasValidServer()) {
+        // Get the server.
+        $server = $index->getServer();
+        // Check if the server is enabled.
+        if ($server->status()) {
+          // @todo: Remove index from the server.
+        }
+        // Once the index is deleted, servers won't be able to tell whether it
+        // was read-only. Therefore, we prefer to err on the safe side and don't
+        // call the server method at all if the index is read-only and the
+        // server currently disabled.
+        elseif (!$index->isReadOnly()) { // @todo: Refractor tasks to a seperate manager.
+          // Get the search API tasks.
+          $tasks = Drupal::state()->get('search_api_tasks') ?: array();
+          // Add an index removal task.
+          $tasks[$server->id()][$index->id()] = array('remove');
+          // Save the changes made to the tasks.
+          Drupal::state()->set('search_api_tasks', $tasks);
+        }
+      }
+      // Stop tracking entities for indexing.
+      //@todo: Dequeue items.
+      // Delete index cache.
+      //@todo: Delete cache tag search_api_index.
+    }
   }
 
 }

@@ -16,8 +16,18 @@ use Drupal\Core\Entity\EntityFormController;
  */
 class IndexWorkflowFormController extends EntityFormController {
 
-  // @todo: Needs implementation.
+  /**
+   * {@inheritdoc}
+   */
+  public function actions(array $form, array &$form_state) {
+    // Get the default entity actions.
+    $actions = parent::actions($form, $form_state);
+    // Remove the delete action.
+    unset($actions['delete']);
+    // Return the modified actions.
+    return $actions;
+  }
 
-  
+  // @todo: Needs implementation.
 
 }
