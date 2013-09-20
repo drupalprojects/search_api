@@ -42,12 +42,12 @@ class ServerListController extends ConfigEntityListController {
    */
   public function buildHeader() {
     return array(
-      'title' => t('Name'),
-      'description' => array(
-        'data' => t('Description'),
-        'class' => array(RESPONSIVE_PRIORITY_MEDIUM),
+      'title' => $this->t('Name'),
+      'service' => array(
+        'data' => $this->t('Service'),
+        'class' => array(RESPONSIVE_PRIORITY_LOW),
       ),
-      'operations' => t('Operations'),
+      'operations' => $this->t('Operations'),
     );
   }
 
@@ -55,9 +55,21 @@ class ServerListController extends ConfigEntityListController {
    * {@inheritdoc}
    */
   public function buildRow(\Drupal\Core\Entity\EntityInterface $entity) {
+    // Check if the server contains a valid service.
+    if ($entity->hasValidService()) {
+      // Get the service plugin definition.
+      $service_plugin_definition = $entity->getService()->getPluginDefinition();
+      // Get the service label.
+      $service_label = $this->t($service_plugin_definition['name']);
+    }
+    else {
+      // Set the service label to broken.
+      $service_label = $this->t('Broken');
+    }
+    // Build the row for the current entity.
     return array(
-      'title' => String::checkPlain($entity->label()),
-      'description' => Xss::filterAdmin($entity->getDescription()),
+      'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
+      'service' => String::checkPlain($service_label),
       'operations' => array(
         'data' => $this->buildOperations($entity),
       ),

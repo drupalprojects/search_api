@@ -42,12 +42,12 @@ class IndexListController extends ConfigEntityListController {
    */
   public function buildHeader() {
     return array(
-      'title' => t('Name'),
-      'description' => array(
-        'data' => t('Description'),
-        'class' => array(RESPONSIVE_PRIORITY_MEDIUM),
+      'title' => $this->t('Name'),
+      'datasource' => array(
+        'data' => $this->t('Datasource'),
+        'class' => array(RESPONSIVE_PRIORITY_LOW),
       ),
-      'operations' => t('Operations'),
+      'operations' => $this->t('Operations'),
     );
   }
 
@@ -55,9 +55,21 @@ class IndexListController extends ConfigEntityListController {
    * {@inheritdoc}
    */
   public function buildRow(\Drupal\Core\Entity\EntityInterface $entity) {
+    // Check if the index contains a valid datasource.
+    if ($entity->hasValidDatasource()) {
+      // Get the datasource plugin definition.
+      $datasource_plugin_definition = $entity->getDatasource()->getPluginDefinition();
+      // Get the datasource label.
+      $datasource_label = $this->t($datasource_plugin_definition['name']);
+    }
+    else {
+      // Set the datasource label to broken.
+      $datasource_label = $this->t('Broken');
+    }
+    // Build the row for the current entity.
     return array(
-      'title' => String::checkPlain($entity->label()),
-      'description' => Xss::filterAdmin($entity->getDescription()),
+      'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
+      'datasource' => String::checkPlain($datasource_label),
       'operations' => array(
         'data' => $this->buildOperations($entity),
       ),

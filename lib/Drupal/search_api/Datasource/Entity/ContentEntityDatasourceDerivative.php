@@ -91,7 +91,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
           $plugin_derivatives[$entity_type] = array(
             'id' => "datasource:content-entity:{$entity_type}",
             'entity_type' => $entity_type,
-            'name' => "Content entity: {$entity_type_definition['label']}",
+            'name' => $entity_type_definition['label'],
           ) + $base_plugin_definition;
         }
       }
