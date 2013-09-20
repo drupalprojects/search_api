@@ -15,6 +15,7 @@ use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Annotation\Datasource;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Datasource\Entity\EntityDatasourceItem;
+use Drupal\search_api\Index\IndexInterface;
 
 /**
  * Represents a datasource which exposes the content entities.
