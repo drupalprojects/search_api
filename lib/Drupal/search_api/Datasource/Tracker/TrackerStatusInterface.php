@@ -20,12 +20,16 @@ interface TrackerStatusInterface {
   public function getIndexedCount();
 
   /**
-   * Get the number of dirty items.
+   * Get the number of changed items.
+   *
+   * @param boolean $queued
+   *   Optional. Indicates the queued items should be included in the changed
+   *   count. Defaults to FALSE.
    *
    * @return integer
-   *   The number of dirty items.
+   *   The number of changed items.
    */
-  public function getChangedCount();
+  public function getChangedCount($queued = FALSE);
 
   /**
    * Get the number of queued items.

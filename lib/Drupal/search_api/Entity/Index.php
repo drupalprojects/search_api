@@ -269,6 +269,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->serverMachineName = $server ? $server->id() : '';
   }
 
+  // @todo: Invoke the datasource functions when configuration changes or is removed.
+
   public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
     // Perform default entity post save.
     parent::postSave($storage_controller, $update);

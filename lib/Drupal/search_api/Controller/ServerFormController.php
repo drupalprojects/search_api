@@ -226,6 +226,7 @@ class ServerFormController extends EntityFormController {
         $form['servicePluginConfig']['#type'] = 'details';
         $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['label']));
         $form['servicePluginConfig']['#description'] = String::checkPlain($service_plugin_definition['description']);
+        $form['servicePluginConfig']['#collapsed'] = !$server->isNew();
         // Attach the build service plugin configuration form.
         $form['servicePluginConfig'] += $service_plugin_config_form;
       }

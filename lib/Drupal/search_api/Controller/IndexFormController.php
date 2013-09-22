@@ -308,6 +308,7 @@ class IndexFormController extends EntityFormController {
         $form['datasourcePluginConfig']['#type'] = 'details';
         $form['datasourcePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $datasource_plugin_definition['name']));
         $form['datasourcePluginConfig']['#description'] = String::checkPlain($datasource_plugin_definition['description']);
+        $form['datasourcePluginConfig']['#collapsed'] = !$index->isNew();
         // Attach the build datasource plugin configuration form.
         $form['datasourcePluginConfig'] += $datasource_plugin_config_form;
       }

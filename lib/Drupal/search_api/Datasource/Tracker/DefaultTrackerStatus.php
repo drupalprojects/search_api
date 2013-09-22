@@ -94,12 +94,12 @@ class DefaultTrackerStatus implements TrackerStatusInterface {
   /**
    * {@inheritdoc}
    */
-  public function getChangedCount() {
+  public function getChangedCount($queued = FALSE) {
     // Build the select statement.
     $statement = $this->createSelectStatement();
-    // Filter on dirty items.
-    $statement->condition('state', ItemStates::DIRTY);
-    // Get the number of dirty items.
+    // Filter on updated items.
+    $statement->condition('state', ($queued ? array(ItemStates::CHANGED, ItemStates::QUEUED) : ItemStates::CHANGED));
+    // Get the number of updated items.
     return $statement->execute()->fetchField();
   }
 

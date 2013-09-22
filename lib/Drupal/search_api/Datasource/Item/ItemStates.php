@@ -20,7 +20,7 @@ final class ItemStates {
    * Indicates a deprecated version of an item is present in the index and
    * needs to be updated.
    */
-  const DIRTY = 1;
+  const CHANGED = 1;
 
   /**
    * Indicates an item has been scheduled to be processed during cron.

@@ -141,8 +141,8 @@ class DefaultTracker implements TrackerInterface {
           $statement->values(array(
             'id' => $item_id,
             'index' => $index_id,
+            'state' => ItemStates::CHANGED,
             'changed' => REQUEST_TIME,
-            'state' => ItemStates::DIRTY,
           ));
         }
         // Execute the insert statement.
@@ -176,7 +176,7 @@ class DefaultTracker implements TrackerInterface {
       foreach (array_chunk($ids, 1000) as $ids_chunk) {
         // Build the fields which need to be updated.
         $fields = array(
-          'state' => ItemStates::DIRTY,
+          'state' => ItemStates::CHANGED,
           'changed' => REQUEST_TIME,
         );
         // Build the update statement.
