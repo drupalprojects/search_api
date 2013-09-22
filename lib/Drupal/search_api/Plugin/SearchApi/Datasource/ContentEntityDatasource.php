@@ -170,13 +170,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
-   * Add a datasource tracker.
-   *
-   * @param \Drupal\search_api\Datasource\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return boolean
-   *   TRUE if the tracker was added, otherwise FALSE.
+   * {@inheritdoc}
    */
   public function addTracker(IndexInterface $index) {
     // The default tracker implementation supports dynamic creation.
@@ -184,13 +178,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
-   * Determine whether a datasource tracker for the given index exists.
-   *
-   * @param \Drupal\search_api\Datasource\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return boolean
-   *   TRUE if the tracker exists, otherwise FALSE.
+   * {@inheritdoc}
    */
   public function hasTracker(IndexInterface $index) {
     // The default tracker implementation supports dynamic creation.
@@ -198,13 +186,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
-   * Get a datasource tracker.
-   *
-   * @param \Drupal\search_api\Datasource\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface|NULL
-   *   An instance of TrackerInterface if present, otherwise NULL.
+   * {@inheritdoc}
    */
   public function getTracker(IndexInterface $index) {
     // Check if the index is valid.
@@ -222,15 +204,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
-   * Delete a datasource tracker.
-   *
-   * @param \Drupal\search_api\Datasource\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return boolean
-   *   TRUE if removed, otherwise FALSE.
+   * {@inheritdoc}
    */
-  public function deleteTracker(IndexInterface $index) {
+  public function removeTracker(IndexInterface $index) {
     // Check if the index is valid.
     if (($tracker = $this->getTracker($index))) {
       // Clear the tracked items.

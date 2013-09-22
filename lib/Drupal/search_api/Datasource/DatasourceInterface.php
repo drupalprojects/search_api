@@ -82,7 +82,7 @@ interface DatasourceInterface extends PluginInspectionInterface {
   public function getTracker(IndexInterface $index);
 
   /**
-   * Delete a datasource tracker.
+   * Remove a datasource tracker.
    *
    * @param \Drupal\search_api\Datasource\IndexInterface $index
    *   An instance of IndexInterface.
@@ -90,6 +90,6 @@ interface DatasourceInterface extends PluginInspectionInterface {
    * @return boolean
    *   TRUE if removed, otherwise FALSE.
    */
-  public function deleteTracker(IndexInterface $index);
+  public function removeTracker(IndexInterface $index);
 
 }
