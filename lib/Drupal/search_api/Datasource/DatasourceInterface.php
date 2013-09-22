@@ -9,13 +9,13 @@ namespace Drupal\search_api\Datasource;
 /*
  * Include required classes and interfaces.
  */
-use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\search_api\Plugin\ConfigurablePluginLifecycleInterface;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
  * Interface which desribes a datasource.
  */
-interface DatasourceInterface extends PluginInspectionInterface {
+interface DatasourceInterface extends ConfigurablePluginLifecycleInterface {
 
   /**
    * Get the properties exposed by the underlying complex data type.

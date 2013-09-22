@@ -23,7 +23,7 @@ search_api.server.*:
       type: string
       label: 'Service Plugin ID'
     servicePluginConfig:
-      type: search_api.server.plugin.[%parent.servicePluginId]
+      type: search_api.service.plugin.[%parent.servicePluginId]
     langcode:
       type: string
       label: 'Language code'
@@ -60,6 +60,8 @@ search_api.index.*:
     datasourcePluginId:
       type: string
       label: 'Datasource plugin ID'
+    datasourcePluginConfig:
+      type: search_api.datasource.plugin.[%parent.datasourcePluginId]
     serverMachineName:
       type: string
       label: 'Server machine name'

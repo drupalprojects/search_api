@@ -9,13 +9,9 @@ namespace Drupal\search_api\Datasource;
 /*
  * Include required classes and interfaces.
  */
-use Drupal\Component\Plugin\PluginBase;
+use Drupal\search_api\Plugin\ConfigurablePluginBase;
 
 /**
  * Abstract base class for search datasource plugins.
  */
-abstract class DatasourcePluginBase extends PluginBase implements DatasourceInterface {
-
-  // @todo: Implement the default plugin base.
-
-}
+abstract class DatasourcePluginBase extends ConfigurablePluginBase implements DatasourceInterface { }

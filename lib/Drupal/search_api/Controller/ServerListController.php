@@ -11,7 +11,6 @@ namespace Drupal\search_api\Controller;
  */
 use Drupal\Core\Config\Entity\ConfigEntityListController;
 use Drupal\Component\Utility\String;
-use Drupal\Component\Utility\Xss;
 
 /**
  * Defines a list controller for the Server entity.

@@ -108,6 +108,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public $datasourcePluginId;
 
   /**
+   * The datasource plugin configuration.
+   *
+   * @var array
+   */
+  public $datasourcePluginConfig = array();
+
+  /**
    * The datasource plugin instance.
    *
    * @var \Drupal\search_api\Datasource\DatasourceInterface
@@ -132,8 +139,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Clone a Server object.
    */
   public function __clone() {
-    // Prevent the server instance from being cloned.
-    $this->server = NULL;
+    // Prevent the datasource and server instance from being cloned.
+    $this->datasourcePluginInstance = $this->server = NULL;
   }
 
   /**
@@ -208,7 +215,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the datasource plugin manager.
       $datasource_plugin_manager = Drupal::service('search_api.datasource.plugin.manager');
       // Create a datasource plugin instance.
-      $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id);
+      $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id, $this->getDatasourceConfiguration());
     }
     return $this->datasourcePluginInstance;
   }
@@ -216,8 +223,25 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDatasourceConfiguration() {
+    return $this->datasourcePluginConfig;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setDatasourceConfiguration(array $configuration) {
+    // Set the datasource configuration.
+    $this->datasourcePluginConfig = $configuration;
+    // Clear the datasource instance cache.
+    $this->datasourcePluginInstance = NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasValidServer() {
-    return Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
+    return $this->serverMachineName !== NULL && Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
   }
 
   /**

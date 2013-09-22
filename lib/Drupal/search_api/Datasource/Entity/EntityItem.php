@@ -11,12 +11,12 @@ namespace Drupal\search_api\Datasource\Entity;
  */
 use IteratorAggregate;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\search_api\Datasource\TranslatableItemInterface;
+use Drupal\search_api\Datasource\ItemInterface;
 
 /**
  * Entity datasource item wrapper.
  */
-class EntityItem implements IteratorAggregate, TranslatableItemInterface {
+class EntityItem implements IteratorAggregate, ItemInterface {
 
   /**
    * The wrapped entity.

@@ -216,13 +216,15 @@ class ServerFormController extends EntityFormController {
     );
     // Check if the server has a valid service configured.
     if ($server->hasValidService()) {
+      // Get the service.
+      $service = $server->getService();
       // Get the service plugin definition.
-      $service_plugin_definition = $server->getService()->getPluginDefinition();
+      $service_plugin_definition = $service->getPluginDefinition();
       // Build the service configuration form.
-      if (($service_plugin_config_form = $server->getService()->buildConfigurationForm(array(), $form_state))) {
+      if (($service_plugin_config_form = $service->buildConfigurationForm(array(), $form_state))) {
         // Modify the service plugin configuration container element.
         $form['servicePluginConfig']['#type'] = 'details';
-        $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['name']));
+        $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['label']));
         $form['servicePluginConfig']['#description'] = String::checkPlain($service_plugin_definition['description']);
         // Attach the build service plugin configuration form.
         $form['servicePluginConfig'] += $service_plugin_config_form;
@@ -257,7 +259,7 @@ class ServerFormController extends EntityFormController {
    */
   public function validate(array $form, array &$form_state) {
     // Perform default entity form validate.
-    parent::validateForm($form, $form_state);
+    parent::validate($form, $form_state);
     // Get the entity.
     $entity = $this->getEntity();
     // Get the current service plugin ID.
@@ -266,13 +268,13 @@ class ServerFormController extends EntityFormController {
     if ($service_plugin_id !== $form_state['values']['servicePluginId']) {
       // Check if the service plugin configuration form input values exist.
       if (!empty($form_state['input']['servicePluginConfig'])) {
-        // Overwrite the widget configuration form input values with an empty
+        // Overwrite the plugin configuration form input values with an empty
         // array. This will force the Drupal Form API to use the default values.
         $form_state['input']['servicePluginConfig'] = array();
       }
       // Check if the service plugin configuration form values exist.
       if (!empty($form_state['values']['servicePluginConfig'])) {
-        // Overwrite the widget configuration form values with an empty array.
+        // Overwrite the plugin configuration form values with an empty array.
         // This has no effect on the Drupal Form API but is done to keep the
         // data consistent.
         $form_state['values']['servicePluginConfig'] = array();
@@ -292,11 +294,11 @@ class ServerFormController extends EntityFormController {
     // Get the entity.
     $entity = $this->getEntity();
     // Get the current service plugin ID.
-    $current_service_plugin_id = $entity->hasValidService() ? $entity->getService()->getPluginId() : NULL;
+    $service_plugin_id = $entity->hasValidService() ? $entity->getService()->getPluginId() : NULL;
     // Perform default entity form submittion.
     $entity = parent::submit($form, $form_state);
     // Check if the service plugin changed.
-    if ($current_service_plugin_id !== $form_state['values']['servicePluginId']) {
+    if ($service_plugin_id !== $form_state['values']['servicePluginId']) {
       // Notify the user about the service configuration change.
       drupal_set_message($this->t('Please configure the used service.'), 'warning');
       // Rebuild the form.
@@ -309,7 +311,7 @@ class ServerFormController extends EntityFormController {
       // Submit the service plugin configuration form.
       $service->submitConfigurationForm($form['servicePluginConfig'], $form_state);
       // Apply the active service plugin configuration.
-      $entity->servicePluginConfig = $service->getConfiguration();
+      $entity->setServiceConfiguration($service->getConfiguration());
     }
     return $entity;
   }

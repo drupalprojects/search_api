@@ -123,7 +123,7 @@ class IndexFormController extends EntityFormController {
   protected function getServerOptions() {
     // Initialize the options variable to an empty array.
     $options = array();
-    // Iterate through the service plugin definitions.
+    // Iterate through the servers.
     foreach ($this->getServerStorageController()->loadMultiple() as $server_machine_name => $server) {
       // Add the plugin to the list.
       $options[$server_machine_name] = String::checkPlain($server->label());
@@ -145,6 +145,11 @@ class IndexFormController extends EntityFormController {
    * {@inheritdoc}
    */
   public function form(array $form, array &$form_state) {
+    // Check if the form is being rebuild.
+    if (!empty($form_state['rebuild'])) {
+      // Rebuild the entity with the form state values.
+      $this->entity = $this->buildEntity($form, $form_state);
+    }
     // Build the default entity form.
     $form = parent::form($form, $form_state);
     // Get the entity and attach to the form state.
@@ -194,15 +199,12 @@ class IndexFormController extends EntityFormController {
         'source' => array('name'),
       ),
     );
-    // Build the datasource element.
-    $form['datasourcePluginId'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Datasource'),
-      '#description' => $this->t('Select the datasource of items that will be indexed in this index. This setting cannot be changed afterwards.'),
-      '#options' => $this->getDatasourcePluginDefinitionOptions(),
-      '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
-      '#required' => TRUE,
-      '#disabled' => !$index->isNew(),
+    // Build the description element.
+    $form['description'] = array(
+      '#type' => 'textarea',
+      '#title' => $this->t('Description'),
+      '#description' => $this->t('Enter a description for the index.'),
+      '#default_value' => $index->getDescription(),
     );
     // Build the status element.
     $form['status'] = array(
@@ -213,13 +215,24 @@ class IndexFormController extends EntityFormController {
       // Can't enable an index lying on a disabled server or no server at all.
       '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
     );
-    // Build the description element.
-    $form['description'] = array(
-      '#type' => 'textarea',
-      '#title' => $this->t('Description'),
-      '#description' => $this->t('Enter a description for the index.'),
-      '#default_value' => $index->getDescription(),
+    // Build the datasource element.
+    $form['datasourcePluginId'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Datasource'),
+      '#description' => $this->t('Select the datasource of items that will be indexed in this index. This setting cannot be changed afterwards.'),
+      '#options' => $this->getDatasourcePluginDefinitionOptions(),
+      '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
+      '#required' => TRUE,
+      '#disabled' => !$index->isNew(),
+      '#ajax' => array(
+        'callback' => array($this, 'buildAjaxDatasourceConfigForm'),
+        'wrapper' => 'search-api-datasource-config-form',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
     );
+    // Build the datasource configuration form.
+    $this->buildDatasourceConfigForm($form, $form_state, $index);
     // Build the server machine name element.
     $form['serverMachineName'] = array(
       '#type' => 'select',
@@ -236,7 +249,12 @@ class IndexFormController extends EntityFormController {
       '#default_value' => $index->isReadOnly(),
     );
     // Build the options container element.
-    $form['options'] = array('#tree' => TRUE);
+    $form['options'] = array(
+      '#tree' => TRUE,
+      '#type' => 'details',
+      '#title' => t('Index options'),
+      '#collapsed' => !$index->isNew(),
+    );
     // Build the index directly element.
     $form['options']['index_directly'] = array(
       '#type' => 'checkbox',
@@ -260,25 +278,150 @@ class IndexFormController extends EntityFormController {
   }
 
   /**
+   * Build the datasource configuration form.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param array $form_state
+   *   An associative array containing the current state of the form.
+   * @param \Drupal\search_api\Server\ServerInterface $server
+   *   An instance of ServerInterface.
+   */
+  public function buildDatasourceConfigForm(array &$form, array &$form_state, IndexInterface $index) {
+    // Build the datasource plugin configuration container element.
+    $form['datasourcePluginConfig'] = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'id' => 'search-api-datasource-config-form',
+      ),
+      '#tree' => TRUE,
+    );
+    // Check if the index has a valid datasource configured.
+    if ($index->hasValidDatasource()) {
+      // Get the datasource.
+      $datasource = $index->getDatasource();
+      // Get the datasource plugin definition.
+      $datasource_plugin_definition = $datasource->getPluginDefinition();
+      // Build the datasource configuration form.
+      if (($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state))) {
+        // Modify the datasource plugin configuration container element.
+        $form['datasourcePluginConfig']['#type'] = 'details';
+        $form['datasourcePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $datasource_plugin_definition['name']));
+        $form['datasourcePluginConfig']['#description'] = String::checkPlain($datasource_plugin_definition['description']);
+        // Attach the build datasource plugin configuration form.
+        $form['datasourcePluginConfig'] += $datasource_plugin_config_form;
+      }
+    }
+    // Do not notify the user about a missing datasource plugin if a new index
+    // is being configured.
+    elseif (!$index->isNew()) {
+      // Notify the user about the missing datasource plugin.
+      drupal_set_message($this->t('The datasource plugin is missing or invalid.'), 'error');
+    }
+  }
+
+  /**
+   * Build the datasource plugin configuration form in context of an Ajax
+   * request.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param array $form_state
+   *   An associative array containing the current state of the form.
+   *
+   * @return array
+   *   An associative array containing the structure of the form.
+   */
+  public function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
+    // Get the datasource plugin configuration form.
+    return $form['datasourcePluginConfig'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate(array $form, array &$form_state) {
+    // Perform default entity form validate.
+    parent::validate($form, $form_state);
+    // Get the entity.
+    $entity = $this->getEntity();
+    // Get the current datasource plugin ID.
+    $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
+    // Check if the datasource plugin changed.
+    if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
+      // Check if the datasource plugin configuration form input values exist.
+      if (!empty($form_state['input']['datasourcePluginConfig'])) {
+        // Overwrite the plugin configuration form input values with an empty
+        // array. This will force the Drupal Form API to use the default values.
+        $form_state['input']['datasourcePluginConfig'] = array();
+      }
+      // Check if the datasource plugin configuration form values exist.
+      if (!empty($form_state['values']['datasourcePluginConfig'])) {
+        // Overwrite the plugin configuration form values with an empty array.
+        // This has no effect on the Drupal Form API but is done to keep the
+        // data consistent.
+        $form_state['values']['datasourcePluginConfig'] = array();
+      }
+    }
+    // Check if the entity has a valid datasource plugin.
+    elseif ($entity->hasValidDatasource()) {
+      // Validate the datasource plugin configuration form.
+      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $form_state);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submit(array $form, array &$form_state) {
+    // Get the entity.
+    $entity = $this->getEntity();
+    // Get the current datasource plugin ID.
+    $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
+    // Perform default entity form submittion.
+    $entity = parent::submit($form, $form_state);
+    // Check if the datasource plugin changed.
+    if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
+      // Notify the user about the datasource configuration change.
+      drupal_set_message($this->t('Please configure the used datasource.'), 'warning');
+      // Rebuild the form.
+      $form_state['rebuild'] = TRUE;
+    }
+    // Check if the entity has a valid datasource plugin.
+    elseif ($entity->hasValidDatasource()) {
+      // Get the datasource from the entity.
+      $datasource = $entity->getDatasource();
+      // Submit the datasource plugin configuration form.
+      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $form_state);
+      // Apply the active datasource plugin configuration.
+      $entity->setDatasourceConfiguration($datasource->getConfiguration());
+    }
+    return $entity;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function save(array $form, array &$form_state) {
-    // Catch any exception that may get thrown during save operation.
-    try {
-      // Save changes made to the entity.
-      $this->getEntity()->save();
-      // Notify the user that the server was created.
-      drupal_set_message($this->t('The index was successfully saved.'));
-      // Redirect to the server page.
-      $form_state['redirect'] = $this->url('search_api.index_overview');
-    }
-    catch (Exception $ex) {
-      // Rebuild the form.
-      $form_state['rebuild'] = TRUE;
-      // Log the exception to the watchdog.
-      watchdog_exception('Search API', $ex);
-      // Notify the user that the save operation failed.
-      drupal_set_message($this->t('The index could not be saved.'), 'error');
+    // Check if the form does not need to be rebuild.
+    if (empty($form_state['rebuild'])) {
+      // Catch any exception that may get thrown during save operation.
+      try {
+        // Save changes made to the entity.
+        $this->getEntity()->save();
+        // Notify the user that the server was created.
+        drupal_set_message($this->t('The index was successfully saved.'));
+        // Redirect to the server page.
+        $form_state['redirect'] = $this->url('search_api.index_overview');
+      }
+      catch (Exception $ex) {
+        // Rebuild the form.
+        $form_state['rebuild'] = TRUE;
+        // Log the exception to the watchdog.
+        watchdog_exception('Search API', $ex);
+        // Notify the user that the save operation failed.
+        drupal_set_message($this->t('The index could not be saved.'), 'error');
+      }
     }
   }
 

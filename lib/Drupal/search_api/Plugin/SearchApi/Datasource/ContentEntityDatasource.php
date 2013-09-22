@@ -18,6 +18,7 @@ use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Datasource\Entity\EntityItem;
 use Drupal\search_api\Datasource\Tracker\DefaultTracker;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\Component\Utility\String;
 
 /**
  * Represents a datasource which exposes the content entities.
@@ -25,7 +26,7 @@ use Drupal\search_api\Index\IndexInterface;
  * @Datasource(
  *   id = "search_api_content_entity_datasource",
  *   name = @Translation("Content entity datasource"),
- *   desciption = @Translation("Exposes the content entities as datasource.")
+ *   description = @Translation("Exposes the content entities as datasource."),
  *   derivative = "Drupal\search_api\Datasource\Entity\ContentEntityDatasourceDerivative"
  * )
  */
@@ -128,6 +129,55 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
+   * Get the entity bundles which can be used in a select element.
+   *
+   * For entity types that do not support bundles this method wll return an
+   * empty array.
+   */
+  protected function getEntityBundleOptions() {
+    // Initialize the options variable to NULL.
+    $options = array();
+    // Get the entity bundles.
+    $bundles = $this->getEntityBundles();
+    // Get the total number of bundles.
+    $bundle_count = count($bundles);
+    // Get the entity type.
+    $entity_type = $this->getEntityType();
+    // Check if the entity supports bundles.
+    if (($bundle_count == 1 && !isset($bundles[$entity_type])) || $bundle_count > 1) {
+      // Iterate through the bundles.
+      foreach ($bundles as $bundle => $bundle_info) {
+        // Add the bundle to the options list.
+        $options[$bundle] = String::checkPlain($bundle_info['label']);
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Get the entity type.
+   *
+   * @return string
+   *   The entity type.
+   */
+  public function getEntityType() {
+    // Get the plugin definition.
+    $plugin_definition = $this->getPluginDefinition();
+    // Get the entity type.
+    return $plugin_definition['entity_type'];
+  }
+
+  /**
+   * Get the entity bundles.
+   *
+   * @return array
+   *   An associative array of bundle info, keyed by the bundle name.
+   */
+  public function getEntityBundles() {
+    return $this->getEntityManager()->getBundleInfo($this->getEntityType());
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
@@ -213,6 +263,79 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
       return $tracker->clear();
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    // Check if the entity supports bundles.
+    if (($bundles = $this->getEntityBundleOptions())) {
+      // Build the default operation element.
+      $form['default'] = array(
+        '#type' => 'radios',
+        '#title' => t('Which items should be indexed?'),
+        '#options' => array(
+          0 => t('Only those from the selected bundles'),
+          1 => t('All but those from one of the selected bundles'),
+        ),
+        '#default_value' => $this->configuration['default'],
+      );
+      // Build the bundle selection element.
+      $form['bundles'] = array(
+        '#type' => 'select',
+        '#title' => t('Bundles'),
+        '#options' => $bundles,
+        '#default_value' => $this->configuration['bundles'],
+        '#size' => min(4, count($bundles)),
+        '#multiple' => TRUE,
+      );
+    }
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    // Apply the configuration.
+    $this->configuration['default'] = $form_state['values']['datasourcePluginConfig']['default'];
+    $this->configuration['bundles'] = $form_state['values']['datasourcePluginConfig']['bundles'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return array(
+      'default' => 1,
+      'bundles' => array(),
+    );
+  }
+
+
+
+
+
+
+
+  public function postInstanceConfigurationCreate() {
+
+  }
+  public function postInstanceConfigurationDelete() {
+
+  }
+  public function postInstanceConfigurationUpdate() {
+
+  }
+  public function preInstanceConfigurationCreate() {
+
+  }
+  public function preInstanceConfigurationDelete() {
+
+  }
+  public function preInstanceConfigurationUpdate() {
+
   }
 
 }

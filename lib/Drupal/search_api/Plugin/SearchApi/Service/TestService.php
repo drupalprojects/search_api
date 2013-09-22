@@ -32,4 +32,46 @@ class TestService extends ServicePluginBase {
   public function validateConfigurationForm(array &$form, array &$form_state) {
 
   }
+  public function addIndex(\Drupal\search_api\Index\IndexInterface $index) {
+
+  }
+  public function deleteAllItems(\Drupal\search_api\Index\IndexInterface $index) {
+
+  }
+  public function deleteItems(\Drupal\search_api\Index\IndexInterface $index, array $ids) {
+
+  }
+  public function hasIndex(\Drupal\search_api\Index\IndexInterface $index) {
+
+  }
+  public function indexItems(\Drupal\search_api\Index\IndexInterface $index, array $items) {
+
+  }
+  public function postInstanceConfigurationCreate() {
+
+  }
+  public function postInstanceConfigurationDelete() {
+
+  }
+  public function postInstanceConfigurationUpdate() {
+
+  }
+  public function preInstanceConfigurationCreate() {
+
+  }
+  public function preInstanceConfigurationDelete() {
+
+  }
+  public function preInstanceConfigurationUpdate() {
+
+  }
+  public function removeIndex(\Drupal\search_api\Index\IndexInterface $index) {
+
+  }
+  public function supportsFeature($feature) {
+
+  }
+  public function updateIndex(\Drupal\search_api\Index\IndexInterface $index) {
+
+  }
 }
