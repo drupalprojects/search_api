@@ -89,7 +89,7 @@ class ServerFormController extends EntityFormController {
     // Iterate through the service plugin definitions.
     foreach ($this->getServicePluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
       // Add the plugin to the list.
-      $options[$plugin_id] = String::checkPlain($plugin_definition['name']);
+      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
     }
     return $options;
   }

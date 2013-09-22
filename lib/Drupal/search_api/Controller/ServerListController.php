@@ -60,7 +60,7 @@ class ServerListController extends ConfigEntityListController {
       // Get the service plugin definition.
       $service_plugin_definition = $entity->getService()->getPluginDefinition();
       // Get the service label.
-      $service_label = $this->t($service_plugin_definition['name']);
+      $service_label = $service_plugin_definition['label'];
     }
     else {
       // Set the service label to broken.

@@ -1,0 +1,50 @@
+<?php
+/**
+ * @file
+ * Defines the schema of the search API module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function search_api_schema() {
+  return array(
+    'search_api_item' => array(
+      'description' => 'Stores the items which should be indexed for each index, and their state.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'The unique identifier of this item.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'index' => array(
+          'description' => 'The machine name of the index this item belongs to.',
+          'type' => 'varchar',
+          'length' => 50,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'changed' => array(
+          'description' => 'A timestamp of when the item state was last changed.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'state' => array(
+          'description' => 'The current state of tis item.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'indexes' => array(
+        'indexing' => array('index', 'state', 'changed'),
+      ),
+      'primary key' => array('item', 'index'),
+    ),
+  );
+}

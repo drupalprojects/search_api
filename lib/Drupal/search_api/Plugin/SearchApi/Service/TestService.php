@@ -9,7 +9,7 @@ use Drupal\search_api\Service\ServicePluginBase;
 /**
  * @Service(
  *   id = "search_api_test_service",
- *   name = @Translation("Test service"),
+ *   label = @Translation("Test service"),
  *   description = @Translation("Dummy service implementation")
  * )
  */

@@ -32,7 +32,7 @@ class Service extends Plugin {
    *
    * @var \Drupal\Core\Annotation\Translation
    */
-  public $name;
+  public $label;
 
   /**
    * The service description.

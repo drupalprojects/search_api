@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Datasource\Entity\EntityDatasourceItem.
+ * Contains \Drupal\search_api\Datasource\Entity\EntityItem.
  */
 
 namespace Drupal\search_api\Datasource\Entity;
@@ -11,12 +11,12 @@ namespace Drupal\search_api\Datasource\Entity;
  */
 use IteratorAggregate;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\search_api\Datasource\TranslatableDatasourceItemInterface;
+use Drupal\search_api\Datasource\TranslatableItemInterface;
 
 /**
  * Entity datasource item wrapper.
  */
-class EntityDatasourceItem implements IteratorAggregate, TranslatableDatasourceItemInterface {
+class EntityItem implements IteratorAggregate, TranslatableItemInterface {
 
   /**
    * The wrapped entity.
@@ -26,7 +26,7 @@ class EntityDatasourceItem implements IteratorAggregate, TranslatableDatasourceI
   private $entity;
 
   /**
-   * Create an EntityDatasourceItem object.
+   * Create an EntityItem object.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   An instance of EntityInterface.
@@ -78,7 +78,7 @@ class EntityDatasourceItem implements IteratorAggregate, TranslatableDatasourceI
    * {@inheritdoc}
    */
   public function getPropertyValues() {
-    return $this->getPropertyValues();
+    return $this->getEntity()->getPropertyValues();
   }
 
   /**
@@ -211,21 +211,21 @@ class EntityDatasourceItem implements IteratorAggregate, TranslatableDatasourceI
    * {@inheritdoc}
    */
   public function getTranslationLanguages($include_default = TRUE) {
-    return $this->getTranslationLanguages($include_default);
+    return $this->getEntity()->getTranslationLanguages($include_default);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTranslation($langcode) {
-    return new EntityDatasourceItem($this->getEntity()->getTranslation($langcode));
+    return new static($this->getEntity()->getTranslation($langcode));
   }
 
   /**
    * {@inheritdoc}
    */
   public function getUntranslated() {
-    return new EntityDatasourceItem($this->getEntity()->getUntranslated());
+    return new static($this->getEntity()->getUntranslated());
   }
 
   /**
@@ -239,7 +239,7 @@ class EntityDatasourceItem implements IteratorAggregate, TranslatableDatasourceI
    * {@inheritdoc}
    */
   public function addTranslation($langcode, array $values = array()) {
-    return new EntityDatasourceItem($this->getEntity()->addTranslation($langcode, $values));
+    return new static($this->getEntity()->addTranslation($langcode, $values));
   }
 
   /**

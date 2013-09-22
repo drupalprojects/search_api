@@ -88,7 +88,7 @@ class IndexFormController extends EntityFormController {
     // Iterate through the datasource plugin definitions.
     foreach ($this->getDatasourcePluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
       // Add the plugin to the list.
-      $options[$plugin_id] = String::checkPlain($this->t($plugin_definition['name']));
+      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
     }
     return $options;
   }

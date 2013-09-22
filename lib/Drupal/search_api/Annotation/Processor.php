@@ -32,7 +32,7 @@ class Processor extends Plugin {
    *
    * @var \Drupal\Core\Annotation\Translation
    */
-  public $name;
+  public $label;
 
   /**
    * The description of the processor.

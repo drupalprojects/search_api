@@ -31,8 +31,8 @@ interface DatasourceInterface extends PluginInspectionInterface {
    * @param mixed $id
    *   The ID of an item.
    *
-   * @return \Drupal\search_api\Datasource\DatasourceItemInterface|NULL
-   *   An instance of DatasourceItemInterface if present, otherwise NULL.
+   * @return \Drupal\search_api\Datasource\Item\ItemInterface|NULL
+   *   An instance of ItemInterface if present, otherwise NULL.
    */
   public function load($id);
 
@@ -43,47 +43,53 @@ interface DatasourceInterface extends PluginInspectionInterface {
    *   An array of item IDs.
    *
    * @return array
-   *   An associative array of DatasourceItemInterface objects, keyed by their
+   *   An associative array of ItemInterface objects, keyed by their
    *   ID.
    */
   public function loadMultiple(array $ids);
 
   /**
-   * Add an index tracker.
+   * Add a datasource tracker.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   */
-  public function addIndexTracker(IndexInterface $index);
-
-  /**
-   * Determine whether an index tracker is present.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\Datasource\IndexInterface $index
    *   An instance of IndexInterface.
    *
    * @return boolean
-   *   TRUE if the index is being tracked, otherwise FALSE.
+   *   TRUE if the tracker was added, otherwise FALSE.
    */
-  public function hasIndexTracker(IndexInterface $index);
+  public function addTracker(IndexInterface $index);
 
   /**
-   * Get the index tracker.
+   * Determine whether a datasource tracker for the given index exists.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\Datasource\IndexInterface $index
    *   An instance of IndexInterface.
    *
-   * @return \Drupal\search_api\Index\IndexTrackerInterface|NULL
-   *   An instance of IndexTrackerInterface if present, otherwise NULL.
+   * @return boolean
+   *   TRUE if the tracker exists, otherwise FALSE.
    */
-  public function getIndexTracker(IndexInterface $index);
+  public function hasTracker(IndexInterface $index);
 
   /**
-   * Remove an index tracker.
+   * Get a datasource tracker.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\Datasource\IndexInterface $index
    *   An instance of IndexInterface.
+   *
+   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface|NULL
+   *   An instance of TrackerInterface if present, otherwise NULL.
    */
-  public function removeIndexTracker(IndexInterface $index);
+  public function getTracker(IndexInterface $index);
+
+  /**
+   * Delete a datasource tracker.
+   *
+   * @param \Drupal\search_api\Datasource\IndexInterface $index
+   *   An instance of IndexInterface.
+   *
+   * @return boolean
+   *   TRUE if removed, otherwise FALSE.
+   */
+  public function deleteTracker(IndexInterface $index);
 
 }

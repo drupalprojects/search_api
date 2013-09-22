@@ -60,7 +60,7 @@ class IndexListController extends ConfigEntityListController {
       // Get the datasource plugin definition.
       $datasource_plugin_definition = $entity->getDatasource()->getPluginDefinition();
       // Get the datasource label.
-      $datasource_label = $this->t($datasource_plugin_definition['name']);
+      $datasource_label = $datasource_plugin_definition['label'];
     }
     else {
       // Set the datasource label to broken.

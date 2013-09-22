@@ -81,17 +81,19 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
     $base_plugin_id = $base_plugin_definition['id'];
     // Check if the derivatives need to be resolved.
     if (!isset($this->derivatives[$base_plugin_id])) {
+      // Get the entity manager.
+      $entity_manager = $this->getEntityManager();
       // Initialize the plugin derivatives variable to an empty array.
       $plugin_derivatives = array();
       // Iterate through the entity types.
-      foreach ($this->getEntityManager()->getDefinitions() as $entity_type => $entity_type_definition) {
+      foreach ($entity_manager->getDefinitions() as $entity_type => $entity_type_definition) {
         // Check if the entity type is not a configuration entity.
         if (!(is_subclass_of($entity_type_definition['class'], '\Drupal\Core\Config\Entity\ConfigEntityInterface'))) {
           // Build the derivative plugin definition.
-          $plugin_derivatives[$entity_type] = array(
-            'id' => "datasource:content-entity:{$entity_type}",
+          $plugin_derivatives["{$entity_type}"] = array(
+            'id' => "entity:{$entity_type}",
             'entity_type' => $entity_type,
-            'name' => $entity_type_definition['label'],
+            'label' => $entity_type_definition['label'],
           ) + $base_plugin_definition;
         }
       }
