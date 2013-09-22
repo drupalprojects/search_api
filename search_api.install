@@ -44,7 +44,7 @@ function search_api_schema() {
       'indexes' => array(
         'indexing' => array('index', 'state', 'changed'),
       ),
-      'primary key' => array('item', 'index'),
+      'primary key' => array('id', 'index'),
     ),
   );
 }
