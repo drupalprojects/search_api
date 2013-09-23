@@ -57,19 +57,21 @@ class IndexListController extends ConfigEntityListController {
   public function buildRow(\Drupal\Core\Entity\EntityInterface $entity) {
     // Check if the index contains a valid datasource.
     if ($entity->hasValidDatasource()) {
-      // Get the datasource plugin definition.
-      $datasource_plugin_definition = $entity->getDatasource()->getPluginDefinition();
-      // Get the datasource label.
-      $datasource_label = $datasource_plugin_definition['label'];
+      // Get the datasource.
+      $datasource = $entity->getDatasource();
+      // Get the datasource label and summary.
+      $datasource_label = $datasource->label();
+      $datasource_summary = $datasource->summary();
     }
     else {
       // Set the datasource label to broken.
       $datasource_label = $this->t('Broken');
+      $datasource_summary = '';
     }
     // Build the row for the current entity.
     return array(
       'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
-      'datasource' => String::checkPlain($datasource_label),
+      'datasource' => String::checkPlain($datasource_label) . ($datasource_summary ? "<div class=\"description\">{$datasource_summary}</div>" : ''),
       'operations' => array(
         'data' => $this->buildOperations($entity),
       ),

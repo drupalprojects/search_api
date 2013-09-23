@@ -9,16 +9,13 @@ namespace Drupal\search_api\Service;
 /*
  * Include required classes and interfaces.
  */
-use Drupal\search_api\Plugin\ConfigurablePluginLifecycleInterface;
+use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
  * Interface defining the methods search services have to implement.
- *
- * Before a service object is used, the corresponding server's data will be read
- * from the database (see ServicePluginBase for a list of fields).
  */
-interface ServiceInterface extends ConfigurablePluginLifecycleInterface {
+interface ServiceInterface extends ConfigurablePluginInterface {
 
   /**
    * Determine whether the service supports a given feature.

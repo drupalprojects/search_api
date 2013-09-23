@@ -311,8 +311,6 @@ class ServerFormController extends EntityFormController {
       $service = $entity->getService();
       // Submit the service plugin configuration form.
       $service->submitConfigurationForm($form['servicePluginConfig'], $form_state);
-      // Apply the active service plugin configuration.
-      $entity->setServiceConfiguration($service->getConfiguration());
     }
     return $entity;
   }

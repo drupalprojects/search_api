@@ -154,7 +154,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       // Get the service plugin manager.
       $service_plugin_manager = Drupal::service('search_api.service.plugin.manager');
       // Create a service plugin instance.
-      $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->getServiceConfiguration());
+      $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->servicePluginConfig);
     }
     return $this->servicePluginInstance;
   }
@@ -162,58 +162,19 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getServiceConfiguration() {
-    return $this->servicePluginConfig;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setServiceConfiguration(array $configuration) {
-    // Set the service configuration.
-    $this->servicePluginConfig = $configuration;
-    // Clear the service instance cache.
-    $this->servicePluginInstance = NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function preSave(EntityStorageControllerInterface $storage_controller) {
-    // Perform default entity pre save.
-    parent::preSave($storage_controller);
+  public function getExportProperties() {
+    // Get the exported properties.
+    $properties = parent::getExportProperties();
     // Check if the service is valid.
     if ($this->hasValidService()) {
-      // Check if the entity is being created.
-      if ($this->isNew()) {
-        // Notify the service about the instance configuration being created.
-        $this->getService()->preInstanceConfigurationCreate();
-      }
-      else {
-        // Notify the service about the instance configuration being updated.
-        $this->getService()->preInstanceConfigurationUpdate();
-      }
+      // Overwrite the service plugin configuration with the active.
+      $properties['servicePluginConfig'] = $this->getService()->getConfiguration();
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
-    // Perform default entity post save.
-    parent::postSave($storage_controller, $update);
-    // Check if the service is valid.
-    if ($this->hasValidService()) {
-      // Check if the entity is was updated.
-      if ($update) {
-        // Notify the service about the instance configuration that was updated.
-        $this->getService()->postInstanceConfigurationUpdate();
-      }
-      else {
-        // Notify the service about the instance configuration that was created.
-        $this->getService()->postInstanceConfigurationCreate();
-      }
+    else {
+      // Clear the service plugin configuration.
+      $properties['servicePluginConfig'] = array();
     }
+    return $properties;
   }
 
   /**
@@ -222,14 +183,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public static function preDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
     // Perform default entity pre delete.
     parent::preDelete($storage_controller, $entities);
-    // Iterate through the entities.
-    foreach ($entities as $entity) {
-      // Check if the service is valid.
-      if ($entity->hasValidService()) {
-        // Notify the service about the instance configuration being deleted.
-        $entity->getService()->preInstanceConfigurationDelete();
-      }
-    }
     // Get the indexes associated with the servers.
     $index_ids = Drupal::entityQuery('search_api_index')
       ->condition('serverMachineName', array_keys($entities), 'IN')
@@ -242,22 +195,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $index->setServer(NULL);
       // Save changes made to the index.
       $index->save();
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function postDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
-    // Perform default entity post delete.
-    parent::postDelete($storage_controller, $entities);
-    // Iterate through the entities.
-    foreach ($entities as $entity) {
-      // Check if the service is valid.
-      if ($entity->hasValidService()) {
-        // Notify the service about the instance configuration that was deleted.
-        $entity->getService()->postInstanceConfigurationDelete();
-      }
     }
   }
 

@@ -394,8 +394,6 @@ class IndexFormController extends EntityFormController {
       $datasource = $entity->getDatasource();
       // Submit the datasource plugin configuration form.
       $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $form_state);
-      // Apply the active datasource plugin configuration.
-      $entity->setDatasourceConfiguration($datasource->getConfiguration());
     }
     return $entity;
   }

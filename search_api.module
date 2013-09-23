@@ -24,6 +24,7 @@ function search_api_menu() {
   return array(
     'admin/config/search/search_api' => array(
       'title' => 'Search API',
+      'description' => 'Create and configure search engines.',
       'route_name' => 'search_api.overview',
     ),
     'admin/config/search/search_api/servers' => array(
@@ -33,6 +34,7 @@ function search_api_menu() {
     ),
     'admin/config/search/search_api/servers/add_server' => array(
       'title' => 'Add server',
+    'description' => 'Create a new search server.',
       'route_name' => 'search_api.server_add',
       'type' => MENU_LOCAL_ACTION,
     ),
@@ -69,6 +71,7 @@ function search_api_menu() {
     ),
     'admin/config/search/search_api/indexes/add_index' => array(
       'title' => 'Add index',
+    'description' => 'Create a new search index.',
       'route_name' => 'search_api.index_add',
       'type' => MENU_LOCAL_ACTION,
     ),

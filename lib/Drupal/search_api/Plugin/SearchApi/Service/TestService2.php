@@ -32,7 +32,9 @@ class TestService2 extends ServicePluginBase {
     $this->configuration = $configuration;
   }
   public function submitConfigurationForm(array &$form, array &$form_state) {
-
+    $this->setConfiguration(array(
+      'test' => $form_state['values']['servicePluginConfig']['test'],
+    ));
   }
   public function validateConfigurationForm(array &$form, array &$form_state) {
 

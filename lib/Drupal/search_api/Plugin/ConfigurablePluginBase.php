@@ -9,14 +9,13 @@ namespace Drupal\search_api\Plugin;
 /*
  * Include required classes and interfaces.
  */
-use Drupal\Component\Plugin\PluginBase;
-use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Plugin\PluginBase;
+use Drupal\Component\Utility\String;
 
 /**
  * Base class for all configurable plugins.
  */
-abstract class ConfigurablePluginBase extends PluginBase implements ConfigurablePluginInterface, PluginFormInterface {
+abstract class ConfigurablePluginBase extends PluginBase implements ConfigurablePluginInterface {
 
   /**
    * Overrides PluginBase::__construct().
@@ -26,6 +25,26 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
     $configuration += $this->defaultConfiguration();
     // Initialize the parent chain of objects.
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    // Get the plugin definition.
+    $plugin_definition = $this->getPluginDefinition();
+    // Get the plugin definition label.
+    return String::checkPlain($plugin_definition['label']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary() {
+    // Get the plugin definition.
+    $plugin_definition = $this->getPluginDefinition();
+    // Get the plugin definition label.
+    return String::checkPlain($plugin_definition['description']);
   }
 
   /**

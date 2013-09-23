@@ -17,7 +17,6 @@ use Drupal\search_api\Annotation\Datasource;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Datasource\Entity\EntityItem;
 use Drupal\search_api\Datasource\Tracker\DefaultTracker;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\Component\Utility\String;
 
 /**
@@ -54,11 +53,11 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   private $databaseConnection;
 
   /**
-   * Cache which contains already loaded TrackerInterface objects.
+   * Cache which contains already loaded TrackerInterface object.
    *
-   * @var array
+   * @var \Drupal\search_api\Datasource\Tracker\TrackerInterface
    */
-  private $trackers;
+  private $tracker;
 
   /**
    * Create a ContentEntityDatasource object.
@@ -81,7 +80,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
     $this->entityManager = $entity_manager;
     $this->storageController = $entity_manager->getStorageController($plugin_definition['entity_type']);
     $this->databaseConnection = $connection;
-    $this->trackers = array();
+    $this->tracker = new DefaultTracker($this->getIndex(), $connection);
   }
 
   /**
@@ -117,34 +116,27 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   /**
    * Determine whether the index is valid for this datasource.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
    * @return boolean
    *   TRUE if the index is valid, otherwise FALSE.
    */
-  protected function isValidIndex(IndexInterface $index) {
+  protected function isValidIndex() {
     // Determine whether the index is compatible with the datasource.
-    return $index->getDatasource()->getPluginId() == $this->getPluginId();
+    return $this->getIndex()->getDatasource()->getPluginId() == $this->getPluginId();
   }
 
   /**
    * Get the entity bundles which can be used in a select element.
    *
-   * For entity types that do not support bundles this method wll return an
-   * empty array.
+   * @return array
+   *   An associative array of bundle labels, keyed by the bundle name.
    */
   protected function getEntityBundleOptions() {
     // Initialize the options variable to NULL.
     $options = array();
-    // Get the entity bundles.
-    $bundles = $this->getEntityBundles();
-    // Get the total number of bundles.
-    $bundle_count = count($bundles);
-    // Get the entity type.
-    $entity_type = $this->getEntityType();
-    // Check if the entity supports bundles.
-    if (($bundle_count == 1 && !isset($bundles[$entity_type])) || $bundle_count > 1) {
+    // Try to retrieve the exposed entity type bundles.
+    if (($bundles = $this->getEntityBundles())) {
+      // Remove the default entity type bundle.
+      unset($bundles[$this->getEntityType()]);
       // Iterate through the bundles.
       foreach ($bundles as $bundle => $bundle_info) {
         // Add the bundle to the options list.
@@ -168,13 +160,26 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
+   * Determine whether the entity type supports bundles.
+   *
+   * @return boolean
+   *   TRUE if the entity type supports bundles, otherwise FALSE.
+   */
+  public function isEntityBundlable() {
+    // Get the entity type definition.
+    $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityType());
+    // Determine whether the entity type supports bundles.
+    return isset($entity_type_definition['bundle_keys']);
+  }
+
+  /**
    * Get the entity bundles.
    *
    * @return array
    *   An associative array of bundle info, keyed by the bundle name.
    */
   public function getEntityBundles() {
-    return $this->getEntityManager()->getBundleInfo($this->getEntityType());
+    return $this->isEntityBundlable() ? $this->getEntityManager()->getBundleInfo($this->getEntityType()) : array();
   }
 
   /**
@@ -222,69 +227,62 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   /**
    * {@inheritdoc}
    */
-  public function addTracker(IndexInterface $index) {
+  public function hasTracker() {
     // The default tracker implementation supports dynamic creation.
-    return $this->isValidIndex($index);
+    return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function hasTracker(IndexInterface $index) {
+  public function getTracker() {
+    return $this->tracker;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addTracker() {
     // The default tracker implementation supports dynamic creation.
-    return $this->isValidIndex($index);
+    return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getTracker(IndexInterface $index) {
-    // Check if the index is valid.
-    if ($this->isValidIndex($index)) {
-      // Get the index ID.
-      $index_id = $index->id();
-      // Check if the tracker is not present in cache.
-      if (!isset($this->trackers[$index_id])) {
-        // Create a new tracker.
-        $this->trackers[$index_id] = new DefaultTracker($index, $this->getDatabaseConnection());
-      }
-      return $this->trackers[$index_id];
-    }
-    return NULL;
+  public function removeTracker() {
+    return $this->getTracker()->clear();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function removeTracker(IndexInterface $index) {
-    // Check if the index is valid.
-    if (($tracker = $this->getTracker($index))) {
-      // Clear the tracked items.
-      return $tracker->clear();
-    }
-    return FALSE;
+  public function reindex() {
+
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    // Check if the entity supports bundles.
-    if (($bundles = $this->getEntityBundleOptions())) {
+    // Check if the entity type supports bundles.
+    if ($this->isEntityBundlable()) {
+      // Get the entity type bundles.
+      $bundles = $this->getEntityBundleOptions();
       // Build the default operation element.
       $form['default'] = array(
         '#type' => 'radios',
-        '#title' => t('Which items should be indexed?'),
+        '#title' => $this->t('Which items should be indexed?'),
         '#options' => array(
-          0 => t('Only those from the selected bundles'),
-          1 => t('All but those from one of the selected bundles'),
+          0 => $this->t('Only those from the selected bundles'),
+          1 => $this->t('All but those from one of the selected bundles'),
         ),
         '#default_value' => $this->configuration['default'],
       );
       // Build the bundle selection element.
       $form['bundles'] = array(
         '#type' => 'select',
-        '#title' => t('Bundles'),
+        '#title' => $this->t('Bundles'),
         '#options' => $bundles,
         '#default_value' => $this->configuration['bundles'],
         '#size' => min(4, count($bundles)),
@@ -299,8 +297,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     // Apply the configuration.
-    $this->configuration['default'] = $form_state['values']['datasourcePluginConfig']['default'];
-    $this->configuration['bundles'] = $form_state['values']['datasourcePluginConfig']['bundles'];
+    $this->setConfiguration(array(
+      'default' => $form_state['values']['datasourcePluginConfig']['default'],
+      'bundles' => $form_state['values']['datasourcePluginConfig']['bundles'],
+    ));
   }
 
   /**
@@ -313,29 +313,21 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
     );
   }
 
-
-
-
-
-
-
-  public function postInstanceConfigurationCreate() {
-
-  }
-  public function postInstanceConfigurationDelete() {
-
-  }
-  public function postInstanceConfigurationUpdate() {
-
-  }
-  public function preInstanceConfigurationCreate() {
-
-  }
-  public function preInstanceConfigurationDelete() {
-
-  }
-  public function preInstanceConfigurationUpdate() {
-
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    // Check if the a tracker is available.
+    if ($this->hasTracker()) {
+      // Get the current configuration.
+      $current_configuration = $this->getConfiguration();
+      // Check if the datasource configuration changed.
+      if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
+        // @todo: Needs to reindex.
+      }
+    }
+    // Apply the configuration changes.
+    parent::setConfiguration($configuration);
   }
 
 }

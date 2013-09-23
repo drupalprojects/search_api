@@ -28,12 +28,6 @@ class IndexFieldsFormController extends EntityFormController {
     return $actions;
   }
 
-  public function form(array $form, array &$form_state) {
-    dpm(\Drupal::service('search_api.datasource.plugin.manager')->getDefinitions());
-    
-    return parent::form($form, $form_state);
-  }
-
   // @todo: Needs implementation.
 
 }

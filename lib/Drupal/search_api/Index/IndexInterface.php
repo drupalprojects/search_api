@@ -69,22 +69,6 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDatasource();
 
   /**
-   * Get the datasource configuration.
-   *
-   * @return array
-   *   An associative array containing the datasource configuration.
-   */
-  public function getDatasourceConfiguration();
-
-  /**
-   * Set the datasource configuration.
-   *
-   * @param array $configuration
-   *   An associative array containing the datasource configuration.
-   */
-  public function setDatasourceConfiguration(array $configuration);
-
-  /**
    * Determine whether the server is valid.
    *
    * @return boolean

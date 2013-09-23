@@ -56,19 +56,21 @@ class ServerListController extends ConfigEntityListController {
   public function buildRow(\Drupal\Core\Entity\EntityInterface $entity) {
     // Check if the server contains a valid service.
     if ($entity->hasValidService()) {
-      // Get the service plugin definition.
-      $service_plugin_definition = $entity->getService()->getPluginDefinition();
-      // Get the service label.
-      $service_label = $service_plugin_definition['label'];
+      // Get the service.
+      $service = $entity->getService();
+      // Get the service label and summary.
+      $service_label = $service->label();
+      $service_summary = $service->summary();
     }
     else {
       // Set the service label to broken.
       $service_label = $this->t('Broken');
+      $service_summary = '';
     }
     // Build the row for the current entity.
     return array(
       'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
-      'service' => String::checkPlain($service_label),
+      'service' => String::checkPlain($service_label) . ($service_summary ? "<div class=\"description\">{$service_summary}</div>" : ''),
       'operations' => array(
         'data' => $this->buildOperations($entity),
       ),

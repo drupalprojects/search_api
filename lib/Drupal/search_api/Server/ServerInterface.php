@@ -40,20 +40,4 @@ interface ServerInterface extends ConfigEntityInterface {
    */
   public function getService();
 
-  /**
-   * Get the service configuration.
-   *
-   * @return array
-   *   An associative array containing the service configuration.
-   */
-  public function getServiceConfiguration();
-
-  /**
-   * Set the service configuration.
-   *
-   * @param array $configuration
-   *   An associative array containing the service configuration.
-   */
-  public function setServiceConfiguration(array $configuration);
-
 }

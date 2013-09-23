@@ -9,9 +9,7 @@ namespace Drupal\search_api\Processor;
 /*
  * Include required classes and interfaces.
  */
-use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Component\Plugin\PluginInspectionInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 
 /**
  * Interface representing a Search API pre- and/or post-processor.
@@ -26,7 +24,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
  * search queries, so these two methods should mostly be implemented either both
  * or neither.
  */
-interface ProcessorInterface extends ConfigurablePluginInterface, PluginInspectionInterface, PluginFormInterface {
+interface ProcessorInterface extends ConfigurablePluginInterface {
 
   // @todo: Add additional functionality.
 
