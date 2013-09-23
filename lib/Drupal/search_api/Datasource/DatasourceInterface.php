@@ -48,35 +48,11 @@ interface DatasourceInterface extends ConfigurablePluginInterface {
   public function loadMultiple(array $ids);
 
   /**
-   * Determine whether a datasource tracker for the given index exists.
+   * Get the status information.
    *
-   * @return boolean
-   *   TRUE if the tracker exists, otherwise FALSE.
+   * @return \Drupal\search_api\Datasource\Tracker\TrackerStatusInterface
+   *   An instance of TrackerStatusInterface.
    */
-  public function hasTracker();
-
-  /**
-   * Get a datasource tracker.
-   *
-   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface|NULL
-   *   An instance of TrackerInterface if present, otherwise NULL.
-   */
-  public function getTracker();
-
-  /**
-   * Add a datasource tracker.
-   *
-   * @return boolean
-   *   TRUE if the tracker was added, otherwise FALSE.
-   */
-  public function addTracker();
-
-  /**
-   * Remove a datasource tracker.
-   *
-   * @return boolean
-   *   TRUE if removed, otherwise FALSE.
-   */
-  public function removeTracker();
+  public function getStatus();
 
 }

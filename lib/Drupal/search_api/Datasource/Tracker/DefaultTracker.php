@@ -127,8 +127,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Start a database transaction.
       $transaction = $this->getDatabaseConnection()->startTransaction();
       // Get the index ID.
@@ -173,8 +173,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -221,8 +221,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -263,8 +263,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -305,8 +305,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -341,8 +341,8 @@ class DefaultTracker implements TrackerInterface {
     $success = FALSE;
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -377,8 +377,8 @@ class DefaultTracker implements TrackerInterface {
   public function getChangedIds($limit = -1) {
     // Get the index.
     $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if ($index->status() && !$index->isReadOnly()) {
+    // Check if the index is enabled, writable and exists.
+    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Build the select statement.
       $statement = $this->createSelectStatement();
       $statement->fields('search_api_item', array('id'));

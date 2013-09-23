@@ -114,6 +114,16 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   }
 
   /**
+   * Get the tracker.
+   *
+   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface
+   *   An instance of TrackerInterface.
+   */
+  protected function getTracker() {
+    return $this->tracker;
+  }
+
+  /**
    * Determine whether the index is valid for this datasource.
    *
    * @return boolean
@@ -144,6 +154,29 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
       }
     }
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary() {
+    // Initialize the summary variable to an empty string.
+    $summary = '';
+    // Check if the entity supports bundles.
+    if ($this->isEntityBundlable()) {
+      // Get the configured bundles.
+      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), $this->configuration['bundles']));
+      // Check in what operation the datasource is performing.
+      if ($this->configuration['default'] == TRUE) {
+        // Build the summary.
+        $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+      }
+      else {
+        // Build the summary.
+        $summary = $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+      }
+    }
+    return $summary;
   }
 
   /**
@@ -227,38 +260,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   /**
    * {@inheritdoc}
    */
-  public function hasTracker() {
-    // The default tracker implementation supports dynamic creation.
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTracker() {
-    return $this->tracker;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addTracker() {
-    // The default tracker implementation supports dynamic creation.
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function removeTracker() {
-    return $this->getTracker()->clear();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function reindex() {
-
+  public function getStatus() {
+    return $this->getTracker()->getStatus();
   }
 
   /**
@@ -317,17 +320,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
    * {@inheritdoc}
    */
   public function setConfiguration(array $configuration) {
-    // Check if the a tracker is available.
-    if ($this->hasTracker()) {
-      // Get the current configuration.
-      $current_configuration = $this->getConfiguration();
-      // Check if the datasource configuration changed.
-      if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
-        // @todo: Needs to reindex.
-      }
-    }
+    // Get the current configuration.
+    $current_configuration = $this->getConfiguration();
     // Apply the configuration changes.
     parent::setConfiguration($configuration);
+    // Check if the datasource configuration changed.
+    if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
+      // @todo: Needs to reindex.
+    }
   }
 
 }

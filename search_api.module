@@ -5,6 +5,12 @@
  */
 
 /*
+ * Include required classes and interfaces.
+ */
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
+
+/*
  * Constant definitions.
  */
 
@@ -195,5 +201,35 @@ function search_api_system_info_alter(array &$info, $file, $type) {
       // Provide a human friendly message as to why the module is required.
       $info['explanation'] = t('Required by the Search API module');
     }
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function search_api_entity_insert(EntityInterface $entity) {
+  // Check if the entity is a content entity.
+  if (!($entity instanceof ConfigEntityInterface)) {
+    // @todo: Track entity insert.
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function search_api_entity_update(EntityInterface $entity) {
+  // Check if the entity is a content entity.
+  if (!($entity instanceof ConfigEntityInterface)) {
+    // @todo: Track entity change.
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function search_api_entity_delete(EntityInterface $entity) {
+  // Check if the entity is a content entity.
+  if (!($entity instanceof ConfigEntityInterface)) {
+    // @todo: Track entity delete.
   }
 }

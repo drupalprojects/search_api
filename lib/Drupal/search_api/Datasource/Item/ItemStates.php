@@ -25,6 +25,6 @@ final class ItemStates {
   /**
    * Indicates an item has been scheduled to be processed during cron.
    */
-  const QUEUED = 2;
+  const QUEUED = 2; // @todo: Determine whether this should be removed?
 
 }
