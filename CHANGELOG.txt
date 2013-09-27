@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2088905 by queenvictoria, drunken monkey: Fixed handling of Views
+  override_path option.
 - #2083481 by drunken monkey, nickgs: Added "exclude" option for facets.
 - #2084953 by Yaron Tal: Fixed issue with theme initialization.
 - #2075839 by leeomara, drunken monkey: Added descriptions to field lists for
