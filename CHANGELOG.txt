@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2096275 by andrewbelcher: Fixed calling of Views pager pre/post execute
+  callbacks.
 - #2093023 by maciej.zgadzaj: Added Drush commands to enable and disable
   indexes.
 - #2088905 by queenvictoria, drunken monkey: Fixed handling of Views

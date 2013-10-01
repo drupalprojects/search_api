@@ -291,6 +291,9 @@ class SearchApiViewsQuery extends views_plugin_query {
     }
 
     try {
+      // Trigger pager pre_execute().
+      $this->pager->pre_execute($this->query);
+
       $start = microtime(TRUE);
 
       // Execute the search.
@@ -310,6 +313,9 @@ class SearchApiViewsQuery extends views_plugin_query {
       // We shouldn't use $results['performance']['complete'] here, since
       // extracting the results probably takes considerable time as well.
       $view->execute_time = microtime(TRUE) - $start;
+
+      // Trigger pager post_execute().
+      $this->pager->post_execute($view->results);
     }
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
