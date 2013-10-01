@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2093023 by maciej.zgadzaj: Added Drush commands to enable and disable
+  indexes.
 - #2088905 by queenvictoria, drunken monkey: Fixed handling of Views
   override_path option.
 - #2083481 by drunken monkey, nickgs: Added "exclude" option for facets.
