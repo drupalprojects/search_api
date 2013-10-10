@@ -31,8 +31,8 @@ class SearchApiViewsHandlerFilter extends views_handler_filter {
    */
   public function operator_options() {
     return array(
-      '<' => t('Is smaller than'),
-      '<=' => t('Is smaller than or equal to'),
+      '<' => t('Is less than'),
+      '<=' => t('Is less than or equal to'),
       '=' => t('Is equal to'),
       '<>' => t('Is not equal to'),
       '>=' => t('Is greater than or equal to'),

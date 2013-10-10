@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2102353 by aaronbauman: Fixed "smaller than" to read "less than".
 - #2097559 by thijsvdanker: Fixed the language of created search excerpts.
 - #2096275 by andrewbelcher: Fixed calling of Views pager pre/post execute
   callbacks.
