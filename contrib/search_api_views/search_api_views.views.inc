@@ -145,8 +145,18 @@ function search_api_views_views_data() {
 }
 
 /**
- * Helper function that returns an array of handler definitions to add to a
- * views field definition.
+ * Adds handler definitions for a field to a Views data table definition.
+ *
+ * Helper method for search_api_views_views_data().
+ *
+ * @param $id
+ *   The internal identifier of the field.
+ * @param array $field
+ *   Information about the field.
+ * @param EntityMetadataWrapper $wrapper
+ *   A wrapper providing further metadata about the field.
+ * @param array $table
+ *   The existing Views data table definition, as a reference.
  */
 function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper $wrapper, array &$table) {
   $type = $field['type'];
