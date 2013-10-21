@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2110315 by drumm, drunken monkey: Added specialized Views filters for users
+  and terms.
 - #2111273 by drunken monkey: Fixed Javascript states for exposed filter
   operator.
 - #2102353 by aaronbauman: Fixed "smaller than" to read "less than".

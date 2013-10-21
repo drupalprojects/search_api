@@ -191,6 +191,15 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
   elseif ($inner_type == 'date') {
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilterDate';
   }
+  elseif (isset($field['entity_type']) && $field['entity_type'] === 'user') {
+    $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilterUser';
+  }
+  elseif (isset($field['entity_type']) && $field['entity_type'] === 'taxonomy_term') {
+    $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilterTaxonomyTerm';
+    $info = $wrapper->info();
+    $field_info = field_info_field($info['name']);
+    $table[$id]['filter']['vocabulary'] = $field_info['settings']['allowed_values'][0]['vocabulary'];
+  }
   else {
     $table[$id]['filter']['handler'] = 'SearchApiViewsHandlerFilter';
   }
