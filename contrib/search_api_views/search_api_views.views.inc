@@ -207,6 +207,9 @@ function _search_api_views_add_handlers($id, array $field, EntityMetadataWrapper
   if ($inner_type == 'string' || $inner_type == 'uri') {
     $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgumentString';
   }
+  elseif ($inner_type == 'date') {
+    $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgumentDate';
+  }
   else {
     $table[$id]['argument']['handler'] = 'SearchApiViewsHandlerArgument';
   }

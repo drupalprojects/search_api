@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2091499 by sammys, drunken monkey: Added Views contextual filter handler for
+  dates.
 - #2109537 by hefox, drunken monkey: Added alter hooks for workflow plugin
   definitions.
 - #2102111 by sergei_brill: Added hook_search_api_views_query_alter().

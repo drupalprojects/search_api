@@ -336,8 +336,14 @@ class SearchApiViewsQuery extends views_plugin_query {
    *
    * Used by handlers to flag a fatal error which shouldn't be displayed but
    * still lead to the view returning empty and the search not being executed.
+   *
+   * @param string|null $msg
+   *   Optionally, a translated, unescaped error message to display.
    */
-  public function abort() {
+  public function abort($msg = NULL) {
+    if ($msg) {
+      $this->errors[] = $msg;
+    }
     $this->abort = TRUE;
   }
 
