@@ -1696,10 +1696,13 @@ function search_api_get_alter_callbacks() {
   if (!isset($callbacks)) {
     $callbacks = module_invoke_all('search_api_alter_callback_info');
 
-    // Initialization of optional entries with default values
+    // Fill optional settings with default values.
     foreach ($callbacks as $id => $callback) {
-      $callbacks[$id] += array('enabled' => TRUE, 'weight' => 0);
+      $callbacks[$id] += array('weight' => 0);
     }
+
+    // Invoke alter hook.
+    drupal_alter('search_api_alter_callback_info', $callbacks);
   }
 
   return $callbacks;
@@ -1719,10 +1722,13 @@ function search_api_get_processors() {
   if (!isset($processors)) {
     $processors = module_invoke_all('search_api_processor_info');
 
-    // Initialization of optional entries with default values
+    // Fill optional settings with default values.
     foreach ($processors as $id => $processor) {
-      $processors[$id] += array('enabled pre' => TRUE, 'enabled post' => TRUE, 'weight' => 0);
+      $processors[$id] += array('weight' => 0);
     }
+
+    // Invoke alter hook.
+    drupal_alter('search_api_processor_info', $processors);
   }
 
   return $processors;
