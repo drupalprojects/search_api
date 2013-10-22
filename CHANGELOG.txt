@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2102111 by sergei_brill: Added hook_search_api_views_query_alter().
 - #2110315 by drumm, drunken monkey: Added specialized Views filters for users
   and terms.
 - #2111273 by drunken monkey: Fixed Javascript states for exposed filter

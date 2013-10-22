@@ -180,7 +180,6 @@ class SearchApiViewsQuery extends views_plugin_query {
       '#options' => array(),
       '#default_value' => $this->options['parse_mode'],
     );
-    $modes = array();
     foreach ($this->query->parseModes() as $key => $mode) {
       $form['parse_mode']['#options'][$key] = $mode['name'];
       if (!empty($mode['description'])) {
@@ -268,6 +267,14 @@ class SearchApiViewsQuery extends views_plugin_query {
     if (!empty($this->view->override_path) && strpos(current_path(), $this->view->override_path) !== 0) {
       $this->query->setOption('search_api_base_path', $this->view->override_path);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alter(&$view) {
+    parent::alter($view);
+    drupal_alter('search_api_views_query', $view, $this);
   }
 
   /**
