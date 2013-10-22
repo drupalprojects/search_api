@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2109247 by mmikitka, drunken monkey: Exposed the status and module
+  properties to Entity API.
 - #2091499 by sammys, drunken monkey: Added Views contextual filter handler for
   dates.
 - #2109537 by hefox, drunken monkey: Added alter hooks for workflow plugin

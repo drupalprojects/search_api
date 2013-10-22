@@ -383,6 +383,19 @@ function search_api_entity_property_info() {
       'description' => t('A flag indicating whether the server is enabled.'),
       'schema field' => 'enabled',
     ),
+    'status' => array(
+      'label' => t('Status'),
+      'type' => 'integer',
+      'description' => t('Search API server status property'),
+      'schema field' => 'status',
+      'options list' => 'search_api_status_options_list',
+    ),
+    'module' => array(
+      'label' => t('Module'),
+      'type' => 'text',
+      'description' => t('The name of the module from which this server originates.'),
+      'schema field' => 'module',
+    ),
   );
   $info['search_api_index']['properties'] = array(
     'id' => array(
@@ -443,6 +456,19 @@ function search_api_entity_property_info() {
       'type' => 'boolean',
       'description' => t('A flag indicating whether the index is read-only.'),
       'schema field' => 'read_only',
+    ),
+    'status' => array(
+      'label' => t('Status'),
+      'type' => 'integer',
+      'description' => t('Search API index status property'),
+      'schema field' => 'status',
+      'options list' => 'search_api_status_options_list',
+    ),
+    'module' => array(
+      'label' => t('Module'),
+      'type' => 'text',
+      'description' => t('The name of the module from which this index originates.'),
+      'schema field' => 'module',
     ),
   );
 
@@ -2297,14 +2323,37 @@ function search_api_index_url(SearchApiIndex $index) {
 }
 
 /**
- * Property callback.
+ * Returns an index's server.
+ *
+ * Used as a property getter callback for the index's "server_entity" prioperty
+ * in search_api_entity_property_info().
+ *
+ * @param SearchApiIndex $index
+ *   The index whose server should be returned.
  *
  * @return SearchApiServer
- *   The server this index currently resides on, or NULL if the index
- *   is currently unassigned.
+ *   The server this index currently resides on, or NULL if the index is
+ * currently unassigned.
  */
 function search_api_index_get_server(SearchApiIndex $index) {
   return $index->server();
+}
+
+/**
+ * Returns an options list for the "status" property.
+ *
+ * Used as an options list callback in search_api_entity_property_info().
+ *
+ * @return array
+ *   An array of options, as defined by hook_options_list().
+ */
+function search_api_status_options_list() {
+  return array(
+    ENTITY_CUSTOM => t('Custom'),
+    ENTITY_IN_CODE => t('Default'),
+    ENTITY_OVERRIDDEN => t('Overridden'),
+    ENTITY_FIXED => t('Fixed'),
+  );
 }
 
 /**
