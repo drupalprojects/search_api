@@ -1,5 +1,8 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+
+Search API 1.9 (10/23/2013):
+----------------------------
 - #2113277 by moonray, drunken monkey: Fixed date facet count for active item.
 - #2086783 by drunken monkey: Removed Views field handlers for "virtual" fields.
 - #2114593 by drunken monkey: Added list of floats to test module.
