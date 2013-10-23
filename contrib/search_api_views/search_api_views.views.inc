@@ -28,7 +28,7 @@ function search_api_views_views_data() {
       }
 
       try {
-        $wrapper = $index->entityWrapper(NULL, TRUE);
+        $wrapper = $index->entityWrapper(NULL, FALSE);
       }
       catch (EntityMetadataWrapperException $e) {
         watchdog_exception('search_api_views', $e, "%type while retrieving metadata for index %index: !message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
@@ -41,6 +41,14 @@ function search_api_views_views_data() {
         if ($info) {
           entity_views_field_definition($key, $info, $table);
         }
+      }
+
+      try {
+        $wrapper = $index->entityWrapper(NULL);
+      }
+      catch (EntityMetadataWrapperException $e) {
+        watchdog_exception('search_api_views', $e, "%type while retrieving metadata for index %index: !message in %function (line %line of %file).", array('%index' => $index->name), WATCHDOG_WARNING);
+        continue;
       }
 
       // Add handlers for all indexed fields.
@@ -69,7 +77,7 @@ function search_api_views_views_data() {
         if ($group) {
           // @todo Entity type label instead of $group?
           $table[$id]['group'] = $group;
-          $name = t('@field (indexed)', array('@field' => $name));
+          $name = t('!field (indexed)', array('!field' => $name));
         }
         $table[$id]['title'] = $name;
         $table[$id]['help'] = empty($info['description']) ? t('(No information available)') : $info['description'];

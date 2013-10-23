@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2086783 by drunken monkey: Removed Views field handlers for "virtual" fields.
 - #2114593 by drunken monkey: Added list of floats to test module.
 - #2109247 by mmikitka, drunken monkey: Exposed the status and module
   properties to Entity API.
