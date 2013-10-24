@@ -154,6 +154,16 @@ function search_api_menu() {
 }
 
 /**
+ * Implements hook_help().
+ */
+function search_api_help($path) {
+  switch ($path) {
+    case 'admin/config/search/search_api':
+      return '<p>' . t('A search server and search index are used to execute searches. Several indexes can exist per server.<br />You need at least one server and one index to create searches on your site.') . '</p>';
+  }
+}
+
+/**
  * Implements hook_hook_info().
  */
 function search_api_hook_info() {

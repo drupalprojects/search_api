@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2100191 by drunken monkey, Bojhan: Added an admin description to the Search
+  API landing page.
 
 Search API 1.9 (10/23/2013):
 ----------------------------
