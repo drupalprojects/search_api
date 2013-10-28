@@ -588,7 +588,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE) {
-    if (!$this->table) {
+    if (!$this->table || $item_ids === array()) {
       return;
     }
     $index_ids = array();
@@ -624,7 +624,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *   If any of the indexes doesn't use the same item type as this controller.
    */
   public function trackItemQueued($item_ids, SearchApiIndex $index) {
-    if (!$this->table) {
+    if (!$this->table || $item_ids === array()) {
       return;
     }
     $update = db_update($this->table)

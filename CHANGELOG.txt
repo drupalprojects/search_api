@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1956650 by drunken monkey, wwhurley: Fixed trackItemChange not checking for
+  empty $item_ids.
 - #2100191 by drunken monkey, Bojhan: Added an admin description to the Search
   API landing page.
 
