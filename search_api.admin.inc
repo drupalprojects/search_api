@@ -1480,10 +1480,17 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
 
   // An array of option arrays for types, keyed by nesting level.
   $types = array(0 => search_api_field_types());
-  $fulltext_type = array(0 => 'text');
   $entity_types = entity_get_info();
-  $default_types = search_api_default_field_types();
   $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
+
+  $fulltext_types = array(0 => array('text'));
+  // Add all custom data types with fallback "text" to fulltext types as well.
+  foreach (search_api_get_data_type_info() as $id => $type) {
+    if ($type['fallback'] != 'text') {
+      continue;
+    }
+    $fulltext_types[0][] = $id;
+  }
 
   $form_state['index'] = $index;
   $form['#theme'] = 'search_api_admin_fields_table';
@@ -1518,17 +1525,20 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
       '#default_value' => $info['indexed'],
     );
     if (empty($info['entity_type'])) {
-      // Determine the correct type options (i.e., with the correct nesting level).
+      // Determine the correct type options (with the correct nesting level).
       $level = search_api_list_nesting_level($info['type']);
       if (empty($types[$level])) {
         $type_prefix = str_repeat('list<', $level);
         $type_suffix = str_repeat('>', $level);
         $types[$level] = array();
         foreach ($types[0] as $type => $name) {
-          // We use the singular name for list types, since the user usually doesn't care about the nesting level.
+          // We use the singular name for list types, since the user usually
+          // doesn't care about the nesting level.
           $types[$level][$type_prefix . $type . $type_suffix] = $name;
         }
-        $fulltext_type[$level] = $type_prefix . 'text' . $type_suffix;
+        foreach ($fulltext_types[0] as $type) {
+          $fulltext_types[$level][] = $type_prefix . $type . $type_suffix;
+        }
       }
       $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
       $form['fields'][$key]['type'] = array(
@@ -1548,10 +1558,19 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
         '#states' => array(
           'visible' => array(
             $css_key . '-indexed' => array('checked' => TRUE),
-            $css_key . '-type' => array('value' => $fulltext_type[$level]),
           ),
         ),
       );
+      // Only add the multiple visible states if the VERSION string is >= 7.14.
+      // See https://drupal.org/node/1464758.
+      if (version_compare(VERSION, '7.14', '>=')) {
+        foreach ($fulltext_types[$level] as $type) {
+          $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
+        }
+      }
+      else {
+        $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'] = array('value' => reset($fulltext_types[$level]));
+      }
     }
     else {
       // This is an entity.
