@@ -160,7 +160,9 @@ interface SearchApiDataSourceControllerInterface {
    * @param array $indexes
    *   The indexes for which the change should be tracked.
    * @param $dequeue
-   *   If set to TRUE, also change the status of queued items.
+   *   (deprecated) If set to TRUE, also change the status of queued items.
+   *   The concept of queued items will be removed in the Drupal 8 version of
+   *   this module.
    *
    * @throws SearchApiDataSourceException
    *   If any of the indexes doesn't use the same item type as this controller.
@@ -180,7 +182,12 @@ interface SearchApiDataSourceControllerInterface {
    *   The index for which the items were queued.
    *
    * @throws SearchApiDataSourceException
-   *   If any of the indexes doesn't use the same item type as this controller.
+   *   If the index doesn't use the same item type as this controller.
+   *
+   * @deprecated
+   *   As of Search API 1.10, the cron queue is not used for indexing anymore,
+   *   therefore this method has become useless. It will be removed in the
+   *   Drupal 8 version of this module.
    */
   public function trackItemQueued($item_ids, SearchApiIndex $index);
 
@@ -189,7 +196,7 @@ interface SearchApiDataSourceControllerInterface {
    *
    * @param array $item_ids
    *   The IDs of the indexed items.
-   * @param SearchApiIndex $indexes
+   * @param SearchApiIndex $index
    *   The index on which the items were indexed.
    *
    * @throws SearchApiDataSourceException
@@ -571,24 +578,10 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
   }
 
   /**
-   * Set the tracking status of the given items to "changed"/"dirty".
-   *
-   * Unless $dequeue is set to TRUE, this operation is ignored for items whose
-   * status is not "indexed".
-   *
-   * @param $item_ids
-   *   Either an array with the IDs of the changed items. Or FALSE to mark all
-   *   items as changed for the given indexes.
-   * @param array $indexes
-   *   The indexes for which the change should be tracked.
-   * @param $dequeue
-   *   If set to TRUE, also change the status of queued items.
-   *
-   * @throws SearchApiDataSourceException
-   *   If any of the indexes doesn't use the same item type as this controller.
+   * {@inheritdoc}
    */
   public function trackItemChange($item_ids, array $indexes, $dequeue = FALSE) {
-    if (!$this->table || $item_ids === array()) {
+    if (!$this->table) {
       return;
     }
     $index_ids = array();
@@ -609,22 +602,11 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
   }
 
   /**
-   * Set the tracking status of the given items to "queued".
-   *
-   * Queued items are not marked as "dirty" even when they are changed, and they
-   * are not returned by the getChangedItems() method.
-   *
-   * @param $item_ids
-   *   Either an array with the IDs of the queued items. Or FALSE to mark all
-   *   items as queued for the given indexes.
-   * @param SearchApiIndex $index
-   *   The index for which the items were queued.
-   *
-   * @throws SearchApiDataSourceException
-   *   If any of the indexes doesn't use the same item type as this controller.
+   * {@inheritdoc}
    */
   public function trackItemQueued($item_ids, SearchApiIndex $index) {
-    if (!$this->table || $item_ids === array()) {
+    $this->checkIndex($index);
+    if (!$this->table) {
       return;
     }
     $update = db_update($this->table)
