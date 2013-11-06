@@ -65,6 +65,7 @@ function search_api_menu() {
     'file' => 'search_api.admin.inc',
     'weight' => -1,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
   );
   $items[$pre . '/server/%search_api_server/delete'] = array(
     'title' => 'Delete',
@@ -76,7 +77,7 @@ function search_api_menu() {
     'access callback' => 'search_api_access_delete_page',
     'access arguments' => array(5),
     'file' => 'search_api.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
   );
   $items[$pre . '/index/%search_api_index'] = array(
     'title' => 'View index',
@@ -91,21 +92,11 @@ function search_api_menu() {
   $items[$pre . '/index/%search_api_index/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
     'weight' => -10,
   );
-  $items[$pre . '/index/%search_api_index/status'] = array(
-    'title' => 'Status',
-    'description' => 'Display and work on index status.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('search_api_admin_index_status_form', 5),
-    'access arguments' => array('administer search_api'),
-    'file' => 'search_api.admin.inc',
-    'weight' => -8,
-    'type' => MENU_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
-  );
   $items[$pre . '/index/%search_api_index/edit'] = array(
-    'title' => 'Settings',
+    'title' => 'Edit',
     'description' => 'Edit index settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_index_edit', 5),
@@ -147,7 +138,7 @@ function search_api_menu() {
     'access callback' => 'search_api_access_delete_page',
     'access arguments' => array(5),
     'file' => 'search_api.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -214,24 +205,6 @@ function search_api_theme() {
       'class_description' => NULL,
       'options' => array(),
       'status' => ENTITY_CUSTOM,
-    ),
-    'file' => 'search_api.admin.inc',
-  );
-  $themes['search_api_index'] = array(
-    'variables' => array(
-      'id' => NULL,
-      'name' => '',
-      'machine_name' => '',
-      'description' => NULL,
-      'item_type' => NULL,
-      'enabled' => NULL,
-      'server' => NULL,
-      'options' => array(),
-      'fields' => array(),
-      'indexed_items' => 0,
-      'total_items' => 0,
-      'status' => ENTITY_CUSTOM,
-      'read_only' => 0,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -2673,13 +2646,11 @@ function _search_api_batch_indexing_callback(SearchApiIndex $index, $batch_size,
  * Batch API finishing callback for the indexing functionality.
  *
  * @param boolean $success
- *   Result of the batch operation.
+ *   Whether the batch finished successfully.
  * @param array $results
- *   Results.
- * @param array $operations
- *   Remaining batch operation to process.
+ *   Detailed informations about the result.
  */
-function _search_api_batch_indexing_finished($success, $results, $operations) {
+function _search_api_batch_indexing_finished($success, $results) {
   // Check if called from drush.
   if (!empty($results['drush'])) {
     $drupal_set_message = 'drush_log';

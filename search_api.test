@@ -250,10 +250,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertTitle('Search API test index | Drupal', 'Correct title when viewing index.');
     $this->assertText('An index used for testing.', 'Description displayed.');
     $this->assertText('Search API test entity', 'Item type displayed.');
-    $this->assertText(format_plural(1, '1 item per cron batch.', '@count items per cron batch.'), 'Cron batch size displayed.');
-
-    $this->drupalGet("admin/config/search/search_api/index/$id/status");
-    $this->assertText(t('The index is currently disabled.'), '"Disabled" status displayed.');
+    $this->assertText(t('disabled'), '"Disabled" status displayed.');
   }
 
   /**
@@ -373,7 +370,6 @@ class SearchApiWebTest extends DrupalWebTestCase {
    */
   protected function indexItems() {
     $this->checkIndexStatus();
-    $this->assertText(t('The index is currently enabled.'), '"Enabled" status displayed.');
 
     // Here we test the indexing + the warning message when some items
     // cannot be indexed.
@@ -439,7 +435,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
    *   Defaults to TRUE.
    */
   protected function checkIndexStatus($indexed = 0, $total = 10, $check_buttons = TRUE) {
-    $url = "admin/config/search/search_api/index/{$this->index_id}/status";
+    $url = "admin/config/search/search_api/index/{$this->index_id}";
     if (strpos($this->url, $url) === FALSE) {
       $this->drupalGet($url);
     }
@@ -466,19 +462,13 @@ class SearchApiWebTest extends DrupalWebTestCase {
       return;
     }
 
+    $this->assertText(t('enabled'), '"Enabled" status displayed.');
     if ($all) {
       $this->assertNoText(t('Index now'), '"Index now" form not displayed.');
     }
     else {
       $this->assertText(t('Index now'), '"Index now" form displayed.');
     }
-    if ($indexed) {
-      $this->assertText(t('Re-indexing'), '"Re-indexing" form displayed.');
-    }
-    else {
-      $this->assertNoText(t('Re-indexing'), '"Re-indexing" form not displayed.');
-    }
-    $this->assertText(t('Clear index'), '"Clear index" form displayed.');
   }
 
   /**
@@ -606,7 +596,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
    * Tests whether clearing the index works correctly.
    */
   protected function clearIndex() {
-    $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}/status", array(), t('Clear index'));
+    $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}", array('reindex[clear]' => TRUE), t('Re-index content'));
     $this->assertText(t('The index was successfully cleared.'));
     $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 14)), 'Correct index status displayed.');
   }
@@ -619,8 +609,9 @@ class SearchApiWebTest extends DrupalWebTestCase {
   protected function deleteServer() {
     $this->drupalPost("admin/config/search/search_api/server/{$this->server_id}/delete", array(), t('Confirm'));
     $this->assertNoText('test-name-foo', 'Server no longer listed.');
-    $this->drupalGet("admin/config/search/search_api/index/{$this->index_id}/status");
-    $this->assertText(t('The index is currently disabled.'), 'The index was disabled and removed from the server.');
+    $this->drupalGet("admin/config/search/search_api/index/{$this->index_id}");
+    $this->assertNoText(t('Server'), 'The index was removed from the server.');
+    $this->assertText(t('disabled'), 'The index was disabled.');
   }
 
   /**

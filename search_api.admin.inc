@@ -473,9 +473,16 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
   $form['options']['#title'] = $class['name'];
   $form['options']['#description'] = $class['description'];
 
-  $form['submit'] = array(
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save settings'),
+  );
+  $form['actions']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#submit' => array('search_api_admin_form_delete_submit'),
+    '#limit_validation_errors' => array(),
   );
 
   return $form;
@@ -504,6 +511,30 @@ function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   $server->update($values);
   $form_state['redirect'] = 'admin/config/search/search_api/server/' . $server->machine_name;
   drupal_set_message(t('The search server was successfully edited.'));
+}
+
+/**
+ * Form submission handler for search_api_admin_server_edit().
+ *
+ * Handles the 'Delete' button on the server and index edit forms.
+ *
+ * @see search_api_admin_server_edit()
+ * @see search_api_admin_index_edit()
+ */
+function search_api_admin_form_delete_submit($form, &$form_state) {
+  $destination = array();
+  if (isset($_GET['destination'])) {
+    $destination = drupal_get_destination();
+    unset($_GET['destination']);
+  }
+  if (isset($form_state['server'])) {
+    $server = $form_state['server'];
+    $form_state['redirect'] = array('admin/config/search/search_api/server/' . $server->machine_name . '/delete', array('query' => $destination));
+  }
+  elseif (isset($form_state['index'])) {
+    $index = $form_state['index'];
+    $form_state['redirect'] = array('admin/config/search/search_api/index/' . $index->machine_name . '/delete', array('query' => $destination));
+  }
 }
 
 /**
@@ -633,16 +664,15 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
 }
 
 /**
- * Displays an index' details.
+ * Page callback for displaying an index's status.
  *
  * @param SearchApiIndex $index
  *   The index to display.
+ * @param string|null $action
+ *   (optional) An action to execute for the index. Either "enable" or
+ * "disable". For "disable", a confirm dialog will be shown.
  */
-function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NULL) {
-  if (empty($index)) {
-    return MENU_NOT_FOUND;
-  }
-
+function search_api_admin_index_view(SearchApiIndex $index, $action = NULL) {
   if (!empty($action)) {
     if ($action == 'enable') {
       if (isset($_GET['token']) && drupal_valid_token($_GET['token'], $index->machine_name)) {
@@ -666,134 +696,7 @@ function search_api_admin_index_view(SearchApiIndex $index = NULL, $action = NUL
     }
   }
 
-  $ret = array(
-    '#theme' => 'search_api_index',
-    '#id' => $index->id,
-    '#name' => $index->name,
-    '#machine_name' => $index->machine_name,
-    '#description' => $index->description,
-    '#item_type' => $index->item_type,
-    '#enabled' => $index->enabled,
-    '#server' => $index->server(),
-    '#options' => $index->options,
-    '#fields' => $index->getFields(),
-    '#status' => $index->status,
-    '#read_only' => $index->read_only,
-  );
-
-  return $ret;
-}
-
-/**
- * Theme function for displaying an index.
- *
- * @param array $variables
- *   An associative array containing:
- *   - id: The index's id.
- *   - name: The index' name.
- *   - machine_name: The index' machine name.
- *   - description: The index' description.
- *   - item_type: The type of items stored in this index.
- *   - enabled: Boolean indicating whether the index is enabled.
- *   - server: The server this index currently rests on, if any.
- *   - options: The index' options, like cron limit.
- *   - fields: All indexed fields of the index.
- *   - indexed_items: The number of items already indexed in their latest
- *     version on this index.
- *   - total_items: The total number of items that have to be indexed for this
- *     index.
- *   - status: The entity configuration status (in database, in code, etc.).
- *   - read_only: Boolean indicating whether this index is read only.
- */
-function theme_search_api_index(array $variables) {
-  extract($variables);
-
-  $output = '';
-
-  $output .= '<h3>' . check_plain($name) . '</h3>' . "\n";
-
-  $output .= '<dl>' . "\n";
-
-  $output .= '<dt>' . t('Status') . '</dt>' . "\n";
-  $output .= '<dd>';
-  if ($enabled) {
-    $output .= t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $machine_name . '/disable')));
-  }
-  elseif ($server && $server->enabled) {
-    $output .= t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $machine_name . '/enable', array('query' => array('token' => drupal_get_token($machine_name))))));
-  }
-  else {
-    $output .= t('disabled');
-  }
-  $output .= '</dd>' . "\n";
-
-  $output .= '<dt>' . t('Machine name') . '</dt>' . "\n";
-  $output .= '<dd>' . check_plain($machine_name) . '</dd>' . "\n";
-
-  $output .= '<dt>' . t('Item type') . '</dt>' . "\n";
-  $type = search_api_get_item_type_info($item_type);
-  $type = $type['name'];
-  $output .= '<dd>' . check_plain($type) . '</dd>' . "\n";
-
-  if (!empty($description)) {
-    $output .= '<dt>' . t('Description') . '</dt>' . "\n";
-    $output .= '<dd>' . nl2br(check_plain($description)) . '</dd>' . "\n";
-  }
-
-  if (!empty($server)) {
-    $output .= '<dt>' . t('Server') . '</dt>' . "\n";
-    $output .= '<dd>' . l($server->name, 'admin/config/search/search_api/server/' . $server->machine_name);
-    if (!empty($server->description)) {
-      $output .= '<p class="description">' . nl2br(check_plain($server->description)) . '</p>';
-    }
-    $output .= '</dd>' . "\n";
-  }
-
-  if (!$read_only && !empty($options)) {
-    $output .= '<dt>' . t('Index options') . '</dt>' . "\n";
-    $output .= '<dd><dl>' . "\n";
-    $output .= '<dt>' . t('Cron batch size') . '</dt>' . "\n";
-    if (empty($options['cron_limit'])) {
-      $output .= '<dd>' . t("Don't index during cron runs") . '</dd>' . "\n";
-    }
-    elseif ($options['cron_limit'] < 0) {
-      $output .= '<dd>' . t('Unlimited') . '</dd>' . "\n";
-    }
-    else {
-      $output .= '<dd>' . format_plural($options['cron_limit'], '1 item per cron batch.', '@count items per cron batch.') . '</dd>' . "\n";
-    }
-
-    if (!empty($fields)) {
-      $fields_list = array();
-      foreach ($fields as $name => $field) {
-        if (search_api_is_text_type($field['type'])) {
-          $fields_list[] = t('@field (@boost x)', array('@field' => $field['name'], '@boost' => $field['boost']));
-        }
-        else {
-          $fields_list[] = check_plain($field['name']);
-        }
-      }
-      if ($fields_list) {
-        $output .= '<dt>' . t('Indexed fields') . '</dt>' . "\n";
-        $output .= '<dd>' . implode(', ', $fields_list) . '</dd>' . "\n";
-      }
-    }
-
-    $output .= '</dl></dd>' . "\n";
-  }
-  elseif ($read_only) {
-    $output .= '<dt>' . t('Read only') . '</dt>' . "\n";
-    $output .= '<dd>' . t('This index is read-only.') . '</dd>' . "\n";
-  }
-
-  $output .= '<dt>' . t('Configuration status') . '</dt>' . "\n";
-  $output .= '<dd>' . "\n";
-  $output .= theme('entity_status', array('status' => $status));
-  $output .= '</dd>' . "\n";
-
-  $output .= '</dl>';
-
-  return $output;
+  return drupal_get_form('search_api_admin_index_status_form', $index);
 }
 
 /**
@@ -804,68 +707,89 @@ function theme_search_api_index(array $variables) {
  */
 function search_api_admin_index_status_form(array $form, array &$form_state, SearchApiIndex $index) {
   $enabled = !empty($index->enabled);
-  $status = search_api_index_status($index);
   $server = $index->server();
 
   $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
   $form_state['index'] = $index;
 
-  $form['status_message'] = array(
-    '#type' => 'item',
-    '#title' => t('Status'),
-    '#description' => $enabled ? t('The index is currently enabled.') : t('The index is currently disabled.'),
-  );
-  if (!empty($server->enabled)) {
-    $form['status'] = array(
-      '#type' => 'submit',
-      '#value' => $enabled ? t('Disable') : t('Enable'),
-    );
+  if (!empty($index->description)) {
+    $form['description']['#markup'] = '<p>' . nl2br(check_plain($index->description)) . '</p>';
   }
 
+  $form['info']['#prefix'] = '<dl>';
+  $form['info']['#suffix'] = '</dl>';
+  if ($enabled) {
+    $status_message = t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), 'admin/config/search/search_api/index/' . $index->machine_name . '/disable')));
+  }
+  elseif (!empty($server->enabled)) {
+    $status_message = t('disabled (!enable_link)', array('!enable_link' => l(t('enable'), 'admin/config/search/search_api/index/' . $index->machine_name . '/enable', array('query' => array('token' => drupal_get_token($index->machine_name))))));
+  }
+  else {
+    $status_message = t('disabled');
+  }
+  $form['info']['status']['#markup'] = '<dt>' . t('Status') . '</dt>' . "\n";
+  $form['info']['status']['#markup'] .= '<dd>' . $status_message . '</dd>' . "\n";
+
+  $type = search_api_get_item_type_info($index->item_type);
+  $form['info']['type']['#markup'] = '<dt>' . t('Item type') . '</dt>' . "\n";
+  $form['info']['type']['#markup'] .= '<dd>' . check_plain($type['name']) . '</dd>' . "\n";
+
+  if (!empty($server)) {
+    $form['info']['server']['#markup'] = '<dt>' . t('Server') . '</dt>' . "\n";
+    $form['info']['server']['#markup'] .= '<dd>' . l($server->name, 'admin/config/search/search_api/server/' . $server->machine_name);
+    if (!empty($server->description)) {
+      $form['info']['server']['#markup'] .= '<p class="description">' . nl2br(check_plain($server->description)) . '</p>';
+    }
+    $form['info']['server']['#markup'] .= '</dd>' . "\n";
+  }
+
+  $form['info']['config_status']['#markup'] = '<dt>' . t('Configuration status') . '</dt>' . "\n";
+  $form['info']['config_status']['#markup'] .= '<dd>' . theme('entity_status', array('status' => $index->status)) . '</dd>' . "\n";
+
   if ($index->read_only) {
-    $form['read_only'] = array(
-      '#type' => 'item',
-      '#title' => t('Read only'),
-      '#description' => t('The index is currently in read-only mode. ' .
-          'No new items will be indexed, nor will old ones be deleted.'),
-    );
+    $message = t('The index is currently in read-only mode. No new items will be indexed, nor will old ones be deleted.');
+    $form['info']['read_only']['#markup'] = '<dt>' . t('Read only') . '</dt>' . "\n";
+    $form['info']['read_only']['#markup'] .= '<dd>' . $message . '</dd>';
 
     return $form;
   }
 
+  $status = search_api_index_status($index);
+  $form['index'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Indexing status'),
+    '#description' => t('This index is disabled. No information about the indexing status is available.'),
+    '#collapsible' => TRUE,
+  );
   if ($enabled) {
-    $form['progress'] = array(
-      '#type' => 'item',
-      '#title' => t('Progress'),
-    );
     $all = ($status['indexed'] == $status['total']);
     if ($all) {
-      $form['progress']['#description'] = t('All items have been indexed (@total / @total).',
+      $form['index']['#description'] = t('All items have been indexed (@total / @total).',
           array('@total' => $status['total']));
     }
     elseif (!$status['indexed']) {
-      $form['progress']['#description'] = t('All items still need to be indexed (@total total).',
+      $form['index']['#description'] = t('All items still need to be indexed (@total total).',
           array('@total' => $status['total']));
     }
     else {
       $percentage = (int) (100 * $status['indexed'] / $status['total']);
-      $form['progress']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
+      $form['index']['#description'] = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
           array('@indexed' => $status['indexed'], '@total' => $status['total'], '@percentage' => $percentage));
     }
 
     if (!$all) {
-      $form['index'] = array(
+      $form['index']['index'] = array(
         '#type' => 'fieldset',
         '#title' => t('Index now'),
         '#collapsible' => TRUE,
       );
-      $form['index']['settings'] = array(
+      $form['index']['index']['settings'] = array(
         '#type' => 'fieldset',
         '#title' => t('Advanced settings'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
-      $form['index']['settings']['limit'] = array(
+      $form['index']['index']['settings']['limit'] = array(
         '#type' => 'textfield',
         '#title' => t('Number of items to index'),
         '#default_value' => -1,
@@ -874,7 +798,7 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
         '#description' => t('Number of items to index. Set to -1 for all items.'),
       );
       $batch_size = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
-      $form['index']['settings']['batch_size'] = array(
+      $form['index']['index']['settings']['batch_size'] = array(
         '#type' => 'textfield',
         '#title' => t('Number of items per batch run'),
         '#default_value' => $batch_size,
@@ -882,15 +806,15 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
         '#attributes' => array('class' => array('search-api-batch-size')),
         '#description' => t('Number of items per batch run. Set to -1 for all items at once (not recommended). Defaults to the cron batch size of the index.'),
       );
-      $form['index']['button'] = array(
+      $form['index']['index']['button'] = array(
         '#type' => 'submit',
         '#value' => t('Index now'),
       );
-      $form['index']['total'] = array(
+      $form['index']['index']['total'] = array(
         '#type' => 'value',
         '#value' => $status['total'],
       );
-      $form['index']['remaining'] = array(
+      $form['index']['index']['remaining'] = array(
         '#type' => 'value',
         '#value' => $status['total'] - $status['indexed'],
       );
@@ -898,36 +822,26 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
   }
 
   if ($server) {
-    if ($enabled && $status['indexed'] > 0) {
-      $form['reindex'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Re-indexing'),
-        '#collapsible' => TRUE,
-      );
-      $form['reindex']['message'] = array(
-        '#type' => 'item',
-        '#description' => t('This will add all items to the index again (overwriting the index), but existing items in the index will remain searchable.'),
-      );
-      $form['reindex']['button'] = array(
-        '#type' => 'submit',
-        '#value' => t('Re-index content'),
-      );
-    }
-
-    $form['clear'] = array(
+    $form['index']['reindex'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Clear index'),
+      '#title' => t('Re-indexing'),
       '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
     );
-    $form['clear']['message'] = array(
+    $form['index']['reindex']['message'] = array(
       '#type' => 'item',
-      '#description' => t('All items will be deleted from the index and have to be inserted again by normally indexing them. ' .
-          'Until all items are re-indexed, searches on this index will return incomplete results.<br />' .
-          'Use with care, in most cases rebuilding the index might be enough.'),
+      '#description' => t('This will mark all items as "changed" and add them to the index again (overwriting existing data) in subsequent indexing operations.'),
     );
-    $form['clear']['button'] = array(
+    $form['index']['reindex']['clear'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Also clear data on server'),
+      '#description' => t('If checked, indexed data on the server will be deleted, too. No results will be returned by searches for this index until items are indexed again.<br />Use with care, in most cases rebuilding the index might be enough.'),
+      '#default_value' => FALSE,
+    );
+    $form['index']['reindex']['button'] = array(
       '#type' => 'submit',
-      '#value' => t('Clear index'),
+      '#value' => t('Re-index content'),
     );
   }
 
@@ -965,25 +879,26 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
       if (!_search_api_batch_indexing_create($index, $values['batch_size'], $values['limit'], $values['remaining'])) {
         drupal_set_message(t("Couldn't create a batch, please check the batch size and limit."), 'warning');
       }
-      $redirect = $pre . '/status';
+      $redirect = $pre;
       break;
     case t('Re-index content'):
-      if ($index->reindex()) {
-        drupal_set_message(t('The index was successfully scheduled for re-indexing.'));
+      if (empty($values['reindex']['clear'])) {
+        if ($index->reindex()) {
+          drupal_set_message(t('The index was successfully scheduled for re-indexing.'));
+        }
+        else {
+          drupal_set_message(t('An error has occurred while performing the desired action. Check the logs for details.'), 'error');
+        }
       }
       else {
-        drupal_set_message(t('An error has occurred while performing the desired action. Check the logs for details.'), 'error');
+        if ($index->clear()) {
+          drupal_set_message(t('The index was successfully cleared.'));
+        }
+        else {
+          drupal_set_message(t('An error has occurred while performing the desired action. Check the logs for details.'), 'error');
+        }
       }
-      $redirect = $pre . '/status';
-      break;
-    case t('Clear index'):
-      if ($index->clear()) {
-        drupal_set_message(t('The index was successfully cleared.'));
-      }
-      else {
-        drupal_set_message(t('An error has occurred while performing the desired action. Check the logs for details.'), 'error');
-      }
-      $redirect = $pre . '/status';
+      $redirect = $pre;
       break;
 
     default:
@@ -1070,9 +985,16 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     ),
   );
 
-  $form['submit'] = array(
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save settings'),
+  );
+  $form['actions']['delete'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#submit' => array('search_api_admin_form_delete_submit'),
+    '#limit_validation_errors' => array(),
   );
 
   return $form;
