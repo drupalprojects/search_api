@@ -1034,8 +1034,7 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
 }
 
 /**
- * Edit an index' workflow (data alter callbacks, pre-/postprocessors, and their
- * order).
+ * Form constructor for editing an index's data alterations and processors.
  *
  * @param SearchApiIndex $index
  *   The index to edit.
@@ -1378,8 +1377,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
 
     $index->save();
     $index->reindex();
-    drupal_set_message(t("The search index' workflow was successfully edited. " .
-        'All content was scheduled for re-indexing so the new settings can take effect.'));
+    drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
   }
   else {
     drupal_set_message(t('No values were changed.'));
@@ -1792,7 +1790,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
       $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
     }
     else {
-      drupal_set_message(t('Please set up the index workflow.'));
+      drupal_set_message(t('Please set up the indexing workflow.'));
       $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/workflow';
     }
     return;

@@ -90,7 +90,7 @@ IMPORTANT: Access checks
   results are displayed – either by only indexing such items, or by filtering
   appropriately at search time.
   For search on general site content (item type "Node"), this is already
-  supported by the Search API. To enable this, go to the index's "Workflow" tab
+  supported by the Search API. To enable this, go to the index's "Filters" tab
   and activate the "Node access" data alteration. This will add the necessary
   field, "Node access information", to the index (which you have to leave as
   "indexed"). If both this field and "Published" are set to be indexed, access
@@ -171,8 +171,8 @@ form at the bottom of the page. For instance, you might want to index the
 author's username to the indexed data of a node, and you need to add the "Body"
 entity to the node when you want to index the actual text it contains.
 
-- Index workflow
-  (Configuration > Search API > [Index name] > Workflow)
+- Indexing workflow
+  (Configuration > Search API > [Index name] > Filters)
 
 This page lets you customize how the created index works, and what metadata will
 be available, by selecting data alterations and processors (see the glossary for

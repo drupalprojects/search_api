@@ -244,7 +244,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
       'callbacks[search_api_alter_add_aggregation][settings][fields][search_api_aggregation_1][fields][parent:body]' => 1,
     );
     $this->drupalPost(NULL, $values, t('Save configuration'));
-    $this->assertText(t("The search index' workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), 'Workflow successfully edited.');
+    $this->assertText(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."), 'Workflow successfully edited.');
 
     $this->drupalGet("admin/config/search/search_api/index/$id");
     $this->assertTitle('Search API test index | Drupal', 'Correct title when viewing index.');

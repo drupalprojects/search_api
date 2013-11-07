@@ -133,8 +133,8 @@ function search_api_menu() {
     'weight' => -4,
   );
   $items[$pre . '/index/%search_api_index/workflow'] = array(
-    'title' => 'Workflow',
-    'description' => 'Edit index workflow.',
+    'title' => 'Filters',
+    'description' => 'Edit indexing workflow.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_api_admin_index_workflow', 5),
     'access arguments' => array('administer search_api'),
