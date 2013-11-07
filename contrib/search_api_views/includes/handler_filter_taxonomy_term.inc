@@ -123,8 +123,8 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
             $keys = array_keys($options);
             $default_value = array_shift($keys);
           }
-          // Due to #1464174 there is a chance that array('') was saved in the admin ui.
-          // Let's choose a safe default value.
+          // Due to #1464174 there is a chance that array('') was saved in the
+          // admin ui. Let's choose a safe default value.
           elseif ($default_value == array('')) {
             $default_value = 'All';
           }
