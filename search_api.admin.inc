@@ -46,15 +46,10 @@ function search_api_admin_overview() {
     '#title' => t('disabled'),
   );
   $t_disabled['class'] = array('search-api-status');
-  $t_enable = t('enable');
-  $t_disable = t('disable');
-  $t_edit = t('edit');
+  $t_enable = t('Enable');
   $pre_server = 'admin/config/search/search_api/server';
   $pre_index = 'admin/config/search/search_api/index';
   $enable = '/enable';
-  $disable = '/disable';
-  $edit = '/edit';
-  $edit_link_options['attributes']['class'][] = 'search-api-edit-menu-toggle';
   foreach ($servers as $server) {
     $url = $pre_server . '/' . $server->machine_name;
     $row = array();
@@ -64,10 +59,21 @@ function search_api_admin_overview() {
     }
     $row[] = $t_server;
     $row[] = l($server->name, $url);
-    $row[] = $server->enabled ? l($t_disable, $url . $disable) : l($t_enable, $url . $enable, array('query' => array('token' => drupal_get_token($server->machine_name))));
-    $row[] = l($t_edit, $url . $edit);
-    $row[] = _search_api_admin_delete_link($server);
+    $links = array();
+    // The "Enable" function has no menu link, since a token is required. We add
+    // it as the first link, since it will most likely be the most useful link
+    // for a disabled server. (Same for indexes below.)
+    if (!$server->enabled) {
+      $links[] = array(
+        'title' => $t_enable,
+        'href' => $url . $enable,
+        'query' => array('token' => drupal_get_token($server->machine_name))
+      );
+    }
+    $links = array_merge($links, menu_contextual_links('search-api-server', $pre_server, array($server->machine_name)));
+    $row[] = theme('search_api_dropbutton', array('links' => $links));
     $rows[] = $row;
+
     if (!empty($indexes[$server->machine_name])) {
       foreach ($indexes[$server->machine_name] as $index) {
         $url = $pre_index . '/' . $index->machine_name;
@@ -79,14 +85,16 @@ function search_api_admin_overview() {
         $row[] = '';
         $row[] = $t_index;
         $row[] = l($index->name, $url);
-        $row[] = $index->enabled
-            ? l($t_disable, $url . $disable)
-            : ($server->enabled ? l($t_enable, $url . $enable, array('query' => array('token' => drupal_get_token($index->machine_name)))) : '');
-        $row[] = l($t_edit, $url . $edit, $edit_link_options) .
-            '<div class="search-api-edit-menu collapsed">' .
-            theme('links', array('links' => menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)))) .
-            '</div>';
-        $row[] = _search_api_admin_delete_link($index);
+        $links = array();
+        if (!$index->enabled && $server->enabled) {
+          $links[] = array(
+            'title' => $t_enable,
+            'href' => $url . $enable,
+            'query' => array('token' => drupal_get_token($index->machine_name))
+          );
+        }
+        $links = array_merge($links, menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)));
+        $row[] = theme('search_api_dropbutton', array('links' => $links));
         $rows[] = $row;
       }
     }
@@ -101,12 +109,8 @@ function search_api_admin_overview() {
       }
       $row[] = array('data' => $t_index, 'colspan' => 2);
       $row[] = l($index->name, $url);
-      $row[] = '';
-      $row[] = l($t_edit, $url . $edit, $edit_link_options) .
-            '<div class="search-api-edit-menu collapsed">' .
-            theme('links', array('links' => menu_contextual_links('search-api-index', $pre_index, array($index->machine_name)))) .
-            '</div>';
-      $row[] = _search_api_admin_delete_link($index);
+      $links = menu_contextual_links('search-api-index', $pre_index, array($index->machine_name));
+      $row[] = theme('search_api_dropbutton', array('links' => $links));
       $rows[] = $row;
     }
   }
@@ -118,32 +122,41 @@ function search_api_admin_overview() {
   }
   $header[] = array('data' => t('Type'), 'colspan' => 2);
   $header[] = t('Name');
-  $header[] = array('data' => t('Operations'), 'colspan' => 3);
+  $header[] = array('data' => t('Operations'));
 
   return array(
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#attributes' => array('class' => array('search-api-overview')),
     '#empty' => t('There are no search servers or indexes defined yet.'),
   );
 }
 
 /**
- * @param Entity $entity
- *   The index or server for which a link should be generated.
+ * Returns HTML for a drobutton list of links.
+ *
+ * When using this, you have to
+ *
+ * @param array $variables
+ *   An associative array containing the following keys:
+ *   - links: An array of links, as expected by theme_links().
  *
  * @return string
- *   A link to a delete form for the entity, if applicable.
+ *   HTML for the dropbutton link list.
  */
-function _search_api_admin_delete_link(Entity $entity) {
-  // Delete link only makes sense if entity is in the database (custom or overridden).
-  if ($entity->hasStatus(ENTITY_CUSTOM)) {
-    $type = $entity instanceof SearchApiServer ? 'server' : 'index';
-    $url = 'admin/config/search/search_api/' . $type . '/' . $entity->machine_name . '/delete';
-    $title = $entity->hasStatus(ENTITY_IN_CODE) ? t('revert') : t('delete');
-    return l($title, $url);
-  }
-  return '';
+function theme_search_api_dropbutton(array &$variables) {
+  $base_path = drupal_get_path('module', 'search_api') . '/';
+  drupal_add_css($base_path . 'search_api.admin.css');
+  drupal_add_js($base_path . 'search_api.admin.js');
+
+  $variables['attributes']['class'][] = 'dropbutton';
+  $list = theme('links', $variables);
+  return "<div class=\"dropbutton-wrapper\">
+  <div class=\"dropbutton-widget\">
+    $list
+  </div>
+</div>";
 }
 
 /**

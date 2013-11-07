@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2100193 by drunken monkey: Turned operations in overview into D8 dropbuttons.
 - #2100199 by drunken monkey: Merged index tabs for a cleaner look.
 - #2115127 by drunken monkey: Fixed cron indexing logic to keep the right order.
 - #1750144 by jsacksick, drunken monkey: Fixed missing Boost option for custom
