@@ -33,6 +33,7 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
     $options['operator']['default'] = 'AND';
 
     $options['mode'] = array('default' => 'keys');
+    $options['min_length'] = array('default' => '');
     $options['fields'] = array('default' => array());
 
     return $options;
@@ -75,6 +76,55 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
     if (isset($form['expose'])) {
       $form['expose']['#weight'] = -5;
     }
+
+    $form['min_length'] = array(
+      '#title' => t('Minimum keyword length'),
+      '#description' => t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
+      '#type' => 'textfield',
+      '#element_validate' => array('element_validate_integer_positive'),
+      '#default_value' => $this->options['min_length'],
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function exposed_validate(&$form, &$form_state) {
+    // Only validate exposed input.
+    if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
+      return;
+    }
+
+    // We only need to validate if there is a minimum word length set.
+    if ($this->options['min_length'] < 2) {
+      return;
+    }
+
+    $identifier = $this->options['expose']['identifier'];
+    $input = &$form_state['values'][$identifier];
+
+    if ($this->options['is_grouped'] && isset($this->options['group_info']['group_items'][$input])) {
+      $this->operator = $this->options['group_info']['group_items'][$input]['operator'];
+      $input = &$this->options['group_info']['group_items'][$input]['value'];
+    }
+
+    // If there is no input, we're fine.
+    if (!trim($input)) {
+      return;
+    }
+
+    $words = preg_split('/\s+/', $input);
+    foreach ($words as $i => $word) {
+      if (drupal_strlen($word) < $this->options['min_length']) {
+        unset($words[$i]);
+      }
+    }
+    if (!$words) {
+      $vars['@count'] = $this->options['min_length'];
+      $msg = t('You must include at least one positive keyword with @count characters or more.', $vars);
+      form_error($form[$identifier], $msg);
+    }
+    $input = implode(' ', $words);
   }
 
   /**

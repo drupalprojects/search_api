@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1961120 by drunken monkey: Fixed Views handling of short fulltext keywords.
 - #2100231 by drunken monkey: Renamed "Workflow" tab to "Filters".
 - #2100193 by drunken monkey: Turned operations in overview into D8 dropbuttons.
 - #2100199 by drunken monkey: Merged index tabs for a cleaner look.
