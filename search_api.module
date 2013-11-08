@@ -1026,6 +1026,11 @@ function search_api_search_api_alter_callback_info() {
     'description' => t('Add node access information to the index.'),
     'class' => 'SearchApiAlterNodeAccess',
   );
+  $callbacks['search_api_alter_comment_access'] = array(
+    'name' => t('Access check'),
+    'description' => t('Add node access information to the index.'),
+    'class' => 'SearchApiAlterCommentAccess',
+  );
   $callbacks['search_api_alter_node_status'] = array(
     'name' => t('Exclude unpublished nodes'),
     'description' => t('Exclude unpublished nodes from the index.'),
@@ -1777,39 +1782,68 @@ function search_api_get_processors() {
  *   The SearchApiQueryInterface object representing the search query.
  */
 function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
+  global $user;
   $index = $query->getIndex();
   // Only add node access if the necessary fields are indexed in the index, and
   // unless disabled explicitly by the query.
-  $fields = $index->options['fields'];
-  if (!empty($fields['search_api_access_node']) && !empty($fields['status']) && !empty($fields['author']) && !$query->getOption('search_api_bypass_access')) {
-    $account = $query->getOption('search_api_access_account', $GLOBALS['user']);
+  $type = $index->getEntityType();
+  if (!empty($index->options['data_alter_callbacks']["search_api_alter_{$type}_access"]) && !$query->getOption('search_api_bypass_access')) {
+    $account = $query->getOption('search_api_access_account', $user);
     if (is_numeric($account)) {
       $account = user_load($account);
     }
     if (is_object($account)) {
       try {
-        _search_api_query_add_node_access($account, $query);
+        _search_api_query_add_node_access($account, $query, $type);
       }
       catch (SearchApiException $e) {
         watchdog_exception('search_api', $e);
       }
     }
     else {
-      watchdog('search_api', 'An illegal user UID was given for node access: @uid.', array('@uid' => $query->getOption('search_api_access_account', $GLOBALS['user'])), WATCHDOG_WARNING);
+      watchdog('search_api', 'An illegal user UID was given for node access: @uid.', array('@uid' => $query->getOption('search_api_access_account', $user)), WATCHDOG_WARNING);
     }
   }
 }
 
 /**
-  * Build a node access subquery.
-  *
-  * @param $account
-  *   The user object, who searches.
-  *
-  * @return SearchApiQueryFilter
-  */
-function _search_api_query_add_node_access($account, SearchApiQueryInterface $query) {
-  if (!user_access('access content', $account)) {
+ * Adds a node access filter to a search query, if applicable.
+ *
+ * @param object $account
+ *   The user object, who searches.
+ * @param SearchApiQueryInterface $query
+ *   The query to which a node access filter should be added, if applicable.
+ * @param string $type
+ *   (optional) The type of search – either "node" or "comment". Defaults to
+ *   "node".
+ *
+ * @throws SearchApiException
+ *   If not all necessary fields are indexed on the index.
+ */
+function _search_api_query_add_node_access($account, SearchApiQueryInterface $query, $type = 'node') {
+  // Don't do anything if the user can access all content.
+  if (user_access('bypass node access', $account)) {
+    return;
+  }
+
+  $is_comment = ($type == 'comment');
+
+  // Check whether the necessary fields are indexed.
+  $fields = $query->getIndex()->options['fields'];
+  $required = array('search_api_access_node', 'status');
+  if (!$is_comment) {
+    $required[] = 'author';
+  }
+  foreach ($required as $field) {
+    if (empty($fields[$field])) {
+      $vars['@field'] = $field;
+      $vars['@index'] = $query->getIndex()->name;
+      throw new SearchApiException(t('Required field @field not indexed on index @index. Could not perform access checks.', $vars));
+    }
+  }
+
+  // If the user cannot access content/comments at all, return no results.
+  if (!user_access('access content', $account) || ($is_comment && !user_access('access content', $account))) {
     // Simple hack for returning no results.
     $query->condition('status', 0);
     $query->condition('status', 1);
@@ -1817,29 +1851,28 @@ function _search_api_query_add_node_access($account, SearchApiQueryInterface $qu
     return;
   }
 
-  // Only filter for user which don't have full node access.
-  if (!user_access('bypass node access', $account)) {
-    // Filter by node "published" status.
-    if (user_access('view own unpublished content')) {
-      $filter = $query->createFilter('OR');
-      $filter->condition('status', NODE_PUBLISHED);
-      $filter->condition('author', $account->uid);
-      $query->filter($filter);
-    }
-    else {
-      $query->condition('status', NODE_PUBLISHED);
-    }
-    // Filter by node access grants.
+  // Filter by the "published" status.
+  $published = $is_comment ? COMMENT_PUBLISHED : NODE_PUBLISHED;
+  if (!$is_comment && user_access('view own unpublished content')) {
     $filter = $query->createFilter('OR');
-    $grants = node_access_grants('view', $account);
-    foreach ($grants as $realm => $gids) {
-      foreach ($gids as $gid) {
-        $filter->condition('search_api_access_node', "node_access_$realm:$gid");
-      }
-    }
-    $filter->condition('search_api_access_node', 'node_access__all');
+    $filter->condition('status', $published);
+    $filter->condition('author', $account->uid);
     $query->filter($filter);
   }
+  else {
+    $query->condition('status', $published);
+  }
+
+  // Filter by node access grants.
+  $filter = $query->createFilter('OR');
+  $grants = node_access_grants('view', $account);
+  foreach ($grants as $realm => $gids) {
+    foreach ($gids as $gid) {
+      $filter->condition('search_api_access_node', "node_access_$realm:$gid");
+    }
+  }
+  $filter->condition('search_api_access_node', 'node_access__all');
+  $query->filter($filter);
 }
 
 /**
