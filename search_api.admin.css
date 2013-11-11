@@ -1,34 +1,13 @@
+/*
+ * OVERVIEW
+ */
+
 .search-api-overview td.search-api-status {
   text-align: center;
 }
 
 .search-api-overview td {
   vertical-align: top;
-}
-
-.search-api-edit-menu {
-  position: relative;
-  vertical-align: top;
-}
-
-.search-api-edit-menu .ctools-dropbutton-processed {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  border-radius: 11px;
-  /* We need some background color, or the popup will look weird.
-   * Since we can't know what theme we are on, we just guess it's "Seven".
-   */
-  background-color: #FFF;
-}
-
-.search-api-edit-menu .ctools-dropbutton-processed.open {
-  left: auto;
-}
-
-tr.even .search-api-edit-menu .ctools-dropbutton-processed {
-  background-color: #F3F4EE;
 }
 
 /*

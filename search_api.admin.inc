@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Administration page callbacks for the Search API module.
+ */
+
+/**
  * Page callback that shows an overview of defined servers and indexes.
  */
 function search_api_admin_overview() {
@@ -328,12 +333,17 @@ function search_api_admin_item_title($object) {
 }
 
 /**
- * Displays a server's details.
+ * Page callback: Displays information about a server.
  *
  * @param SearchApiServer $server
  *   The server to display.
- * @param $action
+ * @param string|null $action
  *   One of 'enable', 'disable', 'delete'; or NULL if the server is only viewed.
+ *
+ * @return array
+ *   A render array for displaying information about a server.
+ *
+ * @see search_api_menu()
  */
 function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
   if (!empty($action)) {
@@ -377,7 +387,7 @@ function search_api_admin_server_view(SearchApiServer $server, $action = NULL) {
 }
 
 /**
- * Theme function for displaying a server.
+ * Returns HTML for displaying a server.
  *
  * @param array $variables
  *   An associative array containing:
