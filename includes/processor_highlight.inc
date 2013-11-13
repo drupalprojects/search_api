@@ -150,8 +150,8 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
   /**
    * Retrieves the fulltext data of a result.
    *
-   * @param array $result
-   *   All results returned in the search.
+   * @param array $results
+   *   All results returned in the search, by reference.
    * @param int|string $i
    *   The index in the results array of the result whose data should be
    *   returned.
