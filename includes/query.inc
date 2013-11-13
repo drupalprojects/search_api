@@ -318,7 +318,8 @@ interface SearchApiQueryInterface {
    * @param mixed $value
    *   The new value of the option.
    *
-   * @return The option's previous value.
+   * @return mixed
+   *   The option's previous value.
    */
   public function setOption($name, $value);
 
@@ -341,11 +342,20 @@ interface SearchApiQueryInterface {
 class SearchApiQuery implements SearchApiQueryInterface {
 
   /**
-   * The index.
+   * The index this query will use.
    *
    * @var SearchApiIndex
    */
   protected $index;
+
+  /**
+   * The index's machine name.
+   *
+   * used during serialization to avoid serializing the whole index object.
+   *
+   * @var string
+   */
+  protected $index_id;
 
   /**
    * The search keys. If NULL, this will be a filter-only search.
@@ -616,6 +626,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
    *
    * @param array $languages
    *   The languages for which results should be returned.
+   *
+   * @throws SearchApiException
+   *   If there was a logical error in the combination of filters and languages.
    */
   protected function addLanguages(array $languages) {
     if (array_search(LANGUAGE_NONE, $languages) === FALSE) {
