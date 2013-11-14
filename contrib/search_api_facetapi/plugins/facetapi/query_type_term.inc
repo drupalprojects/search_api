@@ -40,24 +40,27 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
       return;
     }
 
-    if (FACETAPI_OPERATOR_OR == $operator) {
-      // If we're dealing with an OR facet, we need to use a nested filter.
-      $facet_filter = $query->createFilter('OR');
+    // Create the facet filter, and add a tag to it so that it can be easily
+    // identified down the line by services when they need to exclude facets.
+    if ($operator == FACETAPI_OPERATOR_AND) {
+      $conjunction = 'AND';
+    }
+    elseif ($operator == FACETAPI_OPERATOR_OR) {
+      $conjunction = 'OR';
     }
     else {
-      // Otherwise we set the conditions directly on the query.
-      $facet_filter = $query;
+      throw new SearchApiException(t('Unknown facet operator %operator.', array('%operator' => $operator)));
     }
+    $tags = array('facet:' . $this->facet['field']);
+    $facet_filter = $query->createFilter($conjunction, $tags);
 
     foreach ($active as $filter => $filter_array) {
       $field = $this->facet['field'];
       $this->addFacetFilter($facet_filter, $field, $filter);
     }
 
-    // For OR facets, we now have to add the filter to the query.
-    if (FACETAPI_OPERATOR_OR == $operator) {
-      $query->filter($facet_filter);
-    }
+    // Now add the filter to the query.
+    $query->filter($facet_filter);
   }
 
   /**

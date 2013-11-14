@@ -62,11 +62,15 @@ interface SearchApiQueryInterface {
    *
    * @param string $conjunction
    *   The conjunction to use for the filter - either 'AND' or 'OR'.
+   * @param $tags
+   *   (Optional) An arbitrary set of tags. Can be used to identify this filter
+   *   down the line if necessary. This is primarily used by the facet system
+   *   to support OR facet queries.
    *
    * @return SearchApiQueryFilterInterface
    *   A filter object that is set to use the specified conjunction.
    */
-  public function createFilter($conjunction = 'AND');
+  public function createFilter($conjunction = 'AND', $tags = array());
 
   /**
    * Sets the keys to search for.
@@ -513,9 +517,9 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function createFilter($conjunction = 'AND') {
+  public function createFilter($conjunction = 'AND', $tags = array()) {
     $filter_class = $this->options['filter class'];
-    return new $filter_class($conjunction);
+    return new $filter_class($conjunction, $tags);
   }
 
   /**
@@ -803,9 +807,13 @@ interface SearchApiQueryFilterInterface {
    * Constructs a new filter that uses the specified conjunction.
    *
    * @param string $conjunction
-   *   The conjunction to use for this filter - either 'AND' or 'OR'.
+   *   (optional) The conjunction to use for this filter - either 'AND' or 'OR'.
+   * @param array $tags
+   *   (optional) An arbitrary set of tags. Can be used to identify this filter
+   *   down the line if necessary. This is primarily used by the facet system
+   *   to support OR facet queries.
    */
-  public function __construct($conjunction = 'AND');
+  public function __construct($conjunction = 'AND', array $tags = array());
 
   /**
    * Sets this filter's conjunction.
@@ -869,6 +877,25 @@ interface SearchApiQueryFilterInterface {
    */
   public function &getFilters();
 
+  /**
+   * Checks whether a certain tag was set on this filter.
+   *
+   * @param string $tag
+   *   A tag to check for.
+   *
+   * @return bool
+   *   TRUE if the tag was set for this filter, FALSE otherwise.
+   */
+  public function hasTag($tag);
+
+  /**
+   * Retrieves the tags set on this filter.
+   *
+   * @return array
+   *   The tags associated with this filter, as both the array keys and values.
+   */
+  public function &getTags();
+
 }
 
 /**
@@ -896,9 +923,10 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct($conjunction = 'AND') {
+  public function __construct($conjunction = 'AND', array $tags = array()) {
     $this->setConjunction($conjunction);
     $this->filters = array();
+    $this->tags = drupal_map_assoc($tags);
   }
 
   /**
@@ -937,6 +965,20 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    */
   public function &getFilters() {
     return $this->filters;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasTag($tag) {
+    return isset($this->tags[$tag]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function &getTags() {
+    return $this->tags;
   }
 
 }

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1390598 by Damien Tournoud, drunken monkey: Added the concept of query filter
+  tags.
 - #2135255 by dww: Fixed missing pager on first page of search results.
 - #1832334 by Damien Tournoud, drunken monkey: Fixed performance issues of
   Views options filter handler for huge options lists.

@@ -545,9 +545,9 @@ class SearchApiViewsQuery extends views_plugin_query {
   // Query interface methods (proxy to $this->query)
   //
 
-  public function createFilter($conjunction = 'AND') {
+  public function createFilter($conjunction = 'AND', $tags = array()) {
     if (!$this->errors) {
-      return $this->query->createFilter($conjunction);
+      return $this->query->createFilter($conjunction, $tags);
     }
   }
 
