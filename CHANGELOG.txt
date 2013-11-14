@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2135255 by dww: Fixed missing pager on first page of search results.
 - #1832334 by Damien Tournoud, drunken monkey: Fixed performance issues of
   Views options filter handler for huge options lists.
 - #2118589 by mxr576, drunken monkey: Added node access for comment indexes.

@@ -322,7 +322,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       $view->execute_time = microtime(TRUE) - $start;
 
       // Trigger pager post_execute().
-      $this->pager->post_execute($view->results);
+      $this->pager->post_execute($view->result);
     }
     catch (Exception $e) {
       $this->errors[] = $e->getMessage();
