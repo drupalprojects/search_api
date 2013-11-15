@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2128001 by drunken monkey: Fixed the logic of the "contains none of these
+  words" fulltext operator.
 - #2128947 by stBorchert, drunken monkey: Fixed facet handling for multiple
   searches on a page.
 - #2128529 by Frando, drunken monkey: Added a way for facet query type plugins

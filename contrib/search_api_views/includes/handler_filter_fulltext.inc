@@ -158,9 +158,9 @@ class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterTex
       return;
     }
 
-    // If the operator was set to OR, set it as the conjunction. (AND is set by
-    // default.)
-    if ($this->operator === 'OR') {
+    // If the operator was set to OR or NOT, set OR as the conjunction. (It is
+    // also set for NOT since otherwise it would be "not all of these words".)
+    if ($this->operator != 'AND') {
       $this->query->setOption('conjunction', $this->operator);
     }
 
