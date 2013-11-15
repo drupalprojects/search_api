@@ -241,6 +241,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     // Initialize the pager and let it modify the query to add limits.
     $view->init_pager();
     $this->pager->query();
+    $this->query->setOption('skip result count', $this->pager->use_count_query());
 
     // Views passes sometimes NULL and sometimes the integer 0 for "All" in a
     // pager. If set to 0 items, a string "0" is passed. Therefore, we unset
@@ -308,11 +309,13 @@ class SearchApiViewsQuery extends views_plugin_query {
       $this->search_api_results = $results;
 
       // Store the results.
-      $this->pager->total_items = $view->total_rows = $results['result count'];
-      if (!empty($this->pager->options['offset'])) {
-        $this->pager->total_items -= $this->pager->options['offset'];
+      if ($this->pager->use_count_query()) {
+        $this->pager->total_items = $view->total_rows = $results['result count'];
+        if (!empty($this->pager->options['offset'])) {
+          $this->pager->total_items -= $this->pager->options['offset'];
+        }
+        $this->pager->update_page_info();
       }
-      $this->pager->update_page_info();
       $view->result = array();
       if (!empty($results['results'])) {
         $this->addResults($results['results'], $view);

@@ -33,6 +33,10 @@ interface SearchApiQueryInterface {
    *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
+   *   - 'skip result count': If present and set to TRUE, the result's
+   *     "result count" key will not be needed. Service classes can check for
+   *     this option to possibly avoid executing expensive operations to compute
+   *     the result count in cases where it is not needed.
    *   - search_api_access_account: The account which will be used for entity
    *     access checks, if available and enabled for the index.
    *   - search_api_bypass_access: If set to TRUE, entity access checks will be
@@ -179,7 +183,9 @@ interface SearchApiQueryInterface {
    *   An associative array containing the search results. The following keys
    *   are standardized:
    *   - 'result count': The overall number of results for this query, without
-   *     range restrictions. Might be approximated, for large numbers.
+   *     range restrictions. Might be approximated, for large numbers, or
+   *     skipped entirely if the "skip result count" option was set on this
+   *     query.
    *   - results: An array of results, ordered as specified. The array keys are
    *     the items' IDs, values are arrays containing the following keys:
    *     - id: The item's ID.
