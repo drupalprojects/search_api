@@ -394,7 +394,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
    *
    * The data structure uses largely the format specified in
    * hook_entity_property_info(). However, the first level of keys (containing
-   * the entity types) is omitted, and the "property" key is called
+   * the entity types) is omitted, and the "properties" key is called
    * "property info" instead. So, an example return value would look like this:
    *
    * @code
