@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2128529 by Frando, drunken monkey: Added a way for facet query type plugins
+  to pass options to the search query.
 - #1551302 by drunken monkey: Fixed the server tasks system.
 - #2135363 by drumm, drunken monkey: Added support for Views' use_count_query()
   method.
