@@ -30,11 +30,17 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
     // Return terms for this facet.
     $this->adapter->addFacet($this->facet, $query);
 
-    $settings = $this->adapter->getFacet($this->facet)->getSettings();
-    // Adds the operator parameter.
-    $operator = $settings->settings['operator'];
+    $settings = $this->adapter->getFacet($this->facet)->getSettings()->settings;
 
-    // Add active facet filters.
+    // First check if the facet is enabled for this search.
+    $default_true = isset($settings['default_true']) ? $settings['default_true'] : TRUE;
+    $facet_search_ids = isset($settings['facet_search_ids']) ? $settings['facet_search_ids'] : array();
+    if ($default_true != empty($facet_search_ids[$query->getOption('search id')])) {
+      // Facet is not enabled for this search ID.
+      return;
+    }
+
+    // Retrieve the active facet filters.
     $active = $this->adapter->getActiveItems($this->facet);
     if (empty($active)) {
       return;
@@ -42,6 +48,7 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
 
     // Create the facet filter, and add a tag to it so that it can be easily
     // identified down the line by services when they need to exclude facets.
+    $operator = $settings['operator'];
     if ($operator == FACETAPI_OPERATOR_AND) {
       $conjunction = 'AND';
     }
