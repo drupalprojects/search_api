@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Provides a flexible framework for implementing search servives.
+ */
+
+/**
  * Default number of items indexed per cron batch for each enabled index.
  */
 define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
@@ -270,9 +275,18 @@ function search_api_permission() {
 /**
  * Implements hook_cron().
  *
- * Will index $options['cron-limit'] items for each enabled index.
+ * This will first execute any pending server tasks. After that, items will
+ * be indexed on all enabled indexes with a non-zero cron limit. Indexing will
+ * run for the time set in the search_api_index_worker_callback_runtime variable
+ * (defaulting to 15 seconds), but will at least index one batch of items on
+ * each index.
+ *
+ * @see search_api_server_tasks_check()
  */
 function search_api_cron() {
+  // Execute pending server tasks.
+  search_api_server_tasks_check();
+
   // Load all enabled, not read-only indexes.
   $conditions = array(
     'enabled' => TRUE,
@@ -319,7 +333,8 @@ function search_api_cron() {
           // Exceptions will probably be caused by the server in most cases.
           // Therefore, don't index for any index on this server.
           $ignored_servers[$index->server] = TRUE;
-          watchdog_exception('search_api', $e);
+          $vars['%index'] = $index->name;
+          watchdog_exception('search_api', $e, '%type while trying to index items on %index: !message in %function (line %line of %file).', $vars);
         }
       }
       if  (!$num) {
@@ -540,50 +555,11 @@ function search_api_search_api_server_update(SearchApiServer $server) {
   }
   if (!empty($server->original) && $server->enabled != $server->original->enabled) {
     if ($server->enabled) {
-      // Were there any changes in the server's indexes while it was disabled?
-      $tasks = variable_get('search_api_tasks', array());
-      if (isset($tasks[$server->machine_name])) {
-        foreach ($tasks[$server->machine_name] as $index_id => $index_tasks) {
-          $index = search_api_index_load($index_id);
-          foreach ($index_tasks as $task) {
-            switch ($task) {
-              case 'add':
-                $server->addIndex($index);
-                break;
-              case 'clear':
-                $server->deleteItems('all', $index);
-                break;
-              case 'clear all':
-                // Would normally be used with a fake index ID of "", since it
-                // doesn't matter.
-                $server->deleteItems('all');
-                break;
-              case 'fields':
-                if ($server->fieldsUpdated($index)) {
-                  _search_api_index_reindex($index);
-                }
-                break;
-              case 'remove':
-                $server->removeIndex($index ? $index : $index_id);
-                break;
-              default:
-                if (substr($task, 0, 7) == 'delete-') {
-                  $id = substr($task, 7);
-                  $server->deleteItems(array($id), $index);
-                }
-                else {
-                  watchdog('search_api', t('Unknown task "@task" for server "@name".', array('@task' => $task, '@name' => $server->machine_name)), NULL, WATCHDOG_WARNING);
-                }
-            }
-          }
-        }
-        unset($tasks[$server->machine_name]);
-        variable_set('search_api_tasks', $tasks);
-      }
+      search_api_server_tasks_check($server);
     }
     else {
-      foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name, 'enabled' => 1)) as $index) {
-        $index->update(array('enabled' => 0));
+      foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+        $index->update(array('enabled' => 0, 'server' => NULL));
       }
     }
   }
@@ -607,9 +583,7 @@ function search_api_search_api_server_delete(SearchApiServer $server) {
     $index->update(array('server' => NULL, 'enabled' => FALSE));
   }
 
-  $tasks = variable_get('search_api_tasks', array());
-  unset($tasks[$server->machine_name]);
-  variable_set('search_api_tasks', $tasks);
+  search_api_server_tasks_delete(NULL, $server);
 }
 
 /**
@@ -647,31 +621,14 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
       $old_server = search_api_server_load($index->original->server);
       // The server might have changed because the old one was deleted:
       if ($old_server) {
-        if ($old_server->enabled) {
-          $old_server->removeIndex($index);
-        }
-        else {
-          $tasks = variable_get('search_api_tasks', array());
-          // When we add or remove an index, we can ignore all other tasks.
-          $tasks[$old_server->machine_name][$index->machine_name] = array('remove');
-          variable_set('search_api_tasks', $tasks);
-        }
+        $old_server->removeIndex($index);
       }
     }
 
     if ($index->server) {
       $new_server = $index->server(TRUE);
       // If the server is enabled, we call addIndex(); otherwise, we save the task.
-      if ($new_server->enabled) {
-        $new_server->addIndex($index);
-      }
-      else {
-        $tasks = variable_get('search_api_tasks', array());
-        // When we add or remove an index, we can ignore all other tasks.
-        $tasks[$new_server->machine_name][$index->machine_name] = array('add');
-        variable_set('search_api_tasks', $tasks);
-        unset($new_server);
-      }
+      $new_server->addIndex($index);
     }
 
     // We also have to re-index all content.
@@ -686,8 +643,8 @@ function search_api_search_api_index_update(SearchApiIndex $index) {
   $new_fields = $new_fields['fields'];
   if ($old_fields != $new_fields) {
     cache_clear_all($index->getCacheId(), 'cache', TRUE);
-    if ($index->server && $index->server()->fieldsUpdated($index)) {
-      _search_api_index_reindex($index);
+    if ($index->server) {
+      $index->server()->fieldsUpdated($index);
     }
   }
 
@@ -1211,18 +1168,156 @@ function search_api_track_item_delete($type, array $item_ids) {
   foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
     if ($index->server) {
       $server = $index->server();
-      if ($server->enabled) {
-        $server->deleteItems($item_ids, $index);
-      }
-      else {
-        $tasks = variable_get('search_api_tasks', array());
-        foreach ($item_ids as $id) {
-          $tasks[$server->machine_name][$index->machine_name][] = 'delete-' . $id;
-        }
-        variable_set('search_api_tasks', $tasks);
-      }
+      $server->deleteItems($item_ids, $index);
     }
   }
+}
+
+/**
+ * Checks for pending tasks on one or all enabled search servers.
+ *
+ * @param SearchApiServer|null $server
+ *   (optional) The server whose tasks should be checked. If not given, the
+ *   tasks for all enabled servers are checked.
+ *
+ * @return bool
+ *   TRUE if all tasks (for the specific server, if $server was given) were
+ *   executed successfully, or if there were no tasks. FALSE if there are still
+ *   pending tasks.
+ */
+function search_api_server_tasks_check(SearchApiServer $server = NULL) {
+  $select = db_select('search_api_task', 't')
+    ->fields('t')
+    // Only retrieve tasks we can handle.
+    ->condition('t.type', array('addIndex', 'fieldsUpdated', 'removeIndex', 'deleteItems'));
+  if ($server) {
+    $select->condition('t.server_id', $server->machine_name);
+  }
+  else {
+    $select->innerJoin('search_api_server', 's', 't.server_id = s.machine_name AND s.enabled = 1');
+    // By ordering by the server, we can later just load them when we reach them
+    // while looping through the tasks. It is very unlikely there will be tasks
+    // for more than one or two servers, so a *_load_multiple() probably
+    // wouldn't bring any significant advantages, but complicate the code.
+    $select->orderBy('t.server_id');
+  }
+  // Store a count query for later checking whether all tasks were processed
+  // successfully.
+  $count_query = $select->countQuery();
+
+  // Sometimes the order of tasks might be important, so make sure to order by
+  // the task ID (which should be in order of insertion).
+  $select->orderBy('t.id');
+  $tasks = $select->execute();
+
+  $executed_tasks = array();
+  foreach ($tasks as $task) {
+    if (!$server || $server->machine_name != $task->server_id) {
+      $server = search_api_server_load($task->server_id);
+      if (!$server) {
+        continue;
+      }
+    }
+    switch ($task->type) {
+      case 'addIndex':
+        $index = search_api_index_load($task->index_id);
+        if ($index) {
+          $server->addIndex($index);
+        }
+        break;
+
+      case 'fieldsUpdated':
+        $index = search_api_index_load($task->index_id);
+        if ($index) {
+          if ($task->data) {
+            $index->original = unserialize($task->data);
+          }
+          $server->fieldsUpdated($index);
+        }
+        break;
+
+      case 'removeIndex':
+        $index = search_api_index_load($task->index_id);
+        if ($index) {
+          $server->removeIndex($index ? $index : $task->index_id);
+        }
+        break;
+
+      case 'deleteItems':
+        $ids = $task->data ? unserialize($task->data) : 'all';
+        $index = $task->index_id ? search_api_index_load($task->index_id) : NULL;
+        // Since a failed load returns (for stupid menu handler reasons) FALSE,
+        // not NULL, we have to make doubly sure here not to pass an invalid
+        // value (and cause a fatal error).
+        $index = $index ? $index : NULL;
+        $server->deleteItems($ids, $index);
+        break;
+
+      default:
+        // This should never happen.
+        continue;
+    }
+    $executed_tasks[] = $task->id;
+  }
+
+  // If there were no tasks (we recognized), return TRUE.
+  if (!$executed_tasks) {
+    return TRUE;
+  }
+  // Otherwise, delete the executed tasks and check if new tasks were created.
+  search_api_server_tasks_delete($executed_tasks);
+  return $count_query->execute()->fetchField() === 0;
+}
+
+/**
+ * Adds an entry into a server's list of pending tasks.
+ *
+ * @param SearchApiServer $server
+ *   The server for which a task should be remembered.
+ * @param $type
+ *   The type of task to perform.
+ * @param SearchApiIndex|string|null $index
+ *   (optional) If applicable, the index to which the task pertains (or its
+ *   machine name).
+ * @param mixed $data
+ *   (optional) If applicable, some further data necessary for the task.
+ */
+function search_api_server_tasks_add(SearchApiServer $server, $type, $index = NULL, $data = NULL) {
+  db_insert('search_api_task')
+    ->fields(array(
+      'server_id' => $server->machine_name,
+      'type' => $type,
+      'index_id' => $index ? (is_object($index) ? $index->machine_name : $index) : NULL,
+      'data' => isset($data) ? serialize($data) : NULL,
+    ))
+    ->execute();
+}
+
+/**
+ * Removes pending server tasks from the list.
+ *
+ * @param array|null $ids
+ *   (optional) The IDs of the pending server tasks to delete. Set to NULL
+ *   to not filter by IDs.
+ * @param SearchApiServer|null $server
+ *   (optional) A server for which the tasks should be deleted. Set to NULL to
+ *   delete tasks from all servers.
+ * @param SearchApiIndex|string|null $index
+ *   (optional) An index (or its machine name) for which the tasks should be
+ *   deleted. Set to NULL to delete tasks for all indexes.
+ */
+function search_api_server_tasks_delete(array $ids = NULL, SearchApiServer $server = NULL, $index = NULL) {
+  $delete = db_delete('search_api_task');
+  if ($ids) {
+    $delete->condition('id', $ids);
+  }
+  if ($server) {
+    $delete->condition('server_id', $server->machine_name);
+  }
+  if ($index) {
+    $delete->condition('index_id', $index->machine_name);
+  }
+  $delete->execute();
 }
 
 /**
@@ -1347,6 +1442,13 @@ function search_api_index_items(SearchApiIndex $index, $limit = -1) {
  *   If any error occurs during indexing.
  */
 function search_api_index_specific_items(SearchApiIndex $index, array $ids) {
+  // Before doing anything else, check whether there are pending tasks that need
+  // to be executed on the server. It might be important that they are executed
+  // before any indexing occurs.
+  if (!search_api_server_tasks_check($index->server())) {
+    throw new SearchApiException(t('Could not index items since important pending server tasks could not be performed.'));
+  }
+
   $items = $index->loadItems($ids);
   // Clone items because data alterations may alter them.
   $cloned_items = array();
@@ -2246,13 +2348,13 @@ function search_api_server_insert(array $values) {
 /**
  * Changes a server's settings.
  *
- * @param $id
+ * @param string|int $id
  *   The ID or machine name of the server whose values should be changed.
  * @param array $fields
  *   The new field values to set. The enabled field can't be set this way, use
  *   search_api_server_enable() and search_api_server_disable() instead.
  *
- * @return
+ * @return int|false
  *   1 if fields were changed, 0 if the fields already had the desired values.
  *   FALSE on failure.
  */
@@ -2263,13 +2365,14 @@ function search_api_server_edit($id, array $fields) {
 }
 
 /**
- * Enables a search server. Will also check for remembered tasks for this server
- * and execute them.
+ * Enables a search server.
  *
- * @param $id
+ * Will also check for remembered tasks for this server and execute them.
+ *
+ * @param string|int $id
  *   The ID or machine name of the server to enable.
  *
- * @return
+ * @return int|false
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_server_enable($id) {
@@ -2279,12 +2382,14 @@ function search_api_server_enable($id) {
 }
 
 /**
- * Disables a search server, along with all associated indexes.
+ * Disables a search server.
  *
- * @param $id
+ * Will also disable all associated indexes and remove them from the server.
+ *
+ * @param string|int $id
  *   The ID or machine name of the server to disable.
  *
- * @return
+ * @return int|false
  *   1 on success, 0 or FALSE on failure.
  */
 function search_api_server_disable($id) {
@@ -2316,12 +2421,12 @@ function search_api_server_delete($id) {
  * @param $reset
  *   Whether to reset the internal cache.
  *
- * @return SearchApiIndex
- *   A completely loaded index object, or NULL if no such index exists.
+ * @return SearchApiIndex|false
+ *   A completely loaded index object, or FALSE if no such index exists.
  */
 function search_api_index_load($id, $reset = FALSE) {
   $ret = search_api_index_load_multiple(array($id), array(), $reset);
-  return $ret ? reset($ret) : FALSE;
+  return reset($ret);
 }
 
 /**
@@ -2427,12 +2532,12 @@ function search_api_index_insert(array $values) {
 /**
  * Changes an index' settings.
  *
- * @param $id
- *   The edited index' id.
+ * @param int|string $id
+ *   The edited index' ID or machine name.
  * @param array $fields
  *   The new field values to set.
  *
- * @return
+ * @return int|false
  *   1 if fields were changed, 0 if the fields already had the desired values.
  *   FALSE on failure.
  */
@@ -2445,12 +2550,12 @@ function search_api_index_edit($id, array $fields) {
 /**
  * Changes an index' indexed field settings.
  *
- * @param $id
+ * @param int|string $id
  *   The ID or machine name of the index whose fields should be changed.
  * @param array $fields
  *   The new indexed field settings.
  *
- * @return
+ * @return int|false
  *   1 if the field settings were changed, 0 if they already had the desired
  *   values. FALSE on failure.
  */
@@ -2696,8 +2801,18 @@ function _search_api_batch_indexing_callback(SearchApiIndex $index, $batch_size,
   $to_index = min($context['sandbox']['limit'] - $context['sandbox']['progress'], $context['sandbox']['batch_size']);
 
   // Index the items.
-  $indexed = search_api_index_items($index, $to_index);
-  $context['results']['indexed'] += $indexed;
+  try {
+    $indexed = search_api_index_items($index, $to_index);
+    $context['results']['indexed'] += $indexed;
+  }
+  catch (SearchApiException $e) {
+    watchdog_exception('search_api', $e);
+    $vars['@message'] = $e->getMessage();
+    $context['message'] = t('An error occurred during indexing: @message.', $vars);
+    $context['finished'] = 1;
+    $context['results']['not indexed'] += $context['sandbox']['limit'] - $context['sandbox']['progress'];
+    return;
+  }
 
   // Display progress message.
   if ($indexed > 0) {

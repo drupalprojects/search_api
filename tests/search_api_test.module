@@ -23,6 +23,12 @@ function search_api_test_menu() {
       'page arguments' => array(2),
       'access callback' => TRUE,
     ),
+    'search_api_test/delete/%search_api_test' => array(
+      'title' => 'Delete items',
+      'page callback' => 'search_api_test_delete',
+      'page arguments' => array(2),
+      'access callback' => TRUE,
+    ),
   );
 }
 
@@ -85,6 +91,14 @@ function search_api_test_view($entity) {
  */
 function search_api_test_touch($entity) {
   module_invoke_all('entity_update', $entity, 'search_api_test');
+}
+
+/**
+ * Menu callback for marking a "search_api_test" entity as changed.
+ */
+function search_api_test_delete($entity) {
+  db_delete('search_api_test')->condition('id', $entity->id)->execute();
+  module_invoke_all('entity_delete', $entity, 'search_api_test');
 }
 
 /**
@@ -227,6 +241,29 @@ class SearchApiTestService extends SearchApiAbstractService {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function addIndex(SearchApiIndex $index) {
+    $this->checkErrorState();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldsUpdated(SearchApiIndex $index) {
+    $this->checkErrorState();
+    return db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField() > 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function removeIndex($index) {
+    $this->checkErrorState();
+    parent::removeIndex($index);
+  }
+
+  /**
    * Implements SearchApiServiceInterface::indexItems().
    *
    * Indexes items by storing their IDs in the server's options.
@@ -235,6 +272,7 @@ class SearchApiTestService extends SearchApiAbstractService {
    * that ID will not be indexed.
    */
   public function indexItems(SearchApiIndex $index, array $items) {
+    $this->checkErrorState();
     // Refuse to index the item with the same ID as the
     // "search_api_test_indexing_break" variable, if it is set.
     $exclude = variable_get('search_api_test_indexing_break', 8);
@@ -267,6 +305,7 @@ class SearchApiTestService extends SearchApiAbstractService {
    * {@inheritdoc}
    */
   public function deleteItems($ids = 'all', SearchApiIndex $index = NULL) {
+    $this->checkErrorState();
     if ($ids == 'all') {
       if ($index) {
         $this->options['indexes'][$index->machine_name] = array();
@@ -321,10 +360,15 @@ class SearchApiTestService extends SearchApiAbstractService {
   }
 
   /**
-   * {@inheritdoc}
+   * Throws an exception if the "search_api_test_error_state" variable is set.
+   *
+   * @throws SearchApiException
+   *   If the "search_api_test_error_state" variable is set.
    */
-  public function fieldsUpdated(SearchApiIndex $index) {
-    return db_query('SELECT COUNT(*) FROM {search_api_test}')->fetchField() > 0;
+  protected function checkErrorState() {
+    if (variable_get('search_api_test_error_state', FALSE)) {
+      throw new SearchApiException();
+    }
   }
 
 }

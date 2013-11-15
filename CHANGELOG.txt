@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1551302 by drunken monkey: Fixed the server tasks system.
 - #2135363 by drumm, drunken monkey: Added support for Views' use_count_query()
   method.
 - #1390598 by Damien Tournoud, drunken monkey: Added the concept of query filter

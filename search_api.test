@@ -105,6 +105,26 @@ class SearchApiWebTest extends DrupalWebTestCase {
   }
 
   /**
+   * Returns the test server in use by this test case.
+   *
+   * @return SearchApiServer
+   *   The test server.
+   */
+  protected function server() {
+    return search_api_server_load($this->server_id, TRUE);
+  }
+
+  /**
+   * Returns the test index in use by this test case.
+   *
+   * @return SearchApiIndex
+   *   The test index.
+   */
+  protected function index() {
+    return search_api_index_load($this->index_id, TRUE);
+  }
+
+  /**
    * Inserts some test items into the database, via the test module.
    *
    * @param int $number
@@ -170,7 +190,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('The index was successfully created. Please set up its indexed fields now.'), 'The index was successfully created.');
     $found = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $id) !== FALSE;
     $this->assertTrue($found, 'Correct redirect.');
-    $index = search_api_index_load($id, TRUE);
+    $index = $this->index();
     $this->assertEqual($index->name, $values['name'], 'Name correctly inserted.');
     $this->assertEqual($index->item_type, $values['item_type'], 'Index item type correctly inserted.');
     $this->assertFalse($index->enabled, 'Status correctly inserted.');
@@ -285,7 +305,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('The server was successfully created.'));
     $found = strpos($this->getUrl(), 'admin/config/search/search_api/server/' . $id) !== FALSE;
     $this->assertTrue($found, 'Correct redirect.');
-    $server = search_api_server_load($id, TRUE);
+    $server = $this->server();
     $this->assertEqual($server->name, $values['name'], 'Name correctly inserted.');
     $this->assertTrue($server->enabled, 'Status correctly inserted.');
     $this->assertEqual($server->description, $values['description'], 'Description correctly inserted.');
@@ -352,8 +372,8 @@ class SearchApiWebTest extends DrupalWebTestCase {
     // different page requests), the static cache in this page request
     // (executing the tests) will get stale. Therefore, we clear it before
     // executing the search.
-    search_api_index_load($this->index_id, TRUE);
-    search_api_server_load($this->server_id, TRUE);
+    $this->index();
+    $this->server();
 
     $query = search_api_query($this->index_id);
     if ($offset || $limit) {
@@ -414,7 +434,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->checkIndexStatus(10);
 
     // Reset the static cache for the server.
-    search_api_server_load($this->server_id, TRUE);
+    $this->server();
   }
 
   /**
@@ -514,7 +534,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     // count as  indexed for the Search API, but won't be returned in searches.
     // We do this so we have finer-grained control over the order in which items
     // are indexed.
-    search_api_server_load($this->server_id, TRUE)->deleteItems();
+    $this->server()->deleteItems();
     $results = $this->doSearch();
     $this->assertEqual($results['result count'], 0, 'Indexed items were successfully deleted from the server.');
     $this->assertEqual(array_keys($results['results']), array(), 'Indexed items were successfully deleted from the server.');
@@ -577,6 +597,86 @@ class SearchApiWebTest extends DrupalWebTestCase {
   }
 
   /**
+   * Tests whether the server tasks system works correctly.
+   *
+   * Uses the "search_api_test_error_state" variable to trigger exceptions in
+   * the test service class and asserts that the Search API reacts correctly and
+   * re-attempts the operation on the next cron run.
+   */
+  protected function checkServerTasks() {
+    // Make sure none of the previous operations added any tasks.
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 0, 'No server tasks were previously saved.');
+
+    // Set error state for test service, so all operations will fail.
+    variable_set('search_api_test_error_state', TRUE);
+
+    // Delete some items.
+    $this->drupalGet('search_api_test/delete/8');
+    $this->drupalGet('search_api_test/delete/12');
+
+    // Assert that the indexed items haven't changed yet.
+    $results = $this->doSearch();
+    $this->assertEqual(array_keys($results['results']), array(2, 5, 8, 11, 12, 13, 14), 'During error state, no indexed items were deleted.');
+
+    // Check that tasks were correctly inserted.
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 2, 'Server tasks for deleted items were saved.');
+
+    // Now reset the error state variable and run cron to delete the items.
+    variable_set('search_api_test_error_state', FALSE);
+    $this->cronRun();
+
+    // Assert that the indexed items were indeed deleted from the server.
+    $results = $this->doSearch();
+    $this->assertEqual(array_keys($results['results']), array(2, 5, 11, 13, 14), 'Pending "delete item" server tasks were correctly executed during the cron run.');
+
+    // Check that the tasks were correctly deleted.
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 0, 'Server tasks were correctly deleted after being executed.');
+
+    // Now we first delete more items, then disable the server (thereby removing
+    // the index from it) – all while in error state.
+    variable_set('search_api_test_error_state', TRUE);
+    $this->drupalGet('search_api_test/delete/14');
+    $this->drupalGet('search_api_test/delete/2');
+    $settings['enabled'] = 0;
+    $this->drupalPost("admin/config/search/search_api/server/{$this->server_id}/edit", $settings, t('Save settings'));
+
+    // Check whether the index was correctly removed from the server.
+    $this->assertEqual($this->index()->server(), NULL, 'The index was successfully set to have no server.');
+    $exception = FALSE;
+    try {
+      $this->doSearch();
+    }
+    catch (SearchApiException $e) {
+      $exception = TRUE;
+    }
+    $this->assertTrue($exception, 'Searching on the index failed with an exception.');
+
+    // Check that only one task – to remove the index from the server – is now
+    // present in the tasks table.
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 1, 'Only the "remove index" task is present in the server tasks.');
+
+    // Reset the error state variable, re-enable the server.
+    variable_set('search_api_test_error_state', FALSE);
+    $settings['enabled'] = 1;
+    $this->drupalPost("admin/config/search/search_api/server/{$this->server_id}/edit", $settings, t('Save settings'));
+
+    // Check whether the index was really removed from the server now.
+    $server = $this->server();
+    $this->assertTrue(empty($server->options['indexes'][$this->index_id]), 'The index was removed from the server after cron ran.');
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 0, 'Server tasks were correctly deleted after being executed.');
+
+    // Put the index back on the server and index some items for the next tests.
+    $settings = array('server' => $this->server_id);
+    $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}/edit", $settings, t('Save settings'));
+    $this->cronRun();
+  }
+
+  /**
    * Tests whether editing the server works correctly.
    */
   protected function editServer() {
@@ -605,13 +705,26 @@ class SearchApiWebTest extends DrupalWebTestCase {
    * Tests whether deleting the server works correctly.
    *
    * The index still lying on the server should be disabled and removed from it.
+   * Also, any tasks with that server's ID should be deleted.
    */
   protected function deleteServer() {
+    // Insert some dummy tasks to check for.
+    $server = $this->server();
+    search_api_server_tasks_add($server, 'foo');
+    search_api_server_tasks_add($server, 'bar', $this->index());
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 2, 'Dummy tasks were added.');
+
+    // Delete the server.
     $this->drupalPost("admin/config/search/search_api/server/{$this->server_id}/delete", array(), t('Confirm'));
     $this->assertNoText('test-name-foo', 'Server no longer listed.');
     $this->drupalGet("admin/config/search/search_api/index/{$this->index_id}");
     $this->assertNoText(t('Server'), 'The index was removed from the server.');
     $this->assertText(t('disabled'), 'The index was disabled.');
+
+    // Check whether the tasks were correctly deleted.
+    $task_count = db_query('SELECT COUNT(id) FROM {search_api_task}')->fetchField();
+    $this->assertEqual($task_count, 0, 'Remaining server tasks were correctly deleted.');
   }
 
   /**
@@ -635,7 +748,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertFalse(db_table_exists('search_api_server'), 'Search server table was successfully removed.');
     $this->assertFalse(db_table_exists('search_api_index'), 'Search index table was successfully removed.');
     $this->assertFalse(db_table_exists('search_api_item'), 'Index items table was successfully removed.');
-    $this->assertNull(variable_get('search_api_tasks'), 'Tasks variable was correctly removed.');
+    $this->assertFalse(db_table_exists('search_api_task'), 'Server tasks table was successfully removed.');
     $this->assertNull(variable_get('search_api_index_worker_callback_runtime'), 'Worker runtime variable was correctly removed.');
   }
 

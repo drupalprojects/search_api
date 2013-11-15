@@ -611,17 +611,10 @@ function search_api_admin_add_index(array $form, array &$form_state) {
     '#default_value' => '',
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_server_load_multiple(FALSE);
+  $servers = search_api_server_load_multiple(FALSE, array('enabled' => 1));
   // List enabled servers first.
   foreach ($servers as $server) {
-    if ($server->enabled) {
-      $form['server']['#options'][$server->machine_name] = $server->name;
-    }
-  }
-  foreach ($servers as $server) {
-    if (!$server->enabled) {
-      $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
-    }
+    $form['server']['#options'][$server->machine_name] = $server->name;
   }
   $form['read_only'] = array(
     '#type' => 'checkbox',
@@ -678,8 +671,8 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
 
   $values = $form_state['values'];
 
-  // Validation of whether the server of an enabled index is also enabled is
-  // done in the *_insert() function.
+  // Validation of whether the server of an index is enabled is done in the
+  // SearchApiIndex::save() method.
   search_api_index_insert($values);
 
   drupal_set_message(t('The index was successfully created. Please set up its indexed fields now.'));
@@ -966,17 +959,10 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
     '#default_value' => $index->server,
     '#options' => array('' => t('< No server >'))
   );
-  $servers = search_api_server_load_multiple(FALSE);
+  $servers = search_api_server_load_multiple(FALSE, array('enabled' => 1));
   // List enabled servers first.
   foreach ($servers as $server) {
-    if ($server->enabled) {
-      $form['server']['#options'][$server->machine_name] = $server->name;
-    }
-  }
-  foreach ($servers as $server) {
-    if (!$server->enabled) {
-      $form['server']['#options'][$server->machine_name] = t('@server_name (disabled)', array('@server_name' => $server->name));
-    }
+    $form['server']['#options'][$server->machine_name] = $server->name;
   }
   $form['read_only'] = array(
     '#type' => 'checkbox',
@@ -1819,11 +1805,20 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
 }
 
-
 /**
  * Helper function for displaying a generic confirmation form.
  *
- * @return
+ * @param $type
+ *   The type of entity (not the real "entity type"). Either "server" or
+ *   "index".
+ * @param $action
+ *   The action that would be executed for this entity after confirming. Either
+ *   "disable" or "delete".
+ * @param Entity $entity
+ *   The entity for which the action would be performed. Must have a "name"
+ *   property.
+ *
+ * @return array|false
  *   Either a form array, or FALSE if this combination of type and action is
  *   not supported.
  */
@@ -1835,8 +1830,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
           $text = array(
             t('Disable server @name', array('@name' => $entity->name)),
             t('Do you really want to disable this server?'),
-            t('This will disable both the server and all associated indexes. ' .
-                "Searches on these indexes won't be available until they are re-enabled."),
+            t('This will disconnect all indexes from this server and disable them. Searches on these indexes will not be available until they are added to another server and re-enabled. All indexed data (except for read-only indexes) on this server will be cleared.'),
             t('The server and its indexes were successfully disabled.'),
           );
           break;
