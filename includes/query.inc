@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiQueryInterface and SearchApiQuery.
+ */
+
+/**
  * Interface representing a search query on an Search API index.
  *
  * Methods not returning something else will return the object itself, so calls

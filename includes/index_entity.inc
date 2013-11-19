@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiIndex.
+ */
+
+/**
  * Class representing a search index.
  */
 class SearchApiIndex extends Entity {

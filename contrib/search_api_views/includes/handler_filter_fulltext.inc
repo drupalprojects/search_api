@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiViewsHandlerFilterFulltext.
+ */
+
+/**
  * Views filter handler class for handling fulltext fields.
  */
 class SearchApiViewsHandlerFilterFulltext extends SearchApiViewsHandlerFilterText {

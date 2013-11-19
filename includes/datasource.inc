@@ -129,7 +129,7 @@ interface SearchApiDataSourceControllerInterface {
    * items were already present, these should also be set to "changed" and not
    * be inserted again.
    *
-   * @param array $indexes
+   * @param SearchApiIndex[] $indexes
    *   The SearchApiIndex objects for which item tracking should be initialized.
    *
    * @throws SearchApiDataSourceException
@@ -142,7 +142,7 @@ interface SearchApiDataSourceControllerInterface {
    *
    * The tracking tables of the given indexes should be completely cleared.
    *
-   * @param array $indexes
+   * @param SearchApiIndex[] $indexes
    *   The SearchApiIndex objects for which item tracking should be stopped.
    *
    * @throws SearchApiDataSourceException
@@ -155,7 +155,7 @@ interface SearchApiDataSourceControllerInterface {
    *
    * @param array $item_ids
    *   The IDs of new items to track.
-   * @param array $indexes
+   * @param SearchApiIndex[] $indexes
    *   The indexes for which items should be tracked.
    *
    * @throws SearchApiDataSourceException
@@ -172,7 +172,7 @@ interface SearchApiDataSourceControllerInterface {
    * @param array|false $item_ids
    *   Either an array with the IDs of the changed items. Or FALSE to mark all
    *   items as changed for the given indexes.
-   * @param array $indexes
+   * @param SearchApiIndex[] $indexes
    *   The indexes for which the change should be tracked.
    * @param bool $dequeue
    *   (deprecated) If set to TRUE, also change the status of queued items.
@@ -224,7 +224,7 @@ interface SearchApiDataSourceControllerInterface {
    *
    * @param array $item_ids
    *   The IDs of the removed items.
-   * @param array $indexes
+   * @param SearchApiIndex[] $indexes
    *   The indexes for which the deletions should be tracked.
    *
    * @throws SearchApiDataSourceException

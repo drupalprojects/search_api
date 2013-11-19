@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Integrates the Search API with Views.
+ */
+
+/**
  * Implements hook_views_api().
  */
 function search_api_views_views_api() {

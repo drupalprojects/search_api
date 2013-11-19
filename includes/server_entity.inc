@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiServer.
+ */
+
+/**
  * Class representing a search server.
  *
  * This can handle the same calls as defined in the SearchApiServiceInterface

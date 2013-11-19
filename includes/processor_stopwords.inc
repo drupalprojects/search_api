@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiStopWords.
+ */
+
+/**
  * Processor for removing stopwords from index and search terms.
  */
 class SearchApiStopWords extends SearchApiAbstractProcessor {

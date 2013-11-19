@@ -7,6 +7,8 @@
 
 /**
  * Page callback that shows an overview of defined servers and indexes.
+ *
+ * @see search_api_menu()
  */
 function search_api_admin_overview() {
   $base_path = drupal_get_path('module', 'search_api') . '/';
@@ -15,7 +17,8 @@ function search_api_admin_overview() {
 
   $servers = search_api_server_load_multiple(FALSE);
   $indexes = array();
-  // When any entity was not normally created in the database, then show status for all.
+  // When any entity was not normally created in the database, then show status
+  // for all.
   $show_config_status = FALSE;
   foreach (search_api_index_load_multiple(FALSE) as $index) {
     $indexes[$index->server][$index->machine_name] = $index;
@@ -258,15 +261,16 @@ function search_api_admin_add_server(array $form, array &$form_state) {
 }
 
 /**
- * AJAX callback that just returns the "options" array of the already built form
- * array.
+ * Form AJAX handler for search_api_admin_add_server().
+ *
+ * Just returns the "options" array of the already built form array.
  */
 function search_api_admin_add_server_ajax_callback(array $form, array &$form_state) {
   return $form['options'];
 }
 
 /**
- * Form validation callback for adding a server.
+ * Form validation handler for adding a server.
  *
  * Validates the machine name and calls the service class' validation handler.
  */
@@ -297,7 +301,7 @@ function search_api_admin_add_server_validate(array $form, array &$form_state) {
 }
 
 /**
- * Form submit callback for adding a server.
+ * Form submission handler for adding a server.
  */
 function search_api_admin_add_server_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
@@ -338,10 +342,8 @@ function search_api_admin_item_title($object) {
  * @param SearchApiServer $server
  *   The server to display.
  * @param string|null $action
- *   One of 'enable', 'disable', 'delete'; or NULL if the server is only viewed.
- *
- * @return array
- *   A render array for displaying information about a server.
+ *   (optional) An action to execute for the server. One of 'enable', 'disable'
+ *   or 'clear'.
  *
  * @see search_api_menu()
  */
@@ -455,10 +457,15 @@ function theme_search_api_server(array $variables) {
 }
 
 /**
- * Edit a server's settings.
+ * Form constructor for editing a server's settings.
  *
  * @param SearchApiServer $server
  *   The server to edit.
+ *
+ * @ingroup forms
+ *
+ * @see search_api_admin_server_edit_validate()
+ * @see search_api_admin_server_edit_submit()
  */
 function search_api_admin_server_edit(array $form, array &$form_state, SearchApiServer $server) {
   $form_state['server'] = $server;
@@ -512,14 +519,18 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
 }
 
 /**
- * Validation function for search_api_admin_server_edit.
+ * Form validation handler for search_api_admin_server_edit().
+ *
+ * @see search_api_admin_server_edit_submit()
  */
 function search_api_admin_server_edit_validate(array $form, array &$form_state) {
   $form_state['server']->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
 }
 
 /**
- * Submit function for search_api_admin_server_edit.
+ * Form submission handler for search_api_admin_server_edit().
+ *
+ * @see search_api_admin_server_edit_validate()
  */
 function search_api_admin_server_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
@@ -561,7 +572,12 @@ function search_api_admin_form_delete_submit($form, &$form_state) {
 }
 
 /**
- * Form callback showing a form for adding an index.
+ * Form constructor for adding an index.
+ *
+ * @ingroup forms
+ *
+ * @see search_api_admin_add_index_validate()
+ * @see search_api_admin_add_index_submit()
  */
 function search_api_admin_add_index(array $form, array &$form_state) {
   drupal_set_title(t('Add index'));
@@ -648,7 +664,9 @@ function search_api_admin_add_index(array $form, array &$form_state) {
 }
 
 /**
- * Validation callback for search_api_admin_add_index.
+ * Form validation handler for search_api_admin_add_index().
+ *
+ * @see search_api_admin_add_index_submit()
  */
 function search_api_admin_add_index_validate(array $form, array &$form_state) {
   $name = $form_state['values']['machine_name'];
@@ -664,7 +682,9 @@ function search_api_admin_add_index_validate(array $form, array &$form_state) {
 }
 
 /**
- * Submit callback for search_api_admin_add_index.
+ * Form submission handler for search_api_admin_add_index().
+ *
+ * @see search_api_admin_add_index_validate()
  */
 function search_api_admin_add_index_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
@@ -685,8 +705,10 @@ function search_api_admin_add_index_submit(array $form, array &$form_state) {
  * @param SearchApiIndex $index
  *   The index to display.
  * @param string|null $action
- *   (optional) An action to execute for the index. Either "enable" or
- * "disable". For "disable", a confirm dialog will be shown.
+ *   (optional) An action to execute for the index. One of "reindex", "clear",
+ *   "enable" or "disable". For "disable", a confirm dialog will be shown.
+ *
+ * @see search_api_menu()
  */
 function search_api_admin_index_view(SearchApiIndex $index, $action = NULL) {
   if (!empty($action)) {
@@ -865,7 +887,9 @@ function search_api_admin_index_status_form(array $form, array &$form_state, Sea
 }
 
 /**
- * Validation function for search_api_admin_index_status_form.
+ * Form validation handler for search_api_admin_index_status_form().
+ *
+ * @see search_api_admin_index_status_form_submit()
  */
 function search_api_admin_index_status_form_validate(array $form, array &$form_state) {
   if ($form_state['values']['op'] == t('Index now') && !$form_state['values']['limit']) {
@@ -874,7 +898,9 @@ function search_api_admin_index_status_form_validate(array $form, array &$form_s
 }
 
 /**
- * Submit function for search_api_admin_index_status_form.
+ * Form submission handler for search_api_admin_index_status_form().
+ *
+ * @see search_api_admin_index_status_form_validate()
  */
 function search_api_admin_index_status_form_submit(array $form, array &$form_state) {
   $redirect = &$form_state['redirect'];
@@ -923,10 +949,14 @@ function search_api_admin_index_status_form_submit(array $form, array &$form_sta
 }
 
 /**
- * Edit an index' settings.
+ * Form constructor for editing an index's settings.
  *
  * @param SearchApiIndex $index
  *   The index to edit.
+ *
+ * @ingroup forms
+ *
+ * @see search_api_admin_index_edit_submit()
  */
 function search_api_admin_index_edit(array $form, array &$form_state, SearchApiIndex $index) {
   $form_state['index'] = $index;
@@ -1010,7 +1040,7 @@ function search_api_admin_index_edit(array $form, array &$form_state, SearchApiI
 }
 
 /**
- * Submit callback for search_api_admin_index_edit.
+ * Form submission handler for search_api_admin_index_edit().
  */
 function search_api_admin_index_edit_submit(array $form, array &$form_state) {
   form_state_values_clean($form_state);
@@ -1034,8 +1064,13 @@ function search_api_admin_index_edit_submit(array $form, array &$form_state) {
  *
  * @param SearchApiIndex $index
  *   The index to edit.
+ *
+ * @ingroup forms
+ *
+ * @see search_api_admin_index_workflow_validate()
+ * @see search_api_admin_index_workflow_submit()
  */
-// Copied from filter_admin_format_form
+// Copied from filter_admin_format_form()
 function search_api_admin_index_workflow(array $form, array &$form_state, SearchApiIndex $index) {
   $callback_info = search_api_get_alter_callbacks();
   $processor_info = search_api_get_processors();
@@ -1275,7 +1310,9 @@ function theme_search_api_admin_item_order(array $variables) {
 }
 
 /**
- * Validation callback for search_api_admin_index_workflow.
+ * Form validation handler for search_api_admin_index_workflow().
+ *
+ * @see search_api_admin_index_workflow_submit()
  */
 function search_api_admin_index_workflow_validate(array $form, array &$form_state) {
   // Call validation functions.
@@ -1292,7 +1329,9 @@ function search_api_admin_index_workflow_validate(array $form, array &$form_stat
 }
 
 /**
- * Submit callback for search_api_admin_index_workflow.
+ * Form submission handler for search_api_admin_index_workflow().
+ *
+ * @see search_api_admin_index_workflow_validate()
  */
 function search_api_admin_index_workflow_submit(array $form, array &$form_state) {
   $values = $form_state['values'];
@@ -1327,7 +1366,8 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
             $type = $field['type'];
             $inner = search_api_extract_inner_type($type);
             if ($inner != 'token' && empty($types[$inner])) {
-              // Someone apparently added a structure or entity as a property in a data-alter callback.
+              // Someone apparently added a structure or entity as a property in
+              // a data alteration.
               continue;
             }
             if ($inner == 'token' || (search_api_is_text_type($inner) && !empty($field['options list']))) {
@@ -1385,7 +1425,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
 /**
  * Sort callback sorting array elements by their "weight" key, if present.
  *
- * @see element_sort
+ * @see element_sort()
  */
 function search_api_admin_element_compare($a, $b) {
   $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
@@ -1397,10 +1437,11 @@ function search_api_admin_element_compare($a, $b) {
 }
 
 /**
- * Select the indexed fields.
+ * Form constructor for setting the indexed fields.
  *
- * @param SearchApiIndex $index
- *   The index to edit.
+ * @ingroup forms
+ *
+ * @see search_api_admin_index_fields_submit()
  */
 function search_api_admin_index_fields(array $form, array &$form_state, SearchApiIndex $index) {
   $options = $index->getFields(FALSE, TRUE);
@@ -1594,14 +1635,17 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
     $added[$key] = TRUE;
   }
 
-  // Then we walk through all properties and look if they are already contained in one of the arrays.
-  // Since this uses an iterative instead of a recursive approach, it is a bit complicated, with three arrays tracking the current depth.
+  // Then we walk through all properties and look if they are already contained
+  // in one of the arrays. Since this uses an iterative instead of a recursive
+  // approach, it is a bit complicated, with three arrays tracking the current
+  // depth.
 
-  // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
+  // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user
+  // wrapper
   $wrappers = array('' => $wrapper);
   // Display names for the prefixes
   $prefix_names = array('' => '');
-    // The list nesting level for entities with a certain prefix
+  // The list nesting level for entities with a certain prefix
   $nesting_levels = array('' => 0);
 
   $types = search_api_default_field_types();
@@ -1627,7 +1671,8 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
         // We hide the complexity of multi-valued types from the user here.
         $type = search_api_extract_inner_type($info['type']);
         // Treat Entity API type "token" as our "string" type.
-        // Also let text fields with limited options be of type "string" by default.
+        // Also let text fields with limited options be of type "string" by
+        // default.
         if ($type == 'token' || ($type == 'text' && !empty($info['options list']))) {
           // Inner type is changed to "string".
           $type = 'string';
@@ -1742,7 +1787,7 @@ function theme_search_api_admin_fields_table($variables) {
 }
 
 /**
- * Submit function for search_api_admin_index_fields.
+ * Form submission handler for search_api_admin_index_fields().
  */
 function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $index = $form_state['index'];
@@ -1806,14 +1851,14 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
 }
 
 /**
- * Helper function for displaying a generic confirmation form.
+ * Form constructor for a generic confirmation form.
  *
  * @param $type
  *   The type of entity (not the real "entity type"). Either "server" or
  *   "index".
  * @param $action
- *   The action that would be executed for this entity after confirming. Either
- *   "disable" or "delete".
+ *   The action that would be executed for this entity after confirming. One of
+ *   "reindex" ("index" type only), "clear", "disable" or "delete".
  * @param Entity $entity
  *   The entity for which the action would be performed. Must have a "name"
  *   property.

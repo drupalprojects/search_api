@@ -1050,9 +1050,9 @@ function search_api_search_api_processor_info() {
 /**
  * Inserts new unindexed items for all indexes on the specified type.
  *
- * @param $type
+ * @param string $type
  *   The item type of the new items.
- * @param array $item_id
+ * @param array $item_ids
  *   The IDs of the new items.
  */
 function search_api_track_item_insert($type, array $item_ids) {
@@ -1328,7 +1328,7 @@ function search_api_server_tasks_delete(array $ids = NULL, SearchApiServer $serv
  * index and, if a discrepancy is spotted, re-save that index with updated
  * fields options (thus, of course, also triggering a re-indexing operation).
  *
- * @param array|false $indexes
+ * @param SearchApiIndex[]|false $indexes
  *   An array of SearchApiIndex objects on which to perform the operation, or
  *   FALSE to perform it on all indexes.
  */
@@ -1978,17 +1978,20 @@ function _search_api_query_add_node_access($account, SearchApiQueryInterface $qu
 }
 
 /**
- * Utility function for determining whether a field of the given type contains
- * text data.
+ * Determines whether a field of the given type contains text data.
  *
- * @param $type
- *   A string containing the type to check.
+ * Can also be used to find other types.
+ *
+ * @param string $type
+ *   The type for which to check.
  * @param array $allowed
  *   Optionally, an array of allowed types.
  *
  * @return
  *   TRUE if $type is either one of the specified types, or a list of such
  *   values. FALSE otherwise.
+ *
+ * @see search_api_extract_inner_type()
  */
 function search_api_is_text_type($type, array $allowed = array('text')) {
   return array_search(search_api_extract_inner_type($type), $allowed) !== FALSE;
@@ -2270,7 +2273,7 @@ function search_api_server_load($id, $reset = FALSE) {
  * @param bool $reset
  *   Whether to reset the internal entity_load cache.
  *
- * @return array
+ * @return SearchApiServer[]
  *   An array of server objects keyed by machine name.
  */
 function search_api_server_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
@@ -2443,7 +2446,7 @@ function search_api_index_load($id, $reset = FALSE) {
  * @param bool $reset
  *   Whether to reset the internal entity_load cache.
  *
- * @return array
+ * @return SearchApiIndex[]
  *   An array of index objects keyed by machine name.
  */
 function search_api_index_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
@@ -2730,18 +2733,21 @@ function _search_api_convert_custom_type($callback, $value, $original_type, $typ
 }
 
 /**
- * Create and set a batch for indexing items.
+ * Creates and sets a batch for indexing items.
  *
  * @param SearchApiIndex $index
  *   The index for which items should be indexed.
- * @param $batch_size
+ * @param int $batch_size
  *   Number of items to index per batch.
- * @param $limit
- *   Maximum number of items to index.
- * @param $remaining
+ * @param int $limit
+ *   Maximum number of items to index. Negative values mean "no limit".
+ * @param int $remaining
  *   Remaining items to index.
- * @param $drush
+ * @param bool $drush
  *   Boolean specifying whether this was called from drush or not.
+ *
+ * @return bool
+ *   Whether the batch was created and set successfully.
  */
 function _search_api_batch_indexing_create(SearchApiIndex $index, $batch_size, $limit, $remaining, $drush = FALSE) {
   if ($limit !== 0 && $batch_size !== 0) {

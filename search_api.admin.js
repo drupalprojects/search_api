@@ -1,10 +1,14 @@
+/**
+ * @file
+ * Javascript enhancements for the Search API admin pages.
+ */
 
-// Copied from filter.admin.js
 (function ($) {
 
 /**
  * Allows the re-ordering of enabled data alterations and processors.
  */
+// Copied from filter.admin.js
 Drupal.behaviors.searchApiStatus = {
   attach: function (context, settings) {
     $('.search-api-status-wrapper input.form-checkbox', context).once('search-api-status', function () {

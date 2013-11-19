@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Test functions and classes for testing the Search API.
+ */
+
+/**
  * Implements hook_menu().
  */
 function search_api_test_menu() {

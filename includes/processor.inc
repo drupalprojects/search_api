@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains SearchApiProcessorInterface and SearchApiAbstractProcessor.
+ */
+
+/**
  * Interface representing a Search API pre- and/or post-processor.
  *
  * While processors are enabled or disabled for both pre- and postprocessing at
