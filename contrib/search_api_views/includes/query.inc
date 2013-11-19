@@ -246,7 +246,7 @@ class SearchApiViewsQuery extends views_plugin_query {
     // Initialize the pager and let it modify the query to add limits.
     $view->init_pager();
     $this->pager->query();
-    $this->query->setOption('skip result count', $this->pager->use_count_query());
+    $this->query->setOption('skip result count', !$this->pager->use_count_query());
 
     // Views passes sometimes NULL and sometimes the integer 0 for "All" in a
     // pager. If set to 0 items, a string "0" is passed. Therefore, we unset
