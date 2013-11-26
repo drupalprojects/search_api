@@ -25,7 +25,7 @@ function search_api_views_update_7101() {
   if (!$table_fields) {
     return;
   }
-  foreach (views_get_all_views() as $name => $view) {
+  foreach (views_get_all_views() as $view) {
     if (empty($view->base_table) || empty($table_fields[$view->base_table])) {
       continue;
     }
@@ -33,7 +33,7 @@ function search_api_views_update_7101() {
     $fields = $table_fields[$view->base_table];
     $change |= _search_api_views_update_7101_helper($view->base_field, $fields);
     if (!empty($view->display)) {
-      foreach ($view->display as $key => &$display) {
+      foreach ($view->display as &$display) {
         $options = &$display->display_options;
         if (isset($options['style_options']['grouping'])) {
           $change |= _search_api_views_update_7101_helper($options['style_options']['grouping'], $fields);

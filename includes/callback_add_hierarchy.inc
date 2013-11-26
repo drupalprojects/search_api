@@ -59,7 +59,7 @@ class SearchApiAlterAddHierarchy extends SearchApiAbstractAlterCallback {
       $fields = &$this->index->options['fields'];
       $previous = drupal_map_assoc($this->options['fields']);
       foreach ($values['fields'] as $field) {
-        list($key, $prop) = explode(':', $field);
+        list($key) = explode(':', $field);
         if (empty($previous[$field]) && isset($fields[$key]['type'])) {
           $fields[$key]['type'] = 'list<' . search_api_extract_inner_type($fields[$key]['type']) . '>';
           $change = TRUE;
@@ -67,7 +67,7 @@ class SearchApiAlterAddHierarchy extends SearchApiAbstractAlterCallback {
       }
       $new = drupal_map_assoc($values['fields']);
       foreach ($previous as $field) {
-        list($key, $prop) = explode(':', $field);
+        list($key) = explode(':', $field);
         if (empty($new[$field]) && isset($fields[$key]['type'])) {
           $w = $this->index->entityWrapper(NULL, FALSE);
           if (isset($w->$key)) {

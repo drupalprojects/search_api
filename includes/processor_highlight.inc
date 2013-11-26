@@ -166,10 +166,10 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
   protected function getFulltextFields(array &$results, $i, $load = TRUE) {
     global $language;
     $data = array();
-    // Act as if $load is TRUE if we have a loaded item.
-    $load |= !empty($result['entity']);
 
     $result = &$results[$i];
+    // Act as if $load is TRUE if we have a loaded item.
+    $load |= !empty($result['entity']);
     $result += array('fields' => array());
     $fulltext_fields = $this->index->getFulltextFields();
     // We only need detailed fields data if $load is TRUE.
@@ -294,7 +294,6 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
     // If the sum of all fragments is too short, we look for second occurrences.
     $ranges = array();
     $included = array();
-    $foundkeys = array();
     $length = 0;
     $workkeys = $keys;
     while ($length < $this->options['excerpt_length'] && count($workkeys)) {

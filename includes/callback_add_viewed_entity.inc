@@ -69,7 +69,7 @@ class SearchApiAlterAddViewedEntity extends SearchApiAbstractAlterCallback {
 
     $type = $this->index->getEntityType();
     $mode = empty($this->options['mode']) ? 'full' : $this->options['mode'];
-    foreach ($items as $id => &$item) {
+    foreach ($items as &$item) {
       // Since we can't really know what happens in entity_view() and render(),
       // we use try/catch. This will at least prevent some errors, even though
       // it's no protection against fatal errors and the like.

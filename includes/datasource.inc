@@ -507,7 +507,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     // will mostly be called with only one index.
     foreach ($indexes as $index) {
       $this->checkIndex($index);
-      $query = db_delete($this->table)
+      db_delete($this->table)
         ->condition($this->indexIdColumn, $index->id)
         ->execute();
     }

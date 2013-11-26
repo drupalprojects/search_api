@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2134509 by kscheirer, drunken monkey: Removed unused variables and
+  parameters.
 - #2136019 by drunken monkey: Fixed mapping callback for taxonomy term facets.
 - #2128001 by drunken monkey: Fixed the logic of the "contains none of these
   words" fulltext operator.

@@ -144,7 +144,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
       // I suspect that http://drupal.org/node/593658 would help.
       // For now, just taking the first current search for this index. :-/
       foreach (search_api_current_search() as $search) {
-        list($query, $results) = $search;
+        list($query) = $search;
         if ($query->getIndex()->machine_name == $index_id) {
           $this->current_search = $search;
         }

@@ -651,7 +651,7 @@ function search_api_update_7106() {
       $callbacks['search_api_alter_add_aggregation'] = $callbacks['search_api_alter_add_fulltext'];
       unset($callbacks['search_api_alter_add_fulltext']);
       if (!empty($callbacks['search_api_alter_add_aggregation']['settings']['fields'])) {
-        foreach ($callbacks['search_api_alter_add_aggregation']['settings']['fields'] as $field => &$info) {
+        foreach ($callbacks['search_api_alter_add_aggregation']['settings']['fields'] as &$info) {
           if (!isset($info['type'])) {
             $info['type'] = 'fulltext';
           }

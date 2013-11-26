@@ -1340,7 +1340,6 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   $index = $form_state['index'];
 
   $options = empty($index->options) ? array() : $index->options;
-  $fields_set = !empty($options['fields']);
 
   // Store callback and processor settings.
   foreach ($form_state['callbacks'] as $name => $callback) {
