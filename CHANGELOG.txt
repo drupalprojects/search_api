@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2143659 by khiminrm: Fixed typo in update function 7116.
 - #2134509 by kscheirer, drunken monkey: Removed unused variables and
   parameters.
 - #2136019 by drunken monkey: Fixed mapping callback for taxonomy term facets.

@@ -942,7 +942,7 @@ function search_api_update_7116() {
   foreach ($select->execute() as $index) {
     $index_ids[] = $index->machine_name;
     $tasks[] = array(
-      'server_id' => $$index->server,
+      'server_id' => $index->server,
       'type' => 'removeIndex',
       'index_id' => $index->machine_name,
     );
