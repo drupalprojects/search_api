@@ -2785,10 +2785,10 @@ function _search_api_batch_indexing_create(SearchApiIndex $index, $batch_size, $
  *   Maximum number of items to index.
  * @param boolean $drush
  *   Boolean specifying whether this was called from drush or not.
- * @param array $context
- *   The batch context.
+ * @param $context
+ *   An array (or object implementing ArrayAccess) containing the batch context.
  */
-function _search_api_batch_indexing_callback(SearchApiIndex $index, $batch_size, $limit, $drush = FALSE, array &$context) {
+function _search_api_batch_indexing_callback(SearchApiIndex $index, $batch_size, $limit, $drush = FALSE, &$context) {
   // Persistent data among batch runs.
   if (!isset($context['sandbox']['limit'])) {
     $context['sandbox']['limit'] = $limit;
