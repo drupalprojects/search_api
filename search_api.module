@@ -801,13 +801,11 @@ function search_api_system_info_alter(&$info, $file, $type) {
 /**
  * Implements hook_entity_insert().
  *
- * Marks the new item as to-index for all indexes on entities of the specified
- * type.
+ * This is implemented on behalf of the SearchApiEntityDataSourceController
+ * datasource controller and calls search_api_track_item_insert() for the
+ * inserted items.
  *
- * @param $entity
- *   The new entity.
- * @param $type
- *   The entity's type.
+ * @see search_api_search_api_item_type_info()
  */
 function search_api_entity_insert($entity, $type) {
   // When inserting a new search index, the new index was already inserted into
@@ -827,12 +825,11 @@ function search_api_entity_insert($entity, $type) {
 /**
  * Implements hook_entity_update().
  *
- * Marks the item as changed for all indexes on entities of the specified type.
+ * This is implemented on behalf of the SearchApiEntityDataSourceController
+ * datasource controller and calls search_api_track_item_change() for the
+ * updated items.
  *
- * @param $entity
- *   The updated entity.
- * @param $type
- *   The entity's type.
+ * @see search_api_search_api_item_type_info()
  */
 function search_api_entity_update($entity, $type) {
   // We only react on entity operations for types with property information, as
@@ -849,12 +846,11 @@ function search_api_entity_update($entity, $type) {
 /**
  * Implements hook_entity_delete().
  *
- * Removes the item from the tracking table and deletes it from all indexes.
+ * This is implemented on behalf of the SearchApiEntityDataSourceController
+ * datasource controller and calls search_api_track_item_delete() for the
+ * deleted items.
  *
- * @param $entity
- *   The updated entity.
- * @param $type
- *   The entity's type.
+ * @see search_api_search_api_item_type_info()
  */
 function search_api_entity_delete($entity, $type) {
   // We only react on entity operations for types with property information, as
