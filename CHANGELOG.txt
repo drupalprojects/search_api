@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1925114 by azinck: Fixed Views Facet Block integration with Panels.
 - #2139215 by drunken monkey: Fixed $context parameter of batch callback.
 - #2143659 by khiminrm: Fixed typo in update function 7116.
 - #2134509 by kscheirer, drunken monkey: Removed unused variables and
