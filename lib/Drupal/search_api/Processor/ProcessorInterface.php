@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Procesor\ProcessorInterface.
+ * Contains \Drupal\search_api\Processor\ProcessorInterface.
  */
 
 namespace Drupal\search_api\Processor;
