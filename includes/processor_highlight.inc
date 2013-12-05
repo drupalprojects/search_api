@@ -395,8 +395,8 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
    */
   protected function highlightField($text, array $keys) {
     $replace = $this->options['prefix'] . '\0' . $this->options['suffix'];
-    $text = preg_replace('/' . self::$boundary . '(' . implode('|', $keys) . ')' . self::$boundary . '/iu', $replace, ' ' . $text);
-    return substr($text, 1);
+    $text = preg_replace('/' . self::$boundary . '(' . implode('|', $keys) . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
+    return substr($text, 1, -1);
   }
 
 }
