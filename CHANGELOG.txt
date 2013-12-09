@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2100671 by drunken monkey: Fixed stopwords processor to ignore missing
+  stopwords.
 - #2139239 by drunken monkey: Fixed highlighting for the last word of a field.
 - #1925114 by azinck: Fixed Views Facet Block integration with Panels.
 - #2139215 by drunken monkey: Fixed $context parameter of batch callback.
