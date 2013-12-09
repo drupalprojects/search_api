@@ -59,7 +59,6 @@ function search_api_menu() {
   $items[$pre . '/server/%search_api_server/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
     'weight' => -10,
   );
   $items[$pre . '/server/%search_api_server/edit'] = array(
@@ -112,7 +111,6 @@ function search_api_menu() {
   $items[$pre . '/index/%search_api_index/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE | MENU_CONTEXT_PAGE,
     'weight' => -10,
   );
   $items[$pre . '/index/%search_api_index/edit'] = array(
@@ -183,6 +181,20 @@ function search_api_menu() {
  */
 function search_api_help($path) {
   switch ($path) {
+    case 'admin/help#search_api':
+      $classes = array();
+      foreach (search_api_get_service_info() as $id => $info) {
+        $id = drupal_clean_css_identifier($id);
+        $name = check_plain($info['name']);
+        $description = isset($info['description']) ? $info['description'] : '';
+        $classes[] = "<h2 id=\"$id\">$name</h2>\n$description";
+      }
+      $output = '';
+      if ($classes) {
+        $output .= '<p>' . t('The following service classes are available for creating a search server.') . "</p>\n";
+        $output .= implode("\n\n", $classes);
+      }
+      return $output;
     case 'admin/config/search/search_api':
       return '<p>' . t('A search server and search index are used to execute searches. Several indexes can exist per server.<br />You need at least one server and one index to create searches on your site.') . '</p>';
   }
@@ -243,8 +255,29 @@ function search_api_theme() {
       'enabled' => NULL,
       'class_name' => NULL,
       'class_description' => NULL,
+      'indexes' => array(),
       'options' => array(),
       'status' => ENTITY_CUSTOM,
+      'extra' => array(),
+    ),
+    'file' => 'search_api.admin.inc',
+  );
+  $themes['search_api_index'] = array(
+    'variables' => array(
+      'id' => NULL,
+      'name' => '',
+      'machine_name' => '',
+      'description' => NULL,
+      'item_type' => NULL,
+      'enabled' => NULL,
+      'server' => NULL,
+      'options' => array(),
+      'fields' => array(),
+      'indexed_items' => 0,
+      'on_server' => 0,
+      'total_items' => 0,
+      'status' => ENTITY_CUSTOM,
+      'read_only' => 0,
     ),
     'file' => 'search_api.admin.inc',
   );
@@ -2398,6 +2431,30 @@ function search_api_server_disable($id) {
 }
 
 /**
+ * Clears a search server.
+ *
+ * Will delete all items stored on the server and mark all associated indexes
+ * for re-indexing.
+ *
+ * @param int|string $id
+ *   The ID or machine name of the server to clear.
+ *
+ * @return bool
+ *   TRUE on success, FALSE on failure.
+ */
+function search_api_server_clear($id) {
+  $server = search_api_server_load($id);
+  $success = TRUE;
+  foreach (search_api_index_load_multiple(FALSE, array('server' => $server->machine_name)) as $index) {
+    $success &= $index->reindex();
+  }
+  if ($success) {
+    $server->deleteItems();
+  }
+  return $success;
+}
+
+/**
  * Deletes a search server and disables all associated indexes.
  *
  * @param $id
@@ -2726,6 +2783,63 @@ function _search_api_convert_custom_type($callback, $value, $original_type, $typ
     }
   }
   return $values;
+}
+
+/**
+ * Determines the number of items indexed on a server for a certain index.
+ *
+ * Used as a helper function in search_api_admin_index_view().
+ *
+ * @param SearchApiIndex $index
+ *   The index
+ *
+ * @return int
+ *   The number of items found on the server for this index, if the latter is
+ *   enabled. 0 otherwise.
+ */
+function _search_api_get_items_on_server(SearchApiIndex $index) {
+  if (!$index->enabled) {
+    return 0;
+  }
+  // We want the raw count, without facets or other filters. Therefore we don't
+  // use the query's execute() method but pass it straight to the server for
+  // evaluation. Since this circumvents the normal preprocessing, which sets the
+  // fields (on which some service classes might even rely when there are no
+  // keywords), we set them manually here.
+  $query = $index->query()
+    ->fields(array())
+    ->range(0, 0);
+  $response = $index->server()->search($query);
+  return $response['result count'];
+}
+
+/**
+ * Returns a deep copy of the input array.
+ *
+ * The behavior of PHP regarding arrays with references pointing to it is rather
+ * weird. Therefore, we use this helper function in theme_search_api_index() to
+ * create safe copies of such arrays.
+ *
+ * @param array $array
+ *   The array to copy.
+ *
+ * @return array
+ *   A deep copy of the array.
+ */
+function _search_api_deep_copy(array $array) {
+  $copy = array();
+  foreach ($array as $k => $v) {
+    if (is_array($v)) {
+      $copy[$k] = _search_api_deep_copy($v);
+    }
+    elseif (is_object($v)) {
+      $copy[$k] = clone $v;
+    }
+    elseif ($v) {
+      $copy[$k] = $v;
+    }
+  }
+  return $copy;
 }
 
 /**

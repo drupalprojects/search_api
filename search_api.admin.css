@@ -16,9 +16,33 @@
 }
 
 /*
+ * VIEW SERVER
+ */
+
+.search-api-server-summary ul.inline {
+  margin: 0;
+}
+
+.search-api-server-summary ul.inline li {
+  padding-left: 0;
+}
+
+/*
+ * VIEW INDEX
+ */
+.search-api-limit,
+.search-api-batch-size {
+  text-align: center;
+}
+
+.search-api-index-status .progress .filled {
+  background: #0074BD none;
+}
+
+/*
  * DROPBUTTONS
  *
- * (Largely copied from D8's dropbutton.css.
+ * (Largely copied from D8's dropbutton.css.)
  */
 
 /**

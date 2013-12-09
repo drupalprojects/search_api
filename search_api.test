@@ -314,7 +314,6 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertTitle('Search API test server | Drupal', 'Correct title when viewing server.');
     $this->assertText('A server used for testing.', 'Description displayed.');
     $this->assertText('search_api_test_service', 'Service name displayed.');
-    $this->assertText('search_api_test_service description', 'Service description displayed.');
     $this->assertText('search_api_test foo bar', 'Service options displayed.');
   }
 
@@ -453,29 +452,40 @@ class SearchApiWebTest extends DrupalWebTestCase {
    * @param bool $check_buttons
    *   (optional) Whether to check for the correct presence/absence of buttons.
    *   Defaults to TRUE.
+   * @param int|null $on_server
+   *   (optional) The number of items actually on the server. Defaults to
+   *   $indexed.
    */
-  protected function checkIndexStatus($indexed = 0, $total = 10, $check_buttons = TRUE) {
+  protected function checkIndexStatus($indexed = 0, $total = 10, $check_buttons = TRUE, $on_server = NULL) {
     $url = "admin/config/search/search_api/index/{$this->index_id}";
     if (strpos($this->url, $url) === FALSE) {
       $this->drupalGet($url);
     }
-    $all = ($indexed == $total);
-    $correct_status = 'Correct index status displayed.';
-    if ($all) {
-      $this->assertText(t('All items have been indexed (@total / @total).', array('@total' => $total)), $correct_status);
+
+    $index_status = t('@indexed/@total indexed', array('@indexed' => $indexed, '@total' => $total));
+    $this->assertText($index_status, 'Correct index status displayed.');
+
+    if (!isset($on_server)) {
+      $on_server = $indexed;
     }
-    elseif (!$indexed) {
-      $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => $total)), $correct_status);
+    if ($on_server == $total) {
+      $this->assertNoText(t('Server index status'), 'No server index status displayed.');
     }
     else {
-      $percentage = (int) (100 * $indexed / $total);
-      $text = t('About @percentage% of all items have been indexed in their latest version (@indexed / @total).',
-        array(
-          '@indexed' => $indexed,
-          '@total' => $total,
-          '@percentage' => $percentage
-        ));
-      $this->assertText($text, $correct_status);
+      $vars['@num'] = $on_server;
+      if ($on_server < $indexed) {
+        $vars['@diff'] = $indexed - $on_server;
+        $info = t('The index status on the search server has diverged (@num items indexed – @diff less than required). You are strongly advised to mark the index for re-indexing using the form below.', $vars);
+      }
+      elseif ($on_server > $total) {
+        $vars['@diff'] = $on_server - $total;
+        $info = t('The index status on the search server has diverged (@num items indexed – @diff more than present). You are strongly advised to clear the index using the form below.', $vars);
+      }
+      else {
+        $info = format_plural($on_server, 'There is 1 item indexed on the server for this index.', 'There are @count items indexed on the server for this index.');
+      }
+      $this->assertText(t('Server index status'), 'Server index status displayed.');
+      $this->assertText($info, 'Correct server index status displayed.');
     }
 
     if (!$check_buttons) {
@@ -483,11 +493,11 @@ class SearchApiWebTest extends DrupalWebTestCase {
     }
 
     $this->assertText(t('enabled'), '"Enabled" status displayed.');
-    if ($all) {
-      $this->assertNoText(t('Index now'), '"Index now" form not displayed.');
+    if ($indexed == $total) {
+      $this->assertRaw('disabled="disabled"', '"Index now" form disabled.');
     }
     else {
-      $this->assertText(t('Index now'), '"Index now" form displayed.');
+      $this->assertNoRaw('disabled="disabled"', '"Index now" form enabled.');
     }
   }
 
@@ -554,7 +564,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->insertItems(1); // item 14
 
     // Check whether the status display is right.
-    $this->checkIndexStatus(7, 14, FALSE);
+    $this->checkIndexStatus(7, 14, FALSE, 0);
 
     // Indexing order should now be: 11, 12, 13, 14, 8, 2, 4. Let's try it out!
     // First manually index one item, and see if it's 11.
@@ -565,7 +575,7 @@ class SearchApiWebTest extends DrupalWebTestCase {
     $this->assertText(t('Successfully indexed @count item.', array('@count' => 1)));
     $this->assertNoText(t("Some items couldn't be indexed. Check the logs for details."), "Index errors warning isn't displayed.");
     $this->assertNoText(t("Couldn't index items. Check the logs for details."), "Index error isn't displayed.");
-    $this->checkIndexStatus(8, 14, FALSE);
+    $this->checkIndexStatus(8, 14, FALSE, 1);
 
     $results = $this->doSearch();
     $this->assertEqual($results['result count'], 1, 'Indexing order test 1: correct result count.');
@@ -696,9 +706,10 @@ class SearchApiWebTest extends DrupalWebTestCase {
    * Tests whether clearing the index works correctly.
    */
   protected function clearIndex() {
-    $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}", array('reindex[clear]' => TRUE), t('Re-index content'));
+    $this->drupalPost("admin/config/search/search_api/index/{$this->index_id}", array(), t('Clear all indexed data'));
+    $this->drupalPost(NULL, array(), t('Confirm'));
     $this->assertText(t('The index was successfully cleared.'));
-    $this->assertText(t('All items still need to be indexed (@total total).', array('@total' => 14)), 'Correct index status displayed.');
+    $this->assertText(t('@indexed/@total indexed', array('@indexed' => 0, '@total' => 14)), 'Correct index status displayed.');
   }
 
   /**

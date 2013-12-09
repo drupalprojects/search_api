@@ -374,4 +374,23 @@ class SearchApiServer extends Entity {
     return $this->proxy->search($query);
   }
 
+  /**
+   * Retrieves additional information for the server, if available.
+   *
+   * Retrieving such information is only supported if the service class supports
+   * the "search_api_service_extra" feature.
+   *
+   * @return array
+   *   An array containing additional, service class-specific information about
+   *   the server.
+   *
+   * @see SearchApiAbstractService::getExtraInformation()
+   */
+  public function getExtraInformation() {
+    if ($this->proxy->supportsFeature('search_api_service_extra')) {
+      return $this->proxy->getExtraInformation();
+    }
+    return array();
+  }
+
 }
