@@ -1,3 +1,6 @@
+Search API 1.x, dev (xx/xx/xxxx):
+---------------------------------
+
 Search API 1.10 (12/09/2013):
 -----------------------------
 - #2130819 by drunken monkey, Bojhan: Added UI improvements for the "View" tabs.
