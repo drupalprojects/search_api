@@ -1,5 +1,5 @@
-Search API 1.x, dev (xx/xx/xxxx):
----------------------------------
+Search API 1.10 (12/09/2013):
+-----------------------------
 - #2130819 by drunken monkey, Bojhan: Added UI improvements for the "View" tabs.
 - #2152327 by sirtet, miro_dietiker: Fixed typo in help text for drush sapi-c.
 - #2144531 by drunken monkey: Fixed cloning of queries to clone filters, too.
