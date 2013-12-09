@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2144531 by drunken monkey: Fixed cloning of queries to clone filters, too.
 - #2100671 by drunken monkey: Fixed stopwords processor to ignore missing
   stopwords.
 - #2139239 by drunken monkey: Fixed highlighting for the last word of a field.

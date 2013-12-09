@@ -804,6 +804,13 @@ class SearchApiQuery implements SearchApiQueryInterface {
     }
   }
 
+  /**
+   * Implements the magic __clone() method to clone the filter, too.
+   */
+  public function __clone() {
+    $this->filter = clone $this->filter;
+  }
+
 }
 
 /**
@@ -990,6 +997,17 @@ class SearchApiQueryFilter implements SearchApiQueryFilterInterface {
    */
   public function &getTags() {
     return $this->tags;
+  }
+
+  /**
+   * Implements the magic __clone() method to clone nested filters, too.
+   */
+  public function __clone() {
+    foreach ($this->filters as $i => $filter) {
+      if (is_object($filter)) {
+        $this->filters[$i] = clone $filter;
+      }
+    }
   }
 
 }
