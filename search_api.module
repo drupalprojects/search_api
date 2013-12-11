@@ -253,6 +253,7 @@ function search_api_theme() {
       'machine_name' => '',
       'description' => NULL,
       'enabled' => NULL,
+      'class_id' => NULL,
       'class_name' => NULL,
       'class_description' => NULL,
       'indexes' => array(),
