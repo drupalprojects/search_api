@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2156021 by jgullstr: Fixed confirm message when disabling servers.
 - #2146435 by timkang: Fixed Views paging with custom pager add-ons.
 - #2150347 by drunken monkey: Added access callbacks for indexes and servers.
 

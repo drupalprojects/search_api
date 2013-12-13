@@ -2104,7 +2104,7 @@ function search_api_admin_confirm(array $form, array &$form_state, $type, $actio
           break;
 
         case 'disable':
-          array(
+          $text = array(
             t('Disable server @name', array('@name' => $entity->name)),
             t('Do you really want to disable this server?'),
             t('This will disconnect all indexes from this server and disable them. Searches on these indexes will not be available until they are added to another server and re-enabled. All indexed data (except for read-only indexes) on this server will be cleared.'),
