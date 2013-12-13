@@ -392,6 +392,7 @@ function search_api_entity_info() {
     'entity class' => 'SearchApiServer',
     'base table' => 'search_api_server',
     'uri callback' => 'search_api_server_url',
+    'access callback' => 'search_api_entity_access',
     'module' => 'search_api',
     'exportable' => TRUE,
     'entity keys' => array(
@@ -407,6 +408,7 @@ function search_api_entity_info() {
     'entity class' => 'SearchApiIndex',
     'base table' => 'search_api_index',
     'uri callback' => 'search_api_index_url',
+    'access callback' => 'search_api_entity_access',
     'module' => 'search_api',
     'exportable' => TRUE,
     'entity keys' => array(
@@ -2360,6 +2362,15 @@ function search_api_access_disable_page(Entity $entity) {
  */
 function search_api_access_delete_page(Entity $entity) {
   return user_access('administer search_api') && $entity->hasStatus(ENTITY_CUSTOM);
+}
+
+/**
+ * Determines whether a user can access a certain search server or index.
+ *
+ * Used as an access callback in search_api_entity_info().
+ */
+function search_api_entity_access() {
+  return user_access('administer search_api');
 }
 
 /**
