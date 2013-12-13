@@ -248,16 +248,6 @@ class SearchApiViewsQuery extends views_plugin_query {
     $this->pager->query();
     $this->query->setOption('skip result count', !$this->pager->use_count_query());
 
-    // Views passes sometimes NULL and sometimes the integer 0 for "All" in a
-    // pager. If set to 0 items, a string "0" is passed. Therefore, we unset
-    // the limit if an empty value OTHER than a string "0" was passed.
-    if (!$this->limit && $this->limit !== '0') {
-      $this->limit = NULL;
-    }
-    // Set the range. (We always set this, as there might even be an offset if
-    // all items are shown.)
-    $this->query->range($this->offset, $this->limit);
-
     // Set the search ID, if it was not already set.
     if ($this->query->getOption('search id') == get_class($this->query)) {
       $this->query->setOption('search id', 'search_api_views:' . $view->name . ':' . $view->current_display);
@@ -306,6 +296,16 @@ class SearchApiViewsQuery extends views_plugin_query {
     try {
       // Trigger pager pre_execute().
       $this->pager->pre_execute($this->query);
+
+      // Views passes sometimes NULL and sometimes the integer 0 for "All" in a
+      // pager. If set to 0 items, a string "0" is passed. Therefore, we unset
+      // the limit if an empty value OTHER than a string "0" was passed.
+      if (!$this->limit && $this->limit !== '0') {
+        $this->limit = NULL;
+      }
+      // Set the range. (We always set this, as there might even be an offset if
+      // all items are shown.)
+      $this->query->range($this->offset, $this->limit);
 
       $start = microtime(TRUE);
 
