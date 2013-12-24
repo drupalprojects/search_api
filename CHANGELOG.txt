@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2159011 by idebr, drunken monkey: Fixed highlighting of keywords with PCRE
+  special characters.
 - #2155721 by rjacobs, drunken monkey: Added support for Views' get_total_rows
   property.
 - #2158873 by drumm, drunken monkey: Fixed "all of" operator of Views entity
