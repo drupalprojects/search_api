@@ -1921,7 +1921,7 @@ function search_api_search_api_query_alter(SearchApiQueryInterface $query) {
   // Only add node access if the necessary fields are indexed in the index, and
   // unless disabled explicitly by the query.
   $type = $index->getEntityType();
-  if (!empty($index->options['data_alter_callbacks']["search_api_alter_{$type}_access"]) && !$query->getOption('search_api_bypass_access')) {
+  if (!empty($index->options['data_alter_callbacks']["search_api_alter_{$type}_access"]['status']) && !$query->getOption('search_api_bypass_access')) {
     $account = $query->getOption('search_api_access_account', $user);
     if (is_numeric($account)) {
       $account = user_load($account);
