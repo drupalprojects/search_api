@@ -1,3 +1,6 @@
+Search API 1.x, dev (xx/xx/xxxx):
+---------------------------------
+
 Search API 1.11 (12/25/2013):
 -----------------------------
 - #1879196 by drunken monkey: Fixed invalid old indexes causing errors.
