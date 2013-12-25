@@ -349,8 +349,13 @@ function search_api_enable() {
     }
   }
   foreach ($types as $type => $indexes) {
-    $controller = search_api_get_datasource_controller($type);
-    $controller->startTracking($indexes);
+    try {
+      $controller = search_api_get_datasource_controller($type);
+      $controller->startTracking($indexes);
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e);
+    }
   }
 }
 

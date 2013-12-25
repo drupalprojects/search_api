@@ -137,15 +137,21 @@ function drush_search_api_list() {
   foreach ($indexes as $index) {
     $type = search_api_get_item_type_info($index->item_type);
     $type = isset($type['name']) ? $type['name'] : $index->item_type;
-    $server = $index->server();
-    $server = $server ? $server->name : '(' . t('none') . ')';
+    try {
+      $server = $index->server();
+      $server = $server ? $server->name : '(' . dt('none') . ')';
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e);
+      $server = '(' . dt('unknown: !server', array('server' => $index->server)) . ')';
+    }
     $row = array(
       $index->id,
       $index->name,
       $index->machine_name,
       $server,
       $type,
-      $index->enabled ? t('enabled') : t('disabled'),
+      $index->enabled ? dt('enabled') : dt('disabled'),
       $index->options['cron_limit'],
     );
     $rows[] = $row;
@@ -168,17 +174,24 @@ function drush_search_api_enable($index_id = NULL) {
     return;
   }
   foreach ($indexes as $index) {
+    $vars = array('!index' => $index->name);
     if (!$index->enabled) {
-      drush_log(dt("Enabling index !index and queueing items for indexing.", array('!index' => $index->name)), 'notice');
-      if (search_api_index_enable($index->id)) {
-        drush_log(dt("The index !index was successfully enabled.", array('!index' => $index->name)), 'ok');
+      drush_log(dt("Enabling index !index and queueing items for indexing.", $vars), 'notice');
+      $success = FALSE;
+      try {
+        if ($success = search_api_index_enable($index->id)) {
+          drush_log(dt("The index !index was successfully enabled.", $vars), 'ok');
+        }
       }
-      else {
-        drush_log(dt("Error enabling index !index.", array('!index' => $index->name)), 'error');
+      catch (SearchApiException $e) {
+        drush_log($e->getMessage(), 'error');
+      }
+      if (!$success) {
+        drush_log(dt("Error enabling index !index.", $vars), 'error');
       }
     }
     else {
-      drush_log(dt("The index !index is already enabled.", array('!index' => $index->name)), 'error');
+      drush_log(dt("The index !index is already enabled.", $vars), 'error');
     }
   }
 }
@@ -198,16 +211,23 @@ function drush_search_api_disable($index_id = NULL) {
     return;
   }
   foreach ($indexes as $index) {
+    $vars = array('!index' => $index->name);
     if ($index->enabled) {
-      if (search_api_index_disable($index->id)) {
-        drush_log(dt("The index !index was successfully disabled.", array('!index' => $index->name)), 'ok');
+      $success = FALSE;
+      try {
+        if ($success = search_api_index_disable($index->id)) {
+          drush_log(dt("The index !index was successfully disabled.", $vars), 'ok');
+        }
       }
-      else {
-        drush_log(dt("Error disabling index !index.", array('!index' => $index->name)), 'error');
+      catch (SearchApiException $e) {
+        drush_log($e->getMessage(), 'error');
+      }
+      if (!$success) {
+        drush_log(dt("Error disabling index !index.", $vars), 'error');
       }
     }
     else {
-      drush_log(dt("The index !index is already disabled.", array('!index' => $index->name)), 'error');
+      drush_log(dt("The index !index is already disabled.", $vars), 'error');
     }
   }
 }
@@ -266,7 +286,13 @@ function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = N
   }
   foreach ($indexes as $index) {
     // Get the number of remaing items to index.
-    $datasource = $index->datasource();
+    try {
+      $datasource = $index->datasource();
+    }
+    catch (SearchApiException $e) {
+      drush_log($e->getMessage(), 'error');
+      continue;
+    }
     $index_status = $datasource->getIndexStatus($index);
     $remaining = $index_status['total'] - $index_status['indexed'];
     if ($remaining <= 0) {

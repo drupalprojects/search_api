@@ -53,7 +53,7 @@ function search_api_facetapi_facetapi_searcher_info() {
   $info = array();
   $indexes = search_api_index_load_multiple(FALSE);
   foreach ($indexes as $index) {
-    if ($index->enabled && $index->server()->supportsFeature('search_api_facets')) {
+    if (_search_api_facetapi_index_support_feature($index)) {
       $searcher_name = 'search_api@' . $index->machine_name;
       $info[$searcher_name] = array(
         'label' => t('Search service: @name', array('@name' => $index->name)),
@@ -116,7 +116,7 @@ function search_api_facetapi_facetapi_facet_info(array $searcher_info) {
           'description' => t('Filter by @type.', array('@type' => $field['name'])),
           'allowed operators' => array(
             FACETAPI_OPERATOR_AND => TRUE,
-            FACETAPI_OPERATOR_OR => $index->server()->supportsFeature('search_api_facets_operator_or'),
+            FACETAPI_OPERATOR_OR => _search_api_facetapi_index_support_feature($index, 'search_api_facets_operator_or'),
           ),
           'dependency plugins' => array('role'),
           'facet missing allowed' => TRUE,
@@ -218,12 +218,34 @@ function search_api_facetapi_settings($realm_name, SearchApiIndex $index) {
   if (!$index->enabled) {
     return array('#markup' => t('Since this index is at the moment disabled, no facets can be activated.'));
   }
-  if (!$index->server()->supportsFeature('search_api_facets')) {
+  if (!_search_api_facetapi_index_support_feature($index)) {
     return array('#markup' => t('This index uses a server that does not support facet functionality.'));
   }
   $searcher_name = 'search_api@' . $index->machine_name;
   module_load_include('inc', 'facetapi', 'facetapi.admin');
   return drupal_get_form('facetapi_realm_settings_form', $searcher_name, $realm_name);
+}
+
+/**
+ * Checks whether a certain feature is supported for an index.
+ *
+ * @param SearchApiIndex $index
+ *   The search index which should be checked.
+ * @param string $feature
+ *   (optional) The feature to check for. Defaults to "search_api_facets".
+ *
+ * @return bool
+ *   TRUE if the feature is supported by the index's server (and the index is
+ *   currently enabled), FALSE otherwise.
+ */
+function _search_api_facetapi_index_support_feature(SearchApiIndex $index, $feature = 'search_api_facets') {
+  try {
+    $server = $index->server();
+    return $server && $server->supportsFeature($feature);
+  }
+  catch (SearchApiException $e) {
+    return FALSE;
+  }
 }
 
 /**
