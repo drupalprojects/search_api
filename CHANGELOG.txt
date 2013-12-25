@@ -1,5 +1,5 @@
-Search API 1.x, dev (xx/xx/xxxx):
----------------------------------
+Search API 1.11 (12/25/2013):
+-----------------------------
 - #1879196 by drunken monkey: Fixed invalid old indexes causing errors.
 - #2155127 by drunken monkey: Clarified the scope of the "Node access" and
   "Exclude unpublished nodes" data alterations.
