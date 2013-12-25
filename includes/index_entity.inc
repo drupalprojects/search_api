@@ -264,6 +264,10 @@ class SearchApiIndex extends Entity {
       $this->server = NULL;
       $this->enabled = FALSE;
     }
+    if (!empty($this->options['fields'])) {
+      ksort($this->options['fields']);
+    }
+
     $this->resetCaches();
 
     return parent::save();

@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2150779 by hefox: Fixed "Overridden" detection for index features.
 - #1227702 by drunken monkey: Improved error handling.
 
 Search API 1.11 (12/25/2013):
