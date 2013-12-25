@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2155127 by drunken monkey: Clarified the scope of the "Node access" and
+  "Exclude unpublished nodes" data alterations.
 - #2155575 by drunken monkey: Fixed incorrect "Server index status" warnings.
 - #2159011 by idebr, drunken monkey: Fixed highlighting of keywords with PCRE
   special characters.

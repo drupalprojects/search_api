@@ -1012,17 +1012,17 @@ function search_api_search_api_alter_callback_info() {
   );
   $callbacks['search_api_alter_node_access'] = array(
     'name' => t('Node access'),
-    'description' => t('Add node access information to the index.'),
+    'description' => t('Add node access information to the index. <strong>Caution:</strong> This only affects the indexed nodes themselves, not any node reference fields that are indexed with them, or displayed in search results.'),
     'class' => 'SearchApiAlterNodeAccess',
   );
   $callbacks['search_api_alter_comment_access'] = array(
     'name' => t('Access check'),
-    'description' => t('Add node access information to the index.'),
+    'description' => t('Add node access information to the index. <strong>Caution:</strong> This only affects the indexed nodes themselves, not any node reference fields that are indexed with them, or displayed in search results.'),
     'class' => 'SearchApiAlterCommentAccess',
   );
   $callbacks['search_api_alter_node_status'] = array(
     'name' => t('Exclude unpublished nodes'),
-    'description' => t('Exclude unpublished nodes from the index.'),
+    'description' => t('Exclude unpublished nodes from the index. <strong>Caution:</strong> This only affects the indexed nodes themselves. If an enabled node has references to disabled nodes, those will still be indexed (or displayed) normally.'),
     'class' => 'SearchApiAlterNodeStatus',
   );
 
