@@ -966,3 +966,29 @@ function search_api_update_7116() {
     $insert->execute();
   }
 }
+
+/**
+ * Checks the database for illegal {search_api_index}.server values.
+ */
+function search_api_update_7117() {
+  $servers = db_select('search_api_server', 's')
+    ->fields('s', array('machine_name'))
+    ->condition('enabled', 1);
+  $indexes = db_select('search_api_index', 'i')
+    ->fields('i', array('id'))
+    ->condition('server', $servers, 'NOT IN')
+    ->execute()
+    ->fetchCol();
+  if ($indexes) {
+    db_delete('search_api_item')
+      ->condition('index_id', $indexes)
+      ->execute();
+    db_update('search_api_index')
+      ->fields(array(
+        'server' => NULL,
+        'enabled' => 0,
+      ))
+      ->condition('id', $indexes)
+      ->execute();
+  }
+}
