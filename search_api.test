@@ -468,25 +468,9 @@ class SearchApiWebTest extends DrupalWebTestCase {
     if (!isset($on_server)) {
       $on_server = $indexed;
     }
-    if ($on_server == $total) {
-      $this->assertNoText(t('Server index status'), 'No server index status displayed.');
-    }
-    else {
-      $vars['@num'] = $on_server;
-      if ($on_server < $indexed) {
-        $vars['@diff'] = $indexed - $on_server;
-        $info = t('The index status on the search server has diverged (@num items indexed – @diff less than required). You are strongly advised to mark the index for re-indexing using the form below.', $vars);
-      }
-      elseif ($on_server > $total) {
-        $vars['@diff'] = $on_server - $total;
-        $info = t('The index status on the search server has diverged (@num items indexed – @diff more than present). You are strongly advised to clear the index using the form below.', $vars);
-      }
-      else {
-        $info = format_plural($on_server, 'There is 1 item indexed on the server for this index.', 'There are @count items indexed on the server for this index.');
-      }
-      $this->assertText(t('Server index status'), 'Server index status displayed.');
-      $this->assertText($info, 'Correct server index status displayed.');
-    }
+    $info = format_plural($on_server, 'There is 1 item indexed on the server for this index.', 'There are @count items indexed on the server for this index.');
+    $this->assertText(t('Server index status'), 'Server index status displayed.');
+    $this->assertText($info, 'Correct server index status displayed.');
 
     if (!$check_buttons) {
       return;

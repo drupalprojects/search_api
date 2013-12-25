@@ -969,27 +969,11 @@ function theme_search_api_index(array $variables) {
     $output .= '<h3>' . t('Index status') . '</h3>';
     $output .= '<div class="search-api-index-status">' . theme('progress_bar', $theme) . '</div>';
 
-    if ($on_server != $total_items) {
-      if ($on_server < $indexed_items || $on_server > $total_items) {
-        $vars = array();
-        $vars['@num'] = $on_server;
-        if ($on_server < $indexed_items) {
-          $vars['@diff'] = $indexed_items - $on_server;
-          $info = t('The index status on the search server has diverged (@num items indexed – @diff less than required). You are strongly advised to mark the index for re-indexing using the form below.', $vars);
-        }
-        else {
-          $vars['@diff'] = $on_server - $total_items;
-          $info = t('The index status on the search server has diverged (@num items indexed – @diff more than present). You are strongly advised to clear the index using the form below.', $vars);
-        }
-        $class = 'error';
-      }
-      else {
-        $info = format_plural($on_server, 'There is 1 item indexed on the server for this index.', 'There are @count items indexed on the server for this index.');
-        $class = 'warning';
-      }
-      $label = t('Server index status');
-      $rows[] = _search_api_deep_copy($row);
-    }
+    $vars['@url'] = url('https://drupal.org/node/2009804#server-index-status');
+    $info = format_plural($on_server, 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+    $class = '';
+    $label = t('Server index status');
+    $rows[] = _search_api_deep_copy($row);
   }
 
   if ($status != ENTITY_CUSTOM) {
