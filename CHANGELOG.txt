@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2168713 by idebr: Fixed highlighting of keys containing slashes.
 - #2150779 by hefox: Fixed "Overridden" detection for index features.
 - #1227702 by drunken monkey: Improved error handling.
 
