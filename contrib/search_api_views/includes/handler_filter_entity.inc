@@ -90,7 +90,8 @@ abstract class SearchApiViewsHandlerFilterEntity extends SearchApiViewsHandlerFi
 
     // Set the correct default value in case the admin-set value is used (and a
     // value is present). The value is used if the form is either not exposed,
-    // or the exposed form wasn't submitted yet (there is
+    // or the exposed form wasn't submitted yet. (There doesn't seem to be an
+    // easier way to check for that.)
     if ($this->value && (empty($form_state['input']) || !empty($form_state['input']['live_preview']))) {
       $form['value']['#default_value'] = $this->ids_to_strings($this->value);
     }
