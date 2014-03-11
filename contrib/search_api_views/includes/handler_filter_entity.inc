@@ -176,6 +176,9 @@ abstract class SearchApiViewsHandlerFilterEntity extends SearchApiViewsHandlerFi
    * {@inheritdoc}
    */
   public function admin_summary() {
+    if (!is_array($this->value)) {
+      $this->value = $this->value ? array($this->value) : array();
+    }
     $value = $this->value;
     $this->value = empty($value) ? '' : $this->ids_to_strings($value);
     $ret = parent::admin_summary();
