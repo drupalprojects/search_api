@@ -48,4 +48,10 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
    */
   public function postprocessSearchResults(array &$response, QueryInterface $query) {}
 
+  /**
+   * {@inheritdoc}
+   */
+  public function propertyInfo() {
+    array();
+  }
 }

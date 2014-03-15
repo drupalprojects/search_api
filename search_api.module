@@ -7,7 +7,9 @@
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /*
@@ -265,17 +267,16 @@ function search_api_get_data_type_info($type = NULL) {
 }
 
 /**
- * Extracts specific field values from typed data object.
- *
- * Used during indexing.
+ * Extracts specific field values from a complex data object.
  *
  * @param \Drupal\Core\TypedData\ComplexDataInterface $item
  *   The item from which fields should be extracted.
  * @param array $fields
- *   The fields to extract, as stored in an index. I.e., the array keys are
- *   field names, the values are arrays with at least a "type" key present.
- *   Passed by reference, "value" and "original_type" keys will be added for all
- *   fields.
+ *   The fields to extract, passed by reference. The format is the same as the
+ *   "fields" sub-array in the index options, i.e., an array with the field
+ *   names as keys and arrays of field information as values, at least
+ *   containing a "type" key. "value" and "original_type" keys will be added for
+ *   all fields.
  */
 function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
   // Figure out which fields are directly on the item and which need to be
@@ -293,14 +294,15 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
   }
   // Extract the direct fields.
   foreach ($direct_fields as $key) {
+    // Set defaults if something fails or the field is empty.
+    $fields[$key]['value'] = array();
+    $fields[$key]['original_type'] = NULL;
     try {
-      $item = $item->get($key);
-      // @todo Figure out what to do with that.
+      $data = $item->get($key);
+      _search_api_extract_field($data, $fields[$key]);
     }
     catch (\InvalidArgumentException $e) {
-      // Set defaults if something fails.
-      $fields[$key]['value'] = NULL;
-      $fields[$key]['original_type'] = $fields[$key]['type'];
+      // No need to do anything, we already set the defaults.
     }
   }
   // Recurse for all nested fields.
@@ -320,11 +322,44 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
     // set the defaults here.
     if (!$success) {
       foreach (array_keys($fields_nested) as $key) {
-        $fields[$key]['value'] = NULL;
+        $fields[$key]['value'] = array();
         $fields[$key]['original_type'] = $fields[$key]['type'];
       }
     }
   }
+}
+
+/**
+ * Extracts value and original type from a single piece of data.
+ *
+ * @param \Drupal\Core\TypedData\TypedDataInterface $data
+ *   The piece of data from which to extract information.
+ * @param array $field
+ *   The field information array into which to put the extracted information.
+ */
+function _search_api_extract_field(TypedDataInterface $data, array &$field) {
+  if ($data->getDataDefinition()->isList()) {
+    foreach ($data as $piece) {
+      _search_api_extract_field($piece, $field);
+    }
+    return;
+  }
+  $value = $data->getValue();
+  $definition = $data->getDataDefinition();
+  if ($definition instanceof ComplexDataDefinitionInterface) {
+    $property = $definition->getMainPropertyName();
+    if (isset($value[$property])) {
+      $field['value'][] = $value[$property];
+    }
+  }
+  else {
+    $field['value'][] = reset($value);
+  }
+  // @todo Figure out how to make this less specific. fago mentioned some
+  // hierarchy/inheritance for types, with non-complex types inheriting from
+  // one of a few primitive types – maybe we can track that back?
+  // Also, is the "field_item:" prefix necessary or always there?
+  $field['original_type'] = $definition->getDataType();
 }
 
 /**

@@ -6,7 +6,6 @@
 
 namespace Drupal\search_api\Datasource\Tracker;
 
-use Exception;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Index\IndexInterface;
 
@@ -160,7 +159,7 @@ class DefaultTracker implements TrackerInterface {
         // Indicate successful operation.
         $success = TRUE;
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Log the exception to watchdog.
         watchdog_exception('Search API', $ex);
         // Rollback the transaction.
@@ -204,7 +203,7 @@ class DefaultTracker implements TrackerInterface {
         // Indicate success operation.
         $success = TRUE;
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Log the exception to watchdog.
         watchdog_exception('Search API', $ex);
         // Rollback the transaction.
@@ -245,7 +244,7 @@ class DefaultTracker implements TrackerInterface {
         // Indicate success operation.
         $success = TRUE;
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Log the exception to watchdog.
         watchdog_exception('Search API', $ex);
         // Rollback the transaction.
@@ -281,7 +280,7 @@ class DefaultTracker implements TrackerInterface {
         // Indicate success operation.
         $success = TRUE;
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Log the exception to watchdog.
         watchdog_exception('Search API', $ex);
         // Rollback the transaction.
@@ -312,7 +311,7 @@ class DefaultTracker implements TrackerInterface {
         // Indicate success operation.
         $success = TRUE;
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Log the exception to watchdog.
         watchdog_exception('Search API', $ex);
         // Rollback the transaction.
