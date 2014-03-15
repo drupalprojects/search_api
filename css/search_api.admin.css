@@ -12,3 +12,15 @@
 .search-api-entity-status-disabled {
   background-image: url('../images/disabled.png');
 }
+
+/*
+ * VIEW SERVER
+ */
+
+.search-api-server-summary ul.inline {
+  margin: 0;
+}
+
+.search-api-server-summary ul.inline li {
+  padding-left: 0;
+}
