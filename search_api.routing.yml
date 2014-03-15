@@ -16,9 +16,9 @@ search_api.server_add:
 search_api.server_view:
   path: '/admin/config/search/search-api/server/{search_api_server}'
   defaults:
-    _entity_form: 'search_api_server.edit'
+    _content: '\Drupal\search_api\Controller\SearchApiServerController::page'
   requirements:
-    _entity_access: 'search_api_server.edit'
+    _permission: 'administer search_api'
 
 search_api.server_edit:
   path: '/admin/config/search/search-api/server/{search_api_server}/edit'
@@ -58,7 +58,7 @@ search_api.index_add:
 search_api.index_view:
   path: '/admin/config/search/search-api/index/{search_api_index}'
   defaults:
-    _entity_form: 'search_api_index.edit'
+    _content: '\Drupal\search_api\Controller\SearchApiIndexController::page'
   requirements:
     _entity_access: 'search_api_index.edit'
 

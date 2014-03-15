@@ -4,6 +4,7 @@
  * Contains the Search API hook implementations.
  */
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -381,8 +382,17 @@ function search_api_server_tasks_delete(array $ids = NULL, ServerInterface $serv
  * Implements hook_theme().
  */
 function search_api_theme() {
+  $themes = array();
+
   $themes['search_api_admin_fields_table'] = array(
     'render element' => 'element',
+  );
+
+  $themes['search_api_server'] = array(
+    'variables' => array(
+      'server' => NULL,
+      'indexes' => array(),
+    ),
   );
 
   return $themes;
@@ -438,6 +448,117 @@ function theme_search_api_admin_fields_table($variables) {
   if ($additional) {
     $output .= render($additional);
   }
+
+  return $output;
+}
+
+/**
+ * Returns HTML for a Search API server.
+ * 
+ * @param array $variables
+ *   An associative array containing:
+ *     - server: The ServerInterface instance.
+ *     - indexes: A renderable array which contain links to indexes.
+ *
+ * @return string
+ *   The rendered HTML for a Search API server.
+ */
+function theme_search_api_server($variables) {
+  // Get the Search API server
+  $server = $variables['server'];
+  $indexes = $variables['indexes'];
+  // Initialize the output variable to an empty string.
+  $output = '';
+
+  // Check if a description is available.
+  if (($description = $server->getDescription())) {
+    // Sanitiaze the description and append to the output.
+    $output .= '<p class="description">' . nl2br(String::checkPlain($description)) . '</p>';
+  }
+
+  // Initialize the rows variable which will hold the different parts of server
+  // information.
+  $rows = array();
+  // Create a row template with references so we don't have to deal with the
+  // complicated structure for each inidividual row.
+  $row = array(
+    'data' => array(
+      array('header' => TRUE),
+      '',
+    ),
+    'class' => array(''),
+  );
+  // Get the individual parts of the row by reference.
+  $label = &$row['data'][0]['data'];
+  $info = &$row['data'][1];
+  $class = &$row['class'][0];
+
+  // Check if the server is enabled.
+  if ($server->status()) {
+    $class = 'ok';
+    $info = t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), $server->url('disable'))));
+  }
+  else {
+    $class = 'warning';
+    // Build the enable bypass url options.
+    $url_options = array('query' => array('token' => \Drupal::csrfToken()->get($server->id())));
+    // Build the disabled message and use the enable bypass link.
+    $info = t('disabled (!enable_link)', array('!enable_link' => l(t('enabled'), $server->url('enable-bypass', $url_options))));
+  }
+  // Append the row and reset variables.
+  $label = t('Status');
+  $rows[] = _search_api_deep_copy($row);
+  $class = '';
+
+  // Check if the service used by the server is valid.
+  if ($server->hasValidService()) {
+    // Get the service used by the server.
+    $service = $server->getService();
+    // Get the service plugin definition.
+    $service_plugin_definition = $service->getPluginDefinition();
+    // Use the label defined in the plugin definition.
+    $info = String::checkPlain($service_plugin_definition['label']);
+  }
+  else {
+    $class = 'error';
+    $info = t('Invalid service or service plugin missing');
+  }
+  // Append the row and reset variables.
+  $label = t('Service class');
+  $rows[] = _search_api_deep_copy($row);
+  $class = '';
+
+  // Check if the indexes variable contains links.
+  if (!empty($indexes['#links'])) {
+    $label = t('Search indexes');
+    $info = render($indexes);
+    $rows[] = _search_api_deep_copy($row);
+  }
+
+  // Check if the server has available view settings.
+  if (($options = $server->viewSettings())) {
+    $label = t('Service options');
+    $info = render($options);
+    $rows[] = _search_api_deep_copy($row);
+  }
+
+  //
+  // @todo: Add extra information once the function is available.
+  //
+  // Build the server info table theme variables.
+  $server_info_table = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#attributes' => array(
+      'class' => array(
+        'search-api-summary',
+        'search-api-server-summary',
+        'system-status-report',
+      ),
+    ),
+  );
+  // Render the server info table and append to the output.
+  $output .= drupal_render($server_info_table);
 
   return $output;
 }

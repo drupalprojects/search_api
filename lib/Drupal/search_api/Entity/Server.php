@@ -45,6 +45,7 @@ use Drupal\search_api\Server\ServerInterface;
  *     "delete-form" = "search_api.server_delete",
  *     "disable" = "search_api.server_disable",
  *     "enable" = "search_api.server_enable",
+ *     "enable-bypass" = "search_api.server_bypass_enable",
  *   }
  * )
  */
@@ -247,6 +248,18 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     else {
       return $this->getService()->postInsert();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexes() {
+    // Get the index storage controller.
+    $storage_controller = \Drupal::entityManager()->getStorageController('search_api_index');
+    // Retrieve the indexes attached to the server.
+    return $storage_controller->loadByProperties(array(
+          'serverMachineName' => $this->id(),
+    ));
   }
 
   /**

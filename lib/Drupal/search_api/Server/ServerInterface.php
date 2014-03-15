@@ -40,6 +40,14 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
   public function getService();
 
   /**
+   * Retrieves a list of indexes which use this server.
+   * 
+   * @return \Drupal\search_api\Index\IndexInterface[]
+   *   An array of IndexInterface instances.
+   */
+  public function getIndexes();
+
+  /**
    * Executes a search on the server represented by this object.
    *
    * @param QueryInterface $query
