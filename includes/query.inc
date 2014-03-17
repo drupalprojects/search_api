@@ -366,7 +366,7 @@ class SearchApiQuery implements SearchApiQueryInterface {
   /**
    * The index's machine name.
    *
-   * used during serialization to avoid serializing the whole index object.
+   * Used during serialization to avoid serializing the whole index object.
    *
    * @var string
    */
