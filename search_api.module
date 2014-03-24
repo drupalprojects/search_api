@@ -74,7 +74,7 @@ function search_api_menu() {
     ),
     'admin/config/search/search_api/indexes/add_index' => array(
       'title' => 'Add index',
-    'description' => 'Create a new search index.',
+      'description' => 'Create a new search index.',
       'route_name' => 'search_api.index_add',
       'type' => MENU_LOCAL_ACTION,
     ),
