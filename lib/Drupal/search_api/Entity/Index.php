@@ -19,16 +19,16 @@ use Drupal\search_api\Index\IndexInterface;
  *   label = @Translation("Search index"),
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
- *     "access" = "Drupal\search_api\Controller\ServerAccessController",
+ *     "access" = "Drupal\search_api\Controller\IndexAccessController",
  *     "list_builder" = "Drupal\search_api\Controller\IndexListController",
  *     "form" = {
- *       "default" = "Drupal\search_api\Controller\ServerFormController",
- *       "edit" = "Drupal\search_api\Controller\ServerFormController",
- *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
- *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
- *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
+ *       "default" = "Drupal\search_api\Controller\IndexFormController",
+ *       "edit" = "Drupal\search_api\Controller\IndexFormController",
+ *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
+ *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
+ *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\Controller\ServerListController"
+ *     "list" = "Drupal\search_api\Controller\IndexListController"
  *   },
  *   config_prefix = "index",
  *   entity_keys = {
