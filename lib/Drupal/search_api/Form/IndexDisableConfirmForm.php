@@ -31,7 +31,7 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.index_overview');
+    return array('route_name' => 'search_api.index_view');
   }
 
   /**
