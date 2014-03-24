@@ -29,7 +29,7 @@ function search_api_menu_link_defaults() {
       'link_title' => 'Search API',
       'description' => 'Create and configure search engines.',
       'route_name' => 'search_api.overview',
-      'parent' => 'system.admin.config.search',
+      'parent' => 'system.admin_config_search',
     ),
     'search_api.server_overview' => array(
       'link_title' => 'Servers',
