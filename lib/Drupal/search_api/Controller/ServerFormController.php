@@ -120,11 +120,11 @@ class ServerFormController extends EntityFormController {
     // Check if the entity is being created.
     if ($entity->isNew()) {
       // Change the page title to 'Add server'.
-      drupal_set_title($this->t('Add search server'));
+      $form['#title'] = $this->t('Add search server');
     }
     else {
       // Change the page title to 'Edit @label'.
-      drupal_set_title($this->t('Edit search server @label', array('@label' => $entity->label())));
+      $form['#title'] = $this->t('Edit search server @label', array('@label' => $entity->label()));
     }
     // Build the entity form.
     $this->buildEntityForm($form, $form_state, $entity);
