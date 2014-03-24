@@ -214,8 +214,7 @@ class IndexFormController extends EntityFormController {
     );
     // Build the datasource element.
     $options = $this->getDatasourcePluginDefinitionOptions();
-    // Sort the options
-    sort($options);
+
     $form['datasourcePluginId'] = array(
       '#type' => 'select',
       '#title' => $this->t('Datasource'),
