@@ -7,33 +7,29 @@
 namespace Drupal\search_api\Entity;
 
 use Drupal;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Class representing a search index.
+ * Defines the search index configuration entity.
  *
- * @EntityType(
+ * @ConfigEntityType(
  *   id = "search_api_index",
- *   label = @Translation("Search server"),
+ *   label = @Translation("Search index"),
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
- *     "access" = "Drupal\search_api\Controller\IndexAccessController",
+ *     "access" = "Drupal\search_api\Controller\ServerAccessController",
  *     "form" = {
- *       "default" = "Drupal\search_api\Controller\IndexFormController",
- *       "edit" = "Drupal\search_api\Controller\IndexFormController",
- *       "fields" = "Drupal\search_api\Controller\IndexFieldsFormController",
- *       "workflow" = "Drupal\search_api\Controller\IndexWorkflowFormController",
- *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
- *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
- *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
+ *       "default" = "Drupal\search_api\Controller\ServerFormController",
+ *       "edit" = "Drupal\search_api\Controller\ServerFormController",
+ *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
+ *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
+ *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\Controller\IndexListController"
+ *     "list" = "Drupal\search_api\Controller\ServerListController"
  *   },
- *   config_prefix = "search_api.index",
+ *   config_prefix = "index",
  *   entity_keys = {
  *     "id" = "machine_name",
  *     "label" = "name",
@@ -41,8 +37,9 @@ use Drupal\search_api\Index\IndexInterface;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "/admin/config/search/search_api/indexes/{search_api_index}",
- *     "edit-form" = "/admin/config/search/search_api/indexes/{search_api_index}/edit",
+ *     "canonical" = "search_api.index_edit",
+ *     "add-form" = "search_api.index_add",
+ *     "edit-form" = "search_api.index_edit_default",
  *   }
  * )
  */
