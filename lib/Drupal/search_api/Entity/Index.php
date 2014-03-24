@@ -6,8 +6,8 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 
@@ -161,6 +161,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $server;
 
   /**
+   * Cached fields data for getFields().
+   *
+   * @var array
+   */
+  protected $fields;
+
+  /**
+   * Cached fulltext fields data for getFulltextFields().
+   *
+   * @var array
+   */
+  protected $fulltextFields;
+
+  /**
    * Clones an index object.
    */
   public function __clone() {
@@ -211,7 +225,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function hasValidDatasource() {
     // Get the datasource plugin definition.
-    $datasource_plugin_definition = Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
+    $datasource_plugin_definition = \Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
     // Determine whether the datasource is valid.
     return !empty($datasource_plugin_definition);
   }
@@ -225,7 +239,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the ID of the datasource plugin.
       $datasource_plugin_id = $this->datasourcePluginId;
       // Get the datasource plugin manager.
-      $datasource_plugin_manager = Drupal::service('search_api.datasource.plugin.manager');
+      $datasource_plugin_manager = \Drupal::service('search_api.datasource.plugin.manager');
       // Get the plugin configuration for the datasource.
       $datasource_plugin_configuration = array('_index_' => $this) + $this->datasourcePluginConfig;
       // Create a datasource plugin instance.
@@ -238,7 +252,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->serverMachineName !== NULL && Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
+    return $this->serverMachineName !== NULL && \Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
   }
 
   /**
@@ -251,7 +265,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the server machine name.
       $server_machine_name = $this->serverMachineName;
       // Get the server from the storage.
-      $this->server = Drupal::entityManager()->getStorageController('search_api_server')->load($server_machine_name);
+      $this->server = \Drupal::entityManager()->getStorageController('search_api_server')->load($server_machine_name);
     }
     return $this->server;
   }
@@ -263,7 +277,91 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Overwrite the current server instance.
     $this->server = $server;
     // Overwrite the server machine name.
-    $this->serverMachineName = $server ? $server->id() : '';
+    $this->serverMachineName = $server ? $server->id() : NULL;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
+    // @todo Adapt to ComplexDataInterface.
+    $only_indexed = $only_indexed ? 1 : 0;
+    $get_additional = $get_additional ? 1 : 0;
+
+    if (empty($this->fields[$only_indexed][$get_additional])) {
+      // @todo Implement both caching and the actual computation.
+    }
+
+    return $this->fields[$only_indexed][$get_additional];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFulltextFields($only_indexed = TRUE) {
+    $i = $only_indexed ? 1 : 0;
+    if (!isset($this->fulltextFields[$i])) {
+      $this->fulltextFields[$i] = array();
+      $fields = $only_indexed ? $this->options['fields'] : $this->getFields(FALSE);
+      foreach ($fields as $key => $field) {
+        if (search_api_is_text_type($field['type'])) {
+          $this->fulltextFields[$i][] = $key;
+        }
+      }
+    }
+    return $this->fulltextFields[$i];
+  }
+
+  /**
+   * Loads all enabled processors for this index in proper order.
+   *
+   * @return array
+   *   All enabled processors for this index, as
+   *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
+   */
+  public function getProcessors() {
+    // @todo Implement getProcessors() method.
+  }
+
+  /**
+   * Preprocesses data items for indexing.
+   *
+   * Lets all enabled processors for this index preprocess the indexed data.
+   *
+   * @param array $items
+   *   An array of items to be preprocessed for indexing.
+   */
+  public function preprocessIndexItems(array &$items) {
+    // @todo Implement preprocessIndexItems() method.
+  }
+
+  /**
+   * Preprocesses a search query.
+   *
+   * Lets all enabled processors for this index preprocess the search query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The object representing the query to be executed.
+   */
+  public function preprocessSearchQuery(QueryInterface $query) {
+    // @todo Implement preprocessSearchQuery() method.
+  }
+
+  /**
+   * Postprocesses search results before display.
+   *
+   * If a class is used for both pre- and post-processing a search query, the
+   * same object will be used for both calls (so preserving some data or state
+   * locally is possible).
+   *
+   * @param array $response
+   *   An array containing the search results. See
+   *   \Drupal\search_api\Plugin\search_api\QueryInterface::execute() for the
+   *   detailed format.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The object representing the executed query.
+   */
+  public function postprocessSearchResults(array &$response, QueryInterface $query) {
+    // @todo Implement postprocessSearchResults() method.
+  }
 }

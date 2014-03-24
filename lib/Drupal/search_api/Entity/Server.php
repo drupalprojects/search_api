@@ -6,10 +6,12 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\Service\ServiceInterface;
 
 /**
  * Defines the search server configuration entity.
@@ -135,7 +137,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function hasValidService() {
     // Get the service plugin definition.
-    $service_plugin_definition = Drupal::service('search_api.service.plugin.manager')->getDefinition($this->servicePluginId);
+    $service_plugin_definition = \Drupal::service('search_api.service.plugin.manager')->getDefinition($this->servicePluginId);
     // Determine whether the service is valid.
     return !empty($service_plugin_definition);
   }
@@ -149,7 +151,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       // Get the ID of the service plugin.
       $service_plugin_id = $this->servicePluginId;
       // Get the service plugin manager.
-      $service_plugin_manager = Drupal::service('search_api.service.plugin.manager');
+      $service_plugin_manager = \Drupal::service('search_api.service.plugin.manager');
       // Create a service plugin instance.
       $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->servicePluginConfig);
     }
@@ -159,9 +161,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExportProperties() {
+  public function toArray() {
     // Get the exported properties.
-    $properties = parent::getExportProperties();
+    $properties = parent::toArray();
     // Check if the service is valid.
     if ($this->hasValidService()) {
       // Overwrite the service plugin configuration with the active.
@@ -181,17 +183,36 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // Perform default entity pre delete.
     parent::preDelete($storage_controller, $entities);
     // Get the indexes associated with the servers.
-    $index_ids = Drupal::entityQuery('search_api_index')
+    $index_ids = \Drupal::entityQuery('search_api_index')
       ->condition('serverMachineName', array_keys($entities), 'IN')
       ->execute();
     // Load the related indexes.
-    $indexes = Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
+    $indexes = \Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
     // Iterate through the indexes.
     foreach ($indexes as $index) {
       // Remove the index from the server.
       $index->setServer(NULL);
       // Save changes made to the index.
       $index->save();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function search(QueryInterface $query) {
+    $this->ensurePlugin();
+    return $this->servicePluginInstance->search($query);
+  }
+
+  /**
+   * Helper method for ensuring the proxy object is set up.
+   */
+  protected function ensurePlugin() {
+    if (!isset($this->servicePluginInstance)) {
+      if (!($this->getService() instanceof ServiceInterface)) {
+        throw new SearchApiException(t('Search server with machine name @name specifies illegal service plugin @plugin.', array('@name' => $this->machine_name, '@plugin' => $this->servicePluginId)));
+      }
     }
   }
 

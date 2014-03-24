@@ -1,5 +1,5 @@
-name: 'Search API'
 type: module
+name: 'Search API'
 description: 'Provides a generic API for modules offering search capabilites.'
 package: Search
 core: 8.x

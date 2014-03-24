@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Service;
 
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Service\ServicePluginBase;
 
 /**
@@ -78,5 +79,24 @@ class TestService2 extends ServicePluginBase {
   }
   public function updateIndex(\Drupal\search_api\Index\IndexInterface $index) {
 
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function search(QueryInterface $query) {
+    return array(
+      'result count' => 1,
+      'results' => array(
+        1 => array(
+          'id' => 1,
+          'score' => 1,
+        ),
+        2 => array(
+          'id' => 2,
+          'score' => 1,
+        ),
+      ),
+    );
   }
 }

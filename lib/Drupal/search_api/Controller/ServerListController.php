@@ -38,6 +38,8 @@ class ServerListController extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     return array(
+      'status' => $this->t('Status'),
+      'type' => $this->t('Type'),
       'title' => $this->t('Name'),
       'service' => array(
         'data' => $this->t('Service'),
@@ -65,7 +67,11 @@ class ServerListController extends ConfigEntityListBuilder {
       $service_summary = '';
     }
     // Build the row for the current entity.
+    $filepath = '/' . drupal_get_path('module', 'search_api') . '/images/';
+    $status = $entity->status() ? 'enabled' : 'disabled';
     return array(
+      'status' => "<img src='$filepath$status.png' alt='$status' title='$status'></div>",
+      'type' => "<div class=\"description\">Server</div>",
       'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
       'service' => String::checkPlain($service_label) . ($service_summary ? "<div class=\"description\">{$service_summary}</div>" : ''),
       'operations' => array(

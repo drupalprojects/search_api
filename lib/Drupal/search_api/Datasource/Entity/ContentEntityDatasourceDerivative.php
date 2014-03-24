@@ -6,8 +6,7 @@
 
 namespace Drupal\search_api\Datasource\Entity;
 
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\ContentEntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Drupal\Core\Entity\EntityManager;
@@ -87,7 +86,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
       // Iterate through the entity types.
       foreach ($entity_manager->getDefinitions() as $entity_type => $entity_type_definition) {
         // Check if the entity type is not a configuration entity.
-        if (!($entity_type_definition instanceof ConfigEntityInterface)) {
+        if ($entity_type_definition instanceof ContentEntityType) {
           // Build the derivative plugin definition.
           $plugin_derivatives["{$entity_type}"] = array(
             'id' => "entity:{$entity_type}",
@@ -96,10 +95,21 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
           ) + $base_plugin_definition;
         }
       }
+
+      // Sort alphabetically
+      uasort($plugin_derivatives, array($this, 'sortDerivatives'));
+
       // Add the plugin derivatives for the given base plugin.
       $this->derivatives[$base_plugin_id] = $plugin_derivatives;
     }
     return $this->derivatives[$base_plugin_id];
+  }
+
+  /**
+   * Helper function to sort the list of content entities
+   */
+  function sortDerivatives($a, $b) {
+    return strcmp($a["label"], $b["label"]);
   }
 
 }
