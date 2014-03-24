@@ -1,0 +1,31 @@
+search_api.server_overview:
+    route_name: search_api.server_overview
+    base_route: search_api.server_overview
+    title: 'Servers'
+search_api.server_view:
+  route_name: search_api.server_view
+  base_route: search_api.server_view
+  title: 'View'
+search_api.server_edit:
+  route_name: search_api.server_edit
+  base_route: search_api.server_view
+  title: 'Edit'
+search_api.index_view:
+  route_name: search_api.index_view
+  base_route: search_api.index_view
+  title: 'View'
+search_api.index_edit:
+  route_name: search_api.index_edit
+  base_route: search_api.index_view
+  title: 'Edit'
+  weight: 0
+search_api.index_fields:
+  route_name: search_api.index_fields
+  base_route: search_api.index_view
+  title: 'Fields'
+  weight: 10
+search_api.workflow:
+  route_name: search_api.index_workflow
+  base_route: search_api.index_view
+  title: 'Workflow'
+  weight: 20

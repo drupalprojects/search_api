@@ -38,9 +38,9 @@ use Drupal\search_api\Server\ServerInterface;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "search_api.server_edit",
+ *     "canonical" = "search_api.server_view",
  *     "add-form" = "search_api.server_add",
- *     "edit-form" = "search_api.server_edit_default",
+ *     "edit-form" = "search_api.server_edit",
  *   }
  * )
  */

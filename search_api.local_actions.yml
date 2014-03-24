@@ -1,0 +1,11 @@
+search_api.server_add:
+  route_name: search_api.server_add
+  title: 'Add server'
+  appears_on:
+    - search_api.server_overview
+    - search_api.overview
+search_api.index_add:
+  route_name: search_api.index_add
+  title: 'Add index'
+  appears_on:
+    - search_api.overview

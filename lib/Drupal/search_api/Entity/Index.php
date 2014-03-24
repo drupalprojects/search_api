@@ -38,9 +38,9 @@ use Drupal\search_api\Index\IndexInterface;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "search_api.index_edit",
+ *     "canonical" = "search_api.index_view",
  *     "add-form" = "search_api.index_add",
- *     "edit-form" = "search_api.index_edit_default",
+ *     "edit-form" = "search_api.index_edit",
  *   }
  * )
  */

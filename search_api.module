@@ -21,116 +21,23 @@ define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
  */
 
 /**
- * Implements hook_menu().
- */
-function search_api_menu() {
-  return array(
-    'admin/config/search/search_api' => array(
-      'title' => 'Search API',
-      'description' => 'Create and configure search engines.',
-      'route_name' => 'search_api.overview',
-    ),
-    'admin/config/search/search_api/servers' => array(
-      'title' => 'Servers',
-      'route_name' => 'search_api.server_overview',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-    ),
-    'admin/config/search/search_api/servers/add_server' => array(
-      'title' => 'Add server',
-    'description' => 'Create a new search server.',
-      'route_name' => 'search_api.server_add',
-      'type' => MENU_LOCAL_ACTION,
-    ),
-    'admin/config/search/search_api/servers/%' => array(
-      'title callback' => 'entity_page_label',
-      'title arguments' => array(5),
-      'route_name' => 'search_api.server_edit',
-    ),
-    'admin/config/search/search_api/servers/%/edit' => array(
-      'title' => 'Edit',
-      'route_name' => 'search_api.server_edit_default',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-      'weight' => 0,
-    ),
-    'admin/config/search/search_api/servers/%/delete' => array(
-      'title' => 'Delete',
-      'route_name' => 'search_api.server_delete',
-      'type' => MENU_CALLBACK,
-    ),
-    'admin/config/search/search_api/servers/%/enable' => array(
-      'title' => 'Enable',
-      'route_name' => 'search_api.server_enable',
-      'type' => MENU_CALLBACK,
-    ),
-    'admin/config/search/search_api/servers/%/disable' => array(
-      'title' => 'Disable',
-      'route_name' => 'search_api.server_disable',
-      'type' => MENU_CALLBACK,
-    ),
-    'admin/config/search/search_api/indexes' => array(
-      'title' => 'Indexes',
-      'route_name' => 'search_api.index_overview',
-      'type' => MENU_LOCAL_TASK,
-    ),
-    'admin/config/search/search_api/indexes/add_index' => array(
-      'title' => 'Add index',
-      'description' => 'Create a new search index.',
-      'route_name' => 'search_api.index_add',
-      'type' => MENU_LOCAL_ACTION,
-    ),
-    'admin/config/search/search_api/indexes/%' => array(
-      'title callback' => 'entity_page_label',
-      'title arguments' => array(5),
-      'route_name' => 'search_api.index_edit',
-    ),
-    'admin/config/search/search_api/indexes/%/edit' => array(
-      'title' => 'Edit',
-      'route_name' => 'search_api.index_edit_default',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-      'weight' => 0,
-    ),
-    'admin/config/search/search_api/indexes/%/fields' => array(
-      'title' => 'Fields',
-      'route_name' => 'search_api.index_fields',
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 10,
-    ),
-    'admin/config/search/search_api/indexes/%/workflow' => array(
-      'title' => 'Workflow',
-      'route_name' => 'search_api.index_workflow',
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 20,
-    ),
-    'admin/config/search/search_api/indexes/%/delete' => array(
-      'title' => 'Delete',
-      'route_name' => 'search_api.index_delete',
-      'type' => MENU_CALLBACK,
-    ),
-    'admin/config/search/search_api/indexes/%/enable' => array(
-      'title' => 'Enable',
-      'route_name' => 'search_api.index_enable',
-      'type' => MENU_CALLBACK,
-    ),
-    'admin/config/search/search_api/indexes/%/disable' => array(
-      'title' => 'Disable',
-      'route_name' => 'search_api.index_disable',
-      'type' => MENU_CALLBACK,
-    ),
-  );
-}
-
-/**
  * Implements hook_menu_link_defaults().
  */
 function search_api_menu_link_defaults() {
-  $links['search_api.overview'] = array(
-    'link_title' => 'Search API',
-    'description' => "Create and configure search engines.",
-    'route_name' => 'search_api.overview',
-    'parent' => 'system.admin.config.search',
+  return array(
+    'search_api.overview' => array(
+      'link_title' => 'Search API',
+      'description' => 'Create and configure search engines.',
+      'route_name' => 'search_api.overview',
+      'parent' => 'system.admin.config.search',
+    ),
+    'search_api.server_overview' => array(
+      'link_title' => 'Servers',
+      'description' => 'Create and configure search servers.',
+      'route_name' => 'search_api.server_overview',
+      'parent' => 'search_api.overview',
+    ),
   );
-
-  return $links;
 }
 
 /**

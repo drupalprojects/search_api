@@ -21,14 +21,14 @@ search_api.server_add:
   requirements:
     _entity_create_access: 'search_api_server'
 
-search_api.server_edit:
+search_api.server_view:
   path: '/admin/config/search/search_api/servers/{search_api_server}'
   defaults:
     _entity_form: 'search_api_server.edit'
   requirements:
     _entity_access: 'search_api_server.edit'
 
-search_api.server_edit_default:
+search_api.server_edit:
   path: '/admin/config/search/search_api/servers/{search_api_server}/edit'
   defaults:
     _entity_form: 'search_api_server.edit'
@@ -56,14 +56,6 @@ search_api.server_disable:
   requirements:
     _entity_access: 'search_api_server.disable'
 
-search_api.index_overview:
-  path: '/admin/config/search/search_api/indexes'
-  defaults:
-    _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
-    entity_type: 'search_api_index'
-  requirements:
-    _permission: 'administer search_api'
-
 search_api.index_add:
   path: '/admin/config/search/search_api/indexes/add_index'
   defaults:
@@ -71,14 +63,14 @@ search_api.index_add:
   requirements:
     _entity_create_access: 'search_api_index'
 
-search_api.index_edit:
+search_api.index_view:
   path: '/admin/config/search/search_api/indexes/{search_api_index}'
   defaults:
     _entity_form: 'search_api_index.edit'
   requirements:
     _entity_access: 'search_api_index.edit'
 
-search_api.index_edit_default:
+search_api.index_edit:
   path: '/admin/config/search/search_api/indexes/{search_api_index}/edit'
   defaults:
     _entity_form: 'search_api_index.edit'
