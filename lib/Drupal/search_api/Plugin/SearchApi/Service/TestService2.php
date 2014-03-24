@@ -2,12 +2,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Service;
 
-use Drupal\Core\Annotation\Translation;
-use Drupal\search_api\Annotation\Service;
 use Drupal\search_api\Service\ServicePluginBase;
 
 /**
- * @Service(
+ * @SearchApiService(
  *   id = "search_api_test_service2",
  *   label = @Translation("Test service 2"),
  *   description = @Translation("Dummy service implementation")

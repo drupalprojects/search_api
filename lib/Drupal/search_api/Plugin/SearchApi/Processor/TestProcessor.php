@@ -2,12 +2,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\Core\Annotation\Translation;
-use Drupal\search_api\Annotation\Processor;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
- * @Processor(
+ * @SearchApiProcessor(
  *   id = "search_api_test_service",
  *   label = @Translation("Test service"),
  *   description = @Translation("Dummy service implementation")

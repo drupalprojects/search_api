@@ -8,9 +8,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\EntityManager;
-use Drupal\search_api\Annotation\Datasource;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Datasource\Entity\EntityItem;
 use Drupal\search_api\Datasource\Tracker\DefaultTracker;
@@ -19,7 +17,7 @@ use Drupal\Component\Utility\String;
 /**
  * Represents a datasource which exposes the content entities.
  *
- * @Datasource(
+ * @SearchApiDatasource(
  *   id = "search_api_content_entity_datasource",
  *   name = @Translation("Content entity datasource"),
  *   description = @Translation("Exposes the content entities as datasource."),
