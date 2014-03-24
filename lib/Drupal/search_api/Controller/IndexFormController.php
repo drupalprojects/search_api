@@ -409,8 +409,10 @@ class IndexFormController extends EntityFormController {
         $this->getEntity()->save();
         // Notify the user that the server was created.
         drupal_set_message($this->t('The index was successfully saved.'));
-        // Redirect to the server page.
-        $form_state['redirect'] = $this->url('search_api.index_view');
+        // Redirect to the index page.
+        // Build the route parameters.
+        $params = array('search_api_index' => $this->getEntity()->id());
+        $form_state['redirect'] = $this->url('search_api.index_view', $params);
       }
       catch (Exception $ex) {
         // Rebuild the form.
