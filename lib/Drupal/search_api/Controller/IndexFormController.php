@@ -213,11 +213,14 @@ class IndexFormController extends EntityFormController {
       '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
     );
     // Build the datasource element.
+    $options = $this->getDatasourcePluginDefinitionOptions();
+    // Sort the options
+    sort($options);
     $form['datasourcePluginId'] = array(
       '#type' => 'select',
       '#title' => $this->t('Datasource'),
       '#description' => $this->t('Select the datasource of items that will be indexed in this index. This setting cannot be changed afterwards.'),
-      '#options' => $this->getDatasourcePluginDefinitionOptions(),
+      '#options' => $options,
       '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),
