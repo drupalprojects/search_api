@@ -7,16 +7,14 @@
 namespace Drupal\search_api\Entity;
 
 use Drupal;
-use Drupal\Core\Annotation\Translation;
-use Drupal\Core\Entity\Annotation\EntityType;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
- * Class representing a search server.
+ * Defines the search server configuration entity.
  *
- * @EntityType(
+ * @ConfigEntityType(
  *   id = "search_api_server",
  *   label = @Translation("Search server"),
  *   controllers = {
@@ -31,7 +29,7 @@ use Drupal\search_api\Server\ServerInterface;
  *     },
  *     "list" = "Drupal\search_api\Controller\ServerListController"
  *   },
- *   config_prefix = "search_api.server",
+ *   config_prefix = "server",
  *   entity_keys = {
  *     "id" = "machine_name",
  *     "label" = "name",
@@ -39,8 +37,9 @@ use Drupal\search_api\Server\ServerInterface;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "/admin/config/search/search_api/servers/{search_api_server}",
- *     "edit-form" = "/admin/config/search/search_api/servers/{search_api_server}/edit",
+ *     "canonical" = "search_api.server_edit",
+ *     "add-form" = "search_api.server_add",
+ *     "edit-form" = "search_api.server_edit_default",
  *   }
  * )
  */
