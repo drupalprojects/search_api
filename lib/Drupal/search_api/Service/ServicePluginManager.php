@@ -35,7 +35,7 @@ class ServicePluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SearchApi/Service', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiService');
     // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, $language_manager, 'search_api_services');
-    $this->alterInfo($module_handler, 'search_api_service_info');
+    $this->alterInfo('search_api_service_info');
   }
 
 }

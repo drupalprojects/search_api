@@ -35,7 +35,7 @@ class ProcessorPluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SearchApi/Processor', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiProcessor');
     // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, $language_manager, 'search_api_processors');
-    $this->alterInfo($module_handler, 'search_api_processor_info');
+    $this->alterInfo('search_api_processor_info');
   }
 
 }

@@ -35,7 +35,7 @@ class DatasourcePluginManager extends DefaultPluginManager {
     parent::__construct('Plugin/SearchApi/Datasource', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiDatasource');
     // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, $language_manager, 'search_api_datasources');
-    $this->alterInfo($module_handler, 'search_api_datasource_info');
+    $this->alterInfo('search_api_datasource_info');
   }
 
 }
