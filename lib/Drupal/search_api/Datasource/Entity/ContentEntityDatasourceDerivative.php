@@ -95,10 +95,21 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
           ) + $base_plugin_definition;
         }
       }
+
+      // Sort alphabetically
+      uasort($plugin_derivatives, array($this, 'sortDerivatives'));
+
       // Add the plugin derivatives for the given base plugin.
       $this->derivatives[$base_plugin_id] = $plugin_derivatives;
     }
     return $this->derivatives[$base_plugin_id];
+  }
+
+  /**
+   * Helper function to sort the list of content entities
+   */
+  function sortDerivatives($a, $b) {
+    return strcmp($a["label"], $b["label"]);
   }
 
 }
