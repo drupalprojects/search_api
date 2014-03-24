@@ -197,7 +197,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
     // Get the entity type definition.
     $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityType());
     // Determine whether the entity type supports bundles.
-    return !empty($entity_type_definition->getKey('bundle'));
+    return $entity_type_definition->hasKey('bundle');
   }
 
   /**
