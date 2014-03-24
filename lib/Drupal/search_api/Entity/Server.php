@@ -6,7 +6,6 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Exception\SearchApiException;
@@ -138,7 +137,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function hasValidService() {
     // Get the service plugin definition.
-    $service_plugin_definition = Drupal::service('search_api.service.plugin.manager')->getDefinition($this->servicePluginId);
+    $service_plugin_definition = \Drupal::service('search_api.service.plugin.manager')->getDefinition($this->servicePluginId);
     // Determine whether the service is valid.
     return !empty($service_plugin_definition);
   }
@@ -152,7 +151,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       // Get the ID of the service plugin.
       $service_plugin_id = $this->servicePluginId;
       // Get the service plugin manager.
-      $service_plugin_manager = Drupal::service('search_api.service.plugin.manager');
+      $service_plugin_manager = \Drupal::service('search_api.service.plugin.manager');
       // Create a service plugin instance.
       $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->servicePluginConfig);
     }
@@ -184,11 +183,11 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // Perform default entity pre delete.
     parent::preDelete($storage_controller, $entities);
     // Get the indexes associated with the servers.
-    $index_ids = Drupal::entityQuery('search_api_index')
+    $index_ids = \Drupal::entityQuery('search_api_index')
       ->condition('serverMachineName', array_keys($entities), 'IN')
       ->execute();
     // Load the related indexes.
-    $indexes = Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
+    $indexes = \Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
     // Iterate through the indexes.
     foreach ($indexes as $index) {
       // Remove the index from the server.
