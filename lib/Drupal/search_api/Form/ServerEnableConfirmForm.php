@@ -31,7 +31,12 @@ class ServerEnableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.server_overview');
+    return array(
+      'route_name' => 'search_api.server_view',
+      'route_parameters' => array(
+        'search_api_server' => $this->entity->id(),
+      ),
+    );
   }
 
   /**
@@ -49,10 +54,8 @@ class ServerEnableConfirmForm extends EntityConfirmFormBase {
     $this->entity->setStatus(TRUE)->save();
     // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been enabled.', array('%name' => $this->entity->label())));
-    // Get the cancel route.
-    $cancel_route = $this->getCancelRoute();
-    // Redirect to the server overview page.
-    $form_state['redirect'] = $this->url($cancel_route['route_name']);
+    // Redirect to the server view page.
+    $form_state['redirect_route'] = $this->getCancelRoute();
   }
 
 }

@@ -223,7 +223,7 @@ class ServerFormController extends EntityFormController {
         $form['servicePluginConfig']['#type'] = 'details';
         $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['label']));
         $form['servicePluginConfig']['#description'] = String::checkPlain($service_plugin_definition['description']);
-        $form['servicePluginConfig']['#collapsed'] = !$server->isNew();
+        $form['servicePluginConfig']['#collapsed'] = FALSE;
         // Attach the build service plugin configuration form.
         $form['servicePluginConfig'] += $service_plugin_config_form;
       }
@@ -321,11 +321,17 @@ class ServerFormController extends EntityFormController {
       // Catch any exception that may get thrown during save operation.
       try {
         // Save changes made to the entity.
-        $this->getEntity()->save();
+        $entity = $this->getEntity();
+        $entity->save();
         // Notify the user that the server was created.
         drupal_set_message($this->t('The server was successfully saved.'));
         // Redirect to the server page.
-        $form_state['redirect'] = $this->url('search_api.server_overview');
+        $form_state['redirect_route'] = array(
+          'route_name' => 'search_api.server_view',
+          'route_parameters' => array(
+            'search_api_server' => $entity->id(),
+          ),
+        );
       }
       catch (Exception $ex) {
         // Rebuild the form.
@@ -344,10 +350,13 @@ class ServerFormController extends EntityFormController {
   public function delete(array $form, array &$form_state) {
     // Get the entity.
     $entity = $this->getEntity();
-    // Build the route parameters.
-    $params = array('search_api_server' => $entity->id());
     // Redirect to the entity delete confirm page.
-    $form_state['redirect'] = $this->url('search_api.server_delete', $params);
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.server_delete',
+      'route_parameters' => array(
+        'search_api_server' => $entity->id(),
+      ),
+    );
   }
 
 }

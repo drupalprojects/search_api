@@ -24,14 +24,19 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return ''; // @fixme: What description message should be shown here?
+    return $this->t('Disabling a server will also remove all indexes from it and disable them, along with their searches.');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.server_overview');
+    return array(
+      'route_name' => 'search_api.server_view',
+      'route_parameters' => array(
+        'search_api_server' => $this->entity->id(),
+      ),
+    );
   }
 
   /**
@@ -49,10 +54,10 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
     $this->entity->setStatus(FALSE)->save();
     // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been disabled.', array('%name' => $this->entity->label())));
-    // Get the cancel route.
-    $cancel_route = $this->getCancelRoute();
-    // Redirect to the server overview page.
-    $form_state['redirect'] = $this->url($cancel_route['route_name']);
+    // Redirect to the overview page.
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.overview',
+    );
   }
 
 }

@@ -24,7 +24,12 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.server_overview');
+    return array(
+      'route_name' => 'search_api.server_view',
+      'route_parameters' => array(
+        'search_api_server' => $this->entity->id(),
+      ),
+    );
   }
 
   /**
@@ -42,10 +47,10 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
     $this->entity->delete();
     // Notify the user about the server removal.
     drupal_set_message(t('The search server %name has been removed.', array('%name' => $this->entity->label())));
-    // Get the cancel route.
-    $cancel_route = $this->getCancelRoute();
-    // Redirect to the server overview page.
-    $form_state['redirect'] = $this->url($cancel_route['route_name']);
+    // Redirect to the overview page.
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.overview',
+    );
   }
 
 }
