@@ -24,7 +24,7 @@ class ServerEnableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return ''; // @fixme: What description message should be shown here?
+    return '';
   }
 
   /**

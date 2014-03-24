@@ -23,6 +23,13 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
+  public function getDescription() {
+    return $this->t('Deleting a server will disable all its indexes and their searches.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCancelRoute() {
     return array(
       'route_name' => 'search_api.server_view',
