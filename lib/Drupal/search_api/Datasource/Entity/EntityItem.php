@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Datasource\Entity;
 
-/*
- * Include required classes and interfaces.
- */
 use IteratorAggregate;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\Datasource\ItemInterface;

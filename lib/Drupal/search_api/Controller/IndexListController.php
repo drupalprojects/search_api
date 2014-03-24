@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Controller;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Config\Entity\ConfigEntityListController;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;

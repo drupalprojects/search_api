@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Controller;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Entity\EntityAccessController;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;

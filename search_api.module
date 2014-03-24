@@ -4,9 +4,6 @@
  * Contains the Search API hook implementations.
  */
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 

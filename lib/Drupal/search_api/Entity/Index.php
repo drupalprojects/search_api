@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Entity;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Config\Entity\ConfigEntityBase;

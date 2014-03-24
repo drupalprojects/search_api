@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
-/*
- * Include required classes and interfaces.
- */
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Annotation\Translation;

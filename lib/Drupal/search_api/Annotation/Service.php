@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Annotation;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Component\Annotation\Plugin;
 
 /**
@@ -16,7 +13,7 @@ use Drupal\Component\Annotation\Plugin;
  *
  * @Annotation
  */
-class Service extends Plugin {
+class SearchApiService extends Plugin {
 
   /**
    * The service plugin ID.

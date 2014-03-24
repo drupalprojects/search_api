@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Datasource\Tracker;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\Item\ItemStates;

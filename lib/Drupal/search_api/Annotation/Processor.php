@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Annotation;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Component\Annotation\Plugin;
 
 /**
@@ -16,7 +13,7 @@ use Drupal\Component\Annotation\Plugin;
  *
  * @Annotation
  */
-class Processor extends Plugin {
+class SearchApiProcessor extends Plugin {
 
   /**
    * The processor plugin ID.

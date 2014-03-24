@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Datasource;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Index\IndexInterface;

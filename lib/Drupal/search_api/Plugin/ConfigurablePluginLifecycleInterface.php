@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Plugin;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Plugin\PluginFormInterface;

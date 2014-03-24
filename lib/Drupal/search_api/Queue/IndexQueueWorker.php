@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Queue;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal;
 
 /**

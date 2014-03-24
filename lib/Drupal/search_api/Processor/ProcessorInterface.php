@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Processor;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 
 /**

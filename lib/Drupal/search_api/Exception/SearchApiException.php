@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Exception;
 
-/*
- * Include required classes and interfaces.
- */
 use Exception;
 
 /**

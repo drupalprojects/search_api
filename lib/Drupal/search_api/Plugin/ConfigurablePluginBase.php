@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Plugin;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Component\Utility\String;
 

@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Form;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Entity\EntityConfirmFormBase;
 
 /**

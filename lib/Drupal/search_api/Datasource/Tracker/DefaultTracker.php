@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Datasource\Tracker;
 
-/*
- * Include required classes and interfaces.
- */
 use Exception;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Index\IndexInterface;

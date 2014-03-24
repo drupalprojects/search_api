@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Datasource\Entity;
 
-/*
- * Include required classes and interfaces.
- */
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Drupal\Core\Entity\EntityManager;

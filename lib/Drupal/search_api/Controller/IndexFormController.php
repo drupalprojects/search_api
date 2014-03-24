@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Controller;
 
-/*
- * Include required classes and interfaces.
- */
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManager;

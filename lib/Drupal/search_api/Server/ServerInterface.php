@@ -6,9 +6,6 @@
 
 namespace Drupal\search_api\Server;
 
-/*
- * Include required classes and interfaces.
- */
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 
 /**
