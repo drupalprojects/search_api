@@ -8,6 +8,7 @@ namespace Drupal\search_api\Plugin;
 
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Component\Utility\String;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for all configurable plugins.
@@ -22,6 +23,13 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
     $configuration += $this->defaultConfiguration();
     // Initialize the parent chain of objects.
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+    return new static($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
