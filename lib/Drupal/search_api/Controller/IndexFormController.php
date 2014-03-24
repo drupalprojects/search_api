@@ -411,8 +411,13 @@ class IndexFormController extends EntityFormController {
         drupal_set_message($this->t('The index was successfully saved.'));
         // Redirect to the index page.
         // Build the route parameters.
-        $params = array('search_api_index' => $this->getEntity()->id());
-        $form_state['redirect'] = $this->url('search_api.index_view', $params);
+        // Redirect to the entity delete confirm page.
+        $form_state['redirect_route'] = array(
+          'route_name' => 'search_api.index_view',
+          'route_parameters' => array(
+            'search_api_index' => $this->getEntity()->id(),
+          ),
+        );
       }
       catch (Exception $ex) {
         // Rebuild the form.
@@ -431,10 +436,14 @@ class IndexFormController extends EntityFormController {
   public function delete(array $form, array &$form_state) {
     // Get the entity.
     $entity = $this->getEntity();
-    // Build the route parameters.
-    $params = array('search_api_index' => $entity->id());
     // Redirect to the entity delete confirm page.
-    $form_state['redirect'] = $this->url('search_api.index_delete', $params);
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.index_delete',
+      'route_parameters' => array(
+        'search_api_index' => $entity->id(),
+      ),
+    );
+
   }
 
 }

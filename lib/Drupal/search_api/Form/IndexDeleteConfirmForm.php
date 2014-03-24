@@ -24,7 +24,12 @@ class IndexDeleteConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.index_view');
+    return array(
+      'route_name' => 'search_api.index_view',
+      'route_parameters' => array(
+        'search_api_index' => $this->entity->id(),
+      ),
+    );
   }
 
   /**
@@ -42,10 +47,10 @@ class IndexDeleteConfirmForm extends EntityConfirmFormBase {
     $this->entity->delete();
     // Notify the user about the index removal.
     drupal_set_message(t('The search index %name has been removed.', array('%name' => $this->entity->label())));
-    // Get the cancel route.
-    $cancel_route = $this->getCancelRoute();
-    // Redirect to the index overview page.
-    $form_state['redirect'] = $this->url($cancel_route['route_name']);
+    // Redirect to the overview page.
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.overview',
+    );
   }
 
 }

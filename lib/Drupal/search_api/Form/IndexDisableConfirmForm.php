@@ -31,7 +31,12 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array('route_name' => 'search_api.index_view');
+    return array(
+      'route_name' => 'search_api.index_view',
+      'route_parameters' => array(
+        'search_api_index' => $this->entity->id(),
+      ),
+    );
   }
 
   /**
@@ -47,12 +52,12 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
   public function submit(array $form, array &$form_state) {
     // Toggle the entity status.
     $this->entity->setStatus(FALSE)->save();
-    // Notify the user about the index removal.
+    // Notify the user about the server removal.
     drupal_set_message($this->t('The search index %name has been disabled.', array('%name' => $this->entity->label())));
-    // Get the cancel route.
-    $cancel_route = $this->getCancelRoute();
-    // Redirect to the index overview page.
-    $form_state['redirect'] = $this->url($cancel_route['route_name']);
+    // Redirect to the overview page.
+    $form_state['redirect_route'] = array(
+      'route_name' => 'search_api.overview',
+    );
   }
 
 }
