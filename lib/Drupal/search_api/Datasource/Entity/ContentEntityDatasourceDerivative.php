@@ -6,6 +6,8 @@
 
 namespace Drupal\search_api\Datasource\Entity;
 
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Config\Entity\ConfigEntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Drupal\Core\Entity\EntityManager;
@@ -63,7 +65,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
   /**
    * {@inheritdoc}
    */
-  public function getDerivativeDefinition($derivative_id, array $base_plugin_definition) {
+  public function getDerivativeDefinition($derivative_id, $base_plugin_definition) {
     // Get the derivatives for the given base plugin definition.
     $derivatives = $this->getDerivativeDefinitions($base_plugin_definition);
     // Get the derivative plugin defintion.
@@ -73,7 +75,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
   /**
    * {@inheritdoc}
    */
-  public function getDerivativeDefinitions(array $base_plugin_definition) {
+  public function getDerivativeDefinitions($base_plugin_definition) {
     // Get the base plugin ID.
     $base_plugin_id = $base_plugin_definition['id'];
     // Check if the derivatives need to be resolved.
@@ -85,12 +87,12 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
       // Iterate through the entity types.
       foreach ($entity_manager->getDefinitions() as $entity_type => $entity_type_definition) {
         // Check if the entity type is not a configuration entity.
-        if (!(is_subclass_of($entity_type_definition['class'], '\Drupal\Core\Config\Entity\ConfigEntityInterface'))) {
+        if (!($entity_type_definition instanceof ConfigEntityInterface)) {
           // Build the derivative plugin definition.
           $plugin_derivatives["{$entity_type}"] = array(
             'id' => "entity:{$entity_type}",
             'entity_type' => $entity_type,
-            'label' => $entity_type_definition['label'],
+            'label' => $entity_type_definition->getLabel(),
           ) + $base_plugin_definition;
         }
       }

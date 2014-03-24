@@ -8,7 +8,7 @@ namespace Drupal\search_api\Datasource\Entity;
 
 use IteratorAggregate;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\search_api\Datasource\ItemInterface;
+use Drupal\search_api\Datasource\Item\ItemInterface;
 
 /**
  * Entity datasource item wrapper.
