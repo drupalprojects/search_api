@@ -4,8 +4,8 @@
  * Contains the Search API hook implementations.
  */
 
+use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
 
 /*
  * Constant definitions.
@@ -57,7 +57,7 @@ function search_api_permission() {
  */
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
-  if (!($entity instanceof ConfigEntityInterface)) {
+  if ($entity instanceof ContentEntityType) {
     // @todo: Track entity insert.
   }
 }
@@ -67,7 +67,7 @@ function search_api_entity_insert(EntityInterface $entity) {
  */
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
-  if (!($entity instanceof ConfigEntityInterface)) {
+  if ($entity instanceof ContentEntityType) {
     // @todo: Track entity change.
   }
 }
@@ -77,7 +77,7 @@ function search_api_entity_update(EntityInterface $entity) {
  */
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
-  if (!($entity instanceof ConfigEntityInterface)) {
+  if ($entity instanceof ContentEntityType) {
     // @todo: Track entity delete.
   }
 }
