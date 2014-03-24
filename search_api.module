@@ -53,19 +53,6 @@ function search_api_permission() {
 }
 
 /**
- * Implements hook_queue_info().
- */
-function search_api_queue_info() {
-  return array(
-    'search_api_indexing_queue' => array(
-      'title' => t('Search index queue'),
-      'worker callback' => array('\Drupal\search_api\Queue\IndexQueueWorker', 'process'),
-      'cron' => array('time' => Drupal::config('search_api')->get('cron_worker_runtime')),
-    ),
-  );
-}
-
-/**
  * Implements hook_entity_insert().
  */
 function search_api_entity_insert(EntityInterface $entity) {
