@@ -6,8 +6,7 @@
 
 namespace Drupal\search_api\Datasource\Entity;
 
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\ContentEntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Drupal\Core\Entity\EntityManager;
@@ -87,7 +86,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
       // Iterate through the entity types.
       foreach ($entity_manager->getDefinitions() as $entity_type => $entity_type_definition) {
         // Check if the entity type is not a configuration entity.
-        if (!($entity_type_definition instanceof ConfigEntityInterface)) {
+        if ($entity_type_definition instanceof ContentEntityType) {
           // Build the derivative plugin definition.
           $plugin_derivatives["{$entity_type}"] = array(
             'id' => "entity:{$entity_type}",
