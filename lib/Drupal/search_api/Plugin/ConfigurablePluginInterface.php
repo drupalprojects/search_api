@@ -6,14 +6,15 @@
 
 namespace Drupal\search_api\Plugin;
 
-use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Component\Plugin\ConfigurablePluginInterface as DrupalConfigurablePluginInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 
 /**
  * Interface which describes a plugin for Search API.
  */
-interface ConfigurablePluginInterface extends PluginInspectionInterface, DrupalConfigurablePluginInterface, PluginFormInterface {
+interface ConfigurablePluginInterface extends PluginInspectionInterface, DrupalConfigurablePluginInterface, PluginFormInterface, ContainerFactoryPluginInterface {
 
   /**
    * Get the label for use on the administration pages.
