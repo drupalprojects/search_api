@@ -6,9 +6,9 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_test_service",
- *   label = @Translation("Test service"),
- *   description = @Translation("Dummy service implementation")
+ *   id = "search_api_test_processor",
+ *   label = @Translation("Test processor"),
+ *   description = @Translation("Dummy processor implementation")
  * )
  */
 class TestProcessor extends ProcessorPluginBase {

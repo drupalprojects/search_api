@@ -12,17 +12,19 @@ use Drupal\search_api\Service\ServicePluginBase;
  * )
  */
 class TestService extends ServicePluginBase {
+  protected $configuration = array();
+
   public function buildConfigurationForm(array $form, array &$form_state) {
 
   }
   public function defaultConfiguration() {
-
+    return array();
   }
   public function getConfiguration() {
-
+    return $this->configuration;
   }
   public function setConfiguration(array $configuration) {
-
+    $this->configuration = $configuration;
   }
   public function submitConfigurationForm(array &$form, array &$form_state) {
 
