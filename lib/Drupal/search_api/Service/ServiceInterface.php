@@ -8,6 +8,7 @@ namespace Drupal\search_api\Service;
 
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Query\QueryInterface;
 
 /**
  * Interface defining the methods search services have to implement.
@@ -107,5 +108,20 @@ interface ServiceInterface extends ConfigurablePluginInterface {
    *   TRUE if the all items were deleted, otherwise FALSE.
    */
   public function deleteAllItems(IndexInterface $index);
+
+  /**
+   * Executes a search on the server represented by this object.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to execute.
+   *
+   * @return array
+   *   An associative array containing the search results, as required by
+   *   \Drupal\search_api\Query\QueryInterface::execute().
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error prevented the search from completing.
+   */
+  public function search(QueryInterface $query);
 
 }

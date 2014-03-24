@@ -7,6 +7,7 @@
 namespace Drupal\search_api\Index;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -84,9 +85,103 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Set the server.
    *
-   * @param \Drupal\search_api\Index\ServerInterface|NULL $server
-   *   An instance of ServerInterface or NULL.
+   * @param \Drupal\search_api\Server\ServerInterface|NULL $server
+   *   The server to move this index to, or NULL.
    */
   public function setServer(ServerInterface $server = NULL);
+
+  /**
+   * Loads all enabled processors for this index in proper order.
+   *
+   * @return array
+   *   All enabled processors for this index, as
+   *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
+   */
+  public function getProcessors();
+
+  /**
+   * Preprocesses data items for indexing.
+   *
+   * Lets all enabled processors for this index preprocess the indexed data.
+   *
+   * @param array $items
+   *   An array of items to be preprocessed for indexing.
+   */
+  public function preprocessIndexItems(array &$items);
+
+  /**
+   * Preprocesses a search query.
+   *
+   * Lets all enabled processors for this index preprocess the search query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The object representing the query to be executed.
+   */
+  public function preprocessSearchQuery(QueryInterface $query);
+
+  /**
+   * Postprocesses search results before display.
+   *
+   * If a class is used for both pre- and post-processing a search query, the
+   * same object will be used for both calls (so preserving some data or state
+   * locally is possible).
+   *
+   * @param array $response
+   *   An array containing the search results. See
+   *   \Drupal\search_api\Plugin\search_api\QueryInterface::execute() for the
+   *   detailed format.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The object representing the executed query.
+   */
+  public function postprocessSearchResults(array &$response, QueryInterface $query);
+
+  /**
+   * Returns a list of all known fields for this index.
+   *
+   * @param bool $only_indexed
+   *   (optional) Return only indexed fields, not all known fields.
+   * @param bool $get_additional
+   *   (optional) Return not only known/indexed fields, but also related
+   *   entities whose fields could additionally be added to the index.
+   *
+   * @return array
+   *   An array of all known fields for this index. Keys are the field
+   *   identifiers, the values are arrays for specifying the field settings. The
+   *   structure of those arrays looks like this:
+   *   - name: The human-readable name for the field.
+   *   - description: A description of the field, if available.
+   *   - indexed: Boolean indicating whether the field is indexed or not.
+   *   - type: The type set for this field. One of the types returned by
+   *     search_api_default_field_types().
+   *   - real_type: (optional) If a custom data type was selected for this
+   *     field, this type will be stored here, and "type" contain the fallback
+   *     default data type.
+   *   - boost: A boost value for terms found in this field during searches.
+   *     Usually only relevant for fulltext fields.
+   *   - entity_type (optional): If set, the type of this field is really an
+   *     entity. The "type" key will then contain "integer", meaning that
+   *     servers will ignore this and merely index the entity's ID. Components
+   *     displaying this field, though, are advised to use the entity label
+   *     instead of the ID.
+   *   If $get_additional is TRUE, this array is encapsulated in another
+   *   associative array, which contains the above array under the "fields" key,
+   *   and a list of related entities (field keys mapped to names) under the
+   *   "additional_fields" key.
+   */
+  public function getFields($only_indexed = TRUE, $get_additional = FALSE);
+
+  /**
+   * Convenience method for getting all of this index's fulltext fields.
+   *
+   * @param bool $only_indexed
+   *   (optional) If set to TRUE, only the indexed fulltext fields will be
+   *   returned. Otherwise, this method will return all available fulltext
+   *   fields.
+   *
+   * @return array
+   *   An array containing all (or all indexed) fulltext fields defined for this
+   *   index.
+   */
+  public function getFulltextFields($only_indexed = TRUE);
 
 }

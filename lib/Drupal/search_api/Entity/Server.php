@@ -9,7 +9,10 @@ namespace Drupal\search_api\Entity;
 use Drupal;
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\Service\ServiceInterface;
 
 /**
  * Defines the search server configuration entity.
@@ -159,9 +162,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExportProperties() {
+  public function toArray() {
     // Get the exported properties.
-    $properties = parent::getExportProperties();
+    $properties = parent::toArray();
     // Check if the service is valid.
     if ($this->hasValidService()) {
       // Overwrite the service plugin configuration with the active.
@@ -192,6 +195,25 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $index->setServer(NULL);
       // Save changes made to the index.
       $index->save();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function search(QueryInterface $query) {
+    $this->ensurePlugin();
+    return $this->servicePluginInstance->search($query);
+  }
+
+  /**
+   * Helper method for ensuring the proxy object is set up.
+   */
+  protected function ensurePlugin() {
+    if (!isset($this->servicePluginInstance)) {
+      if (!($this->getService() instanceof ServiceInterface)) {
+        throw new SearchApiException(t('Search server with machine name @name specifies illegal service plugin @plugin.', array('@name' => $this->machine_name, '@plugin' => $this->servicePluginId)));
+      }
     }
   }
 
