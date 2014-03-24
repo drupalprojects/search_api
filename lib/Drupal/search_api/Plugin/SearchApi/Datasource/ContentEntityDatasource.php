@@ -190,14 +190,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
   /**
    * Determine whether the entity type supports bundles.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the entity type supports bundles, otherwise FALSE.
    */
   public function isEntityBundlable() {
     // Get the entity type definition.
     $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityType());
     // Determine whether the entity type supports bundles.
-    return isset($entity_type_definition['bundle_keys']);
+    return !empty($entity_type_definition->getKey('bundle'));
   }
 
   /**
