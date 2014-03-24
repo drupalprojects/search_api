@@ -159,63 +159,6 @@ function search_api_queue_info() {
 }
 
 /**
- * Implements hook_system_info_alter().
- *
- * @todo: See https://drupal.org/node/1199946 if dynamic module requirement will
- * be supported through another API.
- */
-function search_api_system_info_alter(array &$info, $file, $type) {
-  // Check if the info describes a module and Drupal is not in maintenance
-  // mode.
-  if ($type == 'module' && !defined('MAINTENANCE_MODE')) {
-    // Get the entity manager.
-    $entity_manager = Drupal::service('entity.manager');
-    // Get all the defined servers.
-    $servers = $entity_manager->getStorageController('search_api_server')->loadMultiple();
-    // Iterate through the servers.
-    foreach ($servers as $server) {
-      // Check if the server contains a valid service.
-      if ($server->hasValidService()) {
-        // Get the service plugin definition.
-        $plugin_definition = $server->getService()->getPluginDefinition();
-        // Check if the current module provides the plugin.
-        if ($file->name == $plugin_definition['provider']) {
-          // Mark the module as required.
-          $info['required'] = TRUE;
-          // Provide a human friendly message as to why the module is required.
-          $info['explanation'] = t('Required by the Search API module');
-        }
-      }
-    }
-    // Get all the defined indexes.
-    $indexes = $entity_manager->getStorageController('search_api_index')->loadMultiple();
-    // Iterate through the indexes.
-    foreach ($indexes as $index) {
-      // Check if the index contains a valid datasource.
-      if ($index->hasValidDatasource()) {
-        // Get the datasource plugin definition.
-        $plugin_definition = $index->getDatasource()->getPluginDefinition();
-        // Check if the current module provides the plugin.
-        if ($file->name == $plugin_definition['provider']) {
-          // Mark the module as required.
-          $info['required'] = TRUE;
-          // Provide a human friendly message as to why the module is required.
-          $info['explanation'] = t('Required by the Search API module');
-        }
-      }
-    }
-    // Check if the current module is the Search API module and at least one
-    // server or index is defined.
-    if ($file->name == 'search_api' && ($servers || $indexes)) {
-      // Mark the module as required.
-      $info['required'] = TRUE;
-      // Provide a human friendly message as to why the module is required.
-      $info['explanation'] = t('Required by the Search API module');
-    }
-  }
-}
-
-/**
  * Implements hook_entity_insert().
  */
 function search_api_entity_insert(EntityInterface $entity) {
