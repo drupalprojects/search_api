@@ -9,7 +9,7 @@ namespace Drupal\search_api\Datasource;
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 
 /**
- * Interface which desribes a datasource.
+ * Describes a datasource.
  */
 interface DatasourceInterface extends ConfigurablePluginInterface {
 
