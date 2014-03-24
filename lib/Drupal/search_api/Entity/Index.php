@@ -86,6 +86,37 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * - cron_limit: The maximum number of items to be indexed per cron batch.
    * - index_directly: Boolean setting whether entities are indexed immediately
    *   after they are created or updated.
+   * - fields: An array of all indexed fields for this index. Keys are the field
+   *   identifiers, the values are arrays for specifying the field settings. The
+   *   structure of those arrays looks like this:
+   *   - type: The type set for this field. One of the types returned by
+   *     search_api_default_field_types().
+   *   - real_type: (optional) If a custom data type was selected for this
+   *     field, this type will be stored here, and "type" contain the fallback
+   *     default data type.
+   *   - boost: (optional) A boost value for terms found in this field during
+   *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
+   *   - entity_type (optional): If set, the type of this field is really an
+   *     entity. The "type" key will then just contain the primitive data type
+   *     of the ID field, meaning that servers will ignore this and merely index
+   *     the entity's ID. Components displaying this field, though, are advised
+   *     to use the entity label instead of the ID.
+   * - additional fields: An associative array with keys and values being the
+   *   field identifiers of related entities whose fields should be displayed.
+   * - data_alter_callbacks: An array of all data alterations available. Keys
+   *   are the alteration identifiers, the values are arrays containing the
+   *   settings for that data alteration. The inner structure looks like this:
+   *   - status: Boolean indicating whether the data alteration is enabled.
+   *   - weight: Used for sorting the data alterations.
+   *   - settings: Alteration-specific settings, configured via the alteration's
+   *     configuration form.
+   * - processors: An array of all processors available for the index. The keys
+   *   are the processor identifiers, the values are arrays containing the
+   *   settings for that processor. The inner structure looks like this:
+   *   - status: Boolean indicating whether the processor is enabled.
+   *   - weight: Used for sorting the processors.
+   *   - settings: Processor-specific settings, configured via the processor's
+   *     configuration form.
    *
    * @var array
    */
@@ -113,10 +144,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var \Drupal\search_api\Datasource\DatasourceInterface
    */
-  private $datasourcePluginInstance;
+  protected $datasourcePluginInstance;
 
   /**
-   * The machine name of the server which data should be indexed.
+   * The machine name of the server on which data should be indexed.
    *
    * @var string
    */
@@ -127,10 +158,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var \Drupal\search_api\Server\ServerInterface
    */
-  private $server;
+  protected $server;
 
   /**
-   * Clone a Server object.
+   * Clones an index object.
    */
   public function __clone() {
     // Prevent the datasource and server instance from being cloned.
@@ -142,19 +173,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function id() {
     return $this->machine_name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function uri() {
-    return array(
-     'path' => 'admin/config/search/search_api/indexes/' . $this->id(),
-      'options' => array(
-        'entity_type' => $this->entityType,
-        'entity' => $this,
-      ),
-    );
   }
 
   /**
@@ -246,24 +264,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->server = $server;
     // Overwrite the server machine name.
     $this->serverMachineName = $server ? $server->id() : '';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getExportProperties() {
-    // Get the exported properties.
-    $properties = parent::getExportProperties();
-    // Check if the datasource is valid.
-    if ($this->hasValidDatasource()) {
-      // Overwrite the datasource plugin configuration with the active.
-      $properties['datasourcePluginConfig'] = $this->getDatasource()->getConfiguration();
-    }
-    else {
-      // Clear the datasource plugin configuration.
-      $properties['datasourcePluginConfig'] = array();
-    }
-    return $properties;
   }
 
 }
