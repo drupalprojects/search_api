@@ -154,11 +154,11 @@ class IndexFormController extends EntityFormController {
     // Check if the entity is being created.
     if ($entity->isNew()) {
       // Change the page title to 'Add index'.
-      drupal_set_title($this->t('Add search index'));
+      $form['#title'] = $this->t('Add search index');
     }
     else {
       // Change the page title to 'Edit search index @label'.
-      drupal_set_title($this->t('Edit search index @label', array('@label' => $entity->label())));
+      $form['#title'] = $this->t('Edit search index @label', array('@label' => $entity->label()));
     }
     // Build the entity form.
     $this->buildEntityForm($form, $form_state, $entity);
