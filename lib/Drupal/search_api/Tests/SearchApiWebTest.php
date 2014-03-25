@@ -44,6 +44,7 @@ class SearchApiWebTest extends WebTestBase {
         $this->createIndex();
         $this->addFieldsToIndex();
         $this->addAdditionalFieldsToIndex();
+        $this->addFiltersToIndex();
     }
 
     public function createServer() {
@@ -171,6 +172,23 @@ class SearchApiWebTest extends WebTestBase {
     public function renderMenuLinkTest() {
       $this->drupalGet('admin/config');
       $this->assertText('Search API', 'Search API menu link is displayed.');
+    }
+
+    public function addFiltersToIndex() {
+      $settings_path = 'admin/config/search/search_api/index/' . $this->index_id . '/filters';
+
+      $this->drupalGet($settings_path);
+      $this->assertResponse(200);
+
+      $edit = array(
+        'processors[search_api_highlight_processor][status]' => 1,
+        'processors[search_api_add_aggregation_processor][status]' => 1,
+      );
+
+      $this->drupalPostForm($settings_path, $edit, t('Save'));
+      $this->assertText(t('The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect.'));
+      $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->index_id . '/filters') !== FALSE;
+      $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
     }
 }
 
