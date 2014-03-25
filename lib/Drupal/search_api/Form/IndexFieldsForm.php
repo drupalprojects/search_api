@@ -1,24 +1,34 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\IndexFieldsFormController.
+ * Contains \Drupal\search_api\Form\IndexFieldsForm.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\String;
 
 /**
  * Provides a fields form controller for the Index entity.
  */
-class IndexFieldsFormController extends EntityFormController {
+class IndexFieldsForm extends EntityFormController {
 
   /**
    * The index where the fields will be configured for
    *
-   * @var Index
+   * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $entity;
+
+  /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManager
+   */
+  private $entityManager;
 
   /**
    * {@inheritdoc}
@@ -37,21 +47,53 @@ class IndexFieldsFormController extends EntityFormController {
   }
 
   /**
+   * Get the entity manager.
+   *
+   * @return \Drupal\Core\Entity\EntityManager
+   *   An instance of EntityManager.
+   */
+  protected function getEntityManager() {
+    return $this->entityManager;
+  }
+
+  /**
+   * Constructs a ContentEntityFormController object.
+   *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
+   */
+  public function __construct(EntityManagerInterface $entity_manager) {
+    $this->entityManager = $entity_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
+    $entity_manager = $container->get('entity.manager');
+    return new static($entity_manager);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, array &$form_state) {
-    // Get the old value
+    // Get the index
     $index = $this->entity;
 
+    // Get all options
     $options = $index->getFields(FALSE, TRUE);
     $fields = $options['fields'];
     $additional = $options['additional fields'];
 
     // An array of option arrays for types, keyed by nesting level.
-    /*$types = array(0 => search_api_field_types());
+    $types = array(0 => search_api_field_types());
 
-    $entity_types = entity_get_info();
-    $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
+    // Get all entity types
+    $entity_types = $this->getEntityManager()->getDefinitions();
+    $boost_values = array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
+    $boosts = array_combine($boost_values, $boost_values);
 
     $fulltext_types = array(0 => array('text'));
     // Add all custom data types with fallback "text" to fulltext types as well.
@@ -73,17 +115,17 @@ class IndexFieldsFormController extends EntityFormController {
         '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
-    if ($index->server) {
+    if ($index->getServer()) {
       $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
-          array('@server-url' => url('admin/config/search/search_api/server/' . $index->server))) . '</p>';
+          array('@server-url' => url('admin/config/search/search_api/server/' . $index->getServer()->machine_name))) . '</p>';
     }
     foreach ($fields as $key => $info) {
-      $form['fields'][$key]['title']['#markup'] = check_plain($info['name']);
+      $form['fields'][$key]['title']['#markup'] = String::checkPlain($info['name']);
       if (search_api_is_list_type($info['type'])) {
         $form['fields'][$key]['title']['#markup'] .= ' <sup><a href="#note-multi-valued" class="note-ref">1</a></sup>';
         $multi_valued_field_present = TRUE;
       }
-      $form['fields'][$key]['machine_name']['#markup'] = check_plain($key);
+      $form['fields'][$key]['machine_name']['#markup'] = String::checkPlain($key);
       if (isset($info['description'])) {
         $form['fields'][$key]['description'] = array(
           '#type' => 'value',
@@ -124,7 +166,7 @@ class IndexFieldsFormController extends EntityFormController {
         $form['fields'][$key]['boost'] = array(
           '#type' => 'select',
           '#options' => $boosts,
-          '#default_value' => $info['boost'],
+          '#default_value' => (isset($info['boost'])) ? $info['boost'] : '',
           '#states' => array(
             'visible' => array(
               $css_key . '-indexed' => array('checked' => TRUE),
@@ -133,7 +175,7 @@ class IndexFieldsFormController extends EntityFormController {
         );
         // Only add the multiple visible states if the VERSION string is >= 7.14.
         // See https://drupal.org/node/1464758.
-        if (version_compare(VERSION, '7.14', '>=')) {
+        if (version_compare(\Drupal::VERSION, '7.14', '>=')) {
           foreach ($fulltext_types[$level] as $type) {
             $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
           }
@@ -163,7 +205,7 @@ class IndexFieldsFormController extends EntityFormController {
           '#value' => $info['entity_type'],
         );
         $form['fields'][$key]['type_name'] = array(
-          '#markup' => check_plain($label),
+          '#markup' => String::checkPlain($label),
         );
         $form['fields'][$key]['boost'] = array(
           '#type' => 'value',
@@ -214,7 +256,6 @@ class IndexFieldsFormController extends EntityFormController {
         ),
       );
     }
-    */
 
     return $form;
   }
@@ -225,4 +266,5 @@ class IndexFieldsFormController extends EntityFormController {
   public function submitForm(array &$form, array &$form_state) {
     // TODO: Implement submitForm() method.
   }
+
 }

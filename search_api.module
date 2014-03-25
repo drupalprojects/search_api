@@ -184,3 +184,73 @@ function search_api_extract_inner_type($type) {
 function search_api_is_sortable_type($type) {
   return !search_api_is_text_type($type) && !search_api_is_list_type($type);
 }
+
+/**
+ * Returns all field types recognized by the Search API framework.
+ *
+ * @return array
+ *   An associative array with all recognized types as keys, mapped to their
+ *   translated display names.
+ *
+ * @see search_api_default_field_types()
+ * @see search_api_get_data_type_info()
+ */
+function search_api_field_types() {
+  $types = search_api_default_field_types();
+  foreach (search_api_get_data_type_info() as $id => $type) {
+    $types[$id] = $type['name'];
+  }
+  return $types;
+}
+
+/**
+ * Returns the default field types recognized by the Search API framework.
+ *
+ * @return array
+ *   An associative array with the default types as keys, mapped to their
+ *   translated display names.
+ */
+function search_api_default_field_types() {
+  return array(
+    'text' => t('Fulltext'),
+    'string' => t('String'),
+    'integer' => t('Integer'),
+    'decimal' => t('Decimal'),
+    'date' => t('Date'),
+    'duration' => t('Duration'),
+    'boolean' => t('Boolean'),
+    'uri' => t('URI'),
+  );
+}
+
+/**
+ * Returns either all custom field type definitions, or a specific one.
+ *
+ * @param $type
+ *   If specified, the type whose definition should be returned.
+ *
+ * @return array
+ *   If $type was not given, an array containing all custom data types, in the
+ *   format specified by hook_search_api_data_type_info().
+ *   Otherwise, the definition for the given type, or NULL if it is unknown.
+ *
+ * @see hook_search_api_data_type_info()
+ */
+function search_api_get_data_type_info($type = NULL) {
+  $types = &drupal_static(__FUNCTION__);
+  if (!isset($types)) {
+    $default_types = search_api_default_field_types();
+    $types =  \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
+    $types = $types ? $types : array();
+    foreach ($types as &$type_info) {
+      if (!isset($type_info['fallback']) || !isset($default_types[$type_info['fallback']])) {
+        $type_info['fallback'] = 'string';
+      }
+    }
+    \Drupal::moduleHandler()->alter('search_api_data_type_info', $types);
+  }
+  if (isset($type)) {
+    return isset($types[$type]) ? $types[$type] : NULL;
+  }
+  return $types;
+}
