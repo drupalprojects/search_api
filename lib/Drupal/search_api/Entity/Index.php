@@ -10,6 +10,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\Core\Entity;
 
 /**
  * Defines the search index configuration entity.
@@ -382,24 +383,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
       while ($field_entity_types) {
         foreach ($field_entity_types as $prefix => $field_entity_type) {
           /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
+          dpm($field_entity_type);
 
           $prefix_name = $field_entity_type->getLabel();
+          if (!($field_entity_type instanceof \Drupal\Core\Entity\EntityTypeInterface)) {
+            unset($field_entity_types[$prefix]);
+            continue;
+          }
           $entity_type_id = $field_entity_type->id();
-
-          // @todo : Does this still make sense in Drupal 8?
-          // Deal with lists of entities.
-          /*$nesting_level = $nesting_levels[$prefix];
-          $type_prefix = str_repeat('list<', $nesting_level);
-          $type_suffix = str_repeat('>', $nesting_level);
-          if ($nesting_level) {
-
-            $info =
-            // The real nesting level of the wrapper, not the accumulated one.
-            $level = search_api_list_nesting_level($info['type']);
-            for ($i = 0; $i < $level; ++$i) {
-              $wrapper = $wrapper[0];
-            }
-          }*/
 
           // Now look at all fields for all bundles for this entity type.
           $bundles = $this->entityManager()->getBundleInfo($entity_type_id);
@@ -429,7 +420,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
                 if (!empty($search_api_index_fields[$key])) {
                   // This field is already known in the index configuration.
                   $flat[$key] = $search_api_index_fields[$key] + array(
-                    'name' => $prefix_name . $field->getLabel(),
+                    'name' => $prefix_name . ' ' . $field->getLabel(),
                     'description' => $field->getDescription(),
                     'boost' => '1.0',
                     'indexed' => TRUE,
@@ -437,7 +428,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
                 }
                 else {
                   $flat[$key] = array(
-                    'name'    => $prefix_name . $field->getLabel(),
+                    'name'    => $prefix_name . ' ' . $field->getLabel(),
                     'description' => $field->getDescription(),
                     'type'    => $type,
                     'boost' => '1.0',
@@ -448,7 +439,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
               if (empty($types[$type])) {
                 if (isset($added[$key])) {
                   // Visit this entity/struct in a later iteration.
-                  $wrappers[$key . ':'] = $value;
+                  $field_entity_types[$key . ':'] = $field;
                   $prefix_names[$key . ':'] = $prefix_name . $field->getLabel(). ' » ';
                 }
                 else {

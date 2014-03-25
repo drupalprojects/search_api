@@ -87,6 +87,8 @@ class IndexFieldsForm extends EntityFormController {
     $fields = $options['fields'];
     $additional = $options['additional fields'];
 
+    dpm($options);
+
     // An array of option arrays for types, keyed by nesting level.
     $types = array(0 => search_api_field_types());
 
@@ -105,13 +107,13 @@ class IndexFieldsForm extends EntityFormController {
     }
 
     $form_state['index'] = $index;
-    $form['#theme'] = 'search_api_admin_fields_table';
+    $form['#theme'] = array('search_api_admin_fields_table');
     $form['#tree'] = TRUE;
     $form['description'] = array(
       '#type' => 'item',
       '#title' => t('Select fields to index'),
-      '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering. Fields indexed with type "Fulltext" and multi-valued fields (marked with <sup>1</sup>) cannot be used for sorting. ' .
-        'The boost is used to give additional weight to certain fields, e.g. titles or tags. It only takes effect for fulltext fields.</p>' .
+      '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering.' .
+        'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
         '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
@@ -137,16 +139,14 @@ class IndexFieldsForm extends EntityFormController {
         //$level = search_api_list_nesting_level($info['type']);
         $level = 1;
         if (empty($types[$level])) {
-          $type_prefix = str_repeat('list<', $level);
-          $type_suffix = str_repeat('>', $level);
           $types[$level] = array();
           foreach ($types[0] as $type => $name) {
             // We use the singular name for list types, since the user usually
             // doesn't care about the nesting level.
-            $types[$level][$type_prefix . $type . $type_suffix] = $name;
+            $types[$level][$type] = $name;
           }
           foreach ($fulltext_types[0] as $type) {
-            $fulltext_types[$level][] = $type_prefix . $type . $type_suffix;
+            $fulltext_types[$level][] = $type;
           }
         }
         $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
@@ -170,15 +170,8 @@ class IndexFieldsForm extends EntityFormController {
             ),
           ),
         );
-        // Only add the multiple visible states if the VERSION string is >= 7.14.
-        // See https://drupal.org/node/1464758.
-        if (version_compare(\Drupal::VERSION, '7.14', '>=')) {
-          foreach ($fulltext_types[$level] as $type) {
-            $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
-          }
-        }
-        else {
-          $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'] = array('value' => reset($fulltext_types[$level]));
+        foreach ($fulltext_types[$level] as $type) {
+          $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
         }
       }
       else {
@@ -221,10 +214,6 @@ class IndexFieldsForm extends EntityFormController {
         $form['fields'][$key]['indexed']['#default_value'] = 1;
         $form['fields'][$key]['indexed']['#disabled'] = TRUE;
       }
-    }
-
-    if (!empty($multi_valued_field_present)) {
-      $form['note']['#markup'] = '<div id="note-multi-valued"><small><sup>1</sup> ' . t('Multi-valued field') . '</small></div>';
     }
 
     if ($additional) {

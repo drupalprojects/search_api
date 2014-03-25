@@ -89,7 +89,7 @@ function search_api_entity_delete(EntityInterface $entity) {
  *   values. FALSE otherwise.
  */
 function search_api_is_text_type($type, array $allowed = array('text')) {
-  return in_array(search_api_extract_inner_type($type), $allowed);
+  return in_array($type, $allowed);
 }
 
 /**
@@ -98,11 +98,14 @@ function search_api_is_text_type($type, array $allowed = array('text')) {
  * @param $type
  *   The type to check for.
  *
+ * @todo
+ *   Make sure you take the field object and check the isMultiple parameter
+ *
  * @return bool
  *   TRUE if this type is sortable, FALSE otherwise.
  */
 function search_api_is_sortable_type($type) {
-  return !search_api_is_text_type($type) && !search_api_is_list_type($type);
+  return !search_api_is_text_type($type);
 }
 
 /**
@@ -189,4 +192,79 @@ function search_api_get_data_type_info($type = NULL) {
  */
 function search_api_extract_fields($wrapper, array $fields, array $value_options = array()) {
   return array();
+}
+
+/**
+ * Returns HTML for a field list form.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form.
+ */
+function theme_search_api_admin_fields_table($variables) {
+  dpr($variables);
+  $form = $variables['element'];
+  $header = array(t('Field'), t('Machine name'), t('Indexed'), t('Type'), t('Boost'));
+
+  $rows = array();
+  foreach (\Drupal\Core\Render\Element::children($form['fields']) as $name) {
+    $row = array();
+    foreach (\Drupal\Core\Render\Element::children($form['fields'][$name]) as $field) {
+      if ($cell = render($form['fields'][$name][$field])) {
+        $row[] = $cell;
+      }
+    }
+    if (empty($form['fields'][$name]['description']['#value'])) {
+      $rows[] = _search_api_deep_copy($row);
+    }
+    else {
+      $rows[] = array(
+        'data' => $row,
+        'title' => strip_tags($form['fields'][$name]['description']['#value']),
+      );
+    }
+  }
+
+  $note = isset($form['note']) ? $form['note'] : '';
+  $submit = $form['submit'];
+  $additional = isset($form['additional']) ? $form['additional'] : FALSE;
+  unset($form['note'], $form['submit'], $form['additional']);
+  $output = drupal_render_children($form);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= render($note);
+  $output .= render($submit);
+  if ($additional) {
+    $output .= render($additional);
+  }
+
+  return $output;
+}
+
+/**
+ * Returns a deep copy of the input array.
+ *
+ * The behavior of PHP regarding arrays with references pointing to it is rather
+ * weird. Therefore, we use this helper function in theme_search_api_index() to
+ * create safe copies of such arrays.
+ *
+ * @param array $array
+ *   The array to copy.
+ *
+ * @return array
+ *   A deep copy of the array.
+ */
+function _search_api_deep_copy(array $array) {
+  $copy = array();
+  foreach ($array as $k => $v) {
+    if (is_array($v)) {
+      $copy[$k] = _search_api_deep_copy($v);
+    }
+    elseif (is_object($v)) {
+      $copy[$k] = clone $v;
+    }
+    elseif ($v) {
+      $copy[$k] = $v;
+    }
+  }
+  return $copy;
 }
