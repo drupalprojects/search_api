@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\ServerListController.
+ * Contains \Drupal\search_api\ServerListBuilder.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Component\Utility\String;
@@ -12,7 +12,7 @@ use Drupal\Component\Utility\String;
 /**
  * Defines a list controller for the Server entity.
  */
-class ServerListController extends ConfigEntityListBuilder {
+class ServerListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}

@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\IndexListController.
+ * Contains \Drupal\search_api\IndexListBuilder.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Component\Utility\String;
@@ -13,7 +13,7 @@ use Drupal\Component\Utility\Xss;
 /**
  * Defines a list controller for the Index entity.
  */
-class IndexListController extends ConfigEntityListBuilder {
+class IndexListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}

@@ -20,7 +20,7 @@ use Drupal\search_api\Index\IndexInterface;
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\search_api\Controller\IndexAccessController",
- *     "list_builder" = "Drupal\search_api\Controller\IndexListController",
+ *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\IndexFormController",
  *       "edit" = "Drupal\search_api\Controller\IndexFormController",
@@ -28,7 +28,7 @@ use Drupal\search_api\Index\IndexInterface;
  *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\Controller\IndexListController"
+ *     "list" = "Drupal\search_api\IndexListBuilder"
  *   },
  *   config_prefix = "index",
  *   entity_keys = {

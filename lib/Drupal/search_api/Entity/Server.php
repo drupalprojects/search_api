@@ -22,7 +22,7 @@ use Drupal\search_api\Service\ServiceInterface;
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\search_api\Controller\ServerAccessController",
- *     "list_builder" = "Drupal\search_api\Controller\ServerListController",
+ *     "list_builder" = "Drupal\search_api\ServerListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\ServerFormController",
  *       "edit" = "Drupal\search_api\Controller\ServerFormController",
@@ -30,7 +30,7 @@ use Drupal\search_api\Service\ServiceInterface;
  *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\Controller\ServerListController"
+ *     "list" = "Drupal\search_api\ServerListBuilder"
  *   },
  *   config_prefix = "server",
  *   entity_keys = {
