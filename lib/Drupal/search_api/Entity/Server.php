@@ -21,7 +21,7 @@ use Drupal\search_api\Service\ServiceInterface;
  *   label = @Translation("Search server"),
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
- *     "access" = "Drupal\search_api\Controller\ServerAccessController",
+ *     "access" = "Drupal\search_api\Handler\ServerAccessHandler",
  *     "list_builder" = "Drupal\search_api\ServerListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\ServerFormController",

@@ -1,19 +1,21 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\IndexAccessController.
+ * Contains \Drupal\search_api\Handler\ServerAccessHandler.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api\Handler;
 
 use Drupal\Core\Entity\EntityAccessController;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Defines an access controller for the Index entity.
+ * Defines an access controller for the Server entity.
+ * @todo This should be subclassed from EntityAccessHandler
+ * once https://drupal.org/node/2154435 has been committed
  */
-class IndexAccessController extends EntityAccessController {
+class ServerAccessHandler extends EntityAccessController {
 
   /**
    * {@inheritdoc}

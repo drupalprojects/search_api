@@ -19,7 +19,7 @@ use Drupal\search_api\Index\IndexInterface;
  *   label = @Translation("Search index"),
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
- *     "access" = "Drupal\search_api\Controller\IndexAccessController",
+ *     "access" = "Drupal\search_api\Handler\IndexAccessHandler",
  *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\IndexFormController",
