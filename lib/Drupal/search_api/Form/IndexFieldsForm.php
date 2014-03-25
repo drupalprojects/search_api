@@ -105,7 +105,7 @@ class IndexFieldsForm extends EntityFormController {
     }
 
     $form_state['index'] = $index;
-    $form['#theme'] = array('search_api_admin_fields_table');
+    $form['#theme'] = 'search_api_admin_fields_table';
     $form['#tree'] = TRUE;
     $form['description'] = array(
       '#type' => 'item',

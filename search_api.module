@@ -195,6 +195,17 @@ function search_api_extract_fields($wrapper, array $fields, array $value_options
 }
 
 /**
+ * Implements hook_theme().
+ */
+function search_api_theme() {
+  $themes['search_api_admin_fields_table'] = array(
+    'render element' => 'element',
+  );
+
+  return $themes;
+}
+
+/**
  * Returns HTML for a field list form.
  *
  * @param array $variables
@@ -229,7 +240,14 @@ function theme_search_api_admin_fields_table($variables) {
   $additional = isset($form['additional']) ? $form['additional'] : FALSE;
   unset($form['note'], $form['submit'], $form['additional']);
   $output = drupal_render_children($form);
-  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+
+  $build = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+
+  $output .= drupal_render($build);
   $output .= render($note);
   $output .= render($submit);
   if ($additional) {
