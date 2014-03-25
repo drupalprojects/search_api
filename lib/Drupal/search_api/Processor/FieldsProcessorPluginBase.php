@@ -31,7 +31,7 @@ use Drupal\search_api\Query\QueryInterface;
  * - testField()
  * - testType()
  */
-class FieldsProcessorPluginBase extends ProcessorPluginBase {
+abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
 
   /**
    * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::buildConfigurationForm().

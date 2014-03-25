@@ -12,7 +12,7 @@ use Drupal\search_api\Index\IndexInterface;
 /**
  * Base class for plugins that are associated with a certain index.
  */
-class IndexPluginBase extends ConfigurablePluginBase implements IndexPluginInterface {
+abstract class IndexPluginBase extends ConfigurablePluginBase implements IndexPluginInterface {
 
   /**
    * The index this processor is configured for.

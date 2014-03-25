@@ -14,7 +14,7 @@ use Drupal\search_api\Query\QueryInterface;
 /**
  * Abstract base class for search processor plugins.
  */
-class ProcessorPluginBase extends IndexPluginBase implements ProcessorInterface {
+abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorInterface {
 
   /**
    * {@inheritdoc}
