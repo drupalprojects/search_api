@@ -171,11 +171,8 @@ class IndexFiltersForm extends EntityFormController {
     }
 
     // Processor settings.
-    $form['processors']['settings_title'] = array(
-      '#type' => 'item',
+    $form['processor_settings'] = array(
       '#title' => t('Processor settings'),
-    );
-    $form['processors']['processor_settings'] = array(
       '#type' => 'vertical_tabs',
     );
 
@@ -185,13 +182,13 @@ class IndexFiltersForm extends EntityFormController {
       $settings_form = $processor_plugin->buildConfigurationForm($form, $form_state);
 
       if (!empty($settings_form)) {
-        $form['processors']['settings'][$name] = array(
+        $form['settings'][$name] = array(
           '#type' => 'details',
           '#title' => $processor['label'],
           '#group' => 'processor_settings',
           //'#weight' => $processor['weight'],
         );
-        $form['processors']['settings'][$name] += $settings_form;
+        $form['settings'][$name] += $settings_form;
       }
     }
 
