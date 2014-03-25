@@ -72,7 +72,7 @@ search_api.index_edit:
 search_api.index_fields:
   path: '/admin/config/search/search_api/index/{search_api_index}/fields'
   defaults:
-    _form: 'search_api_index.fields'
+    _entity_form: 'search_api_index.fields'
   requirements:
     _entity_access: 'search_api_index.fields'
 
