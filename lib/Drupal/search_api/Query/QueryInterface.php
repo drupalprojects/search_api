@@ -44,8 +44,10 @@ interface QueryInterface {
    * If this method is not called on the query before execution, this will be a
    * filter-only query.
    *
-   * @param array|string|null $keys
-   *   A string with the unparsed search keys, or NULL to use no search keys.
+   * @param string|array|null $keys
+   *   A string with the search keys, in one of the formats specified by
+   *   getKeys(). A passed string will be parsed according to the set parse
+   *   mode. Use NULL to not use any search keys.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   The called object.

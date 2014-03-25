@@ -242,7 +242,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the datasource plugin manager.
       $datasource_plugin_manager = \Drupal::service('search_api.datasource.plugin.manager');
       // Get the plugin configuration for the datasource.
-      $datasource_plugin_configuration = array('_index_' => $this) + $this->datasourcePluginConfig;
+      $datasource_plugin_configuration = array('index' => $this) + $this->datasourcePluginConfig;
       // Create a datasource plugin instance.
       $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id, $datasource_plugin_configuration);
     }

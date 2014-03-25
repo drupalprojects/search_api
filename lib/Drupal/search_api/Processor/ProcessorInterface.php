@@ -7,7 +7,7 @@
 namespace Drupal\search_api\Processor;
 
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Plugin\ConfigurablePluginInterface;
+use Drupal\search_api\Plugin\IndexPluginInterface;
 use Drupal\search_api\Query\QueryInterface;
 
 /**
@@ -23,7 +23,7 @@ use Drupal\search_api\Query\QueryInterface;
  * search queries, so these two methods should mostly be implemented either both
  * or neither.
  */
-interface ProcessorInterface extends ConfigurablePluginInterface {
+interface ProcessorInterface extends IndexPluginInterface {
 
   /**
    * Checks whether this processor is applicable for a certain index.
@@ -60,6 +60,7 @@ interface ProcessorInterface extends ConfigurablePluginInterface {
    * @return array
    *   Information about all additional properties.
    */
+  // @todo Figure out how this method should actually work/be called.
   public function propertyInfo();
 
   /**

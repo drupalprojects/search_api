@@ -2,7 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
@@ -11,23 +11,5 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  *   description = @Translation("Dummy processor implementation")
  * )
  */
-class TestProcessor extends ProcessorPluginBase {
-  public function buildConfigurationForm(array $form, array &$form_state) {
-
-  }
-  public function defaultConfiguration() {
-
-  }
-  public function getConfiguration() {
-
-  }
-  public function setConfiguration(array $configuration) {
-
-  }
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-
-  }
-  public function validateConfigurationForm(array &$form, array &$form_state) {
-
-  }
+class TestProcessor extends FieldsProcessorPluginBase {
 }

@@ -6,12 +6,12 @@
 
 namespace Drupal\search_api\Datasource;
 
-use Drupal\search_api\Plugin\ConfigurablePluginInterface;
+use Drupal\search_api\Plugin\IndexPluginInterface;
 
 /**
  * Describes a datasource.
  */
-interface DatasourceInterface extends ConfigurablePluginInterface {
+interface DatasourceInterface extends IndexPluginInterface {
 
   /**
    * Get the properties exposed by the underlying complex data type.
