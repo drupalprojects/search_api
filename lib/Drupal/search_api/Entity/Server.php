@@ -24,8 +24,8 @@ use Drupal\search_api\Service\ServiceInterface;
  *     "access" = "Drupal\search_api\Handler\ServerAccessHandler",
  *     "list_builder" = "Drupal\search_api\ServerListBuilder",
  *     "form" = {
- *       "default" = "Drupal\search_api\Controller\ServerFormController",
- *       "edit" = "Drupal\search_api\Controller\ServerFormController",
+ *       "default" = "Drupal\search_api\Form\ServerForm",
+ *       "edit" = "Drupal\search_api\Form\ServerForm",
  *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
  *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
