@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\IndexFormController.
+ * Contains \Drupal\search_api\Form\IndexForm.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api\Form;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFormController;
@@ -14,9 +14,9 @@ use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\Component\Utility\String;
 
 /**
- * Provides a form controller for the Index entity.
+ * Provides a form for the Index entity.
  */
-class IndexFormController extends EntityFormController {
+class IndexForm extends EntityFormController {
 
   /**
    * The entity manager.
@@ -39,7 +39,7 @@ class IndexFormController extends EntityFormController {
   protected $datasourcePluginManager;
 
   /**
-   * Create an IndexFormController object.
+   * Create an IndexForm object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
