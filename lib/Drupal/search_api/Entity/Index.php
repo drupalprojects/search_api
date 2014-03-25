@@ -206,11 +206,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getOption($name) {
+  public function getOption($name, $default = NULL) {
     // Get the options.
     $options = $this->getOptions();
     // Get the option value for the given key.
-    return isset($options[$name]) ? $options[$name] : NULL;
+    return isset($options[$name]) ? $options[$name] : $default;
   }
 
   /**
@@ -233,7 +233,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDatasource() {
+  public function getDatasourceId() {
+    return $this->datasourcePluginId;
+  }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDatasource() {
     // Check if the datasource plugin instance needs to be resolved.
     if (!$this->datasourcePluginInstance && $this->hasValidDatasource()) {
       // Get the ID of the datasource plugin.
@@ -258,7 +265,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getServer() {
+  public function getServerId() {
+    return $this->serverMachineName;
+  }
+
+    /**
+     * {@inheritdoc}
+     */
+    public
+    function getServer() {
     // Check if the server needs to be resolved. Note we do not use
     // hasValidServer to prevent duplicate load calls to the storage controller.
     if (!$this->server) {
@@ -345,9 +360,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Loads all enabled processors for this index in proper order.
    *
-   * @return array
-   *   All enabled processors for this index, as
-   *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
+   * @return \Drupal\search_api\Processor\ProcessorInterface[]
+   *   All enabled processors for this index.
    */
   public function getProcessors() {
     // @todo Implement getProcessors() method.
@@ -362,7 +376,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   An array of items to be preprocessed for indexing.
    */
   public function preprocessIndexItems(array &$items) {
-    // @todo Implement preprocessIndexItems() method.
+    foreach ($this->getProcessors() as $processor) {
+      $processor->preprocessIndexItems($items);
+    }
   }
 
   /**
@@ -374,7 +390,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The object representing the query to be executed.
    */
   public function preprocessSearchQuery(QueryInterface $query) {
-    // @todo Implement preprocessSearchQuery() method.
+    foreach ($this->getProcessors() as $processor) {
+      $processor->preprocessSearchQuery($query);
+    }
   }
 
   /**
@@ -392,6 +410,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The object representing the executed query.
    */
   public function postprocessSearchResults(array &$response, QueryInterface $query) {
-    // @todo Implement postprocessSearchResults() method.
+    foreach (array_reverse($this->getProcessors()) as $processor) {
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+      $processor->postprocessSearchResults($response, $query);
+    }
   }
 }
