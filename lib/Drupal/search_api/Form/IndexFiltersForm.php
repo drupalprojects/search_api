@@ -1,17 +1,17 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\IndexFiltersFormController.
+ * Contains \Drupal\search_api\Form\IndexFiltersFormController.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityFormController;
 
 /**
- * Provides a filters form controller for the Index entity.
+ * Provides a filters form for the Index entity.
  */
-class IndexFiltersFormController extends EntityFormController {
+class IndexFiltersForm extends EntityFormController {
 
   /**
    * The book being displayed.
