@@ -65,6 +65,8 @@ class Highlight extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+
     $form['prefix'] = array(
       '#type' => 'textfield',
       '#title' => t('Highlighting prefix'),

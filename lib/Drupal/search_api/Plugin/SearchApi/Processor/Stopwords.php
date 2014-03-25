@@ -24,7 +24,19 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function defaultConfiguration() {
+    return array(
+      'stopwords' => t("but\ndid\nthe this that those\netc"),
+      'file' => '',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+
     $form['help'] = array(
       '#markup' => '<p>' . t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about !stopwords.', array('!stopwords' => l(t('stop words'), "http://en.wikipedia.org/wiki/Stop_words"))) . '</p>',
     );
@@ -37,13 +49,9 @@ class Stopwords extends FieldsProcessorPluginBase {
       '#type' => 'textarea',
       '#title' => t('Stopwords'),
       '#description' => t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
-      '#default_value' => t("but\ndid\nthe this that those\netc"),
+      '#default_value' => $this->configuration['stopwords'],
     );
 
-    if (!empty($this->configuration)) {
-      $form['file']['#default_value'] = $this->configuration['file'];
-      $form['stopwords']['#default_value'] = $this->configuration['stopwords'];
-    }
     return $form;
   }
 

@@ -26,6 +26,16 @@ class Tokenizer extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function defaultConfiguration() {
+    return array(
+      'spaces' => "[^[:alnum:]]",
+      'ignorable' => "[']",
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
@@ -47,20 +57,15 @@ class Tokenizer extends FieldsProcessorPluginBase {
             'Specify the characters as a <a href="@link">PCRE character class</a>. ' .
             'Note: For non-English content, the default setting might not be suitable.',
             array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
-        '#default_value' => "[^[:alnum:]]",
+        '#default_value' => $this->configuration['spaces'],
       ),
       'ignorable' => array(
         '#type' => 'textfield',
         '#title' => t('Ignorable characters'),
         '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). The same format as above is used.'),
-        '#default_value' => "[']",
+        '#default_value' => $this->configuration['ignorable'],
       ),
     );
-
-    if (!empty($this->configuration)) {
-      $form['spaces']['#default_value'] = $this->configuration['spaces'];
-      $form['ignorable']['#default_value'] = $this->configuration['ignorable'];
-    }
 
     return $form;
   }
