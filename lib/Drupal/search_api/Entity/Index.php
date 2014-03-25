@@ -24,6 +24,7 @@ use Drupal\search_api\Index\IndexInterface;
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\IndexFormController",
  *       "edit" = "Drupal\search_api\Controller\IndexFormController",
+ *       "fields" = "Drupal\search_api\Controller\IndexFieldsFormController",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
  *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
