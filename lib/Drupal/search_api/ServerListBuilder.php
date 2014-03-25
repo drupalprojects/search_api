@@ -42,6 +42,11 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       }
     }
 
+    // Add indexes which aren't bound to any server (orphans).
+    if (isset($indexes[''])) {
+      $entities['disabled'] += $indexes[''];
+    }
+
     return $entities;
   }
 
@@ -51,7 +56,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   public function buildHeader() {
     return array(
       'status' => $this->t('Status'),
-      'type' => $this->t('Type'),
+      'type' => array('data' => $this->t('Type'), 'colspan' => 2),
       'title' => $this->t('Name'),
       'service' => array(
         'data' => $this->t('Service'),
@@ -89,15 +94,22 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     $filepath = '/' . drupal_get_path('module', 'search_api') . '/images/';
     $status = $entity->status() ? 'enabled' : 'disabled';
     $type = $entity->getEntityTypeId() == 'search_api_server' ? 'Server' : 'Index';
-    return array(
-      'status' => "<img src='$filepath$status.png' alt='$status' title='$status'></div>",
-      'type' => "<div class=\"description\">$type</div>",
-      'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
-      'service' => String::checkPlain($service_label) . ($service_summary ? "<div class=\"description\">{$service_summary}</div>" : ''),
-      'operations' => array(
-        'data' => $this->buildOperations($entity),
-      ),
+    $row['status'] = "<img src='$filepath$status.png' alt='$status' title='$status'></div>";
+    if ($type == 'Index' && !empty($entity->serverMachineName)) {
+      $row[''] = '';
+      $row['type'] = $type;
+    }
+    else {
+      $row['type'] = array('data' => $type, 'colspan' => 2);
+    }
+    $label = l($entity->label(), "admin/config/search/search_api/" . drupal_strtolower($type) . "/$entity->machine_name/edit");
+    $row['title'] = $label . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : '');
+    $row['service'] = String::checkPlain($service_label) . ($service_summary ? "<div class=\"description\">{$service_summary}</div>" : '');
+    $row['operations'] = array(
+      'data' => $this->buildOperations($entity),
     );
+
+    return $row;
   }
 
   /**
@@ -108,11 +120,11 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     $entities = $this->load();
     // Initialize the build variable to an empty array.
     $build = array(
-      'enabled' => array('#markup' => "<h2>{$this->t('Enabled')}</h2>"),
-      'disabled' => array('#markup' => "<h2>{$this->t('Disabled')}</h2>"),
+      'enabled' => array('#markup' => "<h2>{$this->t('Active servers')}</h2>"),
+      'disabled' => array('#markup' => "<h2>{$this->t('Inactive elements')}</h2>"),
     );
     // Iterate through the entity states.
-    foreach (array('enabled', 'disabled') as $status) {
+    foreach (array_keys($build) as $status) {
       // Initialize the rows variable to an empty array.
       $rows = array();
       // Iterate through the entities.
