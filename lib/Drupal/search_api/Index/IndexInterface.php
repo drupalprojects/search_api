@@ -64,17 +64,26 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
-<<<<<<< HEAD
-   * Determines whether the datasource is valid.
-=======
-   * Set the options.
+   * Sets the options.
    *
    */
   public function setOptions($options);
 
   /**
+   * Sets an option.
+   *
+   * @param string $name
+   *   The name of an option.
+   * @param $option
+   *   The new option.
+   *
+   * @return mixed
+   *   The value of the option.
+   */
+  public function setOption($name, $option);
+
+  /**
    * Determine whether the datasource is valid.
->>>>>>> Field list working. Add additional field not yet
    *
    * @return boolean
    *   TRUE if the datasource is valid, otherwise FALSE.

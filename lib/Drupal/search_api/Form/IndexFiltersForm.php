@@ -186,7 +186,7 @@ class IndexFiltersForm extends EntityFormController {
     );
 
     foreach ($processor_info as $name => $processor) {
-      /** @var \Drupal\search_api\Processor\ProcessorInterface $processor_plugin */
+      /** @var $processor_plugin \Drupal\search_api\Processor\ProcessorInterface */
       $processor_plugin = $processor_objects[$name];
       $settings_form = $processor_plugin->buildConfigurationForm($form, $form_state);
 
@@ -207,6 +207,54 @@ class IndexFiltersForm extends EntityFormController {
   /**
    * {@inheritdoc}
    */
+  public function validate(array $form, array &$form_state) {
+    foreach ($form_state['processors'] as $name => $processor) {
+      if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
+        /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+        $processor->validateConfigurationForm($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submit(array $form, array &$form_state) {
+    $values = $form_state['values'];
+    unset($values['processors']['settings']);
+
+    $options = $this->entity->getOptions();
+
+    // Store processor settings.
+    foreach ($form_state['processors'] as $name => $processor) {
+      $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
+      $values['processors'][$name] += array('settings' => array());
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+      $values['processors'][$name]['settings'] = $processor->submitConfigurationForm($processor_form, $values['processors'][$name]['settings'], $form_state);
+    }
+
+
+    if (!isset($options['processors']) || $options['processors'] != $values['processors']) {
+      // Save the already sorted arrays to avoid having to sort them at each use.
+      uasort($values['processors'], 'search_api_admin_element_compare');
+      $this->entity->setOption('processors', $values['processors']);
+
+      // Reset the index's internal property cache to correctly incorporate the
+      // new data alterations.
+      //$this->entity->resetCaches();
+
+      $this->entity->save();
+      //$this->entity->reindex();
+      drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
+    }
+    else {
+      drupal_set_message(t('No values were changed.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function actions(array $form, array &$form_state) {
     $actions = parent::actions($form, $form_state);
 
@@ -214,15 +262,6 @@ class IndexFiltersForm extends EntityFormController {
     unset($actions['delete']);
 
     return $actions;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @see book_remove_button_submit()
-   */
-  public function submit(array $form, array &$form_state) {
-    // TODO
   }
 
 }

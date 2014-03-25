@@ -237,6 +237,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function setOption($name, $option) {
+    $this->options[$name] = $option;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasValidDatasource() {
     // Get the datasource plugin definition.
     $datasource_plugin_definition = \Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
