@@ -326,8 +326,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $get_additional = $get_additional ? 1 : 0;
 
      // First, try the static cache and the persistent cache bin.
+    $cid = $this->getCacheId() . "-" . $only_indexed . "-" . $get_additional;
     if (empty($this->fields[$only_indexed][$get_additional])) {
-      $cid = $this->getCacheId() . "-" . $only_indexed . "-" . $get_additional;
       if ($cached = \Drupal::cache()->get($cid)) {
         $this->fields[$only_indexed][$get_additional] = $cached->data;
       }
