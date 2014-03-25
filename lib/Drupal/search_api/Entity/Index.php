@@ -20,7 +20,6 @@ use Drupal\search_api\Index\IndexInterface;
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\search_api\Handler\IndexAccessHandler",
- *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",
  *       "edit" = "Drupal\search_api\Form\IndexForm",

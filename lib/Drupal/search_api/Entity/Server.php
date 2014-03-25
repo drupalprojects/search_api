@@ -22,7 +22,7 @@ use Drupal\search_api\Service\ServiceInterface;
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
  *     "access" = "Drupal\search_api\Handler\ServerAccessHandler",
- *     "list_builder" = "Drupal\search_api\ServerListBuilder",
+ *     "list_builder" = "Drupal\search_api\OverviewListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\ServerForm",
  *       "edit" = "Drupal\search_api\Form\ServerForm",

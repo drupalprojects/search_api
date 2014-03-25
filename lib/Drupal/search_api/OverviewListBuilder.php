@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\ServerListBuilder.
+ * Contains \Drupal\search_api\OverviewListBuilder.
  *
- * Overview page for Servers and Indexes.
+ * Overview page for Servers and Indexes. Since those are entities, entity list is used for displaying those.
  */
 
 namespace Drupal\search_api;
@@ -12,9 +12,9 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Component\Utility\String;
 
 /**
- * Defines a list controller for the Server entity.
+ * Defines a list builder for the Server and Index entities.
  */
-class ServerListBuilder extends ConfigEntityListBuilder {
+class OverviewListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}
