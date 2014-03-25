@@ -121,10 +121,6 @@ class IndexFieldsForm extends EntityFormController {
     }
     foreach ($fields as $key => $info) {
       $form['fields'][$key]['title']['#markup'] = String::checkPlain($info['name']);
-      if (search_api_is_list_type($info['type'])) {
-        $form['fields'][$key]['title']['#markup'] .= ' <sup><a href="#note-multi-valued" class="note-ref">1</a></sup>';
-        $multi_valued_field_present = TRUE;
-      }
       $form['fields'][$key]['machine_name']['#markup'] = String::checkPlain($key);
       if (isset($info['description'])) {
         $form['fields'][$key]['description'] = array(
@@ -138,7 +134,8 @@ class IndexFieldsForm extends EntityFormController {
       );
       if (empty($info['entity_type'])) {
         // Determine the correct type options (with the correct nesting level).
-        $level = search_api_list_nesting_level($info['type']);
+        //$level = search_api_list_nesting_level($info['type']);
+        $level = 1;
         if (empty($types[$level])) {
           $type_prefix = str_repeat('list<', $level);
           $type_suffix = str_repeat('>', $level);
@@ -230,11 +227,6 @@ class IndexFieldsForm extends EntityFormController {
       $form['note']['#markup'] = '<div id="note-multi-valued"><small><sup>1</sup> ' . t('Multi-valued field') . '</small></div>';
     }
 
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save changes'),
-    );
-
     if ($additional) {
       reset($additional);
       $form['additional'] = array(
@@ -257,6 +249,11 @@ class IndexFieldsForm extends EntityFormController {
       );
     }
 
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save changes'),
+    );
+
     return $form;
   }
 
@@ -264,7 +261,63 @@ class IndexFieldsForm extends EntityFormController {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, array &$form_state) {
-    // TODO: Implement submitForm() method.
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = $form_state['index'];
+    $options = isset($index->getOptions) ? $index->getOptions : array();
+    if ($form_state['values']['op'] == t('Save changes')) {
+      $fields = $form_state['values']['fields'];
+      $default_types = search_api_default_field_types();
+      $custom_types = search_api_get_data_type_info();
+      foreach ($fields as $name => $field) {
+        if (empty($field['indexed'])) {
+          unset($fields[$name]);
+        }
+        else {
+          // Don't store the description. "indexed" is implied.
+          unset($fields[$name]['description'], $fields[$name]['indexed']);
+          // Boost defaults to 1.0.
+          if ($field['boost'] == '1.0') {
+            unset($fields[$name]['boost']);
+          }
+        }
+      }
+      $options['fields'] = $fields;
+      unset($options['additional fields']);
+      $index->setOptions($options);
+      $ret = $index->save();
+
+      if ($ret) {
+        drupal_set_message(t('The indexed fields were successfully changed. ' .
+          'The index was cleared and will have to be re-indexed with the new settings.'));
+      }
+      else {
+        drupal_set_message(t('No values were changed.'));
+      }
+      if (isset($index->options['data_alter_callbacks']) || isset($index->options['processors'])) {
+        $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
+      }
+      else {
+        drupal_set_message(t('Please set up the indexing workflow.'));
+        $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/filters';
+      }
+      return;
+    }
+    else {
+      // Adding a related entity's fields.
+      $prefix = $form_state['values']['additional']['field'];
+      $options['additional fields'][$prefix] = $prefix;
+      $index->setOptions($options);
+      $ret = $index->save();
+
+      if ($ret) {
+        drupal_set_message(t('The available fields were successfully changed.'));
+      }
+      else {
+        drupal_set_message(t('No values were changed.'));
+      }
+      // Go back to the same page on submit
+      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
+    }
   }
 
 }

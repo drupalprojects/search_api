@@ -16,7 +16,7 @@ use Drupal\search_api\Server\ServerInterface;
 interface IndexInterface extends ConfigEntityInterface {
 
   /**
-   * Get the index description.
+   * Retrieves the index description.
    *
    * @return string
    *   The description of this index.
@@ -32,18 +32,31 @@ interface IndexInterface extends ConfigEntityInterface {
   public function isReadOnly();
 
   /**
-   * Get an option.
+   * Get the cache ID prefix used for this index's caches.
+   *
+   * @param $type
+   *   The type of cache. Currently only "fields" is used.
+   *
+   * @return
+   *   The cache ID (prefix) for this index's caches.
+   */
+  public function getCacheId($type = 'fields');
+
+  /**
+   * Retrieves an option.
    *
    * @param string $name
    *   The name of an option.
+   * @param mixed $default
+   *   The value return if the option wasn't set.
    *
    * @return mixed
    *   The value of the option.
    */
-  public function getOption($name);
+  public function getOption($name, $default = NULL);
 
   /**
-   * Get a list of all options.
+   * Retrieves an array of all options.
    *
    * @return array
    *   An associative array of option values, keyed by the option name.
@@ -51,7 +64,17 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
+<<<<<<< HEAD
+   * Determines whether the datasource is valid.
+=======
+   * Set the options.
+   *
+   */
+  public function setOptions($options);
+
+  /**
    * Determine whether the datasource is valid.
+>>>>>>> Field list working. Add additional field not yet
    *
    * @return boolean
    *   TRUE if the datasource is valid, otherwise FALSE.
@@ -59,7 +82,15 @@ interface IndexInterface extends ConfigEntityInterface {
   public function hasValidDatasource();
 
   /**
-   * Get the datasource.
+   * Retrieves the datasource plugin's ID.
+   *
+   * @return string
+   *   The ID of the datasource plugin used by this index.
+   */
+  public function getDatasourceId();
+
+  /**
+   * Retrieves the datasource plugin.
    *
    * @return \Drupal\search_api\Datasource\DatasourceInterface
    *   An instance of DatasourceInterface.
@@ -67,7 +98,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDatasource();
 
   /**
-   * Determine whether the server is valid.
+   * Determines whether the server is valid.
    *
    * @return boolean
    *   TRUE if the server is valid, otherwise FALSE.
@@ -75,17 +106,27 @@ interface IndexInterface extends ConfigEntityInterface {
   public function hasValidServer();
 
   /**
-   * Get the server.
+   * Retrieves the ID of the server the index is attached to.
    *
-   * @return \Drupal\search_api\Server\ServerInterface
-   *   An instance of ServerInterface.
+   * @return string|null
+   *   The index's server's machine name, or NULL if the index doesn't have a
+   *   server.
+   */
+  public function getServerId();
+
+  /**
+   * Retrieves the server the index is attached to.
+   *
+   * @return \Drupal\search_api\Server\ServerInterface|null
+   *   An instance of ServerInterface, or NULL if the index doesn't have a
+   *   server.
    */
   public function getServer();
 
   /**
-   * Set the server.
+   * Sets the server the index is attached to
    *
-   * @param \Drupal\search_api\Server\ServerInterface|NULL $server
+   * @param \Drupal\search_api\Server\ServerInterface|null $server
    *   The server to move this index to, or NULL.
    */
   public function setServer(ServerInterface $server = NULL);
