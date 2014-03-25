@@ -30,7 +30,6 @@ use Drupal\search_api\Service\ServiceInterface;
  *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\ServerListBuilder"
  *   },
  *   config_prefix = "server",
  *   entity_keys = {

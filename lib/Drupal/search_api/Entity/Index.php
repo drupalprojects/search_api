@@ -29,7 +29,6 @@ use Drupal\search_api\Index\IndexInterface;
  *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
  *     },
- *     "list" = "Drupal\search_api\IndexListBuilder"
  *   },
  *   config_prefix = "index",
  *   entity_keys = {
