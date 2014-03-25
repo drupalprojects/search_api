@@ -33,13 +33,13 @@ class SearchApiWebTest extends WebTestBase {
         parent::setUp();
 
         // Create user with Search API permissions.
-        $this->test_user = $this->drupalCreateUser(array('administer search_api'));
+        $this->test_user = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
     }
 
     public function testFramework() {
 
         $this->drupalLogin($this->test_user);
-
+        $this->renderMenuLinkTest();
         $this->createServer();
         $this->createIndex();
         $this->addFieldsToIndex();
@@ -62,6 +62,16 @@ class SearchApiWebTest extends WebTestBase {
         $this->drupalPostForm($settings_path, $edit, t('Save'));
         $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
         $this->assertText(t('!name field is required.', array('!name' => t('Service'))));
+
+
+        $edit = array(
+            'name' => 'Search API test server',
+            'status' => 1,
+            'description' => 'A server used for testing.',
+            'servicePluginId' => 'search_api_test_service',
+        );
+        $this->drupalPostForm($settings_path, $edit, t('Save'));
+        $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
 
         $this->server_id = 'test_server';
 
@@ -150,6 +160,11 @@ class SearchApiWebTest extends WebTestBase {
 
     public function addAdditionalFieldsToIndex() {
         // @todo Implement addAdditionalFieldsToIndex() method.
+    }
+
+    public function renderMenuLinkTest() {
+      $this->drupalGet('admin/config');
+      $this->assertText('Search API', 'Search API menu link is displayed.');
     }
 }
 
