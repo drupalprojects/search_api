@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
@@ -22,11 +23,12 @@ class AddAggregation extends FieldsProcessorPluginBase {
 
     $fields = $this->index->getFields(FALSE);
     $field_options = array();
+    $field_properties = array();
     foreach ($fields as $name => $field) {
-      $field_options[$name] = check_plain($field['name']);
+      $field_options[$name] = String::checkPlain($field['name']);
       $field_properties[$name] = array(
         '#attributes' => array('title' => $name),
-        '#description' => check_plain($field['description']),
+        '#description' => String::checkPlain($field['description']),
       );
     }
     $additional = empty($this->configuration['fields']) ? array() : $this->configuration['fields'];
@@ -83,7 +85,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
         '#type' => 'checkboxes',
         '#title' => t('Contained fields'),
         '#options' => $field_options,
-        '#default_value' => drupal_map_assoc($field['fields']),
+        '#default_value' => array_combine($field['fields'], $field['fields']),
         '#attributes' => array('class' => array('search-api-alter-add-aggregation-fields')),
         '#required' => TRUE,
       ));
@@ -268,7 +270,6 @@ class AddAggregation extends FieldsProcessorPluginBase {
    * @param $info (optional)
    *   One of "name", "type" or "description", to indicate what values should be
    *   returned for the types. Defaults to "name".
-   *
    */
   protected function getTypes($info = 'name') {
     switch ($info) {

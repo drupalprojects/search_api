@@ -80,11 +80,11 @@ class Tokenizer extends FieldsProcessorPluginBase {
     $ignorable = str_replace('/', '\/', $form_state['values']['ignorable']);
     if (@preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
       $el = $form['spaces'];
-      form_error($el, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
     }
     if (@preg_match('/(' . $ignorable . ')+/u', '') === FALSE) {
       $el = $form['ignorable'];
-      form_error($el, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
     }
   }
 

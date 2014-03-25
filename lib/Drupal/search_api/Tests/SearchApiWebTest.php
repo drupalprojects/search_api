@@ -15,9 +15,14 @@ class SearchApiWebTest extends WebTestBase {
 
   public static $modules = array('search_api', 'node');
 
+<<<<<<< HEAD
   protected $testUser;
   protected $serverId;
   protected $indexId;
+=======
+  protected $test_user;
+  protected $server_id;
+>>>>>>> Small fixes for the processors
 
   /**
    * {@inheritdoc}
@@ -38,8 +43,12 @@ class SearchApiWebTest extends WebTestBase {
   }
 
   public function testFramework() {
+<<<<<<< HEAD
 
     $this->drupalLogin($this->testUser);
+=======
+    $this->drupalLogin($this->test_user);
+>>>>>>> Small fixes for the processors
     $this->renderMenuLinkTest();
     $this->createServer();
     $this->createIndex();
@@ -48,6 +57,7 @@ class SearchApiWebTest extends WebTestBase {
     $this->addFiltersToIndex();
   }
 
+<<<<<<< HEAD
   public function renderMenuLinkTest() {
     $this->drupalGet('admin/config');
     $this->assertText('Search API', 'Search API menu link is displayed.');
@@ -55,6 +65,9 @@ class SearchApiWebTest extends WebTestBase {
 
   public function createServer() {
 
+=======
+  public function createServer() {
+>>>>>>> Small fixes for the processors
     $settings_path = 'admin/config/search/search_api/add_server';
 
     $this->drupalGet($settings_path);
@@ -70,6 +83,10 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Service'))));
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> Small fixes for the processors
     $edit = array(
       'name' => 'Search API test server',
       'status' => 1,
@@ -83,14 +100,22 @@ class SearchApiWebTest extends WebTestBase {
 
     $edit = array(
       'name' => 'Search API test server',
+<<<<<<< HEAD
       'machine_name' => $this->serverId,
+=======
+      'machine_name' => $this->server_id,
+>>>>>>> Small fixes for the processors
       'status' => 1,
       'description' => 'A server used for testing.',
       'servicePluginId' => 'search_api_test_service',
     );
 
+<<<<<<< HEAD
     // The first post gives a 'Please configure the used service.' warning,
     // so we have to submit the form twice.
+=======
+    // The first post gives a 'Please configure the used service.' warning, so we have to submit the form twice.
+>>>>>>> Small fixes for the processors
     $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -100,7 +125,10 @@ class SearchApiWebTest extends WebTestBase {
   }
 
   public function createIndex() {
+<<<<<<< HEAD
 
+=======
+>>>>>>> Small fixes for the processors
     $settings_path = 'admin/config/search/search_api/add_index';
 
     $this->drupalGet($settings_path);
@@ -116,6 +144,7 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Datasource'))));
 
+<<<<<<< HEAD
     $this->indexId = 'test_index';
 
     $edit = array(
@@ -124,6 +153,16 @@ class SearchApiWebTest extends WebTestBase {
       'status' => 1,
       'description' => 'An index used for testing.',
       'serverMachineName' => $this->serverId,
+=======
+    $this->index_id = 'test_index';
+
+    $edit = array(
+      'name' => 'Search API test index',
+      'machine_name' => $this->index_id,
+      'status' => 1,
+      'description' => 'An index used for testing.',
+      'serverMachineName' => $this->server_id,
+>>>>>>> Small fixes for the processors
       'datasourcePluginId' => 'search_api_content_entity_datasource:node',
     );
 
@@ -131,10 +170,17 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The index was successfully saved.'));
+<<<<<<< HEAD
     $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->indexId) !== FALSE;
     $this->assertTrue($redirect_path, t('Correct redirect to index page.'));
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
+=======
+    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->index_id) !== FALSE;
+    $this->assertTrue($redirect_path, t('Correct redirect to index page.'));
+
+    $index = entity_load('search_api_index', $this->index_id, TRUE);
+>>>>>>> Small fixes for the processors
 
     $this->assertEqual($index->name, $edit['name'], t('Name correctly inserted.'));
     $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
@@ -145,7 +191,11 @@ class SearchApiWebTest extends WebTestBase {
   }
 
   public function addFieldsToIndex() {
+<<<<<<< HEAD
     $settings_path = 'admin/config/search/search_api/index/' . $this->indexId . '/fields';
+=======
+    $settings_path = 'admin/config/search/search_api/index/' . $this->index_id . '/fields';
+>>>>>>> Small fixes for the processors
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -159,10 +209,17 @@ class SearchApiWebTest extends WebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
+<<<<<<< HEAD
     $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->indexId . '/fields') !== FALSE;
     $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
+=======
+    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->index_id . '/fields') !== FALSE;
+    $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
+
+    $index = entity_load('search_api_index', $this->index_id, TRUE);
+>>>>>>> Small fixes for the processors
     $fields = $index->getFields();
 
     $this->assertEqual($fields['entity:node:nid']['indexed'], $edit['fields[entity:node:nid][indexed]'], t('nid field is indexed.'));
@@ -175,8 +232,18 @@ class SearchApiWebTest extends WebTestBase {
     // @todo Implement addAdditionalFieldsToIndex() method.
   }
 
+<<<<<<< HEAD
   public function addFiltersToIndex() {
     $settings_path = 'admin/config/search/search_api/index/' . $this->indexId . '/filters';
+=======
+  public function renderMenuLinkTest() {
+    $this->drupalGet('admin/config');
+    $this->assertText('Search API', 'Search API menu link is displayed.');
+  }
+
+  public function addFiltersToIndex() {
+    $settings_path = 'admin/config/search/search_api/index/' . $this->index_id . '/filters';
+>>>>>>> Small fixes for the processors
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -188,7 +255,11 @@ class SearchApiWebTest extends WebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect.'));
+<<<<<<< HEAD
     $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->indexId . '/filters') !== FALSE;
+=======
+    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->index_id . '/filters') !== FALSE;
+>>>>>>> Small fixes for the processors
     $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
   }
 }

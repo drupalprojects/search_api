@@ -44,7 +44,7 @@ em: 1.5
 u: 1.5
 DEFAULT_TAGS
     );
-    
+
     $this->tags = $this->parseTags($this->options['tags']);
 
     // Specifying empty tags doesn't make sense.
@@ -54,7 +54,9 @@ DEFAULT_TAGS
   /**
    *  Parses an array of tags in YAML.
    *
-   *  @param $yaml yaml represenation of array
+   *  @param $yaml
+   *    yaml represenation of array
+   *
    *  @return array of tags
    */
   protected function parseTags($yaml) {
@@ -62,7 +64,7 @@ DEFAULT_TAGS
     try {
       $tags = Yaml::parse($yaml);
     }
-    catch(Symfony\Component\Yaml\Exception\ParseException $exception) {
+    catch(\Symfony\Component\Yaml\Exception\ParseException $exception) {
       //problem parsing, return empty array
       $tags = array();
     }
@@ -71,37 +73,40 @@ DEFAULT_TAGS
 
   }
 
-  /* Builds configuration form */
+  /**
+   * Builds configuration form
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-    $form += array(
-      'title' => array(
-        '#type' => 'checkbox',
-        '#title' => t('Index title attribute'),
-        '#description' => t('If set, the contents of title attributes will be indexed.'),
-        '#default_value' => $this->options['title'],
-      ),
-      'alt' => array(
-        '#type' => 'checkbox',
-        '#title' => t('Index alt attribute'),
-        '#description' => t('If set, the alternative text of images will be indexed.'),
-        '#default_value' => $this->options['alt'],
-      ),
-      'tags' => array(
-        '#type' => 'textarea',
-        '#title' => t('Tag boosts'),
-        '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
-            'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
-            'Assign a boost of 0 to ignore the text content of that HTML element.',
-            array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
-        '#default_value' => $this->options['tags'],
-      ),
+    $form['title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Index title attribute'),
+      '#description' => t('If set, the contents of title attributes will be indexed.'),
+      '#default_value' => $this->options['title'],
     );
+    $form['alt'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Index alt attribute'),
+      '#description' => t('If set, the alternative text of images will be indexed.'),
+      '#default_value' => $this->options['alt'],
+    );
+    $form['tags'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Tag boosts'),
+      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
+          'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
+          'Assign a boost of 0 to ignore the text content of that HTML element.',
+          array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
+      '#default_value' => $this->options['tags'],
+    );
+
+    return $form;
   }
 
   public function validateConfigurationForm(array &$form, array &$form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
+    $values = $form_state['values'];
     if (empty($values['tags'])) {
       return;
     }
@@ -119,7 +124,7 @@ DEFAULT_TAGS
       }
     }
     if ($errors) {
-      form_error($form['tags'], implode("<br />\n", $errors));
+      \Drupal::formBuilder()->setError($form['tags'], $form_state, implode("<br />\n", $errors));
     }
   }
 

@@ -12,4 +12,5 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  * )
  */
 class TestProcessor extends FieldsProcessorPluginBase {
+
 }
