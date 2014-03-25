@@ -144,18 +144,24 @@ class SearchApiWebTest extends WebTestBase {
         $this->assertResponse(200);
 
         $edit = array(
-            'fields[nid][indexed]' => 1,
-            'fields[vid][indexed]' => 0,
-            'fields[is_new][indexed]' => 1,
+            'fields[entity:node:nid][indexed]' => 1,
+            'fields[entity:node:title][indexed]' => 1,
+            'fields[entity:node:title][type]' => 'text',
+            'fields[entity:node:title][boost]' => '21.0',
         );
 
         $this->drupalPostForm($settings_path, $edit, t('Save changes'));
+        $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
+        $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->index_id . '/fields') !== FALSE;
+        $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
+
         $index = entity_load('search_api_index', $this->index_id, TRUE);
         $fields = $index->getFields();
 
-        $this->assertEqual($fields['fields']['vid']['indexed'], $edit['fields[vid][indexed]'], t('vid field is not indexed.'));
-        $this->assertEqual($fields['fields']['nid']['indexed'], $edit['fields[nid][indexed]'], t('nid field is indexed.'));
-        $this->assertEqual($fields['fields']['is_new']['indexed'], $edit['fields[is_new][indexed]'], t('is_new field is indexed.'));
+        $this->assertEqual($fields['entity:node:nid']['indexed'], $edit['fields[entity:node:nid][indexed]'], t('nid field is indexed.'));
+        $this->assertEqual($fields['entity:node:title']['indexed'], $edit['fields[entity:node:title][indexed]'], t('title field is indexed.'));
+        $this->assertEqual($fields['entity:node:title']['type'], $edit['fields[entity:node:title][type]'], t('title field type is text.'));
+        $this->assertEqual($fields['entity:node:title']['boost'], $edit['fields[entity:node:title][boost]'], t('title field boost value is 21.'));
     }
 
     public function addAdditionalFieldsToIndex() {
