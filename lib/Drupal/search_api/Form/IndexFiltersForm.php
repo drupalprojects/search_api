@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
@@ -78,13 +79,13 @@ class IndexFiltersForm extends EntityFormController {
     // Fetch all the processor plugins
     $processor_info = $this->processorPluginManager->getDefinitions();
 
-
     $form['#tree'] = TRUE;
     //$form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
 
     // Processors
     $processors = $this->entity->getOption('processors');
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
+
     foreach ($processor_info as $name => $processor) {
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
@@ -141,40 +142,37 @@ class IndexFiltersForm extends EntityFormController {
       );
     }
 
-    // Processor order (tabledrag).
-    $form['processors']['order'] = array(
-      '#markup' =>  t('Processor processing order'),
-      '#description' => t('Set the order in which preprocessing will be done at index and search time. ' .
-        'Postprocessing of search results will be in the exact opposite direction.'),
-    );
-
-    $header = array(
-      array('data' => t('Processor')),
-      array('data' => t('Weight')),
-    );
-
-    $rows = array();
-    foreach ($processor_info as $name => $processor) {
-      $row = array();
-      $row[]['data'] = $processor['label'];
-      $row[]['data'] = $processors[$name]['weight'];
-
-      $rows[] = $row;
-    }
-
     $form['processors']['order'] = array(
       '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#attributes' => array('id' => "search-api-processors"),
+      '#header' => array(t('Processor'), t('Weight')),
+      '#attributes' => array('id' => 'search-api-processors'),
       '#tabledrag' => array(
         array(
           'action' => 'order',
           'relationship' => 'sibling',
-          'group' => "search-api-processor-weight",
+          'group' => 'search-api-processor-weight'
         ),
       ),
     );
+
+    foreach ($processor_info as $name => $processor) {
+      $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
+      // @todo : add weight property from processor.
+      $form['processors']['order'][$name]['#weight'] = 0;
+
+      $form['processors']['order'][$name]['label'] = array(
+        '#markup' => String::checkPlain($processor['label']),
+      );
+
+      // TableDrag: Weight column element.
+      $form['processors']['order'][$name]['weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight for @title', array('@title' => $processor['label'])),
+        '#title_display' => 'invisible',
+        '#default_value' => 0,
+        '#attributes' => array('class' => array('search-api-processor-weight')),
+      );
+    }
 
     // Processor settings.
     $form['processors']['settings_title'] = array(
