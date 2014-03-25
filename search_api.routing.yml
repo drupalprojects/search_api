@@ -76,12 +76,12 @@ search_api.index_fields:
   requirements:
     _entity_access: 'search_api_index.fields'
 
-search_api.index_workflow:
-  path: '/admin/config/search/search_api/index/{search_api_index}/workflow'
+search_api.index_filters:
+  path: '/admin/config/search/search_api/index/{search_api_index}/filters'
   defaults:
-    _entity_form: 'search_api_index.workflow'
+    _entity_form: 'search_api_index.filters'
   requirements:
-    _entity_access: 'search_api_index.workflow'
+    _entity_access: 'search_api_index.filters'
 
 search_api.index_delete:
   path: '/admin/config/search/search_api/index/{search_api_index}/delete'

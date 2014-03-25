@@ -419,7 +419,7 @@ class IndexFormController extends EntityFormController {
           ),
         );
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Rebuild the form.
         $form_state['rebuild'] = TRUE;
         // Log the exception to the watchdog.

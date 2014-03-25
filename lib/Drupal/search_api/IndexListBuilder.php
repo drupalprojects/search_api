@@ -89,9 +89,9 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         'options' => $entity_uri['options'],
         'weight' => 20,
       ),
-      'workflow' => array(
-        'title' => $this->t('Workflow'),
-        'href' => "{$entity_uri['path']}/workflow",
+      'filters' => array(
+        'title' => $this->t('Filters'),
+        'href' => "{$entity_uri['path']}/filters",
         'options' => $entity_uri['options'],
         'weight' => 30,
       ),

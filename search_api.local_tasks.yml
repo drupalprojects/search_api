@@ -20,8 +20,8 @@ search_api.index_fields:
   base_route: search_api.index_view
   title: 'Fields'
   weight: 10
-search_api.workflow:
-  route_name: search_api.index_workflow
+search_api.filters:
+  route_name: search_api.index_filters
   base_route: search_api.index_view
-  title: 'Workflow'
+  title: 'Filters'
   weight: 20
