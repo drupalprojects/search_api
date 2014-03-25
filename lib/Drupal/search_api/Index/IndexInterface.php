@@ -32,6 +32,17 @@ interface IndexInterface extends ConfigEntityInterface {
   public function isReadOnly();
 
   /**
+   * Get the cache ID prefix used for this index's caches.
+   *
+   * @param $type
+   *   The type of cache. Currently only "fields" is used.
+   *
+   * @return
+   *   The cache ID (prefix) for this index's caches.
+   */
+  public function getCacheId($type = 'fields');
+
+  /**
    * Retrieves an option.
    *
    * @param string $name
@@ -53,7 +64,17 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
+<<<<<<< HEAD
    * Determines whether the datasource is valid.
+=======
+   * Set the options.
+   *
+   */
+  public function setOptions($options);
+
+  /**
+   * Determine whether the datasource is valid.
+>>>>>>> Field list working. Add additional field not yet
    *
    * @return boolean
    *   TRUE if the datasource is valid, otherwise FALSE.
