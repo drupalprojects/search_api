@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Controller\ServerFormController.
+ * Contains \Drupal\search_api\Form\ServerForm.
  */
 
-namespace Drupal\search_api\Controller;
+namespace Drupal\search_api\Form;
 
 use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,9 +15,9 @@ use Drupal\search_api\Server\ServerInterface;
 use Drupal\Component\Utility\String;
 
 /**
- * Provides a form controller for the Server entity.
+ * Provides a form for the Server entity.
  */
-class ServerFormController extends EntityFormController {
+class ServerForm extends EntityFormController {
 
   /**
    * The server storage controller.
