@@ -7,7 +7,6 @@
 namespace Drupal\search_api\Plugin;
 
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Component\Utility\String;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -39,7 +38,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
     // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
     // Get the plugin definition label.
-    return String::checkPlain($plugin_definition['label']);
+    return $plugin_definition['label'];
   }
 
   /**
@@ -49,7 +48,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
     // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
     // Get the plugin definition label.
-    return String::checkPlain($plugin_definition['description']);
+    return $plugin_definition['description'];
   }
 
   /**

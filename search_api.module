@@ -31,12 +31,6 @@ function search_api_menu_link_defaults() {
       'route_name' => 'search_api.overview',
       'parent' => 'system.admin_config_search',
     ),
-    'search_api.server_overview' => array(
-      'link_title' => 'Servers',
-      'description' => 'Create and configure search servers.',
-      'route_name' => 'search_api.server_overview',
-      'parent' => 'search_api.overview',
-    ),
   );
 }
 

@@ -24,6 +24,7 @@ use Drupal\search_api\Index\IndexInterface;
  *     "form" = {
  *       "default" = "Drupal\search_api\Controller\IndexFormController",
  *       "edit" = "Drupal\search_api\Controller\IndexFormController",
+ *       "fields" = "Drupal\search_api\Controller\IndexFieldsFormController",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
  *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm"
@@ -291,8 +292,38 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (empty($this->fields[$only_indexed][$get_additional])) {
       // @todo Implement both caching and the actual computation.
     }
+    $output = array(
+      'fields' => array(
+        'nid' => array(
+          'name' => 'Node ID',
+          'description' => 'The unique ID of the node.',
+          'type' => 'integer',
+          'boost' => '1.0',
+          'indexed' => '',
+        ),
+        'vid' => array(
+          'name' => 'Revision ID',
+          'description' => 'The unique ID of the node\'s revision.',
+          'type' => 'integer',
+          'boost' => '1.0',
+          'indexed' => '',
+        ),
+        'is_new' => array(
+          'name' => 'Is new',
+          'description' => 'Whether the node is new and not saved to the database yet.',
+          'type' => 'boolean',
+          'indexed' => '',
+        ),
+      ),
+      'additional fields' => array(
+        'author' => 'Author',
+        'source' => 'Source',
+      )
 
-    return $this->fields[$only_indexed][$get_additional];
+    );
+    return $output;
+
+    //return $this->fields[$only_indexed][$get_additional];
   }
 
   /**
