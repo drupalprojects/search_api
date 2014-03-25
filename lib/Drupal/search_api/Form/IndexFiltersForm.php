@@ -73,14 +73,10 @@ class IndexFiltersForm extends EntityFormController {
    * {@inheritdoc}
    */
   public function form(array $form, array &$form_state) {
-    // Fetch all the selected options
-    $options = $this->entity->getOptions();
-
     // Fetch all the processor plugins
     $processor_info = $this->processorPluginManager->getDefinitions();
 
     $form['#tree'] = TRUE;
-    //$form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
 
     // Processors
     $processors = $this->entity->getOption('processors');
@@ -228,13 +224,12 @@ class IndexFiltersForm extends EntityFormController {
       $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
       $values['processors'][$name] += array('settings' => array());
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-      $values['processors'][$name]['settings'] = $processor->submitConfigurationForm($processor_form, $values['processors'][$name]['settings'], $form_state);
+      $values['processors'][$name]['settings'] = $processor->submitConfigurationForm($processor_form, $form_state);
     }
-
 
     if (!isset($options['processors']) || $options['processors'] != $values['processors']) {
       // Save the already sorted arrays to avoid having to sort them at each use.
-      uasort($values['processors'], 'search_api_admin_element_compare');
+      uasort($values['processors'], array($this, 'elementCompare'));
       $this->entity->setOption('processors', $values['processors']);
 
       // Reset the index's internal property cache to correctly incorporate the
@@ -260,6 +255,20 @@ class IndexFiltersForm extends EntityFormController {
     unset($actions['delete']);
 
     return $actions;
+  }
+
+  /**
+   * Sort callback sorting array elements by their "weight" key, if present.
+   *
+   * @see element_sort()
+   */
+  function elementCompare($a, $b) {
+    $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
+    $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
+    if ($a_weight == $b_weight) {
+      return 0;
+    }
+    return ($a_weight < $b_weight) ? -1 : 1;
   }
 
 }
