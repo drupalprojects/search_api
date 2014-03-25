@@ -2,6 +2,8 @@
 /**
  * @file
  * Contains \Drupal\search_api\ServerListBuilder.
+ *
+ * Overview page for Servers and Indexes.
  */
 
 namespace Drupal\search_api;
@@ -23,13 +25,23 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       'enabled' => array(),
       'disabled' => array(),
     );
-    // Iterate through the available entities.
+    // Iterate through indexes.
+    $indexes = array();
+    foreach (entity_load_multiple('search_api_index') as $entity) {
+      // Add the entity to the list.
+      $indexes[$entity->serverMachineName][$entity->machine_name] = $entity;
+    }
+    // Iterate through servers.
     foreach (parent::load() as $entity) {
       // Get the status key based upon the entity status.
       $status_key = $entity->status() ? 'enabled' : 'disabled';
       // Add the entity to the list.
-      $entities[$status_key][] = $entity;
+      $entities[$status_key][$entity->machine_name] = $entity;
+      if (isset($indexes[$entity->machine_name])) {
+        $entities[$status_key] += $indexes[$entity->machine_name];
+      }
     }
+
     return $entities;
   }
 
@@ -53,25 +65,33 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(\Drupal\Core\Entity\EntityInterface $entity) {
-    // Check if the server contains a valid service.
-    if ($entity->hasValidService()) {
-      // Get the service.
-      $service = $entity->getService();
-      // Get the service label and summary.
-      $service_label = $service->label();
-      $service_summary = $service->summary();
+    if ($entity->getEntityTypeId() == 'search_api_server') {
+      // Check if the server contains a valid service.
+      if ($entity->hasValidService()) {
+        // Get the service.
+        $service = $entity->getService();
+        // Get the service label and summary.
+        $service_label = $service->label();
+        $service_summary = $service->summary();
+      }
+      else {
+        // Set the service label to broken.
+        $service_label = $this->t('Broken');
+        $service_summary = '';
+      }
     }
     else {
-      // Set the service label to broken.
-      $service_label = $this->t('Broken');
+      // None for indexes.
+      $service_label = '';
       $service_summary = '';
     }
     // Build the row for the current entity.
     $filepath = '/' . drupal_get_path('module', 'search_api') . '/images/';
     $status = $entity->status() ? 'enabled' : 'disabled';
+    $type = $entity->getEntityTypeId() == 'search_api_server' ? 'Server' : 'Index';
     return array(
       'status' => "<img src='$filepath$status.png' alt='$status' title='$status'></div>",
-      'type' => "<div class=\"description\">Server</div>",
+      'type' => "<div class=\"description\">$type</div>",
       'title' => String::checkPlain($entity->label()) . ($entity->getDescription() ? "<div class=\"description\">{$entity->getDescription()}</div>" : ''),
       'service' => String::checkPlain($service_label) . ($service_summary ? "<div class=\"description\">{$service_summary}</div>" : ''),
       'operations' => array(
