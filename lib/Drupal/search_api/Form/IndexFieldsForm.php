@@ -87,8 +87,6 @@ class IndexFieldsForm extends EntityFormController {
     $fields = $options['fields'];
     $additional = $options['additional fields'];
 
-    dpm($options);
-
     // An array of option arrays for types, keyed by nesting level.
     $types = array(0 => search_api_field_types());
 

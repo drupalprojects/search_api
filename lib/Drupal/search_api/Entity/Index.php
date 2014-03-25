@@ -383,7 +383,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       while ($field_entity_types) {
         foreach ($field_entity_types as $prefix => $field_entity_type) {
           /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
-          dpm($field_entity_type);
 
           $prefix_name = $field_entity_type->getLabel();
           if (!($field_entity_type instanceof \Drupal\Core\Entity\EntityTypeInterface)) {
