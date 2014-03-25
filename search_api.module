@@ -93,86 +93,6 @@ function search_api_is_text_type($type, array $allowed = array('text')) {
 }
 
 /**
- * Determines whether a field of the given type contains a list of any kind.
- *
- * @param string $type
- *   A string containing the type to check.
- *
- * @return bool
- *   TRUE iff $type is a list type ("list<*>").
- */
-function search_api_is_list_type($type) {
-  return substr($type, 0, 5) == 'list<';
-}
-
-/**
- * Determines the nesting level of a list type.
- *
- * @param string $type
- *   The type to check.
- *
- * @return int
- *   The nesting level of the type. 0 for singular types, 1 for lists of
- *   singular types, etc.
- */
-function search_api_list_nesting_level($type) {
-  $level = 0;
-  while (search_api_is_list_type($type)) {
-    $type = substr($type, 5, -1);
-    ++$level;
-  }
-  return $level;
-}
-
-/**
- * Nests a type to the same level as another type.
- *
- * I.e., after
- * @code
- * $t = search_api_nest_type($type, $nested_type);
- * @endcode
- * is executed, the following statements will always be true:
- *
- * @code
- * search_api_list_nesting_level($t) == search_api_list_nesting_level($nested_type);
- * search_api_extract_inner_type($t) == search_api_extract_inner_type($type);
- * @endcode
- *
- * @param string $type
- *   The type to wrap.
- * @param string $nested_type
- *   Another type, determining the nesting level.
- *
- * @return string
- *   A list version of $type, as specified above.
- */
-function search_api_nest_type($type, $nested_type) {
-  while (search_api_is_list_type($nested_type)) {
-    $nested_type = substr($nested_type, 5, -1);
-    $type = "list<$type>";
-  }
-  return $type;
-}
-
-/**
- * Extracts the contained primitive type of a list type.
- *
- * @param string $type
- *   A string containing the list type to process.
- *
- * @return string
- *   A string containing the primitive type contained within the list, e.g.
- *   "text" for "list<text>" (or for "list<list<text>>"). If $type is no list
- *   type, it is returned unchanged.
- */
-function search_api_extract_inner_type($type) {
-  while (search_api_is_list_type($type)) {
-    $type = substr($type, 5, -1);
-  }
-  return $type;
-}
-
-/**
  * Checks whether it is possible to sort on fields of the given type.
  *
  * @param $type
@@ -220,6 +140,12 @@ function search_api_default_field_types() {
     'duration' => t('Duration'),
     'boolean' => t('Boolean'),
     'uri' => t('URI'),
+    'language' => t('Language'),
+    'uuid' => t('UUID'),
+    'timestamp' => t('Timestamp'),
+    'path' => t('Path'),
+    'text_with_summary' => t('Text with summary'),
+    'comment' => t('Comment'),
   );
 }
 

@@ -192,6 +192,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCacheId($type = 'fields') {
+    return 'search_api:index-' . $this->machine_name . '--' . $type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDescription() {
     return $this->description;
   }
@@ -206,11 +213,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getOption($name) {
+  public function getOption($name, $default = NULL) {
     // Get the options.
     $options = $this->getOptions();
     // Get the option value for the given key.
-    return isset($options[$name]) ? $options[$name] : NULL;
+    return isset($options[$name]) ? $options[$name] : $default;
   }
 
   /**
@@ -218,6 +225,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getOptions() {
     return $this->options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOptions($options) {
+    $this->options = $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOption($name, $option) {
+    $this->options[$name] = $option;
   }
 
   /**
@@ -233,7 +254,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDatasource() {
+  public function getDatasourceId() {
+    return $this->datasourcePluginId;
+  }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDatasource() {
     // Check if the datasource plugin instance needs to be resolved.
     if (!$this->datasourcePluginInstance && $this->hasValidDatasource()) {
       // Get the ID of the datasource plugin.
@@ -258,7 +286,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getServer() {
+  public function getServerId() {
+    return $this->serverMachineName;
+  }
+
+    /**
+     * {@inheritdoc}
+     */
+    public
+    function getServer() {
     // Check if the server needs to be resolved. Note we do not use
     // hasValidServer to prevent duplicate load calls to the storage controller.
     if (!$this->server) {
@@ -288,41 +324,166 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $only_indexed = $only_indexed ? 1 : 0;
     $get_additional = $get_additional ? 1 : 0;
 
+     // First, try the static cache and the persistent cache bin.
     if (empty($this->fields[$only_indexed][$get_additional])) {
-      // @todo Implement both caching and the actual computation.
+      $cid = $this->getCacheId() . "-" . $only_indexed . "-" . $get_additional;
+      if ($cached = \Drupal::cache()->get($cid)) {
+        $this->fields[$only_indexed][$get_additional] = $cached->data;
+      }
     }
-    $output = array(
-      'fields' => array(
-        'nid' => array(
-          'name' => 'Node ID',
-          'description' => 'The unique ID of the node.',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => '',
-        ),
-        'vid' => array(
-          'name' => 'Revision ID',
-          'description' => 'The unique ID of the node\'s revision.',
-          'type' => 'integer',
-          'boost' => '1.0',
-          'indexed' => '',
-        ),
-        'is_new' => array(
-          'name' => 'Is new',
-          'description' => 'Whether the node is new and not saved to the database yet.',
-          'type' => 'boolean',
-          'indexed' => '',
-        ),
-      ),
-      'additional fields' => array(
-        'author' => 'Author',
-        'source' => 'Source',
-      )
+    $this->fields[$only_indexed][$get_additional] = '';
 
-    );
-    return $output;
+    // Otherwise, we have to compute the result.
+    if (empty($this->fields[$only_indexed][$get_additional])) {
+      $search_api_index_fields = empty($this->options['fields']) ? array() : $this->options['fields'];
+      // Get all entity types
+      $entity_types = $this->entityManager()->getDefinitions();
+      // Define additional variable
+      $additional = array();
 
-    //return $this->fields[$only_indexed][$get_additional];
+      // First we need all already added prefixes.
+      $added = ($only_indexed || empty($this->options['additional fields'])) ? array() : $this->options['additional fields'];
+      foreach (array_keys($search_api_index_fields) as $key) {
+        $len = strlen($key) + 1;
+        $pos = $len;
+        // The third parameter ($offset) to strrpos has rather weird behaviour,
+        // necessitating this rather awkward code. It will iterate over all
+        // prefixes of each field, beginning with the longest, adding all of them
+        // to $added until one is encountered that was already added (which means
+        // all shorter ones will have already been added, too).
+        while ($pos = strrpos($key, ':', $pos - $len)) {
+          $prefix = substr($key, 0, $pos);
+          if (isset($added[$prefix])) {
+            break;
+          }
+          $added[$prefix] = $prefix;
+        }
+      }
+
+      // Then we walk through all properties and look if they are already
+      // contained in one of the arrays.
+      // Since this uses an iterative instead of a recursive approach, it is a bit
+      // complicated, with three arrays tracking the current depth.
+
+
+      // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
+      $datasource_definition = $this->getDatasource()->getPluginDefinition();
+      $field_entity_types = array($datasource_definition['id'] => $entity_types[$datasource_definition['entity_type']]);
+
+      // The list nesting level for entities with a certain prefix
+      $nesting_levels = array('' => 0);
+      // Gets the default types for Search API Fields
+      $types = search_api_default_field_types();
+      // @todo find out what this flat does and give it a better name
+      $flat = array();
+
+      // As long as we have not processed all entity types that are attached to our main datasource entity type we need
+      // to keep searching for fields that we want to index
+      while ($field_entity_types) {
+        foreach ($field_entity_types as $prefix => $field_entity_type) {
+          /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
+
+          $prefix_name = $field_entity_type->getLabel();
+          $entity_type_id = $field_entity_type->id();
+
+          // @todo : Does this still make sense in Drupal 8?
+          // Deal with lists of entities.
+          /*$nesting_level = $nesting_levels[$prefix];
+          $type_prefix = str_repeat('list<', $nesting_level);
+          $type_suffix = str_repeat('>', $nesting_level);
+          if ($nesting_level) {
+
+            $info =
+            // The real nesting level of the wrapper, not the accumulated one.
+            $level = search_api_list_nesting_level($info['type']);
+            for ($i = 0; $i < $level; ++$i) {
+              $wrapper = $wrapper[0];
+            }
+          }*/
+
+          // Now look at all fields for all bundles for this entity type.
+          $bundles = $this->entityManager()->getBundleInfo($entity_type_id);
+          foreach ($bundles as $bundle_id => $bundle) {
+            $fields = $this->entityManager()->getFieldDefinitions($entity_type_id, $bundle_id);
+            foreach ($fields as $field) {
+              $name = $field->getName();
+              $type = $field->getType();
+              $isMultiple = $field->isMultiple();
+
+              // @todo, perhaps a hook that we implement in other modules name
+              // Treat Entity API type "token" as our "string" type.
+              // Treat list_text as strings for option lists.
+              if ($type == 'token' ||  $type == 'list_text') {
+                // Inner type is changed to "string".
+                $type = 'string';
+              }
+              if ($type == 'created' || $type == 'changed') {
+                $type = 'date';
+              }
+              // All of the items are lists so we can use the real type without the list.
+              $type = str_replace('list_', '', $type);
+
+              $key = $prefix . ':' . $name;
+              // @todo: Check if this comparision is valid
+              if ((isset($types[$type]) || isset($entity_types[$type])) && (!$only_indexed || !empty($search_api_index_fields[$key]))) {
+                if (!empty($search_api_index_fields[$key])) {
+                  // This field is already known in the index configuration.
+                  $flat[$key] = $search_api_index_fields[$key] + array(
+                    'name' => $prefix_name . $field->getLabel(),
+                    'description' => $field->getDescription(),
+                    'boost' => '1.0',
+                    'indexed' => TRUE,
+                  );
+                }
+                else {
+                  $flat[$key] = array(
+                    'name'    => $prefix_name . $field->getLabel(),
+                    'description' => $field->getDescription(),
+                    'type'    => $type,
+                    'boost' => '1.0',
+                    'indexed' => FALSE,
+                  );
+                }
+              }
+              if (empty($types[$type])) {
+                if (isset($added[$key])) {
+                  // Visit this entity/struct in a later iteration.
+                  $wrappers[$key . ':'] = $value;
+                  $prefix_names[$key . ':'] = $prefix_name . $field->getLabel(). ' » ';
+                }
+                else {
+                  $name = $prefix_name . ' ' . $field->getLabel();
+                  // Add machine names to discern fields with identical labels.
+                  if (isset($used_names[$name])) {
+                    if ($used_names[$name] !== FALSE) {
+                      $additional[$used_names[$name]] .= ' [' . $used_names[$name] . ']';
+                      $used_names[$name] = FALSE;
+                    }
+                    $name .= ' [' . $key . ']';
+                  }
+                  $additional[$key] = $name;
+                  $used_names[$name] = $key;
+                }
+              }
+            }
+          }
+          unset($field_entity_types[$prefix]);
+        }
+      }
+
+      if (!$get_additional) {
+        $this->fields[$only_indexed][$get_additional] = $flat;
+      }
+      else {
+        $options = array();
+        $options['fields'] = $flat;
+        $options['additional fields'] = $additional;
+        $this->fields[$only_indexed][$get_additional] =  $options;
+      }
+      \Drupal::cache()->set($cid, $this->fields[$only_indexed][$get_additional]);
+    }
+
+    return $this->fields[$only_indexed][$get_additional];
   }
 
   /**
@@ -345,9 +506,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Loads all enabled processors for this index in proper order.
    *
-   * @return array
-   *   All enabled processors for this index, as
-   *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
+   * @return \Drupal\search_api\Processor\ProcessorInterface[]
+   *   All enabled processors for this index.
    */
   public function getProcessors() {
     // @todo Implement getProcessors() method.
@@ -362,7 +522,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   An array of items to be preprocessed for indexing.
    */
   public function preprocessIndexItems(array &$items) {
-    // @todo Implement preprocessIndexItems() method.
+    foreach ($this->getProcessors() as $processor) {
+      $processor->preprocessIndexItems($items);
+    }
   }
 
   /**
@@ -374,7 +536,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The object representing the query to be executed.
    */
   public function preprocessSearchQuery(QueryInterface $query) {
-    // @todo Implement preprocessSearchQuery() method.
+    foreach ($this->getProcessors() as $processor) {
+      $processor->preprocessSearchQuery($query);
+    }
   }
 
   /**
@@ -392,6 +556,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The object representing the executed query.
    */
   public function postprocessSearchResults(array &$response, QueryInterface $query) {
-    // @todo Implement postprocessSearchResults() method.
+    foreach (array_reverse($this->getProcessors()) as $processor) {
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+      $processor->postprocessSearchResults($response, $query);
+    }
   }
 }

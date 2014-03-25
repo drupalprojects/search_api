@@ -72,9 +72,6 @@ class IndexFiltersForm extends EntityFormController {
    * {@inheritdoc}
    */
   public function form(array $form, array &$form_state) {
-    //$callback_info = search_api_get_alter_callbacks();
-    //$processor_info = search_api_get_processors();
-
     // Fetch all the selected options
     $options = $this->entity->getOptions();
 
@@ -85,113 +82,16 @@ class IndexFiltersForm extends EntityFormController {
     $form['#tree'] = TRUE;
     //$form['#attached']['js'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.js';
 
-    // Callbacks
-
-    /*
-    $callbacks = empty($options['data_alter_callbacks']) ? array() : $options['data_alter_callbacks'];
-    $callback_objects = isset($form_state['callbacks']) ? $form_state['callbacks'] : array();
-    foreach ($callback_info as $name => $callback) {
-      if (!isset($callbacks[$name])) {
-        $callbacks[$name]['status'] = 0;
-        $callbacks[$name]['weight'] = $callback['weight'];
-      }
-      $settings = empty($callbacks[$name]['settings']) ? array() : $callbacks[$name]['settings'];
-      if (empty($callback_objects[$name]) && class_exists($callback['class'])) {
-        $callback_objects[$name] = new $callback['class']($index, $settings);
-      }
-      if (!(class_exists($callback['class']) && $callback_objects[$name] instanceof SearchApiAlterCallbackInterface)) {
-        watchdog('search_api', t('Data alteration @id specifies illegal callback class @class.', array('@id' => $name, '@class' => $callback['class'])), NULL, WATCHDOG_WARNING);
-        unset($callback_info[$name]);
-        unset($callbacks[$name]);
-        unset($callback_objects[$name]);
-        continue;
-      }
-      if (!$callback_objects[$name]->supportsIndex($index)) {
-        unset($callback_info[$name]);
-        unset($callbacks[$name]);
-        unset($callback_objects[$name]);
-        continue;
-      }
-    }
-    $form_state['callbacks'] = $callback_objects;
-    $form['#callbacks'] = $callbacks;
-    $form['callbacks'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Data alterations'),
-      '#description' => t('Select the alterations that will be executed on indexed items, and their order.'),
-      '#collapsible' => TRUE,
-    );
-
-    // Callback status.
-    $form['callbacks']['status'] = array(
-      '#type' => 'item',
-      '#title' => t('Enabled data alterations'),
-      '#prefix' => '<div class="search-api-status-wrapper">',
-      '#suffix' => '</div>',
-    );
-    foreach ($callback_info as $name => $callback) {
-      $form['callbacks']['status'][$name] = array(
-        '#type' => 'checkbox',
-        '#title' => $callback['name'],
-        '#default_value' => $callbacks[$name]['status'],
-        '#parents' => array('callbacks', $name, 'status'),
-        '#description' => $callback['description'],
-        '#weight' => $callback['weight'],
-      );
-    }
-
-    // Callback order (tabledrag).
-    $form['callbacks']['order'] = array(
-      '#type' => 'item',
-      '#title' => t('Data alteration processing order'),
-      '#theme' => 'search_api_admin_item_order',
-      '#table_id' => 'search-api-callbacks-order-table',
-    );
-    foreach ($callback_info as $name => $callback) {
-      $form['callbacks']['order'][$name]['item'] = array(
-        '#markup' => $callback['name'],
-      );
-      $form['callbacks']['order'][$name]['weight'] = array(
-        '#type' => 'weight',
-        '#delta' => 50,
-        '#default_value' => $callbacks[$name]['weight'],
-        '#parents' => array('callbacks', $name, 'weight'),
-      );
-      $form['callbacks']['order'][$name]['#weight'] = $callbacks[$name]['weight'];
-    }
-
-    // Callback settings.
-    $form['callbacks']['settings_title'] = array(
-      '#type' => 'item',
-      '#title' => t('Callback settings'),
-    );
-    $form['callbacks']['settings'] = array(
-      '#type' => 'vertical_tabs',
-    );
-
-    foreach ($callback_info as $name => $callback) {
-      $settings_form = $callback_objects[$name]->configurationForm();
-      if (!empty($settings_form)) {
-        $form['callbacks']['settings'][$name] = array(
-          '#type' => 'fieldset',
-          '#title' => $callback['name'],
-          '#parents' => array('callbacks', $name, 'settings'),
-          '#weight' => $callback['weight'],
-        );
-        $form['callbacks']['settings'][$name] += $settings_form;
-      }
-    }
-
-    */
-
     // Processors
     $processors = $this->entity->getOption('processors');
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
     foreach ($processor_info as $name => $processor) {
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
+        $processors[$name]['weight'] = 0;
       }
       $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
+      $settings['index'] = $this->entity;
 
       if (empty($processor_objects[$name]) && class_exists($processor['class'])) {
         $processor_objects[$name] = $this->processorPluginManager->createInstance($name, $settings);
@@ -215,11 +115,11 @@ class IndexFiltersForm extends EntityFormController {
     $form_state['processors'] = $processor_objects;
     $form['#processors'] = $processors;
     $form['processors'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Processors'),
       '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order. ' .
         'Most processors will only influence fulltext fields, but refer to their individual descriptions for details regarding their effect.'),
-      '#collapsible' => TRUE,
+      '#open' => TRUE,
     );
 
     // Processor status.
@@ -241,54 +141,115 @@ class IndexFiltersForm extends EntityFormController {
       );
     }
 
-    /*
-
     // Processor order (tabledrag).
     $form['processors']['order'] = array(
-      '#type' => 'item',
-      '#title' => t('Processor processing order'),
+      '#markup' =>  t('Processor processing order'),
       '#description' => t('Set the order in which preprocessing will be done at index and search time. ' .
         'Postprocessing of search results will be in the exact opposite direction.'),
-      '#theme' => 'search_api_admin_item_order',
-      '#table_id' => 'search-api-processors-order-table',
     );
+
+    $header = array(
+      array('data' => t('Processor')),
+      array('data' => t('Weight')),
+    );
+
+    $rows = array();
     foreach ($processor_info as $name => $processor) {
-      $form['processors']['order'][$name]['item'] = array(
-        '#markup' => $processor['name'],
-      );
-      $form['processors']['order'][$name]['weight'] = array(
-        '#type' => 'weight',
-        '#delta' => 50,
-        '#default_value' => $processors[$name]['weight'],
-        '#parents' => array('processors', $name, 'weight'),
-      );
-      $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
+      $row = array();
+      $row[]['data'] = $processor['label'];
+      $row[]['data'] = $processors[$name]['weight'];
+
+      $rows[] = $row;
     }
+
+    $form['processors']['order'] = array(
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#attributes' => array('id' => "search-api-processors"),
+      '#tabledrag' => array(
+        array(
+          'action' => 'order',
+          'relationship' => 'sibling',
+          'group' => "search-api-processor-weight",
+        ),
+      ),
+    );
 
     // Processor settings.
     $form['processors']['settings_title'] = array(
       '#type' => 'item',
       '#title' => t('Processor settings'),
     );
-    $form['processors']['settings'] = array(
+    $form['processors']['processor_settings'] = array(
       '#type' => 'vertical_tabs',
     );
 
     foreach ($processor_info as $name => $processor) {
-      $settings_form = $processor_objects[$name]->configurationForm();
+      /** @var $processor_plugin \Drupal\search_api\Processor\ProcessorInterface */
+      $processor_plugin = $processor_objects[$name];
+      $settings_form = $processor_plugin->buildConfigurationForm($form, $form_state);
+
       if (!empty($settings_form)) {
         $form['processors']['settings'][$name] = array(
-          '#type' => 'fieldset',
-          '#title' => $processor['name'],
-          '#parents' => array('processors', $name, 'settings'),
-          '#weight' => $processor['weight'],
+          '#type' => 'details',
+          '#title' => $processor['label'],
+          '#group' => 'processor_settings',
+          //'#weight' => $processor['weight'],
         );
         $form['processors']['settings'][$name] += $settings_form;
       }
     }
-    */
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate(array $form, array &$form_state) {
+    foreach ($form_state['processors'] as $name => $processor) {
+      if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
+        /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+        $processor->validateConfigurationForm($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submit(array $form, array &$form_state) {
+    $values = $form_state['values'];
+    unset($values['processors']['settings']);
+
+    $options = $this->entity->getOptions();
+
+    // Store processor settings.
+    foreach ($form_state['processors'] as $name => $processor) {
+      $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
+      $values['processors'][$name] += array('settings' => array());
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+      $values['processors'][$name]['settings'] = $processor->submitConfigurationForm($processor_form, $values['processors'][$name]['settings'], $form_state);
+    }
+
+
+    if (!isset($options['processors']) || $options['processors'] != $values['processors']) {
+      // Save the already sorted arrays to avoid having to sort them at each use.
+      uasort($values['processors'], 'search_api_admin_element_compare');
+      $this->entity->setOption('processors', $values['processors']);
+
+      // Reset the index's internal property cache to correctly incorporate the
+      // new data alterations.
+      //$this->entity->resetCaches();
+
+      $this->entity->save();
+      //$this->entity->reindex();
+      drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
+    }
+    else {
+      drupal_set_message(t('No values were changed.'));
+    }
   }
 
   /**
@@ -303,19 +264,4 @@ class IndexFiltersForm extends EntityFormController {
     return $actions;
   }
 
-  /**
-   * {@inheritdoc}
-   *
-   * @see book_remove_button_submit()
-   */
-  public function submit(array $form, array &$form_state) {
-    // TODO
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function delete(array $form, array &$form_state) {
-    //$form_state['redirect_route'] = $this->entity->urlInfo('book-remove-form');
-  }
 }
