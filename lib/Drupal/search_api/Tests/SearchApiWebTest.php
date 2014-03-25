@@ -24,7 +24,7 @@ class SearchApiWebTest extends WebTestBase {
     public static function getInfo() {
         return array(
             'name' => 'Search API web tests',
-            'description' => 'Tests for Search API to see if the interface reacts as it should..',
+            'description' => 'Tests for Search API to see if the interface reacts as it should.',
             'group' => 'Search API',
         );
     }
