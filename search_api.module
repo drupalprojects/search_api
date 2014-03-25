@@ -254,3 +254,13 @@ function search_api_get_data_type_info($type = NULL) {
   }
   return $types;
 }
+
+/**
+ * Extracts specific field values from an EntityMetadataWrapper object.
+ *
+ * @see Drupal\search_api\Plugin\SearchApi\Processor\Highlight::getFulltextfields()
+ * @todo
+ */
+function search_api_extract_fields($wrapper, array $fields, array $value_options = array()) {
+  return array();
+}
