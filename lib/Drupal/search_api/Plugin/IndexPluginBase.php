@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin;
 
+use Drupal\search_api\Index\IndexInterface;
+
 /**
  * Base class for plugins that are associated with a certain index.
  */
@@ -22,16 +24,11 @@ class IndexPluginBase extends ConfigurablePluginBase implements IndexPluginInter
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
-    $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    if (!empty($configuration['index'])) {
-      $index = $container
-        ->get('entity.manager')
-        ->getStorageController('search_api_index')
-        ->load($configuration['index']);
-      $processor->setIndex($index);
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
+      $this->setIndex($configuration['index']);
     }
-    return $processor;
   }
 
   /**
