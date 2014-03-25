@@ -82,6 +82,9 @@ class IndexFiltersForm extends EntityFormController {
     $processors = $this->entity->getOption('processors');
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
 
+
+    dpm($processors);
+
     foreach ($processor_info as $name => $processor) {
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
@@ -134,7 +137,7 @@ class IndexFiltersForm extends EntityFormController {
         '#default_value' => $processors[$name]['status'],
         '#parents' => array('processors', $name, 'status'),
         '#description' => $processor['description'],
-        //'#weight' => $processor['weight'],
+        '#weight' => $processors[$name]['weight'],
       );
     }
 
@@ -153,19 +156,18 @@ class IndexFiltersForm extends EntityFormController {
 
     foreach ($processor_info as $name => $processor) {
       $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
-      // @todo : add weight property from processor.
-      $form['processors']['order'][$name]['#weight'] = 0;
-
       $form['processors']['order'][$name]['label'] = array(
         '#markup' => String::checkPlain($processor['label']),
       );
+
+      $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
 
       // TableDrag: Weight column element.
       $form['processors']['order'][$name]['weight'] = array(
         '#type' => 'weight',
         '#title' => t('Weight for @title', array('@title' => $processor['label'])),
         '#title_display' => 'invisible',
-        '#default_value' => 0,
+        '#default_value' => $processors[$name]['weight'],
         '#attributes' => array('class' => array('search-api-processor-weight')),
       );
     }
@@ -186,7 +188,7 @@ class IndexFiltersForm extends EntityFormController {
           '#type' => 'details',
           '#title' => $processor['label'],
           '#group' => 'processor_settings',
-          //'#weight' => $processor['weight'],
+          '#weight' => $processors[$name]['weight'],
         );
         $form['settings'][$name] += $settings_form;
       }
@@ -222,7 +224,9 @@ class IndexFiltersForm extends EntityFormController {
       $values['processors'][$name] += array('settings' => array());
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $values['processors'][$name]['settings'] = $processor->submitConfigurationForm($processor_form, $form_state);
+      $values['processors'][$name]['weight'] =  $values['processors']['order'][$name]['weight'];
     }
+    unset($values['processors']['order']);
 
     if (!isset($options['processors']) || $options['processors'] != $values['processors']) {
       // Save the already sorted arrays to avoid having to sort them at each use.
