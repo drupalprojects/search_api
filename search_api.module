@@ -202,7 +202,6 @@ function search_api_extract_fields($wrapper, array $fields, array $value_options
  *   - element: A render element representing the form.
  */
 function theme_search_api_admin_fields_table($variables) {
-  dpr($variables);
   $form = $variables['element'];
   $header = array(t('Field'), t('Machine name'), t('Indexed'), t('Type'), t('Boost'));
 
