@@ -1,7 +1,3 @@
-search_api.server_overview:
-  route_name: search_api.server_overview
-  base_route: search_api.server_overview
-  title: 'Servers'
 search_api.server_view:
   route_name: search_api.server_view
   base_route: search_api.server_view
