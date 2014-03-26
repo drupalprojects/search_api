@@ -1,0 +1,8 @@
+search_api.index-active-formatters:
+  version: VERSION
+  js:
+    js/index-active-formatters.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once

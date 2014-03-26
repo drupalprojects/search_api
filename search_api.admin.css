@@ -1,0 +1,14 @@
+.search-api-entity-status-enabled,
+.search-api-entity-status-disabled {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.search-api-entity-status-enabled {
+  background-image: url('images/enabled.png');
+}
+
+.search-api-entity-status-disabled {
+  background-image: url('images/disabled.png');
+}
