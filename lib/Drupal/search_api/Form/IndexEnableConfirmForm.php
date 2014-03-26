@@ -7,6 +7,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Defines a enable confirm form for the Index entity.
@@ -54,5 +55,4 @@ class IndexEnableConfirmForm extends EntityConfirmFormBase {
     // Redirect to the index overview page.
     $form_state['redirect'] = $this->url($cancel_route['route_name']);
   }
-
 }

@@ -77,6 +77,26 @@ function search_api_entity_delete(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_entity_operation_alter().
+ *
+ * @todo rewrite it regarding to https://drupal.org/node/1839516
+ * @todo Should it be moved to SearchApiController->buildRow() ?
+ */
+function search_api_entity_operation_alter(array &$operations, \Drupal\Core\Entity\EntityInterface $entity) {
+  if (($entity->getEntityTypeId() == 'search_api_index' || $entity->getEntityTypeId() == 'search_api_server')
+    && !$entity->status() && !empty($operations['enable'])) {
+    if ($entity->getEntityTypeId() == 'search_api_index') {
+      $operations['enable']['route_name'] = 'search_api.index_bypass_enable';
+    }
+    else {
+      $operations['enable']['route_name'] = 'search_api.server_bypass_enable';
+    }
+
+    $operations['enable']['route_parameters']['token'] = \Drupal::csrfToken()->get($entity->id());
+  }
+}
+
+/**
  * Determines whether a field of the given type contains text data.
  *
  * @param string $type
