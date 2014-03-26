@@ -7,6 +7,7 @@
 namespace Drupal\search_api\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
@@ -298,8 +299,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     /**
      * {@inheritdoc}
      */
-    public
-    function getServer() {
+    public function getServer() {
     // Check if the server needs to be resolved. Note we do not use
     // hasValidServer to prevent duplicate load calls to the storage controller.
     if (!$this->server) {
@@ -319,6 +319,77 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->server = $server;
     // Overwrite the server machine name.
     $this->serverMachineName = $server ? $server->id() : NULL;
+  }
+
+  /**
+   * Indexes items on this index.
+   *
+   * Will return an array of IDs of items that should be marked as indexed –
+   * i.e., items that were either rejected by a data-alter callback or were
+   * successfully indexed.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
+   *   An array of items to index, of this index's item type.
+   *
+   * @return array
+   *   An array of the IDs of all items that should be marked as indexed.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred during indexing.
+   */
+  public function indexItems(array $items) {
+    if (!$items || $this->readOnly) {
+      return array();
+    }
+    if (!$this->status) {
+      throw new SearchApiException(t("Couldn't index values on '@name' index (index is disabled)", array('@name' => $this->name)));
+    }
+    if (empty($this->options['fields'])) {
+      throw new SearchApiException(t("Couldn't index values on '@name' index (no fields selected)", array('@name' => $this->name)));
+    }
+
+    $fields = $this->options['fields'];
+    //$custom_type_fields = array();
+    foreach ($fields as $field => $info) {
+      if (isset($info['real_type'])) {
+        $custom_type = $info['real_type'];
+        if ($this->getServer()->supportsDatatype($custom_type)) {
+          $fields[$field]['type'] = $info['real_type'];
+        }
+        //$custom_type_fields[$custom_type][] = $field;
+      }
+    }
+    if (empty($fields)) {
+      throw new SearchApiException(t("Couldn't index values on '@name' index (no fields selected)", array('@name' => $this->name)));
+    }
+
+    $extracted_items = array();
+    foreach ($items as $id => $item) {
+      $extracted_items[$id] = $fields;
+      search_api_extract_fields($item, $extracted_items[$id]);
+      // @todo Custom data type conversion logic.
+    }
+
+    // Remember the item IDs we got passed.
+    $ret = array_keys($extracted_items);
+
+    // Preprocess the indexed items.
+    \Drupal::moduleHandler()->alter('search_api_index_items', $extracted_items, $this);
+    $this->preprocessIndexItems($extracted_items);
+
+    // Mark all items that are rejected as indexed.
+    $ret = array_diff($ret, array_keys($extracted_items));
+    // Items that are rejected should also be deleted from the server.
+    if ($ret) {
+      $this->getServer()->deleteItems($this, $ret);
+      if (!$extracted_items) {
+        return $ret;
+      }
+    }
+
+    // Return the IDs of all items that were either successfully indexed or
+    // rejected before being handed to the server.
+    return array_merge($ret, $this->getServer()->indexItems($this, $extracted_items));
   }
 
   /**
@@ -577,5 +648,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $processor->postprocessSearchResults($response, $query);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reindex() {
+    $this->getDatasource()->getTracker()->trackUpdate();
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clear() {
+    $this->getServer()->deleteAllItems($this);
+    $this->getDatasource()->getTracker()->trackUpdate();
+    return TRUE;
   }
 }

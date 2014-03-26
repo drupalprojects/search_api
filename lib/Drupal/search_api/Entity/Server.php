@@ -8,10 +8,11 @@ namespace Drupal\search_api\Entity;
 
 use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Service\ServiceInterface;
 
 /**
  * Defines the search server configuration entity.
@@ -48,7 +49,7 @@ use Drupal\search_api\Service\ServiceInterface;
  *   }
  * )
  */
-class Server extends ConfigEntityBase implements ServerInterface {
+class Server extends ConfigEntityBase implements ServerInterface, PluginFormInterface {
 
   /**
    * The machine name of the server.
@@ -117,19 +118,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function uri() {
-    return array(
-     'path' => 'admin/config/search/search_api/servers/' . $this->id(),
-      'options' => array(
-        'entity_type' => $this->entityType,
-        'entity' => $this,
-      ),
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDescription() {
     return $this->description;
   }
@@ -192,10 +180,171 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $indexes = \Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
     // Iterate through the indexes.
     foreach ($indexes as $index) {
+      /** @var \Drupal\search_api\Index\IndexInterface $index */
       // Remove the index from the server.
       $index->setServer(NULL);
+      $index->setStatus(FALSE);
       // Save changes made to the index.
       $index->save();
+    }
+
+    // Iterate through the servers, executing the service's preDelete() methods.
+    foreach ($entities as $server) {
+      /** @var \Drupal\search_api\Server\ServerInterface $server */
+      // Remove the index from the server.
+      $server->getService()->preDelete();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    return $this->getService()->buildConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    return $this->getService()->validateConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    return $this->getService()->submitConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewSettings() {
+    return $this->getService()->viewSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsFeature($feature) {
+    return $this->getService()->supportsFeature($feature);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsDatatype($type) {
+    return $this->getService()->supportsDatatype($type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+    if ($update) {
+      return $this->getService()->postUpdate();
+    }
+    else {
+      return $this->getService()->postInsert();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addIndex(IndexInterface $index) {
+    try {
+      $this->getService()->addIndex($index);
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->label(),
+        '%index' => $index->label(),
+      );
+      watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
+      search_api_server_tasks_add($this, __FUNCTION__, $index);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateIndex(IndexInterface $index) {
+    try {
+      if ($this->getService()->updateIndex($index)) {
+        $index->reindex();
+        return TRUE;
+      }
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->label(),
+        '%index' => $index->label(),
+      );
+      watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
+      search_api_server_tasks_add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function removeIndex(IndexInterface $index) {
+    // When removing an index from a server, it doesn't make any sense anymore to
+    // delete items from it, or react to other changes.
+    search_api_server_tasks_delete(NULL, $this, $index);
+
+    try {
+      $this->getService()->removeIndex($index);
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->label(),
+        '%index' => is_object($index) ? $index->label() : $index,
+      );
+      watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
+      search_api_server_tasks_add($this, __FUNCTION__, $index);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function indexItems(IndexInterface $index, array $items) {
+    return $this->getService()->indexItems($index, $items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems(IndexInterface $index = NULL, array $ids) {
+    try {
+      $this->getService()->deleteItems($index, $ids);
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->label(),
+      );
+      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
+      search_api_server_tasks_add($this, __FUNCTION__, $index, $ids);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAllItems(IndexInterface $index = NULL) {
+    try {
+      $this->getService()->deleteAllItems($index);
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->label(),
+      );
+      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
+      search_api_server_tasks_add($this, __FUNCTION__, $index);
     }
   }
 
@@ -203,19 +352,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    $this->ensurePlugin();
-    return $this->servicePluginInstance->search($query);
-  }
-
-  /**
-   * Helper method for ensuring the proxy object is set up.
-   */
-  protected function ensurePlugin() {
-    if (!isset($this->servicePluginInstance)) {
-      if (!($this->getService() instanceof ServiceInterface)) {
-        throw new SearchApiException(t('Search server with machine name @name specifies illegal service plugin @plugin.', array('@name' => $this->machine_name, '@plugin' => $this->servicePluginId)));
-      }
-    }
+    return $this->getService()->search($query);
   }
 
   /**

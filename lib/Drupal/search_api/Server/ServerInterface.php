@@ -8,14 +8,15 @@ namespace Drupal\search_api\Server;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Service\ServiceSpecificInterface;
 
 /**
  * Defines the interface for server entities.
  */
-interface ServerInterface extends ConfigEntityInterface {
+interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterface {
 
   /**
-   * Get the description.
+   * Retrieves the server's description.
    *
    * @return string
    *   The description of the server.
@@ -23,7 +24,7 @@ interface ServerInterface extends ConfigEntityInterface {
   public function getDescription();
 
   /**
-   * Determine whether the service is valid.
+   * Determines whether the service is valid.
    *
    * @return boolean
    *   TRUE if the service is valid, otherwise FALSE.
@@ -31,7 +32,7 @@ interface ServerInterface extends ConfigEntityInterface {
   public function hasValidService();
 
   /**
-   * Get the service.
+   * Retrieves the service.
    *
    * @return \Drupal\search_api\Service\ServiceInterface
    *   An instance of ServiceInterface.

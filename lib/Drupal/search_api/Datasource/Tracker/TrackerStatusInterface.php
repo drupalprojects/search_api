@@ -12,37 +12,25 @@ namespace Drupal\search_api\Datasource\Tracker;
 interface TrackerStatusInterface {
 
   /**
-   * Get the number of indexed items.
+   * Retrieves the number of indexed items.
    *
-   * @return integer
+   * @return int
    *   The number of indexed items.
    */
   public function getIndexedCount();
 
   /**
-   * Get the number of changed items.
+   * Retrieves the number of changed items.
    *
-   * @param boolean $queued
-   *   Optional. Indicates the queued items should be included in the changed
-   *   count. Defaults to FALSE.
-   *
-   * @return integer
+   * @return int
    *   The number of changed items.
    */
-  public function getChangedCount($queued = FALSE);
+  public function getChangedCount();
 
   /**
-   * Get the number of queued items.
+   * Retrieves the total number of items that have to be indexed.
    *
-   * @return integer
-   *   The number of queued items.
-   */
-  public function getQueuedCount();
-
-  /**
-   * Get the total number of items that have to be indexed.
-   *
-   * @return integer
+   * @return int
    *   The total number of items that have to be indexed.
    */
   public function getTotalCount();

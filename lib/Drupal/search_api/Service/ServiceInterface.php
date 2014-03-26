@@ -7,121 +7,53 @@
 namespace Drupal\search_api\Service;
 
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Query\QueryInterface;
 
 /**
  * Interface defining the methods search services have to implement.
+ *
+ * Consists of general plugin methods and the service-specific methods defined
+ * in \Drupal\search_api\Service\ServiceSpecificInterface, as well as special
+ * CRUD "hook" methods that cannot be present on the server entity (which also
+ * implements \Drupal\search_api\Service\ServiceSpecificInterface.
  */
-interface ServiceInterface extends ConfigurablePluginInterface {
+interface ServiceInterface extends ConfigurablePluginInterface, ServiceSpecificInterface {
 
   /**
-   * Determine whether the service supports a given feature.
+   * Reacts to the server's creation.
    *
-   * Features are optional extensions to Search API functionality and usually
-   * defined and used by third-party modules.
-   *
-   * There are currently three features defined directly in the Search API:
-   * <ul>
-   *   <li>"search_api_facets", by the search_api_facetapi module.</li>
-   *   <li>"search_api_facets_operator_or", also by the search_api_facetapi module.</li>
-   *   <li>"search_api_mlt", by the search_api_views module.</li>
-   * </ul>
-   *
-   * @param string $feature
-   *   The name of the optional feature.
-   *
-   * @return boolean
-   *   TRUE if the service knows and supports the specified feature, otherwise
-   *   FALSE.
+   * Called once, when the server is first created. Allows the service class to
+   * set up its necessary infrastructure.
    */
-  public function supportsFeature($feature);
+  public function postInsert();
 
   /**
-   * Add a new index to the service.
+   * Notifies this server that its fields are about to be updated.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return boolean
-   *   TRUE if the index was added, otherwise FALSE.
+   * The server's $original property can be used to inspect the old property
+   * values.
    */
-  public function addIndex(IndexInterface $index);
+  public function preUpdate();
 
   /**
-   * Update index of the service.
+   * Notifies this server that its fields were updated.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   * The server's $original property can be used to inspect the old property
+   * values.
+   *
+   * @return bool
+   *   TRUE, if the update requires reindexing of all content on the server.
    */
-  public function updateIndex(IndexInterface $index);
+  public function postUpdate();
 
   /**
-   * Determine whether the service contains the index.
+   * Notifies this server that it is about to be deleted from the database.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   * This should execute any necessary cleanup operations.
    *
-   * @return boolean
-   *   TRUE if the index exists, otherwise FALSE.
+   * Note that you shouldn't call the server's save() method, or any
+   * methods that might do that, from inside of this method as the server isn't
+   * present in the database anymore at this point.
    */
-  public function hasIndex(IndexInterface $index);
-
-  /**
-   * Remove an index from the service.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   */
-  public function removeIndex(IndexInterface $index);
-
-  /**
-   * Index the specified items.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   * @param array $items
-   *   An associtiave array of ItemInterface objects, keyed by the item ID.
-   */
-  public function indexItems(IndexInterface $index, array $items);
-
-  /**
-   * Delete the specified items from the index.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   * @param array $ids
-   *   An array of item IDs.
-   *
-   * @return boolean
-   *   TRUE if the items were deleted, otherwise FALSE.
-   */
-  public function deleteItems(IndexInterface $index, array $ids);
-
-  /**
-   * Delete all the items from the index.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
-   *
-   * @return boolean
-   *   TRUE if the all items were deleted, otherwise FALSE.
-   */
-  public function deleteAllItems(IndexInterface $index);
-
-  /**
-   * Executes a search on the server represented by this object.
-   *
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The query to execute.
-   *
-   * @return array
-   *   An associative array containing the search results, as required by
-   *   \Drupal\search_api\Query\QueryInterface::execute().
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   If an error prevented the search from completing.
-   */
-  public function search(QueryInterface $query);
+  public function preDelete();
 
 }

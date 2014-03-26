@@ -152,9 +152,9 @@ class AddAggregation extends FieldsProcessorPluginBase {
                 $required_fields[$f]['type'] = $types[$field['type']];
               }
             }
-            $fields = search_api_extract_fields($wrapper, $required_fields);
+            search_api_extract_fields($wrapper, $required_fields);
             $values = array();
-            foreach ($fields as $f) {
+            foreach ($required_fields as $f) {
               if (isset($f['value'])) {
                 $values[] = $f['value'];
               }
@@ -214,8 +214,9 @@ class AddAggregation extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function propertyInfo() {
-    $types = $this->getTypes('type');
+  public function alterPropertyDefinitions(array &$properties) {
+    // @todo Port this method to the new method functionality.
+    /*$types = $this->getTypes('type');
     $ret = array();
     if (isset($this->configuration['fields'])) {
       foreach ($this->configuration['fields'] as $name => $field) {
@@ -226,7 +227,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
         );
       }
     }
-    return $ret;
+    return $ret;*/
   }
 
   /**

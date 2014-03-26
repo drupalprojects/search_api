@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Service;
 
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Service\ServicePluginBase;
 
@@ -13,6 +14,17 @@ use Drupal\search_api\Service\ServicePluginBase;
  * )
  */
 class TestService2 extends ServicePluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return array('test' => '');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form['test'] = array(
       '#type' => 'textfield',
@@ -21,64 +33,32 @@ class TestService2 extends ServicePluginBase {
     );
     return $form;
   }
-  public function defaultConfiguration() {
-    return array('test' => '');
-  }
-  public function getConfiguration() {
-    return $this->configuration;
-  }
-  public function setConfiguration(array $configuration) {
-    $this->configuration = $configuration;
-  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     $this->setConfiguration(array(
       'test' => $form_state['values']['servicePluginConfig']['test'],
     ));
   }
-  public function validateConfigurationForm(array &$form, array &$form_state) {
 
+  /**
+   * {@inheritdoc}
+   */
+  public function indexItems(IndexInterface $index, array $items) {
   }
-  public function addIndex(\Drupal\search_api\Index\IndexInterface $index) {
 
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems(IndexInterface $index, array $ids) {
   }
-  public function deleteAllItems(\Drupal\search_api\Index\IndexInterface $index) {
 
-  }
-  public function deleteItems(\Drupal\search_api\Index\IndexInterface $index, array $ids) {
-
-  }
-  public function hasIndex(\Drupal\search_api\Index\IndexInterface $index) {
-
-  }
-  public function indexItems(\Drupal\search_api\Index\IndexInterface $index, array $items) {
-
-  }
-  public function postInstanceConfigurationCreate() {
-
-  }
-  public function postInstanceConfigurationDelete() {
-
-  }
-  public function postInstanceConfigurationUpdate() {
-
-  }
-  public function preInstanceConfigurationCreate() {
-
-  }
-  public function preInstanceConfigurationDelete() {
-
-  }
-  public function preInstanceConfigurationUpdate() {
-
-  }
-  public function removeIndex(\Drupal\search_api\Index\IndexInterface $index) {
-
-  }
-  public function supportsFeature($feature) {
-
-  }
-  public function updateIndex(\Drupal\search_api\Index\IndexInterface $index) {
-
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAllItems(IndexInterface $index = NULL) {
   }
 
   /**
@@ -99,4 +79,5 @@ class TestService2 extends ServicePluginBase {
       ),
     );
   }
+
 }

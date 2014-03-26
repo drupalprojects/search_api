@@ -26,26 +26,12 @@ interface TrackerInterface {
    * Track IDs as updated.
    *
    * @param array $ids
-   *   An array of item IDs.
-   * @param boolean $dequeue
-   *   Optional. Indicates whether queued items should be removed from the
-   *   queue. Defaults to FALSE.
+   *   An array of item IDs, or NULL to mark all items as changed.
    *
    * @return boolean
    *   TRUE if successful, otherwise FALSE.
    */
-  public function trackUpdate(array $ids, $dequeue = FALSE);
-
-  /**
-   * Track IDs as queued.
-   *
-   * @param array $ids
-   *   An array of item IDs.
-   *
-   * @return boolean
-   *   TRUE if successful, otherwise FALSE.
-   */
-  public function trackQueued(array $ids);
+  public function trackUpdate(array $ids = NULL);
 
   /**
    * Track IDs as indexed.

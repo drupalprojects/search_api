@@ -6,11 +6,11 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
-use Drupal\search_api\Datasource\Entity\EntityItem;
 use Drupal\search_api\Datasource\Tracker\DefaultTracker;
 use Drupal\Component\Utility\String;
 
@@ -21,10 +21,10 @@ use Drupal\Component\Utility\String;
  *   id = "search_api_content_entity_datasource",
  *   name = @Translation("Content entity datasource"),
  *   description = @Translation("Exposes the content entities as datasource."),
- *   derivative = "Drupal\search_api\Plugin\SearchApi\Datasource\Derivative\ContentEntityDatasourceDerivative"
+ *   derivative = "Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative"
  * )
  */
-class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Core\Plugin\ContainerFactoryPluginInterface {
+class ContentEntityDatasource extends DatasourcePluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The entity manager.
@@ -39,6 +39,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
    * @var \Drupal\Core\Entity\EntityStorageControllerInterface
    */
   private $storageController;
+
+  /**
+   * The typed data manager.
+   *
+   * @var \Drupal\Core\TypedData\TypedDataManager
+   */
+  protected $typedDataManager;
 
   /**
    * The database connection.
@@ -74,48 +81,20 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
     // Setup object members.
     $this->entityManager = $entity_manager;
     $this->storageController = $entity_manager->getStorageController($plugin_definition['entity_type']);
+    $this->typedDataManager = \Drupal::typedDataManager();
     $this->databaseConnection = $connection;
     $this->tracker = new DefaultTracker($this->getIndex(), $connection);
   }
 
   /**
-   * Get the entity manager.
-   *
-   * @return \Drupal\Core\Entity\EntityManager
-   *   An instance of EntityManager.
+   * {@inheritdoc}
    */
-  protected function getEntityManager() {
-    return $this->entityManager;
-  }
-
-  /**
-   * Get the entity storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   An instance of EntityStorageControllerInterface.
-   */
-  protected function getStorageController() {
-    return $this->storageController;
-  }
-
-  /**
-   * Get the database connection.
-   *
-   * @return \Drupal\Core\Database\Connection
-   *   An instance of Connection.
-   */
-  protected function getDatabaseConnection() {
-    return $this->databaseConnection;
-  }
-
-  /**
-   * Get the tracker.
-   *
-   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface
-   *   An instance of TrackerInterface.
-   */
-  protected function getTracker() {
-    return $this->tracker;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+    /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
+    $entity_manager = $container->get('entity.manager');
+    /** @var $connection \Drupal\Core\Database\Connection */
+    $connection = $container->get('database');
+    return new static($entity_manager, $connection, $configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -195,7 +174,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
    */
   public function isEntityBundlable() {
     // Get the entity type definition.
-    $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityType());
+    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityType());
     // Determine whether the entity type supports bundles.
     return $entity_type_definition->hasKey('bundle');
   }
@@ -207,56 +186,37 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
    *   An associative array of bundle info, keyed by the bundle name.
    */
   public function getEntityBundles() {
-    return $this->isEntityBundlable() ? $this->getEntityManager()->getBundleInfo($this->getEntityType()) : array();
+    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityType()) : array();
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
-    return new static(
-      $container->get('entity.manager'),
-      $container->get('database'),
-      $configuration,
-      $plugin_id,
-      $plugin_definition
-    );
+  public function getPropertyDefinitions() {
+    /** @var \Drupal\Core\TypedData\ComplexDataDefinitionInterface $def */
+    $def = $this->typedDataManager->createDataDefinition($this->getEntityType());
+    return $def->getPropertyDefinitions();
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPropertyInfo() { return array(); /* @todo */ }
 
   /**
    * {@inheritdoc}
    */
   public function load($id) {
-    // Load the entity from the storage controller.
-    $entity = $this->getStorageController()->load($id);
-    // Wrap the entity into a datasource item.
-    return $entity ? new EntityItem($entity) : NULL;
+    return $this->storageController->load($id);
   }
 
   /**
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
-    // Initialize the items variable to an empty array.
-    $items = array();
-    // Iterate through the loaded entities.
-    foreach ($this->getStorageController()->loadMultiple($ids) as $entity_id => $entity) {
-      // Wrap the entity into a datasource item and add it to the list.
-      $items[$entity_id] = new EntityItem($entity);
-    }
-    return $items;
+    return $this->storageController->loadMultiple($ids);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getStatus() {
-    return $this->getTracker()->getStatus();
+    return $this->tracker->getStatus();
   }
 
   /**
@@ -323,6 +283,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements \Drupal\Co
     if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
       // @todo: Needs to reindex.
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTracker() {
+    return new DefaultTracker($this->index, $this->databaseConnection);
   }
 
 }

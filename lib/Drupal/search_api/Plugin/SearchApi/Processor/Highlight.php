@@ -213,9 +213,9 @@ class Highlight extends ProcessorPluginBase {
     }
     $wrapper = $this->index->entityWrapper($result['entity'], FALSE);
     $wrapper->language($language->language);
-    $extracted = search_api_extract_fields($wrapper, $needs_extraction);
+    search_api_extract_fields($wrapper, $needs_extraction);
 
-    foreach ($extracted as $field => $info) {
+    foreach ($needs_extraction as $field => $info) {
       if (isset($info['value'])) {
         $data[$field] = $info['value'];
       }

@@ -8,43 +8,74 @@
  * Implements hook_schema().
  */
 function search_api_schema() {
-  return array(
-    'search_api_item' => array(
-      'description' => 'Stores the items which should be indexed for each index, and their state.',
-      'fields' => array(
-        'id' => array(
-          'description' => 'The unique identifier of this item.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'index' => array(
-          'description' => 'The machine name of the index this item belongs to.',
-          'type' => 'varchar',
-          'length' => 50,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'changed' => array(
-          'description' => 'A timestamp of when the item state was last changed.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-        'state' => array(
-          'description' => 'The current state of tis item.',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-          'default' => 0,
-        ),
+  $schema['search_api_item'] = array(
+    'description' => 'Stores the items which should be indexed for each index, and their state.',
+    'fields' => array(
+      'item_id' => array(
+        'description' => 'The unique identifier of this item.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
       ),
-      'indexes' => array(
-        'indexing' => array('index', 'state', 'changed'),
+      'index_id' => array(
+        'description' => 'The machine name of the index this item belongs to.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
       ),
-      'primary key' => array('id', 'index'),
+      'changed' => array(
+        'description' => 'Either a flag or a timestamp to indicate if or when the item was changed since it was last indexed.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+      ),
     ),
+    'indexes' => array(
+      'indexing' => array('index_id', 'changed'),
+    ),
+    'primary key' => array('index_id', 'item_id'),
   );
+  $schema['search_api_task'] = array(
+    'description' => 'Stores pending tasks for servers.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'An integer identifying this task.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'server_id' => array(
+        'description' => 'The {search_api_server}.machine_name for which this task should be executed.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'A keyword identifying the type of task that should be executed.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'index_id' => array(
+        'description' => 'The {search_api_index}.machine_name to which this task pertains, if applicable for this type.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
+      ),
+      'data' => array(
+        'description' => 'Some data needed for the task, might be optional depending on the type.',
+        'type' => 'text',
+        'size' => 'medium',
+        'serialize' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'indexes' => array(
+      'server' => array('server_id'),
+    ),
+    'primary key' => array('id'),
+  );
+
+  return $schema;
 }

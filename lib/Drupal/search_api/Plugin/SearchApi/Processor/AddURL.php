@@ -13,9 +13,12 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  */
 class AddURL extends ProcessorPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
-      $url = $this->index->datasource()->getItemUrl($item);
+      $url = $this->index->getDatasource()->getItemUrl($item);
       if (!$url) {
         $item->search_api_url = NULL;
         continue;
@@ -24,14 +27,18 @@ class AddURL extends ProcessorPluginBase {
     }
   }
 
-  public function propertyInfo() {
-    return array(
+  /**
+   * {@inheritdoc}
+   */
+  public function alterPropertyDefinitions(array &$properties) {
+    // @todo Port this method to the new method functionality.
+    /*return array(
       'search_api_url' => array(
         'label' => t('URI'),
         'description' => t('A URI where the item can be accessed.'),
         'type' => 'uri',
       ),
-    );
+    );*/
   }
 
 }

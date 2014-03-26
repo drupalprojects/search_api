@@ -64,7 +64,7 @@ class Stopwords extends FieldsProcessorPluginBase {
     $uri = $form_state['values']['file'];
     if (!empty($uri) && !@file_get_contents($uri)) {
       $el = $form['file'];
-      form_error($el, t('Stopwords file') . ': ' . t('The file %uri is not readable or does not exist.', array('%uri' => $uri)));
+      \Drupal::formBuilder()->setError($el, $form_state, t('Stopwords file') . ': ' . t('The file %uri is not readable or does not exist.', array('%uri' => $uri)));
     }
   }
 

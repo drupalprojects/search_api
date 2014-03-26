@@ -6,6 +6,8 @@
 
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\search_api\Server\ServerInterface;
 
 /*
  * Constant definitions.
@@ -262,13 +264,117 @@ function search_api_get_data_type_info($type = NULL) {
 }
 
 /**
- * Extracts specific field values from an EntityMetadataWrapper object.
+ * Extracts specific field values from typed data object.
  *
- * @see Drupal\search_api\Plugin\SearchApi\Processor\Highlight::getFulltextfields()
- * @todo
+ * Used during indexing.
+ *
+ * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+ *   The item from which fields should be extracted.
+ * @param array $fields
+ *   The fields to extract, as stored in an index. I.e., the array keys are
+ *   field names, the values are arrays with at least a "type" key present.
+ *   Passed by reference, "value" and "original_type" keys will be added for all
+ *   fields.
  */
-function search_api_extract_fields($wrapper, array $fields, array $value_options = array()) {
-  return array();
+function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
+  // Figure out which fields are directly on the item and which need to be
+  // extracted from nested items.
+  $direct_fields = array();
+  $nested_fields = array();
+  foreach (array_keys($fields) as $key) {
+    if (strpos($key, ':') !== FALSE) {
+      list($direct, $nested) = explode(':', $key, 2);
+      $nested_fields[$direct][$nested] = &$fields[$key];
+    }
+    else {
+      $direct_fields[] = $key;
+    }
+  }
+  // Extract the direct fields.
+  foreach ($direct_fields as $key) {
+    try {
+      $item = $item->get($key);
+      // @todo Figure out what to do with that.
+    }
+    catch (\InvalidArgumentException $e) {
+      // Set defaults if something fails.
+      $fields[$key]['value'] = NULL;
+      $fields[$key]['original_type'] = $fields[$key]['type'];
+    }
+  }
+  // Recurse for all nested fields.
+  foreach ($nested_fields as $direct => $fields_nested) {
+    $success = FALSE;
+    try {
+      $item_nested = $item->get($direct);
+      if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
+        search_api_extract_fields($item_nested, $fields_nested);
+        $success = TRUE;
+      }
+    }
+    catch (\InvalidArgumentException $e) {
+      // Will be automatically handled because $success == FALSE.
+    }
+    // If the values couldn't be extracted from the nested item, we have to
+    // set the defaults here.
+    if (!$success) {
+      foreach (array_keys($fields_nested) as $key) {
+        $fields[$key]['value'] = NULL;
+        $fields[$key]['original_type'] = $fields[$key]['type'];
+      }
+    }
+  }
+}
+
+/**
+ * Adds an entry into a server's list of pending tasks.
+ *
+ * @param \Drupal\search_api\Server\ServerInterface $server
+ *   The server for which a task should be remembered.
+ * @param $type
+ *   The type of task to perform.
+ * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+ *   (optional) If applicable, the index to which the task pertains (or its
+ *   machine name).
+ * @param mixed $data
+ *   (optional) If applicable, some further data necessary for the task.
+ */
+function search_api_server_tasks_add(ServerInterface $server, $type, $index = NULL, $data = NULL) {
+  db_insert('search_api_task')
+    ->fields(array(
+      'server_id' => $server->id(),
+      'type' => $type,
+      'index_id' => $index ? (is_object($index) ? $index->id() : $index) : NULL,
+      'data' => isset($data) ? serialize($data) : NULL,
+    ))
+    ->execute();
+}
+
+/**
+ * Removes pending server tasks from the list.
+ *
+ * @param array|null $ids
+ *   (optional) The IDs of the pending server tasks to delete. Set to NULL
+ *   to not filter by IDs.
+ * @param \Drupal\search_api\Server\ServerInterface|null $server
+ *   (optional) A server for which the tasks should be deleted. Set to NULL to
+ *   delete tasks from all servers.
+ * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+ *   (optional) An index (or its machine name) for which the tasks should be
+ *   deleted. Set to NULL to delete tasks for all indexes.
+ */
+function search_api_server_tasks_delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
+  $delete = db_delete('search_api_task');
+  if ($ids) {
+    $delete->condition('id', $ids);
+  }
+  if ($server) {
+    $delete->condition('server_id', $server->id());
+  }
+  if ($index) {
+    $delete->condition('index_id', is_object($index) ? $index->id() : $index);
+  }
+  $delete->execute();
 }
 
 /**

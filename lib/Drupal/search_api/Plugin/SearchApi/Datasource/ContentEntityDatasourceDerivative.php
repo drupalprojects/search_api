@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Datasource\Entity\ContentEntityDatasourceDerivative.
+ * Contains \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative.
  */
 
-namespace Drupal\search_api\Plugin\SearchApi\Datasource\Derivative;
+namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
 use Drupal\Core\Entity\ContentEntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -56,9 +56,9 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
-    return new static(
-      $container->get('entity.manager')
-    );
+    /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
+    $entity_manager = $container->get('entity.manager');
+    return new static($entity_manager);
   }
 
   /**

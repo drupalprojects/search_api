@@ -44,24 +44,12 @@ interface ProcessorInterface extends IndexPluginInterface {
   public static function supportsIndex(IndexInterface $index);
 
   /**
-   * Declare the properties that are added to items by this processor.
+   * Alters the property definitions for this index's item type.
    *
-   * If one of the specified properties already exists for an entity it will be
-   * overridden, so keep a clear namespace by prefixing the properties with the
-   * module name if this is not desired.
-   *
-   * CAUTION: Since this method is used when calling
-   * \Drupal\search_api\IndexInterface::getFields(), calling that method from
-   * inside propertyInfo() will lead to a recursion and should therefore be
-   * avoided.
-   *
-   * @see hook_entity_property_info()
-   *
-   * @return array
-   *   Information about all additional properties.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   An array of property definitions for this item type.
    */
-  // @todo Figure out how this method should actually work/be called.
-  public function propertyInfo();
+  public function alterPropertyDefinitions(array &$properties);
 
   /**
    * Preprocess data items for indexing.
@@ -71,7 +59,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    * search_api_fulltext fields, if set. Other fields should usually be left
    * untouched.
    *
-   * @param array $items
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
    *   An array of items to be preprocessed for indexing, formatted as specified
    *   by ServiceInterface::indexItems().
    */
@@ -86,8 +74,6 @@ interface ProcessorInterface extends IndexPluginInterface {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The object representing the query to be executed.
-   *
-   * @return
    */
   public function preprocessSearchQuery(QueryInterface $query);
 
@@ -103,8 +89,6 @@ interface ProcessorInterface extends IndexPluginInterface {
    *   QueryInterface->execute() for the detailed format.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The object representing the executed query.
-   *
-   * @return
    */
   public function postprocessSearchResults(array &$response, QueryInterface $query);
 

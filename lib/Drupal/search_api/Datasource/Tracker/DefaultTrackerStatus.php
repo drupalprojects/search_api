@@ -8,7 +8,6 @@ namespace Drupal\search_api\Datasource\Tracker;
 
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Datasource\Item\ItemStates;
 
 /**
  * Default datasource tracker status which uses the database.
@@ -30,21 +29,31 @@ class DefaultTrackerStatus implements TrackerStatusInterface {
   private $databaseConnection;
 
   /**
-   * Create a DefaultTrackerStatus object.
+   * The table to use for tracking items.
    *
-   * @param \Drupal\search_api\Index\IndexInterface
+   * @var string
+   */
+  protected $table;
+
+  /**
+   * Creates a DefaultTrackerStatus object.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    * @param \Drupal\Core\Database\Connection $connection
    *   A connection to the database.
+   * @param string $table
+   *   (optional) The table to use for tracking items.
    */
-  public function __construct(IndexInterface $index, Connection $connection) {
+  public function __construct(IndexInterface $index, Connection $connection, $table = 'search_api_item') {
     // Setup object members.
     $this->index = $index;
     $this->databaseConnection = $connection;
+    $this->table = $table;
   }
 
   /**
-   * Get the index.
+   * Retrieves the index.
    *
    * @return \Drupal\search_api\Index\IndexInterface
    *   An instance of IndexInterface.
@@ -54,7 +63,7 @@ class DefaultTrackerStatus implements TrackerStatusInterface {
   }
 
   /**
-   * Get the database connection
+   * Retrieves the database connection
    *
    * @return \Drupal\Core\Database\Connection
    *   An instance of Connection.
@@ -64,59 +73,47 @@ class DefaultTrackerStatus implements TrackerStatusInterface {
   }
 
   /**
-   * Create a select statement.
+   * Creates a select statement.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   An instance of SelectInterface.
    */
   protected function createSelectStatement() {
-    return $this->getDatabaseConnection()->select('search_api_item', 'search_api_item')
-     ->fields('search_api_item', 'search_api_item')
-     ->condition('index', $this->getIndex()->id())
-     ->countQuery();
+    $select = $this->getDatabaseConnection()->select('search_api_item', 'i');
+    $select->condition('index', $this->getIndex()->id());
+    return $select;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getIndexedCount() {
-    // Build the select statement.
-    $statement = $this->createSelectStatement();
-    // Filter on indexed items.
-    $statement->condition('state', ItemStates::INDEXED);
-    // Get the number of indexed items.
-    return $statement->execute()->fetchField();
+    $select = $this->createSelectStatement();
+    $select->condition('changed', 0);
+    return $select->countQuery()
+      ->execute()
+      ->fetchField();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getChangedCount($queued = FALSE) {
-    // Build the select statement.
-    $statement = $this->createSelectStatement();
-    // Filter on updated items.
-    $statement->condition('state', ($queued ? array(ItemStates::CHANGED, ItemStates::QUEUED) : ItemStates::CHANGED));
-    // Get the number of updated items.
-    return $statement->execute()->fetchField();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getQueuedCount() {
-    // Build the select statement.
-    $statement = $this->createSelectStatement();
-    // Filter on queued items.
-    $statement->condition('state', ItemStates::QUEUED);
-    // Get the number of queued items.
-    return $statement->execute()->fetchField();
+    $select = $this->createSelectStatement();
+    $select->condition('changed', 0, '<>');
+    return $select->countQuery()
+      ->execute()
+      ->fetchField();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTotalCount() {
-    return $this->createSelectStatement()->execute()->fetchField();
+    return $this->createSelectStatement()
+      ->countQuery()
+      ->execute()->
+      fetchField();
   }
 
 }

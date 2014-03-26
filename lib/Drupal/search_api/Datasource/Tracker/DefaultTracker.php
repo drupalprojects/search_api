@@ -9,7 +9,6 @@ namespace Drupal\search_api\Datasource\Tracker;
 use Exception;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Datasource\Item\ItemStates;
 
 /**
  * Default datasource tracker which uses the database.
@@ -38,22 +37,32 @@ class DefaultTracker implements TrackerInterface {
   private $status;
 
   /**
+   * The table to use for tracking.
+   *
+   * @var string
+   */
+  protected $table;
+
+  /**
    * Create a DefaultTracker object.
    *
-   * @param \Drupal\search_api\Index\IndexInterface
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    * @param \Drupal\Core\Database\Connection $connection
    *   A connection to the database.
+   * @param string $table
+   *   The table to use for tracking.
    */
-  public function __construct(IndexInterface $index, Connection $connection) {
+  public function __construct(IndexInterface $index, Connection $connection, $table = 'search_api_item') {
     // Setup object members.
     $this->index = $index;
     $this->databaseConnection = $connection;
     $this->status = new DefaultTrackerStatus($index, $connection);
+    $this->table = $table;
   }
 
   /**
-   * Get the index.
+   * Retrieves the index.
    *
    * @return \Drupal\search_api\Index\IndexInterface
    *   An instance of IndexInterface.
@@ -63,7 +72,7 @@ class DefaultTracker implements TrackerInterface {
   }
 
   /**
-   * Get the database connection
+   * Retrieves the database connection
    *
    * @return \Drupal\Core\Database\Connection
    *   An instance of Connection.
@@ -73,47 +82,47 @@ class DefaultTracker implements TrackerInterface {
   }
 
   /**
-   * Create a select statement.
+   * Creates a select statement.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   An instance of SelectInterface.
    */
   protected function createSelectStatement() {
-    return $this->getDatabaseConnection()->select('search_api_item', 'search_api_item')
-     ->condition('index', $this->getIndex()->id());
+    return $this->getDatabaseConnection()->select('search_api_item', 'i')
+     ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
-   * Create an insert statement.
+   * Creates an insert statement.
    *
    * @return \Drupal\Core\Database\Query\Insert
    *   An instance of Insert.
    */
   protected function createInsertStatement() {
     return $this->getDatabaseConnection()->insert('search_api_item')
-      ->fields(array('id', 'index', 'state', 'changed'));
+      ->fields(array('item_id', 'index_id', 'changed'));
   }
 
   /**
-   * Create an update statement.
+   * Creates an update statement.
    *
    * @return \Drupal\Core\Database\Query\Update
    *   An instance of Update.
    */
   protected function createUpdateStatement() {
     return $this->getDatabaseConnection()->update('search_api_item')
-      ->condition('index', $this->getIndex()->id());
+      ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
-   * Create a delete statement.
+   * Creates a delete statement.
    *
    * @return \Drupal\Core\Database\Query\Delete
    *   An instance of Delete.
    */
   protected function createDeleteStatement() {
     return $this->getDatabaseConnection()->delete('search_api_item')
-      ->condition('index', $this->getIndex()->id());
+      ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
@@ -140,10 +149,9 @@ class DefaultTracker implements TrackerInterface {
           foreach ($ids_chunk as $item_id) {
             // Add the ID to the insert statement.
             $statement->values(array(
-              'id' => $item_id,
-              'index' => $index_id,
-              'state' => ItemStates::CHANGED,
-              'changed' => REQUEST_TIME,
+              'item_id' => $item_id,
+              'index_id' => $index_id,
+              'changed' => 1,
             ));
           }
           // Execute the insert statement.
@@ -165,7 +173,7 @@ class DefaultTracker implements TrackerInterface {
   /**
    * {@inheritdoc}
    */
-  public function trackUpdate(array $ids, $dequeue = FALSE) {
+  public function trackUpdate(array $ids = NULL) {
     // Initialize the success variable to FALSE.
     $success = FALSE;
     // Get the index.
@@ -179,65 +187,19 @@ class DefaultTracker implements TrackerInterface {
       // Catch any exception that may occur during update.
       try {
         // Iterate through the IDs in chunks of 1000 items.
-        foreach (array_chunk($ids, 1000) as $ids_chunk) {
+        $ids_chunks = $ids ? array_chunk($ids, 1000) : array(NULL);
+        foreach ($ids_chunks as $ids_chunk) {
           // Build the fields which need to be updated.
-          $fields = array(
-            'state' => ItemStates::CHANGED,
-            'changed' => REQUEST_TIME,
-          );
           // Build the update statement.
           $statement = $this->createUpdateStatement()
-            ->fields($fields)
-            ->condition('id', $ids_chunk);
-          // Check if the queued items should not be dequeued.
-          if (!$dequeue) {
-            // Exclude queued items from the update statement.
-            $statement->condition('state', ItemStates::QUEUED, '<>');
+            ->fields(array(
+              'changed' => REQUEST_TIME,
+            ));
+          if ($ids_chunk) {
+            $statement->condition('item_id', $ids_chunk);
           }
           // Execute the update statement.
           $statement->execute();
-        }
-        // Indicate success operation.
-        $success = TRUE;
-      }
-      catch (Exception $ex) {
-        // Log the exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback the transaction.
-        $transaction->rollback();
-      }
-    }
-    return $success;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function trackQueued(array $ids) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
-      // Get the database connection.
-      $connection = $this->getDatabaseConnection();
-      // Start a database transaction.
-      $transaction = $connection->startTransaction();
-      // Catch any exception that may occur during update.
-      try {
-        // Iterate through the IDs in chunks of 1000 items.
-        foreach (array_chunk($ids, 1000) as $ids_chunk) {
-          // Build the fields which need to be updated.
-          $fields = array(
-            'state' => ItemStates::QUEUED,
-            'changed' => REQUEST_TIME,
-          );
-          // Build and execute the update statement.
-          $this->createUpdateStatement()
-            ->fields($fields)
-            ->condition('id', $ids_chunk)
-            ->execute();
         }
         // Indicate success operation.
         $success = TRUE;
@@ -272,13 +234,12 @@ class DefaultTracker implements TrackerInterface {
         foreach (array_chunk($ids, 1000) as $ids_chunk) {
           // Build the fields which need to be updated.
           $fields = array(
-            'state' => ItemStates::INDEXED,
             'changed' => REQUEST_TIME,
           );
           // Build and execute the update statement.
           $this->createUpdateStatement()
             ->fields($fields)
-            ->condition('id', $ids_chunk)
+            ->condition('item_id', $ids_chunk)
             ->execute();
         }
         // Indicate success operation.
@@ -314,7 +275,7 @@ class DefaultTracker implements TrackerInterface {
         foreach (array_chunk($ids, 1000) as $ids_chunk) {
           // Build and execute the update statement.
           $this->createDeleteStatement()
-            ->condition('id', $ids_chunk)
+            ->condition('item_id', $ids_chunk)
             ->execute();
         }
         // Indicate success operation.
@@ -378,10 +339,8 @@ class DefaultTracker implements TrackerInterface {
     if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
       // Build the select statement.
       $statement = $this->createSelectStatement();
-      $statement->fields('search_api_item', array('id'));
-      $statement->condition('state', ItemStates::INDEXED, '<>');
+      $statement->fields('i', array('item_id'));
       $statement->orderBy('changed', 'ASC');
-      $statement->orderBy('state', 'ASC');
       // Check if the resultset needs to be limited.
       if ($limit > -1) {
         // Limit the number of results to the given value.

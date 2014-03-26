@@ -234,4 +234,20 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function getFulltextFields($only_indexed = TRUE);
 
+  /**
+   * Marks all items in this index for reindexing.
+   *
+   * @return bool
+   *   TRUE if the operation was successful, FALSE otherwise.
+   */
+  public function reindex();
+
+  /**
+   * Clears all items in this index and marks them for reindexing.
+   *
+   * @return bool
+   *   TRUE if the operation was successful, FALSE otherwise.
+   */
+  public function clear();
+
 }
