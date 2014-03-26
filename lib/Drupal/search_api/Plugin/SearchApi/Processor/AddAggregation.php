@@ -20,6 +20,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
+    /*
     $fields = $this->index->getFields(FALSE);
     $field_options = array();
     $field_properties = array();
@@ -113,6 +114,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
         'wrapper' => 'search-api-alter-add-aggregation-field-settings',
       ),
     );
+    */
     return $form;
   }
 
@@ -120,6 +122,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, array &$form_state) {
+    /*
     unset($form_state['values']['actions']);
     if (empty($form_state['values']['fields'])) {
       return;
@@ -131,6 +134,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
         form_error($form['fields'][$name]['fields'], t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.'));
       }
     }
+    */
   }
 
   /**
