@@ -80,11 +80,6 @@ class RenderedItem extends ProcessorPluginBase {
 
   }
 
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    parent::submitConfigurationForm($form, $form_state);
-    $this->configuration['view_mode'] = $form_state['values']['view_mode'];
-  }
-
   public function preprocessIndexItems(array &$items) {
     // Prevent session information from being saved while indexing.
     drupal_save_session(FALSE);

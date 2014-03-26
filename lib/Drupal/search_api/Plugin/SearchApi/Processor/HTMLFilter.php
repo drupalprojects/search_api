@@ -133,15 +133,6 @@ DEFAULT_TAGS
     }
   }
 
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    parent::submitConfigurationForm($form, $form_state);
-
-    $this->configuration['tags'] = $form_state['values']['tags'];
-    $this->configuration['title'] = $form_state['values']['title'];
-    $this->configuration['alt'] = $form_state['values']['alt'];
-  }
-
-
   protected function processFieldValue(&$value) {
     $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
     if ($this->configuration['title']) {
