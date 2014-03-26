@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Render\Element;
 
 /**
  * Provides a filters form for the Index entity.
@@ -154,13 +155,24 @@ class IndexFiltersForm extends EntityFormController {
       ),
     );
 
-    foreach ($processor_info as $name => $processor) {
+    // Currently the #weight of a row doesn't work, but should (see the
+    // documentation of the drupal_pre_render_table() function.
+    // So we sort the rows manually (bohoo bohoo).
+    $processor_info_sorted = $processor_info;
+    foreach($processor_info_sorted as $name => &$processor) {
+      $processor['#weight'] = $processors[$name]['weight'];
+    }
+    uasort($processor_info_sorted, 'Drupal\Component\Utility\SortArray::sortByWeightProperty');
+
+    foreach ($processor_info_sorted as $name => $processor) {
+
       $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
       $form['processors']['order'][$name]['label'] = array(
         '#markup' => String::checkPlain($processor['label']),
       );
 
-      $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
+      // Temporarily disabled (see comment above).
+      // $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
 
       // TableDrag: Weight column element.
       $form['processors']['order'][$name]['weight'] = array(
