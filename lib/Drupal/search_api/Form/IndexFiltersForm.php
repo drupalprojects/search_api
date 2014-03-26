@@ -206,7 +206,9 @@ class IndexFiltersForm extends EntityFormController {
     foreach ($form_state['processors'] as $name => $processor) {
       if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
         /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-        $processor->validateConfigurationForm($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
+        //$processor->validateConfigurationForm($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
+        $processor_form_state = $this->getFilterFormState($name, $form_state);
+        $processor->validateConfigurationForm($form['processors']['settings'][$name], $processor_form_state);
       }
     }
   }
@@ -229,7 +231,7 @@ class IndexFiltersForm extends EntityFormController {
       // We have to create our own form_state for the plugin form in order to
       // get it to save correctly. This ensures we can use submitConfigurationForm
       // in the correct manner, as described in
-      $processor_form_state = array('values' => $form_state['values']['processors'][$name]['settings']);
+      $processor_form_state = $this->getFilterFormState($name, $form_state);
       $processor->submitConfigurationForm($processor_form, $processor_form_state);
 
       $values['processors'][$name] += array('settings' => array());
@@ -279,6 +281,24 @@ class IndexFiltersForm extends EntityFormController {
       return 0;
     }
     return ($a_weight < $b_weight) ? -1 : 1;
+  }
+
+  /**
+   * Returns the portion of the form_state array used in validate
+   * and submit that corresponds to the filter being processed
+   *
+   * @param $filter_name Name of processor/filter
+   * @param $form_state form_state array passed into validate,submit methods
+   * @return array
+   * @see submit
+   * @see validate
+   */
+  protected function getFilterFormState($filter_name, $form_state) {
+    $filter_form_state = array('values' => array());
+    if(isset($form_state['values']['processors'][$filter_name]['settings'])) {
+        $filter_form_state['values'] = $form_state['values']['processors'][$filter_name]['settings'];
+    }
+    return $filter_form_state;
   }
 
 }
