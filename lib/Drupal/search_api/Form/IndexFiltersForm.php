@@ -251,7 +251,7 @@ class IndexFiltersForm extends EntityFormController {
       $values['processors'][$name]['settings'] = $processor->getConfiguration();
     }
 
-    if (!isset($options['processors']) || $options['processors'] != $values['processors']) {
+    if (!isset($options['processors']) || $options['processors'] !== $values['processors']) {
       // Save the already sorted arrays to avoid having to sort them at each use.
       uasort($values['processors'], array($this, 'elementCompare'));
       $this->entity->setOption('processors', $values['processors']);
