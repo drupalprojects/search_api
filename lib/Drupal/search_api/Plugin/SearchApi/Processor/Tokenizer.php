@@ -5,7 +5,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
- * * @SearchApiProcessor(
+ * @SearchApiProcessor(
  *   id = "search_api_tokenizer_processor",
  *   label = @Translation("Tokenizer processor"),
  *   description = @Translation("Remove characters from search strings.")

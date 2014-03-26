@@ -37,4 +37,5 @@ class ProcessorPluginManager extends DefaultPluginManager {
     $this->setCacheBackend($cache_backend, $language_manager, 'search_api_processors');
     $this->alterInfo('search_api_processor_info');
   }
+
 }

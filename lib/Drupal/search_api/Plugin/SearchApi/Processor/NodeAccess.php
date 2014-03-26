@@ -10,7 +10,11 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
- * Adds node access information to node indexes.
+ * @SearchApiProcessor(
+ *   id = "search_api_node_access_processor",
+ *   label = @Translation("Node access processor"),
+ *   description = @Translation("Adds node access information to node indexes")
+ * )
  */
 class NodeAccess extends ProcessorPluginBase {
 
@@ -18,8 +22,15 @@ class NodeAccess extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function supportsIndex(IndexInterface $index) {
-    // Currently only node access is supported.
-    return $index->getEntityType() === 'node';
+    $data_source_definition = $index->getDatasource()->getPluginDefinition();
+
+    if (isset($data_source_definition['entity_type'])) {
+      // Currently only node access is supported.
+      return $data_source_definition['entity_type'] === 'node';
+    }
+    else {
+      return FALSE;
+    }
   }
 
   /**
@@ -78,6 +89,13 @@ class NodeAccess extends ProcessorPluginBase {
    */
   protected function getNode($item) {
     return $item;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, array &$form_state) {
+   return parent::buildConfigurationForm($form, $form_state);
   }
 
   /**
