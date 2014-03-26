@@ -77,6 +77,7 @@ class IndexFiltersForm extends EntityFormController {
     $processor_info = $this->processorPluginManager->getDefinitions();
 
     $form['#tree'] = TRUE;
+    $form['#attached']['library'][] = 'search_api/search_api.index-active-formatters';
 
     // Set a proper title
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
@@ -144,7 +145,6 @@ class IndexFiltersForm extends EntityFormController {
     $form['processors']['order'] = array(
       '#type' => 'table',
       '#header' => array(t('Processor'), t('Weight')),
-      '#attributes' => array('id' => 'search-api-processors'),
       '#tabledrag' => array(
         array(
           'action' => 'order',
@@ -185,13 +185,14 @@ class IndexFiltersForm extends EntityFormController {
       $settings_form = $processor_plugin->buildConfigurationForm($form, $form_state);
 
       if (!empty($settings_form)) {
-        $form['settings'][$name] = array(
+        $form['processors']['settings'][$name] = array(
           '#type' => 'details',
           '#title' => $processor['label'],
           '#group' => 'processor_settings',
           '#weight' => $processors[$name]['weight'],
+          '#parents' => array('processors', $name, 'settings'),
         );
-        $form['settings'][$name] += $settings_form;
+        $form['processors']['settings'][$name] += $settings_form;
       }
     }
 
