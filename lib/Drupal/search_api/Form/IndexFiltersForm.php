@@ -89,7 +89,6 @@ class IndexFiltersForm extends EntityFormController {
     $internal_weight = 0;
 
     foreach ($processor_info as $name => $processor) {
-
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
         $processors[$name]['weight'] = 0;
@@ -224,9 +223,8 @@ class IndexFiltersForm extends EntityFormController {
    */
   public function validate(array $form, array &$form_state) {
     foreach ($form_state['processors'] as $name => $processor) {
-      if (isset($form['processors']['settings'][$name]) && isset($form_state['values']['processors'][$name]['settings'])) {
+      if (isset($form['processors']['settings'][$name]) && !empty($form['processors']['settings'][$name]['status']) && isset($form_state['values']['processors'][$name]['settings'])) {
         /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-        //$processor->validateConfigurationForm($form['processors']['settings'][$name], $form_state['values']['processors'][$name]['settings'], $form_state);
         $processor_form_state = $this->getFilterFormState($name, $form_state);
         $processor->validateConfigurationForm($form['processors']['settings'][$name], $processor_form_state);
       }
@@ -248,11 +246,14 @@ class IndexFiltersForm extends EntityFormController {
     foreach ($form_state['processors'] as $name => $processor) {
       $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
 
-      // We have to create our own form_state for the plugin form in order to
-      // get it to save correctly. This ensures we can use submitConfigurationForm
-      // in the correct manner, as described in
-      $processor_form_state = $this->getFilterFormState($name, $form_state);
-      $processor->submitConfigurationForm($processor_form, $processor_form_state);
+      if (!empty($form['processors']['settings'][$name]['status'])) {
+
+        // We have to create our own form_state for the plugin form in order to
+        // get it to save correctly. This ensures we can use submitConfigurationForm
+        // in the correct manner, as described in
+        $processor_form_state = $this->getFilterFormState($name, $form_state);
+        //$processor->submitConfigurationForm($processor_form, $processor_form_state);
+      }
 
       $values['processors'][$name] += array('settings' => array());
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */

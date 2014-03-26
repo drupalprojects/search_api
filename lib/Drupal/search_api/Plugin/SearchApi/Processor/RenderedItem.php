@@ -2,18 +2,16 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Symfony\Component\Yaml\Yaml;
-use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
  *   id = "search_api_rendered_item_processor",
  *   label = @Translation("Rendered Item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed.")
- * )
- *
+ * );
  */
-class RenderedItem extends ProcessorPluginBase {
+class RenderedItem extends FieldsProcessorPluginBase {
 
   /**
    * {@inheritdoc}
@@ -25,17 +23,9 @@ class RenderedItem extends ProcessorPluginBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-  }
-
-  /**
    * Builds configuration form
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-
     $form = parent::buildConfigurationForm($form, $form_state);
 
     //enumerate the view modes from the entity type used as the data source
@@ -102,7 +92,7 @@ class RenderedItem extends ProcessorPluginBase {
         }
         $item->search_api_viewed = $rendered_item;
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         $item->search_api_viewed = NULL;
       }
     }
@@ -111,6 +101,4 @@ class RenderedItem extends ProcessorPluginBase {
     $GLOBALS['user'] = $original_user;
     drupal_save_session(TRUE);
   }
-
-
 }
