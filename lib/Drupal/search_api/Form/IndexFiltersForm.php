@@ -77,7 +77,7 @@ class IndexFiltersForm extends EntityFormController {
     $processor_info = $this->processorPluginManager->getDefinitions();
 
     $form['#tree'] = TRUE;
-    $form['#attached']['library'][] = 'search_api/search_api.index-active-formatters';
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
 
     // Set a proper title
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));

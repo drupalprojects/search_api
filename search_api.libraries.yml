@@ -1,4 +1,4 @@
-search_api.index-active-formatters:
+drupal.search_api.index-active-formatters:
   version: VERSION
   js:
     js/index-active-formatters.js: {}
@@ -6,3 +6,8 @@ search_api.index-active-formatters:
     - core/jquery
     - core/drupal
     - core/jquery.once
+drupal.search_api.overview:
+  version: VERSION
+  css:
+    theme:
+      css/search_api.admin.css: {}

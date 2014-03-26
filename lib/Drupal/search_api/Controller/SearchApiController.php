@@ -169,7 +169,7 @@ class SearchApiController extends ControllerBase {
       );
     }
     // Add CSS.
-    $build['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
+    $build['#attached']['library'][] = 'search_api/drupal.search_api.overview';
     // Configure the empty messages.
     $build['enabled']['table']['#empty'] = $this->t('There are no enabled search servers.');
     $build['disabled']['table']['#empty'] = $this->t('There are no disabled search servers or indexes.');

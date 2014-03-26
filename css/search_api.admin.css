@@ -6,9 +6,9 @@
 }
 
 .search-api-entity-status-enabled {
-  background-image: url('images/enabled.png');
+  background-image: url('../images/enabled.png');
 }
 
 .search-api-entity-status-disabled {
-  background-image: url('images/disabled.png');
+  background-image: url('../images/disabled.png');
 }

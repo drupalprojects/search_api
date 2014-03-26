@@ -1,12 +1,12 @@
 services:
   search_api.processor.plugin.manager:
     class: Drupal\search_api\Processor\ProcessorPluginManager
-    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']
+    parent: default_plugin_manager
 
   search_api.service.plugin.manager:
     class: Drupal\search_api\Service\ServicePluginManager
-    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']
+    parent: default_plugin_manager
 
   search_api.datasource.plugin.manager:
     class: Drupal\search_api\Datasource\DatasourcePluginManager
-    arguments: ['@container.namespaces', '@cache.cache', '@language_manager', '@module_handler']
+    parent: default_plugin_manager
