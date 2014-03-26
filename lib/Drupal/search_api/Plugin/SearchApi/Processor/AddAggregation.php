@@ -19,7 +19,6 @@ class AddAggregation extends FieldsProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-    $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/search_api.admin.css';
 
     $fields = $this->index->getFields(FALSE);
     $field_options = array();
@@ -44,7 +43,6 @@ class AddAggregation extends FieldsProcessorPluginBase {
     }
     $type_descriptions = $tmp;
 
-    $form['#id'] = 'edit-callbacks-search-api-alter-add-aggregation-settings';
     $form['description'] = array(
       '#markup' => t('<p>This data alteration lets you define additional fields that will be added to this index. ' .
         'Each of these new fields will be an aggregation of one or more existing fields.</p>' .
