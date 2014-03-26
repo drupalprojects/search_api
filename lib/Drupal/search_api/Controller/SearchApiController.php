@@ -118,17 +118,18 @@ class SearchApiController extends ControllerBase {
         'route_name' => "search_api.{$type}_disable",
       ) + $url;
     }
-
     elseif (!($entity instanceof IndexInterface) || $entity->hasValidServer()) {
       $operations['enable'] = array(
         'title' => $this->t('Enable'),
         'route_name' => "search_api.{$type}_enable",
       ) + $url;
     }
+
     $operations['delete'] = array(
       'title' => $this->t('Delete'),
       'route_name' => "search_api.{$type}_delete",
     ) + $url;
+    $this->moduleHandler()->alter('entity_operation', $operations, $entity);
     $row[] = array(
       'data' => array(
         '#type' => 'operations',
