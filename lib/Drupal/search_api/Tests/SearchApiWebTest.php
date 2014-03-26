@@ -90,8 +90,7 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The server was successfully saved.'));
-    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search-api/server/' . $this->serverId) !== FALSE;
-    $this->assertTrue($redirect_path, t('Correct redirect.'));
+    $this->assertUrl('admin/config/search/search-api/server/' . $serverId, array(), t('Correct redirect to server page.'));
 
     return entity_load('search_api_server', $edit['machine_name'], TRUE);
   }
@@ -128,10 +127,10 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The index was successfully saved.'));
-    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search-api/index/' . $indexId) !== FALSE;
-    $this->assertTrue($redirect_path, t('Correct redirect to index page.'));
+    $this->assertUrl('admin/config/search/search-api/index/' . $indexId, array(), t('Correct redirect to index page.'));
 
     $index = entity_load('search_api_index', $indexId, TRUE);
+
 
     $this->assertEqual($index->name, $edit['name'], t('Name correctly inserted.'));
     $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
@@ -158,8 +157,7 @@ class SearchApiWebTest extends WebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
-    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search-api/index/' . $index->id() . '/filters') !== FALSE;
-    $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
+    $this->assertUrl($settings_path, array(), t('Correct redirect to fields page.'));
 
     $index = entity_load('search_api_index', $index->id(), TRUE);
     $fields = $index->getFields();
