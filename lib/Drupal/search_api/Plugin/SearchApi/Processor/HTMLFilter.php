@@ -60,13 +60,12 @@ DEFAULT_TAGS
 
     try {
       $tags = Yaml::parse($yaml);
+      unset($tags['br'], $tags['hr']);
     }
     catch(\Symfony\Component\Yaml\Exception\ParseException $exception) {
       //problem parsing, return empty array
-      $tags = array();
+      $tags = FALSE;
     }
-
-    unset($tags['br'], $tags['hr']);
 
     return $tags;
 
@@ -113,8 +112,11 @@ DEFAULT_TAGS
     if (empty($values['tags'])) {
       return;
     }
-    $tags = $this->parseTags($values['tags']);
     $errors = array();
+    if (!$tags = $this->parseTags($values['tags'])) {
+      $errors[] = t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
+      $tags = array();
+    }
     foreach ($tags as $key => $value) {
       if (is_array($value)) {
         $errors[] = t("Boost value for tag &lt;@tag&gt; can't be an array.", array('@tag' => $key));
