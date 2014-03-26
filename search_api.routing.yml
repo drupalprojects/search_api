@@ -34,13 +34,6 @@ search_api.server_delete:
   requirements:
     _entity_access: 'search_api_server.delete'
 
-search_api.server_enable:
-  path: '/admin/config/search/search-api/server/{search_api_server}/enable'
-  defaults:
-    _entity_form: 'search_api_server.enable'
-  requirements:
-    _entity_access: 'search_api_server.enable'
-
 search_api.server_bypass_enable:
   path: '/admin/config/search/search-api/server/{search_api_server}/bypass-enable/{token}'
   defaults:
@@ -89,13 +82,6 @@ search_api.index_disable:
     _entity_form: 'search_api_index.disable'
   requirements:
     _entity_access: 'search_api_index.disable'
-
-search_api.index_enable:
-  path: '/admin/config/search/search-api/index/{search_api_index}/enable'
-  defaults:
-    _entity_form: 'search_api_index.enable'
-  requirements:
-    _entity_access: 'search_api_index.enable'
 
 search_api.index_bypass_enable:
   path: '/admin/config/search/search-api/index/{search_api_index}/bypass-enable/{token}'

@@ -51,9 +51,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    */
   public function submit(array $form, array &$form_state) {
     // Toggle the entity status.
-    /** @var $server \Drupal\search_api\Entity\Server */
-    $server = $this->entity;
-    $server->setStatus(FALSE)->save();
+    $this->entity->setStatus(FALSE)->save();
 
     // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been disabled.', array('%name' => $this->entity->label())));

@@ -28,7 +28,6 @@ use Drupal\search_api\Server\ServerInterface;
  *       "default" = "Drupal\search_api\Form\ServerForm",
  *       "edit" = "Drupal\search_api\Form\ServerForm",
  *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
- *       "enable" = "Drupal\search_api\Form\ServerEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
  *     },
  *   },
