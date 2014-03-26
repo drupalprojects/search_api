@@ -19,6 +19,13 @@ class SearchApiIndexController extends ControllerBase {
     if (($token = $request->get('token')) && \Drupal::csrfToken()->validate($token, $search_api_index->id())) {
       // Toggle the entity status.
       $search_api_index->setStatus(TRUE)->save();
+
+      if ($search_api_index->status()) {
+        if (!$search_api_index->getServer()->status()) {
+          $search_api_index->setStatus(FALSE);
+        }
+      }
+
       $route = $search_api_index->urlInfo();
       return $this->redirect($route['route_name'], $route['route_parameters']);
     }

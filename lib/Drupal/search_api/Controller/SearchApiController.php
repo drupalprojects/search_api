@@ -125,7 +125,7 @@ class SearchApiController extends ControllerBase {
         'route_name' => "search_api.{$type}_disable",
       ) + $url;
     }
-    elseif (!($entity instanceof IndexInterface) || $entity->hasValidServer()) {
+    elseif (!($entity instanceof IndexInterface) || $entity->hasValidServer() && $entity->isServerEnabled()) {
       $operations['enable'] = array(
         'title' => $this->t('Enable'),
         'route_name' => "search_api.{$type}_enable",

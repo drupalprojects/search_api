@@ -6,13 +6,14 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Core\Entity\EntityStorageControllerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\Core\Entity;
-use Drupal\Core\Entity\ContentEntityType;
+
 
 /**
  * Defines the search index configuration entity.
@@ -29,7 +30,6 @@ use Drupal\Core\Entity\ContentEntityType;
  *       "fields" = "Drupal\search_api\Form\IndexFieldsForm",
  *       "filters" = "Drupal\search_api\Form\IndexFiltersForm",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
- *       "enable" = "Drupal\search_api\Form\IndexEnableConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm",
  *     },
  *   },
@@ -410,10 +410,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // If not cached, fetch the list of fields and their properties
     if (empty($this->fields[$only_indexed][$get_additional])) {
       $search_api_index_fields = empty($this->options['fields']) ? array() : $this->options['fields'];
+
       // Get all entity types
       $entity_types = $this->entityManager()->getDefinitions();
+
       // Define additional variable
       $additional = array();
+
       // Define prefix names
       $prefix_names = array();
 
@@ -655,7 +658,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function reindex() {
     $this->getDatasource()->getTracker()->trackUpdate();
-    return TRUE;
   }
 
   /**
@@ -665,5 +667,26 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->getServer()->deleteAllItems($this);
     $this->getDatasource()->getTracker()->trackUpdate();
     return TRUE;
+  }
+
+  /**
+   * Check if the server is enabled
+   *
+   * @return bool
+   */
+  public function isServerEnabled() {
+      if (!$this->getServer()->status()) {
+        return FALSE;
+      }
+    return TRUE;
+  }
+
+  /**
+   * Stops enabling of indexes when the server is disabled
+   */
+  public function preSave(EntityStorageControllerInterface $storage_controller) {
+    if ($this->status() && $this->isServerEnabled()) {
+      $this->setStatus(FALSE);
+    }
   }
 }
