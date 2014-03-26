@@ -25,16 +25,15 @@ class HTMLFilter extends FieldsProcessorPluginBase {
    */
   protected $options = array();
 
+
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->options += array(
+  public function defaultConfiguration() {
+    return array(
       'title' => FALSE,
-      'alt'   => TRUE,
-      'tags'  => <<<DEFAULT_TAGS
+      'alt' => TRUE,
+      'tags' => <<<DEFAULT_TAGS
 h1: 5
 h2: 3
 h3: 2
@@ -46,9 +45,13 @@ DEFAULT_TAGS
     );
 
     $this->tags = $this->parseTags($this->options['tags']);
+  }
 
-    // Specifying empty tags doesn't make sense.
-    unset($this->tags['br'], $this->tags['hr']);
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -69,6 +72,8 @@ DEFAULT_TAGS
       $tags = array();
     }
 
+    unset($tags['br'], $tags['hr']);
+
     return $tags;
 
   }
@@ -78,29 +83,33 @@ DEFAULT_TAGS
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-    $form['title'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Index title attribute'),
-      '#description' => t('If set, the contents of title attributes will be indexed.'),
-      '#default_value' => $this->options['title'],
-    );
-    $form['alt'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Index alt attribute'),
-      '#description' => t('If set, the alternative text of images will be indexed.'),
-      '#default_value' => $this->options['alt'],
-    );
-    $form['tags'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Tag boosts'),
-      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
-          'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
-          'Assign a boost of 0 to ignore the text content of that HTML element.',
-          array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
-      '#default_value' => $this->options['tags'],
+
+    $form += array(
+      'title' => array(
+        '#type' => 'checkbox',
+        '#title' => t('Index title attribute'),
+        '#description' => t('If set, the contents of title attributes will be indexed.'),
+        '#default_value' => $this->configuration['title'],
+      ),
+      'alt' => array(
+        '#type' => 'checkbox',
+        '#title' => t('Index alt attribute'),
+        '#description' => t('If set, the alternative text of images will be indexed.'),
+        '#default_value' => $this->configuration['alt'],
+      ),
+      'tags' => array(
+        '#type' => 'textarea',
+        '#title' => t('Tag boosts'),
+        '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
+            'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
+            'Assign a boost of 0 to ignore the text content of that HTML element.',
+            array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
+        '#default_value' => $this->configuration['tags'],
+      ),
     );
 
     return $form;
+
   }
 
   public function validateConfigurationForm(array &$form, array &$form_state) {
@@ -128,16 +137,24 @@ DEFAULT_TAGS
     }
   }
 
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    parent::submitConfigurationForm($form, $form_state);
+
+    $this->configuration['tags'] = $form_state['values']['tags'];
+    $this->configuration['title'] = $form_state['values']['title'];
+    $this->configuration['alt'] = $form_state['values']['alt'];
+  }
+
 
   protected function processFieldValue(&$value) {
     $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
-    if ($this->options['title']) {
+    if ($this->configuration['title']) {
       $text = preg_replace('/(<[-a-z_]+[^>]+)\btitle\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>)/i', '$1 $5 $3$4 ', $text);
     }
-    if ($this->options['alt']) {
+    if ($this->configuration['alt']) {
       $text = preg_replace('/<img\b[^>]+\balt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' <img>$2$3</img> ', $text);
     }
-    if ($this->tags) {
+    if ($this->configuration) {
       $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');
       $value = $this->parseText($text);
     }
