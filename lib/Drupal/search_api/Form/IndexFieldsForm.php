@@ -121,7 +121,7 @@ class IndexFieldsForm extends EntityFormController {
     );
     if ($index->getServer()) {
       $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
-          array('@server-url' => url('admin/config/search/search_api/server/' . $index->getServer()->machine_name))) . '</p>';
+          array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
     }
     foreach ($fields as $key => $info) {
       $form['fields'][$key]['title']['#markup'] = String::checkPlain($info['name']);
