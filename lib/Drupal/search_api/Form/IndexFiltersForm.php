@@ -78,6 +78,9 @@ class IndexFiltersForm extends EntityFormController {
 
     $form['#tree'] = TRUE;
 
+    // Set a proper title
+    $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
+
     // Processors
     $processors = $this->entity->getOption('processors');
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();

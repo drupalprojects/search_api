@@ -82,6 +82,9 @@ class IndexFieldsForm extends EntityFormController {
     // Get the index
     $index = $this->entity;
 
+    // Set a proper title
+    $form['#title'] = $this->t('Manage fields for search index @label', array('@label' => $index->label()));
+
     // Get all options
     $options = $index->getFields(FALSE, TRUE);
     $fields = $options['fields'];
