@@ -297,8 +297,8 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
     $fields[$key]['value'] = array();
     $fields[$key]['original_type'] = NULL;
     try {
-      $item = $item->get($key);
-      _search_api_extract_field($item, $fields[$key]);
+      $data = $item->get($key);
+      _search_api_extract_field($data, $fields[$key]);
     }
     catch (\InvalidArgumentException $e) {
       // No need to do anything, we already set the defaults.
@@ -336,7 +336,7 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
  * @param array $field
  *   The field information array into which to put the extracted information.
  */
-function _search_api_extract_field(TypedDataInterface $data, array $field) {
+function _search_api_extract_field(TypedDataInterface $data, array &$field) {
   if ($data->getDataDefinition()->isList()) {
     foreach ($data as $piece) {
       _search_api_extract_field($piece, $field);
