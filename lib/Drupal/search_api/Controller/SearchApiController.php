@@ -101,17 +101,24 @@ class SearchApiController extends ControllerBase {
     }
     $url = $entity->urlInfo();
     $row[] = $this->l($entity->label(), $url['route_name'], $url['route_parameters'], $url['options']);
-    // @todo Do this a bit more cleanly.
-    $operations['edit'] = array(
-      'title' => $this->t('Edit'),
-      'route_name' => "search_api.{$type}_edit",
-    ) + $url;
+
+    $local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getDefinitions();
+    foreach ($local_tasks as $plugin_id => $local_task) {
+      if ($local_task['base_route'] == "search_api.{$type}_view") {
+        $operations[$plugin_id] = array(
+          'title' => $this->t($local_task['title']),
+          'route_name' => $local_task['route_name'],
+        ) + $url;
+      }
+    }
+
     if ($entity->status()) {
       $operations['disable'] = array(
         'title' => $this->t('Disable'),
         'route_name' => "search_api.{$type}_disable",
       ) + $url;
     }
+
     elseif (!($entity instanceof IndexInterface) || $entity->hasValidServer()) {
       $operations['enable'] = array(
         'title' => $this->t('Enable'),
