@@ -24,7 +24,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('Disabling a server will also remove all indexes from it and disable them, along with their searches.');
+    return $this->t('Disabling a server will also disable all attached indexes. It will also clear the tracking tables and if views is enabled it will disable the following views: insert list of views here');
   }
 
   /**
@@ -51,7 +51,10 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    */
   public function submit(array $form, array &$form_state) {
     // Toggle the entity status.
-    $this->entity->setStatus(FALSE)->save();
+    /** @var $server \Drupal\search_api\Entity\Server */
+    $server = $this->entity;
+    $server->setStatus(FALSE)->save();
+
     // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been disabled.', array('%name' => $this->entity->label())));
     // Redirect to the overview page.
