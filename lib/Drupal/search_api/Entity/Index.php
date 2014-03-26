@@ -666,9 +666,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @return bool
    */
   public function isServerEnabled() {
-      if (!$this->getServer()->status()) {
-        return FALSE;
-      }
+    if (!$this->getServer()->status()) {
+      return FALSE;
+    }
     return TRUE;
   }
 
