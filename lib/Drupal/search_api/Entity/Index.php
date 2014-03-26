@@ -359,9 +359,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Load our drupal fields to search api data types mapping
       $mapping = search_api_field_type_mapping();
 
-      // The list nesting level for entities with a certain prefix
-      $nesting_levels = array('' => 0);
-
       // @todo find out what this flat does and give it a better name
       $flat = array();
 
@@ -443,13 +440,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
                   // If the user added a field that has a referenced field, we need to add it to our array so we can
                   // iterate over it to find its fields.
                   if ($additional[$key]['enabled']) {
-
-                    // Visit this entity/struct in a later iteration.
-
+                    // Visit this entity type in a later iteration.
                     // Add the target type to the field. Use the key as a prefix. Which is again used as key
                     $field_entity_types[$key . ':' . $target_entity_type_id] = $target_entity_type;
                     $prefix_names[$key . ':' . $target_entity_type_id] = $field_entity_type->getLabel() . ' ' . $field->getLabel(). ' » ';
-
                   }
                 }
               }
