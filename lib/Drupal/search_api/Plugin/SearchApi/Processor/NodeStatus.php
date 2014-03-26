@@ -2,7 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
@@ -11,7 +11,7 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  *   description = @Translation("Exclude unpublished nodes from node indexes.")
  * )
  */
-class NodeStatus extends FieldsProcessorPluginBase {
+class NodeStatus extends ProcessorPluginBase {
 
   /**
    * Alter items before indexing.

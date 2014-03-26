@@ -7,8 +7,8 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 /**
  * @SearchApiProcessor(
  *   id = "search_api_add_url_processor",
- *   label = @Translation("Add URL"),
- *   description = @Translation(" Search API data alteration callback that adds an URL field for all items.")
+ *   label = @Translation("URL field"),
+ *   description = @Translation("Adds the item's URL to the indexed data.")
  * )
  */
 class AddURL extends ProcessorPluginBase {
