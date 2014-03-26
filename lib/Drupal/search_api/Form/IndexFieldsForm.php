@@ -293,14 +293,6 @@ class IndexFieldsForm extends EntityFormController {
       else {
         drupal_set_message(t('No values were changed.'));
       }
-      if (isset($index->options['data_alter_callbacks']) || isset($index->options['processors'])) {
-        $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
-      }
-      else {
-        drupal_set_message(t('Please set up the indexing workflow.'));
-        $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/filters';
-      }
-      return;
     }
     else {
       if ($ret) {
@@ -309,8 +301,6 @@ class IndexFieldsForm extends EntityFormController {
       else {
         drupal_set_message(t('No values were changed.'));
       }
-      // Go back to the same page on submit
-      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
     }
   }
 
