@@ -21,12 +21,6 @@ class HTMLFilter extends FieldsProcessorPluginBase {
   protected $tags = array();
 
   /**
-   * @var array
-   */
-  protected $options = array();
-
-
-  /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
@@ -84,28 +78,28 @@ DEFAULT_TAGS
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $form += array(
-      'title' => array(
-        '#type' => 'checkbox',
-        '#title' => t('Index title attribute'),
-        '#description' => t('If set, the contents of title attributes will be indexed.'),
-        '#default_value' => $this->configuration['title'],
-      ),
-      'alt' => array(
-        '#type' => 'checkbox',
-        '#title' => t('Index alt attribute'),
-        '#description' => t('If set, the alternative text of images will be indexed.'),
-        '#default_value' => $this->configuration['alt'],
-      ),
-      'tags' => array(
-        '#type' => 'textarea',
-        '#title' => t('Tag boosts'),
-        '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
-            'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
-            'Assign a boost of 0 to ignore the text content of that HTML element.',
-            array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
-        '#default_value' => $this->configuration['tags'],
-      ),
+    $form['title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Index title attribute'),
+      '#description' => t('If set, the contents of title attributes will be indexed.'),
+      '#default_value' => $this->configuration['title'],
+    );
+
+    $form['alt'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Index alt attribute'),
+      '#description' => t('If set, the alternative text of images will be indexed.'),
+      '#default_value' => $this->configuration['alt'],
+    );
+
+    $form['tags'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Tag boosts'),
+      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
+          'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
+          'Assign a boost of 0 to ignore the text content of that HTML element.',
+          array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
+      '#default_value' => $this->configuration['tags'],
     );
 
     return $form;

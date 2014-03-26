@@ -226,10 +226,10 @@ class IndexFiltersForm extends EntityFormController {
     foreach ($form_state['processors'] as $name => $processor) {
       $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
 
-      // We have to create our own form_state for the plugin form in order to 
+      // We have to create our own form_state for the plugin form in order to
       // get it to save correctly. This ensures we can use submitConfigurationForm
-      // in the correct manner, as described in 
-      $processor_form_state = array('values' => $form_state['values']['settings'][$name]);
+      // in the correct manner, as described in
+      $processor_form_state = array('values' => $form_state['values']['processors'][$name]['settings']);
       $processor->submitConfigurationForm($processor_form, $processor_form_state);
 
       $values['processors'][$name] += array('settings' => array());
