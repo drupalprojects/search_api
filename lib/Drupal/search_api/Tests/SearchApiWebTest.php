@@ -19,6 +19,8 @@ class SearchApiWebTest extends WebTestBase {
   protected $serverId;
   protected $indexId;
 
+  protected $urlGenerator;
+
   /**
    * {@inheritdoc}
    */
@@ -35,6 +37,7 @@ class SearchApiWebTest extends WebTestBase {
 
     // Create user with Search API permissions.
     $this->testUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
+    $this->urlGenerator = $this->container->get('url_generator');
   }
 
   public function testFramework() {
@@ -155,7 +158,7 @@ class SearchApiWebTest extends WebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
-    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search-api/index/' . $index->id() . '/fields') !== FALSE;
+    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search-api/index/' . $index->id() . '/filters') !== FALSE;
     $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
 
     $index = entity_load('search_api_index', $index->id(), TRUE);

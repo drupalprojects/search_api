@@ -106,7 +106,7 @@ class SearchApiController extends ControllerBase {
       '#title' => $entity->label(),
       '#route_name' => $url['route_name'],
       '#route_parameters' => $url['route_parameters'],
-      '#suffix' => '<div>' . $entity->get('description') . 'div',
+      '#suffix' => '<div>' . $entity->get('description') . '</div>',
     ));
 
     $local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getDefinitions();
