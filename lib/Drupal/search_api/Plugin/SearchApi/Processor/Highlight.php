@@ -90,7 +90,8 @@ class Highlight extends ProcessorPluginBase {
       '#title' => t('Excerpt length'),
       '#description' => t('The requested length of the excerpt, in characters.'),
       '#default_value' => $this->configuration['excerpt_length'],
-      '#element_validate' => array('element_validate_integer_positive'),
+      '#element_validate' => array('form_validate_number'),
+      '#min' => 1,
       '#states' => array(
         'visible' => array(
           '#edit-processors-search-api-highlighting-settings-excerpt' => array(
