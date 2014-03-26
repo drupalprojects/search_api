@@ -89,15 +89,17 @@ class IndexFiltersForm extends EntityFormController {
     $internal_weight = 0;
 
     foreach ($processor_info as $name => $processor) {
-      // Add an internal used weight, to ensure the order of the order of the
-      // processors.
-      $processors[$name]['_internal_weight'] = $internal_weight;
-      $internal_weight++;
 
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
         $processors[$name]['weight'] = 0;
       }
+
+      // Add an internal used weight, to ensure the order of the order of the
+      // processors.
+      $processors[$name]['_internal_weight'] = $internal_weight;
+      $internal_weight++;
+
       $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
       $settings['index'] = $this->entity;
 
