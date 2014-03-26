@@ -229,7 +229,7 @@ class IndexFieldsForm extends EntityFormController {
 
       $form['additional'] = array(
         '#type' => 'details',
-        '#title' => t('Add related fields'),
+        '#title' => t('Related fields'),
         '#description' => t('There are entities related to entities of this type. ' .
             'You can add their fields to the list above so they can be indexed too.') . '<br />',
         '#open' => TRUE,
@@ -246,7 +246,7 @@ class IndexFieldsForm extends EntityFormController {
       }
       $form['additional']['add'] = array(
         '#type' => 'submit',
-        '#value' => t('Add fields'),
+        '#value' => t('Update'),
       );
     }
 
