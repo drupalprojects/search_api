@@ -89,6 +89,8 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertText(t('The server was successfully saved.'));
     $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/server/' . $this->serverId) !== FALSE;
     $this->assertTrue($redirect_path, t('Correct redirect.'));
+
+    return entity_load('search_api_server', $edit['machine_name'], TRUE);
   }
 
   public function createIndex() {
@@ -134,6 +136,8 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertEqual($index->description, $edit['description'], t('Index machine name correctly inserted.'));
     $this->assertEqual($index->serverMachineName, $edit['serverMachineName'], t('Index server machine name correctly inserted.'));
     $this->assertEqual($index->datasourcePluginId, $edit['datasourcePluginId'], t('Index datasource id correctly inserted.'));
+
+    return $index;
   }
 
   public function addFieldsToIndex() {
