@@ -166,6 +166,7 @@ class SearchApiController extends ControllerBase {
         '#theme' => 'table',
         '#header' => $this->buildHeader(),
         '#rows' => $rows,
+        '#attributes' => array('class' => array($status . '-servers-list')),
       );
     }
     // Add CSS.

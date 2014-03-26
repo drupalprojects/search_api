@@ -88,6 +88,7 @@ class IndexFieldsForm extends EntityFormController {
     // Get all options
     $options = $index->getFields(FALSE, TRUE);
     $fields = $options['fields'];
+
     $additional = $options['additional fields'];
 
     // An array of option arrays for types, keyed by nesting level.
@@ -218,19 +219,23 @@ class IndexFieldsForm extends EntityFormController {
     }
 
     if ($additional) {
-      reset($additional);
+      // Build our options and our selected ones
+      $additional_form_options = array();
+      $additional_form_default_values = array();
+      foreach ($additional as $additional_key => $additional_option) {
+        $additional_form_options[$additional_key] = $additional_option['name'];
+        $additional_form_default_values[$additional_key] = (!empty($additional_option['enabled'])) ? $additional_key : 0;
+      }
       $form['additional'] = array(
-        '#type' => 'fieldset',
+        '#type' => 'details',
         '#title' => t('Add related fields'),
         '#description' => t('There are entities related to entities of this type. ' .
             'You can add their fields to the list above so they can be indexed too.') . '<br />',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#attributes' => array('class' => array('container-inline')),
+        '#open' => TRUE,
         'field' => array(
-          '#type' => 'select',
-          '#options' => $additional,
-          '#default_value' => key($additional),
+          '#type' => 'checkboxes',
+          '#options' => $additional_form_options,
+          '#default_value' => $additional_form_default_values,
         ),
         'add' => array(
           '#type' => 'submit',
@@ -254,26 +259,33 @@ class IndexFieldsForm extends EntityFormController {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form_state['index'];
     $options = isset($index->getOptions) ? $index->getOptions : array();
-    if ($form_state['values']['op'] == t('Save changes')) {
-      $fields = $form_state['values']['fields'];
-      foreach ($fields as $name => $field) {
-        if (empty($field['indexed'])) {
-          unset($fields[$name]);
-        }
-        else {
-          // Don't store the description. "indexed" is implied.
-          unset($fields[$name]['description'], $fields[$name]['indexed']);
-          // Boost defaults to 1.0.
-          if ($field['boost'] == '1.0') {
-            unset($fields[$name]['boost']);
-          }
+
+    $fields = $form_state['values']['fields'];
+    foreach ($fields as $name => $field) {
+      if (empty($field['indexed'])) {
+        unset($fields[$name]);
+      }
+      else {
+        // Don't store the description. "indexed" is implied.
+        unset($fields[$name]['description'], $fields[$name]['indexed']);
+        // Boost defaults to 1.0.
+        if ($field['boost'] == '1.0') {
+          unset($fields[$name]['boost']);
         }
       }
-      $options['fields'] = $fields;
-      unset($options['additional fields']);
-      $index->setOptions($options);
-      $ret = $index->save();
+    }
+    // Store the fields info
+    $options['fields'] = $fields;
 
+    // Store the additional fields info
+    $additional = $form_state['values']['additional']['field'];
+    $options['additional fields'] = $additional;
+
+    $index->setOptions($options);
+    $ret = $index->save();
+
+    // Show a different message based on the button
+    if ($form_state['values']['op'] == t('Save changes')) {
       if ($ret) {
         drupal_set_message(t('The indexed fields were successfully changed. ' .
           'The index was cleared and will have to be re-indexed with the new settings.'));
@@ -291,12 +303,6 @@ class IndexFieldsForm extends EntityFormController {
       return;
     }
     else {
-      // Adding a related entity's fields.
-      $prefix = $form_state['values']['additional']['field'];
-      $options['additional fields'][$prefix] = $prefix;
-      $index->setOptions($options);
-      $ret = $index->save();
-
       if ($ret) {
         drupal_set_message(t('The available fields were successfully changed.'));
       }

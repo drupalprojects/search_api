@@ -4,7 +4,7 @@
  * Contains \Drupal\search_api\Datasource\Entity\ContentEntityDatasourceDerivative.
  */
 
-namespace Drupal\search_api\Datasource\Entity;
+namespace Drupal\search_api\Plugin\SearchApi\Datasource\Derivative;
 
 use Drupal\Core\Entity\ContentEntityType;
 use Symfony\Component\DependencyInjection\ContainerInterface;

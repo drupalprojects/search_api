@@ -1,5 +1,5 @@
 search_api.overview:
-  path: '/admin/config/search/search_api'
+  path: '/admin/config/search/search-api'
   defaults:
     _title: 'Search API'
     _content: '\Drupal\search_api\Controller\SearchApiController::overview'
@@ -7,133 +7,133 @@ search_api.overview:
     _permission: 'administer search_api'
 
 search_api.server_add:
-  path: '/admin/config/search/search_api/add_server'
+  path: '/admin/config/search/search-api/add-server'
   defaults:
     _entity_form: 'search_api_server.default'
   requirements:
     _entity_create_access: 'search_api_server'
 
 search_api.server_view:
-  path: '/admin/config/search/search_api/server/{search_api_server}'
+  path: '/admin/config/search/search-api/server/{search_api_server}'
   defaults:
     _entity_form: 'search_api_server.edit'
   requirements:
     _entity_access: 'search_api_server.edit'
 
 search_api.server_edit:
-  path: '/admin/config/search/search_api/server/{search_api_server}/edit'
+  path: '/admin/config/search/search-api/server/{search_api_server}/edit'
   defaults:
     _entity_form: 'search_api_server.edit'
   requirements:
     _entity_access: 'search_api_server.edit'
 
 search_api.server_delete:
-  path: '/admin/config/search/search_api/server/{search_api_server}/delete'
+  path: '/admin/config/search/search-api/server/{search_api_server}/delete'
   defaults:
     _entity_form: 'search_api_server.delete'
   requirements:
     _entity_access: 'search_api_server.delete'
 
 search_api.server_enable:
-  path: '/admin/config/search/search_api/server/{search_api_server}/enable'
+  path: '/admin/config/search/search-api/server/{search_api_server}/enable'
   defaults:
     _entity_form: 'search_api_server.enable'
   requirements:
     _entity_access: 'search_api_server.enable'
 
 search_api.server_bypass_enable:
-  path: '/admin/config/search/search_api/server/{search_api_server}/bypass-enable/{token}'
+  path: '/admin/config/search/search-api/server/{search_api_server}/bypass-enable/{token}'
   defaults:
     _controller: 'Drupal\search_api\Controller\SearchApiServerController::serverBypassEnable'
   requirements:
     _entity_access: 'search_api_server.enable'
 
 search_api.server_disable:
-  path: '/admin/config/search/search_api/server/{search_api_server}/disable'
+  path: '/admin/config/search/search-api/server/{search_api_server}/disable'
   defaults:
     _entity_form: 'search_api_server.disable'
   requirements:
     _entity_access: 'search_api_server.disable'
 
 search_api.index_add:
-  path: '/admin/config/search/search_api/add_index'
+  path: '/admin/config/search/search-api/add-index'
   defaults:
     _entity_form: 'search_api_index.default'
   requirements:
     _entity_create_access: 'search_api_index'
 
 search_api.index_view:
-  path: '/admin/config/search/search_api/index/{search_api_index}'
+  path: '/admin/config/search/search-api/index/{search_api_index}'
   defaults:
     _entity_form: 'search_api_index.edit'
   requirements:
     _entity_access: 'search_api_index.edit'
 
 search_api.index_edit:
-  path: '/admin/config/search/search_api/index/{search_api_index}/edit'
+  path: '/admin/config/search/search-api/index/{search_api_index}/edit'
   defaults:
     _entity_form: 'search_api_index.edit'
   requirements:
     _entity_access: 'search_api_index.edit'
 
 search_api.index_delete:
-  path: '/admin/config/search/search_api/index/{search_api_index}/delete'
+  path: '/admin/config/search/search-api/index/{search_api_index}/delete'
   defaults:
     _entity_form: 'search_api_index.delete'
   requirements:
     _entity_access: 'search_api_index.delete'
 
 search_api.index_disable:
-  path: '/admin/config/search/search_api/index/{search_api_index}/disable'
+  path: '/admin/config/search/search-api/index/{search_api_index}/disable'
   defaults:
     _entity_form: 'search_api_index.disable'
   requirements:
     _entity_access: 'search_api_index.disable'
 
 search_api.index_enable:
-  path: '/admin/config/search/search_api/index/{search_api_index}/enable'
+  path: '/admin/config/search/search-api/index/{search_api_index}/enable'
   defaults:
     _entity_form: 'search_api_index.enable'
   requirements:
     _entity_access: 'search_api_index.enable'
 
 search_api.index_bypass_enable:
-  path: '/admin/config/search/search_api/index/{search_api_index}/bypass-enable/{token}'
+  path: '/admin/config/search/search-api/index/{search_api_index}/bypass-enable/{token}'
   defaults:
     _controller: 'Drupal\search_api\Controller\SearchApiIndexController::indexBypassEnable'
   requirements:
     _entity_access: 'search_api_index.enable'
 
 search_api.index_fields:
-  path: '/admin/config/search/search_api/index/{search_api_index}/fields'
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields'
   defaults:
     _entity_form: 'search_api_index.fields'
   requirements:
     _entity_access: 'search_api_index.fields'
 
 search_api.index_filters:
-  path: '/admin/config/search/search_api/index/{search_api_index}/filters'
+  path: '/admin/config/search/search-api/index/{search_api_index}/filters'
   defaults:
     _entity_form: 'search_api_index.filters'
   requirements:
     _entity_access: 'search_api_index.filters'
 
 search_api.index_delete:
-  path: '/admin/config/search/search_api/index/{search_api_index}/delete'
+  path: '/admin/config/search/search-api/index/{search_api_index}/delete'
   defaults:
     _entity_form: 'search_api_index.delete'
   requirements:
     _entity_access: 'search_api_index.delete'
 
 search_api.index_enable:
-  path: '/admin/config/search/search_api/index/{search_api_index}/enable'
+  path: '/admin/config/search/search-api/index/{search_api_index}/enable'
   defaults:
     _entity_form: 'search_api_index.enable'
   requirements:
     _entity_access: 'search_api_index.enable'
 
 search_api.index_disable:
-  path: '/admin/config/search/search_api/index/{search_api_index}/disable'
+  path: '/admin/config/search/search-api/index/{search_api_index}/disable'
   defaults:
     _entity_form: 'search_api_index.disable'
   requirements:

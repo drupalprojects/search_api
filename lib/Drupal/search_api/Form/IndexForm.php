@@ -196,22 +196,6 @@ class IndexForm extends EntityFormController {
         'source' => array('name'),
       ),
     );
-    // Build the description element.
-    $form['description'] = array(
-      '#type' => 'textarea',
-      '#title' => $this->t('Description'),
-      '#description' => $this->t('Enter a description for the index.'),
-      '#default_value' => $index->getDescription(),
-    );
-    // Build the status element.
-    $form['status'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enabled'),
-      '#description' => $this->t('Select if the index will be enabled. This will only take effect if the selected server is also enabled.'),
-      '#default_value' => $index->status(),
-      // Can't enable an index lying on a disabled server or no server at all.
-      '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
-    );
     // Build the datasource element.
     $options = $this->getDatasourcePluginDefinitionOptions();
 
@@ -232,6 +216,24 @@ class IndexForm extends EntityFormController {
     );
     // Build the datasource configuration form.
     $this->buildDatasourceConfigForm($form, $form_state, $index);
+    
+    // Build the status element.
+    $form['status'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#description' => $this->t('Select if the index will be enabled. This will only take effect if the selected server is also enabled.'),
+      '#default_value' => $index->status(),
+      // Can't enable an index lying on a disabled server or no server at all.
+      '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
+    );
+    // Build the description element.
+    $form['description'] = array(
+      '#type' => 'textarea',
+      '#title' => $this->t('Description'),
+      '#description' => $this->t('Enter a description for the index.'),
+      '#default_value' => $index->getDescription(),
+    );
+    
     // Build the server machine name element.
     $form['serverMachineName'] = array(
       '#type' => 'select',
@@ -247,22 +249,15 @@ class IndexForm extends EntityFormController {
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
     );
-    // Build the options container element.
-    $form['options'] = array(
-      '#tree' => TRUE,
-      '#type' => 'details',
-      '#title' => t('Index options'),
-      '#collapsed' => !$index->isNew(),
-    );
     // Build the index directly element.
-    $form['options']['index_directly'] = array(
+    $form['index_directly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Index items immediately'),
       '#description' => $this->t('Immediately index new or updated items instead of waiting for the next cron run. This might have serious performance drawbacks and is generally not advised for larger sites.'),
       '#default_value' => $index->getOption('index_directly'),
     );
     // Build the cron limit element.
-    $form['options']['cron_limit'] = array(
+    $form['cron_limit'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Cron batch size'),
       '#description' => $this->t('Set how many items will be indexed at once when indexing items during a cron run. "0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
@@ -307,7 +302,8 @@ class IndexForm extends EntityFormController {
         $form['datasourcePluginConfig']['#type'] = 'details';
         $form['datasourcePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $datasource_plugin_definition['name']));
         $form['datasourcePluginConfig']['#description'] = String::checkPlain($datasource_plugin_definition['description']);
-        $form['datasourcePluginConfig']['#collapsed'] = !$index->isNew();
+        $form['datasourcePluginConfig']['#open'] = $index->isNew() ? TRUE : $index->isNew();
+        
         // Attach the build datasource plugin configuration form.
         $form['datasourcePluginConfig'] += $datasource_plugin_config_form;
       }

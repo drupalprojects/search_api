@@ -176,6 +176,7 @@ function search_api_field_type_mapping() {
       case 'language':
       case 'string':
       case 'string_long':
+      case 'uuid':
         $mapping[$field_type_id] = 'string';
         break;
       case 'datetime':
@@ -203,14 +204,6 @@ function search_api_field_type_mapping() {
       case 'token':
         $mapping[$field_type_id] = 'string';
         break;
-      case 'uuid':
-      case 'file':
-      case 'image':
-      case 'taxonomy_term_reference':
-      case 'entity_reference':
-      case 'map':
-        break;
-
     }
   }
   // Allow other modules to intercept and define what default type they want to use for their field type.

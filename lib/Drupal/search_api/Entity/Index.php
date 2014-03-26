@@ -11,7 +11,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\Core\Entity;
-use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\ContentEntityType;
 
 /**
  * Defines the search index configuration entity.
@@ -343,39 +343,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $entity_types = $this->entityManager()->getDefinitions();
       // Define additional variable
       $additional = array();
+      // Define prefix names
+      $prefix_names = array();
 
       // First we need all already added prefixes.
-      $added = ($only_indexed || empty($this->options['additional fields'])) ? array() : $this->options['additional fields'];
-      foreach (array_keys($search_api_index_fields) as $key) {
-        $len = strlen($key) + 1;
-        $pos = $len;
-        // The third parameter ($offset) to strrpos has rather weird behaviour,
-        // necessitating this rather awkward code. It will iterate over all
-        // prefixes of each field, beginning with the longest, adding all of them
-        // to $added until one is encountered that was already added (which means
-        // all shorter ones will have already been added, too).
-        while ($pos = strrpos($key, ':', $pos - $len)) {
-          $prefix = substr($key, 0, $pos);
-          if (isset($added[$prefix])) {
-            break;
-          }
-          $added[$prefix] = $prefix;
-        }
-      }
-
-      // Then we walk through all properties and look if they are already
-      // contained in one of the arrays.
-      // Since this uses an iterative instead of a recursive approach, it is a bit
-      // complicated, with three arrays tracking the current depth.
+      $additional_fields_options = empty($this->options['additional fields']) ? array() : $this->options['additional fields'];
 
       // Get the entity type for the selected datasource
       $data_source_definition = $this->getDatasource()->getPluginDefinition();
-      $field_entity_types = array($data_source_definition['id'] => $entity_types[$data_source_definition['entity_type']]);
+      $data_source_entity_type_id = $entity_types[$data_source_definition['entity_type']]->id();
 
+      // Get our base array which will be used to loop over all fields that could be added to the search index.
+      $field_entity_types = array($data_source_entity_type_id => $entity_types[$data_source_definition['entity_type']]);
+
+      // Load our drupal fields to search api data types mapping
       $mapping = search_api_field_type_mapping();
-
-      // The list nesting level for entities with a certain prefix
-      $nesting_levels = array('' => 0);
 
       // @todo find out what this flat does and give it a better name
       $flat = array();
@@ -386,32 +368,44 @@ class Index extends ConfigEntityBase implements IndexInterface {
         foreach ($field_entity_types as $prefix => $field_entity_type) {
           /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
 
-          // Do not process entity types if they are not an instance of the interface.
-          if (!($field_entity_type instanceof EntityTypeInterface)) {
+          // Do not process entity types if they are not an instance of the interface but also not if they are
+          // not fieldable
+          if (!($field_entity_type instanceof \Drupal\Core\Entity\ContentEntityType) && $field_entity_type->isFieldable()) {
             unset($field_entity_types[$prefix]);
             continue;
           }
 
-          $entity_type_id = $field_entity_type->id();
           // Now look at all fields for all bundles for this entity type.
-          $bundles = $this->entityManager()->getBundleInfo($entity_type_id);
+          $bundles = $this->entityManager()->getBundleInfo($field_entity_type->id());
 
-          // Loop over all the bundles to get all the field definitions for those
           // @todo: We need to make sure we do not loop over bundles that are not selected
+          // Loop over all the bundles to get all the field definitions for those
           foreach ($bundles as $bundle_id => $bundle) {
             // Get field definitions for this bundle
-            $fields = $this->entityManager()->getFieldDefinitions($entity_type_id, $bundle_id);
+            $fields = $this->entityManager()->getFieldDefinitions($field_entity_type->id(), $bundle_id);
+
             // Loop over the fields and add the to the list with the proper type
             foreach ($fields as $field) {
               $field_type = $field->getType();
-              $key = $entity_type_id . ':' . $field->getName();
+
+              // Add the prefix here if it was from a reference
+              $key = $prefix . ':' . $field->getName();
 
               // @todo: Check if this comparison is valid
               if ((isset($mapping[$field_type])) && (!$only_indexed || !empty($search_api_index_fields[$key]))) {
+
+                // Generate the base name in advance
+                $base_name = $field_entity_type->getLabel() . ' ' . $field->getLabel();
+
+                // Add the prefix if needed
+                $name = (isset($prefix_names[$prefix])) ? $prefix_names[$prefix] . '' . $base_name : $base_name;
+
+                // See if the field was already enabled in the list
                 if (!empty($search_api_index_fields[$key])) {
+
                   // This field is already known in the index configuration.
                   $flat[$key] = $search_api_index_fields[$key] + array(
-                    'name' => $field_entity_type->getLabel() . ' ' . $field->getLabel(),
+                    'name' => $name,
                     'description' => $field->getDescription(),
                     'boost' => '1.0',
                     'indexed' => TRUE,
@@ -419,7 +413,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
                 }
                 else {
                   $flat[$key] = array(
-                    'name'    => $field_entity_type->getLabel() . ' ' . $field->getLabel(),
+                    'name'    => $name,
                     'description' => $field->getDescription(),
                     'type'    => $mapping[$field_type],
                     'boost' => '1.0',
@@ -427,28 +421,35 @@ class Index extends ConfigEntityBase implements IndexInterface {
                   );
                 }
               }
-              if (empty($mapping[$field_type])) {
-                if (isset($added[$key])) {
-                  // Visit this entity/struct in a later iteration.
-                  $field_entity_types[$key . ':'] = $field;
-                  $prefix_names[$key . ':'] = $field_entity_type->getLabel() . $field->getLabel(). ' » ';
-                }
-                else {
-                  $name = $field_entity_type->getLabel() . ' ' . $field->getLabel();
-                  // Add machine names to discern fields with identical labels.
-                  if (isset($used_names[$name])) {
-                    if ($used_names[$name] !== FALSE) {
-                      $additional[$used_names[$name]] .= ' [' . $used_names[$name] . ']';
-                      $used_names[$name] = FALSE;
-                    }
-                    $name .= ' [' . $key . ']';
+
+              // Only add fields that reference other entity types
+              $target_entity_type_settings = $field->getItemDefinition()->getSettings();
+              if (empty($mapping[$field_type]) && !empty($target_entity_type_settings['target_type']) && !$only_indexed) {
+
+                // Get the target type
+                $target_entity_type_id = $target_entity_type_settings['target_type'];
+                $target_entity_type = \Drupal::entityManager()->getDefinition($target_entity_type_id);
+
+                // We only allow fieldable entities to appear in the list
+                if ($target_entity_type instanceof Entity\ContentEntityType) {
+                  $name = $field_entity_type->getLabel() . ' ' . $field->getLabel() . ' [' . $key . ']';
+                  $additional[$key] = array(
+                    'name' => $name,
+                    'enabled' => (!empty($additional_fields_options[$key])) ? 1 : 0,
+                  );
+                  // If the user added a field that has a referenced field, we need to add it to our array so we can
+                  // iterate over it to find its fields.
+                  if ($additional[$key]['enabled']) {
+                    // Visit this entity type in a later iteration.
+                    // Add the target type to the field. Use the key as a prefix. Which is again used as key
+                    $field_entity_types[$key . ':' . $target_entity_type_id] = $target_entity_type;
+                    $prefix_names[$key . ':' . $target_entity_type_id] = $field_entity_type->getLabel() . ' ' . $field->getLabel(). ' » ';
                   }
-                  $additional[$key] = $name;
-                  $used_names[$name] = $key;
                 }
               }
             }
           }
+          // Delete it from the array as we processed this entity type
           unset($field_entity_types[$prefix]);
         }
       }
