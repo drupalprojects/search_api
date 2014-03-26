@@ -430,20 +430,54 @@ class Index extends ConfigEntityBase implements IndexInterface {
                 $target_entity_type_id = $target_entity_type_settings['target_type'];
                 $target_entity_type = \Drupal::entityManager()->getDefinition($target_entity_type_id);
 
-                // We only allow fieldable entities to appear in the list
-                if ($target_entity_type instanceof Entity\ContentEntityType) {
-                  $name = $field_entity_type->getLabel() . ' ' . $field->getLabel() . ' [' . $key . ']';
-                  $additional[$key] = array(
-                    'name' => $name,
-                    'enabled' => (!empty($additional_fields_options[$key])) ? 1 : 0,
-                  );
-                  // If the user added a field that has a referenced field, we need to add it to our array so we can
-                  // iterate over it to find its fields.
-                  if ($additional[$key]['enabled']) {
-                    // Visit this entity type in a later iteration.
-                    // Add the target type to the field. Use the key as a prefix. Which is again used as key
-                    $field_entity_types[$key . ':' . $target_entity_type_id] = $target_entity_type;
-                    $prefix_names[$key . ':' . $target_entity_type_id] = $field_entity_type->getLabel() . ' ' . $field->getLabel(). ' » ';
+                // Prevent loops in the UI when attaching additional fields.
+                // In order to do that we have to check if we are trying to
+                // attach an already attached field.
+                //
+                // For example:
+                // $prefix = node:uid:user:user_picture:file:uid
+                // $field->getName() = user_picture
+                //
+                // So in this case we try to add user_picture again.
+                //
+                // In order to test this we get the last part of the prefix
+                // appended with a colon and the field name.
+                // When that string appears in the prefix we know we are
+                // looping.
+                $parts = explode(':', $prefix);
+                $last_part = array_pop($parts);
+                if (count($parts) == 1 || strpos($prefix, $last_part . ':' . $field->getName()) === false) {
+                  // We only allow fieldable entities to appear in the list
+                  if ($target_entity_type instanceof Entity\ContentEntityType) {
+                    $name = $field_entity_type->getLabel() . ' ' . $field->getLabel() . ' [' . $key . ']';
+                    $additional[$key] = array(
+                      'name' => $name,
+                      'enabled' => (!empty($additional_fields_options[$key])) ? 1 : 0,
+                    );
+
+                    // When we enabled several additional fields that are
+                    // are changed, we only can disable the last one from the
+                    // chain to prevent errors.
+                    //
+                    // In order to do this we take the prefix string without the
+                    // last part. The "parent" of the key exists if the array
+                    // already contains a key equal to our assembled string.
+                    //
+                    // We only have to create the dependency if the item has a
+                    // child that is already enabled.
+                    $concat_string = implode(':', $parts);
+                    if (!empty($concat_string) && !empty($additional[$key]['enabled']) && isset($additional[$concat_string])) {
+                      $additional[$concat_string]['dependency'] = TRUE;
+                    }
+
+                    // If the user added a field that has a referenced field, we need to add it to our array so we can
+                    // iterate over it to find its fields.
+                    if ($additional[$key]['enabled']) {
+                      // Visit this entity type in a later iteration.
+                      // Add the target type to the field. Use the key as a prefix. Which is again used as key
+                      $field_entity_types[$key . ':' . $target_entity_type_id] = $target_entity_type;
+                      $prefix_names[$key . ':' . $target_entity_type_id] = $field_entity_type->getLabel() . ' ' . $field->getLabel(). ' » ';
+                    }
                   }
                 }
               }

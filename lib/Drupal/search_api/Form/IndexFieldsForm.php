@@ -226,21 +226,27 @@ class IndexFieldsForm extends EntityFormController {
         $additional_form_options[$additional_key] = $additional_option['name'];
         $additional_form_default_values[$additional_key] = (!empty($additional_option['enabled'])) ? $additional_key : 0;
       }
+
       $form['additional'] = array(
         '#type' => 'details',
         '#title' => t('Add related fields'),
         '#description' => t('There are entities related to entities of this type. ' .
             'You can add their fields to the list above so they can be indexed too.') . '<br />',
         '#open' => TRUE,
-        'field' => array(
-          '#type' => 'checkboxes',
-          '#options' => $additional_form_options,
-          '#default_value' => $additional_form_default_values,
-        ),
-        'add' => array(
-          '#type' => 'submit',
-          '#value' => t('Add fields'),
-        ),
+      );
+      foreach ($additional as $additional_key => $additional_option) {
+        // We need to loop through each option because we need to disable the
+        // checkbox if it's a dependency for another option.
+        $form['additional']['field'][$additional_key] = array(
+          '#type' => 'checkbox',
+          '#title' =>  $additional_option['name'],
+          '#default_value' => (!empty($additional_option['enabled'])) ? 1 : 0,
+          '#disabled' => (!empty($additional_option['dependency'])) ? TRUE : FALSE,
+        );
+      }
+      $form['additional']['add'] = array(
+        '#type' => 'submit',
+        '#value' => t('Add fields'),
       );
     }
 
