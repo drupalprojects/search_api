@@ -99,8 +99,15 @@ class SearchApiController extends ControllerBase {
     else {
       return array();
     }
+
     $url = $entity->urlInfo();
-    $row[] = $this->l($entity->label(), $url['route_name'], $url['route_parameters'], $url['options']);
+    $row[] = array('data' => array(
+      '#type' => 'link',
+      '#title' => $entity->label(),
+      '#route_name' => $url['route_name'],
+      '#route_parameters' => $url['route_parameters'],
+      '#suffix' => '<div>' . $entity->get('description') . 'div',
+    ));
 
     $local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getDefinitions();
     foreach ($local_tasks as $plugin_id => $local_task) {

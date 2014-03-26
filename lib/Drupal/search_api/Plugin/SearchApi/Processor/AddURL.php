@@ -2,16 +2,16 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
  *   id = "search_api_add_url_processor",
- *   label = @Translation("Add URL"),
- *   description = @Translation(" Search API data alteration callback that adds an URL field for all items.")
+ *   label = @Translation("URL field"),
+ *   description = @Translation("Adds the item's URL to the indexed data.")
  * )
  */
-class AddURL extends FieldsProcessorPluginBase {
+class AddURL extends ProcessorPluginBase {
 
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
@@ -28,7 +28,7 @@ class AddURL extends FieldsProcessorPluginBase {
     return array(
       'search_api_url' => array(
         'label' => t('URI'),
-        'description' => t('An URI where the item can be accessed.'),
+        'description' => t('A URI where the item can be accessed.'),
         'type' => 'uri',
       ),
     );
