@@ -86,8 +86,14 @@ class IndexFiltersForm extends EntityFormController {
     // Processors
     $processors = $this->entity->getOption('processors');
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
+    $internal_weight = 0;
 
     foreach ($processor_info as $name => $processor) {
+      // Add an internal used weight, to ensure the order of the order of the
+      // processors.
+      $processors[$name]['_internal_weight'] = $internal_weight;
+      $internal_weight++;
+
       if (!isset($processors[$name])) {
         $processors[$name]['status'] = 0;
         $processors[$name]['weight'] = 0;
@@ -139,7 +145,7 @@ class IndexFiltersForm extends EntityFormController {
         '#default_value' => $processors[$name]['status'],
         '#parents' => array('processors', $name, 'status'),
         '#description' => $processor['description'],
-        '#weight' => $processors[$name]['weight'],
+        '#weight' => $processors[$name]['_internal_weight'],
       );
     }
 
@@ -164,11 +170,11 @@ class IndexFiltersForm extends EntityFormController {
     }
     uasort($processor_info_sorted, 'Drupal\Component\Utility\SortArray::sortByWeightProperty');
 
-    foreach ($processor_info_sorted as $name => $processor) {
+    foreach ($processor_info_sorted as $name => $processor_sorted) {
 
       $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
       $form['processors']['order'][$name]['label'] = array(
-        '#markup' => String::checkPlain($processor['label']),
+        '#markup' => String::checkPlain($processor_sorted['label']),
       );
 
       // Temporarily disabled (see comment above).
@@ -177,7 +183,7 @@ class IndexFiltersForm extends EntityFormController {
       // TableDrag: Weight column element.
       $form['processors']['order'][$name]['weight'] = array(
         '#type' => 'weight',
-        '#title' => t('Weight for @title', array('@title' => $processor['label'])),
+        '#title' => t('Weight for @title', array('@title' => $processor_sorted['label'])),
         '#title_display' => 'invisible',
         '#default_value' => $processors[$name]['weight'],
         '#parents' => array('processors', $name, 'weight'),
@@ -201,7 +207,7 @@ class IndexFiltersForm extends EntityFormController {
           '#type' => 'details',
           '#title' => $processor['label'],
           '#group' => 'processor_settings',
-          '#weight' => $processors[$name]['weight'],
+          '#weight' => $processors[$name]['_internal_weight'],
           '#parents' => array('processors', $name, 'settings'),
         );
         $form['processors']['settings'][$name] += $settings_form;
