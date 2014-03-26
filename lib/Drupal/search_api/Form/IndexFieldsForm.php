@@ -91,7 +91,7 @@ class IndexFieldsForm extends EntityFormController {
     $additional = $options['additional fields'];
 
     // An array of option arrays for types, keyed by nesting level.
-    $types = array(0 => search_api_field_types());
+    $types = array(0 => search_api_data_types());
 
     // Get all entity types
     $entity_types = $this->getEntityManager()->getDefinitions();
@@ -256,8 +256,6 @@ class IndexFieldsForm extends EntityFormController {
     $options = isset($index->getOptions) ? $index->getOptions : array();
     if ($form_state['values']['op'] == t('Save changes')) {
       $fields = $form_state['values']['fields'];
-      $default_types = search_api_default_field_types();
-      $custom_types = search_api_get_data_type_info();
       foreach ($fields as $name => $field) {
         if (empty($field['indexed'])) {
           unset($fields[$name]);

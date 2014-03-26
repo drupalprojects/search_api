@@ -11,6 +11,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\Core\Entity;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Defines the search index configuration entity.
@@ -94,7 +95,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - type: The type set for this field. One of the types returned by
-   *     search_api_default_field_types().
+   *     search_api_default_data_types().
    *   - real_type: (optional) If a custom data type was selected for this
    *     field, this type will be stored here, and "type" contain the fallback
    *     default data type.
@@ -324,7 +325,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
-    // @todo Adapt to ComplexDataInterface.
     $only_indexed = $only_indexed ? 1 : 0;
     $get_additional = $get_additional ? 1 : 0;
 
@@ -332,12 +332,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $cid = $this->getCacheId() . "-" . $only_indexed . "-" . $get_additional;
     if (empty($this->fields[$only_indexed][$get_additional])) {
       if ($cached = \Drupal::cache()->get($cid)) {
-        $this->fields[$only_indexed][$get_additional] = $cached->data;
+        //$this->fields[$only_indexed][$get_additional] = $cached->data;
       }
     }
-    $this->fields[$only_indexed][$get_additional] = '';
 
-    // Otherwise, we have to compute the result.
+    // If not cached, fetch the list of fields and their properties
     if (empty($this->fields[$only_indexed][$get_additional])) {
       $search_api_index_fields = empty($this->options['fields']) ? array() : $this->options['fields'];
       // Get all entity types
@@ -369,15 +368,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Since this uses an iterative instead of a recursive approach, it is a bit
       // complicated, with three arrays tracking the current depth.
 
+      // Get the entity type for the selected datasource
+      $data_source_definition = $this->getDatasource()->getPluginDefinition();
+      $field_entity_types = array($data_source_definition['id'] => $entity_types[$data_source_definition['entity_type']]);
 
-      // A wrapper for a specific field name prefix, e.g. 'user:' mapped to the user wrapper
-      $datasource_definition = $this->getDatasource()->getPluginDefinition();
-      $field_entity_types = array($datasource_definition['id'] => $entity_types[$datasource_definition['entity_type']]);
+      $mapping = search_api_field_type_mapping();
 
       // The list nesting level for entities with a certain prefix
       $nesting_levels = array('' => 0);
-      // Gets the default types for Search API Fields
-      $types = search_api_default_field_types();
+
       // @todo find out what this flat does and give it a better name
       $flat = array();
 
@@ -387,42 +386,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
         foreach ($field_entity_types as $prefix => $field_entity_type) {
           /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
 
-          $prefix_name = $field_entity_type->getLabel();
-          if (!($field_entity_type instanceof \Drupal\Core\Entity\EntityTypeInterface)) {
+          // Do not process entity types if they are not an instance of the interface.
+          if (!($field_entity_type instanceof EntityTypeInterface)) {
             unset($field_entity_types[$prefix]);
             continue;
           }
-          $entity_type_id = $field_entity_type->id();
 
+          $entity_type_id = $field_entity_type->id();
           // Now look at all fields for all bundles for this entity type.
           $bundles = $this->entityManager()->getBundleInfo($entity_type_id);
+
+          // Loop over all the bundles to get all the field definitions for those
+          // @todo: We need to make sure we do not loop over bundles that are not selected
           foreach ($bundles as $bundle_id => $bundle) {
+            // Get field definitions for this bundle
             $fields = $this->entityManager()->getFieldDefinitions($entity_type_id, $bundle_id);
+            // Loop over the fields and add the to the list with the proper type
             foreach ($fields as $field) {
-              $name = $field->getName();
-              $type = $field->getType();
-              $isMultiple = $field->isMultiple();
+              $field_type = $field->getType();
+              $key = $entity_type_id . ':' . $field->getName();
 
-              // @todo, perhaps a hook that we implement in other modules name
-              // Treat Entity API type "token" as our "string" type.
-              // Treat list_text as strings for option lists.
-              if ($type == 'token' ||  $type == 'list_text') {
-                // Inner type is changed to "string".
-                $type = 'string';
-              }
-              if ($type == 'created' || $type == 'changed') {
-                $type = 'date';
-              }
-              // All of the items are lists so we can use the real type without the list.
-              $type = str_replace('list_', '', $type);
-
-              $key = $prefix . ':' . $name;
-              // @todo: Check if this comparision is valid
-              if ((isset($types[$type]) || isset($entity_types[$type])) && (!$only_indexed || !empty($search_api_index_fields[$key]))) {
+              // @todo: Check if this comparison is valid
+              if ((isset($mapping[$field_type])) && (!$only_indexed || !empty($search_api_index_fields[$key]))) {
                 if (!empty($search_api_index_fields[$key])) {
                   // This field is already known in the index configuration.
                   $flat[$key] = $search_api_index_fields[$key] + array(
-                    'name' => $prefix_name . ' ' . $field->getLabel(),
+                    'name' => $field_entity_type->getLabel() . ' ' . $field->getLabel(),
                     'description' => $field->getDescription(),
                     'boost' => '1.0',
                     'indexed' => TRUE,
@@ -430,22 +419,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
                 }
                 else {
                   $flat[$key] = array(
-                    'name'    => $prefix_name . ' ' . $field->getLabel(),
+                    'name'    => $field_entity_type->getLabel() . ' ' . $field->getLabel(),
                     'description' => $field->getDescription(),
-                    'type'    => $type,
+                    'type'    => $mapping[$field_type],
                     'boost' => '1.0',
                     'indexed' => FALSE,
                   );
                 }
               }
-              if (empty($types[$type])) {
+              if (empty($mapping[$field_type])) {
                 if (isset($added[$key])) {
                   // Visit this entity/struct in a later iteration.
                   $field_entity_types[$key . ':'] = $field;
-                  $prefix_names[$key . ':'] = $prefix_name . $field->getLabel(). ' » ';
+                  $prefix_names[$key . ':'] = $field_entity_type->getLabel() . $field->getLabel(). ' » ';
                 }
                 else {
-                  $name = $prefix_name . ' ' . $field->getLabel();
+                  $name = $field_entity_type->getLabel() . ' ' . $field->getLabel();
                   // Add machine names to discern fields with identical labels.
                   if (isset($used_names[$name])) {
                     if ($used_names[$name] !== FALSE) {
