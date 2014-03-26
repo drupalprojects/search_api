@@ -20,12 +20,21 @@
         // filter's tableDrag row and vertical tab pane.
         $checkbox.bind('click.searchApiUpdate', function () {
           if ($checkbox.is(':checked')) {
+            $('#edit-processors-order').show();
+            $('.tabledrag-toggle-weight-wrapper').show();
             $row.show();
             if ($tab) {
               $tab.tabShow().updateSummary();
             }
           }
           else {
+            var $enabled_processors = $('.search-api-status-wrapper input.form-checkbox:checked').length;
+
+            if (!$enabled_processors) {
+              $('#edit-processors-order').hide();
+              $('.tabledrag-toggle-weight-wrapper').hide();
+            }
+
             $row.hide();
             if ($tab) {
               $tab.tabHide().updateSummary();
