@@ -25,7 +25,7 @@ class SearchApiWebTest extends WebTestBase {
   public static function getInfo() {
     return array(
       'name' => 'Search API web tests',
-      'description' => 'Tests for Search API to see if the interface reacts as it should..',
+      'description' => 'Tests for Search API to see if the interface reacts as it should.',
       'group' => 'Search API',
     );
   }
@@ -34,7 +34,7 @@ class SearchApiWebTest extends WebTestBase {
     parent::setUp();
 
     // Create user with Search API permissions.
-    $this->test_user = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
+    $this->testUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
   }
 
   public function testFramework() {
@@ -143,18 +143,24 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertResponse(200);
 
     $edit = array(
-      'fields[nid][indexed]' => 1,
-      'fields[vid][indexed]' => 0,
-      'fields[is_new][indexed]' => 1,
+      'fields[node:nid][indexed]' => 1,
+      'fields[node:title][indexed]' => 1,
+      'fields[node:title][type]' => 'text',
+      'fields[node:title][boost]' => '21.0',
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
+    $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
+    $redirect_path = strpos($this->getUrl(), 'admin/config/search/search_api/index/' . $this->indexId . '/fields') !== FALSE;
+    $this->assertTrue($redirect_path, t('Correct redirect to fields page.'));
+
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields();
 
-    $this->assertEqual($fields['fields']['vid']['indexed'], $edit['fields[vid][indexed]'], t('vid field is not indexed.'));
-    $this->assertEqual($fields['fields']['nid']['indexed'], $edit['fields[nid][indexed]'], t('nid field is indexed.'));
-    $this->assertEqual($fields['fields']['is_new']['indexed'], $edit['fields[is_new][indexed]'], t('is_new field is indexed.'));
+    $this->assertEqual($fields['node:nid']['indexed'], $edit['fields[node:nid][indexed]'], t('nid field is indexed.'));
+    $this->assertEqual($fields['node:title']['indexed'], $edit['fields[node:title][indexed]'], t('title field is indexed.'));
+    $this->assertEqual($fields['node:title']['type'], $edit['fields[node:title][type]'], t('title field type is text.'));
+    $this->assertEqual($fields['node:title']['boost'], $edit['fields[node:title][boost]'], t('title field boost value is 21.'));
   }
 
   public function addAdditionalFieldsToIndex() {
