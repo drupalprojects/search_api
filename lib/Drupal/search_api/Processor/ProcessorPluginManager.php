@@ -37,17 +37,4 @@ class ProcessorPluginManager extends DefaultPluginManager {
     $this->setCacheBackend($cache_backend, $language_manager, 'search_api_processors');
     $this->alterInfo('search_api_processor_info');
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function processDefinition(&$definition, $plugin_id) {
-    parent::processDefinition($definition, $plugin_id);
-
-    // Fill optional settings with default values.
-    if (empty($definition[$plugin_id]['weight'])) {
-      $definition[$plugin_id]['weight'] = 0;
-    }
-  }
-
 }
