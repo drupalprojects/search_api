@@ -136,26 +136,6 @@ class AddAggregation extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    if (empty($values['fields'])) {
-      return array();
-    }
-    $index_fields = $this->index->getFields(FALSE);
-    foreach ($values['fields'] as $name => $field) {
-      if (!$field['name']) {
-        unset($values['fields'][$name]);
-      }
-      else {
-        $values['fields'][$name]['description'] = $this->fieldDescription($field, $index_fields);
-      }
-    }
-    $this->configuration = $values;
-    return $values;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function preprocessIndexItems(array &$items) {
     if (!$items) {
       return;
