@@ -42,6 +42,9 @@ use Drupal\Core\Entity;
  *     "canonical" = "search_api.index_view",
  *     "add-form" = "search_api.index_add",
  *     "edit-form" = "search_api.index_edit",
+ *     "delete-form" = "search_api.index_delete",
+ *     "disable" = "search_api.index_disable",
+ *     "enable" = "search_api.index_enable",
  *   }
  * )
  */

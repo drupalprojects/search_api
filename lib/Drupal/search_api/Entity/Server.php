@@ -42,6 +42,9 @@ use Drupal\search_api\Service\ServiceInterface;
  *     "canonical" = "search_api.server_view",
  *     "add-form" = "search_api.server_add",
  *     "edit-form" = "search_api.server_edit",
+ *     "delete-form" = "search_api.server_delete",
+ *     "disable" = "search_api.server_disable",
+ *     "enable" = "search_api.server_enable",
  *   }
  * )
  */

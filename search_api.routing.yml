@@ -1,7 +1,7 @@
 search_api.overview:
   path: '/admin/config/search/search_api'
   defaults:
-    _title: 'Search settings'
+    _title: 'Search API settings'
     _content: '\Drupal\Core\Entity\Controller\EntityListController::listing'
     entity_type: 'search_api_server'
   requirements:
@@ -69,6 +69,27 @@ search_api.index_edit:
     _entity_form: 'search_api_index.edit'
   requirements:
     _entity_access: 'search_api_index.edit'
+
+search_api.index_delete:
+  path: '/admin/config/search/search_api/index/{search_api_index}/delete'
+  defaults:
+    _entity_form: 'search_api_index.delete'
+  requirements:
+    _entity_access: 'search_api_index.delete'
+
+search_api.index_disable:
+  path: '/admin/config/search/search_api/index/{search_api_index}/disable'
+  defaults:
+    _entity_form: 'search_api_index.disable'
+  requirements:
+    _entity_access: 'search_api_index.disable'
+
+search_api.index_enable:
+  path: '/admin/config/search/search_api/index/{search_api_index}/enable'
+  defaults:
+    _entity_form: 'search_api_index.enable'
+  requirements:
+    _entity_access: 'search_api_index.enable'
 
 search_api.index_fields:
   path: '/admin/config/search/search_api/index/{search_api_index}/fields'
