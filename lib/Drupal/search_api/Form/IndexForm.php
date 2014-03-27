@@ -242,22 +242,30 @@ class IndexForm extends EntityFormController {
       '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
       '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
     );
+    
+    $form['options'] = array(
+      '#tree' => TRUE,
+      '#type' => 'details',
+      '#title' => t('Index options'),
+      '#collapsed' => TRUE,
+    );
+    
     // Build the read only element.
-    $form['readOnly'] = array(
+    $form['options']['readOnly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Read only'),
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
     );
     // Build the index directly element.
-    $form['index_directly'] = array(
+    $form['options']['index_directly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Index items immediately'),
       '#description' => $this->t('Immediately index new or updated items instead of waiting for the next cron run. This might have serious performance drawbacks and is generally not advised for larger sites.'),
       '#default_value' => $index->getOption('index_directly'),
     );
     // Build the cron limit element.
-    $form['cron_limit'] = array(
+    $form['options']['cron_limit'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Cron batch size'),
       '#description' => $this->t('Set how many items will be indexed at once when indexing items during a cron run. "0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),

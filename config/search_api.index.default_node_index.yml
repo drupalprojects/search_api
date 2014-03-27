@@ -3,6 +3,7 @@ name: 'Default node index'
 description: 'An automatically created search index for indexing node data. Might be configured to specific needs.'
 readOnly: false
 options:
+  cron_limit: 50
   fields:
     'node:title':
       type: text
@@ -21,8 +22,6 @@ options:
       type: integer
   'additional fields':
     'node:uid': 1
-  options:
-    cron_limit: 50
   processors:
     search_api_stopwords_processor:
       status: 1
