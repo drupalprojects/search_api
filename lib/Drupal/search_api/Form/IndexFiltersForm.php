@@ -72,62 +72,31 @@ class IndexFiltersForm extends EntityFormController {
 
   /**
    * {@inheritdoc}
-   *
-   *  @todo: This function should rely more on getProcessors()
-   *  $this->entity->getProcessors();
    */
   public function form(array $form, array &$form_state) {
-    // Fetch all the processor plugins
-    $processor_info = $this->processorPluginManager->getDefinitions();
+    // Fetch our active Processors for this index
+    $processors_active = $this->entity->getProcessors(TRUE, 'weight');
+    // Fetch all processors
+    $processors_objects = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(FALSE, 'name');
+    // Fetch the settings for all configured processors on this index
+    $processors_settings = $this->entity->getOption('processors');
+
+    // Make sure that we have weights and status for all processors, even new ones
+    foreach ($processors_objects as $name => $processor) {
+      // Set some sensible defaults for weight and status
+      $processors_settings[$name]['status'] = (!isset($processors_settings[$name]['status'])) ? 0 : $processors_settings[$name]['status'];
+      $processors_settings[$name]['weight'] = (!isset($processors_settings[$name]['weight'])) ? 0 : $processors_settings[$name]['weight'];
+
+      $settings = empty($processors_settings[$name]['settings']) ? array() : $processors_settings[$name]['settings'];
+      $settings['index'] = $this->entity;
+    }
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
-
-    // Set a proper title
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
 
-    // Processors
-    $processors = $this->entity->getOption('processors');
-    uasort($processors, '_search_api_sort_processors');
-
-    $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
-    $internal_weight = 0;
-
-    foreach ($processor_info as $name => $processor) {
-      if (!isset($processors[$name])) {
-        $processors[$name]['status'] = 0;
-        $processors[$name]['weight'] = 0;
-      }
-
-      // Add an internal used weight, to ensure the order of the order of the
-      // processors.
-      $processors[$name]['_internal_weight'] = $internal_weight;
-      $internal_weight++;
-
-      $settings = empty($processors[$name]['settings']) ? array() : $processors[$name]['settings'];
-      $settings['index'] = $this->entity;
-
-      if (empty($processor_objects[$name]) && class_exists($processor['class'])) {
-        $processor_objects[$name] = $this->processorPluginManager->createInstance($name, $settings);
-      }
-
-      if (!(class_exists($processor['class']) && $processor_objects[$name] instanceof ProcessorInterface)) {
-        watchdog('search_api', t('Processor @id specifies illegal processor class @class.', array('@id' => $name, '@class' => $processor['class'])), NULL, WATCHDOG_WARNING);
-        unset($processor_info[$name]);
-        unset($processors[$name]);
-        unset($processor_objects[$name]);
-        continue;
-      }
-      if (!$processor_objects[$name]->supportsIndex($this->entity)) {
-        unset($processor_info[$name]);
-        unset($processors[$name]);
-        unset($processor_objects[$name]);
-        continue;
-      }
-    }
-
-    $form_state['processors'] = $processor_objects;
-    $form['#processors'] = $processors;
+    $form_state['processors'] = $processors_objects;
+    $form['#processors'] = $processors_settings;
     $form['processors'] = array(
       '#type' => 'details',
       '#title' => t('Processors'),
@@ -144,14 +113,14 @@ class IndexFiltersForm extends EntityFormController {
       '#suffix' => '</div>',
     );
 
-    foreach ($processor_info as $name => $processor) {
+    foreach ($processors_objects as $name => $processor) {
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $form['processors']['status'][$name] = array(
         '#type' => 'checkbox',
-        '#title' => $processor['label'],
-        '#default_value' => $processors[$name]['status'],
+        '#title' => $processor->label(),
+        '#default_value' => $processors_settings[$name]['status'],
         '#parents' => array('processors', $name, 'status'),
-        '#description' => $processor['description'],
-        '#weight' => $processors[$name]['_internal_weight'],
+        '#description' => $processor->getPluginDefinition()['description'],
       );
     }
 
@@ -167,32 +136,19 @@ class IndexFiltersForm extends EntityFormController {
       ),
     );
 
-    // Currently the #weight of a row doesn't work, but should (see the
-    // documentation of the drupal_pre_render_table() function.
-    // So we sort the rows manually (bohoo bohoo).
-
-    $processor_info_sorted = $processor_info;
-    foreach($processor_info_sorted as $name => &$processor) {
-      $processor['#weight'] = $processors[$name]['weight'];
-    }
-    uasort($processor_info_sorted, 'Drupal\Component\Utility\SortArray::sortByWeightProperty');
-
-    foreach ($processor_info_sorted as $name => $processor_sorted) {
-
+    foreach ($processors_active as $name => $processor) {
+      /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
       $form['processors']['order'][$name]['label'] = array(
-        '#markup' => String::checkPlain($processor_sorted['label']),
+        '#markup' => String::checkPlain($processor->label()),
       );
-
-      // Temporarily disabled (see comment above).
-      // $form['processors']['order'][$name]['#weight'] = $processors[$name]['weight'];
 
       // TableDrag: Weight column element.
       $form['processors']['order'][$name]['weight'] = array(
         '#type' => 'weight',
-        '#title' => t('Weight for @title', array('@title' => $processor_sorted['label'])),
+        '#title' => t('Weight for @title', array('@title' => $processor->label())),
         '#title_display' => 'invisible',
-        '#default_value' => $processors[$name]['weight'],
+        '#default_value' => $processors_settings[$name]['weight'],
         '#parents' => array('processors', $name, 'weight'),
         '#attributes' => array('class' => array('search-api-processor-weight')),
       );
@@ -204,17 +160,15 @@ class IndexFiltersForm extends EntityFormController {
       '#type' => 'vertical_tabs',
     );
 
-    foreach ($processor_info as $name => $processor) {
+    foreach ($processors_active as $name => $processor) {
       /** @var $processor_plugin \Drupal\search_api\Processor\ProcessorInterface */
-      $processor_plugin = $processor_objects[$name];
-      $settings_form = $processor_plugin->buildConfigurationForm($form, $form_state);
-
+      $settings_form = $processor->buildConfigurationForm($form, $form_state);
       if (!empty($settings_form)) {
         $form['processors']['settings'][$name] = array(
           '#type' => 'details',
-          '#title' => $processor['label'],
+          '#title' => $processor->label(),
           '#group' => 'processor_settings',
-          '#weight' => $processors[$name]['_internal_weight'],
+          '#weight' => $processors_settings[$name]['weight'],
           '#parents' => array('processors', $name, 'settings'),
         );
         $form['processors']['settings'][$name] += $settings_form;

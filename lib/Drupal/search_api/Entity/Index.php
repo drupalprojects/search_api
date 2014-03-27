@@ -182,6 +182,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $fulltextFields;
 
   /**
+   * Cached fulltext fields data for getProcessors().
+   *
+   * @var array
+   */
+  protected $processors;
+
+  /**
    * Clones an index object.
    */
   public function __clone() {
@@ -595,13 +602,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return $this->fulltextFields[$i];
   }
 
+
   /**
-   * Loads all enabled processors for this index in proper order.
    *
-   * @return \Drupal\search_api\Processor\ProcessorInterface[]
-   *   All enabled processors for this index.
    */
-  public function getProcessors() {
+  public function getProcessors($all = FALSE, $sortBy = 'weight') {
     /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
     $processorPluginManager = \Drupal::service('search_api.processor.plugin.manager');
 
@@ -611,21 +616,54 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Fetch our active Processors for this index
     $processors_settings = $this->getOption('processors');
 
-    // Sort by weight
-    uasort($processors_settings, '_search_api_sort_processors');
-
-    // Find out which ones are enabled
-    $active_processors = array();
-    foreach ($processors_settings as $name => $processor_setting) {
-      if ($processor_setting['status'] && !empty($processor_definitions[$name])) {
-
-        // Create our settings for this processor
-        $settings = empty($processor_setting['settings']) ? array() : $processor_setting['settings'];
-        $settings['index'] = $this;
-
+    // Only do this if we do not already have our processors
+    if (empty($this->processors)) {
+      foreach ($processor_definitions as $name => $processor_definition) {
         // Instantiate the processors
-        if (class_exists($processor_definitions[$name]['class'])) {
-          $active_processors[$name] = $processorPluginManager->createInstance($name, $settings);
+        if (class_exists($processor_definition['class'])) {
+
+          // Give it some sensible weight default so we can return them in order
+          if (empty($processors_settings[$name])) {
+            $processors_settings[$name] = array('weight' => 0);
+          }
+
+          // Create our settings for this processor
+          $settings = empty($processors_settings[$name]['settings']) ? array() : $processors_settings[$name]['settings'];
+          $settings['index'] = $this;
+
+          /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
+          $processor = $processorPluginManager->createInstance($name, $settings);
+          if (!($processor instanceof ProcessorInterface)) {
+            watchdog('search_api', t('Processor @id is not an ProcessorInterface instance using @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
+          }
+          if ($processor->supportsIndex($this)) {
+            $this->processors[$name] = $processor;
+          }
+        }
+        else {
+          watchdog('search_api', t('Processor @id specifies an non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
+        }
+      }
+    }
+
+    if ($sortBy == 'weight') {
+      // Sort by weight
+      uasort($processors_settings, '_search_api_sort_processors_by_weight');
+    }
+    else {
+      ksort($processors_settings);
+    }
+
+    // Do the return part
+    $active_processors = array();
+    // Find out which ones are enabled
+    foreach ($processors_settings as $name => $processor_setting) {
+      // Define a default status
+      $processor_setting['status'] = empty($processor_setting['status']) ? 0 : $processor_setting['status'];
+      // Find out which ones we want
+      if (($all === TRUE && $processor_setting['status'] === 1) || $all == FALSE) {
+        if (!empty($this->processors[$name])) {
+          $active_processors[$name] = $this->processors[$name];
         }
       }
     }

@@ -794,7 +794,13 @@ function _search_api_deep_copy(array $array) {
  * @param $processor_setting_b
  * @return int
  */
-function _search_api_sort_processors($processor_setting_a, $processor_setting_b) {
+function _search_api_sort_processors_by_weight($processor_setting_a, $processor_setting_b) {
+  if (!isset($processor_setting_a['weight'])) {
+    $processor_setting_a['weight'] = 0;
+  }
+  if (!isset($processor_setting_b['weight'])) {
+    $processor_setting_b['weight'] = 0;
+  }
   if ($processor_setting_a['weight'] == $processor_setting_b['weight']) {
     return 0;
   }
