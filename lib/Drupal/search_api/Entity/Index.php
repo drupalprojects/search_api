@@ -617,16 +617,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $processors_settings = $this->getOption('processors');
 
     // Only do this if we do not already have our processors
-    if (empty($this->processors)) {
-      foreach ($processor_definitions as $name => $processor_definition) {
-        // Instantiate the processors
-        if (class_exists($processor_definition['class'])) {
+    foreach ($processor_definitions as $name => $processor_definition) {
+      // Instantiate the processors
+      if (class_exists($processor_definition['class'])) {
 
-          // Give it some sensible weight default so we can return them in order
-          if (empty($processors_settings[$name])) {
-            $processors_settings[$name] = array('weight' => 0);
-          }
+        // Give it some sensible weight default so we can return them in order
+        if (empty($processors_settings[$name])) {
+          $processors_settings[$name] = array('weight' => 0, 'status' => 0);
+        }
 
+        if (empty($this->processors[$name])) {
           // Create our settings for this processor
           $settings = empty($processors_settings[$name]['settings']) ? array() : $processors_settings[$name]['settings'];
           $settings['index'] = $this;
@@ -640,9 +640,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
             $this->processors[$name] = $processor;
           }
         }
-        else {
-          watchdog('search_api', t('Processor @id specifies an non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
-        }
+      }
+      else {
+        watchdog('search_api', t('Processor @id specifies an non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
       }
     }
 
@@ -658,8 +658,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $active_processors = array();
     // Find out which ones are enabled
     foreach ($processors_settings as $name => $processor_setting) {
-      // Define a default status
-      $processor_setting['status'] = empty($processor_setting['status']) ? 0 : $processor_setting['status'];
       // Find out which ones we want
       if (($all === TRUE && $processor_setting['status'] === 1) || $all == FALSE) {
         if (!empty($this->processors[$name])) {

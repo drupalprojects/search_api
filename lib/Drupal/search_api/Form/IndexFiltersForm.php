@@ -75,14 +75,14 @@ class IndexFiltersForm extends EntityFormController {
    */
   public function form(array $form, array &$form_state) {
     // Fetch our active Processors for this index
-    $processors_active = $this->entity->getProcessors(TRUE, 'weight');
+    $processors_by_weight = $this->entity->getProcessors(FALSE, 'weight');
     // Fetch all processors
-    $processors_objects = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(FALSE, 'name');
+    $processors_by_name = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(FALSE, 'name');
     // Fetch the settings for all configured processors on this index
     $processors_settings = $this->entity->getOption('processors');
 
     // Make sure that we have weights and status for all processors, even new ones
-    foreach ($processors_objects as $name => $processor) {
+    foreach ($processors_by_name as $name => $processor) {
       // Set some sensible defaults for weight and status
       $processors_settings[$name]['status'] = (!isset($processors_settings[$name]['status'])) ? 0 : $processors_settings[$name]['status'];
       $processors_settings[$name]['weight'] = (!isset($processors_settings[$name]['weight'])) ? 0 : $processors_settings[$name]['weight'];
@@ -95,7 +95,7 @@ class IndexFiltersForm extends EntityFormController {
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
 
-    $form_state['processors'] = $processors_objects;
+    $form_state['processors'] = $processors_by_name;
     $form['#processors'] = $processors_settings;
     $form['processors'] = array(
       '#type' => 'details',
@@ -113,7 +113,7 @@ class IndexFiltersForm extends EntityFormController {
       '#suffix' => '</div>',
     );
 
-    foreach ($processors_objects as $name => $processor) {
+    foreach ($processors_by_name as $name => $processor) {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $form['processors']['status'][$name] = array(
         '#type' => 'checkbox',
@@ -136,7 +136,7 @@ class IndexFiltersForm extends EntityFormController {
       ),
     );
 
-    foreach ($processors_active as $name => $processor) {
+    foreach ($processors_by_weight as $name => $processor) {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
       $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
       $form['processors']['order'][$name]['label'] = array(
@@ -160,7 +160,7 @@ class IndexFiltersForm extends EntityFormController {
       '#type' => 'vertical_tabs',
     );
 
-    foreach ($processors_active as $name => $processor) {
+    foreach ($processors_by_weight as $name => $processor) {
       /** @var $processor_plugin \Drupal\search_api\Processor\ProcessorInterface */
       $settings_form = $processor->buildConfigurationForm($form, $form_state);
       if (!empty($settings_form)) {
