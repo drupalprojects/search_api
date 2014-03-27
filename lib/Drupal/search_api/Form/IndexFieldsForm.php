@@ -264,7 +264,8 @@ class IndexFieldsForm extends EntityFormController {
   public function submitForm(array &$form, array &$form_state) {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form_state['index'];
-    $options = isset($index->getOptions) ? $index->getOptions : array();
+    $options = isset($index->options) ? $index->options : array();
+    
 
     $fields = $form_state['values']['fields'];
     foreach ($fields as $name => $field) {

@@ -383,7 +383,10 @@ class IndexForm extends EntityFormController {
     $entity = $this->getEntity();
     // Get the current datasource plugin ID.
     $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
-    // Perform default entity form submittion.
+    // Perform default entity form submission.
+    // merge the fields stored as options from the field form so they do not get lost during save
+    $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
+    
     $entity = parent::submit($form, $form_state);
     // Check if the datasource plugin changed.
     if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
