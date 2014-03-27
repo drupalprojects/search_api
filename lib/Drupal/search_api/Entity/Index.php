@@ -602,7 +602,35 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   All enabled processors for this index.
    */
   public function getProcessors() {
-    // @todo Implement getProcessors() method.
+    /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
+    $processorPluginManager = \Drupal::service('search_api.processor.plugin.manager');
+
+    // Get the processor definitions
+    $processor_definitions = $processorPluginManager->getDefinitions();
+
+    // Fetch our active Processors for this index
+    $processors_settings = $this->getOption('processors');
+
+    // Sort by weight
+    uasort($processors_settings, '_search_api_sort_processors');
+
+    // Find out which ones are enabled
+    $active_processors = array();
+    foreach ($processors_settings as $name => $processor_setting) {
+      if ($processor_setting['status'] && !empty($processor_definitions[$name])) {
+
+        // Create our settings for this processor
+        $settings = empty($processor_setting['settings']) ? array() : $processor_setting['settings'];
+        $settings['index'] = $this;
+
+        // Instantiate the processors
+        if (class_exists($processor_definitions[$name]['class'])) {
+          $active_processors[$name] = $processorPluginManager->createInstance($name, $settings);
+        }
+      }
+    }
+
+    return $active_processors;
   }
 
   /**

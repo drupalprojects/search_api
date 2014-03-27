@@ -72,6 +72,9 @@ class IndexFiltersForm extends EntityFormController {
 
   /**
    * {@inheritdoc}
+   *
+   *  @todo: This function should rely more on getProcessors()
+   *  $this->entity->getProcessors();
    */
   public function form(array $form, array &$form_state) {
     // Fetch all the processor plugins
@@ -85,6 +88,8 @@ class IndexFiltersForm extends EntityFormController {
 
     // Processors
     $processors = $this->entity->getOption('processors');
+    uasort($processors, '_search_api_sort_processors');
+
     $processor_objects = isset($form_state['processors']) ? $form_state['processors'] : array();
     $internal_weight = 0;
 
@@ -165,6 +170,7 @@ class IndexFiltersForm extends EntityFormController {
     // Currently the #weight of a row doesn't work, but should (see the
     // documentation of the drupal_pre_render_table() function.
     // So we sort the rows manually (bohoo bohoo).
+
     $processor_info_sorted = $processor_info;
     foreach($processor_info_sorted as $name => &$processor) {
       $processor['#weight'] = $processors[$name]['weight'];
