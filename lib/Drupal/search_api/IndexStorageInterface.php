@@ -29,4 +29,5 @@ interface IndexStorageInterface {
    *   Array of Index.
    */
   public function getIndexesForEntity(ContentEntityInterface $entity);
+
 }
