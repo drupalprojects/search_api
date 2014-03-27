@@ -6,7 +6,7 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\Exception\SearchApiException;
@@ -169,15 +169,15 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public static function preDelete(EntityStorageControllerInterface $storage_controller, array $entities) {
+  public static function preDelete(EntityStorageInterface $storage, array $entities) {
     // Perform default entity pre delete.
-    parent::preDelete($storage_controller, $entities);
+    parent::preDelete($storage, $entities);
     // Get the indexes associated with the servers.
     $index_ids = \Drupal::entityQuery('search_api_index')
       ->condition('serverMachineName', array_keys($entities), 'IN')
       ->execute();
     // Load the related indexes.
-    $indexes = \Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
+    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
     // Iterate through the indexes.
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Index\IndexInterface $index */
@@ -241,7 +241,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function postSave(EntityStorageControllerInterface $storage_controller, $update = TRUE) {
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     if ($update) {
       return $this->getService()->postUpdate();
     }
@@ -255,7 +255,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function getIndexes() {
     // Get the index storage controller.
-    $storage_controller = \Drupal::entityManager()->getStorageController('search_api_index');
+    $storage_controller = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
     return $storage_controller->loadByProperties(array(
           'serverMachineName' => $this->id(),
@@ -370,7 +370,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function preSave(EntityStorageControllerInterface $storage_controller) {
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
     // Check if the server is disabled.
     if (!$this->status()) {
       // Disable all the indexes that belong to this server

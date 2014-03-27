@@ -6,7 +6,7 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Core\Entity\EntityStorageControllerInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Query\QueryInterface;
@@ -287,7 +287,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->serverMachineName !== NULL && \Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
+    return $this->serverMachineName !== NULL && \Drupal::entityManager()->getStorage('search_api_server')->load($this->serverMachineName) !== NULL;
   }
 
   /**
@@ -307,7 +307,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the server machine name.
       $server_machine_name = $this->serverMachineName;
       // Get the server from the storage.
-      $this->server = \Drupal::entityManager()->getStorageController('search_api_server')->load($server_machine_name);
+      $this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($server_machine_name);
     }
     return $this->server;
   }
@@ -710,7 +710,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Stops enabling of indexes when the server is disabled
    */
-  public function preSave(EntityStorageControllerInterface $storage_controller) {
+  public function preSave(EntityStorageInterface $storage) {
     if ($this->status() && !$this->isServerEnabled()) {
       $this->setStatus(FALSE);
     }
