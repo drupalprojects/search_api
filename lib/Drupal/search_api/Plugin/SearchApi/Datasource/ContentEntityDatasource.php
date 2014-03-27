@@ -120,7 +120,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Try to retrieve the exposed entity type bundles.
     if (($bundles = $this->getEntityBundles())) {
       // Remove the default entity type bundle.
-      unset($bundles[$this->getEntityType()]);
+      unset($bundles[$this->getEntityTypeId()]);
       // Iterate through the bundles.
       foreach ($bundles as $bundle => $bundle_info) {
         // Add the bundle to the options list.
@@ -159,7 +159,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * @return string
    *   The entity type.
    */
-  public function getEntityType() {
+  public function getEntityTypeId() {
     // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
     // Get the entity type.
@@ -174,7 +174,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function isEntityBundlable() {
     // Get the entity type definition.
-    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityType());
+    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityTypeId());
     // Determine whether the entity type supports bundles.
     return $entity_type_definition->hasKey('bundle');
   }
@@ -186,7 +186,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *   An associative array of bundle info, keyed by the bundle name.
    */
   public function getEntityBundles() {
-    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityType()) : array();
+    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
@@ -194,7 +194,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function getPropertyDefinitions() {
     /** @var \Drupal\Core\TypedData\ComplexDataDefinitionInterface $def */
-    $def = $this->typedDataManager->createDataDefinition($this->getEntityType());
+    $def = $this->typedDataManager->createDataDefinition($this->getEntityTypeId());
     return $def->getPropertyDefinitions();
   }
 
