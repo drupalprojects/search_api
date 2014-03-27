@@ -371,7 +371,8 @@ class IndexForm extends EntityFormController {
     // Check if the entity has a valid datasource plugin.
     elseif ($entity->hasValidDatasource()) {
       // Validate the datasource plugin configuration form.
-      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $form_state);
+      $datassource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
+      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $datassource_form_state);
     }
   }
 
@@ -400,7 +401,8 @@ class IndexForm extends EntityFormController {
       // Get the datasource from the entity.
       $datasource = $entity->getDatasource();
       // Submit the datasource plugin configuration form.
-      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $form_state);
+      $datassource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
+      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $datassource_form_state);
     }
     return $entity;
   }
