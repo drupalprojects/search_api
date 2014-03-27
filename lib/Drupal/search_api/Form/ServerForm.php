@@ -49,7 +49,7 @@ class ServerForm extends EntityFormController {
    */
   public function __construct(EntityManager $entity_manager, ServicePluginManager $service_plugin_manager) {
     // Setup object members.
-    $this->storageController = $entity_manager->getStorageController('search_api_server');
+    $this->storageController = $entity_manager->getStorage('search_api_server');
     $this->servicePluginManager = $service_plugin_manager;
   }
 
@@ -59,8 +59,8 @@ class ServerForm extends EntityFormController {
    * @return \Drupal\Core\Entity\EntityStorageControllerInterface
    *   An instance of EntityStorageControllerInterface.
    */
-  protected function getStorageController() {
-    return $this->storageController;
+  protected function getStorage() {
+    return $this->storage;
   }
 
   /**
@@ -157,7 +157,7 @@ class ServerForm extends EntityFormController {
       '#maxlength' => 50,
       '#required' => TRUE,
       '#machine_name' => array(
-        'exists' => array($this->getStorageController(), 'load'),
+        'exists' => array($this->getStorage(), 'load'),
         'source' => array('name'),
       ),
     );

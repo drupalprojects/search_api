@@ -80,7 +80,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     // Setup object members.
     $this->entityManager = $entity_manager;
-    $this->storageController = $entity_manager->getStorageController($plugin_definition['entity_type']);
+    $this->storageController = $entity_manager->getStorage($plugin_definition['entity_type']);
     $this->typedDataManager = \Drupal::typedDataManager();
     $this->databaseConnection = $connection;
     $this->tracker = new DefaultTracker($this->getIndex(), $connection);
