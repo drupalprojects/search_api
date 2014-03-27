@@ -47,7 +47,6 @@ use Drupal\Core\Entity;
  *     "delete-form" = "search_api.index_delete",
  *     "disable" = "search_api.index_disable",
  *     "enable" = "search_api.index_enable",
- *     "enable-bypass" = "search_api.index_bypass_enable"
  *   }
  * )
  */

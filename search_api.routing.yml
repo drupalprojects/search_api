@@ -18,6 +18,7 @@ search_api.server_view:
   defaults:
     _content: '\Drupal\search_api\Controller\SearchApiServerController::page'
     _title_callback: '\Drupal\search_api\Controller\SearchApiServerController::pageTitle'
+    _title: "View"
   requirements:
     _permission: 'administer search_api'
 
@@ -35,12 +36,13 @@ search_api.server_delete:
   requirements:
     _entity_access: 'search_api_server.delete'
 
-search_api.server_bypass_enable:
-  path: '/admin/config/search/search-api/server/{search_api_server}/bypass-enable/{token}'
+search_api.server_enable:
+  path: '/admin/config/search/search-api/server/{search_api_server}/enable'
   defaults:
     _controller: 'Drupal\search_api\Controller\SearchApiServerController::serverBypassEnable'
   requirements:
     _entity_access: 'search_api_server.enable'
+    _csrf_token: 'TRUE'
 
 search_api.server_disable:
   path: '/admin/config/search/search-api/server/{search_api_server}/disable'
@@ -85,12 +87,13 @@ search_api.index_disable:
   requirements:
     _entity_access: 'search_api_index.disable'
 
-search_api.index_bypass_enable:
+search_api.index_enable:
   path: '/admin/config/search/search-api/index/{search_api_index}/bypass-enable/{token}'
   defaults:
     _controller: 'Drupal\search_api\Controller\SearchApiIndexController::indexBypassEnable'
   requirements:
     _entity_access: 'search_api_index.enable'
+    _csrf_token: 'TRUE'
 
 search_api.index_fields:
   path: '/admin/config/search/search-api/index/{search_api_index}/fields'
