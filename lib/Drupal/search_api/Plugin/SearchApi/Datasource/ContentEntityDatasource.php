@@ -254,11 +254,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
-    // Apply the configuration.
-    $this->setConfiguration(array(
-      'default' => $form_state['values']['datasourcePluginConfig']['default'],
-      'bundles' => $form_state['values']['datasourcePluginConfig']['bundles'],
-    ));
+    // Apply the configuration if the selected entity is bundable..
+    if ($this->isEntityBundlable()) {
+      $this->setConfiguration(array(
+        'default' => $form_state['values']['datasourcePluginConfig']['default'],
+        'bundles' => $form_state['values']['datasourcePluginConfig']['bundles'],
+      ));
+    }
   }
 
   /**
