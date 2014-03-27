@@ -27,7 +27,7 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
   public static $modules = array('search_api');
 
   /**
-   * Search API Index storage controller.
+   * Search API Index storage.
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */

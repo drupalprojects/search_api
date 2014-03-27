@@ -34,7 +34,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   private $entityManager;
 
   /**
-   * The entity storage controller.
+   * The entity storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */

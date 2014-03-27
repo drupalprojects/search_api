@@ -254,10 +254,10 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function getIndexes() {
-    // Get the index storage controller.
-    $storage_controller = \Drupal::entityManager()->getStorage('search_api_index');
+    // Get the index storage.
+    $storage = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
-    return $storage_controller->loadByProperties(array(
+    return $storage->loadByProperties(array(
           'serverMachineName' => $this->id(),
     ));
   }
