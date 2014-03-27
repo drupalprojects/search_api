@@ -292,4 +292,16 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     return new DefaultTracker($this->index, $this->databaseConnection);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemUrl($item) {
+    if ($item instanceof Entity) {
+      return $item->urlInfo();
+    }
+    else {
+      return FALSE;
+    }
+  }
+
 }
