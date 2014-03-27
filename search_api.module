@@ -54,6 +54,10 @@ function search_api_permission() {
 
 /**
  * Implements hook_entity_insert().
+ *
+ * Adds an entry to the tracking table for each index that tracks this entity.
+ *
+ * @param EntityInterface $entity
  */
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
@@ -73,12 +77,18 @@ function search_api_entity_insert(EntityInterface $entity) {
 
 /**
  * Implements hook_entity_update().
+ *
+ * Updates the entry to the tracking table for each index that tracks this entity.
+ *
+ * @param EntityInterface $entity
  */
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
 
+    // Get the IndexStorage class so we can find out which indexes support the entity that needs to be tracked
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    //
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
@@ -92,6 +102,10 @@ function search_api_entity_update(EntityInterface $entity) {
 
 /**
  * Implements hook_entity_delete().
+ *
+ * Deletes the entry from the tracking table for each index that tracks this entity.
+ *
+ * @param EntityInterface $entity
  */
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.

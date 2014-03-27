@@ -133,7 +133,7 @@ class DefaultTracker implements TrackerInterface {
     // Get the index.
     $index = $this->getIndex();
     // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
+    if ($index->status() && !$index->isReadOnly()) {
       // Start a database transaction.
       $transaction = $this->getDatabaseConnection()->startTransaction();
       // Get the index ID.
@@ -150,7 +150,7 @@ class DefaultTracker implements TrackerInterface {
             $statement->values(array(
               'item_id' => $item_id,
               'index_id' => $index_id,
-              'changed' => 1,
+              'changed' => 0,
             ));
           }
           // Execute the insert statement.
@@ -178,7 +178,7 @@ class DefaultTracker implements TrackerInterface {
     // Get the index.
     $index = $this->getIndex();
     // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
+    if ($index->status() && !$index->isReadOnly()) {
       // Get the database connection.
       $connection = $this->getDatabaseConnection();
       // Start a database transaction.
@@ -340,7 +340,7 @@ class DefaultTracker implements TrackerInterface {
       $statement = $this->createSelectStatement();
       $statement->fields('i', array('item_id'));
       $statement->orderBy('changed', 'ASC');
-      // Check if the resultset needs to be limited.
+      // Check if the result set needs to be limited.
       if ($limit > -1) {
         // Limit the number of results to the given value.
         $statement->range(0, $limit);

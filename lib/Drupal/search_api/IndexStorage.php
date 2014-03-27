@@ -86,10 +86,22 @@ class IndexStorage extends ConfigEntityStorage implements IndexStorageInterface 
 
     $index_names = $this->queryFactory->get('search_api_index', 'AND')
       ->condition('datasourcePluginId', $entity_type_id, 'ENDS_WITH')
-      ->condition('datasourcePluginConfig.bundles.*', $entity_bundle, 'CONTAINS')->execute();
+      ->execute();
 
     if (!empty($index_names)) {
       $indexes = $this->loadMultiple($index_names);
+    }
+
+    // Check if the index is set to excluded or included.
+    // datasourcePluginConfig.config = 1, exclude from indexing if the bundle exists in the datasourcePluginConfig.bundles
+    // datasourcePluginConfig.config = 0, exclude from indexing if the bundle does not exists
+    foreach ($indexes as $index_id => $index) {
+      if (($index->datasourcePluginConfig['default'] == 1) && isset($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
+        unset($indexes[$index_id]);
+      }
+      if (($index->datasourcePluginConfig['default'] == 0) && !isset($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
+        unset($indexes[$index_id]);
+      }
     }
 
     return $indexes;
