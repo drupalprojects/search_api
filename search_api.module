@@ -7,9 +7,7 @@
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /*
@@ -267,16 +265,17 @@ function search_api_get_data_type_info($type = NULL) {
 }
 
 /**
- * Extracts specific field values from a complex data object.
+ * Extracts specific field values from typed data object.
+ *
+ * Used during indexing.
  *
  * @param \Drupal\Core\TypedData\ComplexDataInterface $item
  *   The item from which fields should be extracted.
  * @param array $fields
- *   The fields to extract, passed by reference. The format is the same as the
- *   "fields" sub-array in the index options, i.e., an array with the field
- *   names as keys and arrays of field information as values, at least
- *   containing a "type" key. "value" and "original_type" keys will be added for
- *   all fields.
+ *   The fields to extract, as stored in an index. I.e., the array keys are
+ *   field names, the values are arrays with at least a "type" key present.
+ *   Passed by reference, "value" and "original_type" keys will be added for all
+ *   fields.
  */
 function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
   // Figure out which fields are directly on the item and which need to be
@@ -294,15 +293,14 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
   }
   // Extract the direct fields.
   foreach ($direct_fields as $key) {
-    // Set defaults if something fails or the field is empty.
-    $fields[$key]['value'] = array();
-    $fields[$key]['original_type'] = NULL;
     try {
-      $data = $item->get($key);
-      _search_api_extract_field($data, $fields[$key]);
+      $item = $item->get($key);
+      // @todo Figure out what to do with that.
     }
     catch (\InvalidArgumentException $e) {
-      // No need to do anything, we already set the defaults.
+      // Set defaults if something fails.
+      $fields[$key]['value'] = NULL;
+      $fields[$key]['original_type'] = $fields[$key]['type'];
     }
   }
   // Recurse for all nested fields.
@@ -322,44 +320,11 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
     // set the defaults here.
     if (!$success) {
       foreach (array_keys($fields_nested) as $key) {
-        $fields[$key]['value'] = array();
+        $fields[$key]['value'] = NULL;
         $fields[$key]['original_type'] = $fields[$key]['type'];
       }
     }
   }
-}
-
-/**
- * Extracts value and original type from a single piece of data.
- *
- * @param \Drupal\Core\TypedData\TypedDataInterface $data
- *   The piece of data from which to extract information.
- * @param array $field
- *   The field information array into which to put the extracted information.
- */
-function _search_api_extract_field(TypedDataInterface $data, array &$field) {
-  if ($data->getDataDefinition()->isList()) {
-    foreach ($data as $piece) {
-      _search_api_extract_field($piece, $field);
-    }
-    return;
-  }
-  $value = $data->getValue();
-  $definition = $data->getDataDefinition();
-  if ($definition instanceof ComplexDataDefinitionInterface) {
-    $property = $definition->getMainPropertyName();
-    if (isset($value[$property])) {
-      $field['value'][] = $value[$property];
-    }
-  }
-  else {
-    $field['value'][] = reset($value);
-  }
-  // @todo Figure out how to make this less specific. fago mentioned some
-  // hierarchy/inheritance for types, with non-complex types inheriting from
-  // one of a few primitive types – maybe we can track that back?
-  // Also, is the "field_item:" prefix necessary or always there?
-  $field['original_type'] = $definition->getDataType();
 }
 
 /**
@@ -430,6 +395,12 @@ function search_api_theme() {
     ),
   );
 
+  $themes['search_api_index'] = array(
+    'variables' => array(
+      'index' => NULL,
+    ),
+  );
+
   return $themes;
 }
 
@@ -492,14 +463,15 @@ function theme_search_api_admin_fields_table($variables) {
  * 
  * @param array $variables
  *   An associative array containing:
- *     - server: The ServerInterface instance.
- *     - indexes: A renderable array which contain links to indexes.
+ *     - server:  A ServerInterface instance.
+ *     - indexes: A renderable array which contain links to indexes associated
+ *                with the server.
  *
  * @return string
  *   The rendered HTML for a Search API server.
  */
 function theme_search_api_server($variables) {
-  // Get the Search API server
+  // Get the Search API server and index links.
   $server = $variables['server'];
   $indexes = $variables['indexes'];
   // Initialize the output variable to an empty string.
@@ -556,7 +528,7 @@ function theme_search_api_server($variables) {
   }
   else {
     $class = 'error';
-    $info = t('Invalid service or service plugin missing');
+    $info = t('Invalid or missing service plugin');
   }
   // Append the row and reset variables.
   $label = t('Service class');
@@ -594,6 +566,144 @@ function theme_search_api_server($variables) {
   );
   // Render the server info table and append to the output.
   $output .= drupal_render($server_info_table);
+
+  return $output;
+}
+
+/**
+ * Returns HTML for a Search API index.
+ * 
+ * @param array $variables
+ *   An associative array containing:
+ *     - index: An IndexInterface instance.
+ * 
+ * @return string
+ *   The rendered HTML for a Search API index.
+ */
+function theme_search_api_index($variables) {
+  // Get the Search API index
+  $index = $variables['index'];
+  $server = $index->hasValidServer() ? $index->getServer() : NULL;
+  $datasource = $index->hasValidDatasource() ? $index->getDatasource() : NULL;
+  // Initialize the output variable to an empty string.
+  $output = '';
+
+  // Check if a description is available.
+  if (($description = $index->getDescription())) {
+    // Sanitiaze the description and append to the output.
+    $output .= '<p class="description">' . nl2br(String::checkPlain($description)) . '</p>';
+  }
+
+  // Initialize the rows variable which will hold the different parts of server
+  // information.
+  $rows = array();
+  // Create a row template with references so we don't have to deal with the
+  // complicated structure for each inidividual row.
+  $row = array(
+    'data' => array(
+      array('header' => TRUE),
+      '',
+    ),
+    'class' => array(''),
+  );
+  // Get the individual parts of the row by reference.
+  $label = &$row['data'][0]['data'];
+  $info = &$row['data'][1];
+  $class = &$row['class'][0];
+
+  // Check if the index is enabled.
+  if ($index->status()) {
+    $class = 'ok';
+    $info = t ('enabled (!disable_link)', array ('!disable_link' => l (t ('disable'), $index->url ('disable'))));
+  }
+  // Check if a server is available and enabled.
+  elseif ($server && $server->status()) {
+    $class = 'warning';
+    // Build the enable bypass url options.
+    $url_options = array('query' => array('token' => \Drupal::csrfToken()->get($index->id())));
+    // Build the disabled message and use the enable bypass link.
+    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $index->url('enable-bypass', $url_options))));
+  }
+  else {
+    $class = 'warning';
+    $info = t('disabled');
+  }
+  // Append the row and reset variables.
+  $label = t('Status');
+  $rows[] = _search_api_deep_copy($row);
+  $class = '';
+
+  // Check if a datasource is available.
+  if ($datasource) {
+    // Get the datasource plugin definition.
+    $datasource_plugin_definition = $datasource->getPluginDefinition();
+    // Use the label defined in the plugin definition.
+    $info = $datasource_plugin_definition['label'];
+  }
+  else {
+    $class = 'error';
+    $info = t('Invalid or missing datasource plugin');
+  }
+  // Append the row and reset variables.
+  $label = t('Item type');
+  $rows[] = _search_api_deep_copy($row);
+  $class = '';
+
+  // Check if a server is available.
+  if ($server) {
+    $label = t('Server');
+    $info = l($server->label(), $server->url('canonical'));
+    $rows[] = _search_api_deep_copy($row);
+  }
+
+  // Check if the index is enabled and a datasource is available.
+  if ($index->status() && $datasource) {
+    // Get the configured options, merge in default options to prevent notice
+    // when an index is missing the required options.
+    $options = $index->getOptions() + array('cron_limit' => SEARCH_API_DEFAULT_CRON_LIMIT);
+    // Check if the cron limit is higher then zero.
+    if ($options['cron_limit'] > 0) {
+      $class = 'ok';
+      $info = \Drupal::translation()->formatPlural($options['cron_limit'], 'During cron runs, 1 item will be indexed per batch.', 'During cron runs, @count items will be indexed per batch.');
+    }
+    else {
+      $class = 'warning';
+      $info = t('No items will be indexed during cron runs.');
+    }
+    // Append the row and reset variables.
+    $label = t('Cron batch size');
+    $rows[] = _search_api_deep_copy($row);
+    $class = '';
+    //
+    // @todo: Get server status info.
+    //
+    // @todo: Get index status info.
+    // 
+    // Build the index progress bar.
+    $index_progress = array(
+      '#theme' => 'progress_bar',
+      '#percent' => 0,
+      '#message' => t('@indexed/@total indexed', array('@indexed' => 0, '@total' => 0)),
+    );
+    // Add the progress bar to the output.
+    $output .= '<h3>' . t('Index status') . '</h3>';
+    $output .= '<div class="search-api-index-status">' . drupal_render($index_progress) . '</div>';
+  }
+
+  // Build the index info table theme variables.
+  $index_info_table = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#attributes' => array(
+      'class' => array(
+        'search-api-summary',
+        'search-api-index-summary',
+        'system-status-report',
+      ),
+    ),
+  );
+  // Render the server info table and append to the output.
+  $output .= drupal_render($index_info_table);
 
   return $output;
 }

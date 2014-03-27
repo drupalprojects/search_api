@@ -371,14 +371,10 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function preSave(EntityStorageControllerInterface $storage_controller) {
-
+    // Check if the server is disabled.
     if (!$this->status()) {
-      $indexes = \Drupal::entityManager()
-        ->getStorageController('search_api_index')
-        ->loadByProperties(array('serverMachineName' => $this->id()));
-
       // Disable all the indexes that belong to this server
-      foreach ($indexes as $index) {
+      foreach ($this->getIndexes() as $index) {
         /** @var $index \Drupal\search_api\Entity\Index */
         $index->setStatus(FALSE)->save();
       }

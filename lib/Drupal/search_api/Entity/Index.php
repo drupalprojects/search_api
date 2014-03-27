@@ -47,6 +47,7 @@ use Drupal\Core\Entity;
  *     "delete-form" = "search_api.index_delete",
  *     "disable" = "search_api.index_disable",
  *     "enable" = "search_api.index_enable",
+ *     "enable-bypass" = "search_api.index_bypass_enable"
  *   }
  * )
  */
@@ -349,22 +350,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     $fields = $this->options['fields'];
+    //$custom_type_fields = array();
+    foreach ($fields as $field => $info) {
+      if (isset($info['real_type'])) {
+        $custom_type = $info['real_type'];
+        if ($this->getServer()->supportsDatatype($custom_type)) {
+          $fields[$field]['type'] = $info['real_type'];
+        }
+        //$custom_type_fields[$custom_type][] = $field;
+      }
+    }
     if (empty($fields)) {
       throw new SearchApiException(t("Couldn't index values on '@name' index (no fields selected)", array('@name' => $this->name)));
     }
-
-    // @todo Custom data type conversion/fallback logic.
 
     $extracted_items = array();
     foreach ($items as $id => $item) {
       $extracted_items[$id] = $fields;
       search_api_extract_fields($item, $extracted_items[$id]);
+      // @todo Custom data type conversion logic.
     }
 
     // Remember the item IDs we got passed.
     $ret = array_keys($extracted_items);
 
     // Preprocess the indexed items.
+    \Drupal::moduleHandler()->alter('search_api_index_items', $extracted_items, $this);
     $this->preprocessIndexItems($extracted_items);
 
     // Mark all items that are rejected as indexed.
@@ -603,7 +614,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   An array of items to be preprocessed for indexing.
    */
   public function preprocessIndexItems(array &$items) {
-    \Drupal::moduleHandler()->alter('search_api_index_items', $items, $this);
     foreach ($this->getProcessors() as $processor) {
       $processor->preprocessIndexItems($items);
     }
@@ -666,17 +676,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @return bool
    */
   public function isServerEnabled() {
-    if (!$this->getServer()->status()) {
-      return FALSE;
-    }
-    return TRUE;
+    return ($this->hasValidServer() && $this->getServer()->status());
   }
 
   /**
    * Stops enabling of indexes when the server is disabled
    */
   public function preSave(EntityStorageControllerInterface $storage_controller) {
-    if ($this->status() && (!$this->getServer() || ($this->getServer()) && !$this->isServerEnabled())) {
+    if ($this->status() && !$this->isServerEnabled()) {
       $this->setStatus(FALSE);
     }
   }

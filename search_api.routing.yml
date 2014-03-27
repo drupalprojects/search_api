@@ -60,8 +60,9 @@ search_api.index_view:
   path: '/admin/config/search/search-api/index/{search_api_index}'
   defaults:
     _content: '\Drupal\search_api\Controller\SearchApiIndexController::page'
+    _title_callback: '\Drupal\search_api\Controller\SearchApiIndexController::pageTitle'
   requirements:
-    _entity_access: 'search_api_index.edit'
+    _permission: 'administer search_api'
 
 search_api.index_edit:
   path: '/admin/config/search/search-api/index/{search_api_index}/edit'
