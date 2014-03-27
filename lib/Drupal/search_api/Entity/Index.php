@@ -287,7 +287,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->serverMachineName !== NULL && \Drupal::entityManager()->getStorageController('search_api_server')->load($this->serverMachineName) !== NULL;
+    return $this->serverMachineName !== NULL && \Drupal::entityManager()->getStorage('search_api_server')->load($this->serverMachineName) !== NULL;
   }
 
   /**
@@ -307,7 +307,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the server machine name.
       $server_machine_name = $this->serverMachineName;
       // Get the server from the storage.
-      $this->server = \Drupal::entityManager()->getStorageController('search_api_server')->load($server_machine_name);
+      $this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($server_machine_name);
     }
     return $this->server;
   }

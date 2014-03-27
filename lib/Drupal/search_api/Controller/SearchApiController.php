@@ -35,14 +35,14 @@ class SearchApiController extends ControllerBase {
     );
     // Iterate over all indexes.
     $server_indexes = array();
-    $indexes = $this->entityManager()->getStorageController('search_api_index')->loadMultiple();
+    $indexes = $this->entityManager()->getStorage('search_api_index')->loadMultiple();
     foreach ($indexes as $index) {
       /** @var $index \Drupal\search_api\Index\IndexInterface */
       // Add the entity to the list.
       $server_indexes[$index->getServerId()][] = $index;
     }
     // Iterate over all servers.
-    $servers = $this->entityManager()->getStorageController('search_api_server')->loadMultiple();
+    $servers = $this->entityManager()->getStorage('search_api_server')->loadMultiple();
     foreach ($servers as $server) {
       /** @var $server \Drupal\search_api\Server\ServerInterface */
       // Get the status key based upon the entity status.

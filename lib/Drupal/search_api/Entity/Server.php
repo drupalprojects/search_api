@@ -177,7 +177,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       ->condition('serverMachineName', array_keys($entities), 'IN')
       ->execute();
     // Load the related indexes.
-    $indexes = \Drupal::entityManager()->getStorageController('search_api_index')->loadMultiple($index_ids);
+    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
     // Iterate through the indexes.
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Index\IndexInterface $index */
@@ -255,7 +255,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function getIndexes() {
     // Get the index storage controller.
-    $storage_controller = \Drupal::entityManager()->getStorageController('search_api_index');
+    $storage_controller = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
     return $storage_controller->loadByProperties(array(
           'serverMachineName' => $this->id(),
