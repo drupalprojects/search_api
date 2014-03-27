@@ -23,7 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * This extends the Drupal\Core\Entity\ConfigStorageController class, adding
  * required special handling for index entities.
  */
-class IndexStorage extends ConfigEntityStorage {
+class IndexStorage extends ConfigEntityStorage implements IndexStorageInterface {
 
 
   /**
@@ -77,12 +77,7 @@ class IndexStorage extends ConfigEntityStorage {
   }
 
   /**
-   * Gets the indexes that are configured for the given entity.
-   *
-   * @param ContentEntityInterface $entity
-   *   The entity.
-   * @return array
-   *   Array of Index.
+   * {@inheritdoc}
    */
   public function getIndexesForEntity(ContentEntityInterface $entity) {
     $entity_type_id = $entity->getEntityTypeId();
