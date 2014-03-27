@@ -100,7 +100,7 @@ class SearchApiController extends ControllerBase {
       return array();
     }
 
-    $url = $entity->urlInfo();
+    $url = $entity->urlInfo('canonical');
     $row[] = array('data' => array(
       '#type' => 'link',
       '#title' => $entity->label(),
@@ -111,7 +111,7 @@ class SearchApiController extends ControllerBase {
 
     $local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getDefinitions();
     foreach ($local_tasks as $plugin_id => $local_task) {
-      if ($local_task['base_route'] == "search_api.{$type}_view") {
+      if ($local_task['base_route'] == "search_api.{$type}_view" && $local_task['route_name'] != "search_api.{$type}_view") {
         $operations[$plugin_id] = array(
           'title' => $this->t($local_task['title']),
           'route_name' => $local_task['route_name'],
