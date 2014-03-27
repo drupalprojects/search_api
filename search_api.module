@@ -57,15 +57,9 @@ function search_api_permission() {
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    $entity_type_id = $entity->getEntityTypeId();
-    $entity_bundle = $entity->bundle();
 
-    $entity_query = \Drupal::entityQuery('search_api_index')
-      ->condition('datasourcePluginId', $entity_type_id, 'ENDS_WITH')
-      ->condition('datasourcePluginConfig.bundles.*', $entity_bundle, 'CONTAINS');
-
-    $index_names = $entity_query->execute();
-    $indexes = entity_load_multiple('search_api_index', $index_names);
+    $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Entity\Index $index */
@@ -82,7 +76,16 @@ function search_api_entity_insert(EntityInterface $entity) {
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    // @todo: Track entity change.
+
+    $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    $indexes = $storage->getIndexesForEntity($entity);
+
+    foreach ($indexes as $index) {
+      /** @var \Drupal\search_api\Entity\Index $index */
+      if ($index->isServerEnabled()) {
+        $index->getDatasource()->getTracker()->trackUpdate(array($entity->id()));
+      }
+    }
   }
 }
 
@@ -92,7 +95,16 @@ function search_api_entity_update(EntityInterface $entity) {
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    // @todo: Track entity delete.
+
+    $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    $indexes = $storage->getIndexesForEntity($entity);
+
+    foreach ($indexes as $index) {
+      /** @var \Drupal\search_api\Entity\Index $index */
+      if ($index->isServerEnabled()) {
+        $index->getDatasource()->getTracker()->trackDelete(array($entity->id()));
+      }
+    }
   }
 }
 
