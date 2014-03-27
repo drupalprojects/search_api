@@ -411,19 +411,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $only_indexed = $only_indexed ? 1 : 0;
 
      // First, try the static cache and the persistent cache bin.
-    $cid = $this->getCacheId() . "-" . $only_indexed;
-    if (empty($this->fields[$only_indexed])) {
+    $cid = $this->getCacheId();
+    if (empty($this->fields)) {
       if ($cached = \Drupal::cache()->get($cid)) {
-        $this->fields[$only_indexed] = $cached->data;
+        $this->fields = $cached->data;
       }
     }
 
     // If not cached, fetch the list of fields and their properties
     if (empty($this->fields[$only_indexed])) {
-      $this->fields[$only_indexed] = array();
-      $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions(), $only_indexed);
+      $this->fields = array(
+        0 => array(),
+        1 => array(),
+      );
+      $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions());
       $tags['search_api_index'] = $this->id();
-      \Drupal::cache()->set($cid, $this->fields[$only_indexed], Cache::PERMANENT, $tags);
+      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
 
     return $get_additional ? $this->fields[$only_indexed] : $this->fields[$only_indexed]['fields'];
@@ -437,39 +440,24 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of properties on some complex data object.
-   * @param bool $only_indexed
-   *   TRUE to retrieve only information about the fields indexed by this index,
-   *   FALSE to include all fields.
    * @param string $prefix
    *   Internal use only. A prefix to use for the generated field names in this
    *   method.
+   * @param string $prefix_label
+   *   Internal use only. A prefix to use for the generated field labels in this
+   *   method.
    */
-  protected function convertPropertyDefinitionsToFields(array $properties, $only_indexed, $prefix = '') {
+  protected function convertPropertyDefinitionsToFields(array $properties, $prefix = '', $prefix_label = '') {
     $type_mapping = search_api_field_type_mapping();
-    $fields = &$this->fields[$only_indexed]['fields'];
-
-    // Sort out fields from which nested items should be added.
-    if ($only_indexed) {
-      // Collect the fields under this prefix that have nested items indexed. We
-      // later only recurse for those.
-      $prefix_len = strlen($prefix);
-      $get_prefix = function($key) use ($prefix, $prefix_len) {
-        if (substr($key, 0, $prefix_len) === $prefix && ($pos = strpos($key, ':', $prefix_len))) {
-          return substr($key, 0, $pos);
-        }
-        return NULL;
-      };
-      $recurse_for_prefixes = array_filter(array_map($get_prefix, $this->options['fields']));
-      $recurse_for_prefixes = array_fill_keys($recurse_for_prefixes, TRUE);
-    }
-    else {
-      $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
-    }
+    $fields = &$this->fields[0]['fields'];
+    $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
     foreach ($properties as $key => $property) {
       $key = "$prefix$key";
+      $label = $prefix_label . $property->getLabel();
+      $description = $property->getDescription();
       while ($property instanceof ListDataDefinitionInterface) {
         $property = $property->getItemDefinition();
       }
@@ -478,17 +466,26 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       if ($property instanceof ComplexDataDefinitionInterface) {
         $main_property = $property->getMainPropertyName();
+        $nested_properties = $property->getPropertyDefinitions();
+        $additional = count($nested_properties) > 1;
         if (!empty($recurse_for_prefixes[$key])) {
-          $nested_properties = $property->getPropertyDefinitions();
-          // We allow the main property to be indexed directly, so we don't have
-          // to add it again for the nested fields.
-          if ($main_property) {
-            unset($nested_properties[$main_property]);
+          if ($nested_properties) {
+            // We allow the main property to be indexed directly, so we don't
+            // have to add it again for the nested fields.
+            if ($main_property) {
+              unset($nested_properties[$main_property]);
+            }
+            if ($nested_properties) {
+              $additional = TRUE;
+              $recurse[] = array($nested_properties, "$key:", "$label » ");
+            }
           }
-          $recurse["$key:"] = $nested_properties;
         }
-        else {
-          $this->fields[$only_indexed]['additional_fields'][$key] = $property->getLabel();
+        if ($additional) {
+          $this->fields[0]['additional fields'][$key] = array(
+            'name' => "$label [$key]",
+            'enabled' => !empty($recurse_for_prefixes[$key]),
+          );
         }
         // If the complex data type has a main property, we can index that
         // directly here. Otherwise, we don't add it and continue with the next
@@ -496,24 +493,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
         if (!$main_property) {
           continue;
         }
+        $property = $property->getPropertyDefinition($main_property);
+        if (!$property) {
+          continue;
+        }
       }
+      $type = $property->getDataType();
       $fields[$key] = array(
-        'name' => $property->getLabel(),
-        'description' => $property->getDescription(),
-        'indexed' => TRUE,
-        'type' => $type_mapping[$property->getDataType()],
-        'boost' => 1.0,
+        'name' => $label,
+        'description' => $description,
+        'indexed' => FALSE,
+        'type' => $type_mapping[$type],
+        'boost' => '1.0',
       );
       if (isset($this->options['fields'][$key])) {
         $fields[$key] = $this->options['fields'][$key] + $fields[$key];
         $fields[$key]['indexed'] = TRUE;
-      }
-      elseif ($only_indexed) {
-        unset($fields[$key]);
+        $this->fields[1]['fields'][$key] = $fields[$key];
       }
     }
-    foreach ($recurse as $nested_prefix => $nested_properties) {
-      $this->convertPropertyDefinitionsToFields($nested_properties, $only_indexed, $nested_prefix);
+    foreach ($recurse as $arguments) {
+      call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
     }
   }
 

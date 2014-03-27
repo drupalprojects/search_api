@@ -214,8 +214,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *     Usually only relevant for fulltext fields.
    *   If $get_additional is TRUE, this array is encapsulated in another
    *   associative array, which contains the above array under the "fields" key,
-   *   and a list of related entities (field keys mapped to names) under the
-   *   "additional_fields" key.
+   *   and a list of related entities under the "additional fields" key,
+   *   mapping field keys to arrays with "name" and "enabled".
    */
   public function getFields($only_indexed = TRUE, $get_additional = FALSE);
 
