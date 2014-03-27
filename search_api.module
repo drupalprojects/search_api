@@ -736,3 +736,17 @@ function _search_api_deep_copy(array $array) {
   }
   return $copy;
 }
+
+/**
+ * Custom sort function for the processors
+ *
+ * @param $processor_setting_a
+ * @param $processor_setting_b
+ * @return int
+ */
+function _search_api_sort_processors($processor_setting_a, $processor_setting_b) {
+  if ($processor_setting_a['weight'] == $processor_setting_b['weight']) {
+    return 0;
+  }
+  return ($processor_setting_a['weight'] < $processor_setting_b['weight']) ? -1 : 1;
+}
