@@ -36,9 +36,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * The entity storage controller.
    *
-   * @var \Drupal\Core\Entity\EntityStorageControllerInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  private $storageController;
+  private $storage;
 
   /**
    * The typed data manager.
@@ -80,7 +80,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     // Setup object members.
     $this->entityManager = $entity_manager;
-    $this->storageController = $entity_manager->getStorage($plugin_definition['entity_type']);
+    $this->storage = $entity_manager->getStorage($plugin_definition['entity_type']);
     $this->typedDataManager = \Drupal::typedDataManager();
     $this->databaseConnection = $connection;
     $this->tracker = new DefaultTracker($this->getIndex(), $connection);
@@ -202,14 +202,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function load($id) {
-    return $this->storageController->load($id);
+    return $this->storage->load($id);
   }
 
   /**
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
-    return $this->storageController->loadMultiple($ids);
+    return $this->storage->loadMultiple($ids);
   }
 
   /**
