@@ -257,6 +257,8 @@ class IndexForm extends EntityFormController {
       '#title' => $this->t('Read only'),
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
+      // changed #parents so this option is not saved into options
+      '#parents' => array('readOnly'),
     );
     // Build the index directly element.
     $form['options']['index_directly'] = array(
