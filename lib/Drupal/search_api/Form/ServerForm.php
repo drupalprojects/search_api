@@ -25,9 +25,9 @@ class ServerForm extends EntityFormController {
    * This object members must be set to anything other than private in order for
    * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
    *
-   * @var \Drupal\Core\Entity\EntityStorageControllerInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $storageController;
+  protected $storage;
 
   /**
    * The service plugin manager.
@@ -49,15 +49,15 @@ class ServerForm extends EntityFormController {
    */
   public function __construct(EntityManager $entity_manager, ServicePluginManager $service_plugin_manager) {
     // Setup object members.
-    $this->storageController = $entity_manager->getStorage('search_api_server');
+    $this->storage = $entity_manager->getStorage('search_api_server');
     $this->servicePluginManager = $service_plugin_manager;
   }
 
   /**
    * Get the server storage controller.
    *
-   * @return \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   An instance of EntityStorageControllerInterface.
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   An instance of EntityStorageInterface.
    */
   protected function getStorage() {
     return $this->storage;
