@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\Component\Utility\Unicode;
 
 /**
  * @SearchApiProcessor(
@@ -19,7 +20,7 @@ class Ignorecase extends FieldsProcessorPluginBase {
   protected function process(&$value) {
     // We don't touch integers, NULL values or the like.
     if (is_string($value)) {
-      $value = drupal_strtolower($value);
+      $value = Unicode::strtolower($value);
     }
   }
 
