@@ -177,6 +177,7 @@ class IndexForm extends EntityFormController {
    *   An instance of IndexInterface.
    */
   public function buildEntityForm(array &$form, array &$form_state, IndexInterface $index) {
+    $form['#tree'] = TRUE;
     // Build the name element.
     $form['name'] = array(
       '#type' => 'textfield',
@@ -216,7 +217,7 @@ class IndexForm extends EntityFormController {
     );
     // Build the datasource configuration form.
     $this->buildDatasourceConfigForm($form, $form_state, $index);
-    
+
     // Build the status element.
     $form['status'] = array(
       '#type' => 'checkbox',
@@ -233,7 +234,7 @@ class IndexForm extends EntityFormController {
       '#description' => $this->t('Enter a description for the index.'),
       '#default_value' => $index->getDescription(),
     );
-    
+
     // Build the server machine name element.
     $form['serverMachineName'] = array(
       '#type' => 'select',
@@ -311,7 +312,7 @@ class IndexForm extends EntityFormController {
         $form['datasourcePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $datasource_plugin_definition['name']));
         $form['datasourcePluginConfig']['#description'] = String::checkPlain($datasource_plugin_definition['description']);
         $form['datasourcePluginConfig']['#open'] = $index->isNew() ? TRUE : $index->isNew();
-        
+
         // Attach the build datasource plugin configuration form.
         $form['datasourcePluginConfig'] += $datasource_plugin_config_form;
       }
