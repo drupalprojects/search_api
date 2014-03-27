@@ -6,7 +6,7 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\Core\Config\Entity\ConfigStorageController;
+use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\simpletest\DrupalUnitTestBase;
 use Drupal\search_api\Entity\Index;
 
@@ -29,7 +29,7 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
   /**
    * Search API Index storage controller.
    *
-   * @var \Drupal\Core\Config\Entity\ConfigStorageControllerInterface.
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
   protected $controller;
 
@@ -50,14 +50,14 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->controller = $this->container->get('entity.manager')->getStorageController('search_api_index');
+    $this->controller = $this->container->get('entity.manager')->getStorage('search_api_index');
   }
 
   /**
    * Test all CRUD operations here as a queue of operations.
    */
   public function testIndexCRUD() {
-    $this->assertTrue($this->controller instanceof ConfigStorageController, 'The Search API Index storage controller is loaded.');
+    $this->assertTrue($this->controller instanceof ConfigEntityStorage, 'The Search API Index storage controller is loaded.');
 
     $index = $this->indexCreate();
 

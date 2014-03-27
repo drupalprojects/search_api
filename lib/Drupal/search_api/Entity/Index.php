@@ -22,7 +22,7 @@ use Drupal\Core\Entity;
  *   id = "search_api_index",
  *   label = @Translation("Search index"),
  *   controllers = {
- *     "storage" = "Drupal\Core\Config\Entity\ConfigStorageController",
+ *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
  *     "access" = "Drupal\search_api\Handler\IndexAccessHandler",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",

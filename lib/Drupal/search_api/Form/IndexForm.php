@@ -93,21 +93,21 @@ class IndexForm extends EntityFormController {
   /**
    * Get the index storage controller.
    *
-   * @return \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   An instance of EntityStorageControllerInterface.
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   An instance of EntityStorageInterface.
    */
-  protected function getIndexStorageController() {
-    return $this->getEntityManager()->getStorageController('search_api_index');
+  protected function getIndexStorage() {
+    return $this->getEntityManager()->getStorage('search_api_index');
   }
 
   /**
    * Get the server storage controller.
    *
-   * @return \Drupal\Core\Entity\EntityStorageControllerInterface
-   *   An instance of EntityStorageControllerInterface.
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   An instance of EntityStorageInterface.
    */
-  protected function getServerStorageController() {
-    return $this->getEntityManager()->getStorageController('search_api_server');
+  protected function getServerStorage() {
+    return $this->getEntityManager()->getStorage('search_api_server');
   }
 
   /**
@@ -121,7 +121,7 @@ class IndexForm extends EntityFormController {
     // Initialize the options variable to an empty array.
     $options = array();
     // Iterate through the servers.
-    foreach ($this->getServerStorageController()->loadMultiple() as $server_machine_name => $server) {
+    foreach ($this->getServerStorage()->loadMultiple() as $server_machine_name => $server) {
       // Add the plugin to the list.
       $options[$server_machine_name] = String::checkPlain($server->label());
     }
@@ -192,7 +192,7 @@ class IndexForm extends EntityFormController {
       '#maxlength' => 50,
       '#required' => TRUE,
       '#machine_name' => array(
-        'exists' => array($this->getIndexStorageController(), 'load'),
+        'exists' => array($this->getIndexStorage(), 'load'),
         'source' => array('name'),
       ),
     );
