@@ -9,6 +9,7 @@
 
 namespace Drupal\search_api\Controller;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -60,6 +61,19 @@ class SearchApiServerController extends ControllerBase {
       //$render['form'] = $this->formBuilder()->getForm('?', $search_api_server);
     }
     return $render;
+  }
+
+  /**
+   * The _title_callback for the search_api.server_view route.
+   *
+   * @param \Drupal\search_api\Server\ServerInterface $search_api_server
+   *   An instance of ServerInterface.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function pageTitle(ServerInterface $search_api_server) {
+    return String::checkPlain($search_api_server->label());
   }
 
   public function serverBypassEnable(Request $request, ServerInterface $search_api_server) {

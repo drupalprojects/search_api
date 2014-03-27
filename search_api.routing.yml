@@ -17,6 +17,7 @@ search_api.server_view:
   path: '/admin/config/search/search-api/server/{search_api_server}'
   defaults:
     _content: '\Drupal\search_api\Controller\SearchApiServerController::page'
+    _title_callback: '\Drupal\search_api\Controller\SearchApiServerController::pageTitle'
   requirements:
     _permission: 'administer search_api'
 
