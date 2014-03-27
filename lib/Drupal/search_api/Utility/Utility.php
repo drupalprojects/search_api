@@ -127,7 +127,8 @@ class Utility {
         case 'decimal':
           $mapping[$field_type_id] = 'decimal';
           break;
-          // You can't make a default here. Only types that are explicitly supported will show up here
+          // We can't include a default here. Only types that are explicitly
+          // supported should show up here.
       }
     }
     // Allow other modules to intercept and define what default type they want to use for their field type.

@@ -212,11 +212,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *     default data type.
    *   - boost: A boost value for terms found in this field during searches.
    *     Usually only relevant for fulltext fields.
-   *   - entity_type (optional): If set, the type of this field is really an
-   *     entity. The "type" key will then contain "integer", meaning that
-   *     servers will ignore this and merely index the entity's ID. Components
-   *     displaying this field, though, are advised to use the entity label
-   *     instead of the ID.
    *   If $get_additional is TRUE, this array is encapsulated in another
    *   associative array, which contains the above array under the "fields" key,
    *   and a list of related entities (field keys mapped to names) under the

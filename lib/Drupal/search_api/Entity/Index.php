@@ -10,6 +10,9 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity;
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
+use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
+use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
@@ -406,185 +409,112 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
     $only_indexed = $only_indexed ? 1 : 0;
-    $get_additional = $get_additional ? 1 : 0;
 
      // First, try the static cache and the persistent cache bin.
-    $cid = $this->getCacheId() . "-" . $only_indexed . "-" . $get_additional;
-    if (empty($this->fields[$only_indexed][$get_additional])) {
+    $cid = $this->getCacheId() . "-" . $only_indexed;
+    if (empty($this->fields[$only_indexed])) {
       if ($cached = \Drupal::cache()->get($cid)) {
-        //$this->fields[$only_indexed][$get_additional] = $cached->data;
+        $this->fields[$only_indexed] = $cached->data;
       }
     }
 
     // If not cached, fetch the list of fields and their properties
-    if (empty($this->fields[$only_indexed][$get_additional])) {
-      $search_api_index_fields = empty($this->options['fields']) ? array() : $this->options['fields'];
-
-      // Get all entity types
-      $entity_types = $this->entityManager()->getDefinitions();
-
-      // Define additional variable
-      $additional = array();
-
-      // Define prefix names
-      $prefix_names = array();
-
-      // First we need all already added prefixes.
-      $additional_fields_options = empty($this->options['additional fields']) ? array() : $this->options['additional fields'];
-
-      // Get the entity type for the selected datasource
-      $data_source_definition = $this->getDatasource()->getPluginDefinition();
-      $data_source_entity_type_id = $entity_types[$data_source_definition['entity_type']]->id();
-
-      // Get our base array which will be used to loop over all fields that could be added to the search index.
-      $field_entity_types = array($data_source_entity_type_id => $entity_types[$data_source_definition['entity_type']]);
-
-      // Load our drupal fields to search api data types mapping
-      $mapping = search_api_field_type_mapping();
-
-      // @todo find out what this flat does and give it a better name
-      $flat = array();
-
-      // As long as we have not processed all entity types that are attached to our main datasource entity type we need
-      // to keep searching for fields that we want to index
-      while ($field_entity_types) {
-        foreach ($field_entity_types as $prefix => $field_entity_type) {
-          /** @var $field_entity_type \Drupal\Core\Entity\EntityTypeInterface */
-
-          // Do not process entity types if they are not an instance of the interface but also not if they are
-          // not fieldable
-          if (!($field_entity_type instanceof \Drupal\Core\Entity\ContentEntityType) && $field_entity_type->isFieldable()) {
-            unset($field_entity_types[$prefix]);
-            continue;
-          }
-
-          // Now look at all fields for all bundles for this entity type.
-          $bundles = $this->entityManager()->getBundleInfo($field_entity_type->id());
-
-          // @todo: We need to make sure we do not loop over bundles that are not selected
-          // Loop over all the bundles to get all the field definitions for those
-          foreach ($bundles as $bundle_id => $bundle) {
-            // Get field definitions for this bundle
-            $fields = $this->entityManager()->getFieldDefinitions($field_entity_type->id(), $bundle_id);
-
-            // Loop over the fields and add the to the list with the proper type
-            foreach ($fields as $field) {
-              $field_type = $field->getType();
-
-              // Add the prefix here if it was from a reference
-              $key = $prefix . ':' . $field->getName();
-
-              // @todo: Check if this comparison is valid
-              if ((isset($mapping[$field_type])) && (!$only_indexed || !empty($search_api_index_fields[$key]))) {
-
-                // Generate the base name in advance
-                $base_name = $field_entity_type->getLabel() . ' ' . $field->getLabel();
-
-                // Add the prefix if needed
-                $name = (isset($prefix_names[$prefix])) ? $prefix_names[$prefix] . '' . $base_name : $base_name;
-
-                // See if the field was already enabled in the list
-                if (!empty($search_api_index_fields[$key])) {
-
-                  // This field is already known in the index configuration.
-                  $flat[$key] = $search_api_index_fields[$key] + array(
-                    'name' => $name,
-                    'description' => $field->getDescription(),
-                    'boost' => '1.0',
-                    'indexed' => TRUE,
-                  );
-                }
-                else {
-                  $flat[$key] = array(
-                    'name'    => $name,
-                    'description' => $field->getDescription(),
-                    'type'    => $mapping[$field_type],
-                    'boost' => '1.0',
-                    'indexed' => FALSE,
-                  );
-                }
-              }
-
-              // Only add fields that reference other entity types
-              $target_entity_type_settings = $field->getItemDefinition()->getSettings();
-              if (empty($mapping[$field_type]) && !empty($target_entity_type_settings['target_type']) && !$only_indexed) {
-
-                // Get the target type
-                $target_entity_type_id = $target_entity_type_settings['target_type'];
-                $target_entity_type = \Drupal::entityManager()->getDefinition($target_entity_type_id);
-
-                // Prevent loops in the UI when attaching additional fields.
-                // In order to do that we have to check if we are trying to
-                // attach an already attached field.
-                //
-                // For example:
-                // $prefix = node:uid:user:user_picture:file:uid
-                // $field->getName() = user_picture
-                //
-                // So in this case we try to add user_picture again.
-                //
-                // In order to test this we get the last part of the prefix
-                // appended with a colon and the field name.
-                // When that string appears in the prefix we know we are
-                // looping.
-                $parts = explode(':', $prefix);
-                $last_part = array_pop($parts);
-                if (count($parts) == 1 || strpos($prefix, $last_part . ':' . $field->getName()) === false) {
-                  // We only allow fieldable entities to appear in the list
-                  if ($target_entity_type instanceof Entity\ContentEntityType) {
-                    $name = $field_entity_type->getLabel() . ' ' . $field->getLabel() . ' [' . $key . ']';
-                    $additional[$key] = array(
-                      'name' => $name,
-                      'enabled' => (!empty($additional_fields_options[$key])) ? 1 : 0,
-                    );
-
-                    // When we enabled several additional fields that are
-                    // are changed, we only can disable the last one from the
-                    // chain to prevent errors.
-                    //
-                    // In order to do this we take the prefix string without the
-                    // last part. The "parent" of the key exists if the array
-                    // already contains a key equal to our assembled string.
-                    //
-                    // We only have to create the dependency if the item has a
-                    // child that is already enabled.
-                    $concat_string = implode(':', $parts);
-                    if (!empty($concat_string) && !empty($additional[$key]['enabled']) && isset($additional[$concat_string])) {
-                      $additional[$concat_string]['dependency'] = TRUE;
-                    }
-
-                    // If the user added a field that has a referenced field, we need to add it to our array so we can
-                    // iterate over it to find its fields.
-                    if ($additional[$key]['enabled']) {
-                      // Visit this entity type in a later iteration.
-                      // Add the target type to the field. Use the key as a prefix. Which is again used as key
-                      $field_entity_types[$key . ':' . $target_entity_type_id] = $target_entity_type;
-                      $prefix_names[$key . ':' . $target_entity_type_id] = $field_entity_type->getLabel() . ' ' . $field->getLabel(). ' » ';
-                    }
-                  }
-                }
-              }
-            }
-          }
-          // Delete it from the array as we processed this entity type
-          unset($field_entity_types[$prefix]);
-        }
-      }
-
-      if (!$get_additional) {
-        $this->fields[$only_indexed][$get_additional] = $flat;
-      }
-      else {
-        $options = array();
-        $options['fields'] = $flat;
-        $options['additional fields'] = $additional;
-        $this->fields[$only_indexed][$get_additional] =  $options;
-      }
+    if (empty($this->fields[$only_indexed])) {
+      $this->fields[$only_indexed] = array();
+      $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions(), $only_indexed);
       $tags['search_api_index'] = $this->id();
-      \Drupal::cache()->set($cid, $this->fields[$only_indexed][$get_additional], Cache::PERMANENT, $tags);
+      \Drupal::cache()->set($cid, $this->fields[$only_indexed], Cache::PERMANENT, $tags);
     }
 
-    return $this->fields[$only_indexed][$get_additional];
+    return $get_additional ? $this->fields[$only_indexed] : $this->fields[$only_indexed]['fields'];
+  }
+
+  /**
+   * Converts an array of property definitions into the index fields format.
+   *
+   * Stores the resulting values in $this->fields, to be returned by subsequent
+   * getFields() calls.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   An array of properties on some complex data object.
+   * @param bool $only_indexed
+   *   TRUE to retrieve only information about the fields indexed by this index,
+   *   FALSE to include all fields.
+   * @param string $prefix
+   *   Internal use only. A prefix to use for the generated field names in this
+   *   method.
+   */
+  protected function convertPropertyDefinitionsToFields(array $properties, $only_indexed, $prefix = '') {
+    $type_mapping = search_api_field_type_mapping();
+    $fields = &$this->fields[$only_indexed]['fields'];
+
+    // Sort out fields from which nested items should be added.
+    if ($only_indexed) {
+      // Collect the fields under this prefix that have nested items indexed. We
+      // later only recurse for those.
+      $prefix_len = strlen($prefix);
+      $get_prefix = function($key) use ($prefix, $prefix_len) {
+        if (substr($key, 0, $prefix_len) === $prefix && ($pos = strpos($key, ':', $prefix_len))) {
+          return substr($key, 0, $pos);
+        }
+        return NULL;
+      };
+      $recurse_for_prefixes = array_filter(array_map($get_prefix, $this->options['fields']));
+      $recurse_for_prefixes = array_fill_keys($recurse_for_prefixes, TRUE);
+    }
+    else {
+      $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
+    }
+
+    // Loop over all properties and handle them accordingly.
+    $recurse = array();
+    foreach ($properties as $key => $property) {
+      $key = "$prefix$key";
+      while ($property instanceof ListDataDefinitionInterface) {
+        $property = $property->getItemDefinition();
+      }
+      while ($property instanceof DataReferenceDefinitionInterface) {
+        $property = $property->getTargetDefinition();
+      }
+      if ($property instanceof ComplexDataDefinitionInterface) {
+        $main_property = $property->getMainPropertyName();
+        if (!empty($recurse_for_prefixes[$key])) {
+          $nested_properties = $property->getPropertyDefinitions();
+          // We allow the main property to be indexed directly, so we don't have
+          // to add it again for the nested fields.
+          if ($main_property) {
+            unset($nested_properties[$main_property]);
+          }
+          $recurse["$key:"] = $nested_properties;
+        }
+        else {
+          $this->fields[$only_indexed]['additional_fields'][$key] = $property->getLabel();
+        }
+        // If the complex data type has a main property, we can index that
+        // directly here. Otherwise, we don't add it and continue with the next
+        // property.
+        if (!$main_property) {
+          continue;
+        }
+      }
+      $fields[$key] = array(
+        'name' => $property->getLabel(),
+        'description' => $property->getDescription(),
+        'indexed' => TRUE,
+        'type' => $type_mapping[$property->getDataType()],
+        'boost' => 1.0,
+      );
+      if (isset($this->options['fields'][$key])) {
+        $fields[$key] = $this->options['fields'][$key] + $fields[$key];
+        $fields[$key]['indexed'] = TRUE;
+      }
+      elseif ($only_indexed) {
+        unset($fields[$key]);
+      }
+    }
+    foreach ($recurse as $nested_prefix => $nested_properties) {
+      $this->convertPropertyDefinitionsToFields($nested_properties, $only_indexed, $nested_prefix);
+    }
   }
 
   /**
