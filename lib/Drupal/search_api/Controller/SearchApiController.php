@@ -8,8 +8,7 @@
 
 namespace Drupal\search_api\Controller;
 
-use Drupal\Component\Utility\String;
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Server\ServerInterface;
@@ -28,44 +27,34 @@ class SearchApiController extends ControllerBase {
    *   assigned to them.
    */
   public function load() {
-    // Initialize the entities variable to default array structure.
-    $entities = array(
-      'enabled' => array(),
-      'disabled' => array(),
-    );
-    // Iterate over all indexes.
-    $server_indexes = array();
     $indexes = $this->entityManager()->getStorage('search_api_index')->loadMultiple();
-    foreach ($indexes as $index) {
-      /** @var $index \Drupal\search_api\Index\IndexInterface */
-      // Add the entity to the list.
-      $server_indexes[$index->getServerId()][] = $index;
-    }
-    // Iterate over all servers.
     $servers = $this->entityManager()->getStorage('search_api_server')->loadMultiple();
+
+    $serverGroups = array();
+
     foreach ($servers as $server) {
-      /** @var $server \Drupal\search_api\Server\ServerInterface */
-      // Get the status key based upon the entity status.
-      $status_key = $server->status() ? 'enabled' : 'disabled';
-      // Add the entity to the list.
-      $entities[$status_key][] = $server;
-      if (isset($server_indexes[$server->id()])) {
-        $entities[$status_key] = array_merge($entities[$status_key], $server_indexes[$server->id()]);
+      $serverGroup = array(
+        $server->id() => $server,
+      );
+
+      foreach ($server->getIndexes() as $index) {
+        $serverGroup[$index->id()] = $index;
+        unset($indexes[$index->id()]);
       }
+
+      $serverGroups[$server->id()] = $serverGroup;
     }
 
-    // Add indexes which aren't bound to any server (orphans).
-    if (isset($server_indexes[''])) {
-      $entities['disabled'] = array_merge($entities['disabled'], $server_indexes[NULL]);
-    }
-
-    return $entities;
+    return array(
+      'servers' => $serverGroups,
+      'loneIndexes' => $indexes,
+    );
   }
 
   /**
    * Returns the header to use for the overview table.
    */
-  public function buildHeader() {
+  protected function buildHeader() {
     return array(
       'status' => $this->t('Status'),
       'type' => array('data' => $this->t('Type'), 'colspan' => 2),
@@ -74,31 +63,29 @@ class SearchApiController extends ControllerBase {
     );
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function buildRow(ConfigEntityInterface $entity) {
+  public function buildRow(ConfigEntityBase $entity, $nested = FALSE) {
     $row = array();
+    $titleColspan = 2;
     $status = $entity->status() ? 'enabled' : 'disabled';
-    $status_label = String::checkPlain($entity->status() ? $this->t('Enabled') : $this->t('Disabled'));
-    $row[] = "<span class=\"search-api-entity-status-$status\" title=\"$status_label\"><span class=\"visually-hidden\">$status_label</span></span>";
+    $statusLabel = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
+    $statusIcon = '<span class="search-api-entity-status-' . $status . '" title="' . $statusLabel . '"><span class="visually-hidden">' . $statusLabel . '</span></span>';
+
+    $row[] = $statusIcon;
+    if ($nested) {
+      $row[] = '';
+      $titleColspan = 1;
+    }
     if ($entity instanceof ServerInterface) {
-      $type = 'server';
-      $row[] = array('data' => $this->t('Server'), 'colspan' => 2);
+      $row[] = array('data' => $this->t('Server'), 'colspan' => $titleColspan);
     }
     elseif ($entity instanceof IndexInterface) {
-      $type = 'index';
-      if ($entity->hasValidServer()) {
-        $row[] = '';
-        $row[] = $this->t('Index');
-      }
-      else {
-        $row[] = array('data' => $this->t('Index'), 'colspan' => 2);
-      }
+      $row[] = array('data' => $this->t('Index'), 'colspan' => $titleColspan);
     }
     else {
       return array();
     }
+
+
 
     $url = $entity->urlInfo('canonical');
     $row[] = array('data' => array(
@@ -109,40 +96,7 @@ class SearchApiController extends ControllerBase {
       '#suffix' => '<div>' . $entity->get('description') . '</div>',
     ));
 
-    $local_tasks = \Drupal::service('plugin.manager.menu.local_task')->getDefinitions();
-    foreach ($local_tasks as $plugin_id => $local_task) {
-      if ($local_task['base_route'] == "search_api.{$type}_view" && $local_task['route_name'] != "search_api.{$type}_view") {
-        $operations[$plugin_id] = array(
-          'title' => $this->t($local_task['title']),
-          'route_name' => $local_task['route_name'],
-        ) + $url;
-      }
-    }
-
-    if ($entity->status()) {
-      $operations['disable'] = array(
-        'title' => $this->t('Disable'),
-        'route_name' => "search_api.{$type}_disable",
-      ) + $url;
-    }
-    elseif (!($entity instanceof IndexInterface) || $entity->hasValidServer() && $entity->isServerEnabled()) {
-      $operations['enable'] = array(
-        'title' => $this->t('Enable'),
-        'route_name' => "search_api.{$type}_enable",
-      ) + $url;
-    }
-
-    $operations['delete'] = array(
-      'title' => $this->t('Delete'),
-      'route_name' => "search_api.{$type}_delete",
-    ) + $url;
-    $this->moduleHandler()->alter('entity_operation', $operations, $entity);
-    $row[] = array(
-      'data' => array(
-        '#type' => 'operations',
-        '#links' => $operations,
-      ),
-    );
+    $row[] = $this->buildOperations($entity);
 
     return $row;
   }
@@ -150,39 +104,86 @@ class SearchApiController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public function overview() {
-    // Load the entities.
-    $entities = $this->load();
-    // Initialize the build variable to an empty array.
-    $build = array(
-      'enabled' => array('#markup' => '<h2>' . $this->t('Enabled servers') . '</h2>'),
-      'disabled' => array('#markup' => '<h2>' . $this->t('Disabled configuration') . '</h2>'),
-    );
-    // Iterate through the entity states.
-    foreach (array_keys($build) as $status) {
-      // Initialize the rows variable to an empty array.
-      $rows = array();
-      // Iterate through the entities.
-      foreach ($entities[$status] as $entity) {
-        // Add the entity to the rows.
-        $rows[$entity->id()] = $this->buildRow($entity);
+  public function buildGroup($group) {
+    static $tr_class = 'odd-group';
+    $rows = array();
+
+    if (is_array($group)) {
+      foreach ($group as $entity) {
+        $nested = $entity instanceof IndexInterface;
+        $row['data'] = $this->buildRow($entity, $nested);
+        // Add class with entity id to allow test this page easily
+        $row['class'] = array($tr_class, $entity->getEntityTypeId() . '-' . $entity->id());
+        $rows[] = $row;
       }
-      // Build the status container.
-      $build[$status]['#type'] = 'container';
-      $build[$status]['table'] = array(
-        '#theme' => 'table',
-        '#header' => $this->buildHeader(),
-        '#rows' => $rows,
-        '#attributes' => array('class' => array($status . '-servers-list')),
-      );
     }
+    elseif ($group instanceof ConfigEntityBase) {
+      $rows = array(array(
+        'data' => $this->buildRow($group),
+        'class' => array($tr_class),
+      ));
+    }
+
+    $tr_class = ($tr_class == 'odd-group') ? 'even-group' : 'odd-group';
+
+    return $rows;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function overview() {
+    // Load the servers and indexes groups.
+    $groups = $this->load();
+
+    $rows = $build = array();
+
+    // Iterate through the groups.
+    foreach ($groups as $subGroup) {
+      foreach ($subGroup as $group) {
+        $rows = array_merge($rows, $this->buildGroup($group));
+      }
+    }
+
+    $build['table'] = array(
+      '#theme' => 'table',
+      '#header' => $this->buildHeader(),
+      '#rows' => $rows,
+      '#attributes' => array(
+        'id' => array('search-api-overview'),
+      ),
+    );
+
     // Add CSS.
     $build['#attached']['library'][] = 'search_api/drupal.search_api.overview';
-    // Configure the empty messages.
-    $build['enabled']['table']['#empty'] = $this->t('There are no enabled search servers.');
-    $build['disabled']['table']['#empty'] = $this->t('There are no disabled search servers or indexes.');
-    // Return the renderable array.
+
     return $build;
   }
 
+  protected function buildOperations(ConfigEntityBase $entity) {
+    // Fetch
+    $urlParams = $entity->urlInfo();
+    $entityLinks = $entity->getEntityType()->getLinkTemplates();
+    if ($entity->status()) {
+      unset($entityLinks['enable']);
+    }
+    else {
+      unset($entityLinks['disable']);
+    }
+
+    $operations = array();
+    foreach ($entityLinks as $link => $routeName) {
+      $operations[$link] = array(
+        'title' => $link,
+        'route_name' => $routeName,
+      ) + $urlParams;
+    }
+
+    return array(
+      'data' => array(
+        '#type' => 'operations',
+        '#links' => $operations,
+      ),
+    );
+  }
 }

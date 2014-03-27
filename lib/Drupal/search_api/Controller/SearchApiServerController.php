@@ -76,14 +76,11 @@ class SearchApiServerController extends ControllerBase {
     return String::checkPlain($search_api_server->label());
   }
 
-  public function serverBypassEnable(Request $request, ServerInterface $search_api_server) {
-    if (($token = $request->get('token')) && \Drupal::csrfToken()->validate($token, $search_api_server->id())) {
+  public function serverBypassEnable(ServerInterface $search_api_server) {
+    $search_api_server->setStatus(TRUE)->save();
+    $route = $search_api_server->urlInfo();
 
-      $search_api_server->setStatus(TRUE)->save();
-      $route = $search_api_server->urlInfo();
-
-      return $this->redirect($route['route_name'], $route['route_parameters']);
-    }
+    return $this->redirect($route['route_name'], $route['route_parameters']);
   }
 
 }

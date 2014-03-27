@@ -41,11 +41,11 @@ class SearchApiListPageTest extends SearchApiWebTest {
 
     $this->assertText($server->label(), 'Server presents on overview page.');
     $this->assertRaw($server->get('description'), 'Description is present');
-    $this->assertFieldByXPath('//table[@class="enabled-servers-list"]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
 
   }
 
-  public function testNewIndexCreate() {
+  public function _testNewIndexCreate() {
     $server = $this->createServer();
     $index = $this->createIndex($server);
 
@@ -53,41 +53,41 @@ class SearchApiListPageTest extends SearchApiWebTest {
 
     $this->assertText($index->label(), 'Server presents on overview page.');
     $this->assertRaw($index->get('description'), 'Description is present');
-    $this->assertFieldByXPath('//table[@class="enabled-servers-list"]//span[@class="search-api-entity-status-enabled"]', NULL, 'Index is in proper table');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Index is in proper table');
 
   }
 
-  public function testEntityStatusChange() {
-//    $server = $this->createServer();
-//
-//    $this->drupalGet($this->overviewPageUrl);
-//    $this->assertFieldByXPath('//table[@class="enabled-servers-list"]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
-//
-//    $server->setStatus(FALSE)->save();
-//    $this->drupalGet($this->overviewPageUrl);
-//    $this->assertFieldByXPath('//table[@class="disabled-servers-list"]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
+  public function _testEntityStatusChange() {
+    $server = $this->createServer();
 
+    $this->drupalGet($this->overviewPageUrl);
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
+
+    $this->drupalGet($this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id())));
+    $this->assertUrl($this->urlGenerator->generateFromRoute('search_api.server_edit', array('search_api_server' => $server->id())), array(), 'Enable link with bypass token');
+    $this->drupalGet($this->overviewPageUrl);
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-disabled"]', NULL, 'Server is in proper table');
   }
 
-  public function testOperations() {
+  public function _testOperations() {
     $server = $this->createServer();
 
     $this->drupalGet($this->overviewPageUrl);
     $basicUrl = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()));
-    $this->assertRaw('<a href="' . $basicUrl .'">View</a>', 'Canoninal operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/edit">Edit</a>', 'Edit operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/disable">Disable</a>', 'Disable operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/delete">Delete</a>', 'Delete operation presents');
-    $this->assertNoRaw('<a href="' . $basicUrl .'/enable">Delete</a>', 'Enable operation doesn\'t present');
+    $this->assertRaw('<a href="' . $basicUrl .'">canonical</a>', 'Canoninal operation presents');
+    $this->assertRaw('<a href="' . $basicUrl .'/edit">edit-form</a>', 'Edit operation presents');
+    $this->assertRaw('<a href="' . $basicUrl .'/disable">disable</a>', 'Disable operation presents');
+    $this->assertRaw('<a href="' . $basicUrl .'/delete">delete-form</a>', 'Delete operation presents');
+    $this->assertNoRaw('<a href="' . $basicUrl .'/enable">enabled-form</a>', 'Enable operation doesn\'t present');
 
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
-    $this->assertRaw('<a href="' . $basicUrl .'/bypass-enable', 'Enable operation present');
-    $this->assertNoRaw('<a href="' . $basicUrl .'/disable">Disable</a>', 'Disable operation  doesn\'t presents');
+    $this->assertRaw('<a href="' . $basicUrl .'/enable">enable</a>', 'Enable operation present');
+    $this->assertNoRaw('<a href="' . $basicUrl .'/disable">disable-form</a>', 'Disable operation  doesn\'t presents');
   }
 
-  public function testAccess() {
+  public function _testAccess() {
     $this->drupalLogin($this->unauthorizedUser);
 
     $this->drupalGet($this->overviewPageUrl);

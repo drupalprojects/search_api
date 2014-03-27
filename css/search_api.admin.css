@@ -24,3 +24,16 @@
 .search-api-server-summary ul.inline li {
   padding-left: 0;
 }
+
+#search-api-overview tr {
+  border: none;
+}
+
+#search-api-overview tr.odd-group,
+#search-api-overview tr.odd-group:hover {
+  background-color: #ddd;
+}
+#search-api-overview tr.even-group,
+#search-api-overview tr.even-group:hover {
+  background-color: #fff;
+}
