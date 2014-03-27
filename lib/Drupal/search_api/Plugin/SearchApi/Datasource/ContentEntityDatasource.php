@@ -154,16 +154,26 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Get the entity type.
+   * Get the entity type id.
    *
    * @return string
-   *   The entity type.
+   *   The entity type id.
    */
   public function getEntityTypeId() {
     // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
     // Get the entity type.
     return $plugin_definition['entity_type'];
+  }
+
+  /**
+   * Returns the entity type definition.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface
+   *   Entity type definition.
+   */
+  public function getEntityType() {
+    return $this->entityManager->getDefinition($this->getEntityTypeId());
   }
 
   /**

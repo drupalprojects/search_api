@@ -818,3 +818,24 @@ function _search_api_sort_processors_by_weight($processor_setting_a, $processor_
   }
   return ($processor_setting_a['weight'] < $processor_setting_b['weight']) ? -1 : 1;
 }
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function search_api_entity_type_build(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  $entity_types['node']->set('search_api_default_fields', array(
+    'node:title' => array(
+      'type' => 'string',
+    ),
+    'node:path' => array(
+      'type' => 'string',
+    ),
+    'node:created' => array(
+      'type' => 'date',
+    ),
+    'node:changed' => array(
+      'type' => 'date',
+    )
+  ));
+}

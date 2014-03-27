@@ -243,14 +243,14 @@ class IndexForm extends EntityFormController {
       '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
       '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
     );
-    
+
     $form['options'] = array(
       '#tree' => TRUE,
       '#type' => 'details',
       '#title' => t('Index options'),
       '#collapsed' => TRUE,
     );
-    
+
     // Build the read only element.
     $form['options']['readOnly'] = array(
       '#type' => 'checkbox',
@@ -389,8 +389,13 @@ class IndexForm extends EntityFormController {
     // Perform default entity form submission.
     // merge the fields stored as options from the field form so they do not get lost during save
     $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
-    
+
     $entity = parent::submit($form, $form_state);
+    // When creating the index, we add the default field configuration coming
+    // from the entity type object.
+    if ($entity->isNew()) {
+      $entity->options['fields'] = $entity->getDatasource()->getEntityType()->get('search_api_default_fields');
+    }
     // Check if the datasource plugin changed.
     if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
       // Notify the user about the datasource configuration change.
