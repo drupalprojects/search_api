@@ -45,10 +45,12 @@ class IgnorecaseProcessorTest extends UnitTestCase {
   }
 
   /**
-   * Commented out until the SearchApiAbstractProcessor can call service rather
-   * than external dependency for search_api_is_text_type
+   * Test ignorecase method AND processor configuration.
+   *
+   * @todo Two tests. One for the processor configuration; and one for the
+   *   ignore case processor - using reflection to access the protected method.
    */
-  public function __testIgnorecase() {
+  public function testIgnorecase() {
     $orig = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
     $processed = Unicode::strtolower($orig);
     $items = array(
@@ -86,35 +88,15 @@ class IgnorecaseProcessorTest extends UnitTestCase {
     );
 
     $tmp = $items;
-
     $this->processor->setConfiguration(array('fields' => array('name' => 'name')));
     $this->processor->preprocessIndexItems($tmp);
     $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
     $this->assertEquals($tmp[1]['mail']['value'], $orig, "Mail field wasn't procesed.");
-/**
- * @todo requries an index. Mocked?
- *
-    $query = new SearchApiQuery($this->index);
-    $query->keys('Foo "baR BaZ" fOObAr1');
-    $query->condition('name', 'FOO');
-    $query->condition('mail', 'BAR');
-    $processor->preprocessSearchQuery($query);
-    $this->assertEqual($query->getKeys(), $keys1, 'Search keys were processed correctly.');
-    $this->assertEqual($query->getFilter()->getFilters(), $filters1, 'Filters were processed correctly.');
 
-    $processor = new SearchApiIgnoreCase($this->index, array('fields' => array('name' => 'name', 'mail' => 'mail')));
     $tmp = $items;
-    $processor->preprocessIndexItems($tmp);
-    $this->assertEqual($tmp[1]['name']['value'], $processed, 'Name field was processed.');
-    $this->assertEqual($tmp[1]['mail']['value'], $processed, 'Mail field was processed.');
-
-    $query = new SearchApiQuery($this->index);
-    $query->keys('Foo "baR BaZ" fOObAr1');
-    $query->condition('name', 'FOO');
-    $query->condition('mail', 'BAR');
-    $processor->preprocessSearchQuery($query);
-    $this->assertEqual($query->getKeys(), $keys2, 'Search keys were processed correctly.');
-    $this->assertEqual($query->getFilter()->getFilters(), $filters2, 'Filters were processed correctly.'); 
-*/
+    $this->processor->setConfiguration(array('fields' => array('name' => 'name', 'mail' => 'mail')));
+    $this->processor->preprocessIndexItems($tmp);
+    $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
+    $this->assertEquals($tmp[1]['mail']['value'], $processed, 'Mail field was processed.');
   }
 }
