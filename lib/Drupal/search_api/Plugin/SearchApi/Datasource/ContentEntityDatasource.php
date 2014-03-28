@@ -323,7 +323,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   public function getEntityIds() {
     $entity_type = $this->getEntityType();
     $entity_type_id = $this->getEntityTypeId();
-    $bundles = $this->getEntityBundles();
+
+    $bundles = array_keys($this->getEntityBundles());
 
     $node_ids = array();
     if (!empty($bundles)) {
