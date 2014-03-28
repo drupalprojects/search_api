@@ -299,9 +299,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     if ($item instanceof Entity) {
       return $item->urlInfo();
     }
-    else {
-      return FALSE;
-    }
+    return NULL;
   }
 
 }
