@@ -249,7 +249,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       );
       // Build the bundle selection element.
       $form['bundles'] = array(
-        '#type' => 'select',
+        '#type' => 'checkboxes',
         '#title' => $this->t('Bundles'),
         '#options' => $bundles,
         '#default_value' => $this->configuration['bundles'],
