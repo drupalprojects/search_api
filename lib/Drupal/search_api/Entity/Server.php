@@ -142,7 +142,9 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       // Get the service plugin manager.
       $service_plugin_manager = \Drupal::service('search_api.service.plugin.manager');
       // Create a service plugin instance.
-      $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $this->servicePluginConfig);
+      $config = $this->servicePluginConfig;
+      $config['server'] = $this;
+      $this->servicePluginInstance = $service_plugin_manager->createInstance($service_plugin_id, $config);
     }
     return $this->servicePluginInstance;
   }
@@ -371,6 +373,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
     // Check if the server is disabled.
     if (!$this->status()) {
       // Disable all the indexes that belong to this server
