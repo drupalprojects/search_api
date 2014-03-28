@@ -40,11 +40,4 @@ class SearchApiProcessor extends Plugin {
    */
   public $description;
 
-  /**
-   * The weight of the processor.
-   *
-   * @var int|NULL
-   */
-  public $weight = NULL;
-
 }
