@@ -164,6 +164,14 @@ class SearchApiController extends ControllerBase {
       }
     }
 
+    $build['description'] = array(
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t("Here is a list of servers with attached indexes or lone indexes.
+       Server - is definition of server side approach of index storing and search invoking.
+        Index is a instance of content storage in this server."),
+    );
+
     $build['table'] = array(
       '#theme' => 'table',
       '#header' => $this->buildHeader(),
