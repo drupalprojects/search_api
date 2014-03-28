@@ -2,15 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\query\DefaultQuery.
+ * Contains \Drupal\search_api\Query\Query.
  */
 
-namespace Drupal\search_api\Plugin\search_api\query;
+namespace Drupal\search_api\Query;
 
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Query\FilterInterface;
-use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Provides a standard implementation of the QueryInterface.
@@ -85,7 +84,7 @@ class Query implements QueryInterface {
   /**
    * Constructs a new search query.
    *
-   * @param Index $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index the query should be executed on.
    * @param array $options
    *   Associative array of options configuring this query. Recognized options
@@ -114,12 +113,9 @@ class Query implements QueryInterface {
    * @throws SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
-  public function __construct(Index $index, array $options = array()) {
-    if (empty($index->options['fields'])) {
-      throw new SearchApiException(t("Can't search an index which hasn't got any fields defined."));
-    }
-    if (empty($index->enabled)) {
-      throw new SearchApiException(t("Can't search a disabled index."));
+  public function __construct(IndexInterface $index, array $options = array()) {
+    if (!$index->status()) {
+      throw new SearchApiException(t("Can't search on a disabled index."));
     }
     if (isset($options['parse mode'])) {
       $modes = $this->parseModes();
@@ -131,11 +127,18 @@ class Query implements QueryInterface {
     $this->options = $options + array(
       'conjunction' => 'AND',
       'parse mode' => 'terms',
-      'filter class' => 'DefaultFilter',
+      'filter class' => '\Drupal\search_api\Query\Filter',
       'search id' => __CLASS__,
     );
     $this->filter = $this->createFilter('AND');
     $this->sort = array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(IndexInterface $index, array $options = array()) {
+    return new static($index, $options);
   }
 
   /**
@@ -269,7 +272,7 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function sort($field, $order = 'ASC') {
-    $fields = $this->index->options['fields'];
+    $fields = $this->index->getOption('fields', array());
     $fields += array(
       'search_api_relevance' => array('type' => 'decimal'),
       'search_api_id' => array('type' => 'integer'),
@@ -278,7 +281,7 @@ class Query implements QueryInterface {
       throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field)));
     }
     $type = $fields[$field]['type'];
-    if (search_api_is_sortable_type($type)) {
+    if (!Utility::isSortableType($type)) {
       throw new SearchApiException(t('Trying to sort on field @field of illegal type @type.', array('@field' => $field, '@type' => $type)));
     }
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
@@ -300,24 +303,14 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function execute() {
-    $start = microtime(TRUE);
-
     // Prepare the query for execution by the server.
     $this->preExecute();
-
-    $pre_search = microtime(TRUE);
 
     // Execute query.
     $response = $this->index->getServer()->search($this);
 
-    $post_search = microtime(TRUE);
-
     // Postprocess the search results.
     $this->postExecute($response);
-
-    $end = microtime(TRUE);
-    $response['performance']['complete'] = $end - $start;
-    $response['performance']['hooks'] = $response['performance']['complete'] - ($post_search - $pre_search);
 
     // Store search for later retrieval for facets, etc.
     // @todo Figure out how to store the executed searches for the request.
@@ -353,6 +346,9 @@ class Query implements QueryInterface {
   public function postExecute(array &$results) {
     // Postprocess results.
     $this->index->postprocessSearchResults($results, $this);
+
+    // Let modules alter the results.
+    \Drupal::moduleHandler()->alter('search_api_results', $this);
   }
 
   /**
@@ -424,7 +420,7 @@ class Query implements QueryInterface {
    * Implements the magic __sleep() method to avoid serializing the index.
    */
   public function __sleep() {
-    $this->index_id = $this->index->machine_name;
+    $this->index_id = $this->index->id();
     $keys = get_object_vars($this);
     unset($keys['index']);
     return array_keys($keys);

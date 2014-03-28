@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\search_api\filter\DefaultFilter.
+ * Contains \Drupal\search_api\Query\Filter.
  */
 
 namespace Drupal\search_api\Query;

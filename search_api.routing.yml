@@ -88,7 +88,7 @@ search_api.index_disable:
     _entity_access: 'search_api_index.disable'
 
 search_api.index_enable:
-  path: '/admin/config/search/search-api/index/{search_api_index}/bypass-enable/{token}'
+  path: '/admin/config/search/search-api/index/{search_api_index}/enable'
   defaults:
     _controller: 'Drupal\search_api\Controller\SearchApiIndexController::indexBypassEnable'
   requirements:
@@ -108,24 +108,3 @@ search_api.index_filters:
     _entity_form: 'search_api_index.filters'
   requirements:
     _entity_access: 'search_api_index.filters'
-
-search_api.index_delete:
-  path: '/admin/config/search/search-api/index/{search_api_index}/delete'
-  defaults:
-    _entity_form: 'search_api_index.delete'
-  requirements:
-    _entity_access: 'search_api_index.delete'
-
-search_api.index_enable:
-  path: '/admin/config/search/search-api/index/{search_api_index}/enable'
-  defaults:
-    _entity_form: 'search_api_index.enable'
-  requirements:
-    _entity_access: 'search_api_index.enable'
-
-search_api.index_disable:
-  path: '/admin/config/search/search-api/index/{search_api_index}/disable'
-  defaults:
-    _entity_form: 'search_api_index.disable'
-  requirements:
-    _entity_access: 'search_api_index.disable'

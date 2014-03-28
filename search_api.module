@@ -269,7 +269,7 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
  */
 function _search_api_extract_field(TypedDataInterface $data, array $field) {
   return Utility::extractField($data, $field);
-} 
+}
 
 /**
  * Adds an entry into a server's list of pending tasks.
@@ -288,7 +288,7 @@ function _search_api_extract_field(TypedDataInterface $data, array $field) {
  */
 function serverTasksAdd(ServerInterface $server, $type, $index = NULL, $data = NULL) {
   return Utility::search_api_server_tasks_add($server, $type, $index, $data);
-} 
+}
 
 /**
  * Removes pending server tasks from the list.
@@ -391,7 +391,7 @@ function theme_search_api_admin_fields_table($variables) {
 
 /**
  * Returns HTML for a Search API server.
- * 
+ *
  * @param array $variables
  *   An associative array containing:
  *     - server:  A ServerInterface instance.
@@ -503,11 +503,11 @@ function theme_search_api_server($variables) {
 
 /**
  * Returns HTML for a Search API index.
- * 
+ *
  * @param array $variables
  *   An associative array containing:
  *     - index: An IndexInterface instance.
- * 
+ *
  * @return string
  *   The rendered HTML for a Search API index.
  */
@@ -609,7 +609,7 @@ function theme_search_api_index($variables) {
     // @todo: Get server status info.
     //
     // @todo: Get index status info.
-    // 
+    //
     // Build the index progress bar.
     $index_progress = array(
       '#theme' => 'progress_bar',
@@ -669,42 +669,24 @@ function _search_api_deep_copy(array $array) {
 }
 
 /**
- * Custom sort function for the processors
- *
- * @param $processor_setting_a
- * @param $processor_setting_b
- * @return int
- */
-function _search_api_sort_processors_by_weight($processor_setting_a, $processor_setting_b) {
-  if (!isset($processor_setting_a['weight'])) {
-    $processor_setting_a['weight'] = 0;
-  }
-  if (!isset($processor_setting_b['weight'])) {
-    $processor_setting_b['weight'] = 0;
-  }
-  if ($processor_setting_a['weight'] == $processor_setting_b['weight']) {
-    return 0;
-  }
-  return ($processor_setting_a['weight'] < $processor_setting_b['weight']) ? -1 : 1;
-}
-
-/**
  * Implements hook_entity_type_build().
  */
 function search_api_entity_type_build(array &$entity_types) {
   /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
-  $entity_types['node']->set('search_api_default_fields', array(
-    'node:title' => array(
-      'type' => 'string',
-    ),
-    'node:path' => array(
-      'type' => 'string',
-    ),
-    'node:created' => array(
-      'type' => 'date',
-    ),
-    'node:changed' => array(
-      'type' => 'date',
-    )
-  ));
+  if (isset($entity_types['node'])) {
+    $entity_types['node']->set('search_api_default_fields', array(
+      'node:title' => array(
+        'type' => 'string',
+      ),
+      'node:path' => array(
+        'type' => 'string',
+      ),
+      'node:created' => array(
+        'type' => 'date',
+      ),
+      'node:changed' => array(
+        'type' => 'date',
+      )
+    ));
+  }
 }

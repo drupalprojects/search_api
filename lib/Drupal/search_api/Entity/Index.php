@@ -6,14 +6,15 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity;
 use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\Core\Entity;
-
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Defines the search index configuration entity.
@@ -647,7 +648,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     if ($sortBy == 'weight') {
       // Sort by weight
-      uasort($processors_settings, '_search_api_sort_processors_by_weight');
+      uasort($processors_settings, array('\Drupal\search_api\Utility\Utility', 'sortByWeight'));
     }
     else {
       ksort($processors_settings);
@@ -658,7 +659,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Find out which ones are enabled
     foreach ($processors_settings as $name => $processor_setting) {
       // Find out which ones we want
-      if (($all === TRUE && $processor_setting['status'] === 1) || $all == FALSE) {
+      if ($all || $processor_setting['status']) {
         if (!empty($this->processors[$name])) {
           $active_processors[$name] = $this->processors[$name];
         }
@@ -734,6 +735,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function resetCaches() {
+    return TRUE;
+  }
+
+  /**
    * Check if the server is enabled
    *
    * @return bool
@@ -750,4 +758,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->setStatus(FALSE);
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function query(array $options = array()) {
+    if (!$this->status()) {
+      throw new SearchApiException(t('Cannot search on a disabled index.'));
+    }
+    return Utility::createQuery($this, $options);
+  }
+
 }
