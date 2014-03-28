@@ -13,6 +13,14 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  */
 class RenderedItem extends FieldsProcessorPluginBase {
 
+  protected $entityManager;
+
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->entityManager = \Drupal::entityManager();
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -34,7 +42,7 @@ class RenderedItem extends FieldsProcessorPluginBase {
     $entity_type = $this->index->getDatasource()->pluginDefinition['entity_type'];
     $entity_label = $this->index->getDatasource()->pluginDefinition['label'];
 
-    foreach (entity_get_view_modes($entity_type) as $key => $mode) {
+    foreach ($this->entityManager->getViewModes($entity_type) as $key => $mode) {
       $view_modes[$key] = $mode['label'];
     }
 
@@ -53,13 +61,13 @@ class RenderedItem extends FieldsProcessorPluginBase {
       );
       if ($view_modes) {
         $form['note'] = array(
-          '#markup' => '<p>' . t('This index contains entities of type %type and they only have a single view mode. ' .
+          '#markup' => '<p>' . $this->t('This index contains entities of type %type and they only have a single view mode. ' .
               'Therefore, no selection needs to be made.', array('%type' => $entity_label)) . '</p>',
         );
       }
       else {
         $form['note'] = array(
-          '#markup' => '<p>' . t('This index contains entities of type %type but they have no defined view modes. ' .
+          '#markup' => '<p>' . $this->t('This index contains entities of type %type but they have no defined view modes. ' .
               'This might either mean that they are always displayed the same way, or that they cannot be processed by this alteration at all. ' .
               'Please consider this when using this alteration.', array('%type' => $entity_label)) . '</p>',
         );
@@ -70,6 +78,9 @@ class RenderedItem extends FieldsProcessorPluginBase {
 
   }
 
+  /**
+   * @param array $items
+   */
   public function preprocessIndexItems(array &$items) {
     // Prevent session information from being saved while indexing.
     drupal_save_session(FALSE);
@@ -85,12 +96,13 @@ class RenderedItem extends FieldsProcessorPluginBase {
       // we use try/catch. This will at least prevent some errors, even though
       // it's no protection against fatal errors and the like.
       try {
-        $rendered_item = drupal_render($item->view(), $view_mode);
-        if (!$rendered_item) {
+        $entityViewBuilder = $this->entityManager->getViewBuilder($item->getEntityTypeId());
+        $renderedEntity = $entityViewBuilder->view($item, $view_mode);
+        if (!$renderedEntity) {
           $item->search_api_viewed = NULL;
           continue;
         }
-        $item->search_api_viewed = $rendered_item;
+        $item->searchAPIView = $renderedEntity;
       }
       catch (\Exception $e) {
         $item->search_api_viewed = NULL;
