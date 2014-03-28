@@ -26,7 +26,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'stopwords' => t("but\ndid\nthe this that those\netc"),
+      'stopwords' => "but\ndid\nthe this that those\netc",
       'file' => '',
     );
   }
@@ -38,17 +38,17 @@ class Stopwords extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['help'] = array(
-      '#markup' => '<p>' . t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about !stopwords.', array('!stopwords' => l(t('stop words'), "http://en.wikipedia.org/wiki/Stop_words"))) . '</p>',
+      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about !stopwords.', array('!stopwords' => $this->l($this->t('stop words'), "http://en.wikipedia.org/wiki/Stop_words"))) . '</p>',
     );
     $form['file'] = array(
       '#type' => 'textfield',
-      '#title' => t('Stopwords file'),
-      '#description' => t('This must be a stream-type description like <code>public://stopwords/stopwords.txt</code> or <code>http://example.com/stopwords.txt</code> or <code>private://stopwords.txt</code>.'),
+      '#title' => $this->t('Stopwords file'),
+      '#description' => $this->t('This must be a stream-type description like <code>public://stopwords/stopwords.txt</code> or <code>http://example.com/stopwords.txt</code> or <code>private://stopwords.txt</code>.'),
     );
     $form['stopwords'] = array(
       '#type' => 'textarea',
-      '#title' => t('Stopwords'),
-      '#description' => t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
+      '#title' => $this->t('Stopwords'),
+      '#description' => $this->t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
       '#default_value' => $this->configuration['stopwords'],
     );
 
@@ -64,7 +64,7 @@ class Stopwords extends FieldsProcessorPluginBase {
     $uri = $form_state['values']['file'];
     if (!empty($uri) && !@file_get_contents($uri)) {
       $el = $form['file'];
-      \Drupal::formBuilder()->setError($el, $form_state, t('Stopwords file') . ': ' . t('The file %uri is not readable or does not exist.', array('%uri' => $uri)));
+      \Drupal::formBuilder()->setError($el, $form_state, $this->t('Stopwords file') . ': ' . $this->t('The file %uri is not readable or does not exist.', array('%uri' => $uri)));
     }
   }
 
