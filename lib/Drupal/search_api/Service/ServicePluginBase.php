@@ -17,6 +17,38 @@ abstract class ServicePluginBase extends ConfigurablePluginBase implements Servi
   // @todo: Provide defaults for more methods.
 
   /**
+   * The server this service is configured for.
+   *
+   * @var \Drupal\search_api\Server\ServerInterface
+   */
+  protected $server;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    dpm($configuration);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    if (!empty($configuration['server']) && $configuration['server'] instanceof ServerInterface) {
+      $this->setServer($configuration['server']);
+    }
+  }
+
+  /**
+   * @param \Drupal\search_api\Server\ServerInterface $server
+   */
+  public function setServer($server) {
+    $this->server = $server;
+  }
+
+  /**
+   * @return \Drupal\search_api\Server\ServerInterface
+   */
+  public function getServer() {
+    return $this->server;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function viewSettings() {
