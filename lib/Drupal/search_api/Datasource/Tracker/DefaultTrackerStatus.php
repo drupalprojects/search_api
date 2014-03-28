@@ -80,7 +80,7 @@ class DefaultTrackerStatus implements TrackerStatusInterface {
    */
   protected function createSelectStatement() {
     $select = $this->getDatabaseConnection()->select('search_api_item', 'i');
-    $select->condition('index', $this->getIndex()->id());
+    $select->condition('index_id', $this->getIndex()->id());
     return $select;
   }
 

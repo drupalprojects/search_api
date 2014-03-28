@@ -119,8 +119,8 @@ function drush_search_api_list() {
     return;
   }
   $rows[] = array(
+    dt('Machine name'),
     dt('Name'),
-    dt('Index'),
     dt('Server'),
     dt('Type'),
     dt('Status'),
@@ -130,8 +130,8 @@ function drush_search_api_list() {
   foreach ($indexes as $index) {
     $plugin_info = \Drupal::service('search_api.datasource.plugin.manager')->getDefinition($index->datasourcePluginId);
     $row = array(
-      $index->name,
       $index->machine_name,
+      $index->name,
       $index->getServerId() ?: '(' . t('none') . ')',
       $plugin_info['label'],
       $index->status() ? t('enabled') : t('disabled'),
@@ -212,8 +212,8 @@ function drush_search_api_status($index_name = NULL) {
   }
   // See search_api_index_status()
   $rows = array(array(
-    dt('Id'),
-    dt('Index'),
+    dt('Machine name'),
+    dt('Name'),
     dt('% Complete'),
     dt('Indexed'),
     dt('Total'),
@@ -224,7 +224,7 @@ function drush_search_api_status($index_name = NULL) {
     $complete = ($status->getTotalCount() > 0) ?
       100 * round($status->getIndexedCount() / $status->getTotalCount(), 3) . '%' : '-';
     $row = array(
-      $index->id,
+      $index->machine_name,
       $index->name,
       $complete,
       $status->getIndexedCount(),
