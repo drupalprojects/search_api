@@ -286,8 +286,8 @@ function _search_api_extract_field(TypedDataInterface $data, array $field) {
  * @param mixed $data
  *   (optional) If applicable, some further data necessary for the task.
  */
-function serverTasksAdd(ServerInterface $server, $type, $index = NULL, $data = NULL) {
-  return Utility::search_api_server_tasks_add($server, $type, $index, $data);
+function search_api_server_tasks_add(ServerInterface $server, $type, $index = NULL, $data = NULL) {
+  return $server->tasksAdd($type, $index, $data);
 }
 
 /**
@@ -305,8 +305,13 @@ function serverTasksAdd(ServerInterface $server, $type, $index = NULL, $data = N
  *   (optional) An index (or its machine name) for which the tasks should be
  *   deleted. Set to NULL to delete tasks for all indexes.
  */
-function serverTasksDelete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
-  return Utility::search_api_server_tasks_delete($ids, $server, $index);
+function server_api_server_tasks_delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
+  if ($server) {
+    return $server->tasksDelete($ids, $index);
+  }
+  else {
+    return Utility::serverTasksDelete($ids, $index);
+  }
 }
 
 /**

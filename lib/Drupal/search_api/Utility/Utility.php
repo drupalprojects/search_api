@@ -282,49 +282,21 @@ class Utility {
   }
 
   /**
-   * Adds an entry into a server's list of pending tasks.
+   * Removes all pending server tasks from the list.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
-   *   The server for which a task should be remembered.
-   * @param $type
-   *   The type of task to perform.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) If applicable, the index to which the task pertains (or its
-   *   machine name).
-   * @param mixed $data
-   *   (optional) If applicable, some further data necessary for the task.
-   */
-  static function serverTasksAdd(ServerInterface $server, $type, $index = NULL, $data = NULL) {
-    db_insert('search_api_task')
-      ->fields(array(
-        'server_id' => $server->id(),
-        'type' => $type,
-        'index_id' => $index ? (is_object($index) ? $index->id() : $index) : NULL,
-        'data' => isset($data) ? serialize($data) : NULL,
-      ))
-      ->execute();
-  }
-
-  /**
-   * Removes pending server tasks from the list.
+   * To remove tasks from an individual server see Server::tasksDelete().
    *
    * @param array|null $ids
    *   (optional) The IDs of the pending server tasks to delete. Set to NULL
    *   to not filter by IDs.
-   * @param \Drupal\search_api\Server\ServerInterface|null $server
-   *   (optional) A server for which the tasks should be deleted. Set to NULL to
-   *   delete tasks from all servers.
    * @param \Drupal\search_api\Index\IndexInterface|string|null $index
    *   (optional) An index (or its machine name) for which the tasks should be
    *   deleted. Set to NULL to delete tasks for all indexes.
    */
-  static function serverTasksDelete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
+  static function serverTasksDelete(array $ids = NULL, $index = NULL) {
     $delete = db_delete('search_api_task');
     if ($ids) {
       $delete->condition('id', $ids);
-    }
-    if ($server) {
-      $delete->condition('server_id', $server->id());
     }
     if ($index) {
       $delete->condition('index_id', is_object($index) ? $index->id() : $index);

@@ -274,7 +274,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
-      search_api_server_tasks_add($this, __FUNCTION__, $index);
+      $this->tasksAdd(__FUNCTION__, $index);
     }
   }
 
@@ -294,7 +294,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
-      search_api_server_tasks_add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
+      $this->tasksAdd(__FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
     }
     return FALSE;
   }
@@ -305,7 +305,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   public function removeIndex(IndexInterface $index) {
     // When removing an index from a server, it doesn't make any sense anymore to
     // delete items from it, or react to other changes.
-    search_api_server_tasks_delete(NULL, $this, $index);
+    $this->tasksDelete(NULL, $index);
 
     try {
       $this->getService()->removeIndex($index);
@@ -316,7 +316,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => is_object($index) ? $index->label() : $index,
       );
       watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
-      search_api_server_tasks_add($this, __FUNCTION__, $index);
+      $this->tasksAdd(__FUNCTION__, $index);
     }
   }
 
@@ -339,7 +339,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%server' => $this->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      search_api_server_tasks_add($this, __FUNCTION__, $index, $ids);
+      $this->tasksAdd(__FUNCTION__, $index, $ids);
     }
   }
 
@@ -355,7 +355,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%server' => $this->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      search_api_server_tasks_add($this, __FUNCTION__, $index);
+      $this->tasksAdd(__FUNCTION__, $index);
     }
   }
 
@@ -395,5 +395,49 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     return $this->servicePluginConfig;
   }
 
+  /**
+   * Adds an entry into a server's list of pending tasks.
+   *
+   * @param $type
+   *   The type of task to perform.
+   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+   *   (optional) If applicable, the index to which the task pertains (or its
+   *   machine name).
+   * @param mixed $data
+   *   (optional) If applicable, some further data necessary for the task.
+   */
+  public function tasksAdd($type, $index = NULL, $data = NULL) {
+    db_insert('search_api_task')
+      ->fields(array(
+        'server_id' => $this->id(),
+        'type' => $type,
+        'index_id' => $index ? (is_object($index) ? $index->id() : $index) : NULL,
+        'data' => isset($data) ? serialize($data) : NULL,
+      ))
+      ->execute();
+  }
 
+  /**
+   * Removes pending server tasks from the list.
+   *
+   * @param array|null $ids
+   *   (optional) The IDs of the pending server tasks to delete. Set to NULL
+   *   to not filter by IDs.
+   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+   *   (optional) An index (or its machine name) for which the tasks should be
+   *   deleted. Set to NULL to delete tasks for all indexes.
+   */
+  public function tasksDelete(array $ids = NULL, $index = NULL) {
+    $delete = db_delete('search_api_task');
+    if ($ids) {
+      $delete->condition('id', $ids);
+    }
+    if ($server) {
+      $delete->condition('server_id', $this->id());
+    }
+    if ($index) {
+      $delete->condition('index_id', is_object($index) ? $this->id() : $index);
+    }
+    $delete->execute();
+  }
 }
