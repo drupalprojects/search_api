@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Service\ServicePluginBase.
@@ -10,7 +11,26 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 
 /**
- * Abstract base class for search service plugins.
+ * Defines a base class from which other service classes may extend.
+ *
+ * Plugins extending this class need to define a plugin definition array through
+ * annotation. These definition arrays may be altered through
+ * hook_search_api_service_info_alter(). The definition includes the following
+ * keys:
+ * - id: The unique, system-wide identifier of the service class.
+ * - label: The human-readable name of the service class, translated.
+ * - description: A human-readable description for the service class,
+ *   translated.
+ *
+ * A complete sample plugin definition should be defined as in this example:
+ *
+ * @code
+ * @SearchApiService(
+ *   id = "my_service",
+ *   label = @Translation("My service"),
+ *   description = @Translation("Searches with SuperSearch™.")
+ * )
+ * @endcode
  */
 abstract class ServicePluginBase extends ConfigurablePluginBase implements ServiceInterface {
 

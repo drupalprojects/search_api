@@ -65,29 +65,55 @@ interface ServiceSpecificInterface {
   public function supportsDatatype($type);
 
   /**
-   * Adds a new index to the service.
+   * Adds a new index to this server.
+   *
+   * If the index was already added to the server, the object should treat this
+   * as if removeIndex() and then addIndex() were called.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The index to add.
    *
-   * @return bool
-   *   TRUE if the index was added, otherwise FALSE.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while adding the index.
    */
   public function addIndex(IndexInterface $index);
 
   /**
-   * Reacts to a change in an index that lies on this server.
+   * Notifies the server that an index attached to it has been changed.
+   *
+   * If any user action is necessary as a result of this, the method should
+   * use drupal_set_message() to notify the user.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The updated index.
+   *
+   * @return bool
+   *   TRUE, if this change affected the server in any way that forces it to
+   *   re-index the content. FALSE otherwise.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while reacting to the change.
    */
   public function updateIndex(IndexInterface $index);
 
   /**
-   * Remove an index from the service.
+   * Removes an index from this server.
+   *
+   * This might mean that the index has been deleted, or reassigned to a
+   * different server. If you need to distinguish between these cases, inspect
+   * $index->server.
+   *
+   * If the index wasn't added to the server, the method call should be ignored.
+   *
+   * Implementations of this method should also check whether $index->read_only
+   * is set, and don't delete any indexed data if it is.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   Either an object representing the index to remove, or its machine name
+   *   (if the index was completely deleted).
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while removing the index.
    */
   public function removeIndex(IndexInterface $index);
 
@@ -95,9 +121,32 @@ interface ServiceSpecificInterface {
    * Indexes the specified items.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The search index for which items should be indexed.
    * @param array $items
-   *   An associtiave array of ItemInterface objects, keyed by the item ID.
+   *   An array of items to be indexed, keyed by their id. The values are
+   *   associative arrays of the fields to be stored, where each field is an
+   *   array with the following keys:
+   *   - type: One of the data types recognized by the Search API, or the
+   *     special type "tokens" for tokenized fulltext fields.
+   *   - original_type: The original type of the property, as defined by the
+   *     datasource controller for the index's item type.
+   *   - value: An array of values to be indexed for this field. The service
+   *     class should also index the first value separately, for single-value
+   *     use (e.g., sorting).
+   *
+   *   The special field "search_api_language" contains the item's language and
+   *   should always be indexed.
+   *
+   *   The value of fields with the "tokens" type is an array of tokens. Each
+   *   token is an array containing the following keys:
+   *   - value: The word that the token represents.
+   *   - score: A score for the importance of that word.
+   *
+   * @return array
+   *   An array of the ids of all items that were successfully indexed.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If indexing was prevented by a fundamental configuration error.
    */
   public function indexItems(IndexInterface $index, array $items);
 
@@ -105,12 +154,12 @@ interface ServiceSpecificInterface {
    * Deletes the specified items from the index.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The index for which items should be deleted.
    * @param array $ids
    *   An array of item IDs.
    *
-   * @return bool
-   *   TRUE if the items were deleted, otherwise FALSE.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while trying to delete the items.
    */
   public function deleteItems(IndexInterface $index, array $ids);
 
@@ -118,11 +167,11 @@ interface ServiceSpecificInterface {
    * Deletes all the items from the index.
    *
    * @param \Drupal\search_api\Index\IndexInterface|null $index
-   *   An instance of IndexInterface, or NULL to delete all items on this
-   *   server.
+   *   The index for which items should be deleted, or NULL to delete all items
+   *   on this server.
    *
-   * @return bool
-   *   TRUE if the all items were deleted, otherwise FALSE.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while trying to delete the items.
    */
   public function deleteAllItems(IndexInterface $index = NULL);
 
