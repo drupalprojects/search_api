@@ -47,13 +47,10 @@ interface TrackerInterface {
   /**
    * Track IDs as deleted.
    *
-   * @param array $ids
+   * @param array|NULL $ids
    *   An array of item IDs.
-   *
-   * @return boolean
-   *   TRUE if successful, otherwise FALSE.
    */
-  public function trackDelete(array $ids);
+  public function trackDelete(array $ids = NULL);
 
   /**
    * Clear all tracked items.

@@ -257,37 +257,12 @@ class DefaultTracker implements TrackerInterface {
   /**
    * {@inheritdoc}
    */
-  public function trackDelete(array $ids) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
-      // Get the database connection.
-      $connection = $this->getDatabaseConnection();
-      // Start a database transaction.
-      $transaction = $connection->startTransaction();
-      // Catch any exception that may occur during update.
-      try {
-        // Iterate through the IDs in chunks of 1000 items.
-        foreach (array_chunk($ids, 1000) as $ids_chunk) {
-          // Build and execute the update statement.
-          $this->createDeleteStatement()
-            ->condition('item_id', $ids_chunk)
-            ->execute();
-        }
-        // Indicate success operation.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log the exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback the transaction.
-        $transaction->rollback();
-      }
+  public function trackDelete(array $ids = NULL) {
+    $delete_statement = $this->createDeleteStatement();
+    if (!empty($ids)) {
+      $delete_statement->condition('item_id', $ids, 'IN');
     }
-    return $success;
+    $delete_statement->execute();
   }
 
   /**

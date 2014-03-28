@@ -314,7 +314,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * Stops tracking for this index.
    */
   public function stopTracking() {
-    // TODO: Implement stopTracking() method.
+    $this->getTracker()->trackDelete();
   }
 
   /**

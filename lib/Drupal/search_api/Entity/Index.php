@@ -764,6 +764,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Stops enabling of indexes when the server is disabled
    */
   public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
     if ($this->status() && !$this->isServerEnabled()) {
       $this->setStatus(FALSE);
     }
@@ -783,6 +784,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Execute necessary tasks for a created or updated index.
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
     try {
       if ($this->server) {
         // Tell the server about the new index.
@@ -795,11 +797,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
         // Start tracking
         $this->getDatasource()->startTracking();
       }
+      elseif ($update && !$this->status() && $this->original->status()) {
+        // Stop tracking
+        $this->getDatasource()->stopTracking();
+      }
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
     }
   }
+
+  /**
+   * Execute necessary tasks for deletion an index
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
+    foreach ($entities as $entity) {
+      $entity->getDatasource()->stopTracking();
+    }
+  }
+
 
   /**
    * {@inheritdoc}
