@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity;
@@ -579,7 +580,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $options['additional fields'] = $additional;
         $this->fields[$only_indexed][$get_additional] =  $options;
       }
-      \Drupal::cache()->set($cid, $this->fields[$only_indexed][$get_additional]);
+      $tags['search_api_index'] = $this->id();
+      \Drupal::cache()->set($cid, $this->fields[$only_indexed][$get_additional], Cache::PERMANENT, $tags);
     }
 
     return $this->fields[$only_indexed][$get_additional];
@@ -738,7 +740,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function resetCaches() {
-    return TRUE;
+    $this->datasourcePluginInstance = NULL;
+    $this->server = NULL;
+    $this->fields = NULL;
+    $this->fulltextFields = NULL;
+    $this->processors = NULL;
+    \Drupal::cache()->deleteTags(array('search_api_index' => $this->id()));
   }
 
   /**

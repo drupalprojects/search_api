@@ -255,10 +255,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function clear();
 
   /**
-   * Resets the caches.
-   *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * Resets the static and stored caches associated with this index.
    */
   public function resetCaches();
 
