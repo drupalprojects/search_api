@@ -73,6 +73,6 @@ class StopwordsTest extends UnitTestCase {
     );
     $this->processor->setConfiguration($configuration);
     $result = $getStopwords->invoke($this->processor);
-    $this->assertTrue(empty(array_diff_key($stopwords, $result)), 'All stopwords returned');
+    $this->assertTrue(!array_diff_key($stopwords, $result), 'All stopwords returned');
   }
 }
