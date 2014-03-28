@@ -218,6 +218,15 @@ class IndexForm extends EntityFormController {
     // Build the datasource configuration form.
     $this->buildDatasourceConfigForm($form, $form_state, $index);
 
+    // Build the server machine name element.
+    $form['serverMachineName'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Server'),
+      '#description' => $this->t('Select the server this index should reside on. Index can not be enabled without connection to valid server.'),
+      '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
+      '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
+    );
+
     // Build the status element.
     $form['status'] = array(
       '#type' => 'checkbox',
@@ -226,6 +235,14 @@ class IndexForm extends EntityFormController {
       '#default_value' => $index->status(),
       // Can't enable an index lying on a disabled server or no server at all.
       '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
+      '#states' => array(
+        'invisible' => array(
+          '[name="serverMachineName"]' => array('value' => '')
+        ),
+        'unchecked' => array(
+          '[name="serverMachineName"]' => array('value' => '')
+        ),
+      ),
     );
     // Build the description element.
     $form['description'] = array(
@@ -233,15 +250,6 @@ class IndexForm extends EntityFormController {
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the index.'),
       '#default_value' => $index->getDescription(),
-    );
-
-    // Build the server machine name element.
-    $form['serverMachineName'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Server'),
-      '#description' => $this->t('Select the server this index should reside on.'),
-      '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
-      '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
     );
 
     $form['options'] = array(
