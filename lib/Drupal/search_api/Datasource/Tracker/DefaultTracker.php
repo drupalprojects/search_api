@@ -87,7 +87,7 @@ class DefaultTracker implements TrackerInterface {
    *   An instance of SelectInterface.
    */
   protected function createSelectStatement() {
-    return $this->getDatabaseConnection()->select('search_api_item', 'i')
+    return $this->getDatabaseConnection()->select('search_api_item', 'sai')
      ->condition('index_id', $this->getIndex()->id());
   }
 
@@ -331,23 +331,54 @@ class DefaultTracker implements TrackerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getChangedIds($limit = -1) {
-    // Get the index.
+  public function getChanged($limit = -1) {
+    // Get the index and its last state
     $index = $this->getIndex();
+
     // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly() && !$index->isNew()) {
+    if ($index->status() && !$index->isReadOnly()) {
+
+      // Get $last_entity_id and $last_changed.
+      $last_indexed = $index->getLastIndexed();
+
       // Build the select statement.
       $statement = $this->createSelectStatement();
-      $statement->fields('i', array('item_id'));
-      $statement->orderBy('changed', 'ASC');
+
+      $changed = $last_indexed['changed'];
+      $item_id = $last_indexed['item_id'];
+
+      // Find the next batch of entities to index for this entity type. Note that
+      // for ordering we're grabbing the oldest first and then ordering by ID so
+      // that we get a definitive order.
+      // Also note that we fetch ALL fields from the indexer table
+      $alias = $statement->addExpression('LENGTH(item_id)', 'item_id_length');
+
+      $statement
+        ->fields('sai', array('item_id'))
+        ->condition(db_or()
+            ->condition('sai.changed', $changed, '>')
+            // Tie breaker for entities that were changed at exactly
+            // the same second as the last indexed entity
+            ->condition(db_and()
+                ->condition('sai.changed', $changed, '=')
+                ->condition('sai.item_id', $item_id, '>')
+            )
+        )
+        // It is important that everything is indexed in order of changed date and
+        // then on entity_id because otherwise the conditions above will not match
+        // correctly
+        ->orderBy('sai.changed', 'ASC')
+        ->orderBy($alias, 'ASC')
+        ->orderBy('sai.item_id', 'ASC');
+
       // Check if the result set needs to be limited.
       if ($limit > -1) {
         // Limit the number of results to the given value.
         $statement->range(0, $limit);
       }
+
       return $statement->execute()->fetchCol();
     }
-    return array();
   }
 
 }

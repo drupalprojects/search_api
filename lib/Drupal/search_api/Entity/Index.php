@@ -605,7 +605,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
+   * Get the processors that belong to the index.
    *
+   * @param bool $all
+   * @param string $sortBy
+   * @return array|\Drupal\search_api\Processor\ProcessorInterface[]
    */
   public function getProcessors($all = FALSE, $sortBy = 'weight') {
     /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
@@ -791,5 +795,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastIndexed() {
+    return \Drupal::state()->get($this->id . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastIndexed($changed, $item_id) {
+    return \Drupal::state()->set($this->id . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
   }
 }

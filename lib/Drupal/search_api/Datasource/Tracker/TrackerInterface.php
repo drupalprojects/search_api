@@ -85,6 +85,6 @@ interface TrackerInterface {
    * @return array
    *   An array of item IDs that need to be indexed for the given index.
    */
-  public function getChangedIds($limit = -1);
+  public function getChanged($limit = -1);
 
 }

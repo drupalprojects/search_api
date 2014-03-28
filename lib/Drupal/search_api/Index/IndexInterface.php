@@ -275,4 +275,26 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function query(array $options = array());
 
+  /**
+   * Get last indexed state for this index.
+   *
+   * @return array
+   *   An array containing the last indexed state for this index. Format is
+   *    { 'changed' => 0, 'item_id' => 1 }
+   *
+   */
+  public function getLastIndexed();
+
+  /**
+   * Set last indexed state for this index.
+   *
+   * @param $changed
+   *   The last timestamp that was indexed
+   * @param $item_id
+   *   The last item that was indexed
+   * @return array
+   *   An array containing the stored last indexed state for this index. Format is
+   *    { 'changed' => 0, 'item_id' => 1 }
+   */
+  public function setLastIndexed($changed, $item_id);
 }
