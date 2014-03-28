@@ -38,7 +38,7 @@ class Stopwords extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['help'] = array(
-      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about !stopwords.', array('!stopwords' => $this->l($this->t('stop words'), "http://en.wikipedia.org/wiki/Stop_words"))) . '</p>',
+      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about !stopwords.', array('!stopwords' => \Drupal::l($this->t('stop words'), "http://en.wikipedia.org/wiki/Stop_words"))) . '</p>',
     );
     $form['file'] = array(
       '#type' => 'textfield',
