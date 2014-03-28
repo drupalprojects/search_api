@@ -7,8 +7,11 @@
 
 namespace Drupal\search_api\Utility;
 
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Query\Query;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -18,20 +21,21 @@ use Drupal\search_api\Server\ServerInterface;
  * @todo Needs breaking up. Server specific methods moved.
  */
 class Utility {
+
   /**
    * Determines whether a field of the given type contains text data.
    *
    * @param string $type
    *   A string containing the type to check.
-   * @param array $allowed
-   *   Optionally, an array of allowed types.
+   * @param array $text_types
+   *   Optionally, an array of types to be considered as text.
    *
    * @return bool
    *   TRUE if $type is either one of the specified types, or a list of such
    *   values. FALSE otherwise.
    */
-  static function isTextType($type, array $allowed = array('text')) {
-    return in_array($type, $allowed);
+  static function isTextType($type, array $text_types = array('text')) {
+    return in_array($type, $text_types);
   }
 
   /**
@@ -47,7 +51,7 @@ class Utility {
    *   TRUE if this type is sortable, FALSE otherwise.
    */
   static function isSortableType($type) {
-    return !search_api_is_text_type($type);
+    return !static::isTextType($type);
   }
 
   /**
@@ -342,6 +346,23 @@ class Utility {
       return 0;
     }
     return ($element_a['weight'] < $element_b['weight']) ? -1 : 1;
+  }
+
+  /**
+   * Creates a new search query object.
+   *
+   * @param IndexInterface $index
+   *   The index on which to search.
+   * @param array $options
+   *   (optional) The options to set for the query.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   A search query object to use.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::create()
+   */
+  public static function createQuery(IndexInterface $index, array $options = array()) {
+    return Query::create($index, $options);
   }
 
 }

@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Query;
 
+use Drupal\search_api\Index\IndexInterface;
+
 /**
  * Represents a search query on a Search API index.
  *
@@ -14,6 +16,19 @@ namespace Drupal\search_api\Query;
  * can be chained.
  */
 interface QueryInterface {
+
+  /**
+   * Instantiates a new instance of this query class.
+   *
+   * @param IndexInterface $index
+   *   The index for which the query should be created.
+   * @param array $options
+   *   (optional) The options to set for the query.
+   *
+   * @return static
+   *   A query object to use.
+   */
+  public static function create(IndexInterface $index, array $options = array());
 
   /**
    * Retrieves the parse modes supported by this query class.

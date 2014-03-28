@@ -262,4 +262,20 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function resetCaches();
 
+  /**
+   * Creates a query object for this index.
+   *
+   * @param array $options
+   *   (optional) Associative array of options configuring this query.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   A query object for searching this index.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the index is currently disabled or its server doesn't exist.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::create()
+   */
+  public function query(array $options = array());
+
 }
