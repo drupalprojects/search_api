@@ -30,6 +30,9 @@ class SearchApiController extends ControllerBase {
     $indexes = $this->entityManager()->getStorage('search_api_index')->loadMultiple();
     $servers = $this->entityManager()->getStorage('search_api_server')->loadMultiple();
 
+    $this->sortByStatusThenAlphabetically($servers);
+    $this->sortByStatusThenAlphabetically($indexes);
+
     $serverGroups = array();
 
     foreach ($servers as $server) {
@@ -49,6 +52,22 @@ class SearchApiController extends ControllerBase {
       'servers' => $serverGroups,
       'loneIndexes' => $indexes,
     );
+  }
+
+  /**
+   * Sort array of entities first by status
+   * then alphabetically.
+   *
+   * @param array Array of ConfigEntityBase $entities
+   */
+  protected function sortByStatusThenAlphabetically(array &$entities) {
+    usort($entities, function (ConfigEntityBase $a, ConfigEntityBase $b) {
+      if ($a->status() == $b->status()) {
+        return $a->label() > $b->label();
+      } else {
+        return $a->status() ? -1 : 1;
+      }
+    });
   }
 
   /**
