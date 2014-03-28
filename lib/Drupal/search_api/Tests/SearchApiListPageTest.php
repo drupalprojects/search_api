@@ -1,18 +1,15 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: artyommiroshnik
- * Date: 3/26/14
- * Time: 1:03 PM
+ * @file
+ * Definition of \Drupal\search_api\Tests\SearchApiListPageTest.
  */
 
 namespace Drupal\search_api\Tests;
 
 
-class SearchApiListPageTest extends SearchApiWebTest {
+class SearchApiListPageTest extends SearchApiWebTestBase {
 
   protected $unauthorizedUser;
-  protected $userWithLimitedPermissions;
   protected $overviewPageUrl;
 
   /**
@@ -29,69 +26,76 @@ class SearchApiListPageTest extends SearchApiWebTest {
   public function setUp() {
     parent::setUp();
 
+    $this->drupalLogin($this->adminUser);
+
     $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
     $this->overviewPageUrl = 'admin/config/search/search-api';
-    $this->drupalLogin($this->testUser);
+
   }
 
   public function testNewServerCreate() {
-    $server = $this->createServer();
+    /** @var $index \Drupal\search_api\Entity\Server */
+    $server = $this->getTestServer();
 
     $this->drupalGet($this->overviewPageUrl);
 
-    $this->assertText($server->label(), 'Server presents on overview page.');
+    $this->assertText($server->label(), 'Server present on overview page.');
     $this->assertRaw($server->get('description'), 'Description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
-
   }
 
-  public function _testNewIndexCreate() {
-    $server = $this->createServer();
-    $index = $this->createIndex($server);
+  public function testNewIndexCreate() {
+    $this->getTestServer();
+    $index = $this->getTestIndex();
 
     $this->drupalGet($this->overviewPageUrl);
 
-    $this->assertText($index->label(), 'Server presents on overview page.');
-    $this->assertRaw($index->get('description'), 'Description is present');
+    $this->assertText($index->label(), 'Index present on overview page.');
+    $this->assertRaw($index->get('description'), 'Index description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Index is in proper table');
-
   }
 
-  public function _testEntityStatusChange() {
-    $server = $this->createServer();
+  public function testEntityStatusChange() {
+    /** @var $index \Drupal\search_api\Entity\Server */
+    $server = $this->getTestServer();
+    $index = $this->getTestIndex();
 
-    $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-enabled"]', NULL, 'Server is in proper table');
+    $server->set('status', FALSE)->save();
 
-    $this->drupalGet($this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id())));
-    $this->assertUrl($this->urlGenerator->generateFromRoute('search_api.server_edit', array('search_api_server' => $server->id())), array(), 'Enable link with bypass token');
+    $link = $this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id()));
+    $this->drupalGet($link);
+    //$this->assertUrl($this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id())), array(), 'Enable link with bypass token');
     $this->drupalGet($this->overviewPageUrl);
     $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-disabled"]', NULL, 'Server is in proper table');
+
+
   }
 
-  public function _testOperations() {
-    $server = $this->createServer();
+  public function testOperations() {
+    /** @var $index \Drupal\search_api\Entity\Server */
+    $server = $this->getTestServer();
 
     $this->drupalGet($this->overviewPageUrl);
-    $basicUrl = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()));
-    $this->assertRaw('<a href="' . $basicUrl .'">canonical</a>', 'Canoninal operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/edit">edit-form</a>', 'Edit operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/disable">disable</a>', 'Disable operation presents');
-    $this->assertRaw('<a href="' . $basicUrl .'/delete">delete-form</a>', 'Delete operation presents');
-    $this->assertNoRaw('<a href="' . $basicUrl .'/enable">enabled-form</a>', 'Enable operation doesn\'t present');
+    $basic_url = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()));
+    $this->assertRaw('<a href="' . $basic_url . '">canonical</a>', 'Canoninal operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '/edit">edit-form</a>', 'Edit operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '/disable">disable</a>', 'Disable operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '/delete">delete-form</a>', 'Delete operation presents');
+    $this->assertNoRaw('<a href="' . $basic_url . '/enable">enabled-form</a>', 'Enable operation doesn\'t present');
 
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
-    $this->assertRaw('<a href="' . $basicUrl .'/enable">enable</a>', 'Enable operation present');
-    $this->assertNoRaw('<a href="' . $basicUrl .'/disable">disable-form</a>', 'Disable operation  doesn\'t presents');
+    $this->assertRaw('<a href="' . $basic_url .'/enable">enable</a>', 'Enable operation present');
+    $this->assertNoRaw('<a href="' . $basic_url .'/disable">disable-form</a>', 'Disable operation  doesn\'t presents');
   }
 
-  public function _testAccess() {
-    $this->drupalLogin($this->unauthorizedUser);
-
+  public function testAccess() {
     $this->drupalGet($this->overviewPageUrl);
+    $this->assertResponse(200, 'Admin user can access the overview page.');
 
+    $this->drupalLogin($this->unauthorizedUser);
+    $this->drupalGet($this->overviewPageUrl);
     $this->assertResponse(403, "User without permissions does have access to this page.");
   }
-} 
+}

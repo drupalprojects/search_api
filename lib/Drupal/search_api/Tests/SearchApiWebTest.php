@@ -1,59 +1,46 @@
 <?php
 /**
  * @file
- * Definition of \Drupal\search_api\Tests\search_apiTest.
+ * Definition of \Drupal\search_api\Tests\SearchApiWebTest.
  */
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\simpletest\WebTestBase;
-
 /**
  * Provides the web tests for Search API.
  */
-class SearchApiWebTest extends WebTestBase {
+class SearchApiWebTest extends SearchApiWebTestBase {
 
-  public static $modules = array('search_api', 'node');
-
-  protected $testUser;
   protected $serverId;
   protected $indexId;
-
-  protected $urlGenerator;
-
   /**
    * {@inheritdoc}
    */
   public static function getInfo() {
     return array(
       'name' => 'Search API web tests',
-      'description' => 'Tests for Search API to see if the interface reacts as it should.',
+      'description' => 'Test creation of Search API indexes en servers through the UI.',
       'group' => 'Search API',
     );
   }
 
-  public function setUp() {
-    parent::setUp();
-
-    // Create user with Search API permissions.
-    $this->testUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
-    $this->urlGenerator = $this->container->get('url_generator');
-  }
-
   public function testFramework() {
-    $this->drupalLogin($this->testUser);
+
+    $this->drupalLogin($this->adminUser);
     $this->renderMenuLinkTest();
-    $server = $this->createServer();
-    $index = $this->createIndex($server);
-    $this->addFieldsToIndex($index);
+
+    $this->createServer();
+    $this->createIndex();
+    $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
   }
 
   public function createServer() {
-    $settings_path = 'admin/config/search/search-api/add-server';
+    $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add');
 
     $this->drupalGet($settings_path);
-    $this->assertResponse(200);
+    $this->assertResponse(200, 'Server add page exists');
+
     $edit = array(
       'name' => '',
       'status' => 1,
@@ -74,11 +61,11 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
 
-    $serverId = 'test_server';
+    $this->serverId = 'test_server';
 
     $edit = array(
       'name' => 'Search API test server',
-      'machine_name' => $serverId,
+      'machine_name' => $this->serverId,
       'status' => 1,
       'description' => 'A server used for testing.',
       'servicePluginId' => 'search_api_test_service',
@@ -90,14 +77,11 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The server was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/server/' . $serverId, array(), t('Correct redirect to server page.'));
-
-    return entity_load('search_api_server', $edit['machine_name'], TRUE);
+    $this->assertUrl('admin/config/search/search-api/server/' . $this->serverId, array(), t('Correct redirect to server page.'));
   }
 
-  public function createIndex($server) {
-
-    $settings_path = 'admin/config/search/search-api/add-index';
+  public function createIndex() {
+    $settings_path = $this->urlGenerator->generateFromRoute('search_api.index_add');
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -112,14 +96,14 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Datasource'))));
 
-    $indexId = 'test_index';
+    $this->index_id = 'test_index';
 
     $edit = array(
       'name' => 'Search API test index',
-      'machine_name' => $indexId,
+      'machine_name' => $this->index_id,
       'status' => 1,
       'description' => 'An index used for testing.',
-      'serverMachineName' => $server->id(),
+      'serverMachineName' => $this->serverId,
       'datasourcePluginId' => 'search_api_content_entity_datasource:node',
     );
 
@@ -127,10 +111,10 @@ class SearchApiWebTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The index was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/index/' . $indexId, array(), t('Correct redirect to index page.'));
+    $this->assertUrl('admin/config/search/search-api/index/' . $this->index_id, array(), t('Correct redirect to index page.'));
 
-    $index = entity_load('search_api_index', $indexId, TRUE);
-
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->index_id, TRUE);
 
     $this->assertEqual($index->name, $edit['name'], t('Name correctly inserted.'));
     $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
@@ -138,12 +122,10 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertEqual($index->description, $edit['description'], t('Index machine name correctly inserted.'));
     $this->assertEqual($index->serverMachineName, $edit['serverMachineName'], t('Index server machine name correctly inserted.'));
     $this->assertEqual($index->datasourcePluginId, $edit['datasourcePluginId'], t('Index datasource id correctly inserted.'));
-
-    return $index;
   }
 
-  public function addFieldsToIndex($index) {
-    $settings_path = 'admin/config/search/search-api/index/' . $index->id() . '/fields';
+  public function addFieldsToIndex() {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->index_id . '/fields';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -159,7 +141,8 @@ class SearchApiWebTest extends WebTestBase {
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
     $this->assertUrl($settings_path, array(), t('Correct redirect to fields page.'));
 
-    $index = entity_load('search_api_index', $index->id(), TRUE);
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->index_id, TRUE);
     $fields = $index->getFields();
 
     $this->assertEqual($fields['node:nid']['indexed'], $edit['fields[node:nid][indexed]'], t('nid field is indexed.'));
