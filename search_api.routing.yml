@@ -20,7 +20,7 @@ search_api.server_view:
     _title_callback: '\Drupal\search_api\Controller\SearchApiServerController::pageTitle'
     _title: "View"
   requirements:
-    _permission: 'administer search_api'
+    _entity_access: 'search_api_server.view'
 
 search_api.server_edit:
   path: '/admin/config/search/search-api/server/{search_api_server}/edit'
@@ -64,7 +64,7 @@ search_api.index_view:
     _content: '\Drupal\search_api\Controller\SearchApiIndexController::page'
     _title_callback: '\Drupal\search_api\Controller\SearchApiIndexController::pageTitle'
   requirements:
-    _permission: 'administer search_api'
+    _entity_access: 'search_api_index.view'
 
 search_api.index_edit:
   path: '/admin/config/search/search-api/index/{search_api_index}/edit'
