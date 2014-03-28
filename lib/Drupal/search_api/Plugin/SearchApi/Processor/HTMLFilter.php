@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
@@ -46,6 +47,10 @@ DEFAULT_TAGS
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    if (!empty($configuration['tags'])) {
+      $this->tags = $this->parseTags($configuration['tags']);
+    }
   }
 
   /**
@@ -60,9 +65,10 @@ DEFAULT_TAGS
 
     try {
       $tags = Yaml::parse($yaml);
+
       unset($tags['br'], $tags['hr']);
     }
-    catch(\Symfony\Component\Yaml\Exception\ParseException $exception) {
+    catch(ParseException $exception) {
       //problem parsing, return empty array
       $tags = FALSE;
     }
@@ -136,13 +142,15 @@ DEFAULT_TAGS
   protected function processFieldValue(&$value) {
     $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
     if ($this->configuration['title']) {
-      $text = preg_replace('/(<[-a-z_]+[^>]+)\btitle\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>)/i', '$1 $5 $3$4 ', $text);
+      $text = preg_replace('/((<[-a-z_]+[^>]+)\s+title\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>))/i', '$4$5 $1', $text);
     }
     if ($this->configuration['alt']) {
-      $text = preg_replace('/<img\b[^>]+\balt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' <img>$2$3</img> ', $text);
+      $text = preg_replace('/(<img[^>]*\s+alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>)/i', '$3$4 $1', $text);
     }
-    if ($this->configuration) {
+    if (!empty($this->configuration['tags'])) {
       $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');
+      // Get rid of unnecessary space symbols
+      $text = trim(preg_replace('/\s+/', ' ', $text));
       $value = $this->parseText($text);
     }
     else {
@@ -160,7 +168,7 @@ DEFAULT_TAGS
         );
       }
       $text = substr($text, $pos + 1);
-      preg_match('#^(/?)([-:_a-zA-Z]+)#', $text, $m);
+      preg_match('/^(/?)([-:_a-zA-Z]+)/', $text, $m);
       $text = substr($text, strpos($text, '>') + 1);
       if ($m[1]) {
         // Closing tag.
