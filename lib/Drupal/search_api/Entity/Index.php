@@ -801,6 +801,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
         // Stop tracking
         $this->getDatasource()->stopTracking();
       }
+      elseif ($update && $this->status() && $this->original->status()) {
+        $current_configuration = $this->getDatasource()->getConfiguration();
+        $previous_configuration = $this->original->getDatasource()->getConfiguration();
+
+        if ($current_configuration['default'] != $previous_configuration['default'] || $current_configuration['bundles'] != $previous_configuration['bundles']) {
+          $this->getDatasource()->stopTracking();
+          $this->getDatasource()->startTracking();
+        }
+      }
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);

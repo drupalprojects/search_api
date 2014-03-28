@@ -306,7 +306,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * Starts tracking for this index.
    */
   public function startTracking() {
-    $entity_ids = $this->getEntityIds();
+    $indexed_bundles = $this->getIndexedBundles();
+
+    $entity_ids = $this->getEntityIds($indexed_bundles);
     $this->getTracker()->trackInsert($entity_ids);
   }
 
@@ -314,25 +316,71 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * Stops tracking for this index.
    */
   public function stopTracking() {
-    $this->getTracker()->trackDelete();
+    $non_index_bundles = $this->getNonIndexedBundles();
+
+    $entity_ids = $this->getEntityIds($non_index_bundles);
+    $this->getTracker()->trackDelete($entity_ids);
   }
 
   /**
    * Gets the affected entity ids.
    */
-  public function getEntityIds() {
+  public function getEntityIds($bundles = array()) {
     $entity_type = $this->getEntityType();
     $entity_type_id = $this->getEntityTypeId();
 
-    $bundles = array_keys($this->getEntityBundles());
+    if (!isset($bundles)) {
+      $bundles = $this->getEntityBundles();
+    }
 
     $node_ids = array();
     if (!empty($bundles)) {
       $node_ids = \Drupal::entityQuery($entity_type_id)
-        ->condition($entity_type->getKey('bundle'), $bundles, 'IN')
+        ->condition($entity_type->getKey('bundle'), array_keys($bundles), 'IN')
         ->execute();
     }
 
     return $node_ids;
+  }
+
+  /**
+   * Gets the indexed bundles
+   */
+  public function getIndexedBundles() {
+    $configuration = $this->getConfiguration();
+    $bundles = $configuration['bundles'];
+
+    // When the default is set to 1, all bundles are selected except those
+    // chosen
+    if ($configuration['default']) {
+      $bundles = $this->getEntityBundles();
+      foreach ($configuration['bundles'] as $config_bundle_name => $config_bundle) {
+        unset($bundles[$config_bundle_name]);
+      }
+    }
+    return $bundles;
+  }
+
+  /**
+   * Gets the non indexed bundles
+   */
+  public function getNonIndexedBundles() {
+    $configuration = $this->getConfiguration();
+
+    $bundles = $this->getEntityBundles();
+    if (!$this->getStatus()) {
+      return $bundles;
+    }
+
+    foreach ($bundles as $bundle_name => $bundle) {
+      if ($configuration['default'] && $bundles[$bundle_name]) {
+        unset($bundles[$bundle_name]);
+      }
+      elseif (!$configuration['default'] && !$bundles[$bundle_name]) {
+        unset($bundles[$bundle_name]);
+      }
+    }
+
+    return $bundles;
   }
 }
