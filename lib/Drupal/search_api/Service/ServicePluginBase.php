@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api\Service;
 
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
+use Drupal\search_api\Server\ServerInterface;
 
 /**
  * Defines a base class from which other service classes may extend.
