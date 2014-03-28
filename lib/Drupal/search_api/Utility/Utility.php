@@ -76,14 +76,13 @@ class Utility {
    *   $mapping array with the field type that is requested and it's default data type for a sensible default
    */
   static function getFieldTypeMapping() {
-
+    // @todo Add (static) caching.
     /** @var \Drupal\Core\Field\FieldTypePluginManager $field_type_service */
     $field_type_service = \Drupal::service('plugin.manager.field.field_type');
     $field_types = $field_type_service->getDefinitions();
 
     $mapping = array();
     foreach ($field_types as $field_type_id => $field_type) {
-      /** @var $field_type \Drupal\Core\Field\FieldDefinition */
       switch ($field_type_id) {
         case 'comment':
         case 'list_text':
@@ -98,6 +97,7 @@ class Utility {
         case 'language':
         case 'string':
         case 'string_long':
+        case 'token':
         case 'uuid':
           $mapping[$field_type_id] = 'string';
           break;
@@ -123,7 +123,8 @@ class Utility {
         case 'decimal':
           $mapping[$field_type_id] = 'decimal';
           break;
-        case 'token':
+
+        default:
           $mapping[$field_type_id] = 'string';
           break;
       }
