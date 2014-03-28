@@ -18,7 +18,7 @@ use Drupal\search_api\Server\ServerInterface;
  * Utility methods.
  *
  * Presently just a wrapper around the previous procedural functions.
- * @todo Needs breaking up. Server specific methods moved.
+ * @todo Needs breaking up. Field related methods seperate?
  */
 class Utility {
 
