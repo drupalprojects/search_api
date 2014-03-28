@@ -5,14 +5,14 @@
  * @todo woek out why we need to use absolute namespaces when
  * referncing classes, eg \stdClass
  */
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Unicode;
 
-class IgnorecaseProcessorTest extends UnitTestCase {
+class IgnorecaseTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
