@@ -202,8 +202,8 @@ class IndexForm extends EntityFormController {
 
     $form['datasourcePluginId'] = array(
       '#type' => 'select',
-      '#title' => $this->t('Datasource'),
-      '#description' => $this->t('Select the datasource of items that will be indexed in this index. This setting cannot be changed afterwards.'),
+      '#title' => $this->t('Data type'),
+      '#description' => $this->t('Select the data type of items that will be indexed in this index. E.g. should it be nodes content or files data. This setting cannot be changed afterwards.'),
       '#options' => $options,
       '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
       '#required' => TRUE,
