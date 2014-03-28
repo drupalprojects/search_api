@@ -61,12 +61,12 @@ class Utility {
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
-   * @see search_api_default_index_types()
-   * @see search_api_get_data_type_info()
+   * @see getDefaultDataTypes()
+   * @see getDataTypeInfo()
    */
   static function getDataTypes() {
-    $types = search_api_default_data_types();
-    foreach (search_api_get_data_type_info() as $id => $type) {
+    $types = self::getDefaultDataTypes();
+    foreach (self::getDataTypeInfo() as $id => $type) {
       $types[$id] = $type['name'];
     }
 
@@ -218,7 +218,7 @@ class Utility {
       $fields[$key]['original_type'] = NULL;
       try {
         $item = $item->get($key);
-        _search_api_extract_field($item, $fields[$key]);
+        self::extractField($item, $fields[$key]);
       }
       catch (\InvalidArgumentException $e) {
         // No need to do anything, we already set the defaults.
@@ -230,7 +230,7 @@ class Utility {
       try {
         $item_nested = $item->get($direct);
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
-          search_api_extract_fields($item_nested, $fields_nested);
+          self::extractFields($item_nested, $fields_nested);
           $success = TRUE;
         }
       }
@@ -259,7 +259,7 @@ class Utility {
   static function extractField(TypedDataInterface $data, array $field) {
     if ($data->getDataDefinition()->isList()) {
       foreach ($data as $piece) {
-        _search_api_extract_field($piece, $field);
+        self::extractField($piece, $field);
       }
       return;
     }
