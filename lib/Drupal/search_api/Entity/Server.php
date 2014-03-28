@@ -381,4 +381,19 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     }
   }
 
+  /**
+   * @param array $servicePluginConfig
+   */
+  public function setServicePluginConfig($servicePluginConfig) {
+    $this->servicePluginConfig = $servicePluginConfig;
+  }
+
+  /**
+   * @return array
+   */
+  public function getServicePluginConfig() {
+    return $this->servicePluginConfig;
+  }
+
+
 }
