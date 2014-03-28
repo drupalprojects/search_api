@@ -254,4 +254,12 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function clear();
 
+  /**
+   * Resets the caches.
+   *
+   * @return bool
+   *   TRUE if the operation was successful, FALSE otherwise.
+   */
+  public function resetCaches();
+
 }

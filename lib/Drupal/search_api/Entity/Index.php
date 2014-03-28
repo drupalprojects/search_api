@@ -734,6 +734,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function resetCaches() {
+    return TRUE;
+  }
+
+  /**
    * Check if the server is enabled
    *
    * @return bool

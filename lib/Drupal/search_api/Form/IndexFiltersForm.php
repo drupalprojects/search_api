@@ -226,10 +226,10 @@ class IndexFiltersForm extends EntityFormController {
 
       // Reset the index's internal property cache to correctly incorporate the
       // new data alterations.
-      //$this->entity->resetCaches();
+      $this->entity->resetCaches();
 
       $this->entity->save();
-      //$this->entity->reindex();
+      $this->entity->reindex();
       drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
     }
     else {
