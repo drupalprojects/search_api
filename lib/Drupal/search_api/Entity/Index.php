@@ -647,7 +647,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     if ($sortBy == 'weight') {
       // Sort by weight
-      uasort($processors_settings, '_search_api_sort_processors_by_weight');
+      uasort($processors_settings, array('\Drupal\search_api\Utility\Utility', 'sortByWeight'));
     }
     else {
       ksort($processors_settings);

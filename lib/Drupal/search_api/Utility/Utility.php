@@ -327,4 +327,21 @@ class Utility {
     }
     $delete->execute();
   }
+
+  /**
+   * Sorts arrays on weight.
+   */
+  static function sortByWeight($element_a, $element_b) {
+    if (!isset($element_a['weight'])) {
+      $element_a['weight'] = 0;
+    }
+    if (!isset($element_b['weight'])) {
+      $element_b['weight'] = 0;
+    }
+    if ($element_a['weight'] == $element_b['weight']) {
+      return 0;
+    }
+    return ($element_a['weight'] < $element_b['weight']) ? -1 : 1;
+  }
+
 }
