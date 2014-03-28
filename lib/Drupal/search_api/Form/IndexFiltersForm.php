@@ -75,9 +75,9 @@ class IndexFiltersForm extends EntityFormController {
    */
   public function form(array $form, array &$form_state) {
     // Fetch our active Processors for this index
-    $processors_by_weight = $this->entity->getProcessors(FALSE, 'weight');
+    $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
     // Fetch all processors
-    $processors_by_name = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(FALSE, 'name');
+    $processors_by_name = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(TRUE, 'name');
     // Fetch the settings for all configured processors on this index
     $processors_settings = $this->entity->getOption('processors');
 
