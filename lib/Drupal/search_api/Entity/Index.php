@@ -791,6 +791,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
           // $this->queueItems();
         }
       }
+      if ((!$update && $this->status()) || ($this->status() && !$this->original->status())) {
+        // Start tracking
+        $this->getDatasource()->startTracking();
+      }
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);

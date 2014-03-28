@@ -302,4 +302,36 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     return NULL;
   }
 
+  /**
+   * Starts tracking for this index.
+   */
+  public function startTracking() {
+    $entity_ids = $this->getEntityIds();
+    $this->getTracker()->trackInsert($entity_ids);
+  }
+
+  /**
+   * Stops tracking for this index.
+   */
+  public function stopTracking() {
+    // TODO: Implement stopTracking() method.
+  }
+
+  /**
+   * Gets the affected entity ids.
+   */
+  public function getEntityIds() {
+    $entity_type = $this->getEntityType();
+    $entity_type_id = $this->getEntityTypeId();
+    $bundles = $this->getEntityBundles();
+
+    $node_ids = array();
+    if (!empty($bundles)) {
+      $node_ids = \Drupal::entityQuery($entity_type_id)
+        ->condition($entity_type->getKey('bundle'), $bundles, 'IN')
+        ->execute();
+    }
+
+    return $node_ids;
+  }
 }

@@ -383,6 +383,7 @@ class IndexForm extends EntityFormController {
    */
   public function submit(array $form, array &$form_state) {
     // Get the entity.
+    /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
     // Get the current datasource plugin ID.
     $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;

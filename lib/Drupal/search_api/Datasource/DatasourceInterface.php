@@ -66,4 +66,14 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function getItemUrl($item);
 
+  /**
+   * Starts tracking for this index.
+   */
+  public function startTracking();
+
+  /**
+   * Stops tracking for this index.
+   */
+  public function stopTracking();
+
 }
