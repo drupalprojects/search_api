@@ -203,7 +203,6 @@ function drush_search_api_disable($index_name = NULL) {
 
 /**
  * Display index status.
- * @todo: port
  */
 function drush_search_api_status($index_name = NULL) {
   $indexes = search_api_drush_get_index($index_name);
@@ -237,10 +236,10 @@ function drush_search_api_status($index_name = NULL) {
 
 /**
  * Index items.
- * @todo: port
+ * @todo: need to make real invoke
  *
- * @param string|integer $index_name
- *   The index name or id for which items should be indexed.
+ * @param string $index_name
+ *   The index machine name for which items should be indexed.
  * @param integer $limit
  *   Maximum number of items to index.
  * @param integer $batch_size
@@ -252,10 +251,11 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
     return;
   }
   foreach ($indexes as $index) {
-    // Get the number of remaing items to index.
-    $datasource = $index->datasource();
-    $index_status = $datasource->getIndexStatus($index);
-    $remaining = $index_status['total'] - $index_status['indexed'];
+    /* @var $index \Drupal\search_api\Entity\Index */
+    $status = $index->getDatasource()->getStatus();
+    $remaining = $status->getTotalCount() - $status->getIndexedCount();
+    $index->getProcessors();
+
     if ($remaining <= 0) {
       drush_log(dt("The index !index is up to date.", array('!index' => $index->name)), 'ok');
       continue;
@@ -263,7 +263,8 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
 
     // Get the number of items to index per batch run.
     if (!isset($batch_size)) {
-      $batch_size = empty($index->options['cron_limit']) ? SEARCH_API_DEFAULT_CRON_LIMIT : $index->options['cron_limit'];
+      $cron_limit = $index->getOption('cron_limit');
+      $batch_size = empty($cron_limit) ?: SEARCH_API_DEFAULT_CRON_LIMIT;
     }
     elseif ($batch_size <= 0) {
       $batch_size = $remaining;
@@ -275,6 +276,9 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
     }
 
     drush_log(dt("Indexing a maximum number of !limit items (!batch_size items per batch run) for the index !index.", array('!index' => $index->name, '!limit' => $limit, '!batch_size' => $batch_size)), 'ok');
+
+    drush_log("@todo: INITIATING BATCH IS NOT YET IMPLEMENTED.", 'error');
+    return;
 
     // Create the batch.
     if (!_search_api_batch_indexing_create($index, $batch_size, $limit, $remaining, TRUE)) {
@@ -288,37 +292,10 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
 }
 
 /**
- * Copy of formal_plural that works with drush as 't' may not be available.
- */
-function _search_api_drush_format_plural($count, $singular, $plural, array $args = array(), array $options = array()) {
-  $args['@count'] = $count;
-  if ($count == 1) {
-    return dt($singular, $args, $options);
-  }
-
-  // Get the plural index through the gettext formula.
-  $index = (function_exists('locale_get_plural')) ? locale_get_plural($count, isset($options['langcode']) ? $options['langcode'] : NULL) : -1;
-  // If the index cannot be computed, use the plural as a fallback (which
-  // allows for most flexiblity with the replaceable @count value).
-  if ($index < 0) {
-    return dt($plural, $args, $options);
-  }
-  else {
-    switch ($index) {
-      case "0":
-        return dt($singular, $args, $options);
-      case "1":
-        return dt($plural, $args, $options);
-      default:
-        unset($args['@count']);
-        $args['@count[' . $index . ']'] = $count;
-        return dt(strtr($plural, array('@count' => '@count[' . $index . ']')), $args, $options);
-    }
-  }
-}
-
-/**
  * Mark for re-indexing.
+ *
+ * @param string $index_name
+ *   The index machine name for which items should be reindexed.
  */
 function drush_search_api_reindex($index_name = NULL) {
   $indexes = search_api_drush_get_index($index_name);
@@ -334,6 +311,9 @@ function drush_search_api_reindex($index_name = NULL) {
 
 /**
  * Clear an index.
+ *
+ * @param string $index_name
+ *   The index machine name for clearing.
  */
 function drush_search_api_clear($index_name = NULL) {
   $indexes = search_api_drush_get_index($index_name);
