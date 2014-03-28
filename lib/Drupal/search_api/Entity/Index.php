@@ -604,7 +604,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return $this->fulltextFields[$i];
   }
 
-
   /**
    *
    */
@@ -776,4 +775,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return Utility::createQuery($this, $options);
   }
 
+  /**
+   * Execute necessary tasks for a created or updated index.
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    try {
+      if ($this->server) {
+        // Tell the server about the new index.
+        $this->server->addIndex($this);
+        if ($this->status()) {
+          // $this->queueItems();
+        }
+      }
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e);
+    }
+  }
 }
