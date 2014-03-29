@@ -570,8 +570,24 @@ function theme_search_api_index($variables) {
     $rows[] = _search_api_deep_copy($row);
   }
 
-  // Check if the index is enabled and a datasource is available.
-  if ($index->status() && $datasource) {
+  // Check if the index is enabled.
+  if ($index->status()) {
+    // Check if a valid server is available.
+    if ($server) {
+      // Create a default search query.
+      $query = $index->query();
+      // Configure the query so that we get a raw count of the index items
+      // without any facets or filters.
+      $query->fields(array())->range(0, 0);
+      // Query the server and process the result.
+      $response = $server->search($query);
+      // Build the server index status translation variables.
+      $vars = array('@url' => url('https://drupal.org/node/2009804#server-index-status'));
+      // Build the server index status info.
+      $label = t('Server index status');
+      $info = \Drupal::translation()->formatPlural($response['result count'], 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+      $rows[] = _search_api_deep_copy($row);
+    }
     // Get the configured options, merge in default options to prevent notice
     // when an index is missing the required options.
     $options = $index->getOptions() + array('cron_limit' => SEARCH_API_DEFAULT_CRON_LIMIT);
@@ -588,21 +604,24 @@ function theme_search_api_index($variables) {
     $label = t('Cron batch size');
     $rows[] = _search_api_deep_copy($row);
     $class = '';
+    // Check if a valid datasource is available.
+    if ($datasource) {
+      // Get the indexed and total item count.
+      $indexed_count = $datasource->getIndexedItemsCount();
+      $total_count = $datasource->getTotalItemsCount();
+      // Calculate the index progress.
+      $percent = ($total_count !== 0) ? ($indexed_count / $total_count) : 0;
 
-    $indexed_count = $datasource->getIndexedItemsCount();
-    $total_count = $datasource->getTotalItemsCount();
-
-    $percent = ($total_count != 0) ? ($indexed_count / $total_count) : 0;
-
-    // Build the index progress bar.
-    $index_progress = array(
-      '#theme' => 'progress_bar',
-      '#percent' => $percent,
-      '#message' => t('@indexed/@total indexed', array('@indexed' => $indexed_count, '@total' => $total_count)),
-    );
-    // Add the progress bar to the output.
-    $output .= '<h3>' . t('Index status') . '</h3>';
-    $output .= '<div class="search-api-index-status">' . drupal_render($index_progress) . '</div>';
+      // Build the index progress bar.
+      $index_progress = array(
+        '#theme' => 'progress_bar',
+        '#percent' => $percent,
+        '#message' => t('@indexed/@total indexed', array('@indexed' => $indexed_count, '@total' => $total_count)),
+      );
+      // Add the progress bar to the output.
+      $output .= '<h3>' . t('Index status') . '</h3>';
+      $output .= '<div class="search-api-index-status">' . drupal_render($index_progress) . '</div>';
+    }
   }
 
   // Build the index info table theme variables.
