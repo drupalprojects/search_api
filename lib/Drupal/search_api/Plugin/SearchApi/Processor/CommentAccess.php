@@ -19,7 +19,7 @@ class CommentAccess extends NodeAccess {
    * {@inheritdoc}
    */
   public static function supportsIndex(IndexInterface $index) {
-    return $index->getDatasource()->pluginId === 'search_api_content_entity_datasource:comment';
+    return $index->getDatasource()->pluginId === 'entity:comment';
   }
   
   /**

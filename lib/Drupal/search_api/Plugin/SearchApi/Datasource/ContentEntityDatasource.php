@@ -18,7 +18,7 @@ use Drupal\Component\Utility\String;
  * Represents a datasource which exposes the content entities.
  *
  * @SearchApiDatasource(
- *   id = "search_api_content_entity_datasource",
+ *   id = "entity",
  *   name = @Translation("Content entity datasource"),
  *   description = @Translation("Exposes the content entities as datasource."),
  *   derivative = "Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative"

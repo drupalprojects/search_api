@@ -58,7 +58,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     return $server;
   }
 
-  public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_plugin_id = 'search_api_content_entity_datasource:node', $reset = FALSE) {
+  public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_plugin_id = 'entity:node', $reset = FALSE) {
     /** @var $index \Drupal\search_api\Entity\Index */
     $index = entity_load('search_api_index', $machine_name);
 

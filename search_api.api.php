@@ -45,7 +45,7 @@ function hook_search_api_service_info_alter(array &$service_info) {
  */
 function hook_search_api_datasource_info_alter(array &$infos) {
   // I'm a traditionalist, I want them called "nodes"!
-  $infos['search_api_content_entity_datasource:node']['label'] = t('Node');
+  $infos['entity:node']['label'] = t('Node');
 }
 
 
@@ -101,7 +101,7 @@ function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Ind
  *   An array containing the successfully indexed items' IDs.
  */
 function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $index, array $item_ids) {
-  if ($index->getDatasourceId() == 'search_api_content_entity_datasource:node') {
+  if ($index->getDatasourceId() == 'entity:node') {
     drupal_set_message(t('Nodes indexed: @ids.', implode(', ', $item_ids)));
   }
 }

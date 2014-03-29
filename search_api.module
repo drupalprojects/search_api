@@ -505,8 +505,13 @@ function theme_search_api_server($variables) {
  */
 function theme_search_api_index($variables) {
   // Get the Search API index
+  /** @var $index \Drupal\search_api\Index\IndexInterface */
   $index = $variables['index'];
+
+  /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $index->hasValidServer() ? $index->getServer() : NULL;
+
+  /** @var $server \Drupal\search_api\DataSource\DataSourceInterface */
   $datasource = $index->hasValidDatasource() ? $index->getDatasource() : NULL;
   // Initialize the output variable to an empty string.
   $output = '';
@@ -597,16 +602,17 @@ function theme_search_api_index($variables) {
     $label = t('Cron batch size');
     $rows[] = _search_api_deep_copy($row);
     $class = '';
-    //
-    // @todo: Get server status info.
-    //
-    // @todo: Get index status info.
-    //
+
+    $indexed_count = $datasource->getIndexedItemsCount();
+    $total_count = $datasource->getTotalItemsCount();
+
+    $percent = ($total_count !== 0) ? ($indexed_count / $total_count) : 0;
+
     // Build the index progress bar.
     $index_progress = array(
       '#theme' => 'progress_bar',
-      '#percent' => 0,
-      '#message' => t('@indexed/@total indexed', array('@indexed' => 0, '@total' => 0)),
+      '#percent' => $percent,
+      '#message' => t('@indexed/@total indexed', array('@indexed' => $indexed_count, '@total' => $total_count)),
     );
     // Add the progress bar to the output.
     $output .= '<h3>' . t('Index status') . '</h3>';
