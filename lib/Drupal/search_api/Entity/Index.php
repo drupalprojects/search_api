@@ -421,8 +421,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // If not cached, fetch the list of fields and their properties
     if (empty($this->fields[$only_indexed])) {
       $this->fields = array(
-        0 => array(),
-        1 => array(),
+        0 => array(
+          'fields' => array(),
+          'additional fields' => array(),
+        ),
+        1 => array(
+          'fields' => array(),
+          // This should never be used, but we still include it to be on the
+          // safe side.
+          'additional fields' => array(),
+        ),
       );
       $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions());
       $tags['search_api_index'] = $this->id();
