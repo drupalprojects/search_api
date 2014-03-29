@@ -27,20 +27,6 @@ define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
  */
 
 /**
- * Implements hook_menu_link_defaults().
- */
-function search_api_menu_link_defaults() {
-  return array(
-    'search_api.overview' => array(
-      'link_title' => 'Search API',
-      'description' => 'Create and configure search engines.',
-      'route_name' => 'search_api.overview',
-      'parent' => 'system.admin_config_search',
-    ),
-  );
-}
-
-/**
  * Implements hook_permission().
  */
 function search_api_permission() {
