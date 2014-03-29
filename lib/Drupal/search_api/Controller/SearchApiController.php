@@ -110,8 +110,8 @@ class SearchApiController extends ControllerBase {
     $row[] = array('data' => array(
       '#type' => 'link',
       '#title' => $entity->label(),
-      '#route_name' => $url['route_name'],
-      '#route_parameters' => $url['route_parameters'],
+      '#route_name' => $url->getRouteName(),
+      '#route_parameters' => $url->getRouteParameters(),
       '#suffix' => '<div>' . $entity->get('description') . '</div>',
     ));
 
@@ -203,7 +203,7 @@ class SearchApiController extends ControllerBase {
       $operations[$link] = array(
         'title' => $link,
         'route_name' => $routeName,
-      ) + $urlParams;
+      ) + $urlParams->toArray();
     }
 
     return array(
