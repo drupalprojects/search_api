@@ -779,13 +779,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getLastIndexed() {
-    return \Drupal::state()->get($this->id . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
+    return \Drupal::state()->get($this->id() . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
   }
 
   /**
    * {@inheritdoc}
    */
   public function setLastIndexed($changed, $item_id) {
-    return \Drupal::state()->set($this->id . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
+    return \Drupal::state()->set($this->id() . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
   }
 }
