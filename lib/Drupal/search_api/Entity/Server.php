@@ -193,7 +193,10 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     foreach ($entities as $server) {
       /** @var \Drupal\search_api\Server\ServerInterface $server */
       // Remove the index from the server.
-      $server->getService()->preDelete();
+      $service = $server->getService();
+      if (!empty($service)) {
+        $server->getService()->preDelete();
+      }
     }
   }
 
@@ -243,11 +246,14 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    if ($update) {
-      return $this->getService()->postUpdate();
-    }
-    else {
-      return $this->getService()->postInsert();
+    $service = $this->getService();
+    if (!empty($service)) {
+      if ($update) {
+        return $service->postUpdate();
+      }
+      else {
+        return $service->postInsert();
+      }
     }
   }
 

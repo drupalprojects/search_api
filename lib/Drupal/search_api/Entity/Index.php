@@ -759,6 +759,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
           }
         }
       }
+
+      $this->resetCaches();
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);

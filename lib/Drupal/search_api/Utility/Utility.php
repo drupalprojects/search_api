@@ -257,7 +257,7 @@ class Utility {
    * @param array $field
    *   The field information array into which to put the extracted information.
    */
-  static function extractField(TypedDataInterface $data, array $field) {
+  static function extractField(TypedDataInterface $data, array &$field) {
     if ($data->getDataDefinition()->isList()) {
       foreach ($data as $piece) {
         self::extractField($piece, $field);
