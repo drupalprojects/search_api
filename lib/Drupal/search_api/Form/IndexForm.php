@@ -200,6 +200,15 @@ class IndexForm extends EntityFormController {
     // Build the datasource element.
     $options = $this->getDatasourcePluginDefinitionOptions();
 
+    // Check if the datasource plugin changed.
+    if (!empty($form_state['values']['datasourcePluginId'])) {
+      // Notify the user about the datasource configuration change.
+      drupal_set_message($this->t('Please configure the used data type.'), 'warning');
+    }
+
+    // Attach the admin css
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     $form['datasourcePluginId'] = array(
       '#type' => 'select',
       '#title' => $this->t('Data type'),
@@ -393,8 +402,6 @@ class IndexForm extends EntityFormController {
     // Get the entity.
     /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
-    // Get the current datasource plugin ID.
-    $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
     // Perform default entity form submission.
     // merge the fields stored as options from the field form so they do not get lost during save
     $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
@@ -404,13 +411,6 @@ class IndexForm extends EntityFormController {
     // from the entity type object.
     if ($entity->isNew()) {
       $entity->options['fields'] = $entity->getDatasource()->getEntityType()->get('search_api_default_fields');
-    }
-    // Check if the datasource plugin changed.
-    if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
-      // Notify the user about the datasource configuration change.
-      drupal_set_message($this->t('Please configure the used datasource.'), 'warning');
-      // Rebuild the form.
-      $form_state['rebuild'] = TRUE;
     }
     // Check if the entity has a valid datasource plugin.
     elseif ($entity->hasValidDatasource()) {

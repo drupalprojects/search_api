@@ -6,7 +6,7 @@ drupal.search_api.index-active-formatters:
     - core/jquery
     - core/drupal
     - core/jquery.once
-drupal.search_api.overview:
+drupal.search_api.admin_css:
   version: VERSION
   css:
     theme:

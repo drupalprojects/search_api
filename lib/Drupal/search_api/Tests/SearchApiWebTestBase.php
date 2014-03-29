@@ -27,10 +27,16 @@ abstract class SearchApiWebTestBase extends WebTestBase {
 
     $this->urlGenerator = $this->container->get('url_generator');
 
-    // Create a node type.
+    // Create a node article type.
     $this->drupalCreateContentType(array(
       'type' => 'article',
       'name' => 'Article',
+    ));
+
+    // Create a node page type.
+    $this->drupalCreateContentType(array(
+      'type' => 'page',
+      'name' => 'Page',
     ));
   }
 

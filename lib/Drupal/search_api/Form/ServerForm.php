@@ -190,6 +190,9 @@ class ServerForm extends EntityFormController {
         'effect' => 'fade',
       ),
     );
+
+    // Attach the admin css
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
   }
 
   /**
@@ -219,11 +222,17 @@ class ServerForm extends EntityFormController {
       $service_plugin_definition = $service->getPluginDefinition();
       // Build the service configuration form.
       if (($service_plugin_config_form = $service->buildConfigurationForm(array(), $form_state))) {
+        // Check if the service plugin changed.
+        if (!empty($form_state['values']['servicePluginId'])) {
+          // Notify the user about the service configuration change.
+          drupal_set_message($this->t('Please configure the used service.'), 'warning');
+        }
+
         // Modify the service plugin configuration container element.
         $form['servicePluginConfig']['#type'] = 'details';
         $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['label']));
         $form['servicePluginConfig']['#description'] = String::checkPlain($service_plugin_definition['description']);
-        $form['servicePluginConfig']['#collapsed'] = FALSE;
+        $form['servicePluginConfig']['#open'] = TRUE;
         // Attach the build service plugin configuration form.
         $form['servicePluginConfig'] += $service_plugin_config_form;
       }
@@ -292,23 +301,10 @@ class ServerForm extends EntityFormController {
    * {@inheritdoc}
    */
   public function submit(array $form, array &$form_state) {
-    // Get the entity.
-    $entity = $this->getEntity();
-    // Get the current service plugin ID.
-    $service_plugin_id = $entity->hasValidService() ? $entity->getService()->getPluginId() : NULL;
     // Perform default entity form submittion.
     $entity = parent::submit($form, $form_state);
-    // Check if the service plugin changed.
-    if ($service_plugin_id !== $form_state['values']['servicePluginId']) {
-      // Notify the user about the service configuration change.
-      drupal_set_message($this->t('Please configure the used service.'), 'warning');
-      // Rebuild the form.
-      $form_state['rebuild'] = TRUE;
-    }
     // Check if the entity has a valid service plugin.
-    elseif ($entity->hasValidService()) {
-      // Get the service from the entity.
-      $service = $entity->getService();
+    if ($entity->hasValidService()) {
       // Submit the service plugin configuration form.
       if (isset($form_state['values']['servicePluginConfig'])) {
         $service_form_state['values'] = $form_state['values']['servicePluginConfig'];

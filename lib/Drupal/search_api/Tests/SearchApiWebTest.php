@@ -13,6 +13,12 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
   protected $serverId;
   protected $indexId;
+
+  protected $article1;
+  protected $article2;
+
+  protected $page1;
+
   /**
    * {@inheritdoc}
    */
@@ -31,8 +37,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     $this->createServer();
     $this->createIndex();
-    $this->addFieldsToIndex();
-    $this->addAdditionalFieldsToIndex();
+    $this->trackContent();
+
+    //$this->addFieldsToIndex();
+    //$this->addAdditionalFieldsToIndex();
   }
 
   public function createServer() {
@@ -71,9 +79,6 @@ class SearchApiWebTest extends SearchApiWebTestBase {
       'servicePluginId' => 'search_api_test_service',
     );
 
-    // The first post gives a 'Please configure the used service.' warning,
-    // so we have to submit the form twice.
-    $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The server was successfully saved.'));
@@ -94,7 +99,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Datasource'))));
+    $this->assertText(t('!name field is required.', array('!name' => t('Data type'))));
 
     $this->index_id = 'test_index';
 
@@ -107,7 +112,6 @@ class SearchApiWebTest extends SearchApiWebTestBase {
       'datasourcePluginId' => 'search_api_content_entity_datasource:node',
     );
 
-    $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The index was successfully saved.'));
@@ -159,4 +163,5 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->drupalGet('admin/config');
     $this->assertText('Search API', 'Search API menu link is displayed.');
   }
+
 }

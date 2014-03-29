@@ -182,7 +182,7 @@ class SearchApiController extends ControllerBase {
     );
 
     // Add CSS.
-    $build['#attached']['library'][] = 'search_api/drupal.search_api.overview';
+    $build['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
     return $build;
   }
