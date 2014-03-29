@@ -281,8 +281,10 @@ class ServerForm extends EntityFormController {
     // Check if the entity has a valid service plugin.
     elseif ($entity->hasValidService()) {
       // Validate the service plugin configuration form.
-      $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
-      $entity->getService()->validateConfigurationForm($form['servicePluginConfig'], $service_form_state);
+      if (isset($form_state['values']['servicePluginConfig'])) {
+        $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
+        $entity->getService()->validateConfigurationForm($form['servicePluginConfig'], $service_form_state);
+      }
     }
   }
 
@@ -308,8 +310,10 @@ class ServerForm extends EntityFormController {
       // Get the service from the entity.
       $service = $entity->getService();
       // Submit the service plugin configuration form.
-      $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
-      $service->submitConfigurationForm($form['servicePluginConfig'], $service_form_state);
+      if (isset($form_state['values']['servicePluginConfig'])) {
+        $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
+        $entity->getService()->submitConfigurationForm($form['servicePluginConfig'], $service_form_state);
+      }
     }
     return $entity;
   }

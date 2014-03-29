@@ -37,15 +37,6 @@ class TestService2 extends ServicePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    $this->setConfiguration(array(
-      'test' => $form_state['values']['servicePluginConfig']['test'],
-    ));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function indexItems(IndexInterface $index, array $items) {
   }
 
