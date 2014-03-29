@@ -39,8 +39,8 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->createIndex();
     $this->trackContent();
 
-    //$this->addFieldsToIndex();
-    //$this->addAdditionalFieldsToIndex();
+    $this->addFieldsToIndex();
+    $this->addAdditionalFieldsToIndex();
   }
 
   public function createServer() {
