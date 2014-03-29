@@ -145,7 +145,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Get the entity type id.
+   * Returns the entity type id.
    *
    * @return string
    *   The entity type id.
@@ -195,7 +195,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function getPropertyDefinitions() {
     /** @var \Drupal\Core\TypedData\ComplexDataDefinitionInterface $def */
-    $def = $this->typedDataManager->createDataDefinition($this->getEntityTypeId());
+    $def = $this->typedDataManager->createDataDefinition('entity:' . $this->getEntityTypeId());
     return $def->getPropertyDefinitions();
   }
 
