@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
@@ -273,7 +274,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function getItemUrl($item) {
-    if ($item instanceof Entity) {
+    if ($item instanceof EntityInterface) {
       return $item->urlInfo();
     }
     return NULL;
@@ -283,8 +284,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * Starts tracking for this index.
    */
   public function startTracking() {
-    $indexed_bundles = $this->getIndexedBundles();
-    $entity_ids = $this->getEntityIds($indexed_bundles);
+    $entity_ids = $this->getEntityIds();
     $this->trackInsert($entity_ids);
   }
 
@@ -292,27 +292,20 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * Stops tracking for this index.
    */
   public function stopTracking() {
-    $non_index_bundles = $this->getNonIndexedBundles();
-    $entity_ids = $this->getEntityIds($non_index_bundles);
-    $this->trackDelete($entity_ids);
+    $this->trackDelete();
   }
 
   /**
    * Gets the affected entity ids.
    */
-  public function getEntityIds($bundles = array()) {
-    $entity_type = $this->getEntityType();
-    $entity_type_id = $this->getEntityTypeId();
-
-    if (!isset($bundles)) {
-      $bundles = $this->getEntityBundles();
-    }
-
+  public function getEntityIds() {
     $node_ids = array();
-    if (!empty($bundles)) {
-      $node_ids = \Drupal::entityQuery($entity_type_id)
-        ->condition($entity_type->getKey('bundle'), array_keys($bundles), 'IN')
-        ->execute();
+    if ($bundles = $this->getIndexedBundles()) {
+      $select = \Drupal::entityQuery($this->getEntityTypeId());
+      if (count($bundles) != count($this->getEntityBundles())) {
+        $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');
+      }
+      $node_ids = $select->execute();
     }
 
     return $node_ids;
@@ -333,29 +326,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
         unset($bundles[$config_bundle_name]);
       }
     }
-    return $bundles;
+    return array_keys($bundles);
   }
 
-  /**
-   * Gets the non indexed bundles
-   */
-  public function getNonIndexedBundles() {
-    $configuration = $this->getConfiguration();
-
-    $bundles = $this->getEntityBundles();
-    if (!$this->getStatus()) {
-      return $bundles;
-    }
-
-    foreach ($bundles as $bundle_name => $bundle) {
-      if ($configuration['default'] && $bundles[$bundle_name]) {
-        unset($bundles[$bundle_name]);
-      }
-      elseif (!$configuration['default'] && !$bundles[$bundle_name]) {
-        unset($bundles[$bundle_name]);
-      }
-    }
-
-    return $bundles;
-  }
 }
