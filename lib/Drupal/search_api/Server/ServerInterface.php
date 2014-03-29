@@ -26,7 +26,7 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
   /**
    * Determines whether the service is valid.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the service is valid, otherwise FALSE.
    */
   public function hasValidService();
@@ -41,7 +41,7 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
 
   /**
    * Retrieves a list of indexes which use this server.
-   * 
+   *
    * @return \Drupal\search_api\Index\IndexInterface[]
    *   An array of IndexInterface instances.
    */
@@ -61,5 +61,21 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
    *   If an error prevented the search from completing.
    */
   public function search(QueryInterface $query);
+
+  /**
+   * Sets the service config of the service from this server.
+   *
+   * @param array $config
+   *   the service config
+   */
+  public function setServicePluginConfig($config);
+
+  /**
+   * Gets the service config of the service from this server.
+   *
+   * @return array
+   *   An array with the service config.
+   */
+  public function getServicePluginConfig();
 
 }

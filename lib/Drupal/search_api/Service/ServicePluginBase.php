@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Service;
 
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Server\ServerInterface;
 
@@ -35,7 +36,6 @@ use Drupal\search_api\Server\ServerInterface;
 abstract class ServicePluginBase extends ConfigurablePluginBase implements ServiceInterface {
 
   // @todo: Provide defaults for more methods.
-
   /**
    * The server this service is configured for.
    *
@@ -127,5 +127,4 @@ abstract class ServicePluginBase extends ConfigurablePluginBase implements Servi
    * {@inheritdoc}
    */
   public function removeIndex(IndexInterface $index) {}
-
 }
