@@ -77,17 +77,17 @@ class SearchApiListPageTest extends SearchApiWebTestBase {
 
     $this->drupalGet($this->overviewPageUrl);
     $basic_url = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()));
-    $this->assertRaw('<a href="' . $basic_url . '">canonical</a>', 'Canoninal operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '">canonical</a>', 'Canonical operation presents');
     $this->assertRaw('<a href="' . $basic_url . '/edit">edit-form</a>', 'Edit operation presents');
     $this->assertRaw('<a href="' . $basic_url . '/disable">disable</a>', 'Disable operation presents');
     $this->assertRaw('<a href="' . $basic_url . '/delete">delete-form</a>', 'Delete operation presents');
-    $this->assertNoRaw('<a href="' . $basic_url . '/enable">enabled-form</a>', 'Enable operation doesn\'t present');
+    $this->assertNoRaw('<a href="' . $basic_url . '/enable">enabled-form</a>', 'Enable operation is not present');
 
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
     $this->assertRaw('<a href="' . $basic_url .'/enable">enable</a>', 'Enable operation present');
-    $this->assertNoRaw('<a href="' . $basic_url .'/disable">disable-form</a>', 'Disable operation  doesn\'t presents');
+    $this->assertNoRaw('<a href="' . $basic_url .'/disable">disable-form</a>', 'Disable operation  is not present');
   }
 
   public function testAccess() {

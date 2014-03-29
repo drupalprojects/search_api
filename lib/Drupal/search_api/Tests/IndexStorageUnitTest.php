@@ -103,7 +103,7 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
       $this->fail($e->getMessage() . ' exception was thrown.');
     }
 
-    $this->assertIdentical($index->get('label'), $entity->get('label'));
+    $this->assertIdentical($index->get('name'), $entity->get('name'));
   }
 
   /**
@@ -118,9 +118,7 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
     catch (\Exception $e) {
       $this->fail($e->getMessage() . ' exception was thrown.');
     }
-
     $entity = $this->controller->load($index->id());
-
     $this->assertFalse($entity);
   }
 } 

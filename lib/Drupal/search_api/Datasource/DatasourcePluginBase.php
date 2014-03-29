@@ -102,6 +102,17 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   }
 
   /**
+   * Creates a delete statement.
+   *
+   * @return \Drupal\Core\Database\Query\Delete
+   *   An instance of ConditionInterface.
+   */
+  protected function createDeleteStatement() {
+    return $this->getDatabaseConnection()->delete('search_api_item')
+      ->condition('index_id', $this->getIndex()->id());
+  }
+
+  /**
    * Creates a select statement.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
@@ -410,4 +421,5 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
         fetchField();
     }
   }
+
 }

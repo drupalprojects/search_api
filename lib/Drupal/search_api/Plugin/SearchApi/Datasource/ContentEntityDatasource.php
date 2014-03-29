@@ -90,108 +90,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Determine whether the index is valid for this datasource.
-   *
-   * @return boolean
-   *   TRUE if the index is valid, otherwise FALSE.
-   */
-  protected function isValidIndex() {
-    // Determine whether the index is compatible with the datasource.
-    return $this->getIndex()->getDatasource()->getPluginId() == $this->getPluginId();
-  }
-
-  /**
-   * Get the entity bundles which can be used in a select element.
-   *
-   * @return array
-   *   An associative array of bundle labels, keyed by the bundle name.
-   */
-  protected function getEntityBundleOptions() {
-    // Initialize the options variable to NULL.
-    $options = array();
-    // Try to retrieve the exposed entity type bundles.
-    if (($bundles = $this->getEntityBundles())) {
-      // Remove the default entity type bundle.
-      unset($bundles[$this->getEntityTypeId()]);
-      // Iterate through the bundles.
-      foreach ($bundles as $bundle => $bundle_info) {
-        // Add the bundle to the options list.
-        $options[$bundle] = String::checkPlain($bundle_info['label']);
-      }
-    }
-    return $options;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function summary() {
-    // Initialize the summary variable to an empty string.
-    $summary = '';
-    // Check if the entity supports bundles.
-    if ($this->isEntityBundlable()) {
-      // Get the configured bundles.
-      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), $this->configuration['bundles']));
-      // Check in what operation the datasource is performing.
-      if ($this->configuration['default'] == TRUE) {
-        // Build the summary.
-        $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
-      }
-      else {
-        // Build the summary.
-        $summary = $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
-      }
-    }
-    return $summary;
-  }
-
-  /**
-   * Returns the entity type id.
-   *
-   * @return string
-   *   The entity type id.
-   */
-  public function getEntityTypeId() {
-    // Get the plugin definition.
-    $plugin_definition = $this->getPluginDefinition();
-    // Get the entity type.
-    return $plugin_definition['entity_type'];
-  }
-
-  /**
-   * Returns the entity type definition.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeInterface
-   *   Entity type definition.
-   */
-  public function getEntityType() {
-    return $this->entityManager->getDefinition($this->getEntityTypeId());
-  }
-
-  /**
-   * Determine whether the entity type supports bundles.
-   *
-   * @return bool
-   *   TRUE if the entity type supports bundles, otherwise FALSE.
-   */
-  public function isEntityBundlable() {
-    // Get the entity type definition.
-    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityTypeId());
-    // Determine whether the entity type supports bundles.
-    return $entity_type_definition->hasKey('bundle');
-  }
-
-  /**
-   * Get the entity bundles.
-   *
-   * @return array
-   *   An associative array of bundle info, keyed by the bundle name.
-   */
-  public function getEntityBundles() {
-    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityTypeId()) : array();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
@@ -286,7 +184,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Starts tracking for this index.
+   * {@inheritdoc}
    */
   public function startTracking() {
     $entity_ids = $this->getEntityIds();
@@ -294,10 +192,112 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Stops tracking for this index.
+   * {@inheritdoc}
    */
   public function stopTracking() {
     $this->trackDelete();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary() {
+    // Initialize the summary variable to an empty string.
+    $summary = '';
+    // Check if the entity supports bundles.
+    if ($this->isEntityBundlable()) {
+      // Get the configured bundles.
+      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), $this->configuration['bundles']));
+      // Check in what operation the datasource is performing.
+      if ($this->configuration['default'] == TRUE) {
+        // Build the summary.
+        $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+      }
+      else {
+        // Build the summary.
+        $summary = $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+      }
+    }
+    return $summary;
+  }
+
+  /**
+   * Determine whether the index is valid for this datasource.
+   *
+   * @return boolean
+   *   TRUE if the index is valid, otherwise FALSE.
+   */
+  protected function isValidIndex() {
+    // Determine whether the index is compatible with the datasource.
+    return $this->getIndex()->getDatasource()->getPluginId() == $this->getPluginId();
+  }
+
+  /**
+   * Get the entity bundles which can be used in a select element.
+   *
+   * @return array
+   *   An associative array of bundle labels, keyed by the bundle name.
+   */
+  protected function getEntityBundleOptions() {
+    // Initialize the options variable to NULL.
+    $options = array();
+    // Try to retrieve the exposed entity type bundles.
+    if (($bundles = $this->getEntityBundles())) {
+      // Remove the default entity type bundle.
+      unset($bundles[$this->getEntityTypeId()]);
+      // Iterate through the bundles.
+      foreach ($bundles as $bundle => $bundle_info) {
+        // Add the bundle to the options list.
+        $options[$bundle] = String::checkPlain($bundle_info['label']);
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Returns the entity type id.
+   *
+   * @return string
+   *   The entity type id.
+   */
+  public function getEntityTypeId() {
+    // Get the plugin definition.
+    $plugin_definition = $this->getPluginDefinition();
+    // Get the entity type.
+    return $plugin_definition['entity_type'];
+  }
+
+  /**
+   * Returns the entity type definition.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface
+   *   Entity type definition.
+   */
+  public function getEntityType() {
+    return $this->entityManager->getDefinition($this->getEntityTypeId());
+  }
+
+  /**
+   * Determine whether the entity type supports bundles.
+   *
+   * @return bool
+   *   TRUE if the entity type supports bundles, otherwise FALSE.
+   */
+  public function isEntityBundlable() {
+    // Get the entity type definition.
+    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityTypeId());
+    // Determine whether the entity type supports bundles.
+    return $entity_type_definition->hasKey('bundle');
+  }
+
+  /**
+   * Get the entity bundles.
+   *
+   * @return array
+   *   An associative array of bundle info, keyed by the bundle name.
+   */
+  public function getEntityBundles() {
+    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
