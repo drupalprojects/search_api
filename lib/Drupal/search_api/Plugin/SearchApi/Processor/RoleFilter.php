@@ -24,7 +24,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
    * This plugin only supports indexes containing users.
    */
   public static function supportsIndex(IndexInterface $index) {
-    return $index->getDatasource()->pluginId === 'search_api_content_entity_datasource:user';
+    return $index->getDatasource()->pluginId === 'entity:user';
   }
   
   /**

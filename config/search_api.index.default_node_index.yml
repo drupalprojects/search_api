@@ -51,7 +51,7 @@ options:
         title: 0
         alt: 1
         tags: "h1: 5\r\nh2: 3\r\nh3: 2\r\nstrong: 2\r\nb: 2\r\nem: 1.5\r\nu: 1.5"
-datasourcePluginId: 'search_api_content_entity_datasource:node'
+datasourcePluginId: 'entity:node'
 datasourcePluginConfig:
   default: '1'
   bundles: {  }
