@@ -8,6 +8,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
@@ -332,6 +333,56 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       }
     }
     return array_keys($bundles);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewModes() {
+    return $this->entityManager->getViewModes($this->getEntityTypeId());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
+    if ($item instanceof EntityInterface) {
+      $langcode = $langcode ?: $item->language()->id;
+      return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
+    $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
+    // Langcode passed, use that for viewing.
+    if (isset($langcode)) {
+      if (reset($items) instanceof EntityInterface) {
+        return $view_builder->viewMultiple($items, $view_mode, $langcode);
+      }
+      return array();
+    }
+    // Otherwise, separate the items by language, keeping the keys.
+    $items_by_language = array();
+    foreach ($items as $i => $item) {
+      if ($item instanceof EntityInterface) {
+        $items_by_language[$item->language()->id][$i] = $item;
+      }
+    }
+    // Then build the items for each language.
+    $build = array();
+    foreach ($items_by_language as $langcode => $language_items) {
+      $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
+    }
+    // Lastly, bring the viewed items into the correct order again.
+    $ret = array();
+    foreach ($items as $i => $item) {
+      $ret[$i] = isset($build[$i]) ? $build[$i] : array();
+    }
+    return $ret;
   }
 
 }

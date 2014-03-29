@@ -7,6 +7,7 @@
 namespace Drupal\search_api\Datasource;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\IndexPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -377,9 +378,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
       }
       return $statement->execute()->fetchCol();
     }
-    else {
-      return 0;
-    }
+    return array();
   }
 
   /**
@@ -402,6 +401,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
       $statement = $this->getRemainingItemsQuery();
       return (int) $statement->countQuery()->execute()->fetchField();
     }
+    return 0;
   }
 
   /**
@@ -415,6 +415,29 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
         ->execute()
         ->fetchField();
     }
+    return 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewModes() {
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
+    $buildList = $this->viewMultipleItems(array($item), $view_mode, $langcode);
+    return $buildList[0];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
+    return array_fill_keys(array_keys($items), array());
   }
 
 }
