@@ -130,7 +130,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return array
    *   An array of item IDs that need to be indexed for the given index.
    */
-  public function getChanged($limit = -1);
+  public function getRemainingItems($limit = -1);
 
   /**
    * Retrieves the number of indexed items.
@@ -138,7 +138,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return int
    *   The number of indexed items.
    */
-  public function getIndexedCount();
+  public function getIndexedItemsCount();
 
   /**
    * Retrieves the number of changed items.
@@ -146,7 +146,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return int
    *   The number of changed items.
    */
-  public function getChangedCount();
+  public function getRemainingItemsCount();
 
   /**
    * Retrieves the total number of items that have to be indexed.
@@ -154,6 +154,6 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return int
    *   The total number of items that have to be indexed.
    */
-  public function getTotalCount();
+  public function getTotalItemsCount();
 
 }

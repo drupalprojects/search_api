@@ -318,20 +318,20 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   }
 
   /**
-   * {@inheritdoc}
+   * Creates the base query so we can get al the items or just the count
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
    */
-  public function getChanged($limit = -1) {
+  private function getRemainingItemsQuery() {
     // Get the index and its last state
     $index = $this->getIndex();
-
-    // Check if the index is enabled, writable and exists.
-    if ($index->status() && !$index->isReadOnly()) {
 
       // Get $last_entity_id and $last_changed.
       $last_indexed = $index->getLastIndexed();
 
       // Build the select statement.
       $statement = $this->createSelectStatement();
+
 
       $changed = $last_indexed['changed'];
       $item_id = $last_indexed['item_id'];
@@ -360,44 +360,65 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
         ->orderBy($alias, 'ASC')
         ->orderBy('sai.item_id', 'ASC');
 
+      return $statement;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemainingItems($limit = -1) {
+    // Check if the index is enabled, writable and exists.
+    if ($this->index->status() && !$this->index->isReadOnly()) {
+      $statement = $this->getRemainingItemsQuery();
       // Check if the result set needs to be limited.
       if ($limit > -1) {
         // Limit the number of results to the given value.
         $statement->range(0, $limit);
       }
-
       return $statement->execute()->fetchCol();
+    }
+    else {
+      return 0;
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getIndexedCount() {
-    // Get the state with the index
-    // do a query for a count for the amount of items before the changed date or with number 0
-   // @todo: Implement it
-    return 0;
+  public function getIndexedItemsCount() {
+    // Check if the index is enabled and exists.
+    if ($this->index->status()) {
+      $total = $this->getTotalItemsCount();
+      $remaining = $this->getRemainingItemsCount();
+      $indexed = $total - $remaining;
+      return $indexed;
+    }
+    else {
+      return 0;
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getChangedCount($queued = FALSE) {
-    $select = $this->createSelectStatement();
-    $select->condition('changed', 0, '<>');
-    return $select->countQuery()
-      ->execute()
-      ->fetchField();
+  public function getRemainingItemsCount() {
+    // Check if the index is enabled, writable and exists.
+    if ($this->index->status()) {
+      $statement = $this->getRemainingItemsQuery();
+      return $statement->countQuery()->execute()->fetchField();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getTotalCount() {
-    return $this->createSelectStatement()
-      ->countQuery()
-      ->execute()->
-      fetchField();
+  public function getTotalItemsCount() {
+    // Check if the index is enabled and exists.
+    if ($this->index->status()) {
+      return $this->createSelectStatement()
+        ->countQuery()
+        ->execute()->
+        fetchField();
+    }
   }
 }

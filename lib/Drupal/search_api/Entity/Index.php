@@ -657,7 +657,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1') {
-    $next_set = $this->getDatasource()->getChanged($limit);
+    $next_set = $this->getDatasource()->getRemainingItems($limit);
     $items = $this->getDatasource()->loadMultiple($next_set);
     $items_status = $this->indexItems($items);
   }
