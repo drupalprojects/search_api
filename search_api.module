@@ -259,20 +259,6 @@ function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
 }
 
 /**
- * Extracts value and original type from a single piece of data.
- *
- * @depreciated
- *
- * @param \Drupal\Core\TypedData\TypedDataInterface $data
- *   The piece of data from which to extract information.
- * @param array $field
- *   The field information array into which to put the extracted information.
- */
-function _search_api_extract_field(TypedDataInterface $data, array $field) {
-  return Utility::extractField($data, $field);
-}
-
-/**
  * Adds an entry into a server's list of pending tasks.
  *
  * @depreciated
