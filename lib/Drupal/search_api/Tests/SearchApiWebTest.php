@@ -97,7 +97,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
       'datasourcePluginId' => '',
     );
 
-    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Data type'))));
 
@@ -164,4 +164,58 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertText('Search API', 'Search API menu link is displayed.');
   }
 
+  public function trackContent() {
+    // Intially there should be no tracked items, because there are no nodes
+    $tracked_items = $this->countTrackedItems();
+    debug($tracked_items);
+
+    $this->assertEqual($tracked_items, 0, t('No items are tracked yet'));
+
+    // Add two articles and a page
+    $article1 = $this->drupalCreateNode(array('type' => 'article'));
+    $article2 = $this->drupalCreateNode(array('type' => 'article'));
+    $page1 = $this->drupalCreateNode(array('type' => 'page'));
+
+    // Those 3 new nodes should be added to the index immediately
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+
+    // Create the edit index path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->index_id . '/edit';
+
+    // Test disabling the index
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => FALSE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 0, t('No items are tracked'));
+
+    // Test enabling the index
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => TRUE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => FALSE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+  }
+
+  private function countTrackedItems() {
+    $results = db_select('search_api_item', 'sai')
+      ->fields('sai')
+      ->execute()
+      ->fetchAllKeyed();
+
+    return count($results);
+  }
 }

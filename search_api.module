@@ -592,7 +592,7 @@ function theme_search_api_index($variables) {
     $indexed_count = $datasource->getIndexedItemsCount();
     $total_count = $datasource->getTotalItemsCount();
 
-    $percent = ($total_count !== 0) ? ($indexed_count / $total_count) : 0;
+    $percent = ($total_count != 0) ? ($indexed_count / $total_count) : 0;
 
     // Build the index progress bar.
     $index_progress = array(

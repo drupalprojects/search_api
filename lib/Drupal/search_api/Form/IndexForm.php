@@ -248,9 +248,6 @@ class IndexForm extends EntityFormController {
         'invisible' => array(
           '[name="serverMachineName"]' => array('value' => '')
         ),
-        'unchecked' => array(
-          '[name="serverMachineName"]' => array('value' => '')
-        ),
       ),
     );
     // Build the description element.

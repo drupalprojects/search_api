@@ -793,4 +793,5 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function setLastIndexed($changed, $item_id) {
     return \Drupal::state()->set($this->id() . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
   }
+
 }

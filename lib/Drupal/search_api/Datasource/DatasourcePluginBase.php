@@ -417,8 +417,8 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
     if ($this->index->status()) {
       return $this->createSelectStatement()
         ->countQuery()
-        ->execute()->
-        fetchField();
+        ->execute()
+        ->fetchField();
     }
   }
 
