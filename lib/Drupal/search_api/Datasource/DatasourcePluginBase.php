@@ -388,14 +388,9 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   public function getIndexedItemsCount() {
     // Check if the index is enabled and exists.
     if ($this->index->status()) {
-      $total = $this->getTotalItemsCount();
-      $remaining = $this->getRemainingItemsCount();
-      $indexed = $total - $remaining;
-      return $indexed;
+      return $this->getTotalItemsCount() - $this->getRemainingItemsCount();
     }
-    else {
-      return 0;
-    }
+    return 0;
   }
 
   /**
@@ -405,7 +400,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
     // Check if the index is enabled, writable and exists.
     if ($this->index->status()) {
       $statement = $this->getRemainingItemsQuery();
-      return $statement->countQuery()->execute()->fetchField();
+      return (int) $statement->countQuery()->execute()->fetchField();
     }
   }
 
@@ -415,7 +410,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   public function getTotalItemsCount() {
     // Check if the index is enabled and exists.
     if ($this->index->status()) {
-      return $this->createSelectStatement()
+      return (int) $this->createSelectStatement()
         ->countQuery()
         ->execute()
         ->fetchField();
