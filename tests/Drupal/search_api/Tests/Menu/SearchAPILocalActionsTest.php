@@ -19,6 +19,6 @@ class SearchAPILocalActionsTest extends UnitTestCase {
   }
 
   public function testLocalActions() {
-    // @todo implement it someday
+    // @todo implement it once there is an integration test for local actions
   }
 }
