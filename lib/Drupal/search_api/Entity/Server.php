@@ -252,7 +252,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         return $service->postUpdate();
       }
       else {
-        return $service()->postInsert();
+        return $service->postInsert();
       }
     }
   }
