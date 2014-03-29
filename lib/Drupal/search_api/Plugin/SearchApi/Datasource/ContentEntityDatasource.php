@@ -195,9 +195,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function getPropertyDefinitions() {
-    /** @var \Drupal\Core\TypedData\ComplexDataDefinitionInterface $def */
-    $def = $this->typedDataManager->createDataDefinition('entity:' . $this->getEntityTypeId());
-    return $def->getPropertyDefinitions();
+    $type = $this->getEntityTypeId();
+    $properties = $this->entityManager->getBaseFieldDefinitions($type);
+    if ($bundles = $this->getIndexedBundles()) {
+      foreach ($bundles as $bundle) {
+        $properties += $this->entityManager->getFieldDefinitions($type, $bundle);
+      }
+    }
+    return $properties;
   }
 
   /**
