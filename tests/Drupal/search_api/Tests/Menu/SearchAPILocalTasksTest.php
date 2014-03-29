@@ -48,6 +48,7 @@ class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
    * @dataProvider getSearchAPIPageRoutesIndex
    */
   public function testSearchAPILocalTasksIndex($route) {
+    // @Todo find out why this is not working
     $tasks = array(
       0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
     );
