@@ -61,7 +61,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
    *   An array of items to be preprocessed for indexing, formatted as specified
-   *   by ServiceInterface::indexItems().
+   *   by \Drupal\search_api\Service\ServiceSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items);
 
@@ -85,8 +85,9 @@ interface ProcessorInterface extends IndexPluginInterface {
    * locally is possible).
    *
    * @param array $response
-   *   An array containing the search results. See the return value of
-   *   QueryInterface->execute() for the detailed format.
+   *   An array containing the search results, passed by reference. See the
+   *   return value of \Drupal\search_api\Query\QueryInterface::execute() for
+   *   the detailed format.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The object representing the executed query.
    */
