@@ -208,6 +208,88 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+
+    // Test putting default to zero and no bundles checked.
+    // This will ignore all bundles except the ones that are checked.
+    // This means all the items should get deleted.
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => FALSE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 0, t('No items are tracked'));
+
+    // Test putting default to zero and the article bundle checked.
+    // This will ignore all bundles except the ones that are checked.
+    // This means all articles should be added.
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => TRUE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
+
+    // Test putting default to zero and the page bundle checked.
+    // This will ignore all bundles except the ones that are checked.
+    // This means all pages should be added.
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => FALSE,
+      'datasourcePluginConfig[bundles][page]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 1, t('One items is tracked'));
+
+    // Test putting default to one and the article bundle checked.
+    // This will add all bundles except the ones that are checked.
+    // This means all pages should be added.
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => TRUE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 1, t('One item is tracked'));
+
+    // Test putting default to one and the page bundle checked.
+    // This will ignore all bundles except the ones that are checked.
+    // This means all articles should be added.
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[bundles][article]' => TRUE,
+      'datasourcePluginConfig[bundles][page]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
+
+    // Now lets delete an article. That should remove one item from the item
+    // table
+    $article1->delete();
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 1, t('One item is tracked'));
   }
 
   private function countTrackedItems() {
