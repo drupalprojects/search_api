@@ -219,15 +219,14 @@ function drush_search_api_status($index_name = NULL) {
   ));
   foreach ($indexes as $index) {
     /* @var $index \Drupal\search_api\Entity\Index */
-    $status = $index->getDatasource()->getStatus();
-    $complete = ($status->getTotalCount() > 0) ?
-      100 * round($status->getIndexedCount() / $status->getTotalCount(), 3) . '%' : '-';
+    $complete = ($index->getDatasource()->getTotalCount() > 0) ?
+      100 * round($index->getDatasource()->getIndexedCount() / $index->getDatasource()->getTotalCount(), 3) . '%' : '-';
     $row = array(
       $index->machine_name,
       $index->name,
       $complete,
-      $status->getIndexedCount(),
-      $status->getTotalCount(),
+      $index->getDatasource()->getIndexedCount(),
+      $index->getDatasource()->getTotalCount(),
     );
     $rows[] = $row;
   }
@@ -252,17 +251,26 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
   }
   foreach ($indexes as $index) {
     /* @var $index \Drupal\search_api\Entity\Index */
-    $status = $index->getDatasource()->getStatus();
-    $remaining = $status->getTotalCount() - $status->getIndexedCount();
-    $index->getProcessors();
+    $data_source = $index->getDatasource();
+    $remaining = $data_source->getTotalCount() - $data_source->getIndexedCount();
 
     if ($remaining <= 0) {
       drush_log(dt("The index !index is up to date.", array('!index' => $index->name)), 'ok');
       continue;
     }
+    else {
+      $t_args = array(
+        '!remaining' => $remaining,
+        '!limit' => ($limit) ? $limit : t('All'),
+        '!index' => $index->name,
+      );
+      drush_log(dt("The index found !remaining items to index for !index. Indexing !limit items.", $t_args), 'ok');
+    }
+
+    $index->index($limit);
 
     // Get the number of items to index per batch run.
-    if (!isset($batch_size)) {
+    /*if (!isset($batch_size)) {
       $cron_limit = $index->getOption('cron_limit');
       $batch_size = empty($cron_limit) ?: SEARCH_API_DEFAULT_CRON_LIMIT;
     }
@@ -287,7 +295,7 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
     else {
       // Launch the batch process.
       drush_backend_batch_process();
-    }
+    }*/
   }
 }
 

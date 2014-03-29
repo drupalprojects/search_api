@@ -239,6 +239,15 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFulltextFields($only_indexed = TRUE);
 
   /**
+   * Indexes a set amount of items. Will fetch the items to be indexed from the datasource and sends it
+   * to indexItems. It then will also mark each as indexed and update the database table
+   *
+   * @return bool
+   *   TRUE if the operation was successful, FALSE otherwise.
+   */
+  public function index($limit = '-1');
+
+  /**
    * Marks all items in this index for reindexing.
    *
    * @return bool

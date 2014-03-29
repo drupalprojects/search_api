@@ -63,13 +63,14 @@ function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
 
+    /** @var $storage \Drupal\search_api\IndexStorage */
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Entity\Index $index */
       if ($index->isServerEnabled()) {
-        $index->getDatasource()->getTracker()->trackInsert(array($entity->id()));
+        $index->getDatasource()->trackInsert(array($entity->id()));
       }
     }
   }
@@ -86,15 +87,14 @@ function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
 
-    // Get the IndexStorage class so we can find out which indexes support the entity that needs to be tracked
+    /** @var $storage \Drupal\search_api\IndexStorage */
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
-    //
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Entity\Index $index */
       if ($index->isServerEnabled()) {
-        $index->getDatasource()->getTracker()->trackUpdate(array($entity->id()));
+        $index->getDatasource()->trackUpdate(array($entity->id()));
       }
     }
   }
@@ -111,13 +111,14 @@ function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
 
+    /** @var $storage \Drupal\search_api\IndexStorage */
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
       /** @var \Drupal\search_api\Entity\Index $index */
       if ($index->isServerEnabled()) {
-        $index->getDatasource()->getTracker()->trackDelete(array($entity->id()));
+        $index->getDatasource()->trackDelete(array($entity->id()));
       }
     }
   }

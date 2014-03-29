@@ -11,7 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
-use Drupal\search_api\Datasource\Tracker\DefaultTracker;
 use Drupal\Component\Utility\String;
 
 /**
@@ -55,13 +54,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   private $databaseConnection;
 
   /**
-   * Cache which contains already loaded TrackerInterface object.
-   *
-   * @var \Drupal\search_api\Datasource\Tracker\TrackerInterface
-   */
-  private $tracker;
-
-  /**
    * Create a ContentEntityDatasource object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
@@ -77,13 +69,12 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function __construct(EntityManager $entity_manager, Connection $connection, array $configuration, $plugin_id, array $plugin_definition) {
     // Initialize the parent chain of objects.
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    parent::__construct($connection, $configuration, $plugin_id, $plugin_definition);
     // Setup object members.
     $this->entityManager = $entity_manager;
     $this->storage = $entity_manager->getStorage($plugin_definition['entity_type']);
     $this->typedDataManager = \Drupal::typedDataManager();
     $this->databaseConnection = $connection;
-    $this->tracker = new DefaultTracker($this->getIndex(), $connection);
   }
 
   /**
@@ -225,13 +216,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function getStatus() {
-    return $this->tracker->getStatus();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     // Check if the entity type supports bundles.
     if ($this->isEntityBundlable()) {
@@ -288,13 +272,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function getTracker() {
-    return new DefaultTracker($this->index, $this->databaseConnection);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getItemUrl($item) {
     if ($item instanceof Entity) {
       return $item->urlInfo();
@@ -307,9 +284,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function startTracking() {
     $indexed_bundles = $this->getIndexedBundles();
-
     $entity_ids = $this->getEntityIds($indexed_bundles);
-    $this->getTracker()->trackInsert($entity_ids);
+    $this->trackInsert($entity_ids);
   }
 
   /**
@@ -317,9 +293,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function stopTracking() {
     $non_index_bundles = $this->getNonIndexedBundles();
-
     $entity_ids = $this->getEntityIds($non_index_bundles);
-    $this->getTracker()->trackDelete($entity_ids);
+    $this->trackDelete($entity_ids);
   }
 
   /**

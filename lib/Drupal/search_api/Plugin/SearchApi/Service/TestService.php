@@ -18,12 +18,16 @@ class TestService extends ServicePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function indexItems(IndexInterface $index, array $items) {}
+  public function indexItems(IndexInterface $index, array $items) {
+    return array();
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {}
+  public function deleteItems(IndexInterface $index, array $ids) {
+    return array();
+  }
 
   /**
    * {@inheritdoc}

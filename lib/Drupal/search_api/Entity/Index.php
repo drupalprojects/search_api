@@ -305,10 +305,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return $this->serverMachineName;
   }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getServer() {
+  /**
+   * {@inheritdoc}
+   */
+  public function getServer() {
     // Check if the server needs to be resolved. Note we do not use
     // hasValidServer to prevent duplicate load calls to the storage controller.
     if (!$this->server) {
@@ -726,8 +726,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function index($limit = '-1') {
+    $next_set = $this->getDatasource()->getChanged($limit);
+    $items = $this->getDatasource()->loadMultiple($next_set);
+    $items_status = $this->indexItems($items);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function reindex() {
-    $this->getDatasource()->getTracker()->trackUpdate();
+    $this->getDatasource()->trackUpdate();
   }
 
   /**
@@ -735,7 +744,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function clear() {
     $this->getServer()->deleteAllItems($this);
-    $this->getDatasource()->getTracker()->trackUpdate();
+    $this->getDatasource()->trackUpdate();
     return TRUE;
   }
 

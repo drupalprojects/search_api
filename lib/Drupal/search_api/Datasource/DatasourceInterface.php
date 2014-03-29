@@ -43,15 +43,6 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function loadMultiple(array $ids);
 
-
-  /**
-   * Retrieves the tracker for this datasource.
-   *
-   * @return \Drupal\search_api\Datasource\Tracker\TrackerInterface
-   *   A tracker for this datasource.
-   */
-  public function getTracker();
-
   /**
    * Retrieves a URL at which the item can be viewed on the web.
    *
@@ -75,5 +66,94 @@ interface DatasourceInterface extends IndexPluginInterface {
    * Stops tracking for this index.
    */
   public function stopTracking();
+
+  /**
+   * Track IDs as inserted.
+   *
+   * @param array $ids
+   *   An array of item IDs.
+   *
+   * @return boolean
+   *   TRUE if successful, otherwise FALSE.
+   */
+  public function trackInsert(array $ids);
+
+  /**
+   * Track IDs as updated.
+   *
+   * @param array $ids
+   *   An array of item IDs, or NULL to mark all items as changed.
+   *
+   * @return boolean
+   *   TRUE if successful, otherwise FALSE.
+   */
+  public function trackUpdate(array $ids = NULL);
+
+  /**
+   * Track IDs as indexed.
+   *
+   * @param array $ids
+   *   An array of item IDs.
+   *
+   * @return boolean
+   *   TRUE if successful, otherwise FALSE.
+   */
+  public function trackIndexed(array $ids);
+
+  /**
+   * Track IDs as deleted.
+   *
+   * @param array|NULL $ids
+   *   An array of item IDs.
+   */
+  public function trackDelete(array $ids = NULL);
+
+  /**
+   * Clear all tracked items.
+   *
+   * @return boolean
+   *   TRUE if successful, otherwise FALSE.
+   */
+  public function clear();
+
+  /**
+   * Get a list of IDs that need to be indexed.
+   *
+   * If possible, completely unindexed items should be returned before items
+   * that were indexed but later changed. Also, items that were changed longer
+   * ago should be favored.
+   *
+   * @param integer $limit
+   *   Optional. The maximum number of items to return. Negative values mean
+   *   "unlimited". Defaults to all changed items.
+   *
+   * @return array
+   *   An array of item IDs that need to be indexed for the given index.
+   */
+  public function getChanged($limit = -1);
+
+  /**
+   * Retrieves the number of indexed items.
+   *
+   * @return int
+   *   The number of indexed items.
+   */
+  public function getIndexedCount();
+
+  /**
+   * Retrieves the number of changed items.
+   *
+   * @return int
+   *   The number of changed items.
+   */
+  public function getChangedCount();
+
+  /**
+   * Retrieves the total number of items that have to be indexed.
+   *
+   * @return int
+   *   The total number of items that have to be indexed.
+   */
+  public function getTotalCount();
 
 }
