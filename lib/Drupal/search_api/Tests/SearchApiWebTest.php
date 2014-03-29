@@ -135,10 +135,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertResponse(200);
 
     $edit = array(
-      'fields[node:nid][indexed]' => 1,
-      'fields[node:title][indexed]' => 1,
-      'fields[node:title][type]' => 'text',
-      'fields[node:title][boost]' => '21.0',
+      'fields[nid][indexed]' => 1,
+      'fields[title][indexed]' => 1,
+      'fields[title][type]' => 'text',
+      'fields[title][boost]' => '21.0',
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
@@ -149,10 +149,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $index = entity_load('search_api_index', $this->index_id, TRUE);
     $fields = $index->getFields();
 
-    $this->assertEqual($fields['node:nid']['indexed'], $edit['fields[node:nid][indexed]'], t('nid field is indexed.'));
-    $this->assertEqual($fields['node:title']['indexed'], $edit['fields[node:title][indexed]'], t('title field is indexed.'));
-    $this->assertEqual($fields['node:title']['type'], $edit['fields[node:title][type]'], t('title field type is text.'));
-    $this->assertEqual($fields['node:title']['boost'], $edit['fields[node:title][boost]'], t('title field boost value is 21.'));
+    $this->assertEqual($fields['nid']['indexed'], $edit['fields[nid][indexed]'], t('nid field is indexed.'));
+    $this->assertEqual($fields['title']['indexed'], $edit['fields[title][indexed]'], t('title field is indexed.'));
+    $this->assertEqual($fields['title']['type'], $edit['fields[title][type]'], t('title field type is text.'));
+    $this->assertEqual($fields['title']['boost'], $edit['fields[title][boost]'], t('title field boost value is 21.'));
   }
 
   public function addAdditionalFieldsToIndex() {
