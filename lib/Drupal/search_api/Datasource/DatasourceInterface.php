@@ -156,4 +156,5 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function getTotalItemsCount();
 
+
 }

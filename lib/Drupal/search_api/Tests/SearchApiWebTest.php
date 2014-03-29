@@ -109,7 +109,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
       'status' => 1,
       'description' => 'An index used for testing.',
       'serverMachineName' => $this->serverId,
-      'datasourcePluginId' => 'search_api_content_entity_datasource:node',
+      'datasourcePluginId' => 'entity:node',
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));

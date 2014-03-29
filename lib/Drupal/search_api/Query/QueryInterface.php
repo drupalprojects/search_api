@@ -181,13 +181,6 @@ interface QueryInterface {
    *     displayed to the user.
    *   - ignored: A numeric array of search keys that were ignored for this
    *     search (e.g., because of being too short or stop words).
-   *   - performance: An associative array with the time taken (as floats, in
-   *     seconds) for specific parts of the search execution:
-   *     - complete: The complete runtime of the query.
-   *     - hooks: Hook invocations and other client-side preprocessing.
-   *     - preprocessing: Preprocessing of the service class.
-   *     - execution: The actual query to the search server, in whatever form.
-   *     - postprocessing: Preparing the results for returning.
    *   Additional metadata may be returned in other keys. Only 'result count'
    *   and 'result' always have to be set, all other entries are optional.
    */

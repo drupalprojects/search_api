@@ -421,8 +421,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // If not cached, fetch the list of fields and their properties
     if (empty($this->fields[$only_indexed])) {
       $this->fields = array(
-        0 => array(),
-        1 => array(),
+        0 => array(
+          'fields' => array(),
+          'additional fields' => array(),
+        ),
+        1 => array(
+          'fields' => array(),
+          // This should never be used, but we still include it to be on the
+          // safe side.
+          'additional fields' => array(),
+        ),
       );
       $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions());
       $tags['search_api_index'] = $this->id();
@@ -732,21 +740,23 @@ class Index extends ConfigEntityBase implements IndexInterface {
           // $this->queueItems();
         }
       }
-      if ((!$update && $this->status()) || ($this->status() && !$this->original->status())) {
-        // Start tracking
-        $this->getDatasource()->startTracking();
-      }
-      elseif ($update && !$this->status() && $this->original->status()) {
-        // Stop tracking
-        $this->getDatasource()->stopTracking();
-      }
-      elseif ($update && $this->status() && $this->original->status()) {
-        $current_configuration = $this->getDatasource()->getConfiguration();
-        $previous_configuration = $this->original->getDatasource()->getConfiguration();
-
-        if ($current_configuration['default'] != $previous_configuration['default'] || $current_configuration['bundles'] != $previous_configuration['bundles']) {
-          $this->getDatasource()->stopTracking();
+      if ($this->getDatasource()) {
+        if ((!$update && $this->status()) || ($this->status() && !$this->original->status())) {
+          // Start tracking
           $this->getDatasource()->startTracking();
+        }
+        elseif ($update && !$this->status() && $this->original->status()) {
+          // Stop tracking
+          $this->getDatasource()->stopTracking();
+        }
+        elseif ($update && $this->status() && $this->original->status()) {
+          $current_configuration = $this->getDatasource()->getConfiguration();
+          $previous_configuration = $this->original->getDatasource()->getConfiguration();
+
+          if ($current_configuration['default'] != $previous_configuration['default'] || $current_configuration['bundles'] != $previous_configuration['bundles']) {
+            $this->getDatasource()->stopTracking();
+            $this->getDatasource()->startTracking();
+          }
         }
       }
     }
@@ -758,26 +768,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Execute necessary tasks for deletion an index
    */
-  public static function postDelete(EntityStorageInterface $storage, array $entities) {
-    parent::postDelete($storage, $entities);
-
+  public static function preDelete(EntityStorageInterface $storage, array $entities) {
+    parent::preDelete($storage, $entities);
     foreach ($entities as $entity) {
-      $entity->getDatasource()->stopTracking();
+      $datasource = $entity->getDatasource();
+      if (!empty($datasource)) {
+        $entity->getDatasource()->stopTracking();
+      }
     }
   }
-
 
   /**
    * {@inheritdoc}
    */
   public function getLastIndexed() {
-    return \Drupal::state()->get($this->id . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
+    return \Drupal::state()->get($this->id() . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
   }
 
   /**
    * {@inheritdoc}
    */
   public function setLastIndexed($changed, $item_id) {
-    return \Drupal::state()->set($this->id . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
+    return \Drupal::state()->set($this->id() . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
   }
 }

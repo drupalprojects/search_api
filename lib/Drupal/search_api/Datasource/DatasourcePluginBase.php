@@ -102,6 +102,17 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   }
 
   /**
+   * Creates a delete statement.
+   *
+   * @return \Drupal\Core\Database\Query\Delete
+   *   An instance of ConditionInterface.
+   */
+  protected function createDeleteStatement() {
+    return $this->getDatabaseConnection()->delete('search_api_item')
+      ->condition('index_id', $this->getIndex()->id());
+  }
+
+  /**
    * Creates a select statement.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
@@ -131,17 +142,6 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    */
   protected function createUpdateStatement() {
     return $this->getDatabaseConnection()->update('search_api_item')
-      ->condition('index_id', $this->getIndex()->id());
-  }
-
-  /**
-   * Creates a delete statement.
-   *
-   * @return \Drupal\Core\Database\Query\Delete
-   *   An instance of Delete.
-   */
-  protected function createDeleteStatement() {
-    return $this->getDatabaseConnection()->delete('search_api_item')
       ->condition('index_id', $this->getIndex()->id());
   }
 
@@ -280,7 +280,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    */
   public function trackDelete(array $ids = NULL) {
     $delete_statement = $this->createDeleteStatement();
-    if (!empty($ids)) {
+    if (isset($ids)) {
       $delete_statement->condition('item_id', $ids, 'IN');
     }
     $delete_statement->execute();
@@ -303,7 +303,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
       // Catch any exception that may occur during update.
       try {
         // Build and execute the update statement.
-        $this->createDeleteStatement()->execute();
+        $this->trackDelete();
         // Indicate success operation.
         $success = TRUE;
       }
@@ -421,4 +421,5 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
         fetchField();
     }
   }
+
 }
