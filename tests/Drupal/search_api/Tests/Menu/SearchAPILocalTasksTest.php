@@ -33,15 +33,46 @@ class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
   /**
    * Tests local task existence.
    *
+   * @dataProvider getSearchAPIPageRoutesServer
    */
-  public function testSearchAPILocalTasks() {
-    // @TODO this test is broken
-//    $this->assertLocalTasks('search_api.server_view', array(array('search_api.server_view')));
-//    $this->assertLocalTasks('search_api.server_edit', array(array('search_api.server_edit')));
-//    $this->assertLocalTasks('search_api.index_view', array(array('search_api.index_view')));
-//    $this->assertLocalTasks('search_api.index_edit', array(array('search_api.index_edit')));
-//    $this->assertLocalTasks('search_api.index_fields', array(array('search_api.index_fields')));
-//    $this->assertLocalTasks('search_api.filters', array(array('search_api.filters')));
+  public function testSearchAPILocalTasksServer($route) {
+    $tasks = array(
+      0 => array('search_api.server_view', 'search_api.server_edit'),
+    );
+    $this->assertLocalTasks($route, $tasks);
   }
 
+  /**
+   * Tests local task existence.
+   *
+   * @dataProvider getSearchAPIPageRoutesIndex
+   */
+  public function testSearchAPILocalTasksIndex($route) {
+    $tasks = array(
+      0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
+    );
+    $this->assertLocalTasks($route, $tasks);
+  }
+
+  /**
+   * Provides a list of routes to test.
+   */
+  public function getSearchAPIPageRoutesServer() {
+    return array(
+      array('search_api.server_view'),
+      array('search_api.server_edit'),
+    );
+  }
+
+  /**
+   * Provides a list of routes to test.
+   */
+  public function getSearchAPIPageRoutesIndex() {
+    return array(
+      array('search_api.index_view'),
+      array('search_api.index_edit'),
+      array('search_api.index_fields'),
+      array('search_api.index_filters'),
+    );
+  }
 }
