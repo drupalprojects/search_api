@@ -36,9 +36,7 @@ class SearchApiIndexController extends ControllerBase {
     // Check if the index is enabled and can be written to.
     if ($search_api_index->status() && !$search_api_index->isReadOnly()) {
       // Attach the index status form.
-      // @todo: Specify the form class for deleting or reindexing data on an
-      // index.
-      //$render['form'] = $this->formBuilder()->getForm('?', $search_api_index);
+      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\IndexStatusForm', $search_api_index);
     }
     return $render;
   }

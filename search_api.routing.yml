@@ -115,3 +115,17 @@ search_api.index_filters:
     _entity_form: 'search_api_index.filters'
   requirements:
     _entity_access: 'search_api_index.filters'
+
+search_api.index_reindex:
+  path: '/admin/config/search/search-api/index/{search_api_index}/reindex'
+  defaults:
+    _entity_form: 'search_api_index.reindex'
+  requirements:
+    _entity_access: 'search_api_index.reindex'
+
+search_api.index_clear:
+  path: '/admin/config/search/search-api/index/{search_api_index}/clear'
+  defaults:
+    _entity_form: 'search_api_index.clear'
+  requirements:
+    _entity_access: 'search_api_index.clear'

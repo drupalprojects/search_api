@@ -36,6 +36,8 @@ use Drupal\search_api\Utility\Utility;
  *       "filters" = "Drupal\search_api\Form\IndexFiltersForm",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm",
+ *       "reindex" = "Drupal\search_api\Form\IndexReindexConfirmForm",
+ *       "clear" = "Drupal\search_api\Form\IndexClearConfirmForm"
  *     },
  *   },
  *   config_prefix = "index",
