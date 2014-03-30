@@ -693,3 +693,4 @@ function search_api_entity_type_build(array &$entity_types) {
     ));
   }
 }
+

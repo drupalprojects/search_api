@@ -234,13 +234,32 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFulltextFields($only_indexed = TRUE);
 
   /**
-   * Indexes a set amount of items. Will fetch the items to be indexed from the datasource and sends it
-   * to indexItems. It then will also mark each as indexed and update the database table
+   * Retrieves the properties available for this index.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * @param bool $alter
+   *   (optional) Whether to pass the property definitions to the index's
+   *   enabled processors for altering before returning them.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
+   *   The properties included in this index, defined by the datasource and
+   *   optionally altered by the enabled processors.
    */
-  public function index($limit = '-1');
+  public function getPropertyDefinitions($alter = TRUE);
+
+  /**
+   * Indexes a set amount of items.
+   *
+   * Will fetch the items to be indexed from the datasource and send them to
+   * indexItems(). It will then mark all successfully indexed items as such in
+   * the datasource.
+   *
+   * @param int $limit
+   *   (optional) The maximum number of items to index. Defaults to indexing all.
+   *
+   * @return int
+   *   The number of items successfully indexed.
+   */
+  public function index($limit = -1);
 
   /**
    * Marks all items in this index for reindexing.

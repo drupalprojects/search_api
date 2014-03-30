@@ -91,8 +91,10 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
       foreach ($item as $name => &$field) {
-        if ($this->testField($name, $field)) {
-          $this->processField($field['value'], $field['type']);
+        if (Element::child($name)) {
+          if ($this->testField($name, $field)) {
+            $this->processField($field['value'], $field['type']);
+          }
         }
       }
     }

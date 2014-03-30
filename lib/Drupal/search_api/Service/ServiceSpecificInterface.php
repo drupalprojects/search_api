@@ -123,9 +123,11 @@ interface ServiceSpecificInterface {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The search index for which items should be indexed.
    * @param array $items
-   *   An array of items to be indexed, keyed by their id. The values are
-   *   associative arrays of the fields to be stored, where each field is an
-   *   array with the following keys:
+   *   An array of items to be indexed, keyed by their IDs. The values are
+   *   element arrays. The settings (i.e., keys prefixed with '#') are arbitrary
+   *   (only "#item" is defined, containing the loaded item object if available)
+   *   and the children map field identifiers to arrays containing the following
+   *   keys:
    *   - type: One of the data types recognized by the Search API, or the
    *     special type "tokens" for tokenized fulltext fields.
    *   - original_type: The original type of the property, as defined by the
@@ -133,9 +135,47 @@ interface ServiceSpecificInterface {
    *   - value: An array of values to be indexed for this field. The service
    *     class should also index the first value separately, for single-value
    *     use (e.g., sorting).
+   *   - boost: (optional) The (decimal) boost to assign to the field. Usually
+   *     only used for fulltext fields. Should default to 1.
+   *
+   *   An example of a $items arrays passed to this method would therefore look
+   *   as follows:
+   *
+   *   @code
+   *   $items = array(
+   *     'some_item_id' => array(
+   *       '#item' => $item1,// object
+   *       'id' => array(
+   *         'type' => 'integer',
+   *         'original_type' => 'field_item:integer',
+   *         'value' => 1,
+   *       ),
+   *       'field_text' => array(
+   *         'type' => 'text',
+   *         'original_type' => 'field_item:string',
+   *         'value' => 'This is some text on the item.',
+   *         'boost' => 4.0,
+   *       ),
+   *     ),
+   *     'another_item_id' => array(
+   *       '#item' => $item2,// object
+   *       'id' => array(
+   *         'type' => 'integer',
+   *         'original_type' => 'field_item:integer',
+   *         'value' => 2,
+   *       ),
+   *       'field_text' => array(
+   *         'type' => 'text',
+   *         'original_type' => 'field_item:string',
+   *         'value' => 'This is some text on the second item.',
+   *         'boost' => 4.0,
+   *       ),
+   *     ),
+   *   );
+   *   @endcode
    *
    *   The special field "search_api_language" contains the item's language and
-   *   should always be indexed.
+   *   is always indexed.
    *
    *   The value of fields with the "tokens" type is an array of tokens. Each
    *   token is an array containing the following keys:
@@ -147,6 +187,8 @@ interface ServiceSpecificInterface {
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If indexing was prevented by a fundamental configuration error.
+   *
+   * @see \Drupal\Core\Render\Element::child()
    */
   public function indexItems(IndexInterface $index, array $items);
 

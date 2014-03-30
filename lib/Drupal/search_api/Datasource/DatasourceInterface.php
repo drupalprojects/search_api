@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Datasource;
 
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 
 /**
@@ -156,5 +157,52 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function getTotalItemsCount();
 
+  /**
+   * Returns view mode info for this item type.
+   *
+   * @return array
+   *   An associative array, keyed by the view mode names, and with the values
+   *   being associative arrays with at least the following keys:
+   *   - label: A human-readable label for the view mode.
+   */
+  public function getViewModes();
+
+  /**
+   * Returns the render array for the provided item and view mode.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   The item to render.
+   * @param string $view_mode
+   *   (optional) The view mode that should be used to render the item.
+   * @param string|null $langcode
+   *   (optional) For which language the item should be rendered. Defaults to
+   *   the language the item has been loaded in.
+   *
+   * @return array
+   *   A render array for the item.
+   *
+   * @throws \InvalidArgumentException
+   *   Can be thrown when the set of parameters is inconsistent.
+   */
+  public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL);
+
+  /**
+   * Returns the render array for the provided items and view mode.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
+   *   The items to render.
+   * @param string $view_mode
+   *   (optional) The view mode that should be used to render the items.
+   * @param string|null $langcode
+   *   (optional) For which language the items should be rendered. Defaults to
+   *   the language each item has been loaded in.
+   *
+   * @return array
+   *   A render array for the items.
+   *
+   * @throws \InvalidArgumentException
+   *   Can be thrown when the set of parameters is inconsistent.
+   */
+  public function viewMultipleItems(array $items, $view_mode, $langcode = NULL);
 
 }

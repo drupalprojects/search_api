@@ -8,6 +8,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
@@ -169,7 +170,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     parent::setConfiguration($configuration);
     // Check if the datasource configuration changed.
     if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
-      // @todo: Needs to reindex.
+       //if (($current_conf['default'] != $previous_conf['default']) || ($current_conf['bundles'] != $previous_conf['bundles'])) {
+       // StopTracking figures out which bundles to remove
+      $this->stopTracking();
     }
   }
 
@@ -305,6 +308,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function getEntityIds() {
     $node_ids = array();
+    $bundles = $this->getIndexedBundles();
     if ($bundles = $this->getIndexedBundles()) {
       $select = \Drupal::entityQuery($this->getEntityTypeId());
       if (count($bundles) != count($this->getEntityBundles())) {
@@ -328,10 +332,62 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     if ($configuration['default']) {
       $bundles = $this->getEntityBundles();
       foreach ($configuration['bundles'] as $config_bundle_name => $config_bundle) {
-        unset($bundles[$config_bundle_name]);
+        if (isset($bundles[$config_bundle])) {
+          unset($bundles[$config_bundle]);
+        }
       }
     }
     return array_keys($bundles);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewModes() {
+    return $this->entityManager->getViewModes($this->getEntityTypeId());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
+    if ($item instanceof EntityInterface) {
+      $langcode = $langcode ?: $item->language()->id;
+      return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
+    $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
+    // Langcode passed, use that for viewing.
+    if (isset($langcode)) {
+      if (reset($items) instanceof EntityInterface) {
+        return $view_builder->viewMultiple($items, $view_mode, $langcode);
+      }
+      return array();
+    }
+    // Otherwise, separate the items by language, keeping the keys.
+    $items_by_language = array();
+    foreach ($items as $i => $item) {
+      if ($item instanceof EntityInterface) {
+        $items_by_language[$item->language()->id][$i] = $item;
+      }
+    }
+    // Then build the items for each language.
+    $build = array();
+    foreach ($items_by_language as $langcode => $language_items) {
+      $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
+    }
+    // Lastly, bring the viewed items into the correct order again.
+    $ret = array();
+    foreach ($items as $i => $item) {
+      $ret[$i] = isset($build[$i]) ? $build[$i] : array();
+    }
+    return $ret;
   }
 
 }

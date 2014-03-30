@@ -1,24 +1,64 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\RenderedItem.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\TypedData\TypedDataManager;
+use Drupal\search_api\Processor\ProcessorPluginBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_rendered_item_processor",
+ *   id = "search_api_rendered_item",
  *   label = @Translation("Rendered Item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed.")
  * );
  */
-class RenderedItem extends FieldsProcessorPluginBase {
+class RenderedItem extends ProcessorPluginBase {
 
-  protected $entityManager;
+  /**
+   * The current_user service used by this plugin.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
 
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+  /**
+   * The typed data manager used by this plugin.
+   *
+   * @var \Drupal\Core\TypedData\TypedDataManager
+   */
+  protected $typedDataManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(AccountProxyInterface $current_user, TypedDataManager $typed_data_manager, TranslationInterface $translation_manager, array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->currentUser = $current_user;
+    $this->typedDataManager = $typed_data_manager;
+    $this->setTranslationManager($translation_manager);
+  }
 
-    $this->entityManager = \Drupal::entityManager();
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+    /** @var \Drupal\Core\Session\AccountProxyInterface $current_user */
+    $current_user = $container->get('current_user');
+    /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */
+    $typed_data_manager = $container->get('typed_data_manager');
+    /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation_manager */
+    $translation_manager = $container->get('string_translation');
+    return new static($current_user, $typed_data_manager, $translation_manager, $configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -26,23 +66,18 @@ class RenderedItem extends FieldsProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'view_mode' => NULL
+      'view_mode' => NULL,
     );
   }
 
   /**
-   * Builds configuration form
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    //enumerate the view modes from the entity type used as the data source
-    //for the index
     $view_modes = array();
-    $entity_type = $this->index->getDatasource()->pluginDefinition['entity_type'];
-    $entity_label = $this->index->getDatasource()->pluginDefinition['label'];
-
-    foreach ($this->entityManager->getViewModes($entity_type) as $key => $mode) {
+    foreach ($this->index->getDatasource()->getViewModes() as $key => $mode) {
       $view_modes[$key] = $mode['label'];
     }
 
@@ -58,59 +93,82 @@ class RenderedItem extends FieldsProcessorPluginBase {
       $form['view_mode'] = array(
         '#type' => 'value',
         '#value' => $this->configuration['view_mode'],
+        '#default_value' => key($view_modes),
       );
+      $type_label = $this->index->getDatasource()->label();
       if ($view_modes) {
         $form['note'] = array(
-          '#markup' => '<p>' . $this->t('This index contains entities of type %type and they only have a single view mode. ' .
-              'Therefore, no selection needs to be made.', array('%type' => $entity_label)) . '</p>',
+          '#markup' => '<p>' . $this->t('This index contains entities of type %type and they only have a single view mode. Therefore, no selection needs to be made.', array('%type' => $type_label)) . '</p>',
         );
       }
       else {
         $form['note'] = array(
-          '#markup' => '<p>' . $this->t('This index contains entities of type %type but they have no defined view modes. ' .
-              'This might either mean that they are always displayed the same way, or that they cannot be processed by this alteration at all. ' .
-              'Please consider this when using this alteration.', array('%type' => $entity_label)) . '</p>',
+          '#markup' => '<p>' . $this->t('This index contains items of type %type but they have no defined view modes. This might either mean that they are always displayed the same way, or that they cannot be processed by this alteration at all. Please consider this when using this alteration.', array('%type' => $type_label)) . '</p>',
         );
       }
     }
 
     return $form;
-
   }
 
   /**
-   * @param array $items
+   * {@inheritdoc}
+   */
+  public function alterPropertyDefinitions(array &$properties) {
+    $definition = array(
+      'type' => 'string',
+      'label' => $this->t('Rendered HTML output'),
+      'description' => $this->t('The complete HTML which would be created when viewing the item.'),
+    );
+    $properties['search_api_rendered_item'] = new DataDefinition($definition);
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    // Prevent session information from being saved while indexing.
-    drupal_save_session(FALSE);
+    // First, check if the field is even enabled.
+    $fields = $this->index->getOption('fields');
+    if (empty($fields['search_api_rendered_item'])) {
+      return;
+    }
 
-    // Force the current user to anonymous to prevent access bypass in search
-    // indexes.
-    $original_user = $GLOBALS['user'];
-    $GLOBALS['user'] = drupal_anonymous_user();
-
-    $view_mode = empty($this->configuration['mode']) ? 'full' : $this->configuration['mode'];
-    foreach ($items as &$item) {
-      // Since we can't really know what happens in entity_view() and render(),
-      // we use try/catch. This will at least prevent some errors, even though
-      // it's no protection against fatal errors and the like.
-      try {
-        $entityViewBuilder = $this->entityManager->getViewBuilder($item->getEntityTypeId());
-        $renderedEntity = $entityViewBuilder->view($item, $view_mode);
-        if (!$renderedEntity) {
-          $item->search_api_viewed = NULL;
-          continue;
-        }
-        $item->searchAPIView = $renderedEntity;
-      }
-      catch (\Exception $e) {
-        $item->search_api_viewed = NULL;
+    // Then, extract all the passed item objects.
+    foreach ($items as $i => $item) {
+      if (isset($item['#item'])) {
+        $item_objects[$i] = $item['#item'];
       }
     }
 
+    // Were there any objects passed?
+    if (empty($item_objects)) {
+      return;
+    }
+
+    // Change the current user to Anonymous so we don't accidentally expose
+    // non-public information in this field.
+    $original_user = $this->currentUser->getAccount();
+    $this->currentUser->setAccount(new AnonymousUserSession());
+
+    // Since we can't really know what happens in entity_view() and render(),
+    // we use try/catch. This will at least prevent some errors, even though
+    // it's no protection against fatal errors and the like.
+    $build = array();
+    try {
+      $build = $this->index->getDatasource()->viewMultipleItems($item_objects, $this->configuration['mode']);
+    }
+    catch (\Exception $e) {
+      // Do nothing; we still need to reset the account and $build will be empty
+      // anyways.
+    }
     // Restore the user.
-    $GLOBALS['user'] = $original_user;
-    drupal_save_session(TRUE);
+    $this->currentUser->setAccount($original_user);
+
+    // Now add the rendered items back to the extracted fields.
+    foreach ($build as $i => $render) {
+      $items[$i]['search_api_rendered_item']['value'][] = drupal_render($render);
+      $items[$i]['search_api_rendered_item']['original_type'] = 'string';
+    }
   }
+
 }
