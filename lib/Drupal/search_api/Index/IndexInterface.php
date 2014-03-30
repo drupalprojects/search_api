@@ -247,13 +247,19 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getPropertyDefinitions($alter = TRUE);
 
   /**
-   * Indexes a set amount of items. Will fetch the items to be indexed from the datasource and sends it
-   * to indexItems. It then will also mark each as indexed and update the database table
+   * Indexes a set amount of items.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * Will fetch the items to be indexed from the datasource and send them to
+   * indexItems(). It will then mark all successfully indexed items as such in
+   * the datasource.
+   *
+   * @param int $limit
+   *   (optional) The maximum number of items to index. Defaults to indexing all.
+   *
+   * @return int
+   *   The number of items successfully indexed.
    */
-  public function index($limit = '-1');
+  public function index($limit = -1);
 
   /**
    * Marks all items in this index for reindexing.

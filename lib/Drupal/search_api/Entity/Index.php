@@ -682,7 +682,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function index($limit = '-1') {
     $next_set = $this->getDatasource()->getRemainingItems($limit);
     $items = $this->getDatasource()->loadMultiple($next_set);
-    $items_status = $this->indexItems($items);
+    $ids_indexed = $this->indexItems($items);
+    $this->getDatasource()->trackIndexed($ids_indexed);
+    return count($ids_indexed);
   }
 
   /**
