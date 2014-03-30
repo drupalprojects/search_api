@@ -170,7 +170,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     parent::setConfiguration($configuration);
     // Check if the datasource configuration changed.
     if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
-      // @todo: Needs to reindex.
+       //if (($current_conf['default'] != $previous_conf['default']) || ($current_conf['bundles'] != $previous_conf['bundles'])) {
+       // StopTracking figures out which bundles to remove
+      $this->stopTracking();
     }
   }
 

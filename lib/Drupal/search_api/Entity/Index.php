@@ -764,15 +764,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
         // If the index is new (so no update) and the status is enabled, start tracking
         // If the index is not new but the original status is disabled and the new status, start tracking
-        if ((!$update && $this->status()) || ($update && $this->status())) {
-          if (($current_conf['default'] != $previous_conf['default']) || ($current_conf['bundles'] != $previous_conf['bundles'])) {
-            $this->getDatasource()->stopTracking();
-          }
-            // Start tracking
+        if ((!$update && $this->status()) || ($update && ($this->status() && !$this->original->status()))) {
+          // StartTracking figures out which bundles to add
           $this->getDatasource()->startTracking();
         }
         // if there is an update and the status is disabled where it was enabled before, stop tracking
-        elseif ($update && !$this->status() && $this->original->status()) {
+        elseif ($update && (!$this->status() && $this->original->status())) {
           // Stop tracking
           $this->getDatasource()->stopTracking();
         }
