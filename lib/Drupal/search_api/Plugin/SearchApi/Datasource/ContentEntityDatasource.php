@@ -115,7 +115,12 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
-    return $this->storage->loadMultiple($ids);
+    $items = $this->storage->loadMultiple($ids);
+    // If we were unable to delete some of the items, mark them as deleted.
+    if ($diff = array_diff_key(array_flip($ids), $items)) {
+      $this->trackDelete(array_keys($diff));
+    }
+    return $items;
   }
 
   /**
