@@ -28,7 +28,8 @@ use Drupal\search_api\Server\ServerInterface;
  *       "default" = "Drupal\search_api\Form\ServerForm",
  *       "edit" = "Drupal\search_api\Form\ServerForm",
  *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
- *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm"
+ *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm",
+ *       "clear" = "Drupal\search_api\Form\ServerClearConfirmForm"
  *     },
  *   },
  *   config_prefix = "server",
@@ -45,6 +46,7 @@ use Drupal\search_api\Server\ServerInterface;
  *     "delete-form" = "search_api.server_delete",
  *     "disable" = "search_api.server_disable",
  *     "enable" = "search_api.server_enable",
+ *     "clear" = "search_api.server_clear"
  *   }
  * )
  */

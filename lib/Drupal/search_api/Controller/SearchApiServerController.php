@@ -57,8 +57,7 @@ class SearchApiServerController extends ControllerBase {
     // Check if the server is enabled.
     if ($search_api_server->status()) {
       // Attach the server status form.
-      // @todo: Specify the form class for deleting all indexed data.
-      //$render['form'] = $this->formBuilder()->getForm('?', $search_api_server);
+      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\ServerStatusForm', $search_api_server);
     }
     return $render;
   }
