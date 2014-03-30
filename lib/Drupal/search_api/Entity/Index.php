@@ -691,7 +691,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    $this->getDatasource()->trackUpdate();
+    return $this->getDatasource()->trackUpdate();
   }
 
   /**
