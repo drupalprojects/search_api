@@ -378,7 +378,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $extracted_items = array();
     foreach ($items as $id => $item) {
       $extracted_items[$id] = $fields;
-      search_api_extract_fields($item, $extracted_items[$id]);
+      Utility::extractFields($item, $extracted_items[$id]);
+      $extracted_items[$id]['#item'] = $item;
       // @todo Custom data type conversion logic.
     }
 
@@ -432,7 +433,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
-      $this->convertPropertyDefinitionsToFields($this->getDatasource()->getPropertyDefinitions());
+      $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions());
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
@@ -528,6 +529,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPropertyDefinitions($alter = TRUE) {
+    $properties = $this->getDatasource()->getPropertyDefinitions();
+    if ($alter) {
+      foreach ($this->getProcessors() as $processor) {
+        $processor->alterPropertyDefinitions($properties);
+      }
+    }
+    return $properties;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFulltextFields($only_indexed = TRUE) {
     $i = $only_indexed ? 1 : 0;
     if (!isset($this->fulltextFields[$i])) {
@@ -578,6 +592,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $processor = $processorPluginManager->createInstance($name, $settings);
           if (!($processor instanceof ProcessorInterface)) {
             watchdog('search_api', t('Processor @id is not an ProcessorInterface instance using @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
+            continue;
           }
           if ($processor->supportsIndex($this)) {
             $this->processors[$name] = $processor;

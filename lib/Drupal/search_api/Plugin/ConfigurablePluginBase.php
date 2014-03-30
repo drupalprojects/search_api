@@ -75,7 +75,9 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) { }
+  public function buildConfigurationForm(array $form, array &$form_state) {
+    return array();
+  }
 
   /**
    * {@inheritdoc}

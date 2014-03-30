@@ -59,7 +59,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    * search_api_fulltext fields, if set. Other fields should usually be left
    * untouched.
    *
-   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
+   * @param array $items
    *   An array of items to be preprocessed for indexing, formatted as specified
    *   by \Drupal\search_api\Service\ServiceSpecificInterface::indexItems().
    */

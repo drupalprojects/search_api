@@ -234,6 +234,19 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFulltextFields($only_indexed = TRUE);
 
   /**
+   * Retrieves the properties available for this index.
+   *
+   * @param bool $alter
+   *   (optional) Whether to pass the property definitions to the index's
+   *   enabled processors for altering before returning them.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
+   *   The properties included in this index, defined by the datasource and
+   *   optionally altered by the enabled processors.
+   */
+  public function getPropertyDefinitions($alter = TRUE);
+
+  /**
    * Indexes a set amount of items. Will fetch the items to be indexed from the datasource and sends it
    * to indexItems. It then will also mark each as indexed and update the database table
    *
