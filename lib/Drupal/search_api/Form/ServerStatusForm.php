@@ -10,7 +10,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
- * @todo: Add documentation.
+ * Form which allows basic operations on a server, e.g. clear indexed data.
  */
 class ServerStatusForm extends FormBase {
 

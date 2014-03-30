@@ -12,7 +12,7 @@ use Drupal\search_api\Batch\IndexBatchHelper;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * @todo: Add documentation.
+ * Form which allows basic operation on an index, e.g. clear indexed data.
  */
 class IndexStatusForm extends FormBase {
 
