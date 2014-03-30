@@ -38,7 +38,7 @@ class SearchApiServerController extends ControllerBase {
       // Build and append the link to the index.
       $indexes['#links'][] = array(
         'title' => $index->label(),
-        'href' => $index->url('canonical'),
+        'href' => $index->getSystemPath('canonical'),
       );
     }
     // Build the Search API server information.
