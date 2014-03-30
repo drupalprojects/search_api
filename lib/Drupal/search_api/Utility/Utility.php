@@ -285,23 +285,9 @@ class Utility {
    * Removes all pending server tasks from the list.
    *
    * To remove tasks from an individual server see Server::tasksDelete().
-   *
-   * @param array|null $ids
-   *   (optional) The IDs of the pending server tasks to delete. Set to NULL
-   *   to not filter by IDs.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) An index (or its machine name) for which the tasks should be
-   *   deleted. Set to NULL to delete tasks for all indexes.
    */
-  static function serverTasksDelete(array $ids = NULL, $index = NULL) {
-    $delete = db_delete('search_api_task');
-    if ($ids) {
-      $delete->condition('id', $ids);
-    }
-    if ($index) {
-      $delete->condition('index_id', is_object($index) ? $index->id() : $index);
-    }
-    $delete->execute();
+  static function serverTasksDeleteAll() {
+    db_delete('search_api_task')->execute();
   }
 
   /**

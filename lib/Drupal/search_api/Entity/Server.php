@@ -392,14 +392,14 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   }
 
   /**
-   * @param array $servicePluginConfig
+   * {@inheritdoc}
    */
   public function setServicePluginConfig($servicePluginConfig) {
     $this->servicePluginConfig = $servicePluginConfig;
   }
 
   /**
-   * @return array
+   * {@inheritdoc}
    */
   public function getServicePluginConfig() {
     return $this->servicePluginConfig;
@@ -438,22 +438,13 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   }
 
   /**
-   * Removes pending server tasks from the list.
-   *
-   * @param array|null $ids
-   *   (optional) The IDs of the pending server tasks to delete. Set to NULL
-   *   to not filter by IDs.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) An index (or its machine name) for which the tasks should be
-   *   deleted. Set to NULL to delete tasks for all indexes.
+   * {@inheritdoc}
    */
   public function tasksDelete(array $ids = NULL, $index = NULL) {
     $delete = db_delete('search_api_task');
+    $delete->condition('server_id', $this->id());
     if ($ids) {
       $delete->condition('id', $ids);
-    }
-    if ($server) {
-      $delete->condition('server_id', $this->id());
     }
     if ($index) {
       $delete->condition('index_id', is_object($index) ? $this->id() : $index);

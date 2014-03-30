@@ -90,4 +90,29 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
    */
   public function getExtraInformation();
 
+  /**
+   * Adds an entry into this server's list of pending tasks.
+   *
+   * @param string $type
+   *   The type of task to perform.
+   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+   *   (optional) If applicable, the index to which the task pertains (or its
+   *   machine name).
+   * @param mixed $data
+   *   (optional) If applicable, some further data necessary for the task.
+   */
+  public function tasksAdd($type, $index = NULL, $data = NULL);
+
+  /**
+   * Removes pending tasks for this server from the list.
+   *
+   * @param array|null $ids
+   *   (optional) The IDs of the pending server tasks to delete. Set to NULL
+   *   to not filter by IDs.
+   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
+   *   (optional) An index (or its machine name) for which the tasks should be
+   *   deleted. Set to NULL to delete tasks for all indexes.
+   */
+  public function tasksDelete(array $ids = NULL, $index = NULL);
+
 }
