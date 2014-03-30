@@ -198,6 +198,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     // Test enabling the index
     $this->drupalGet($settings_path);
+
     $edit = array(
       'status' => TRUE,
       'datasourcePluginConfig[default]' => 1,
@@ -293,11 +294,8 @@ class SearchApiWebTest extends SearchApiWebTestBase {
   }
 
   private function countTrackedItems() {
-    $results = db_select('search_api_item', 'sai')
-      ->fields('sai')
-      ->execute()
-      ->fetchAllKeyed();
-
-    return count($results);
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->index_id, TRUE);
+    return $index->getDatasource()->getTotalItemsCount();
   }
 }

@@ -185,6 +185,7 @@ class IndexForm extends EntityFormController {
       '#description' => $this->t('Enter the displayed name for the index.'),
       '#default_value' => $index->label(),
       '#required' => TRUE,
+      '#weight' => 1,
     );
     // Build the machine name element.
     $form['machine_name'] = array(
@@ -196,6 +197,7 @@ class IndexForm extends EntityFormController {
         'exists' => array($this->getIndexStorage(), 'load'),
         'source' => array('name'),
       ),
+      '#weight' => 2,
     );
     // Build the datasource element.
     $options = $this->getDatasourcePluginDefinitionOptions();
@@ -218,12 +220,39 @@ class IndexForm extends EntityFormController {
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),
       '#ajax' => array(
-        'callback' => array($this, 'buildAjaxDatasourceConfigForm'),
+        'trigger_as' => array('name' => 'datasourcepluginid_configure'),
+        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
         'wrapper' => 'search-api-datasource-config-form',
         'method' => 'replace',
         'effect' => 'fade',
       ),
+      '#weight' => 3,
     );
+
+    // Build the datasource plugin configuration container element.
+    $form['datasourcePluginConfig'] = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'id' => 'search-api-datasource-config-form',
+      ),
+      '#weight' => 4,
+      '#tree' => TRUE,
+    );
+
+    $form['datasourceConfigureButton'] = array(
+      '#type' => 'submit',
+      '#name' => 'datasourcepluginid_configure',
+      '#value' => t('Configure'),
+      '#limit_validation_errors' => array(array('datasourcePluginId')),
+      '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxDatasourceConfigForm'),
+      '#ajax' => array(
+        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
+        'wrapper' => 'search-api-datasource-config-form',
+      ),
+      '#weight' => 5,
+      '#attributes' => array('class' => array('js-hide')),
+    );
+
     // Build the datasource configuration form.
     $this->buildDatasourceConfigForm($form, $form_state, $index);
 
@@ -234,6 +263,7 @@ class IndexForm extends EntityFormController {
       '#description' => $this->t('Select the server this index should reside on. Index can not be enabled without connection to valid server.'),
       '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
       '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
+      '#weight' => 6,
     );
 
     // Build the status element.
@@ -249,13 +279,16 @@ class IndexForm extends EntityFormController {
           '[name="serverMachineName"]' => array('value' => '')
         ),
       ),
+      '#weight' => 7,
     );
+
     // Build the description element.
     $form['description'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the index.'),
       '#default_value' => $index->getDescription(),
+      '#weight' => 8,
     );
 
     $form['options'] = array(
@@ -263,6 +296,7 @@ class IndexForm extends EntityFormController {
       '#type' => 'details',
       '#title' => t('Index options'),
       '#collapsed' => TRUE,
+      '#weight' => 9,
     );
 
     // Build the read only element.
@@ -273,6 +307,7 @@ class IndexForm extends EntityFormController {
       '#default_value' => $index->isReadOnly(),
       // changed #parents so this option is not saved into options
       '#parents' => array('readOnly'),
+      '#weight' => 10,
     );
     // Build the index directly element.
     $form['options']['index_directly'] = array(
@@ -280,6 +315,7 @@ class IndexForm extends EntityFormController {
       '#title' => $this->t('Index items immediately'),
       '#description' => $this->t('Immediately index new or updated items instead of waiting for the next cron run. This might have serious performance drawbacks and is generally not advised for larger sites.'),
       '#default_value' => $index->getOption('index_directly'),
+      '#weight' => 11,
     );
     // Build the cron limit element.
     $form['options']['cron_limit'] = array(
@@ -293,8 +329,10 @@ class IndexForm extends EntityFormController {
           ':input[name="options[index_directly]"]' => array('checked' => TRUE),
         ),
       ),
+      '#weight' => 12,
     );
   }
+
 
   /**
    * Build the datasource configuration form.
@@ -307,14 +345,6 @@ class IndexForm extends EntityFormController {
    *   An instance of ServerInterface.
    */
   public function buildDatasourceConfigForm(array &$form, array &$form_state, IndexInterface $index) {
-    // Build the datasource plugin configuration container element.
-    $form['datasourcePluginConfig'] = array(
-      '#type' => 'container',
-      '#attributes' => array(
-        'id' => 'search-api-datasource-config-form',
-      ),
-      '#tree' => TRUE,
-    );
     // Check if the index has a valid datasource configured.
     if ($index->hasValidDatasource()) {
       // Get the datasource.
@@ -342,6 +372,13 @@ class IndexForm extends EntityFormController {
   }
 
   /**
+   * Button submit handler for datasource configure button 'datasource_configure' button.
+   */
+  public static function submitAjaxDatasourceConfigForm($form, &$form_state) {
+    $form_state['rebuild'] = TRUE;
+  }
+
+  /**
    * Build the datasource plugin configuration form in context of an Ajax
    * request.
    *
@@ -353,7 +390,7 @@ class IndexForm extends EntityFormController {
    * @return array
    *   An associative array containing the structure of the form.
    */
-  public function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
+  public static function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
     // Get the datasource plugin configuration form.
     return $form['datasourcePluginConfig'];
   }
@@ -387,8 +424,8 @@ class IndexForm extends EntityFormController {
     // Check if the entity has a valid datasource plugin.
     elseif ($entity->hasValidDatasource()) {
       // Validate the datasource plugin configuration form.
-      $datassource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
-      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $datassource_form_state);
+      $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
+      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
     }
   }
 
@@ -414,8 +451,8 @@ class IndexForm extends EntityFormController {
       // Get the datasource from the entity.
       $datasource = $entity->getDatasource();
       // Submit the datasource plugin configuration form.
-      $datassource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
-      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $datassource_form_state);
+      $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
+      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
     }
     return $entity;
   }
