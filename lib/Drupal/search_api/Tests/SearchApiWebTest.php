@@ -165,9 +165,8 @@ class SearchApiWebTest extends SearchApiWebTestBase {
   }
 
   public function trackContent() {
-    // Intially there should be no tracked items, because there are no nodes
+    // Initially there should be no tracked items, because there are no nodes
     $tracked_items = $this->countTrackedItems();
-    debug($tracked_items);
 
     $this->assertEqual($tracked_items, 0, t('No items are tracked yet'));
 
@@ -187,7 +186,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[default]' => 0,
       'datasourcePluginConfig[bundles][article]' => FALSE,
       'datasourcePluginConfig[bundles][page]' => FALSE,
     );
@@ -196,19 +195,26 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, t('No items are tracked'));
 
+    // Debug it
+    $this->verbose($this->drupalGet($settings_path));
+
     // Test enabling the index
     $this->drupalGet($settings_path);
 
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 1,
-      'datasourcePluginConfig[bundles][article]' => FALSE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfig[default]' => 0,
+      'datasourcePluginConfig[bundles][article]' => TRUE,
+      'datasourcePluginConfig[bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
+
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+
+    // Debug it
+    $this->verbose($this->drupalGet($settings_path));
 
     // Test putting default to zero and no bundles checked.
     // This will ignore all bundles except the ones that are checked.
@@ -216,7 +222,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfig[default]' => 1,
+      'datasourcePluginConfig[default]' => 0,
       'datasourcePluginConfig[bundles][article]' => FALSE,
       'datasourcePluginConfig[bundles][page]' => FALSE,
     );
@@ -229,14 +235,19 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     // This will ignore all bundles except the ones that are checked.
     // This means all articles should be added.
     $this->drupalGet($settings_path);
+
     $edit = array(
-      'status' => FALSE,
-      'datasourcePluginConfig[default]' => 1,
+      'status' => TRUE,
+      'datasourcePluginConfig[default]' => 0,
       'datasourcePluginConfig[bundles][article]' => TRUE,
       'datasourcePluginConfig[bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
+    debug('test');
+    $this->verbose($this->drupalGet($settings_path));
+
+    debug($this->countTrackedItems());
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
 
@@ -245,8 +256,8 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     // This means all pages should be added.
     $this->drupalGet($settings_path);
     $edit = array(
-      'status' => FALSE,
-      'datasourcePluginConfig[default]' => 1,
+      'status' => TRUE,
+      'datasourcePluginConfig[default]' => 0,
       'datasourcePluginConfig[bundles][article]' => FALSE,
       'datasourcePluginConfig[bundles][page]' => TRUE,
     );
@@ -260,7 +271,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     // This means all pages should be added.
     $this->drupalGet($settings_path);
     $edit = array(
-      'status' => FALSE,
+      'status' => TRUE,
       'datasourcePluginConfig[default]' => 1,
       'datasourcePluginConfig[bundles][article]' => TRUE,
       'datasourcePluginConfig[bundles][page]' => FALSE,

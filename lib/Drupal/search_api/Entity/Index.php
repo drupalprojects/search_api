@@ -757,23 +757,24 @@ class Index extends ConfigEntityBase implements IndexInterface {
           // $this->queueItems();
         }
       }
+      // Only check if there is a datasource
       if ($this->getDatasource()) {
-        if ((!$update && $this->status()) || ($this->status() && !$this->original->status())) {
-          // Start tracking
+        $current_conf = $this->getDatasource()->getConfiguration();
+        $previous_conf = $this->original->getDatasource()->getConfiguration();
+
+        // If the index is new (so no update) and the status is enabled, start tracking
+        // If the index is not new but the original status is disabled and the new status, start tracking
+        if ((!$update && $this->status()) || ($update && $this->status())) {
+          if (($current_conf['default'] != $previous_conf['default']) || ($current_conf['bundles'] != $previous_conf['bundles'])) {
+            $this->getDatasource()->stopTracking();
+          }
+            // Start tracking
           $this->getDatasource()->startTracking();
         }
+        // if there is an update and the status is disabled where it was enabled before, stop tracking
         elseif ($update && !$this->status() && $this->original->status()) {
           // Stop tracking
           $this->getDatasource()->stopTracking();
-        }
-        elseif ($update && $this->status() && $this->original->status()) {
-          $current_configuration = $this->getDatasource()->getConfiguration();
-          $previous_configuration = $this->original->getDatasource()->getConfiguration();
-
-          if ($current_configuration['default'] != $previous_configuration['default'] || $current_configuration['bundles'] != $previous_configuration['bundles']) {
-            $this->getDatasource()->stopTracking();
-            $this->getDatasource()->startTracking();
-          }
         }
       }
 

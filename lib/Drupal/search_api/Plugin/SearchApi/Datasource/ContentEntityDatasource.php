@@ -306,6 +306,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function getEntityIds() {
     $node_ids = array();
+    $bundles = $this->getIndexedBundles();
     if ($bundles = $this->getIndexedBundles()) {
       $select = \Drupal::entityQuery($this->getEntityTypeId());
       if (count($bundles) != count($this->getEntityBundles())) {
@@ -329,7 +330,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     if ($configuration['default']) {
       $bundles = $this->getEntityBundles();
       foreach ($configuration['bundles'] as $config_bundle_name => $config_bundle) {
-        unset($bundles[$config_bundle_name]);
+        if (isset($bundles[$config_bundle])) {
+          unset($bundles[$config_bundle]);
+        }
       }
     }
     return array_keys($bundles);
