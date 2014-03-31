@@ -97,10 +97,10 @@ class IndexStorage extends ConfigEntityStorage implements IndexStorageInterface 
     // datasourcePluginConfig.config = 0, exclude from indexing if the bundle does not exists
     foreach ($indexes as $index_id => $index) {
       if (isset($index->datasourcePluginConfig['default'])) {
-        if (($index->datasourcePluginConfig['default'] == 1) && isset($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
+        if (($index->datasourcePluginConfig['default'] == 1) && !empty($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
           unset($indexes[$index_id]);
         }
-        if (($index->datasourcePluginConfig['default'] == 0) && !isset($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
+        if (($index->datasourcePluginConfig['default'] == 0) && empty($index->datasourcePluginConfig['bundles'][$entity_bundle])) {
           unset($indexes[$index_id]);
         }
       }

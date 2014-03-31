@@ -284,10 +284,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     // This means all articles should be added.
     $this->drupalGet($settings_path);
     $edit = array(
-      'status' => FALSE,
+      'status' => TRUE,
       'datasourcePluginConfig[default]' => 1,
-      'datasourcePluginConfig[bundles][article]' => TRUE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfig[bundles][article]' => FALSE,
+      'datasourcePluginConfig[bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
