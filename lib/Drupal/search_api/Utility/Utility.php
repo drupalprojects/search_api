@@ -12,7 +12,6 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
-use Drupal\search_api\Server\ServerInterface;
 
 /**
  * Utility methods.
@@ -336,6 +335,34 @@ class Utility {
    */
   public static function createQuery(IndexInterface $index, array $options = array()) {
     return Query::create($index, $options);
+  }
+
+  /**
+   * Returns a deep copy of the input array.
+   *
+   * The behavior of PHP regarding arrays with references pointing to it is
+   * rather weird.
+   *
+   * @param array $array
+   *   The array to copy.
+   *
+   * @return array
+   *   A deep copy of the array.
+   */
+  public static function deepCopy(array $array) {
+    $copy = array();
+    foreach ($array as $k => $v) {
+      if (is_array($v)) {
+        $copy[$k] = static::deepCopy($v);
+      }
+      elseif (is_object($v)) {
+        $copy[$k] = clone $v;
+      }
+      elseif ($v) {
+        $copy[$k] = $v;
+      }
+    }
+    return $copy;
   }
 
 }
