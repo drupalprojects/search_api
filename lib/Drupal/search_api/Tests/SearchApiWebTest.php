@@ -105,7 +105,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     $edit = array(
       'name' => 'Search API test index',
-      'machine_name' => $this->indexid,
+      'machine_name' => $this->indexId,
       'status' => 1,
       'description' => 'An index used for testing.',
       'serverMachineName' => $this->serverId,
@@ -209,7 +209,6 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
 
@@ -244,7 +243,6 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    debug('test');
     $this->verbose($this->drupalGet($settings_path));
 
     debug($this->countTrackedItems());
@@ -306,10 +304,8 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
   private function countTrackedItems() {
     /** @var $index \Drupal\search_api\Entity\Index */
-    debug($this->indexId);
-    return 0;
-    //$index = \Drupal::entityManager()->getStorage('search_api_index')->load($this->indexId);
-    //$datasource = $index->getDatasource();
-    //return $index->getDatasource()->getTotalItemsCount();
+    $index = entity_load('search_api_index', $this->indexId);
+    $datasource = $index->getDatasource();
+    return $index->getDatasource()->getTotalItemsCount();
   }
 }

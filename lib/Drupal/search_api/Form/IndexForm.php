@@ -449,8 +449,13 @@ class IndexForm extends EntityFormController {
     elseif ($entity->hasValidDatasource()) {
       // Get the datasource from the entity.
       $datasource = $entity->getDatasource();
-      // Submit the datasource plugin configuration form.
       $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
+      // Also add all additional values so that we can read them in the plugin. Useful for the status
+      $indexValues = $form_state['values'];
+      unset($indexValues['datasourcePluginConfig']);
+      $datasource_form_state['values']['index'] = $indexValues;
+
+      // Submit the datasource plugin configuration form.
       $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
     }
     $entity = parent::submit($form, $form_state);

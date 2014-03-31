@@ -244,7 +244,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function stopTracking() {
-    $this->trackDelete();
+    $entity_ids = $this->getEntityIds();
+    $this->trackDelete($entity_ids);
   }
 
   /**
@@ -261,6 +262,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function stopTrackingBundles(array $bundles) {
+    debug('stopTrackingBundles');
+    debug($bundles);
     $entity_ids = $this->getEntityIds($bundles);
     if (!empty($entity_ids)) {
       return $this->trackDelete($entity_ids);
@@ -412,6 +415,15 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       foreach ($configuration['bundles'] as $config_bundle_name => $config_bundle) {
         if (isset($bundles[$config_bundle])) {
           unset($bundles[$config_bundle]);
+        }
+      }
+    }
+    // When the default is set to 0, all bundles that are selected are chosen
+    else {
+      // Remove all unselected bundles
+      foreach ($bundles as $bundle_key => $bundle_value) {
+        if ($bundle_value === 0) {
+          unset($bundles[$bundle_key]);
         }
       }
     }

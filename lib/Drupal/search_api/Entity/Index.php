@@ -546,9 +546,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFulltextFields($only_indexed = TRUE) {
     $i = $only_indexed ? 1 : 0;
+    $fields = array();
     if (!isset($this->fulltextFields[$i])) {
       $this->fulltextFields[$i] = array();
-      $fields = $only_indexed ? $this->options['fields'] : $this->getFields(FALSE);
+      if ($only_indexed) {
+        if (isset($this->options['fields'])) {
+          $fields = $this->options['fields'];
+        }
+      }
+      else {
+        $fields = $this->getFields(FALSE);
+      }
       foreach ($fields as $key => $field) {
         if (search_api_is_text_type($field['type'])) {
           $this->fulltextFields[$i][] = $key;
