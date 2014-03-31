@@ -15,6 +15,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -51,13 +52,15 @@ class IndexStorage extends ConfigEntityStorage implements IndexStorageInterface 
    *   The config storage service.
    * @param \Drupal\Component\Uuid\UuidInterface $uuid_service
    *   The UUID service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
    *   The query factory.
    */
-  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, StorageInterface $config_storage, UuidInterface $uuid_service, EntityManagerInterface $entity_manager, QueryFactory $query_factory) {
-    parent::__construct($entity_type, $config_factory, $config_storage, $uuid_service);
+  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, StorageInterface $config_storage, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager, QueryFactory $query_factory) {
+    parent::__construct($entity_type, $config_factory, $config_storage, $uuid_service, $language_manager);
     $this->entityManager = $entity_manager;
     $this->queryFactory = $query_factory;
   }
@@ -71,6 +74,7 @@ class IndexStorage extends ConfigEntityStorage implements IndexStorageInterface 
       $container->get('config.factory'),
       $container->get('config.storage'),
       $container->get('uuid'),
+      $container->get('language_manager'),
       $container->get('entity.manager'),
       $container->get('entity.query')
     );
