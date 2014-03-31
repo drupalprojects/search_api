@@ -170,9 +170,18 @@ function theme_search_api_server($variables) {
     $rows[] = Utility::deepCopy($row);
   }
 
-  //
-  // @todo: Add extra information once the function is available.
-  //
+  // Check if the server has extra information available.
+  if (($extra = $server->getExtraInformation())) {
+    // Iterate through the extra information.
+    foreach ($extra as $information) {
+      // Convert the extra information and append the information to the row.
+      $label = $information['label'];
+      $info = $information['info'];
+      $class = (empty($information['status']) ? '' : $information['status']);
+      $rows[] = Utility::deepCopy($row);
+    }
+  }
+
   // Build the server info table theme variables.
   $server_info_table = array(
     '#theme' => 'table',

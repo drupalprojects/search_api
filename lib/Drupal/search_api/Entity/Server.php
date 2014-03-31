@@ -226,21 +226,21 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function viewSettings() {
-    return $this->getService()->viewSettings();
+    return $this->hasValidService() ? $this->getService()->viewSettings() : array();
   }
 
   /**
    * {@inheritdoc}
    */
   public function supportsFeature($feature) {
-    return $this->getService()->supportsFeature($feature);
+    return $this->hasValidService() ? $this->getService()->supportsFeature($feature) : FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
   public function supportsDatatype($type) {
-    return $this->getService()->supportsDatatype($type);
+    return $this->hasValidService() ? $this->getService()->supportsDatatype($type) : FALSE;
   }
 
   /**
@@ -403,6 +403,16 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function getServicePluginConfig() {
     return $this->servicePluginConfig;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtraInformation() {
+    if ($this->supportsFeature('search_api_service_extra')) {
+      return $this->getService()->getExtraInformation();
+    }
+    return array();
   }
 
   /**

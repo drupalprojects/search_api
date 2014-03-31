@@ -79,7 +79,7 @@ abstract class ServicePluginBase extends ConfigurablePluginBase implements Servi
    * {@inheritdoc}
    */
   public function supportsFeature($feature) {
-    return FALSE;
+    return ($feature === 'search_api_service_extra' && $this instanceof ServiceExtraInfoInterface);
   }
 
   /**

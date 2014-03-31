@@ -5,6 +5,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Service;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Service\ServicePluginBase;
+use Drupal\search_api\Service\ServiceExtraInfoInterface;
 
 /**
  * @SearchApiService(
@@ -13,7 +14,7 @@ use Drupal\search_api\Service\ServicePluginBase;
  *   description = @Translation("Dummy service implementation")
  * )
  */
-class TestService extends ServicePluginBase {
+class TestService extends ServicePluginBase implements ServiceExtraInfoInterface {
 
   /**
    * {@inheritdoc}
@@ -49,6 +50,23 @@ class TestService extends ServicePluginBase {
           'id' => 2,
           'score' => 1,
         ),
+      ),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtraInformation() {
+    return array(
+      array(
+        'label' => 'Dummy Info',
+        'info' => 'Dummy Value',
+        'status' => 'error',
+      ),
+      array(
+        'label' => 'Dummy Info 2',
+        'info' => 'Dummy Value 2',
       ),
     );
   }
