@@ -39,7 +39,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    *
    * @var \Drupal\Core\Database\Connection
    */
-  private $databaseConnection;
+  protected $databaseConnection;
 
 
   /**

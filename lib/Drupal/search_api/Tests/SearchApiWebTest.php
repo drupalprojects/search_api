@@ -101,11 +101,11 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
     $this->assertText(t('!name field is required.', array('!name' => t('Data type'))));
 
-    $this->index_id = 'test_index';
+    $this->indexId = 'test_index';
 
     $edit = array(
       'name' => 'Search API test index',
-      'machine_name' => $this->index_id,
+      'machine_name' => $this->indexid,
       'status' => 1,
       'description' => 'An index used for testing.',
       'serverMachineName' => $this->serverId,
@@ -115,10 +115,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The index was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/index/' . $this->index_id, array(), t('Correct redirect to index page.'));
+    $this->assertUrl('admin/config/search/search-api/index/' . $this->indexId, array(), t('Correct redirect to index page.'));
 
     /** @var $index \Drupal\search_api\Entity\Index */
-    $index = entity_load('search_api_index', $this->index_id, TRUE);
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
 
     $this->assertEqual($index->name, $edit['name'], t('Name correctly inserted.'));
     $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
@@ -129,7 +129,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
   }
 
   public function addFieldsToIndex() {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->index_id . '/fields';
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -146,7 +146,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertUrl($settings_path, array(), t('Correct redirect to fields page.'));
 
     /** @var $index \Drupal\search_api\Entity\Index */
-    $index = entity_load('search_api_index', $this->index_id, TRUE);
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields();
 
     $this->assertEqual($fields['nid']['indexed'], $edit['fields[nid][indexed]'], t('nid field is indexed.'));
@@ -180,7 +180,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
 
     // Create the edit index path
-    $settings_path = 'admin/config/search/search-api/index/' . $this->index_id . '/edit';
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
 
     // Test disabling the index
     $this->drupalGet($settings_path);
@@ -306,7 +306,10 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
   private function countTrackedItems() {
     /** @var $index \Drupal\search_api\Entity\Index */
-    $index = entity_load('search_api_index', $this->index_id, TRUE);
-    return $index->getDatasource()->getTotalItemsCount();
+    debug($this->indexId);
+    return 0;
+    //$index = \Drupal::entityManager()->getStorage('search_api_index')->load($this->indexId);
+    //$datasource = $index->getDatasource();
+    //return $index->getDatasource()->getTotalItemsCount();
   }
 }

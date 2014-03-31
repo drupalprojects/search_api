@@ -32,14 +32,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *
    * @var \Drupal\Core\Entity\EntityManager
    */
-  private $entityManager;
+  protected $entityManager;
 
   /**
    * The entity storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  private $storage;
+  protected $storage;
 
   /**
    * The typed data manager.
@@ -53,7 +53,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *
    * @var \Drupal\Core\Database\Connection
    */
-  private $databaseConnection;
+  protected $databaseConnection;
 
   /**
    * Create a ContentEntityDatasource object.
@@ -168,16 +168,57 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function setConfiguration(array $configuration) {
+  public function setConfiguration(array $new_config) {
     // Get the current configuration.
-    $current_configuration = $this->getConfiguration();
-    // Apply the configuration changes.
-    parent::setConfiguration($configuration);
+    $old_config = $this->getConfiguration();
+    parent::setConfiguration($new_config);
+
+    // Apply the configusubmitConfigurationFormration changes.
+    $bundles_start = array();
+    $bundles_stop = array();
     // Check if the datasource configuration changed.
-    if ($current_configuration['default'] != $configuration['default'] || array_diff_key($current_configuration, $configuration) || array_diff_key($configuration, $current_configuration)) {
-       //if (($current_conf['default'] != $previous_conf['default']) || ($current_conf['bundles'] != $previous_conf['bundles'])) {
+    if ($old_config['default'] != $new_config['default']) {
+      // Invert the bundles so that the diff also resolves
+      foreach ($old_config['bundles'] as $bundle_key => $bundle) {
+        if ($bundle_key == $bundle) {
+          $old_config['bundles'][$bundle_key] = 0;
+        }
+        else {
+          $old_config['bundles'][$bundle_key] = $bundle_key;
+        }
+      }
+    }
+
+    if ((array_diff_assoc($new_config['bundles'], $old_config['bundles']))) {
        // StopTracking figures out which bundles to remove
-      $this->stopTracking();
+      $diff = array_diff_assoc($new_config['bundles'], $old_config['bundles']);
+      // A bundle is selected when the key equals its value
+      foreach ($diff as $bundle_key => $bundle) {
+        // Default is 0 for "Only those from the selected bundles"
+        if ($new_config['default'] == 0) {
+          if ($bundle_key === $bundle) {
+            $bundles_start[$bundle_key] = $bundle;
+          }
+          else {
+            $bundles_stop[$bundle_key] = $bundle;
+          }
+        }
+        // Default is 1 for "All but those from one of the selected bundles"
+        else {
+          if ($bundle_key === $bundle) {
+            $bundles_stop[$bundle_key] = $bundle;
+          }
+          else {
+            $bundles_start[$bundle_key] = $bundle;
+          }
+        }
+      }
+      if (!empty($bundles_start)) {
+        $this->startTrackingBundles(array_keys($bundles_start));
+      }
+      if (!empty($bundles_stop)) {
+        $this->stopTrackingBundles(array_keys($bundles_stop));
+      }
     }
   }
 
@@ -204,6 +245,26 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function stopTracking() {
     $this->trackDelete();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function startTrackingBundles(array $bundles) {
+    $entity_ids = $this->getEntityIds($bundles);
+    if (!empty($entity_ids)) {
+      return $this->trackInsert($entity_ids);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function stopTrackingBundles(array $bundles) {
+    $entity_ids = $this->getEntityIds($bundles);
+    if (!empty($entity_ids)) {
+      return $this->trackDelete($entity_ids);
+    }
   }
 
   /**
@@ -292,7 +353,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *   TRUE if the entity type supports bundles, otherwise FALSE.
    */
   public function isEntityBundlable() {
-    // Get the entity type definition.
+    // Get the entity type definition
     $entity_type_definition = $this->entityManager->getDefinition($this->getEntityTypeId());
     // Determine whether the entity type supports bundles.
     return $entity_type_definition->hasKey('bundle');
@@ -310,11 +371,23 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
 
   /**
    * Gets the affected entity ids.
+   *
+   * By default it takes the bundles from the current settings.
+   *
+   * @param array $bundles
+   *   List of bundles you want to get the entity id's from
+   *
+   * @return array
    */
-  public function getEntityIds() {
+  public function getEntityIds(array $bundles = NULL) {
     $node_ids = array();
-    $bundles = $this->getIndexedBundles();
-    if ($bundles = $this->getIndexedBundles()) {
+
+    // Get our bundles from the datasource if it was not passed.
+    if (!isset($bundles)) {
+      $bundles = $this->getIndexedBundles();
+    }
+    // If we have bundles to fetch
+    if ($bundles) {
       $select = \Drupal::entityQuery($this->getEntityTypeId());
       if (count($bundles) != count($this->getEntityBundles())) {
         $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');

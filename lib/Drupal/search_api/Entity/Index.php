@@ -761,9 +761,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       // Only check if there is a datasource
       if ($this->getDatasource()) {
-        $current_conf = $this->getDatasource()->getConfiguration();
-        $previous_conf = $this->original->getDatasource()->getConfiguration();
-
         // If the index is new (so no update) and the status is enabled, start tracking
         // If the index is not new but the original status is disabled and the new status, start tracking
         if ((!$update && $this->status()) || ($update && ($this->status() && !$this->original->status()))) {
