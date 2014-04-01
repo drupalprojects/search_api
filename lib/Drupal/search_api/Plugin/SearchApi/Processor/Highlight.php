@@ -3,8 +3,10 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
@@ -132,30 +134,34 @@ class Highlight extends ProcessorPluginBase {
 
     foreach ($response['results'] as $id => &$result) {
       if ($this->configuration['excerpt']) {
-        $text = array();
-        $fields = $this->getFulltextFields($response['results'], $id);
-        foreach ($fields as $data) {
-          if (is_array($data)) {
-            $text = array_merge($text, $data);
-          }
-          else {
-            $text[] = $data;
-          }
-        }
-        $result['excerpt'] = $this->createExcerpt(implode("\n\n", $text), $keys);
+        $this->postprocessExcerptResults($response['results'], $id, $keys);
       }
       if ($this->configuration['highlight'] != 'never') {
-        $fields = $this->getFulltextFields($response['results'], $id, $this->configuration['highlight'] == 'always');
-        foreach ($fields as $field => $data) {
-          if (is_array($data)) {
-            foreach ($data as $i => $text) {
-              $result['fields'][$field][$i] = $this->highlightField($text, $keys);
-            }
-          }
-          else {
-            $result['fields'][$field] = $this->highlightField($data, $keys);
-          }
-        }
+        $this->postprocessFieldResults($response['results'], $id, $keys);
+      }
+    }
+  }
+
+  /**
+   * For a single result retrieve fields and create an highlighted excerpt.
+   */
+  protected function postprocessExcerptResults(array &$results, $id, $keys) {
+    $text = array();
+    $fields = $this->getFulltextFields($results, $id);
+    foreach ($fields as $data) {
+      $text = array_merge($text, $data);
+    }
+    $result['excerpt'] = $this->createExcerpt(implode("\n\n", $text), $keys);
+  }
+
+  /**
+   * For a single result retrieve fields and highlight.
+   */
+  protected function postprocessFieldResults(array &$results, $id, $keys) {
+    $fields = $this->getFulltextFields($results, $id, $this->configuration['highlight'] == 'always');
+    foreach ($fields as $field => $data) {
+      foreach ($data as $i => $text) {
+        $results['fields'][$field][$i] = $this->highlightField($text, $keys);
       }
     }
   }
@@ -202,18 +208,14 @@ class Highlight extends ProcessorPluginBase {
     }
 
     if (empty($result['entity'])) {
-      $items = $this->index->loadItems(array_keys($results));
-      foreach ($items as $id => $item) {
-        $results[$id]['entity'] = $item;
-      }
+      $this->loadResultsEntities($results);
     }
     // If we still don't have a loaded item, we should stop trying.
     if (empty($result['entity'])) {
       return $data;
     }
-    $wrapper = $this->index->entityWrapper($result['entity'], FALSE);
-    $wrapper->language($language->language);
-    search_api_extract_fields($wrapper, $needs_extraction);
+
+    Utility::extractFields($result['entity'], $needs_extraction);
 
     foreach ($needs_extraction as $field => $info) {
       if (isset($info['value'])) {
@@ -222,6 +224,16 @@ class Highlight extends ProcessorPluginBase {
     }
 
     return $data;
+  }
+
+  /**
+   * Loads entities into results array.
+   */
+  protected function loadResultsEnities(array &$results) {
+    $items = $this->index->loadItems(array_keys($results));
+    foreach ($items as $id => $item) {
+      $results[$id]['entity'] = $item;
+    }
   }
 
   /**
@@ -299,98 +311,106 @@ class Highlight extends ProcessorPluginBase {
   protected function createExcerpt($text, array $keys) {
     // Prepare text by stripping HTML tags and decoding HTML entities.
     $text = strip_tags(str_replace(array('<', '>'), array(' <', '> '), $text));
-    $text = ' ' . decode_entities($text);
-
-    // Extract fragments around keywords.
-    // First we collect ranges of text around each keyword, starting/ending
-    // at spaces, trying to get to the requested length.
-    // If the sum of all fragments is too short, we look for second occurrences.
+    $text = ' ' . String::decodeEntities($text);
+    // Extract fragments of about 60 characters around keywords, bounded by word
+    // boundary characters. Try to reach 256 characters, using second
+    // occurrences if necessary.
     $ranges = array();
-    $included = array();
     $length = 0;
-    $workkeys = $keys;
-    while ($length < $this->configuration['excerpt_length'] && count($workkeys)) {
-      foreach ($workkeys as $k => $key) {
-        if ($length >= $this->configuration['excerpt_length']) {
+    $look_start = array();
+    $remaining_keys = $keys;
+
+    while ($length < 256 && !empty($remaining_keys)) {
+      $found_keys = array();
+      foreach ($remaining_keys as $key) {
+        if ($length >= 256) {
           break;
         }
-        // Remember occurrence of key so we can skip over it if more occurrences
-        // are desired.
-        if (!isset($included[$key])) {
-          $included[$key] = 0;
+
+        // Remember where we last found $key, in case we are coming through a
+        // second time.
+        if (!isset($look_start[$key])) {
+          $look_start[$key] = 0;
         }
-        // Locate a keyword (position $p, always >0 because $text starts with a
-        // space).
-        $p = 0;
-        if (preg_match('/' . self::$boundary . preg_quote($key, '/') . self::$boundary . '/iu', $text, $match, PREG_OFFSET_CAPTURE, $included[$key])) {
-          $p = $match[0][1];
-        }
-        // Now locate a space in front (position $q) and behind it (position $s),
-        // leaving about 60 characters extra before and after for context.
-        // Note that a space was added to the front and end of $text above.
-        if ($p) {
-          if (($q = strpos(' ' . $text, ' ', max(0, $p - 61))) !== FALSE) {
-            $end = substr($text . ' ', $p, 80);
-            if (($s = strrpos($end, ' ')) !== FALSE) {
-              // Account for the added spaces.
-              $q = max($q - 1, 0);
-              $s = min($s, strlen($end) - 1);
-              $ranges[$q] = $p + $s;
-              $length += $p + $s - $q;
-              $included[$key] = $p + 1;
-            }
-            else {
-              unset($workkeys[$k]);
+
+        // See if we can find $key after where we found it the last time. Since
+        // we are requiring a match on a word boundary, make sure $text starts
+        // and ends with a space.
+        $matches = array();
+        if (preg_match('/' . self::$boundary . $key . self::$boundary . '/iu', ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
+          $found_position = $matches[0][1];
+          $look_start[$key] = $found_position + 1;
+          // Keep track of which keys we found this time, in case we need to
+          // pass through again to find more text.
+          $found_keys[] = $key;
+
+          // Locate a space before and after this match, leaving about 60
+          // characters of context on each end.
+          $before = strpos(' ' . $text, ' ', max(0, $found_position - 61));
+          if ($before !== FALSE && $before <= $found_position) {
+            $after = strpos($text . ' ', ' ', min($found_position + 61, strlen($text)));
+            if ($after !== FALSE && $after > $found_position) {
+              // Account for the spaces we added.
+              $before = max($before - 1, 0);
+              $after = min($after, strlen($text));
+              if ($before < $after) {
+                // Save this range.
+                $ranges[$before] = $after;
+                $length += $after - $before;
+              }
             }
           }
-          else {
-            unset($workkeys[$k]);
-          }
-        }
-        else {
-          unset($workkeys[$k]);
         }
       }
+      // Next time through this loop, only look for keys we found this time,
+      // if any.
+      $remaining_keys = $found_keys;
     }
 
-    if (count($ranges) == 0) {
-      // We didn't find any keyword matches, so just return NULL.
+    if (empty($ranges)) {
+      // We didn't find any keyword matches, return NULL.
       return NULL;
     }
 
     // Sort the text ranges by starting position.
     ksort($ranges);
 
-    // Now we collapse overlapping text ranges into one. The sorting makes it O(n).
-    $newranges = array();
-    foreach ($ranges as $from2 => $to2) {
-      if (!isset($from1)) {
-        $from1 = $from2;
-        $to1 = $to2;
+    // Collapse overlapping text ranges into one. The sorting makes it O(n).
+    $new_ranges = array();
+    $max_end = 0;
+    foreach ($ranges as $this_from => $this_to) {
+      $max_end = max($max_end, $this_to);
+      if (!isset($working_from)) {
+        // This is the first time through this loop: initialize.
+        $working_from = $this_from;
+        $working_to = $this_to;
         continue;
       }
-      if ($from2 <= $to1) {
-        $to1 = max($to1, $to2);
+      if ($this_from <= $working_to) {
+        // The ranges overlap: combine them.
+        $working_to = max($working_to, $this_to);
       }
       else {
-        $newranges[$from1] = $to1;
-        $from1 = $from2;
-        $to1 = $to2;
+        // The ranges do not overlap save the working range and start a new one.
+        $new_ranges[$working_from] = $working_to;
+        $working_from = $this_from;
+        $working_to = $this_to;
       }
     }
-    $newranges[$from1] = $to1;
+    // Save the remaining working range.
+    $new_ranges[$working_from] = $working_to;
 
-    // Fetch text
+    // Fetch text within the combined ranges we found.
     $out = array();
-    foreach ($newranges as $from => $to) {
+    foreach ($new_ranges as $from => $to) {
       $out[] = substr($text, $from, $to - $from);
     }
 
-    // Let translators have the ... separator text as one chunk.
-    $dots = explode('!excerpt', t('... !excerpt ... !excerpt ...'));
-
-    $text = (isset($newranges[0]) ? '' : $dots[0]) . implode($dots[1], $out) . $dots[2];
-    $text = check_plain($text);
+    // Combine the text chunks with "..." separators. The "..." needs to be
+    // translated. Let translators have the ... separator text as one chunk.
+    $dots = explode('!excerpt', $this->t('... !excerpt ... !excerpt ...'));
+    $text = (isset($new_ranges[0]) ? '' : $dots[0]) . implode($dots[1], $out) . (($max_end < strlen($text) - 1) ? $dots[2] : '');
+    $text = String::checkPlain($text);
 
     return $this->highlightField($text, $keys);
   }
@@ -410,7 +430,7 @@ class Highlight extends ProcessorPluginBase {
     $replace = $this->configuration['prefix'] . '\0' . $this->configuration['suffix'];
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
     $text = preg_replace('/' . self::$boundary . '(' . $keys . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
-    return substr($text, 1, -1);
+    return trim(substr($text, 1, -1));
   }
 
 }
