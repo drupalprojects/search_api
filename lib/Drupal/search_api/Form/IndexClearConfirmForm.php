@@ -38,14 +38,10 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
   public function submit(array $form, array &$form_state) {
     // Get the search index entity object.
     $entity = $this->getEntity();
-    // Clear the index.
-    if ($entity->clear()) {
-      // Notify user about successful removal.
-      drupal_set_message($this->t('The search index %name was successfully cleared.', array('%name' => $entity->label())));
-    }
-    else {
-      // Notify user about failure to clear indexed data.
-      drupal_set_message($this->t('Failed to clear indexed data from search index %name.', array('%name' => $entity->label())), 'error');
+    // Check if the search index has a valid server available.
+    if ($entity->hasValidServer()) {
+      // Delete items from the server related to the current search index.
+      $entity->getServer()->deleteAllItems($entity);
     }
     // Redirect to the index view page.
     $form_state['redirect_route'] = array(

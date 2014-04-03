@@ -709,7 +709,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function clear() {
     $this->getServer()->deleteAllItems($this);
-    $this->reindex();
+    $this->getDatasource()->trackUpdate();
     return TRUE;
   }
 
