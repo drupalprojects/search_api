@@ -51,7 +51,8 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
     $ignored_indexes = array();
     // Iterate through the attached indexes.
     foreach ($entity->getIndexes() as $index) {
-      // Check if reindexing items is possible.
+      // Check if reindexing items is possible. @fixme: We could use clear()
+      // instead but then clear should take status and readonly into account.
       if ($index->reindex()) {
         // Delete all indexed data for the current index.
         $entity->deleteAllItems($index);

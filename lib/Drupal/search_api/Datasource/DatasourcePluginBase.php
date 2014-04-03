@@ -172,7 +172,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
             $statement->values(array(
               'item_id' => $item_id,
               'index_id' => $index_id,
-              'changed' => 0,
+              'changed' => REQUEST_TIME,
             ));
           }
           // Execute the insert statement.
@@ -255,7 +255,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
         foreach (array_chunk($ids, 1000) as $ids_chunk) {
           // Build the fields which need to be updated.
           $fields = array(
-            'changed' => REQUEST_TIME,
+            'changed' => 0, // Mark item as indexed.
           );
           // Build and execute the update statement.
           $this->createUpdateStatement()
@@ -345,23 +345,24 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
 
       $statement
         ->fields('sai', array('item_id'))
-        ->condition(db_or()
-            ->condition('sai.changed', $changed, '>')
-            // Tie breaker for entities that were changed at exactly
-            // the same second as the last indexed entity
-            ->condition(db_and()
-                ->condition('sai.changed', $changed, '=')
-                ->condition('sai.item_id', $item_id, '>')
-            )
-        )
+        ->condition('sai.changed', 0, '<>')
+//        ->condition(db_or()
+//            ->condition('sai.changed', $changed, '>')
+//            // Tie breaker for entities that were changed at exactly
+//            // the same second as the last indexed entity
+//            ->condition(db_and()
+//                ->condition('sai.changed', $changed, '=')
+//                ->condition('sai.item_id', $item_id, '>')
+//            )
+//        )
         // It is important that everything is indexed in order of changed date and
         // then on entity_id because otherwise the conditions above will not match
         // correctly
-        ->orderBy('sai.changed', 'ASC')
-        ->orderBy($alias, 'ASC')
-        ->orderBy('sai.item_id', 'ASC');
+        ->orderBy('sai.changed', 'ASC');
+    //->orderBy($alias, 'ASC')
+    //->orderBy('sai.item_id', 'ASC');
 
-      return $statement;
+    return $statement;
   }
 
   /**
