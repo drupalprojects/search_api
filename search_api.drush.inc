@@ -272,7 +272,8 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
     // Get the number of items to index per batch run.
     /*if (!isset($batch_size)) {
       $cron_limit = $index->getOption('cron_limit');
-      $batch_size = empty($cron_limit) ?: SEARCH_API_DEFAULT_CRON_LIMIT;
+      $searchApiSettings = \Drupal::configFactory()->get('search_api.settings');
+      $batch_size = empty($cron_limit) ?: $searchApiSettings->get('cron_limit');
     }
     elseif ($batch_size <= 0) {
       $batch_size = $remaining;

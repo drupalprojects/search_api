@@ -309,7 +309,7 @@ function theme_search_api_index($variables) {
     }
     // Get the configured options, merge in default options to prevent notice
     // when an index is missing the required options.
-    $options = $index->getOptions() + array('cron_limit' => SEARCH_API_DEFAULT_CRON_LIMIT);
+    $options = $index->getOptions() + array('cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
     // Check if the cron limit is higher then zero.
     if ($options['cron_limit'] > 0) {
       $class = 'ok';

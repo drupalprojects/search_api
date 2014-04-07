@@ -16,11 +16,6 @@ use Drupal\search_api\Utility\Utility;
  * Constant definitions.
  */
 
-/**
- * Default number of items indexed per cron batch for each enabled index.
- */
-define('SEARCH_API_DEFAULT_CRON_LIMIT', 50);
-
 /*
  * Hook implementations.
  */

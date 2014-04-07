@@ -262,8 +262,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function stopTrackingBundles(array $bundles) {
-    debug('stopTrackingBundles');
-    debug($bundles);
     $entity_ids = $this->getEntityIds($bundles);
     if (!empty($entity_ids)) {
       return $this->trackDelete($entity_ids);

@@ -68,7 +68,7 @@ class IndexBatchHelper {
     // Check if the size should be determined by the index cron limit option.
     if ($size === NULL) {
       // Use the size set by the index.
-      $size = $index->getOption('cron_limit', SEARCH_API_DEFAULT_CRON_LIMIT);
+      $size = $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
     }
     // Check if indexing items is allowed.
     if ($index->status() && !$index->isReadOnly() && $size !== 0 && $limit !== 0) {

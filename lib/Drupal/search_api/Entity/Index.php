@@ -133,10 +133,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var array
    */
-  public $options = array(
-    'cron_limit' => SEARCH_API_DEFAULT_CRON_LIMIT,
-    'index_directly' => FALSE,
-  );
+  public $options;
 
   /**
    * The datasource plugin ID.
@@ -193,6 +190,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var array
    */
   protected $processors;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type) {
+    parent::__construct($values, $entity_type);
+
+    $this->options = array(
+      'cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'),
+      'index_directly' => FALSE,
+    );
+  }
 
   /**
    * Clones an index object.

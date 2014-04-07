@@ -59,7 +59,7 @@ class IndexStatusForm extends FormBase {
       // Build the batch size.
       $batch_size = array(
         '#type' => 'textfield',
-        '#default_value' => $index->getOption('cron_limit', SEARCH_API_DEFAULT_CRON_LIMIT),
+        '#default_value' => $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit')),
         '#size' => 4,
         '#attributes' => array(
           'class' => array('search-api-batch-size'),
