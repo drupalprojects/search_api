@@ -24,7 +24,7 @@ class SearchApiListPageTest extends SearchApiWebTestBase {
   }
 
   public function setUp() {
-    parent::setUp();
+    parent::setUp(array('search_api'));
 
     $this->drupalLogin($this->adminUser);
 

@@ -20,7 +20,7 @@ search_api.index_fields:
   base_route: search_api.index_view
   title: 'Fields'
   weight: 10
-search_api.filters:
+search_api.index_filters:
   route_name: search_api.index_filters
   base_route: search_api.index_view
   title: 'Filters'
