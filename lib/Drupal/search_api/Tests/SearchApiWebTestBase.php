@@ -23,7 +23,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     parent::setUp();
     // Create users.
     $this->adminUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
-    $this->anonymousUser = $this->drupalCreateUser(array());
+    $this->anonymousUser = $this->drupalCreateUser();
 
     $this->urlGenerator = $this->container->get('url_generator');
 

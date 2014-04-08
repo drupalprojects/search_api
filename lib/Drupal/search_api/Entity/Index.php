@@ -302,6 +302,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Create a datasource plugin instance.
       $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id, $datasource_plugin_configuration);
     }
+
     return $this->datasourcePluginInstance;
   }
 

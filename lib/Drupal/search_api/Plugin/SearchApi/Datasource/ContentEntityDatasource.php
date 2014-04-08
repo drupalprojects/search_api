@@ -237,7 +237,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function startTracking() {
     $entity_ids = $this->getEntityIds();
-    $this->trackInsert($entity_ids);
+    if (!empty($entity_ids)) {
+      $this->trackInsert($entity_ids);
+    }
   }
 
   /**
@@ -245,7 +247,9 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function stopTracking() {
     $entity_ids = $this->getEntityIds();
-    $this->trackDelete($entity_ids);
+    if (!empty($entity_ids)) {
+      $this->trackDelete($entity_ids);
+    }
   }
 
   /**

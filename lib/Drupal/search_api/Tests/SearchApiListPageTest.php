@@ -9,6 +9,8 @@ namespace Drupal\search_api\Tests;
 
 class SearchApiListPageTest extends SearchApiWebTestBase {
 
+  public static $modules = array('node', 'search_api');
+
   protected $unauthorizedUser;
   protected $overviewPageUrl;
 
@@ -24,13 +26,12 @@ class SearchApiListPageTest extends SearchApiWebTestBase {
   }
 
   public function setUp() {
-    parent::setUp(array('search_api'));
+    parent::setUp();
 
     $this->drupalLogin($this->adminUser);
 
     $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
     $this->overviewPageUrl = 'admin/config/search/search-api';
-
   }
 
   public function testNewServerCreate() {
@@ -60,12 +61,14 @@ class SearchApiListPageTest extends SearchApiWebTestBase {
     $server = $this->getTestServer();
     $index = $this->getTestIndex();
 
-    $server->set('status', FALSE)->save();
+    $server->setStatus(FALSE)->save();
 
     $link = $this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id()));
     $this->drupalGet($link);
+
     //$this->assertUrl($this->urlGenerator->generateFromRoute('search_api.server_enable', array('search_api_server' => $server->id())), array(), 'Enable link with bypass token');
     $this->drupalGet($this->overviewPageUrl);
+
     $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '")]//span[@class="search-api-entity-status-disabled"]', NULL, 'Server is in proper table');
 
 
@@ -86,7 +89,8 @@ class SearchApiListPageTest extends SearchApiWebTestBase {
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
-    $this->assertRaw('<a href="' . $basic_url .'/enable">enable</a>', 'Enable operation present');
+    // As CsrfTokenGenerator uses current session Id we can not generate valid token
+    $this->assertRaw('<a href="' . $basic_url .'/enable?token=', 'Enable operation present');
     $this->assertNoRaw('<a href="' . $basic_url .'/disable">disable-form</a>', 'Disable operation  is not present');
   }
 
