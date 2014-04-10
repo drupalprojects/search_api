@@ -51,7 +51,7 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\Core\Session\AccountProxyInterface $current_user */
     $current_user = $container->get('current_user');
     /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */

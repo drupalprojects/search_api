@@ -82,7 +82,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, array $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
     $entity_manager = $container->get('entity.manager');
     /** @var $connection \Drupal\Core\Database\Connection */
