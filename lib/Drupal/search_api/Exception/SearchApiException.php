@@ -1,15 +1,14 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\SearchApiException.
+ * Contains \Drupal\search_api\Exception\SearchApiException.
  */
 
 namespace Drupal\search_api\Exception;
-
-use Exception;
 
 /**
  * Represents an exception or error that occurred in some part of the Search API
  * framework.
  */
-class SearchApiException extends Exception { }
+class SearchApiException extends \Exception { }

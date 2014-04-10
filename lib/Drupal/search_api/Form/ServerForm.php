@@ -6,7 +6,6 @@
 
 namespace Drupal\search_api\Form;
 
-use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManager;
@@ -335,7 +334,7 @@ class ServerForm extends EntityFormController {
           ),
         );
       }
-      catch (Exception $ex) {
+      catch (\Exception $ex) {
         // Rebuild the form.
         $form_state['rebuild'] = TRUE;
         // Log the exception to the watchdog.

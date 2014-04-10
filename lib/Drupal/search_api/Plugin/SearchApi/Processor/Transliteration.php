@@ -3,7 +3,6 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
-use \Drupal;
 
 /**
  * @SearchApiProcessor(
@@ -33,9 +32,9 @@ class Transliteration extends FieldsProcessorPluginBase {
     /* Store the language code and transliteration class in this
      * to save recreating it for each 
      */
-    $this->langcode = Drupal::languageManager()->getDefaultLanguage()->id;
+    $this->langcode = \Drupal::languageManager()->getDefaultLanguage()->id;
 
-    $this->transliterator = Drupal::service('transliteration');
+    $this->transliterator = \Drupal::service('transliteration');
   }
 
   protected function process(&$value) {

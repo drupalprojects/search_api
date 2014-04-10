@@ -6,7 +6,6 @@
 
 namespace Drupal\search_api\Processor;
 
-use Traversable;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -30,7 +29,7 @@ class ProcessorPluginManager extends DefaultPluginManager {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
     // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Processor', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiProcessor');
     // Configure the plugin manager.
