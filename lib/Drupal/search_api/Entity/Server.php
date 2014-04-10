@@ -22,7 +22,6 @@ use Drupal\search_api\Server\ServerInterface;
  *   label = @Translation("Search server"),
  *   controllers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
- *     "access" = "Drupal\search_api\Handler\ServerAccessHandler",
  *     "list_builder" = "Drupal\search_api\OverviewListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\ServerForm",
@@ -32,6 +31,7 @@ use Drupal\search_api\Server\ServerInterface;
  *       "clear" = "Drupal\search_api\Form\ServerClearConfirmForm"
  *     },
  *   },
+ *   admin_permission = "administer search_api",
  *   config_prefix = "server",
  *   entity_keys = {
  *     "id" = "machine_name",

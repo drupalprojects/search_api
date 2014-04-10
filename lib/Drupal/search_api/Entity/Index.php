@@ -28,7 +28,6 @@ use Drupal\search_api\Utility\Utility;
  *   label = @Translation("Search index"),
  *   controllers = {
  *     "storage" = "Drupal\search_api\IndexStorage",
- *     "access" = "Drupal\search_api\Handler\IndexAccessHandler",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",
  *       "edit" = "Drupal\search_api\Form\IndexForm",
@@ -40,6 +39,7 @@ use Drupal\search_api\Utility\Utility;
  *       "clear" = "Drupal\search_api\Form\IndexClearConfirmForm"
  *     },
  *   },
+ *   admin_permission = "administer search_api",
  *   config_prefix = "index",
  *   entity_keys = {
  *     "id" = "machine_name",
