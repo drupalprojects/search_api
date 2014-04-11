@@ -1,31 +1,33 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Tests\IgnorecaseProcessorTestCase
- * @todo woek out why we need to use absolute namespaces when
- * referncing classes, eg \stdClass
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
  */
+
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Highlight;
 use Drupal\Tests\UnitTestCase;
 
+/**
+ * Tests the Highlight processor plugin.
+ *
+ * @group Drupal
+ * @group search_api
+ */
 class HighlightTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ProcessorPluginBase
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
    */
   protected $processor;
 
   /**
-   * Modules to enabled.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = array('search_api');
-
   public static function getInfo() {
     return array(
       'name' => 'Highlight Processor Plugin',
@@ -39,6 +41,8 @@ class HighlightTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+
+    // @todo This is never used in the test.
     $this->processor = new Highlight(array(), 'search_api_highlight_processor', array());;
   }
 
@@ -115,7 +119,7 @@ class HighlightTest extends UnitTestCase {
    *
    * Checks highlighting, excerpting, seperators.
    */
-  function testSearchExcerpt() {
+  public function testSearchExcerpt() {
     // t() used but no container; overriding.
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
       ->setMethods(array('t'))
@@ -180,6 +184,6 @@ class HighlightTest extends UnitTestCase {
     $text = "<div class=\"field field-name-body field-type-text-with-summary field-label-hidden\"><div class=\"field-items\"><div class=\"field-item even\" property=\"content:encoded\"><p>123456789 HTMLTest +123456789+‘  +‘  +‘  +‘  +12345678      +‘  +‘  +‘   ‘</p>\n</div></div></div> ";
     $result = $createExcerpt->invoke($processor, $text, array('HTMLTest'));
     $this->assertFalse(empty($result),  'Rendered Multi-byte HTML encodings are not corrupted in search excerpts');
-
   }
+
 }

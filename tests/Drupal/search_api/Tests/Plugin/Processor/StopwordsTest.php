@@ -1,31 +1,33 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Tests\IgnorecaseProcessorTestCase
- * @todo woek out why we need to use absolute namespaces when
- * referncing classes, eg \stdClass
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
  */
+
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Stopwords;
 use Drupal\Tests\UnitTestCase;
 
+/**
+ * Tests the Stopwords processor plugin.
+ *
+ * @group Drupal
+ * @group search_api
+ */
 class StopwordsTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ProcessorPluginBase
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Stopwords
    */
   protected $processor;
 
   /**
-   * Modules to enabled.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = array('search_api');
-
   public static function getInfo() {
     return array(
       'name' => 'Stopwords Processor Plugin',
@@ -75,4 +77,5 @@ class StopwordsTest extends UnitTestCase {
     $result = $getStopwords->invoke($this->processor);
     $this->assertTrue(!array_diff_key($stopwords, $result), 'All stopwords returned');
   }
+
 }

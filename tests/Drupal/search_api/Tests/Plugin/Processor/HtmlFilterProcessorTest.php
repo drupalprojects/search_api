@@ -1,7 +1,8 @@
 <?php
+
 /**
- * @file HtmlFilterProcessorTest.php
- * Contains tests for HTMLFilter Processor from Search API.
+ * @file
+ * Contains \Drupal\search_api\Tests\Processors\HtmlFilterProcessorTest.
  */
 
 namespace Drupal\search_api\Tests\Processors;
@@ -10,9 +11,10 @@ use Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Class HtmlFilterProcessorTest
+ * Tests the HtmlFilter processor plugin.
+ *
  * @group Drupal
- * @group Search API
+ * @group search_api
  */
 class HtmlFilterProcessorTest extends UnitTestCase {
 
@@ -175,4 +177,5 @@ class HtmlFilterProcessorTest extends UnitTestCase {
       array('word', 'div: 2', array(array('value' => 'word', 'score' => 1))),
     );
   }
-} 
+
+}

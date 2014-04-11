@@ -1,10 +1,10 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Tests\IgnorecaseProcessorTestCase
- * @todo woek out why we need to use absolute namespaces when
- * referncing classes, eg \stdClass
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\IgnorecaseTest.
  */
+
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
@@ -12,22 +12,24 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Unicode;
 
+/**
+ * Tests the Ignorecase processor plugin.
+ *
+ * @group Drupal
+ * @group search_api
+ */
 class IgnorecaseTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ProcessorPluginBase
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
    */
   protected $processor;
 
   /**
-   * Modules to enabled.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = array('search_api');
-
   public static function getInfo() {
     return array(
       'name' => 'Ignore case Processor Plugin',
@@ -37,10 +39,11 @@ class IgnorecaseTest extends UnitTestCase {
   }
 
   /**
-   * Creates a new processor object for use in the tests.
+   * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
+
     $this->processor = new Ignorecase(array(), 'search_api_ignorecase_processor', array());
   }
 
@@ -99,4 +102,5 @@ class IgnorecaseTest extends UnitTestCase {
     $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
     $this->assertEquals($tmp[1]['mail']['value'], $processed, 'Mail field was processed.');
   }
+
 }

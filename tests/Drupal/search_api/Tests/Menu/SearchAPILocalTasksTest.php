@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\action\Tests\Menu\SearchAPILocalTasksTest.
+ * Contains \Drupal\search_api\Tests\Menu\SearchAPILocalTasksTest.
  */
 
 namespace Drupal\search_api\Tests\Menu;
@@ -12,10 +12,14 @@ use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
 /**
  * Tests existence of Search API local tasks.
  *
- * @group Search API
+ * @group Drupal
+ * @group search_api
  */
 class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Search API local tasks test',
@@ -24,9 +28,11 @@ class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
-    // @TODO rename module directory name
-    $this->directoryList = array('search_api' => 'modules/search_api__8_x_');
+    $this->directoryList = array('search_api' => 'modules/search_api');
     parent::setUp();
   }
 
@@ -48,7 +54,6 @@ class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
    * @dataProvider getSearchAPIPageRoutesIndex
    */
   public function testSearchAPILocalTasksIndex($route) {
-    // @Todo find out why this is not working
     $tasks = array(
       0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
     );
@@ -76,4 +81,5 @@ class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
       array('search_api.index_filters'),
     );
   }
+
 }
