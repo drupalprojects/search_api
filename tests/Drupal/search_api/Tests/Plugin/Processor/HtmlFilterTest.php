@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processors\HtmlFilterProcessorTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\HtmlFilterTest.
  */
 
-namespace Drupal\search_api\Tests\Processors;
+namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter;
 use Drupal\Tests\UnitTestCase;
@@ -16,7 +16,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class HtmlFilterProcessorTest extends UnitTestCase {
+class HtmlFilterTest extends UnitTestCase {
 
   /**
    * {@inheritdoc}
