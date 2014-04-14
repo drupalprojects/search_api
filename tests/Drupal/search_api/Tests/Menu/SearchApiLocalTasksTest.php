@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Menu\SearchAPILocalTasksTest.
+ * Contains \Drupal\search_api\Tests\Menu\SearchApiLocalTasksTest.
  */
 
 namespace Drupal\search_api\Tests\Menu;
@@ -15,7 +15,7 @@ use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
  * @group Drupal
  * @group search_api
  */
-class SearchAPILocalTasksTest extends LocalTaskIntegrationTest {
+class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
 
   /**
    * {@inheritdoc}

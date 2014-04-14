@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiHighlightTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -16,7 +16,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class HighlightTest extends UnitTestCase {
+class SearchApiHighlightTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
@@ -156,7 +156,7 @@ class HighlightTest extends UnitTestCase {
     $longtext .= ' cat ' . $longtext . ' rabbit ' . $longtext . ' mouse ';
     $result = preg_replace('| +|', ' ', $createExcerpt->invoke($processor, $longtext, array('nothing')));
     $this->assertEmpty($result, 'When keyword is not found in long string, nothing returned.');
-    
+
     $result = preg_replace('| +|', ' ', $createExcerpt->invoke($processor, $longtext, array('fox')));
     $expected = 'The quick brown <strong>fox</strong> &amp; jumps over the lazy dog The quick brown <strong>fox</strong> &amp; jumps over the lazy dog The quick brown <strong>fox</strong> &amp; jumps over the lazy dog The quick brown <strong>fox</strong> &amp; ...';
     $this->assertEquals($result, $expected, 'Snipets filled with multiple instances of a string.');

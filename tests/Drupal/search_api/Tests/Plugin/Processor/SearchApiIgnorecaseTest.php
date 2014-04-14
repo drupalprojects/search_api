@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\IgnorecaseTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiIgnorecaseTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -18,7 +18,7 @@ use Drupal\Component\Utility\Unicode;
  * @group Drupal
  * @group search_api
  */
-class IgnorecaseTest extends UnitTestCase {
+class SearchApiIgnorecaseTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.

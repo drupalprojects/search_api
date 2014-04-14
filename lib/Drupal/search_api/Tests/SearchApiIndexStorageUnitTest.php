@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\IndexStorageUnitTest.
+ * Contains \Drupal\search_api\Tests\SearchApiIndexStorageUnitTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -17,7 +17,7 @@ use Drupal\search_api\Entity\Index;
  *
  * @package Drupal\search_api\Test
  */
-class IndexStorageUnitTest extends DrupalUnitTestBase {
+class SearchApiIndexStorageUnitTest extends DrupalUnitTestBase {
 
   /**
    * Modules to enabled.
@@ -121,4 +121,4 @@ class IndexStorageUnitTest extends DrupalUnitTestBase {
     $entity = $this->controller->load($index->id());
     $this->assertFalse($entity);
   }
-} 
+}

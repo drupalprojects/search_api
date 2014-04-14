@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\NodeStatusProcessorTestCase
+ * Contains \Drupal\search_api\Tests\SearchApiNodeStatusProcessorTestCase
  * @todo woek out why we need to use absolute namespaces when
  * referncing classes, eg \stdClass
  */
@@ -15,7 +15,7 @@ use Drupal\simpletest\DrupalUnitTestBase;
  *
  * @package Drupal\search_api\Test
  */
-class NodeStatusProcessorTestCase extends DrupalUnitTestBase {
+class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
 
   /**
    * Modules to enabled.

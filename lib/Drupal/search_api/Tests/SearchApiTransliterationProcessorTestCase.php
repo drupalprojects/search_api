@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\TransliterationProcessorTestCase
+ * Contains \Drupal\search_api\Tests\SearchApiTransliterationProcessorTestCase
  * @todo woek out why we need to use absolute namespaces when
  * referncing classes, eg \stdClass
  */
@@ -15,7 +15,7 @@ use Drupal\simpletest\DrupalUnitTestBase;
  *
  * @package Drupal\search_api\Test
  */
-class TransliterationProcessorTestCase extends DrupalUnitTestBase {
+class SearchApiTransliterationProcessorTestCase extends DrupalUnitTestBase {
 
   /**
    * Modules to enabled.
@@ -86,11 +86,11 @@ class TransliterationProcessorTestCase extends DrupalUnitTestBase {
   }
 
   /**
-   * createItem 
+   * createItem
    * Helper method to create an item for use with preprocessIndexItems
-   * 
-   * @param mixed $field_value 
-   * @param mixed $field_type 
+   *
+   * @param mixed $field_value
+   * @param mixed $field_type
    * @return array formatted for use with preProcessIndexItems
    */
   protected function createItem($field_value, $field_type) {
