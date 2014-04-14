@@ -2,7 +2,7 @@ search_api.overview:
   path: '/admin/config/search/search-api'
   defaults:
     _title: 'Search API'
-    _content: '\Drupal\search_api\Controller\SearchApiController::overview'
+    _entity_list: 'search_api_index'
   requirements:
     _permission: 'administer search_api'
 
