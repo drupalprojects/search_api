@@ -25,7 +25,7 @@ mysql:
 
 install:
   - composer global require drush/drush:dev-master --prefer-source
-  - cd /home/travis/.composer/vendor/drush/drush && composer require youngj/httpserver:dev-master#41dd2b7 && cd -
+  - cd /home/travis/.composer/vendor/drush/drush && composer require youngj/httpserver:dev-master && cd -
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 
 before_script:
