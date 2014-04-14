@@ -5,6 +5,7 @@
  */
 
 use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Utility\Utility;
 
@@ -112,10 +113,11 @@ function theme_search_api_server($variables) {
   }
   else {
     $class = 'warning';
-    // Build the enable bypass url options.
-    $url_options = array('query' => array('token' => \Drupal::csrfToken()->get($server->id())));
-    // Build the disabled message and use the enable bypass link.
-    $info = t('disabled (!enable_link)', array('!enable_link' => l(t('enabled'), $server->url('enable-bypass', $url_options))));
+    // Build the enable url.
+    $enable_url = $server->url('enable');
+    $parsed_url = UrlHelper::parse($enable_url);
+    // Build the disabled message and use the enable link.
+    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $parsed_url['path'], array('query' => $parsed_url['query']))));
   }
   // Append the row and reset variables.
   $label = t('Status');
@@ -254,10 +256,11 @@ function theme_search_api_index($variables) {
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $class = 'warning';
-    // Build the enable bypass url options.
-    $url_options = array('query' => array('token' => \Drupal::csrfToken()->get($index->id())));
-    // Build the disabled message and use the enable bypass link.
-    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $index->url('enable-bypass', $url_options))));
+    // Build the enable url.
+    $enable_url = $index->url('enable');
+    $parsed_url = UrlHelper::parse($enable_url);
+    // Build the disabled message and use the enable link.
+    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $parsed_url['path'], array('query' => $parsed_url['query']))));
   }
   else {
     $class = 'warning';
