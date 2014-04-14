@@ -55,4 +55,5 @@ script:
   - cd $TRAVIS_BUILD_DIR/drupal
   # Run the tests
   - php core/scripts/run-tests.sh --verbose --module 'search_api' --color --concurrency 4 --php `which php` --url http://127.0.0.1:8080 | tee /tmp/test.txt
-  - ! cat /tmp/test.txt | egrep "[0-9]+ fails" ; echo $?
+  # Check if we had fails in the run-tests.sh script
+  - ! cat /tmp/test.txt | egrep "[0-9]+ fails"
