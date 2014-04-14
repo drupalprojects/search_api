@@ -1,39 +1,50 @@
 <?php
+
 /**
  * @file
- * Definition of \Drupal\search_api\Tests\SearchApiWebTest.
+ * Contains \Drupal\search_api\Tests\SearchApiIntegrationTest.
  */
 
 namespace Drupal\search_api\Tests;
 
 /**
- * Provides the web tests for Search API.
+ * Provides integration tests for Search API.
  */
-class SearchApiWebTest extends SearchApiWebTestBase {
+class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
+  /**
+   * A Search API server ID.
+   *
+   * @var string
+   */
   protected $serverId;
+
+  /**
+   * A Search API index ID.
+   *
+   * @var string
+   */
   protected $indexId;
-
-  protected $article1;
-  protected $article2;
-
-  protected $page1;
 
   /**
    * {@inheritdoc}
    */
   public static function getInfo() {
     return array(
-      'name' => 'Search API web tests',
-      'description' => 'Test creation of Search API indexes en servers through the UI.',
+      'name' => 'Search API integration test',
+      'description' => 'Test creation of Search API indexes and servers through the UI.',
       'group' => 'Search API',
     );
   }
 
+  /**
+   * Tests various UI interactions between servers and indexes.
+   */
   public function testFramework() {
-
     $this->drupalLogin($this->adminUser);
-    $this->renderMenuLinkTest();
+
+    $this->drupalGet('admin/config');
+    $this->assertText('Search API', 'Search API menu link is displayed.');
 
     $this->createServer();
     $this->createIndex();
@@ -43,7 +54,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->addAdditionalFieldsToIndex();
   }
 
-  public function createServer() {
+  protected function createServer() {
     $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add');
 
     $this->drupalGet($settings_path);
@@ -85,7 +96,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertUrl('admin/config/search/search-api/server/' . $this->serverId, array(), t('Correct redirect to server page.'));
   }
 
-  public function createIndex() {
+  protected function createIndex() {
     $settings_path = $this->urlGenerator->generateFromRoute('search_api.index_add');
 
     $this->drupalGet($settings_path);
@@ -128,7 +139,7 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertEqual($index->datasourcePluginId, $edit['datasourcePluginId'], t('Index datasource id correctly inserted.'));
   }
 
-  public function addFieldsToIndex() {
+  protected function addFieldsToIndex() {
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields';
 
     $this->drupalGet($settings_path);
@@ -155,16 +166,11 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertEqual($fields['title']['boost'], $edit['fields[title][boost]'], t('title field boost value is 21.'));
   }
 
-  public function addAdditionalFieldsToIndex() {
+  protected function addAdditionalFieldsToIndex() {
     // @todo Implement addAdditionalFieldsToIndex() method.
   }
 
-  public function renderMenuLinkTest() {
-    $this->drupalGet('admin/config');
-    $this->assertText('Search API', 'Search API menu link is displayed.');
-  }
-
-  public function trackContent() {
+  protected function trackContent() {
     // Initially there should be no tracked items, because there are no nodes
     $tracked_items = $this->countTrackedItems();
 
@@ -245,7 +251,6 @@ class SearchApiWebTest extends SearchApiWebTestBase {
 
     $this->verbose($this->drupalGet($settings_path));
 
-    debug($this->countTrackedItems());
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
 
@@ -302,10 +307,15 @@ class SearchApiWebTest extends SearchApiWebTestBase {
     $this->assertEqual($tracked_items, 1, t('One item is tracked'));
   }
 
-  private function countTrackedItems() {
+  /**
+   * Counts the number of tracked items from an index.
+   *
+   * @return int
+   */
+  protected function countTrackedItems() {
     /** @var $index \Drupal\search_api\Entity\Index */
     $index = entity_load('search_api_index', $this->indexId);
-    $datasource = $index->getDatasource();
     return $index->getDatasource()->getTotalItemsCount();
   }
+
 }
