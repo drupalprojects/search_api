@@ -108,4 +108,24 @@ class Filter implements FilterInterface {
     }
   }
 
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    // Special case for a single, nested filter:
+    if (count($this->filters) == 1 && is_object($this->filters[0])) {
+      return (string) $this->filters[0];
+    }
+    $ret = array();
+    foreach ($this->filters as $filter) {
+      if (is_object($filter)) {
+        $ret[] = "[\n  " . str_replace("\n", "\n    ", (string) $filter) . "\n  ]";
+      }
+      else {
+        $ret[] = "$filter[0] $filter[2] " . str_replace("\n", "\n    ", var_export($filter[1], TRUE));
+      }
+    }
+    return $ret ? '  ' . implode("\n{$this->conjunction}\n  ", $ret) : '';
+  }
+
 }

@@ -436,4 +436,29 @@ class Query implements QueryInterface {
     }
   }
 
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    $ret = 'Index: ' . $this->index->id() . "\n";
+    $ret .= 'Keys: ' . str_replace("\n", "\n  ", var_export($this->orig_keys, TRUE)) . "\n";
+    if (isset($this->keys)) {
+      $ret .= 'Parsed keys: ' . str_replace("\n", "\n  ", var_export($this->keys, TRUE)) . "\n";
+      $ret .= 'Searched fields: ' . (isset($this->fields) ? implode(', ', $this->fields) : '[ALL]') . "\n";
+    }
+    if ($filter = (string) $this->filter) {
+      $filter = str_replace("\n", "\n  ", $filter);
+      $ret .= "Filters:\n  $filter\n";
+    }
+    if ($this->sort) {
+      $sort = array();
+      foreach ($this->sort as $field => $order) {
+        $sort[] = "$field $order";
+      }
+      $ret .= 'Sorting: ' . implode(', ', $sort) . "\n";
+    }
+    $ret .= 'Options: ' . str_replace("\n", "\n  ", var_export($this->options, TRUE)) . "\n";
+    return $ret;
+  }
+
 }
