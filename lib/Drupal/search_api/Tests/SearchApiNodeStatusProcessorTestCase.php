@@ -2,8 +2,6 @@
 /**
  * @file
  * Contains \Drupal\search_api\Tests\SearchApiNodeStatusProcessorTestCase
- * @todo woek out why we need to use absolute namespaces when
- * referncing classes, eg \stdClass
  */
 namespace Drupal\search_api\Tests;
 
@@ -12,8 +10,6 @@ use Drupal\simpletest\DrupalUnitTestBase;
 
 /**
  * Tests the NodeStatus Processor Plugin
- *
- * @package Drupal\search_api\Test
  */
 class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
 

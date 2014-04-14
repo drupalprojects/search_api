@@ -11,11 +11,7 @@ use Drupal\simpletest\DrupalUnitTestBase;
 use Drupal\search_api\Entity\Index;
 
 /**
- * Class IndexStorageUnitTest
- *
  * Tests Search API Index entity storage
- *
- * @package Drupal\search_api\Test
  */
 class SearchApiIndexStorageUnitTest extends DrupalUnitTestBase {
 

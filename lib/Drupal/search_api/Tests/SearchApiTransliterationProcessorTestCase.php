@@ -2,8 +2,6 @@
 /**
  * @file
  * Contains \Drupal\search_api\Tests\SearchApiTransliterationProcessorTestCase
- * @todo woek out why we need to use absolute namespaces when
- * referncing classes, eg \stdClass
  */
 namespace Drupal\search_api\Tests;
 
@@ -12,8 +10,6 @@ use Drupal\simpletest\DrupalUnitTestBase;
 
 /**
  * Tests the Transliteration Processor Plugin
- *
- * @package Drupal\search_api\Test
  */
 class SearchApiTransliterationProcessorTestCase extends DrupalUnitTestBase {
 

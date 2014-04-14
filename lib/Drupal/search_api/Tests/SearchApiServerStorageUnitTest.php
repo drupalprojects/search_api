@@ -11,11 +11,7 @@ use Drupal\simpletest\DrupalUnitTestBase;
 use Drupal\search_api\Entity\Server;
 
 /**
- * Class SearchApiServerStorageUnitTest
- *
  * Tests Search API Server entity storage
- *
- * @package Drupal\search_api\Test
  */
 class SearchApiServerStorageUnitTest extends DrupalUnitTestBase {
 
