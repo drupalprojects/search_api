@@ -31,24 +31,26 @@ install:
 before_script:
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  # Get latest drupal 8 core
   - git clone --depth 1 --branch 8.x http://git.drupal.org/project/drupal.git
+  - chmod go-w $TRAVIS_BUILD_DIR/drupal/sites/default
   - cd drupal
   # Install the site
   - drush si standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
   - drush cr
+  # Get a server running
   - drush runserver --server=builtin 8080 &
   - sleep 4
   - phpenv rehash
 
 script:
-  # go to our Drupal directory
-  - cd $TRAVIS_BUILD_DIR
-  - git clone --depth 1 --branch 8.x http://git.drupal.org/project/drupal.git
-  - cd $TRAVIS_BUILD_DIR/drupal
-  - chmod go-w sites/default
+  # go to our Drupal module directory
   - cd $TRAVIS_BUILD_DIR/drupal/modules/
+  # Get the latest head of the search_api code.
+  # We should figure out how to copy the files from the original checkout there, so it always matches with the commit tested
   - git clone --depth 1 --branch master https://github.com/nickveenhof/search-api-sandbox.git search_api
-  - ls -la $TRAVIS_BUILD_DIR
+  # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/drupal
+  # Run the tests
   - php core/scripts/run-tests.sh --verbose --module 'search_api' --color --concurrency 4 --php `which php` --url http://127.0.0.1:8080
