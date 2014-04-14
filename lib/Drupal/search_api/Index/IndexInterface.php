@@ -9,6 +9,7 @@ namespace Drupal\search_api\Index;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Defines the interface for index entities.
@@ -26,7 +27,7 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Determine whether this index is read-only.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if this index is read-only, otherwise FALSE.
    */
   public function isReadOnly();
@@ -85,7 +86,7 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Determine whether the datasource is valid.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the datasource is valid, otherwise FALSE.
    */
   public function hasValidDatasource();
@@ -107,9 +108,33 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDatasource();
 
   /**
+   * Determine whether the tracker is valid.
+   * 
+   * @return bool
+   *   TRUE if the tracker is valid, otherwise FALSE.
+   */
+  public function hasValidTracker();
+
+  /**
+   * Retrieves the tracker plugin's ID.
+   *
+   * @return string
+   *   The ID of the tracker plugin used by this index.
+   */
+  public function getTrackerId();
+
+  /**
+   * Retrieves the tracker plugin.
+   *
+   * @return \Drupal\search_api\Tracker\TrackerInterface
+   *   An instance of TrackerInterface.
+   */
+  public function getTracker();
+
+  /**
    * Determines whether the server is valid.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the server is valid, otherwise FALSE.
    */
   public function hasValidServer();
@@ -270,6 +295,45 @@ interface IndexInterface extends ConfigEntityInterface {
   public function reindex();
 
   /**
+   * Add items from a specific datasource to the index.
+   * 
+   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
+   *   An instance of DatasourceInterface which manages the items.
+   * @param array $ids
+   *   An array of item IDs.
+   * 
+   * @return bool
+   *   TRUE if the operation was successful, otherwise FALSE.
+   */
+  public function insertItems(DatasourceInterface $datasource, array $ids);
+
+  /**
+   * Update items from a specific datasource present in the index.
+   *
+   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
+   *   An instance of DatasourceInterface which manages the items.
+   * @param array $ids
+   *   An array of item IDs.
+   *
+   * @return bool
+   *   TRUE if the operation was successful, otherwise FALSE.
+   */
+  public function updateItems(DatasourceInterface $datasource, array $ids);
+
+  /**
+   * Delete items from the index.
+   *
+   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
+   *   An instance of DatasourceInterface which manages the items.
+   * @param array $ids
+   *   An array of items IDs.
+   *
+   * @return bool
+   *   TRUE if the operation was successful, otherwise FALSE.
+   */
+  public function deleteItems(DatasourceInterface $datasource, array $ids);
+
+  /**
    * Clears all items in this index and marks them for reindexing.
    *
    * @return bool
@@ -298,26 +362,4 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function query(array $options = array());
 
-  /**
-   * Get last indexed state for this index.
-   *
-   * @return array
-   *   An array containing the last indexed state for this index. Format is
-   *    { 'changed' => 0, 'item_id' => 1 }
-   *
-   */
-  public function getLastIndexed();
-
-  /**
-   * Set last indexed state for this index.
-   *
-   * @param $changed
-   *   The last timestamp that was indexed
-   * @param $item_id
-   *   The last item that was indexed
-   * @return array
-   *   An array containing the stored last indexed state for this index. Format is
-   *    { 'changed' => 0, 'item_id' => 1 }
-   */
-  public function setLastIndexed($changed, $item_id);
 }

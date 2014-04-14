@@ -1,10 +1,11 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Datasource\DatasourcePluginManager.
+ * Contains \Drupal\search_api\Tracker\TrackerPluginManager.
  */
 
-namespace Drupal\search_api\Datasource;
+namespace Drupal\search_api\Tracker;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -13,12 +14,12 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManager;
 
 /**
- * Search API datasource plugin manager.
+ * Search API tracker plugin manager.
  */
-class DatasourcePluginManager extends DefaultPluginManager {
+class TrackerPluginManager extends DefaultPluginManager {
 
   /**
-   * Create a DatasourcePluginManager object.
+   * Create a TrackerPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -32,10 +33,10 @@ class DatasourcePluginManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
     // Initialize the parent chain of objects.
-    parent::__construct('Plugin/SearchApi/Datasource', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiDatasource');
+    parent::__construct('Plugin/SearchApi/Tracker', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiTracker');
     // Configure the plugin manager.
-    $this->setCacheBackend($cache_backend, $language_manager, 'search_api_datasources');
-    $this->alterInfo('search_api_datasource_info');
+    $this->setCacheBackend($cache_backend, $language_manager, 'search_api_trackers');
+    $this->alterInfo('search_api_tracker_info');
   }
 
   /**
@@ -47,7 +48,7 @@ class DatasourcePluginManager extends DefaultPluginManager {
   public function getDefinitionLabels() {
     // Initialize the options variable to an empty array.
     $options = array();
-    // Iterate through the datasource plugin definitions.
+    // Iterate through the tracker plugin definitions.
     foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
       // Add the plugin to the list.
       $options[$plugin_id] = String::checkPlain($plugin_definition['label']);

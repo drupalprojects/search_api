@@ -10,3 +10,7 @@ services:
   search_api.datasource.plugin.manager:
     class: Drupal\search_api\Datasource\DatasourcePluginManager
     parent: default_plugin_manager
+
+  plugin.manager.search_api.tracker:
+    class: Drupal\search_api\Tracker\TrackerPluginManager
+    parent: default_plugin_manager

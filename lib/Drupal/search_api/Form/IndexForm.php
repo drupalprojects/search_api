@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
+use Drupal\search_api\Tracker\TrackerPluginManager;
 use Drupal\Component\Utility\String;
 
 /**
@@ -39,17 +40,30 @@ class IndexForm extends EntityFormController {
   protected $datasourcePluginManager;
 
   /**
+   * The Search API tracker plugin manager.
+   *
+   * This object members must be set to anything other than private in order
+   * for \Drupal\Core\DependencyInjection\DependencySerialization to detect.
+   *
+   * @var \Drupal\search_api\Tracker\TrackerPluginManager
+   */
+  protected $trackerPluginManager;
+
+  /**
    * Create an IndexForm object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
    * @param \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager
    *   The search datasource plugin manager.
+   * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
+   *   The Search API tracker plugin manager.
    */
-  public function __construct(EntityManager $entity_manager, DatasourcePluginManager $datasource_plugin_manager) {
+  public function __construct(EntityManager $entity_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
     // Setup object members.
     $this->entityManager = $entity_manager;
     $this->datasourcePluginManager = $datasource_plugin_manager;
+    $this->trackerPluginManager = $tracker_plugin_manager;
   }
 
   /**
@@ -73,21 +87,13 @@ class IndexForm extends EntityFormController {
   }
 
   /**
-   * Get a list of datasource plugin definitions for use with a select element.
+   * Get the Search API tracker plugin manager.
    *
-   * @return array
-   *   An associative array of datasource plugin names, keyed by the datasource
-   *   plugin ID.
+   * @return \Drupal\search_api\Tracker\TrackerPluginManager
+   *   An instance of TrackerPluginManager.
    */
-  protected function getDatasourcePluginDefinitionOptions() {
-    // Initialize the options variable to an empty array.
-    $options = array();
-    // Iterate through the datasource plugin definitions.
-    foreach ($this->getDatasourcePluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
-      // Add the plugin to the list.
-      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
-    }
-    return $options;
+  protected function getTrackerPluginManager() {
+    return $this->trackerPluginManager;
   }
 
   /**
@@ -134,7 +140,8 @@ class IndexForm extends EntityFormController {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('search_api.datasource.plugin.manager')
+      $container->get('search_api.datasource.plugin.manager'),
+      $container->get('plugin.manager.search_api.tracker')
     );
   }
 
@@ -199,13 +206,17 @@ class IndexForm extends EntityFormController {
       ),
       '#weight' => 2,
     );
-    // Build the datasource element.
-    $options = $this->getDatasourcePluginDefinitionOptions();
 
     // Check if the datasource plugin changed.
     if (!empty($form_state['values']['datasourcePluginId'])) {
       // Notify the user about the datasource configuration change.
       drupal_set_message($this->t('Please configure the used data type.'), 'warning');
+    }
+
+    // Check if the datasource plugin changed.
+    if (!empty($form_state['values']['trackerPluginId'])) {
+      // Notify the user about the tracker configuration change.
+      drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
     }
 
     // Attach the admin css
@@ -215,7 +226,7 @@ class IndexForm extends EntityFormController {
       '#type' => 'select',
       '#title' => $this->t('Data type'),
       '#description' => $this->t('Select the data type of items that will be indexed in this index. E.g. should it be nodes content or files data. This setting cannot be changed afterwards.'),
-      '#options' => $options,
+      '#options' => $this->getDatasourcePluginManager()->getDefinitionLabels(),
       '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),
@@ -256,6 +267,51 @@ class IndexForm extends EntityFormController {
     // Build the datasource configuration form.
     $this->buildDatasourceConfigForm($form, $form_state, $index);
 
+    $form['trackerPluginId'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Tracker'),
+      '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes. This setting cannot be changed afterwards.'),
+      '#options' => $this->getTrackerPluginManager()->getDefinitionLabels(),
+      '#default_value' => $index->hasValidTracker() ? $index->getTracker()->getPluginId() : NULL,
+      '#required' => TRUE,
+      '#disabled' => !$index->isNew(),
+      '#ajax' => array(
+        'trigger_as' => array('name' => 'trackerpluginid_configure'),
+        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxTrackerConfigForm',
+        'wrapper' => 'search-api-tracker-config-form',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
+      '#weight' => 6,
+    );
+
+    // Build the tracker plugin configuration container element.
+    $form['trackerPluginConfig'] = array(
+      '#type' => 'container',
+      '#attributes' => array(
+        'id' => 'search-api-tracker-config-form',
+      ),
+      '#weight' => 7,
+      '#tree' => TRUE,
+    );
+
+    $form['trackerConfigureButton'] = array(
+      '#type' => 'submit',
+      '#name' => 'trackerpluginid_configure',
+      '#value' => t('Configure'),
+      '#limit_validation_errors' => array(array('trackerPluginId')),
+      '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxTrackerConfigForm'),
+      '#ajax' => array(
+        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxTrackerConfigForm',
+        'wrapper' => 'search-api-tracker-config-form',
+      ),
+      '#weight' => 8,
+      '#attributes' => array('class' => array('js-hide')),
+    );
+
+    // Build the tracker configuration form.
+    $this->buildTrackerConfigForm($form, $form_state, $index);
+
     // Build the server machine name element.
     $form['serverMachineName'] = array(
       '#type' => 'select',
@@ -263,7 +319,7 @@ class IndexForm extends EntityFormController {
       '#description' => $this->t('Select the server this index should reside on. Index can not be enabled without connection to valid server.'),
       '#options' => array('' => $this->t('< No server >')) + $this->getServerOptions(),
       '#default_value' => $index->hasValidServer() ? $index->getServer()->id() : NULL,
-      '#weight' => 6,
+      '#weight' => 9,
     );
 
     // Build the status element.
@@ -279,7 +335,7 @@ class IndexForm extends EntityFormController {
           '[name="serverMachineName"]' => array('value' => '')
         ),
       ),
-      '#weight' => 7,
+      '#weight' => 10,
     );
 
     // Build the description element.
@@ -288,7 +344,7 @@ class IndexForm extends EntityFormController {
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the index.'),
       '#default_value' => $index->getDescription(),
-      '#weight' => 8,
+      '#weight' => 11,
     );
 
     $form['options'] = array(
@@ -296,7 +352,7 @@ class IndexForm extends EntityFormController {
       '#type' => 'details',
       '#title' => t('Index options'),
       '#collapsed' => TRUE,
-      '#weight' => 9,
+      '#weight' => 12,
     );
 
     // Build the read only element.
@@ -307,7 +363,7 @@ class IndexForm extends EntityFormController {
       '#default_value' => $index->isReadOnly(),
       // changed #parents so this option is not saved into options
       '#parents' => array('readOnly'),
-      '#weight' => 10,
+      '#weight' => 13,
     );
     // Build the index directly element.
     $form['options']['index_directly'] = array(
@@ -315,7 +371,7 @@ class IndexForm extends EntityFormController {
       '#title' => $this->t('Index items immediately'),
       '#description' => $this->t('Immediately index new or updated items instead of waiting for the next cron run. This might have serious performance drawbacks and is generally not advised for larger sites.'),
       '#default_value' => $index->getOption('index_directly'),
-      '#weight' => 11,
+      '#weight' => 14,
     );
     // Build the cron limit element.
     $form['options']['cron_limit'] = array(
@@ -329,7 +385,7 @@ class IndexForm extends EntityFormController {
           ':input[name="options[index_directly]"]' => array('checked' => TRUE),
         ),
       ),
-      '#weight' => 12,
+      '#weight' => 15,
     );
   }
 
@@ -372,9 +428,53 @@ class IndexForm extends EntityFormController {
   }
 
   /**
+   * Build the tracker configuration form.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param array $form_state
+   *   An associative array containing the current state of the form.
+   * @param \Drupal\search_api\Index\IndexInterface $server
+   *   An instance of IndexInterface.
+   */
+  public function buildTrackerConfigForm(array &$form, array &$form_state, IndexInterface $index) {
+    // Check if the index has a valid tracker configured.
+    if ($index->hasValidTracker()) {
+      // Get the tracker.
+      $tracker = $index->getTracker();
+      // Get the tracker plugin definition.
+      $tracker_plugin_definition = $tracker->getPluginDefinition();
+      // Build the tracker configuration form.
+      if (($tracker_plugin_config_form = $tracker->buildConfigurationForm(array(), $form_state))) {
+        // Modify the tracker plugin configuration container element.
+        $form['trackerPluginConfig']['#type'] = 'details';
+        $form['trackerPluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $tracker_plugin_definition['label']));
+        $form['trackerPluginConfig']['#description'] = String::checkPlain($tracker_plugin_definition['description']);
+        $form['trackerPluginConfig']['#open'] = $index->isNew() ? TRUE : $index->isNew();
+
+        // Attach the build tracker plugin configuration form.
+        $form['trackerPluginConfig'] += $tracker_plugin_config_form;
+      }
+    }
+    // Do not notify the user about a missing tracker plugin if a new index
+    // is being configured.
+    elseif (!$index->isNew()) {
+      // Notify the user about the missing tracker plugin.
+      drupal_set_message($this->t('The tracker plugin is missing or invalid.'), 'error');
+    }
+  }
+
+  /**
    * Button submit handler for datasource configure button 'datasource_configure' button.
    */
   public static function submitAjaxDatasourceConfigForm($form, &$form_state) {
+    $form_state['rebuild'] = TRUE;
+  }
+
+  /**
+   * Button submit handler for tracker configure button 'tracker_configure' button.
+   */
+  public static function submitAjaxTrackerConfigForm($form, &$form_state) {
     $form_state['rebuild'] = TRUE;
   }
 
@@ -393,6 +493,22 @@ class IndexForm extends EntityFormController {
   public static function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
     // Get the datasource plugin configuration form.
     return $form['datasourcePluginConfig'];
+  }
+
+  /**
+   * Build the tracker plugin configuration form in context of an Ajax request.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param array $form_state
+   *   An associative array containing the current state of the form.
+   *
+   * @return array
+   *   An associative array containing the structure of the form.
+   */
+  public static function buildAjaxTrackerConfigForm(array $form, array &$form_state) {
+    // Get the tracker plugin configuration form.
+    return $form['trackerPluginConfig'];
   }
 
   /**
@@ -427,6 +543,33 @@ class IndexForm extends EntityFormController {
       $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
       $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
     }
+    // Get the current tracker plugin ID.
+    $tracker_plugin_id = $entity->hasValidTracker() ? $entity->getTracker()->getPluginId() : NULL;
+    // Check if the tracker plugin changed.
+    if ($tracker_plugin_id !== $form_state['values']['trackerPluginId']) {
+      // Check if the tracker plugin configuration form input values exist.
+      if (!empty($form_state['input']['trackerPluginConfig'])) {
+        // Overwrite the plugin configuration form input values with an empty
+        // array. This will force the Drupal Form API to use the default values.
+        $form_state['input']['trackerPluginConfig'] = array();
+      }
+      // Check if the tracker plugin configuration form values exist.
+      if (!empty($form_state['values']['trackerPluginConfig'])) {
+        // Overwrite the plugin configuration form values with an empty array.
+        // This has no effect on the Drupal Form API but is done to keep the
+        // data consistent.
+        $form_state['values']['trackerPluginConfig'] = array();
+      }
+    }
+    // Check if the entity has a valid tracker plugin.
+    elseif ($entity->hasValidTracker()) {
+      // Build the tracker plugin configuration form state.
+      $tracker_form_state = array(
+        'values' => $form_state['values']['trackerPluginConfig'],
+      );
+      // Validate the tracker plugin configuration form.
+      $entity->getTracker()->validateConfigurationForm($form['trackerPluginConfig'], $tracker_form_state);
+    }
   }
 
   /**
@@ -446,20 +589,37 @@ class IndexForm extends EntityFormController {
       //$entity->options['fields'] = $entity->getDatasource()->getEntityType()->get('search_api_default_fields');
     }
     // Check if the entity has a valid datasource plugin.
-    elseif ($entity->hasValidDatasource()) {
-      // Get the datasource from the entity.
-      $datasource = $entity->getDatasource();
-      $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
-      // Also add all additional values so that we can read them in the plugin. Useful for the status
-      $indexValues = $form_state['values'];
-      unset($indexValues['datasourcePluginConfig']);
-      $datasource_form_state['values']['index'] = $indexValues;
-
+    if ($entity->hasValidDatasource()) {
+      // Build the datasource plugin configuration form state.
+      $datasource_form_state = array(
+        'values' => $form_state['values']['datasourcePluginConfig'],
+      );
+      // Also add all additional values so that we can read them in the plugin.
+      // Useful for the status
+      $datasource_form_state['values']['index'] = $form_state['values'];
+      // Remove the datasource plugin configuration from the index form state
+      // as it is already provided.
+      unset($datasource_form_state['values']['index']['datasourcePluginConfig']);
       // Submit the datasource plugin configuration form.
-      $datasource->submitConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
+      $entity->getDatasource()->submitConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
     }
-    $entity = parent::submit($form, $form_state);
-    return $entity;
+    // Check if the entity has a valid tracker plugin.
+    if ($entity->hasValidTracker()) {
+      // Build the tracker plugin configuration form state.
+      $tracker_form_state = array(
+        'values' => $form_state['values']['trackerPluginConfig']
+      );
+      // Also add all additional values so that we can read them in the plugin.
+      // Useful for the status.
+      $tracker_form_state['values']['index'] = $form_state['values'];
+      // Remove the tracker plugin configuration from the index form state
+      // as it is already provided.
+      unset($tracker_form_state['values']['index']['trackerPluginConfig']);
+      // Submit the tracker plugin configuration form.
+      $entity->getTracker()->submitConfigurationForm($form['trackerPluginConfig'], $tracker_form_state);
+    }
+
+    return parent::submit($form, $form_state);
   }
 
   /**

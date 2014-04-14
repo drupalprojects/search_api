@@ -218,6 +218,8 @@ function theme_search_api_index($variables) {
   $server = $index->hasValidServer() ? $index->getServer() : NULL;
   /** @var $server \Drupal\search_api\DataSource\DataSourceInterface */
   $datasource = $index->hasValidDatasource() ? $index->getDatasource() : NULL;
+  /** @var $tracker \Drupal\search_api\Tracker\TrackerInterface */
+  $tracker = $index->hasValidTracker() ? $index->getTracker() : NULL;
 
   // Initialize the output variable to an empty string.
   $output = '';
@@ -282,6 +284,22 @@ function theme_search_api_index($variables) {
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
+  // Check if a tracker is available.
+  if ($tracker) {
+    // Get the tracker plugin definition.
+    $tracker_plugin_definition = $tracker->getPluginDefinition();
+    // Use the label defined in the plugin definition.
+    $info = $tracker_plugin_definition['label'];
+  }
+  else {
+    $class = 'error';
+    $info = t('Invalid or missing tracker plugin');
+  }
+  // Append the row and reset variables.
+  $label = t('Tracker');
+  $rows[] = Utility::deepCopy($row);
+  $class = '';
+
   // Check if a server is available.
   if ($server) {
     $label = t('Server');
@@ -323,11 +341,11 @@ function theme_search_api_index($variables) {
     $label = t('Cron batch size');
     $rows[] = Utility::deepCopy($row);
     $class = '';
-    // Check if a valid datasource is available.
-    if ($datasource) {
+    // Check if a valid tracker is available.
+    if ($tracker) {
       // Get the indexed and total item count.
-      $indexed_count = $datasource->getIndexedItemsCount();
-      $total_count = $datasource->getTotalItemsCount();
+      $indexed_count = $tracker->getIndexedItemsCount();
+      $total_count = $tracker->getTotalItemsCount();
       // Calculate the index progress.
       $percent = ($total_count !== 0) ? (100 * $indexed_count / $total_count) : 0;
 

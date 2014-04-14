@@ -55,5 +55,7 @@ datasourcePluginId: 'entity:node'
 datasourcePluginConfig:
   default: '1'
   bundles: {  }
+trackerPluginId: 'default_tracker'
+trackerPluginConfig: {  }
 serverMachineName: ''
 status: true

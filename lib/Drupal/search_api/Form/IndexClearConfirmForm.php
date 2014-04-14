@@ -38,11 +38,8 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
   public function submit(array $form, array &$form_state) {
     // Get the search index entity object.
     $entity = $this->getEntity();
-    // Check if the search index has a valid server available.
-    if ($entity->hasValidServer()) {
-      // Delete items from the server related to the current search index.
-      $entity->getServer()->deleteAllItems($entity);
-    }
+    // Clear the index.
+    $entity->clear();
     // Redirect to the index view page.
     $form_state['redirect_route'] = array(
       'route_name' => 'search_api.index_view',

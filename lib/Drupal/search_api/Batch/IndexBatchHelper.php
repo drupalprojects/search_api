@@ -105,17 +105,21 @@ class IndexBatchHelper {
       $context['results']['indexed'] = 0;
       $context['results']['not indexed'] = 0;
     }
+    // Get the remaining item count. When no valid tracker is available then
+    // the value will be set to zero which will cause the batch process to
+    // stop.
+    $remaining_item_count = ($index->hasValidTracker() ? $index->getTracker()->getRemainingItemsCount() : 0);
     // Check if an explicit limit needs to be used.
     if ($context['sandbox']['limit'] > -1) {
-      // Calculate the remaining amount of items that can be indexed.
-      $actual_limit = $context['sandbox']['limit'] - $context['sandbox']['progress'];
+      // Calculate the remaining amount of items that can be indexed. Note that
+      // a minimum is taking between the allowed number of items and the
+      // remaining item count to prevent incorrect reporting of not indexed
+      // items.
+      $actual_limit = min($context['sandbox']['limit'] - $context['sandbox']['progress'], $remaining_item_count);
     }
     else {
-      // Use the remaining item count as actual limit. When no valid datasource
-      // is available then the actual limit will be set to zero and result
-      // in no items being index. This will in turn cause the batch job to
-      // stop.
-      $actual_limit = ($index->hasValidDatasource() ? $index->getDatasource()->getRemainingItemsCount() : 0);
+      // Use the remaining item count as actual limit.
+      $actual_limit = $remaining_item_count;
     }
     // Determine the number of items to index for this run.
     $to_index = min($actual_limit, $context['sandbox']['batch_size']);
@@ -125,7 +129,7 @@ class IndexBatchHelper {
       $indexed = $index->index($to_index);
       // Increment the indexed result and progress.
       $context['results']['indexed'] += $indexed;
-      $context['results']['not indexed'] += ($actual_limit - $indexed);
+      $context['results']['not indexed'] += ($to_index - $indexed);
       $context['sandbox']['progress'] += $to_index;
       // Display progress message.
       if ($indexed > 0) {

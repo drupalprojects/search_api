@@ -1,2 +1,3 @@
 cron_worker_runtime: '15'
 cron_limit: 50
+default_tracker: 'default_tracker'

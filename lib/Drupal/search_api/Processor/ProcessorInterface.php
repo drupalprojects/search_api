@@ -38,7 +38,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index to check for.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the processor can run on the given index; FALSE otherwise.
    */
   public static function supportsIndex(IndexInterface $index);

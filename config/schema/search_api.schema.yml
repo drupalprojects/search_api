@@ -62,6 +62,11 @@ search_api.index.*:
       label: 'Datasource plugin ID'
     datasourcePluginConfig:
       type: search_api.datasource.plugin.[%parent.datasourcePluginId]
+    trackerPluginId:
+      type: string
+      label: 'Tracker plugin ID'
+    trackerPluginConfig:
+      type: search_api.tracker.plugin.[%parent.trackerPluginId]
     serverMachineName:
       type: string
       label: 'Server machine name'

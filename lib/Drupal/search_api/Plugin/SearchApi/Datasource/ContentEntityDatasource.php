@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\Component\Utility\String;
@@ -49,19 +48,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   protected $typedDataManager;
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $databaseConnection;
-
-  /**
    * Create a ContentEntityDatasource object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
-   * @param \Drupal\Core\Database\Connection $connection
-   *   A connection to the database.
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
@@ -69,14 +59,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * @param array $plugin_definition
    *   The plugin implementation definition.
    */
-  public function __construct(EntityManager $entity_manager, Connection $connection, array $configuration, $plugin_id, array $plugin_definition) {
+  public function __construct(EntityManager $entity_manager, array $configuration, $plugin_id, array $plugin_definition) {
     // Initialize the parent chain of objects.
-    parent::__construct($connection, $configuration, $plugin_id, $plugin_definition);
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     // Setup object members.
     $this->entityManager = $entity_manager;
     $this->storage = $entity_manager->getStorage($plugin_definition['entity_type']);
     $this->typedDataManager = \Drupal::typedDataManager();
-    $this->databaseConnection = $connection;
   }
 
   /**
@@ -85,9 +74,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
     $entity_manager = $container->get('entity.manager');
-    /** @var $connection \Drupal\Core\Database\Connection */
-    $connection = $container->get('database');
-    return new static($entity_manager, $connection, $configuration, $plugin_id, $plugin_definition);
+
+    return new static($entity_manager, $configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -108,17 +96,21 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function load($id) {
-    return $this->storage->load($id);
+    // Load the item by ID.
+    $items = $this->loadMultiple(array($id));
+    return ($items) ? reset($items) : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
+    // Load the items from storage.
     $items = $this->storage->loadMultiple($ids);
     // If we were unable to delete some of the items, mark them as deleted.
     if ($diff = array_diff_key(array_flip($ids), $items)) {
-      $this->trackDelete(array_keys($diff));
+      // Remove the items from the index.
+      $this->getIndex()->deleteItems($this, array_keys($diff));
     }
     return $items;
   }
@@ -236,9 +228,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function startTracking() {
-    $entity_ids = $this->getEntityIds();
-    if (!empty($entity_ids)) {
-      $this->trackInsert($entity_ids);
+    // Check whether there are entities which need to be inserted.
+    if (($entity_ids = $this->getEntityIds())) {
+      // Register entities with the tracker.
+      $this->getIndex()->insertItems($this, $entity_ids);
     }
   }
 
@@ -246,9 +239,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function stopTracking() {
-    $entity_ids = $this->getEntityIds();
-    if (!empty($entity_ids)) {
-      $this->trackDelete($entity_ids);
+    // Check whether there are entities which need to be removed.
+    if (($entity_ids = $this->getEntityIds())) {
+      // Remove the items from the tracker.
+      $this->getIndex()->deleteItems($this, $entity_ids);
     }
   }
 
@@ -256,9 +250,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function startTrackingBundles(array $bundles) {
-    $entity_ids = $this->getEntityIds($bundles);
-    if (!empty($entity_ids)) {
-      return $this->trackInsert($entity_ids);
+    // Check whether there are entities which need to be inserted.
+    if (($entity_ids = $this->getEntityIds($bundles))) {
+      // Register entities with the tracker.
+      $this->getIndex()->insertItems($this, $entity_ids);
     }
   }
 
@@ -266,9 +261,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function stopTrackingBundles(array $bundles) {
-    $entity_ids = $this->getEntityIds($bundles);
-    if (!empty($entity_ids)) {
-      return $this->trackDelete($entity_ids);
+    // Check whether there are entities which need to be removed.
+    if (($entity_ids = $this->getEntityIds($bundles))) {
+      // Remove the items from the tracker.
+      $this->getIndex()->deleteItems($this, $entity_ids);
     }
   }
 
@@ -298,7 +294,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * Determine whether the index is valid for this datasource.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the index is valid, otherwise FALSE.
    */
   protected function isValidIndex() {

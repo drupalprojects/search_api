@@ -56,9 +56,7 @@ function search_api_entity_insert(EntityInterface $entity) {
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
-      if ($index->status()) {
-        $index->getDatasource()->trackInsert(array($entity->id()));
-      }
+      $index->insertItems($index->getDatasource(), array($entity->id()));
     }
   }
 }
@@ -77,9 +75,7 @@ function search_api_entity_update(EntityInterface $entity) {
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
-      if ($index->status()) {
-        $index->getDatasource()->trackUpdate(array($entity->id()));
-      }
+      $index->updateItems($index->getDatasource(), array($entity->id()));
     }
   }
 }
@@ -98,9 +94,7 @@ function search_api_entity_delete(EntityInterface $entity) {
     $indexes = $storage->getIndexesForEntity($entity);
 
     foreach ($indexes as $index) {
-      if ($index->status()) {
-        $index->getDatasource()->trackDelete(array($entity->id()));
-      }
+      $index->deleteItems($index->getDatasource(), array($entity->id()));
     }
   }
 }

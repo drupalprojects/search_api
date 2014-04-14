@@ -20,14 +20,14 @@ class TestService extends ServicePluginBase implements ServiceExtraInfoInterface
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
-    return array();
+    return array_keys($items);
   }
 
   /**
    * {@inheritdoc}
    */
   public function deleteItems(IndexInterface $index, array $ids) {
-    return array();
+    return $ids;
   }
 
   /**

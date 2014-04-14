@@ -29,10 +29,8 @@ class IndexStatusForm extends FormBase {
   public function buildForm(array $form, array &$form_state, IndexInterface $index = NULL) {
     // Attach the search index to the form.
     $form['#index'] = $index;
-    // Check if the index has a valid datasource available.
-    if ($index->hasValidDatasource()) {
-      // Get the datasource used by the search index.
-      $datasource = $index->getDatasource();
+    // Check if the index has a valid tracker available.
+    if ($index->hasValidTracker()) {
       // Build the index now option.
       $form['index'] = array(
         '#type' => 'details',
@@ -43,7 +41,7 @@ class IndexStatusForm extends FormBase {
         ),
       );
       // Determine whether the index has remaining items to index.
-      $has_remaining_items = ($datasource->getRemainingItemsCount() > 0);
+      $has_remaining_items = ($index->getTracker()->getRemainingItemsCount() > 0);
       // Get the value which represent indexing all remaining items.
       $all_value = $this->t('all', array(), array('context' => 'items to index'));
       // Build the number of batches to execute.

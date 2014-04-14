@@ -9,7 +9,6 @@ namespace Drupal\search_api\Entity;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
@@ -19,6 +18,7 @@ use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Defines the search index configuration entity.
@@ -158,6 +158,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $datasourcePluginInstance;
 
   /**
+   * The tracker plugin ID.
+   *
+   * @var string
+   */
+  public $trackerPluginId;
+
+  /**
+   * The tracker plugin configuration.
+   *
+   * @var array
+   */
+  public $trackerPluginConfig = array();
+
+  /**
+   * The tracker plugin instance.
+   *
+   * @var \Drupal\search_api\Tracker\TrackerInterface
+   */
+  protected $trackerPluginInstance;
+
+  /**
    * The machine name of the server on which data should be indexed.
    *
    * @var string
@@ -196,8 +217,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
+    // Perform default instance construction.
     parent::__construct($values, $entity_type);
 
+    // Check if the tracker plugin ID is not configured.
+    if ($this->trackerPluginId === NULL) {
+      // Set tracker plugin ID to the default tracker.
+      $this->trackerPluginId = \Drupal::config('search_api.settings')->get('default_tracker');
+    }
+
+    // Merge in default options.
     $this->options += array(
       'cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'),
       'index_directly' => FALSE,
@@ -205,11 +234,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Clones an index object.
+   * {@inheritdoc}
    */
   public function __clone() {
-    // Prevent the datasource and server instance from being cloned.
-    $this->datasourcePluginInstance = $this->server = NULL;
+    // Prevent the datasource, tracker and server instance from being cloned.
+    $this->datasourcePluginInstance = $this->trackerPluginInstance = $this->server = NULL;
   }
 
   /**
@@ -275,9 +304,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidDatasource() {
-    // Get the datasource plugin definition.
     $datasource_plugin_definition = \Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
-    // Determine whether the datasource is valid.
     return !empty($datasource_plugin_definition);
   }
 
@@ -294,17 +321,42 @@ class Index extends ConfigEntityBase implements IndexInterface {
     public function getDatasource() {
     // Check if the datasource plugin instance needs to be resolved.
     if (!$this->datasourcePluginInstance && $this->hasValidDatasource()) {
-      // Get the ID of the datasource plugin.
-      $datasource_plugin_id = $this->datasourcePluginId;
-      // Get the datasource plugin manager.
-      $datasource_plugin_manager = \Drupal::service('search_api.datasource.plugin.manager');
       // Get the plugin configuration for the datasource.
       $datasource_plugin_configuration = array('index' => $this) + $this->datasourcePluginConfig;
       // Create a datasource plugin instance.
-      $this->datasourcePluginInstance = $datasource_plugin_manager->createInstance($datasource_plugin_id, $datasource_plugin_configuration);
+      $this->datasourcePluginInstance = \Drupal::service('search_api.datasource.plugin.manager')->createInstance($this->getDatasourceId(), $datasource_plugin_configuration);
     }
 
     return $this->datasourcePluginInstance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasValidTracker() {
+    $tracker_plugin_definition = \Drupal::service('plugin.manager.search_api.tracker')->getDefinition($this->getTrackerId());
+    return !empty($tracker_plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTrackerId() {
+    return $this->trackerPluginId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTracker() {
+    // Check if the tracker plugin instance needs to be resolved.
+    if (!$this->trackerPluginInstance && $this->hasValidTracker()) {
+      // Get the plugin configuration for the tracker.
+      $tracker_plugin_configuration = array('index' => $this) + $this->trackerPluginConfig;
+      // Create a tracker plugin instance.
+      $this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration);
+    }
+    return $this->trackerPluginInstance;
   }
 
   /**
@@ -701,27 +753,84 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1') {
-    $next_set = $this->getDatasource()->getRemainingItems($limit);
-    $items = $this->getDatasource()->loadMultiple($next_set);
-    $ids_indexed = $this->indexItems($items);
-    $this->getDatasource()->trackIndexed($ids_indexed);
-    return count($ids_indexed);
+    // Initialize the count variable to zero.
+    $count = 0;
+    // Check if a valid tracker and datasource is available.
+    if ($this->hasValidTracker() && $this->hasValidDatasource()) {
+      // Get the tracker.
+      $tracker = $this->getTracker();
+      // Get the next set of items.
+      $next_set = $tracker->getRemainingItems(NULL, $limit);
+      // Iterate through the remaining items.
+      foreach ($next_set as $item_type => $ids) {
+        // Get the datasource for the current item type. 
+        // @todo: Should be reworked once multiple datasources are supported.
+        $datasource = $this->getDatasource();
+        // Load the items from the datasource.
+        $items = $datasource->loadMultiple($ids);
+        // Index the items.
+        $ids_indexed = $this->indexItems($items);
+        // Mark the indexed items.
+        $tracker->trackIndexed($datasource, $ids_indexed);
+        // Increment count by the number of indexed items.
+        $count += count($ids_indexed);
+      }
+    }
+    return $count;
   }
 
   /**
    * {@inheritdoc}
    */
   public function reindex() {
-    return $this->getDatasource()->trackUpdate();
+    // Check whether a valid tracker and datasource is available.
+    if ($this->hasValidTracker() && $this->hasValidDatasource()) {
+      // Mark all items for processing for the current datasource.
+      return $this->getTracker()->trackUpdated($this->getDatasource());
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function insertItems(DatasourceInterface $datasource, array $ids) {
+    return ($this->hasValidTracker() && $this->getTracker()->trackInserted($datasource, $ids));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateItems(DatasourceInterface $datasource, array $ids) {
+    return ($this->hasValidTracker() && $this->getTracker()->trackUpdated($datasource, $ids));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems(DatasourceInterface $datasource, array $ids) {
+    // Remove the items from the tracker.
+    $success = ($this->hasValidTracker() && $this->getTracker()->trackDeleted($datasource, $ids));
+    // Check whether a valid server is available.
+    if ($this->hasValidServer()) {
+      // Remove the items from the server.
+      $this->getServer()->deleteItems($this, $ids);
+    }
+    return $success;
   }
 
   /**
    * {@inheritdoc}
    */
   public function clear() {
-    $this->getServer()->deleteAllItems($this);
-    $this->getDatasource()->trackUpdate();
-    return TRUE;
+    // Check whether the index has a valid server and reindex was successful.
+    if ($this->reindex() && $this->hasValidServer()) {
+      // Remove all items for this index from the server.
+      $this->getServer()->deleteAllItems($this);
+
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -729,6 +838,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function resetCaches() {
     $this->datasourcePluginInstance = NULL;
+    $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
     $this->fulltextFields = NULL;
@@ -780,8 +890,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
           // $this->queueItems();
         }
       }
-      // Only check if there is a datasource
-      if ($this->getDatasource()) {
+      // Only check if there is a datasource.
+      if ($this->hasValidDatasource()) {
         // If the index is new (so no update) and the status is enabled, start tracking
         // If the index is not new but the original status is disabled and the new status, start tracking
         if ((!$update && $this->status()) || ($update && ($this->status() && !$this->original->status()))) {
@@ -813,20 +923,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $entity->getDatasource()->stopTracking();
       }
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getLastIndexed() {
-    return \Drupal::state()->get($this->id() . '.last_indexed', array('changed' => '0', 'item_id' => '0'));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setLastIndexed($changed, $item_id) {
-    return \Drupal::state()->set($this->id() . '.last_indexed', array('changed' => $changed, 'item_id' => $item_id));
   }
 
 }
