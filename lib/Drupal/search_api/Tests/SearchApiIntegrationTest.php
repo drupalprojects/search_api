@@ -165,7 +165,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
     $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
-    $this->assertUrl($settings_path, array(), t('Correct redirect to fields page.'));
 
     /** @var $index \Drupal\search_api\Entity\Index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
