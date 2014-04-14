@@ -13,6 +13,7 @@ php:
 notifications:
   email:
     - nick.veenhof@acquia.com
+    - remus@gmx.net
 
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin
