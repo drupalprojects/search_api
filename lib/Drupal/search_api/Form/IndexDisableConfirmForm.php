@@ -53,8 +53,9 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
     // Toggle the entity status.
     $this->entity->setStatus(FALSE)->save();
 
-    // Notify the user about the server removal.
+    // Notify the user about the status change.
     drupal_set_message($this->t('The search index %name has been disabled.', array('%name' => $this->entity->label())));
+
     // Redirect to the overview page.
     $form_state['redirect_route'] = array(
       'route_name' => 'search_api.overview',

@@ -43,8 +43,19 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   public function testFramework() {
     $this->drupalLogin($this->adminUser);
 
+    // Test that the overview page exists and its permissions work.
     $this->drupalGet('admin/config');
     $this->assertText('Search API', 'Search API menu link is displayed.');
+
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertResponse(200, 'Admin user can access the overview page.');
+
+    $this->drupalLogin($this->unauthorizedUser);
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertResponse(403, "User without permissions doesn't have access to the overview page.");
+
+    // Login as an admin user for the rest of the tests.
+    $this->drupalLogin($this->adminUser);
 
     $this->createServer();
     $this->createIndex();

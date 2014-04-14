@@ -1,25 +1,25 @@
 <?php
 
 /**
-* @file
-* Contains \Drupal\search_api\Controller\SearchApiIndexController.
-*
-* Small controller to handle Index enabling without confirmation task
-*/
+ * @file
+ * Contains \Drupal\search_api\Controller\SearchApiIndexController.
+ */
 
 namespace Drupal\search_api\Controller;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\Index\IndexInterface;
-use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Provides route responses for Search API indexes.
+ */
 class SearchApiIndexController extends ControllerBase {
 
   /**
    * Displays information about a Search API index.
    * 
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $search_api_index
    *   An instance of IndexInterface.
    * 
    * @return array
@@ -54,20 +54,33 @@ class SearchApiIndexController extends ControllerBase {
     return String::checkPlain($search_api_index->label());
   }
 
-  public function indexBypassEnable(Request $request, IndexInterface $search_api_index) {
-    if (($token = $request->get('token')) && \Drupal::csrfToken()->validate($token, $search_api_index->id())) {
-      // Toggle the entity status.
-      $search_api_index->setStatus(TRUE)->save();
+  /**
+   * Enables a Search API index without a confirmation form.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $search_api_index
+   *   An instance of IndexInterface.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response.
+   */
+  public function indexBypassEnable(IndexInterface $search_api_index) {
+    // Enable the index.
+    $search_api_index->setStatus(TRUE)->save();
 
-      if ($search_api_index->status()) {
-        if (!$search_api_index->getServer()->status()) {
-          $search_api_index->setStatus(FALSE);
-        }
-      }
-
-      $route = $search_api_index->urlInfo();
-      return $this->redirect($route['route_name'], $route['route_parameters']);
+    // \Drupal\search_api\Entity\Index::preSave() doesn't allow an index to be
+    // enabled if its server is not set or disabled.
+    if ($search_api_index->status()) {
+      // Notify the user about the status change.
+      drupal_set_message($this->t('The search index %name has been enabled.', array('%name' => $search_api_index->label())));
     }
+    else {
+      // Notify the user that the status change did not succeed.
+      drupal_set_message($this->t('The search index %name could not be enabled. Check if its server is set and enabled.', array('%name' => $search_api_index->label())));
+    }
+
+    // Redirect to the index edit page.
+    $url = $search_api_index->urlInfo();
+    return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }
 
 }

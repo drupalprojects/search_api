@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Definition of \Drupal\search_api\Tests\SearchApiWebTestBase.
+ * Contains \Drupal\search_api\Tests\SearchApiWebTestBase.
  */
 
 namespace Drupal\search_api\Tests;
@@ -13,16 +14,52 @@ use Drupal\simpletest\WebTestBase;
  */
 abstract class SearchApiWebTestBase extends WebTestBase {
 
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
   public static $modules = array('node', 'search_api');
 
+  /**
+   * Account object representing a user with Search API administration
+   * privileges.
+   *
+   * @var \Drupal\Core\Session\AccountInterface $account
+   */
   protected $adminUser;
+
+  /**
+   * Account object representing a user without Search API administration
+   * privileges.
+   *
+   * @var \Drupal\Core\Session\AccountInterface $account
+   */
+  protected $unauthorizedUser;
+
+  /**
+   * Account object representing a anonymous user
+   *
+   * @var \Drupal\Core\Session\AccountInterface $account
+   */
   protected $anonymousUser;
+
+  /**
+   * The URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
   protected $urlGenerator;
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp();
+
     // Create users.
     $this->adminUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
+    $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
     $this->anonymousUser = $this->drupalCreateUser();
 
     $this->urlGenerator = $this->container->get('url_generator');
@@ -40,8 +77,14 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     ));
   }
 
+  /**
+   * Creates or deletes a server.
+   *
+   * @return \Drupal\search_api\Server\ServerInterface
+   *   A Search API server.
+   */
   public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $service_id = 'search_api_test_service', $options = array(), $reset = FALSE) {
-    /** @var $server \Drupal\search_api\Entity\Server */
+    /** @var $server \Drupal\search_api\Server\ServerInterface */
     $server = entity_load('search_api_server', $machine_name);
 
     if ($server) {
@@ -58,8 +101,14 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     return $server;
   }
 
+  /**
+   * Creates or deletes an index.
+   *
+   * @return \Drupal\search_api\Index\IndexInterface
+   *   A Search API server.
+   */
   public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_plugin_id = 'entity:node', $reset = FALSE) {
-    /** @var $index \Drupal\search_api\Entity\Index */
+    /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $machine_name);
 
     if ($index) {
@@ -75,4 +124,5 @@ abstract class SearchApiWebTestBase extends WebTestBase {
 
     return $index;
   }
+
 }

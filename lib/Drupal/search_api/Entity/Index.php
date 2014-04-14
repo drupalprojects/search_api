@@ -745,12 +745,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Stops enabling of indexes when the server is disabled
+   * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
+    // Stop enabling of indexes when the server is disabled.
     if ($this->status() && !$this->isServerEnabled()) {
-      $this->setStatus(FALSE);
+      $this->disable();
     }
   }
 

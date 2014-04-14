@@ -58,11 +58,24 @@ class SearchApiServerController extends ControllerBase {
     return String::checkPlain($search_api_server->label());
   }
 
+  /**
+   * Enables a Search API server without a confirmation form.
+   *
+   * @param \Drupal\search_api\Server\ServerInterface $search_api_server
+   *   An instance of ServerInterface.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response.
+   */
   public function serverBypassEnable(ServerInterface $search_api_server) {
     $search_api_server->setStatus(TRUE)->save();
-    $route = $search_api_server->urlInfo();
 
-    return $this->redirect($route['route_name'], $route['route_parameters']);
+    // Notify the user about the status change.
+    drupal_set_message($this->t('The search server %name has been enabled.', array('%name' => $search_api_server->label())));
+
+    // Redirect to the server edit page.
+    $url = $search_api_server->urlInfo();
+    return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }
 
 }
