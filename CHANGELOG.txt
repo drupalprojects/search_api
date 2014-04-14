@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2219563 by drunken monkey: Added __toString() methods for queries and
+  filters.
 - #1888174 by drunken monkey, ipallian: Fixed problems with date facets.
 - #2187487 by drunken monkey: Fixed admin summary of language filter.
 - #2198261 by drunken monkey: Fixed fatal error on view editing.
