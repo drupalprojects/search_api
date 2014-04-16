@@ -51,14 +51,19 @@ script:
   # go to our Drupal module directory
   - cd $TRAVIS_BUILD_DIR/drupal/modules/
   # Get the latest head of the search_api code.
-  # We should figure out how to copy the files from the original checkout there, so it always matches with the commit tested
+  # We should figure out how to copy the files from the original checkout there, so it always matches with the commit
+  # tested
   - git clone --depth 1 --branch master https://github.com/nickveenhof/search-api-sandbox.git search_api
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/drupal
   # Run the tests
   - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://127.0.0.1:8080 | tee /tmp/test.txt
+  - TEST_EXIT=${PIPESTATUS[0]}
   # Check if we had fails in the run-tests.sh script
   # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
-  # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a bit.
-  - TEST=$(! cat /tmp/test.txt | egrep "[0-9]+ fails")$?
-  - exit $TEST
+  # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
+  # bit.
+  - TEST_OUTPUT=$(! cat /tmp/test.txt | egrep "[0-9]+ fails")$?
+  # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
+  # failed.
+  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
