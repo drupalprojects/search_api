@@ -1,41 +1,47 @@
-.search-api-entity-status-enabled,
-.search-api-entity-status-disabled {
-  display: block;
-  width: 12px;
-  height: 12px;
-}
-
-.search-api-entity-status-enabled {
-  background-image: url('../images/enabled.png');
-}
-
-.search-api-entity-status-disabled {
-  background-image: url('../images/disabled.png');
-}
-
-/*
- * VIEW SERVER
+/**
+ * @file
+ * Administration styles for the Search API module.
  */
 
+/**
+ * Search API overview page.
+ */
+#search-api-entity-list {
+  margin-bottom: 2em;
+}
+#search-api-entity-list tr {
+  border-bottom: none;
+}
+
+#search-api-entity-list tr.search-api-list-server {
+  border-top: 1px solid #E6E4DF;
+}
+#search-api-entity-list tr.search-api-list-index:last-of-type {
+  border-bottom: 1px solid #E6E4DF;
+}
+
+#search-api-entity-list tr.search-api-list-server .search-api-type,
+#search-api-entity-list tr.search-api-list-server .search-api-title {
+  font-weight: bold;
+}
+#search-api-entity-list tr.search-api-list-index .search-api-type {
+  padding-left: 3em;
+}
+
+#search-api-entity-list tr.search-api-list-disabled .search-api-type,
+#search-api-entity-list tr.search-api-list-disabled .search-api-title {
+  font-style: italic;
+}
+
+/**
+ * Server view page.
+ */
 .search-api-server-summary ul.inline {
   margin: 0;
 }
 
 .search-api-server-summary ul.inline li {
   padding-left: 0;
-}
-
-#search-api-overview tr {
-  border: none;
-}
-
-#search-api-overview tr.odd-group,
-#search-api-overview tr.odd-group:hover {
-  background-color: #ddd;
-}
-#search-api-overview tr.even-group,
-#search-api-overview tr.even-group:hover {
-  background-color: #fff;
 }
 
 #search-api-service-config-form .messages,
