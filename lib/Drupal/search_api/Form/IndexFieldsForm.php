@@ -81,6 +81,7 @@ class IndexFieldsForm extends EntityFormController {
   public function buildForm(array $form, array &$form_state) {
     // Get the index
     $index = $this->entity;
+    $entity_description_added = FALSE;
 
     // Set a proper title
     $form['#title'] = $this->t('Manage fields for search index @label', array('@label' => $index->label()));
@@ -179,7 +180,7 @@ class IndexFieldsForm extends EntityFormController {
       else {
         // This is an entity.
         $label = $entity_types[$info['entity_type']]['label'];
-        if (!isset($entity_description_added)) {
+        if (!$entity_description_added) {
           $form['description']['#description'] .= '<p>' .
             t('Note that indexing an entity-valued field (like %field, which has type %type) directly will only index the entity ID. ' .
               'This will be used for filtering and also sorting (which might not be what you expect). ' .
@@ -220,12 +221,14 @@ class IndexFieldsForm extends EntityFormController {
 
     if ($additional) {
       // Build our options and our selected ones
-      $additional_form_options = array();
-      $additional_form_default_values = array();
-      foreach ($additional as $additional_key => $additional_option) {
-        $additional_form_options[$additional_key] = $additional_option['name'];
-        $additional_form_default_values[$additional_key] = (!empty($additional_option['enabled'])) ? $additional_key : 0;
-      }
+
+      // @todo: Figure out if this serves a purpose
+      //$additional_form_options = array();
+      //$additional_form_default_values = array();
+      //foreach ($additional as $additional_key => $additional_option) {
+      //  $additional_form_options[$additional_key] =  $additional_option['name'];
+      //  $additional_form_default_values[$additional_key] = (!empty($additional_option['enabled'])) ? $additional_key : 0;
+      //}
 
       $form['additional'] = array(
         '#type' => 'details',
