@@ -304,7 +304,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidDatasource() {
-    $datasource_plugin_definition = \Drupal::service('search_api.datasource.plugin.manager')->getDefinition($this->datasourcePluginId);
+    $datasource_plugin_definition = \Drupal::service('plugin.manager.search_api.datasource')->getDefinition($this->datasourcePluginId);
     return !empty($datasource_plugin_definition);
   }
 
@@ -324,7 +324,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Get the plugin configuration for the datasource.
       $datasource_plugin_configuration = array('index' => $this) + $this->datasourcePluginConfig;
       // Create a datasource plugin instance.
-      $this->datasourcePluginInstance = \Drupal::service('search_api.datasource.plugin.manager')->createInstance($this->getDatasourceId(), $datasource_plugin_configuration);
+      $this->datasourcePluginInstance = \Drupal::service('plugin.manager.search_api.datasource')->createInstance($this->getDatasourceId(), $datasource_plugin_configuration);
     }
 
     return $this->datasourcePluginInstance;
@@ -638,7 +638,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getProcessors($all = FALSE, $sortBy = 'weight') {
     /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
-    $processorPluginManager = \Drupal::service('search_api.processor.plugin.manager');
+    $processorPluginManager = \Drupal::service('plugin.manager.search_api.processor');
 
     // Get the processor definitions
     $processor_definitions = $processorPluginManager->getDefinitions();

@@ -59,7 +59,7 @@ class IndexFiltersForm extends EntityFormController {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('search_api.processor.plugin.manager')
+      $container->get('plugin.manager.search_api.processor')
     );
   }
 

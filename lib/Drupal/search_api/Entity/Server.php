@@ -127,7 +127,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function hasValidService() {
     // Get the service plugin definition.
-    $service_plugin_definition = \Drupal::service('search_api.service.plugin.manager')->getDefinition($this->servicePluginId);
+    $service_plugin_definition = \Drupal::service('plugin.manager.search_api.service')->getDefinition($this->servicePluginId);
     // Determine whether the service is valid.
     return !empty($service_plugin_definition);
   }
@@ -141,7 +141,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       // Get the ID of the service plugin.
       $service_plugin_id = $this->servicePluginId;
       // Get the service plugin manager.
-      $service_plugin_manager = \Drupal::service('search_api.service.plugin.manager');
+      $service_plugin_manager = \Drupal::service('plugin.manager.search_api.service');
       // Create a service plugin instance.
       $config = $this->servicePluginConfig;
       $config['server'] = $this;

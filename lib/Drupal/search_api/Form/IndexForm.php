@@ -140,7 +140,7 @@ class IndexForm extends EntityFormController {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('search_api.datasource.plugin.manager'),
+      $container->get('plugin.manager.search_api.datasource'),
       $container->get('plugin.manager.search_api.tracker')
     );
   }

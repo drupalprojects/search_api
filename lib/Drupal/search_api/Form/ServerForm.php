@@ -96,7 +96,7 @@ class ServerForm extends EntityFormController {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('search_api.service.plugin.manager')
+      $container->get('plugin.manager.search_api.service')
     );
   }
 
