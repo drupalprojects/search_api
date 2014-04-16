@@ -115,13 +115,12 @@ class IndexFiltersForm extends EntityFormController {
 
     foreach ($processors_by_name as $name => $processor) {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-      $plugin_definition = $processor->getPluginDefinition();
       $form['processors']['status'][$name] = array(
         '#type' => 'checkbox',
         '#title' => $processor->label(),
         '#default_value' => $processors_settings[$name]['status'],
         '#parents' => array('processors', $name, 'status'),
-        '#description' => $plugin_definition['description'],
+        '#description' => $processor->getPluginDefinition()['description'],
       );
     }
 
