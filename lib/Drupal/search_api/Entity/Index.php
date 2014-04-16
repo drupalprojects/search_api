@@ -28,7 +28,6 @@ use Drupal\search_api\Utility\Utility;
  *   label = @Translation("Search index"),
  *   controllers = {
  *     "storage" = "Drupal\search_api\IndexStorage",
- *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",
  *       "edit" = "Drupal\search_api\Form\IndexForm",

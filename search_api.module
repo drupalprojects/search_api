@@ -21,16 +21,6 @@ use Drupal\search_api\Utility\Utility;
  */
 
 /**
- * Implements hook_help().
- */
-function search_api_help($path, $arg) {
-  switch ($path) {
-    case 'admin/config/search/search-api':
-      return t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g. an Apache Solr or MongoDB server). An index is the definition of the actual indexed content that will be searched against (e.g. A core within Solr).');
-  }
-}
-
-/**
  * Implements hook_permission().
  */
 function search_api_permission() {
@@ -102,6 +92,26 @@ function search_api_entity_delete(EntityInterface $entity) {
         $index->getDatasource()->trackDelete(array($entity->id()));
       }
     }
+  }
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ *
+ * @todo rewrite it regarding to https://drupal.org/node/1839516
+ * @todo Should it be moved to SearchApiController->buildRow() ?
+ */
+function search_api_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if (($entity->getEntityTypeId() == 'search_api_index' || $entity->getEntityTypeId() == 'search_api_server')
+    && !$entity->status() && !empty($operations['enable'])) {
+    if ($entity->getEntityTypeId() == 'search_api_index') {
+      $operations['enable']['route_name'] = 'search_api.index_bypass_enable';
+    }
+    else {
+      $operations['enable']['route_name'] = 'search_api.server_bypass_enable';
+    }
+
+    $operations['enable']['route_parameters']['token'] = \Drupal::csrfToken()->get($entity->id());
   }
 }
 
