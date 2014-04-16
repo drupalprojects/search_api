@@ -517,8 +517,10 @@ class IndexForm extends EntityFormController {
   public function validate(array $form, array &$form_state) {
     // Perform default entity form validate.
     parent::validate($form, $form_state);
-    // Get the entity.
+
+    /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
+
     // Get the current datasource plugin ID.
     $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
     // Check if the datasource plugin changed.
@@ -564,9 +566,11 @@ class IndexForm extends EntityFormController {
     // Check if the entity has a valid tracker plugin.
     elseif ($entity->hasValidTracker()) {
       // Build the tracker plugin configuration form state.
-      $tracker_form_state = array(
-        'values' => $form_state['values']['trackerPluginConfig'],
-      );
+      $tracker_form_state = array();
+      if (!empty($form_state['values']['trackerPluginConfig'])) {
+        $tracker_form_state['values'] = $form_state['values']['trackerPluginConfig'];
+      }
+
       // Validate the tracker plugin configuration form.
       $entity->getTracker()->validateConfigurationForm($form['trackerPluginConfig'], $tracker_form_state);
     }
@@ -576,9 +580,9 @@ class IndexForm extends EntityFormController {
    * {@inheritdoc}
    */
   public function submit(array $form, array &$form_state) {
-    // Get the entity.
     /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
+
     // Perform default entity form submission.
     // merge the fields stored as options from the field form so they do not get lost during save
     $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
@@ -606,9 +610,11 @@ class IndexForm extends EntityFormController {
     // Check if the entity has a valid tracker plugin.
     if ($entity->hasValidTracker()) {
       // Build the tracker plugin configuration form state.
-      $tracker_form_state = array(
-        'values' => $form_state['values']['trackerPluginConfig']
-      );
+      $tracker_form_state = array();
+      if (!empty($form_state['values']['trackerPluginConfig'])) {
+        $tracker_form_state['values'] = $form_state['values']['trackerPluginConfig'];
+      }
+
       // Also add all additional values so that we can read them in the plugin.
       // Useful for the status.
       $tracker_form_state['values']['index'] = $form_state['values'];

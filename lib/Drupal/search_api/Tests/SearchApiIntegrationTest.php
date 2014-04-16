@@ -325,7 +325,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   protected function countTrackedItems() {
     /** @var $index \Drupal\search_api\Entity\Index */
     $index = entity_load('search_api_index', $this->indexId);
-    return $index->getDatasource()->getTotalItemsCount();
+    return $index->getTracker()->getTotalItemsCount();
   }
 
 }

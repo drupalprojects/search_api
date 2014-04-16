@@ -219,14 +219,14 @@ function drush_search_api_status($index_name = NULL) {
   ));
   foreach ($indexes as $index) {
     /* @var $index \Drupal\search_api\Entity\Index */
-    $complete = ($index->getDatasource()->getTotalItemsCount() > 0) ?
-      100 * round($index->getDatasource()->getIndexedItemsCount() / $index->getDatasource()->getTotalItemsCount(), 3) . '%' : '-';
+    $complete = ($index->getTracker()->getTotalItemsCount() > 0) ?
+      100 * round($index->getTracker()->getIndexedItemsCount() / $index->getTracker()->getTotalItemsCount(), 3) . '%' : '-';
     $row = array(
       $index->machine_name,
       $index->name,
       $complete,
-      $index->getDatasource()->getIndexedItemsCount(),
-      $index->getDatasource()->getTotalItemsCount(),
+      $index->getTracker()->getIndexedItemsCount(),
+      $index->getTracker()->getTotalItemsCount(),
     );
     $rows[] = $row;
   }
@@ -251,8 +251,8 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
   }
   foreach ($indexes as $index) {
     /* @var $index \Drupal\search_api\Entity\Index */
-    $data_source = $index->getDatasource();
-    $remaining = $data_source->getTotalItemsCount() - $data_source->getIndexedItemsCount();
+    $tracker = $index->getTracker();
+    $remaining = $tracker->getTotalItemsCount() - $tracker->getIndexedItemsCount();
 
     if ($remaining <= 0) {
       drush_log(dt("The index !index is up to date.", array('!index' => $index->name)), 'ok');
