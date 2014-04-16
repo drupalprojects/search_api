@@ -84,32 +84,39 @@ interface IndexInterface extends ConfigEntityInterface {
   public function setOption($name, $option);
 
   /**
-   * Determine whether the datasource is valid.
+   * Retrieves the IDs of all datasources enabled for this index.
    *
-   * @return bool
-   *   TRUE if the datasource is valid, otherwise FALSE.
+   * @return string[]
+   *   The IDs of the datasource plugins used by this index.
    */
-  public function hasValidDatasource();
+  public function getDatasourceIds();
 
   /**
-   * Retrieves the datasource plugin's ID.
+   * Retrieves a specific datasource plugin for this index.
    *
-   * @return string
-   *   The ID of the datasource plugin used by this index.
-   */
-  public function getDatasourceId();
-
-  /**
-   * Retrieves the datasource plugin.
+   * @param string $datasource
+   *   The ID of the datasource plugin to return.
    *
    * @return \Drupal\search_api\Datasource\DatasourceInterface
-   *   An instance of DatasourceInterface.
+   *   The datasource plugin with the given ID.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the specified datasource isn't enabled for this index, or couldn't be
+   *   loaded.
    */
-  public function getDatasource();
+  public function getDatasource($datasource);
+
+  /**
+   * Retrieves this index's datasource plugins.
+   *
+   * @return \Drupal\search_api\Datasource\DatasourceInterface[]
+   *   The datasource plugins used by this index, keyed by plugin ID.
+   */
+  public function getDatasources();
 
   /**
    * Determine whether the tracker is valid.
-   * 
+   *
    * @return bool
    *   TRUE if the tracker is valid, otherwise FALSE.
    */
@@ -296,12 +303,12 @@ interface IndexInterface extends ConfigEntityInterface {
 
   /**
    * Add items from a specific datasource to the index.
-   * 
+   *
    * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
    *   An instance of DatasourceInterface which manages the items.
    * @param array $ids
    *   An array of item IDs.
-   * 
+   *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */

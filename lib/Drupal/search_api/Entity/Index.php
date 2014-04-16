@@ -137,25 +137,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public $options = array();
 
   /**
-   * The datasource plugin ID.
+   * The datasource plugin IDs.
    *
-   * @var string
+   * @var string[]
    */
-  public $datasourcePluginId;
+  public $datasourcePluginIds;
 
   /**
-   * The datasource plugin configuration.
+   * The configuration for the datasource plugins.
    *
    * @var array
    */
-  public $datasourcePluginConfig = array();
+  public $datasourcePluginConfigs = array();
 
   /**
-   * The datasource plugin instance.
+   * The datasource plugin instances.
    *
-   * @var \Drupal\search_api\Datasource\DatasourceInterface
+   * @var \Drupal\search_api\Datasource\DatasourceInterface[]
+   *
+   * @see getDatasources()
    */
-  protected $datasourcePluginInstance;
+  protected $datasourcePluginInstances;
 
   /**
    * The tracker plugin ID.
@@ -237,8 +239,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function __clone() {
-    // Prevent the datasource, tracker and server instance from being cloned.
-    $this->datasourcePluginInstance = $this->trackerPluginInstance = $this->server = NULL;
+    // Prevent the datasources, tracker and server instance from being cloned.
+    $this->datasourcePluginInstances = $this->trackerPluginInstance = $this->server = NULL;
   }
 
   /**
@@ -303,31 +305,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasValidDatasource() {
-    $datasource_plugin_definition = \Drupal::service('plugin.manager.search_api.datasource')->getDefinition($this->datasourcePluginId);
-    return !empty($datasource_plugin_definition);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDatasourceId() {
-    return $this->datasourcePluginId;
+  public function getDatasourceIds() {
+    return $this->datasourcePluginIds;
   }
 
     /**
      * {@inheritdoc}
      */
-    public function getDatasource() {
-    // Check if the datasource plugin instance needs to be resolved.
-    if (!$this->datasourcePluginInstance && $this->hasValidDatasource()) {
-      // Get the plugin configuration for the datasource.
-      $datasource_plugin_configuration = array('index' => $this) + $this->datasourcePluginConfig;
-      // Create a datasource plugin instance.
-      $this->datasourcePluginInstance = \Drupal::service('plugin.manager.search_api.datasource')->createInstance($this->getDatasourceId(), $datasource_plugin_configuration);
+  public function getDatasource($datasource) {
+    $datasources = $this->getDatasources();
+    if (empty($datasources[$datasource])) {
+      $args['@datasource'] = $datasource;
+      $args['%index'] = $this->label();
+      throw new SearchApiException(t('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
+    }
+    return $datasources[$datasource];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDatasources() {
+    if (!$this->datasourcePluginInstances) {
+      $plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
+      foreach ($this->datasourcePluginIds as $datasource) {
+        $config = array('index' => $this);
+        if (isset($this->datasourcePluginConfigs[$datasource])) {
+          $config += $this->datasourcePluginConfigs[$datasource];
+        }
+        $this->datasourcePluginInstances[$datasource] = $plugin_manager->createInstance($datasource, $config);
+      }
     }
 
-    return $this->datasourcePluginInstance;
+    return $this->datasourcePluginInstances;
   }
 
   /**
@@ -763,7 +773,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $next_set = $tracker->getRemainingItems(NULL, $limit);
       // Iterate through the remaining items.
       foreach ($next_set as $item_type => $ids) {
-        // Get the datasource for the current item type. 
+        // Get the datasource for the current item type.
         // @todo: Should be reworked once multiple datasources are supported.
         $datasource = $this->getDatasource();
         // Load the items from the datasource.

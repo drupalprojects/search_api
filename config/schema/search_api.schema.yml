@@ -57,11 +57,14 @@ search_api.index.*:
         index_directly:
           type: boolean
           label: 'Index items immediately'
-    datasourcePluginId:
-      type: string
-      label: 'Datasource plugin ID'
-    datasourcePluginConfig:
-      type: search_api.datasource.plugin.[%parent.datasourcePluginId]
+    datasourcePluginIds:
+      type: sequence
+      label: 'Datasource plugin IDs'
+      sequence:
+        - type: string
+    datasourcePluginConfigs:
+      # How to do this properly?
+      type: mapping
     trackerPluginId:
       type: string
       label: 'Tracker plugin ID'

@@ -1,0 +1,2 @@
+Find callers of IndexInterface::getDatasource() and add a try/catch.
+getFields(): Probably take $datasource as (first) parameter, hand that down to getPropertyDefinitions(), update calls and caching
