@@ -28,7 +28,7 @@ mysql:
 
 install:
   - composer global require drush/drush:dev-master --prefer-source
-  - cd /home/travis/.composer/vendor/drush/drush && composer require youngj/httpserver:dev-master && cd -
+  - cd /home/travis/.composer/vendor/drush/drush && cd -
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - composer global require drupal/coder:\>7
 
