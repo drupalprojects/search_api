@@ -63,7 +63,8 @@ script:
   # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
   # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
   # bit.
-  - TEST_OUTPUT=$(! cat /tmp/test.txt | egrep "[0-9]+ fails")$?
+  # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
+  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)" /tmp/test.txt > /dev/null)$?
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
   - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
