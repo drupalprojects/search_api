@@ -9,6 +9,7 @@ namespace Drupal\search_api\Entity;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
@@ -541,20 +542,31 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($property instanceof ComplexDataDefinitionInterface) {
         $main_property = $property->getMainPropertyName();
         $nested_properties = $property->getPropertyDefinitions();
-        $additional = count($nested_properties) > 1;
-        if (!empty($recurse_for_prefixes[$key])) {
-          if ($nested_properties) {
-            // We allow the main property to be indexed directly, so we don't
-            // have to add it again for the nested fields.
-            if ($main_property) {
-              unset($nested_properties[$main_property]);
-            }
-            if ($nested_properties) {
-              $additional = TRUE;
-              $recurse[] = array($nested_properties, "$key:", "$label » ");
-            }
+
+        // Don't add the additional 'entity' property for entity reference
+        // fields which don't target a content entity type.
+        // @todo Try to see if there's a better way of doing this check when
+        // https://drupal.org/node/2228721 gets fixed.
+        if ($property instanceof FieldItemDataDefinition && $property->getDataType() == 'field_item:entity_reference') {
+          $entity_type = $this->entityManager()->getDefinition($property->getSetting('target_type'));
+          if (!$entity_type->isSubclassOf('\Drupal\Core\TypedData\TypedDataInterface')) {
+            unset($nested_properties['entity']);
           }
         }
+
+        $additional = count($nested_properties) > 1;
+        if (!empty($recurse_for_prefixes[$key]) && $nested_properties) {
+          // We allow the main property to be indexed directly, so we don't
+          // have to add it again for the nested fields.
+          if ($main_property) {
+            unset($nested_properties[$main_property]);
+          }
+          if ($nested_properties) {
+            $additional = TRUE;
+            $recurse[] = array($nested_properties, "$key:", "$label » ");
+          }
+        }
+
         if ($additional) {
           $this->fields[0]['additional fields'][$key] = array(
             'name' => "$label [$key]",
