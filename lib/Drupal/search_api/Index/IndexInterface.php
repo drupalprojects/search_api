@@ -222,7 +222,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function postprocessSearchResults(array &$response, QueryInterface $query);
 
   /**
-   * Returns a list of all known fields for this index.
+   * Returns a list of all known fields for one datasource of this index.
    *
    * @param bool $only_indexed
    *   (optional) Return only indexed fields, not all known fields.
@@ -239,6 +239,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   - indexed: Boolean indicating whether the field is indexed or not.
    *   - type: The type set for this field. One of the types returned by
    *     search_api_default_field_types().
+   *   - datasource: The datasource to which this field belongs.
    *   - real_type: (optional) If a custom data type was selected for this
    *     field, this type will be stored here, and "type" contain the fallback
    *     default data type.
@@ -247,7 +248,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   If $get_additional is TRUE, this array is encapsulated in another
    *   associative array, which contains the above array under the "fields" key,
    *   and a list of related entities under the "additional fields" key,
-   *   mapping field keys to arrays with "name" and "enabled".
+   *   mapping field keys to arrays with the keys "name" and "enabled".
    */
   public function getFields($only_indexed = TRUE, $get_additional = FALSE);
 
@@ -268,6 +269,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Retrieves the properties available for this index.
    *
+   * @param string $datasource
+   *   The datasource for which the properties should be retrieved.
    * @param bool $alter
    *   (optional) Whether to pass the property definitions to the index's
    *   enabled processors for altering before returning them.
@@ -275,8 +278,12 @@ interface IndexInterface extends ConfigEntityInterface {
    * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
    *   The properties included in this index, defined by the datasource and
    *   optionally altered by the enabled processors.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the specified datasource isn't enabled for this index, or couldn't be
+   *   loaded.
    */
-  public function getPropertyDefinitions($alter = TRUE);
+  public function getPropertyDefinitions($datasource, $alter = TRUE);
 
   /**
    * Indexes a set amount of items.

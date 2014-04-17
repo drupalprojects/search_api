@@ -1,2 +1,3 @@
-Find callers of IndexInterface::getDatasource() and add a try/catch.
-getFields(): Probably take $datasource as (first) parameter, hand that down to getPropertyDefinitions(), update calls and caching
+Find callers of following methods and add a try/catch:
+- IndexInterface::getDatasource()
+Datasource is not included in field labels => when fields are shown in UI (Fields tab, processor "Fields" setting) either separate by datasource or prefix labels manually

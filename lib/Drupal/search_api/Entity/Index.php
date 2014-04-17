@@ -117,13 +117,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *     to use the entity label instead of the ID.
    * - additional fields: An associative array with keys and values being the
    *   field identifiers of related entities whose fields should be displayed.
-   * - data_alter_callbacks: An array of all data alterations available. Keys
-   *   are the alteration identifiers, the values are arrays containing the
-   *   settings for that data alteration. The inner structure looks like this:
-   *   - status: Boolean indicating whether the data alteration is enabled.
-   *   - weight: Used for sorting the data alterations.
-   *   - settings: Alteration-specific settings, configured via the alteration's
-   *     configuration form.
    * - processors: An array of all processors available for the index. The keys
    *   are the processor identifiers, the values are arrays containing the
    *   settings for that processor. The inner structure looks like this:
@@ -508,7 +501,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
-      $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions());
+      foreach ($this->datasourcePluginIds as $datasource) {
+        try {
+          $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource), $datasource);
+        }
+        catch (SearchApiException $e) {
+          $variables['%index'] = $this->label();
+          watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: !message in %function (line %line of %file).', $variables);
+        }
+      }
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
@@ -524,6 +525,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of properties on some complex data object.
+   * @param string $datasource
+   *   The ID of the datasource to which these properties belong.
    * @param string $prefix
    *   Internal use only. A prefix to use for the generated field names in this
    *   method.
@@ -531,10 +534,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
    */
-  protected function convertPropertyDefinitionsToFields(array $properties, $prefix = '', $prefix_label = '') {
-    $type_mapping = search_api_field_type_mapping();
+  protected function convertPropertyDefinitionsToFields(array $properties, $datasource, $prefix = '', $prefix_label = '') {
+    $type_mapping = Utility::getFieldTypeMapping();
     $fields = &$this->fields[0]['fields'];
     $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
+
+    // All field identifiers should start with the datasource ID.
+    if (!$prefix) {
+      $prefix = "$datasource|";
+    }
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
@@ -561,7 +569,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
             }
             if ($nested_properties) {
               $additional = TRUE;
-              $recurse[] = array($nested_properties, "$key:", "$label » ");
+              $recurse[] = array($nested_properties, $datasource, "$key:", "$label » ");
             }
           }
         }
@@ -586,6 +594,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $fields[$key] = array(
         'name' => $label,
         'description' => $description,
+        'datasource' => $datasource,
         'indexed' => FALSE,
         'type' => $type_mapping[$type],
         'boost' => '1.0',
@@ -604,8 +613,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions($alter = TRUE) {
-    $properties = $this->getDatasource()->getPropertyDefinitions();
+  public function getPropertyDefinitions($datasource, $alter = TRUE) {
+    $properties = $this->getDatasource($datasource)->getPropertyDefinitions();
     if ($alter) {
       foreach ($this->getProcessors() as $processor) {
         $processor->alterPropertyDefinitions($properties);
