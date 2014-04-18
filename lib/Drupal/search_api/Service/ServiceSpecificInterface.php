@@ -126,9 +126,10 @@ interface ServiceSpecificInterface {
    *   An array of items to be indexed, keyed by their IDs. They are represented
    *   as element arrays. The settings of these arrays (i.e., keys prefixed with
    *   '#') are arbitrary meta information (only "#item", containing the loaded
-   *   item object (if available), and "#datasource", the datasource of the item
-   *   are defined) and the children map field identifiers to arrays containing
-   *   the following keys:
+   *   item object (if available); "#item_id", containing the item's datasource-
+   *   specific ID; and "#datasource", the datasource of the item, are defined)
+   *   and the children map field identifiers to arrays containing the following
+   *   keys:
    *   - type: One of the data types recognized by the Search API, or the
    *     special type "tokens" for tokenized fulltext fields.
    *   - original_type: The original type of the property, as defined by the

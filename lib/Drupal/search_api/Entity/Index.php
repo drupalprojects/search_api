@@ -303,17 +303,25 @@ class Index extends ConfigEntityBase implements IndexInterface {
     return $this->datasourcePluginIds;
   }
 
-    /**
-     * {@inheritdoc}
-     */
-  public function getDatasource($datasource) {
+  /**
+   * {@inheritdoc}
+   */
+  public function isValidDatasource($datasource_id) {
     $datasources = $this->getDatasources();
-    if (empty($datasources[$datasource])) {
-      $args['@datasource'] = $datasource;
+    return !empty($datasources[$datasource_id]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDatasource($datasource_id) {
+    $datasources = $this->getDatasources();
+    if (empty($datasources[$datasource_id])) {
+      $args['@datasource'] = $datasource_id;
       $args['%index'] = $this->label();
       throw new SearchApiException(t('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
     }
-    return $datasources[$datasource];
+    return $datasources[$datasource_id];
   }
 
   /**
@@ -405,7 +413,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function indexItems($datasource_id, array $items) {
+  public function indexItems(array $items) {
     if (!$items || $this->readOnly) {
       return array();
     }
@@ -416,56 +424,61 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
-    // $fields contains the normal array of fields (of the given datasource),
-    // $fields will contain the array of fields (of the given datasource), as
-    // normally stored in the index, but keyed by property path (i.e., without
-    // the datasource prefix), as expected by Utility::extractFields().
+    // To enable proper extraction of fields with Utility::extractFields(),
+    // $fields will contain the information from $this->options['fields'], but
+    // in a two-dimensional array, keyed by both parts of the field identifier
+    // separately – i.e, first by datasource ID, then by property path.
     $fields = array();
     foreach ($this->options['fields'] as $key => $field) {
-      list ($field_datasource, $property_path) = explode(self::FIELD_ID_SEPARATOR, $key, 2);
-      // Only include fields from this datasource.
-      if ($field_datasource !== $datasource_id) {
-        continue;
-      }
-
-      // Copy the field information into the $fields array.
-      $fields[$property_path] = $field;
-
       // Include real type, if known.
       if (isset($field['real_type'])) {
         $custom_type = $field['real_type'];
         if ($this->getServer()->supportsDatatype($custom_type)) {
-          $fields[$property_path]['type'] = $field['real_type'];
+          $field['type'] = $field['real_type'];
         }
       }
-    }
-    if (empty($fields)) {
-      $args['%index'] = $this->label();
-      $args['%datasource'] = $this->getDatasource($datasource_id)->label();
-      throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $args));
+
+      // Copy the field information into the $fields array.
+      list ($datasource_id, $property_path) = explode(self::FIELD_ID_SEPARATOR, $key, 2);
+      $fields[$datasource_id][$property_path] = $field;
     }
 
     $extracted_items = array();
-    foreach ($items as $id => $item) {
-      $extracted_fields = $fields;
-      Utility::extractFields($item, $extracted_fields);
-      foreach ($extracted_fields as $property_path => $field) {
-        $extracted_items[$id][$datasource_id . self::FIELD_ID_SEPARATOR . $property_path] = $field;
+    $ret = array();
+    foreach ($items as $datasource_id => $datasource_items) {
+      $field_prefix = $datasource_id . self::FIELD_ID_SEPARATOR;
+      foreach ($datasource_items as $item_id => $item) {
+        if (empty($fields[$datasource_id])) {
+          $variables['%index'] = $this->label();
+          $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
+          throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
+        }
+        $extracted_fields = $fields[$datasource_id];
+        Utility::extractFields($item, $extracted_fields);
+        $extracted_item = array();
+        $extracted_item['#item'] = $item;
+        $extracted_item['#item_id'] = $item_id;
+        $extracted_item['#datasource'] = $datasource_id;
+        foreach ($extracted_fields as $property_path => $field) {
+          $extracted_item[$field_prefix . $property_path] = $field;
+        }
+        $extracted_items[] = $extracted_item;
+        // Remember the items that were initially passed.
+        $ret[$datasource_id][$item_id] = $item_id;
       }
-      $extracted_items[$id]['#item'] = $item;
-      $extracted_items[$id]['#datasource'] = $datasource_id;
-      // @todo Custom data type conversion logic.
     }
-
-    // Remember the item IDs we got passed.
-    $ret = array_keys($extracted_items);
 
     // Preprocess the indexed items.
     \Drupal::moduleHandler()->alter('search_api_index_items', $extracted_items, $this);
     $this->preprocessIndexItems($extracted_items);
 
-    // Mark all items that are rejected as indexed.
-    $ret = array_diff($ret, array_keys($extracted_items));
+    // Remove all items still in $extracted_items from $ret. Thus, only the
+    // rejected items' IDs are still contained in $ret, to later be returned
+    // along with the successfully indexed ones.
+    foreach ($extracted_items as $item) {
+      unset($ret[$item['#datasource']][$item['#item_id']]);
+    }
+
     // Items that are rejected should also be deleted from the server.
     if ($ret) {
       $this->getServer()->deleteItems($this, $ret);
@@ -476,7 +489,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Return the IDs of all items that were either successfully indexed or
     // rejected before being handed to the server.
-    return array_merge($ret, $this->getServer()->indexItems($this, $extracted_items));
+    return array_merge_recursive($ret, $this->getServer()->indexItems($this, $extracted_items));
   }
 
   /**
@@ -789,28 +802,31 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1', $datasource_id = NULL) {
-    // Initialize the count variable to zero.
     $count = 0;
-    // Check if a valid tracker is available.
+
     if ($this->hasValidTracker()) {
-      // Get the tracker.
       $tracker = $this->getTracker();
-      // Get the next set of items.
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
-      // Iterate through the remaining items.
+      $items = array();
       foreach ($next_set as $datasource_id => $item_ids) {
-        $datasource = NULL;
         try {
-          $datasource = $this->getDatasource($datasource_id);
-          $items = $datasource->loadMultiple($item_ids);
-          $ids_indexed = $this->indexItems($datasource_id, $items);
-          $tracker->trackIndexed($datasource, $ids_indexed);
+          $items[$datasource_id] = $this->getDatasource($datasource_id)->loadMultiple($item_ids);
+        }
+        catch (SearchApiException $e) {
+          watchdog_exception('search_api', $e);
+        }
+      }
+      if ($items) {
+        try {
+          $ids_indexed = $this->indexItems($items);
+          foreach ($ids_indexed as $datasource_id => $ids) {
+            $tracker->trackIndexed($this->getDatasource($datasource_id), $ids);
+          }
           $count += count($ids_indexed);
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
-          $variables['%datasource'] = $datasource ? $datasource->label() : $datasource_id;
-          watchdog_exception('search_api', $e, '%type while trying to index items from data source %datasource on index %index: !message in %function (line %line of %file)', $variables);
+          watchdog_exception('search_api', $e, '%type while trying to index items on index %index: !message in %function (line %line of %file)', $variables);
         }
       }
     }

@@ -102,9 +102,25 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDatasourceIds();
 
   /**
+   * Determines whether the given datasource ID is valid for this index.
+   *
+   * The general contract of this method is that it should return TRUE if, and
+   * only if, a call to getDatasource() with the same ID would not result in an
+   * exception.
+   *
+   * @param string $datasource_id
+   *   A datasource plugin ID.
+   *
+   * @return bool
+   *   TRUE if the datasource with the given ID is enabled for this index and
+   *   can be loaded. FALSE otherwise.
+   */
+  public function isValidDatasource($datasource_id);
+
+  /**
    * Retrieves a specific datasource plugin for this index.
    *
-   * @param string $datasource
+   * @param string $datasource_id
    *   The ID of the datasource plugin to return.
    *
    * @return \Drupal\search_api\Datasource\DatasourceInterface
@@ -114,7 +130,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   If the specified datasource isn't enabled for this index, or couldn't be
    *   loaded.
    */
-  public function getDatasource($datasource);
+  public function getDatasource($datasource_id);
 
   /**
    * Retrieves this index's datasource plugins.
@@ -316,22 +332,21 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Indexes items on this index.
    *
-   * Will return an array of IDs of items that should be marked as indexed –
-   * i.e., items that were either rejected from indexing or were successfully
-   * indexed.
+   * Will return the IDs of items that should be marked as indexed – i.e., items
+   * that were either rejected from indexing or were successfully indexed.
    *
-   * @param string $datasource_id
-   *   The ID of the datasource whose items are being indexed.
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
-   *   An array of items to index, from the given datasource.
+   *   An associative array mapping datasource IDs to arrays of items to be
+   *   indexed for that datasource.
    *
    * @return array
-   *   The IDs of all items that should be marked as indexed.
+   *   The IDs of all items that should be marked as indexed, returned nested in
+   *   an associative array keyed by datasource IDs.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If any error occurred during indexing.
    */
-  public function indexItems($datasource_id, array $items);
+  public function indexItems(array $items);
 
   /**
    * Marks all items in this index for reindexing.
