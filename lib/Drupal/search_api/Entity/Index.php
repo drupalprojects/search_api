@@ -579,17 +579,27 @@ class Index extends ConfigEntityBase implements IndexInterface {
         if (!$main_property) {
           continue;
         }
+        $parent_type = $property->getDataType();
         $property = $property->getPropertyDefinition($main_property);
         if (!$property) {
           continue;
         }
       }
+
       $type = $property->getDataType();
+      // Try to see if there's a mapping for a parent.child data type.
+      if (isset($parent_type) && isset($type_mapping[$parent_type . '.' . $type])) {
+        $field_type = $type_mapping[$parent_type . '.' . $type];
+      }
+      else {
+        $field_type = $type_mapping[$type];
+      }
+
       $fields[$key] = array(
         'name' => $label,
         'description' => $description,
         'indexed' => FALSE,
-        'type' => $type_mapping[$type],
+        'type' => $field_type,
         'boost' => '1.0',
       );
       if (isset($this->options['fields'][$key])) {

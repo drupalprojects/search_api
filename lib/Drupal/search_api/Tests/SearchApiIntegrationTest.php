@@ -161,6 +161,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       'fields[title][indexed]' => 1,
       'fields[title][type]' => 'text',
       'fields[title][boost]' => '21.0',
+      'fields[body][indexed]' => 1,
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
@@ -174,6 +175,10 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->assertEqual($fields['title']['indexed'], $edit['fields[title][indexed]'], t('title field is indexed.'));
     $this->assertEqual($fields['title']['type'], $edit['fields[title][type]'], t('title field type is text.'));
     $this->assertEqual($fields['title']['boost'], $edit['fields[title][boost]'], t('title field boost value is 21.'));
+
+    // Check that a 'parent_data_type.data_type' Search API field type => data
+    // type mapping relationship works.
+    $this->assertEqual($fields['body']['type'], 'text', 'Complex field mapping relationship works.');
   }
 
   protected function addAdditionalFieldsToIndex() {
