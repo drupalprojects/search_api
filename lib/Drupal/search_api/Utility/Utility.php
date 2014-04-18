@@ -21,6 +21,8 @@ use Drupal\search_api\Query\Query;
  */
 class Utility {
 
+  static $fieldTypeMapping = array();
+
   /**
    * Determines whether a field of the given type contains text data.
    *
@@ -79,60 +81,54 @@ class Utility {
    *   $mapping array with the field type that is requested and it's default data type for a sensible default
    */
   static function getFieldTypeMapping() {
-    // @todo Add (static) caching.
-    /** @var \Drupal\Core\Field\FieldTypePluginManager $field_type_service */
-    $field_type_service = \Drupal::service('plugin.manager.field.field_type');
-    $field_types = $field_type_service->getDefinitions();
+    // Check the static cache first.
+    if (empty(static::$fieldTypeMapping)) {
+      // It's easier to write and understand this array in the form of
+      // $search_api_field_type => array($data_types) and flip it below.
+      $default_mapping = array(
+        'text' => array(
+          'field_item:string_long.string',
+          'field_item:text_long.string',
+          'field_item:text_with_summary.string',
+        ),
+        'string' => array(
+          'string',
+          'email',
+          'uri',
+          'filter_format',
+          'duration_iso8601,'
+        ),
+        'integer' => array(
+          'integer',
+          'timespan',
+        ),
+        'decimal' => array(
+          'decimal',
+          'float',
+        ),
+        'date' => array(
+          'datetime_iso8601',
+          'timestamp',
+        ),
+        'boolean' => array(
+          'boolean',
+        ),
+      );
 
-    $mapping = array();
-    foreach ($field_types as $field_type_id => $field_type) {
-      switch ($field_type_id) {
-        case 'comment':
-        case 'list_text':
-        case 'text':
-        case 'text_long':
-        case 'text_with_summary':
-          $mapping[$field_type_id] = 'text';
-          break;
-        case 'path':
-        case 'uri':
-        case 'email':
-        case 'language':
-        case 'string':
-        case 'string_long':
-        case 'token':
-        case 'uuid':
-          $mapping[$field_type_id] = 'string';
-          break;
-        case 'datetime':
-        case 'date':
-        case 'changed':
-        case 'created':
-        case 'timestamp':
-          $mapping[$field_type_id] = 'date';
-          break;
-        case 'list_boolean':
-        case 'boolean':
-          $mapping[$field_type_id] = 'boolean';
-          break;
-        case 'list_float':
-        case 'float':
-          $mapping[$field_type_id] = 'float';
-          break;
-        case 'list_integer':
-        case 'integer':
-          $mapping[$field_type_id] = 'integer';
-          break;
-        case 'decimal':
-          $mapping[$field_type_id] = 'decimal';
-          break;
-          // We can't include a default here. Only types that are explicitly
-          // supported should show up here.
+      foreach ($default_mapping as $key => $value) {
+        foreach ($value as $subkey) {
+          $mapping[$subkey] = $key;
+        }
       }
+
+      // Allow other modules to intercept and define what default type they want
+      // to use for their data type.
+      \Drupal::moduleHandler()->alter('search_api_field_type_mapping', $mapping);
+
+      static::$fieldTypeMapping = $mapping;
     }
-    // Allow other modules to intercept and define what default type they want to use for their field type.
-    \Drupal::moduleHandler()->alter('search_api_field_type_mapping', $mapping);
-    return $mapping;
+
+    return static::$fieldTypeMapping;
   }
 
   /**
