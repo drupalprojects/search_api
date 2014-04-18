@@ -17,6 +17,16 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 interface IndexInterface extends ConfigEntityInterface {
 
   /**
+   * The character used to separate the two parts of field identifiers.
+   *
+   * Internal field identifiers of the Search API consist of two parts: the ID
+   * of the datasource to which the field belongs; and the property path to the
+   * field, with properties separated by colons. The two parts are concatenated
+   * using this character as a separator to form the complete field identifier.
+   */
+  const FIELD_ID_SEPARATOR = '|';
+
+  /**
    * Retrieves the index description.
    *
    * @return string

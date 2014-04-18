@@ -193,7 +193,7 @@ class Utility {
    * @param array $fields
    *   The fields to extract, passed by reference. The array keys here are
    *   property paths (i.e., the second part of the field identifier, after the
-   *   pipe (|) separator). The values are associative arrays of field
+   *   field ID separator). The values are associative arrays of field
    *   information, at least containing a "type" key. "value" and
    *   "original_type" keys will be added for all fields.
    */

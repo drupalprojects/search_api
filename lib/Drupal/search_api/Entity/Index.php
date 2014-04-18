@@ -422,7 +422,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // the datasource prefix), as expected by Utility::extractFields().
     $fields = array();
     foreach ($this->options['fields'] as $key => $field) {
-      list ($field_datasource, $property_path) = explode('|', $key, 2);
+      list ($field_datasource, $property_path) = explode(self::FIELD_ID_SEPARATOR, $key, 2);
       // Only include fields from this datasource.
       if ($field_datasource !== $datasource_id) {
         continue;
@@ -450,7 +450,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $extracted_fields = $fields;
       Utility::extractFields($item, $extracted_fields);
       foreach ($extracted_fields as $property_path => $field) {
-        $extracted_items[$id]["$datasource_id|$property_path"] = $field;
+        $extracted_items[$id][$datasource_id . self::FIELD_ID_SEPARATOR . $property_path] = $field;
       }
       $extracted_items[$id]['#item'] = $item;
       $extracted_items[$id]['#datasource'] = $datasource_id;
@@ -547,7 +547,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // All field identifiers should start with the datasource ID.
     if (!$prefix) {
-      $prefix = "$datasource|";
+      $prefix = $datasource . self::FIELD_ID_SEPARATOR;
     }
 
     // Loop over all properties and handle them accordingly.
