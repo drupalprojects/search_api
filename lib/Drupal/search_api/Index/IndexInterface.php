@@ -9,7 +9,6 @@ namespace Drupal\search_api\Index;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Defines the interface for index entities.
@@ -171,6 +170,14 @@ interface IndexInterface extends ConfigEntityInterface {
    *   TRUE if the server is valid, otherwise FALSE.
    */
   public function hasValidServer();
+
+  /**
+   * Checks if this index has an enabled server.
+   *
+   * @return bool
+   *   TRUE if this index is attached to a valid, enabled server.
+   */
+  public function isServerEnabled();
 
   /**
    * Retrieves the ID of the server the index is attached to.
@@ -357,43 +364,43 @@ interface IndexInterface extends ConfigEntityInterface {
   public function reindex();
 
   /**
-   * Add items from a specific datasource to the index.
+   * Adds items from a specific datasource to the index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which manages the items.
+   * @param string $datasource_id
+   *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of item IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function insertItems(DatasourceInterface $datasource, array $ids);
+  public function insertItems($datasource_id, array $ids);
 
   /**
-   * Update items from a specific datasource present in the index.
+   * Updates items from a specific datasource present in the index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which manages the items.
+   * @param string $datasource_id
+   *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of item IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function updateItems(DatasourceInterface $datasource, array $ids);
+  public function updateItems($datasource_id, array $ids);
 
   /**
-   * Delete items from the index.
+   * Deletes items from the index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which manages the items.
+   * @param string $datasource_id
+   *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of items IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function deleteItems(DatasourceInterface $datasource, array $ids);
+  public function deleteItems($datasource_id, array $ids);
 
   /**
    * Clears all items in this index and marks them for reindexing.

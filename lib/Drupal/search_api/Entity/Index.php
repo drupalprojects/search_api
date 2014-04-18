@@ -328,7 +328,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getDatasources() {
-    if (!$this->datasourcePluginInstances) {
+    if (!isset($this->datasourcePluginInstances)) {
+      $this->datasourcePluginInstances = array();
       $plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
       foreach ($this->datasourcePluginIds as $datasource) {
         $config = array('index' => $this);
@@ -847,10 +848,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    // Check whether a valid tracker and datasource is available.
-    if ($this->hasValidTracker() && $this->hasValidDatasource()) {
-      // Mark all items for processing for the current datasource.
-      return $this->getTracker()->trackUpdated($this->getDatasource());
+    if ($this->status() && !$this->isReadOnly() && $this->hasValidTracker()) {
+      $this->getTracker()->trackUpdated();
+      return TRUE;
     }
     return FALSE;
   }
@@ -858,40 +858,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function insertItems(DatasourceInterface $datasource, array $ids) {
-    return ($this->hasValidTracker() && $this->getTracker()->trackInserted($datasource, $ids));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function updateItems(DatasourceInterface $datasource, array $ids) {
-    return ($this->hasValidTracker() && $this->getTracker()->trackUpdated($datasource, $ids));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function deleteItems(DatasourceInterface $datasource, array $ids) {
-    // Remove the items from the tracker.
-    $success = ($this->hasValidTracker() && $this->getTracker()->trackDeleted($datasource, $ids));
-    // Check whether a valid server is available.
-    if ($this->hasValidServer()) {
-      // Remove the items from the server.
-      $this->getServer()->deleteItems($this, $ids);
+  public function insertItems($datasource_id, array $ids) {
+    if ($this->hasValidTracker()) {
+      $this->getTracker()->trackInserted($datasource_id, $ids);
     }
-    return $success;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateItems($datasource_id, array $ids) {
+    if ($this->hasValidTracker()) {
+      $this->getTracker()->trackUpdated($datasource_id, $ids);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteItems($datasource_id, array $ids) {
+    if ($this->hasValidTracker()) {
+      $this->getTracker()->trackDeleted($datasource_id, $ids);
+      if ($this->isServerEnabled()) {
+        $this->getServer()->deleteItems($this, $ids);
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function clear() {
-    // Check whether the index has a valid server and reindex was successful.
-    if ($this->reindex() && $this->hasValidServer()) {
-      // Remove all items for this index from the server.
+    if ($this->reindex() && $this->isServerEnabled()) {
       $this->getServer()->deleteAllItems($this);
-
       return TRUE;
     }
     return FALSE;
@@ -901,19 +900,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function resetCaches() {
-    $this->datasourcePluginInstance = NULL;
+    $this->datasourcePluginInstances = NULL;
     $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
-    \Drupal::cache()->deleteTags(array('search_api_index' => $this->id()));
+    Cache::invalidateTags(array('search_api_index' => array($this->id())));
   }
 
   /**
-   * Check if the server is enabled
-   *
-   * @return bool
+   * {@inheritdoc}
    */
   public function isServerEnabled() {
     return ($this->hasValidServer() && $this->getServer()->status());
@@ -926,7 +923,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     parent::preSave($storage);
 
     // Stop enabling of indexes when the server is disabled.
-    if ($this->status() && !$this->isServerEnabled()) {
+    if ($this->status() && !$this->hasValidServer()) {
       $this->disable();
     }
   }
@@ -942,30 +939,41 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Execute necessary tasks for a created or updated index.
+   * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
+    $this->resetCaches();
     try {
-      if ($this->server) {
-        // Tell the server about the new index.
-        $this->server->addIndex($this);
-        if ($this->status()) {
-          // $this->queueItems();
+      // Fake an original for inserts to make code cleaner.
+      /** @var \Drupal\search_api\Index\IndexInterface $original */
+      $original = $update ? $this->original : new static(array(), $this->getEntityTypeId());
+      if ($this->getServerId() != $original->getServerId()) {
+        if ($original->isServerEnabled()) {
+          $original->getServer()->removeIndex($this);
+        }
+        if ($this->isServerEnabled()) {
+          $this->getServer()->addIndex($this);
+        }
+        // When the server changes we also need to re-index. (reindex() will
+        // figure out itself if this is possible.)
+        $this->reindex();
+      }
+      elseif ($this->isServerEnabled()) {
+        if ($this->getServer()->updateIndex($this)) {
+          $this->reindex();
         }
       }
-      // Only check if there is a datasource.
-      if ($this->hasValidDatasource()) {
-        // If the index is new (so no update) and the status is enabled, start tracking
-        // If the index is not new but the original status is disabled and the new status, start tracking
-        if ((!$update && $this->status()) || ($update && ($this->status() && !$this->original->status()))) {
-          // StartTracking figures out which bundles to add
-          $this->getDatasource()->startTracking();
-        }
-        // if there is an update and the status is disabled where it was enabled before, stop tracking
-        elseif ($update && (!$this->status() && $this->original->status())) {
-          // Stop tracking
-          $this->getDatasource()->stopTracking();
+
+      // @todo Is this logic correct?
+      if ($this->status() != $original->status() && $this->hasValidTracker()) {
+        foreach ($this->getDatasources() as $datasource) {
+          if ($this->status()) {
+            $datasource->startTracking();
+          }
+          else {
+            $datasource->stopTracking();
+          }
         }
       }
 
@@ -977,14 +985,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Execute necessary tasks for deletion an index
+   * {@inheritdoc}
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
-    foreach ($entities as $entity) {
-      $datasource = $entity->getDatasource();
-      if (!empty($datasource)) {
-        $entity->getDatasource()->stopTracking();
+    /** @var \Drupal\search_api\Index\IndexInterface[] $entities */
+    foreach ($entities as $index) {
+      if ($index->hasValidTracker()) {
+        $index->getTracker()->trackDeleted();
+      }
+      if ($index->hasValidServer()) {
+        $index->getServer()->removeIndex($index);
       }
     }
   }
