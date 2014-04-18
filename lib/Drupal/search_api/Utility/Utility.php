@@ -191,11 +191,11 @@ class Utility {
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
    * @param array $fields
-   *   The fields to extract, passed by reference. The format is the same as the
-   *   "fields" sub-array in the index options, i.e., an array with the field
-   *   names as keys and arrays of field information as values, at least
-   *   containing a "type" key. "value" and "original_type" keys will be added for
-   *   all fields.
+   *   The fields to extract, passed by reference. The array keys here are
+   *   property paths (i.e., the second part of the field identifier, after the
+   *   pipe (|) separator). The values are associative arrays of field
+   *   information, at least containing a "type" key. "value" and
+   *   "original_type" keys will be added for all fields.
    */
   static function extractFields(ComplexDataInterface $item, array &$fields) {
     // Figure out which fields are directly on the item and which need to be

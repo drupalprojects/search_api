@@ -123,11 +123,12 @@ interface ServiceSpecificInterface {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The search index for which items should be indexed.
    * @param array $items
-   *   An array of items to be indexed, keyed by their IDs. The values are
-   *   element arrays. The settings (i.e., keys prefixed with '#') are arbitrary
-   *   (only "#item" is defined, containing the loaded item object if available)
-   *   and the children map field identifiers to arrays containing the following
-   *   keys:
+   *   An array of items to be indexed, keyed by their IDs. They are represented
+   *   as element arrays. The settings of these arrays (i.e., keys prefixed with
+   *   '#') are arbitrary meta information (only "#item", containing the loaded
+   *   item object (if available), and "#datasource", the datasource of the item
+   *   are defined) and the children map field identifiers to arrays containing
+   *   the following keys:
    *   - type: One of the data types recognized by the Search API, or the
    *     special type "tokens" for tokenized fulltext fields.
    *   - original_type: The original type of the property, as defined by the

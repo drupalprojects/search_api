@@ -115,12 +115,12 @@ class DefaultTracker extends TrackerPluginBase {
 
   /**
    * Creates a statement which filters on the remaining items.
-   * 
+   *
    * @return \Drupal\Core\Database\Query\Select
    *   An instance of Select.
    */
   protected function createRemainingItemsStatement() {
-    // Build the select statement. 
+    // Build the select statement.
     // @todo: Should filter on the datasource once multiple datasources are
     // supported.
     $statement = $this->createSelectStatement();
@@ -156,7 +156,7 @@ class DefaultTracker extends TrackerPluginBase {
           $statement = $this->createInsertStatement();
           // Iterate through the chunked IDs.
           foreach ($ids_chunk as $item_id) {
-            // Add the item ID to the insert statement. 
+            // Add the item ID to the insert statement.
             // @todo: Once multiple datasource are support we should include it.
             $statement->values(array(
               'item_id' => $item_id,
@@ -198,7 +198,7 @@ class DefaultTracker extends TrackerPluginBase {
         $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
         // Iterate through the IDs in chunks of 1000 items.
         foreach ($ids_chunks as $ids_chunk) {
-          // Build the update statement. 
+          // Build the update statement.
           // @todo: Should include the datasource as filter once multiple
           // datasources are supported.
           $statement = $this->createUpdateStatement();
@@ -242,7 +242,7 @@ class DefaultTracker extends TrackerPluginBase {
         $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
         // Iterate through the IDs in chunks of 1000 items.
         foreach ($ids_chunks as $ids_chunk) {
-          // Build the update statement. 
+          // Build the update statement.
           // @todo: Should include the datasource as filter once multiple
           // datasources are supported.
           $statement = $this->createUpdateStatement();
@@ -287,7 +287,7 @@ class DefaultTracker extends TrackerPluginBase {
           $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
           // Iterate through the IDs in chunks of 1000 items.
           foreach ($ids_chunks as $ids_chunk) {
-            // Build the delete statement. 
+            // Build the delete statement.
             // @todo: Should include the datasource as filter once multiple
             // datasources are supported.
             $statement = $this->createDeleteStatement();
@@ -315,12 +315,12 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getRemainingItems(DatasourceInterface $datasource = NULL, $limit = -1) {
+  public function getRemainingItems($limit = -1, $datasource_id = NULL) {
     // Get the index.
     $index = $this->getIndex();
     // Check if the index is enabled and writable.
     if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Create the remaining items statement. 
+      // Create the remaining items statement.
       // @todo: Should include the datasource once multiple datasources are
       // supported.
       $statement = $this->createRemainingItemsStatement();

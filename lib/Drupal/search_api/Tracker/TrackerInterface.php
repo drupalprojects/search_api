@@ -83,17 +83,20 @@ interface TrackerInterface extends IndexPluginInterface {
   /**
    * Get a list of item IDs that need to be indexed.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
-   *   (optional) The datasource to filter by when retrieving the remaining
-   *   items.
    * @param int $limit
-   *   (optional) The maximum number of items to return. Negative value means
-   *   "unlimited". Defaults to all pending items.
+   *   (optional) The maximum number of items to return. A negative value means
+   *   "unlimited".
+   * @param string|null $datasource_id
+   *   (optional) If specified, only items of the datasource with that ID are
+   *   retrieved.
    *
    * @return array
-   *   An associative array of item IDs, keyed by the item type.
+   *   If no datasource ID was given, an associative array where the keys are
+   *   datasource IDs and the values are arrays of item IDs to index for those
+   *   datasources. Otherwise, an array of item IDs to index for the given
+   *   datasource.
    */
-  public function getRemainingItems(DatasourceInterface $datasource = NULL, $limit = -1);
+  public function getRemainingItems($limit = -1, $datasource_id = NULL);
 
   /**
    * Get the total number of pending items.
@@ -108,10 +111,10 @@ interface TrackerInterface extends IndexPluginInterface {
 
   /**
    * Get the total number of items that are being monitored.
-   * 
+   *
    * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
    *   (optional) The datasource to filter the total number of items by.
-   * 
+   *
    * @return int
    *   The total number of items that are being monitored.
    */
@@ -119,10 +122,10 @@ interface TrackerInterface extends IndexPluginInterface {
 
   /**
    * Get the total number of indexed items.
-   * 
+   *
    * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
    *   (optional) The datasource to filter the total number of indexed items by.
-   * 
+   *
    * @return int
    *   The total number of items that are indexed.
    */

@@ -293,12 +293,35 @@ interface IndexInterface extends ConfigEntityInterface {
    * the datasource.
    *
    * @param int $limit
-   *   (optional) The maximum number of items to index. Defaults to indexing all.
+   *   (optional) The maximum number of items to index.
+   * @param string|null $datasource_id
+   *   (optional) If specified, only items of the datasource with that ID are
+   *   indexed.
    *
    * @return int
    *   The number of items successfully indexed.
    */
-  public function index($limit = -1);
+  public function index($limit = -1, $datasource_id = NULL);
+
+  /**
+   * Indexes items on this index.
+   *
+   * Will return an array of IDs of items that should be marked as indexed –
+   * i.e., items that were either rejected from indexing or were successfully
+   * indexed.
+   *
+   * @param string $datasource_id
+   *   The ID of the datasource whose items are being indexed.
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
+   *   An array of items to index, from the given datasource.
+   *
+   * @return array
+   *   The IDs of all items that should be marked as indexed.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If any error occurred during indexing.
+   */
+  public function indexItems($datasource_id, array $items);
 
   /**
    * Marks all items in this index for reindexing.

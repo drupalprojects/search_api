@@ -403,52 +403,57 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Indexes items on this index.
-   *
-   * Will return an array of IDs of items that should be marked as indexed –
-   * i.e., items that were either rejected by a data-alter callback or were
-   * successfully indexed.
-   *
-   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
-   *   An array of items to index, of this index's item type.
-   *
-   * @return array
-   *   An array of the IDs of all items that should be marked as indexed.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   If an error occurred during indexing.
+   * {@inheritdoc}
    */
-  public function indexItems(array $items) {
+  public function indexItems($datasource_id, array $items) {
     if (!$items || $this->readOnly) {
       return array();
     }
     if (!$this->status) {
-      throw new SearchApiException(t("Couldn't index values on '@name' index (index is disabled)", array('@name' => $this->name)));
+      throw new SearchApiException(t("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
     }
     if (empty($this->options['fields'])) {
-      throw new SearchApiException(t("Couldn't index values on '@name' index (no fields selected)", array('@name' => $this->name)));
+      throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
-    $fields = $this->options['fields'];
-    //$custom_type_fields = array();
-    foreach ($fields as $field => $info) {
-      if (isset($info['real_type'])) {
-        $custom_type = $info['real_type'];
+    // $fields contains the normal array of fields (of the given datasource),
+    // $fields will contain the array of fields (of the given datasource), as
+    // normally stored in the index, but keyed by property path (i.e., without
+    // the datasource prefix), as expected by Utility::extractFields().
+    $fields = array();
+    foreach ($this->options['fields'] as $key => $field) {
+      list ($field_datasource, $property_path) = explode('|', $key, 2);
+      // Only include fields from this datasource.
+      if ($field_datasource !== $datasource_id) {
+        continue;
+      }
+
+      // Copy the field information into the $fields array.
+      $fields[$property_path] = $field;
+
+      // Include real type, if known.
+      if (isset($field['real_type'])) {
+        $custom_type = $field['real_type'];
         if ($this->getServer()->supportsDatatype($custom_type)) {
-          $fields[$field]['type'] = $info['real_type'];
+          $fields[$property_path]['type'] = $field['real_type'];
         }
-        //$custom_type_fields[$custom_type][] = $field;
       }
     }
     if (empty($fields)) {
-      throw new SearchApiException(t("Couldn't index values on '@name' index (no fields selected)", array('@name' => $this->name)));
+      $args['%index'] = $this->label();
+      $args['%datasource'] = $this->getDatasource($datasource_id)->label();
+      throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $args));
     }
 
     $extracted_items = array();
     foreach ($items as $id => $item) {
-      $extracted_items[$id] = $fields;
-      Utility::extractFields($item, $extracted_items[$id]);
+      $extracted_fields = $fields;
+      Utility::extractFields($item, $extracted_fields);
+      foreach ($extracted_fields as $property_path => $field) {
+        $extracted_items[$id]["$datasource_id|$property_path"] = $field;
+      }
       $extracted_items[$id]['#item'] = $item;
+      $extracted_items[$id]['#datasource'] = $datasource_id;
       // @todo Custom data type conversion logic.
     }
 
@@ -652,7 +657,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $fields = $this->getFields(FALSE);
       }
       foreach ($fields as $key => $field) {
-        if (search_api_is_text_type($field['type'])) {
+        if (Utility::isTextType($field['type'])) {
           $this->fulltextFields[$i][] = $key;
         }
       }
@@ -783,28 +788,30 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function index($limit = '-1') {
+  public function index($limit = '-1', $datasource_id = NULL) {
     // Initialize the count variable to zero.
     $count = 0;
-    // Check if a valid tracker and datasource is available.
-    if ($this->hasValidTracker() && $this->hasValidDatasource()) {
+    // Check if a valid tracker is available.
+    if ($this->hasValidTracker()) {
       // Get the tracker.
       $tracker = $this->getTracker();
       // Get the next set of items.
-      $next_set = $tracker->getRemainingItems(NULL, $limit);
+      $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       // Iterate through the remaining items.
-      foreach ($next_set as $item_type => $ids) {
-        // Get the datasource for the current item type.
-        // @todo: Should be reworked once multiple datasources are supported.
-        $datasource = $this->getDatasource();
-        // Load the items from the datasource.
-        $items = $datasource->loadMultiple($ids);
-        // Index the items.
-        $ids_indexed = $this->indexItems($items);
-        // Mark the indexed items.
-        $tracker->trackIndexed($datasource, $ids_indexed);
-        // Increment count by the number of indexed items.
-        $count += count($ids_indexed);
+      foreach ($next_set as $datasource_id => $item_ids) {
+        $datasource = NULL;
+        try {
+          $datasource = $this->getDatasource($datasource_id);
+          $items = $datasource->loadMultiple($item_ids);
+          $ids_indexed = $this->indexItems($datasource_id, $items);
+          $tracker->trackIndexed($datasource, $ids_indexed);
+          $count += count($ids_indexed);
+        }
+        catch (SearchApiException $e) {
+          $variables['%index'] = $this->label();
+          $variables['%datasource'] = $datasource ? $datasource->label() : $datasource_id;
+          watchdog_exception('search_api', $e, '%type while trying to index items from data source %datasource on index %index: !message in %function (line %line of %file)', $variables);
+        }
       }
     }
     return $count;
