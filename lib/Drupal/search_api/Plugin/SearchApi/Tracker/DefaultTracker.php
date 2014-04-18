@@ -10,7 +10,6 @@ namespace Drupal\search_api\Plugin\SearchApi\Tracker;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Tracker\TrackerPluginBase;
-use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Default Search API tracker which implements a FIFO-like processing order.
@@ -44,9 +43,7 @@ class DefaultTracker extends TrackerPluginBase {
    *   The plugin implementation definition.
    */
   public function __construct(Connection $connection, array $configuration, $plugin_id, array $plugin_definition) {
-    // Perform default instance construction.
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    // Setup object members.
     $this->connection = $connection;
   }
 
@@ -64,6 +61,7 @@ class DefaultTracker extends TrackerPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\Core\Database\Connection $connection */
     $connection = $container->get('database');
     // Create the plugin instance.
     return new static($connection, $configuration, $plugin_id, $plugin_definition);
@@ -88,7 +86,7 @@ class DefaultTracker extends TrackerPluginBase {
    */
   protected function createInsertStatement() {
     return $this->getDatabaseConnection()->insert('search_api_item')
-            ->fields(array('item_id', 'index_id', 'changed'));
+            ->fields(array('index_id', 'datasource', 'item_id', 'changed'));
   }
 
   /**
@@ -116,310 +114,183 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * Creates a statement which filters on the remaining items.
    *
+   * @param string|null $datasource
+   *   (optional) If specified, only items of the datasource with that ID are
+   *   retrieved.
+   *
    * @return \Drupal\Core\Database\Query\Select
    *   An instance of Select.
    */
-  protected function createRemainingItemsStatement() {
-    // Build the select statement.
-    // @todo: Should filter on the datasource once multiple datasources are
-    // supported.
-    $statement = $this->createSelectStatement();
-    // Only the item ID is needed.
-    $statement->fields('sai', array('item_id'));
-    // Exclude items marked as indexed.
-    $statement->condition('sai.changed', 0, '>');
-    // Sort items by changed timestamp.
-    $statement->orderBy('sai.changed', 'ASC');
+  protected function createRemainingItemsStatement($datasource = NULL) {
+    $select = $this->createSelectStatement();
+    $fields = array('item_id');
+    if ($datasource) {
+      $select->condition('datasource', $datasource);
+    }
+    else {
+      $fields[] = 'datasource';
+    }
+    $select->fields('sai', $fields);
+    $select->condition('sai.changed', 0, '>');
+    $select->orderBy('sai.changed', 'ASC');
 
-    return $statement;
+    return $select;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function trackInserted(DatasourceInterface $datasource, array $ids) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Start a database transaction.
-      $transaction = $this->getDatabaseConnection()->startTransaction();
-      // Catch any exception that may occur during insert.
-      try {
-        // Get the index ID.
-        $index_id = $index->id();
-        // Iterate through the IDs in chunks of 1000 items.
-        foreach (array_chunk($ids, 1000) as $ids_chunk) {
-          // Build the insert statement.
-          $statement = $this->createInsertStatement();
-          // Iterate through the chunked IDs.
-          foreach ($ids_chunk as $item_id) {
-            // Add the item ID to the insert statement.
-            // @todo: Once multiple datasource are support we should include it.
-            $statement->values(array(
-              'item_id' => $item_id,
-              'index_id' => $index_id,
-              'changed' => REQUEST_TIME,
-            ));
-          }
-          // Execute the statement.
-          $statement->execute();
+  public function trackInserted($datasource, array $ids) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      $index_id = $this->getIndex()->id();
+      // Process the IDs in chunks so we don't create an overly large INSERT
+      // statement.
+      foreach (array_chunk($ids, 1000) as $ids_chunk) {
+        $insert = $this->createInsertStatement();
+        foreach ($ids_chunk as $item_id) {
+          $insert->values(array(
+            'index_id' => $index_id,
+            'datasource' => $datasource,
+            'item_id' => $item_id,
+            'changed' => REQUEST_TIME,
+          ));
         }
-        // Mark operation as successful.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback any changes made to the database.
-        $transaction->rollback();
+        $insert->execute();
       }
     }
-    return $success;
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function trackUpdated(DatasourceInterface $datasource, array $ids = NULL) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Start a database transaction.
-      $transaction = $this->getDatabaseConnection()->startTransaction();
-      // Catch any exception that may occur during insert.
-      try {
-        // Group the item IDs in chunks of maximum 1000 entries.
-        $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
-        // Iterate through the IDs in chunks of 1000 items.
-        foreach ($ids_chunks as $ids_chunk) {
-          // Build the update statement.
-          // @todo: Should include the datasource as filter once multiple
-          // datasources are supported.
-          $statement = $this->createUpdateStatement();
-          // Set changed value to current REQUEST_TIME.
-          $statement->fields(array('changed' => REQUEST_TIME));
-          // Check whether specific items should be updated.
+  public function trackUpdated($datasource = NULL, array $ids = NULL) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      // Process the IDs in chunks so we don't create an overly large UPDATE
+      // statement.
+      $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
+      foreach ($ids_chunks as $ids_chunk) {
+        $update = $this->createUpdateStatement();
+        $update->fields(array('changed' => REQUEST_TIME));
+        if ($datasource) {
+          $update->condition('datasource', $datasource);
           if ($ids_chunk) {
-            $statement->condition('item_id', $ids_chunk);
-          }
-          // Execute the statement.
-          $statement->execute();
-        }
-        // Mark operation as successful.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback any changes made to the database.
-        $transaction->rollback();
-      }
-    }
-    return $success;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function trackIndexed(DatasourceInterface $datasource, array $ids) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Start a database transaction.
-      $transaction = $this->getDatabaseConnection()->startTransaction();
-      // Catch any exception that may occur during insert.
-      try {
-        // Group the item IDs in chunks of maximum 1000 entries.
-        $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
-        // Iterate through the IDs in chunks of 1000 items.
-        foreach ($ids_chunks as $ids_chunk) {
-          // Build the update statement.
-          // @todo: Should include the datasource as filter once multiple
-          // datasources are supported.
-          $statement = $this->createUpdateStatement();
-          // Set changed value to 0 which idicates the item was indexed.
-          $statement->fields(array('changed' => 0));
-          // Ensure only specified items get marked as indexed.
-          $statement->condition('item_id', $ids_chunk);
-          // Execute the statement.
-          $statement->execute();
-        }
-        // Mark operation as successful.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback any changes made to the database.
-        $transaction->rollback();
-      }
-    }
-    return $success;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function trackDeleted(DatasourceInterface $datasource, array $ids = NULL) {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Start a database transaction.
-      $transaction = $this->getDatabaseConnection()->startTransaction();
-      // Catch any exception that may occur during insert.
-      try {
-        // Only perform the delete statement if at lease one ID is present or
-        // all items should be deleted.
-        if ($ids === NULL || $ids) {
-          // Group the item IDs in chunks of maximum 1000 entries.
-          $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
-          // Iterate through the IDs in chunks of 1000 items.
-          foreach ($ids_chunks as $ids_chunk) {
-            // Build the delete statement.
-            // @todo: Should include the datasource as filter once multiple
-            // datasources are supported.
-            $statement = $this->createDeleteStatement();
-            // Check whether specific items should be removed.
-            if ($ids_chunk) {
-              $statement->condition('item_id', $ids_chunk);
-            }
-            // Execute the statement.
-            $statement->execute();
+            $update->condition('item_id', $ids_chunk);
           }
         }
-        // Mark operation as successful.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback any changes made to the database.
-        $transaction->rollback();
+        $update->execute();
       }
     }
-    return $success;
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getRemainingItems($limit = -1, $datasource_id = NULL) {
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Create the remaining items statement.
-      // @todo: Should include the datasource once multiple datasources are
-      // supported.
-      $statement = $this->createRemainingItemsStatement();
-      // Check whether a range should be applied.
-      if ($limit > -1) {
-        $statement->range(0, $limit);
-      }
-      // @todo: Default is temporarly used because multiple datasources
-      // are currently not supported and ignored.
-      return array('default' => $statement->execute()->fetchCol());
-    }
-    return array();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRemainingItemsCount(DatasourceInterface $datasource = NULL) {
-    // Get the index.
-    $index = $this->getIndex();
-    // Check whether the index is enabled.
-    if (!$index->isNew() && $index->status()) {
-      // @todo: Should include the datasource as filter once multiple
-      // datasources are supported.
-      return (int) $this->createRemainingItemsStatement()
-              ->countQuery()
-              ->execute()
-              ->fetchField();
-    }
-    return 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTotalItemsCount(DatasourceInterface $datasource = NULL) {
-    // Get the index.
-    $index = $this->getIndex();
-    // Check whether the index is enabled.
-    if (!$index->isNew() && $index->status()) {
-      // @todo: Should include the datasource as filter once multiple
-      // datasources are supported.
-      return (int) $this->createSelectStatement()
-              ->countQuery()
-              ->execute()
-              ->fetchField();
-    }
-    return 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIndexedItemsCount(DatasourceInterface $datasource = NULL) {
-    // Get the index.
-    $index = $this->getIndex();
-    // Check whether the index is enabled.
-    if (!$index->isNew() && $index->status()) {
-      // Create the select statement. @todo: Should include the datasource once
-      // multiple datasources are supported.
-      $statement = $this->createSelectStatement();
-      // Filter on indexed items.
-      $statement->condition('sai.changed', 0);
-      // Get the number of indexed items.
-      return (int) $statement
-              ->countQuery()
-              ->execute()
-              ->fetchField();
-    }
-    return 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clear() {
-    // Initialize the success variable to FALSE.
-    $success = FALSE;
-    // Get the index.
-    $index = $this->getIndex();
-    // Check if the index is enabled and writable.
-    if (!$index->isNew() && $index->status() && !$index->isReadOnly()) {
-      // Start a database transaction.
-      $transaction = $this->getDatabaseConnection()->startTransaction();
-      // Catch any exception that may occur during insert.
-      try {
-        // Remove all items for the current index.
-        $this->createDeleteStatement()->execute();
-        // Mark operation as successful.
-        $success = TRUE;
-      }
-      catch (\Exception $ex) {
-        // Log exception to watchdog.
-        watchdog_exception('Search API', $ex);
-        // Rollback any changes made to the database.
-        $transaction->rollback();
+  public function trackIndexed($datasource, array $ids) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      // Process the IDs in chunks so we don't create an overly large UPDATE
+      // statement.
+      $ids_chunks = array_chunk($ids, 1000);
+      foreach ($ids_chunks as $ids_chunk) {
+        $update = $this->createUpdateStatement();
+        $update->fields(array('changed' => 0));
+        $update->condition('datasource', $datasource);
+        $update->condition('item_id', $ids_chunk);
+        $update->execute();
       }
     }
-    return $success;
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function trackDeleted($datasource = NULL, array $ids = NULL) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      // Process the IDs in chunks so we don't create an overly large DELETE
+      // statement.
+      $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
+      foreach ($ids_chunks as $ids_chunk) {
+        $delete = $this->createDeleteStatement();
+        if ($datasource) {
+          $delete->condition('datasource', $datasource);
+          if ($ids_chunk) {
+            $delete->condition('item_id', $ids_chunk);
+          }
+        }
+        $delete->execute();
+      }
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemainingItems($limit = -1, $datasource = NULL) {
+    $select = $this->createRemainingItemsStatement($datasource);
+    if ($limit >= 0) {
+      $select->range(0, $limit);
+    }
+    if ($datasource) {
+      return $select->execute()->fetchCol();
+    }
+    $items = array();
+    foreach ($select->execute() as $row) {
+      $items[$row->datasource][] = $row->item_id;
+    }
+    return $items;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemainingItemsCount($datasource = NULL) {
+    $select = $this->createRemainingItemsStatement();
+    if ($datasource) {
+      $select->condition('datasource', $datasource);
+    }
+    return (int) $select->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTotalItemsCount($datasource = NULL) {
+    $select = $this->createSelectStatement();
+    if ($datasource) {
+      $select->condition('datasource', $datasource);
+    }
+    return (int) $select->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexedItemsCount($datasource = NULL) {
+    $select = $this->createSelectStatement();
+    $select->condition('sai.changed', 0);
+    if ($datasource) {
+      $select->condition('datasource', $datasource);
+    }
+    return (int) $select->countQuery()->execute()->fetchField();
   }
 
 }

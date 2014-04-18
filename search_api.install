@@ -11,14 +11,20 @@ function search_api_schema() {
   $schema['search_api_item'] = array(
     'description' => 'Stores the items which should be indexed for each index, and their state.',
     'fields' => array(
-      'item_id' => array(
-        'description' => 'The unique identifier of this item.',
+      'index_id' => array(
+        'description' => 'The machine name of the index this item belongs to.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
-      'index_id' => array(
-        'description' => 'The machine name of the index this item belongs to.',
+      'datasource' => array(
+        'description' => 'The plugin ID of the datasource this item belongs to.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+      ),
+      'item_id' => array(
+        'description' => 'The unique identifier of this item.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,

@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Tracker;
 
 use Drupal\search_api\Plugin\IndexPluginInterface;
-use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Interface which describes a tracker plugin for Search API.
@@ -16,77 +15,55 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 interface TrackerInterface extends IndexPluginInterface {
 
   /**
-   * Track items being inserted.
+   * Tracks items being inserted.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which is registering the items for
-   *   tracking.
+   * @param string $datasource
+   *   The datasource to which the inserted items belong.
    * @param array $ids
    *   An array of item IDs.
-   *
-   * @return bool
-   *   TRUE if the items are being tracked, otherwise FALSE.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   Can be thrown when the datasource is not owned by the index.
    */
-  public function trackInserted(DatasourceInterface $datasource, array $ids);
+  public function trackInserted($datasource, array $ids);
 
   /**
-   * Track items being updated.
+   * Tracks items being updated.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which is updating the items.
+   * @param string|null $datasource
+   *   (optional) The datasource to which the updated items belong. If NULL,
+   *   $ids is ignored and all tracked items for this index are marked for
+   *   re-indexing.
    * @param array|null $ids
    *   (optional) An array of item IDs. Defaults to all tracked items.
-   *
-   * @return bool
-   *   TRUE if the items were updated, otherwise FALSE.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   Can be thrown when the datasource is not owned by the index.
    */
-  public function trackUpdated(DatasourceInterface $datasource, array $ids = NULL);
+  public function trackUpdated($datasource = NULL, array $ids = NULL);
 
   /**
-   * Track items being indexed.
+   * Tracks items being indexed.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which owns the indexed items.
+   * @param string $datasource
+   *   The datasource to which the indexed items belong.
    * @param array $ids
    *   An array of item IDs.
-   *
-   * @return bool
-   *   TRUE if the items were marked as indexed, otherwise FALSE.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   Can be thrown when the datasource is not owned by the index.
    */
-  public function trackIndexed(DatasourceInterface $datasource, array $ids);
+  public function trackIndexed($datasource, array $ids);
 
   /**
-   * Track items being deleted.
+   * Tracks items being deleted.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatasourceInterface which owns the items.
+   * @param string|null $datasource
+   *   (optional) The datasource to which the deleted items belong. If NULL,
+   *   $ids is ignored and all tracked items are deleted for this index.
    * @param array|null $ids
    *   (optional) An array of item IDs. Defaults to all tracked items.
-   *
-   * @return bool
-   *   TRUE if the items were removed, otherwise FALSE.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   Can be thrown when the datasource is not owned by the index.
    */
-  public function trackDeleted(DatasourceInterface $datasource, array $ids = NULL);
+  public function trackDeleted($datasource = NULL, array $ids = NULL);
 
   /**
-   * Get a list of item IDs that need to be indexed.
+   * Retrieves a list of item IDs that need to be indexed.
    *
    * @param int $limit
    *   (optional) The maximum number of items to return. A negative value means
    *   "unlimited".
-   * @param string|null $datasource_id
+   * @param string|null $datasource
    *   (optional) If specified, only items of the datasource with that ID are
    *   retrieved.
    *
@@ -96,47 +73,40 @@ interface TrackerInterface extends IndexPluginInterface {
    *   datasources. Otherwise, an array of item IDs to index for the given
    *   datasource.
    */
-  public function getRemainingItems($limit = -1, $datasource_id = NULL);
+  public function getRemainingItems($limit = -1, $datasource = NULL);
 
   /**
-   * Get the total number of pending items.
+   * Retrieves the total number of pending items for this index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   * @param string|null $datasource
    *   (optional) The datasource to filter the total number of pending items by.
    *
    * @return int
    *   The total number of pending items.
    */
-  public function getRemainingItemsCount(DatasourceInterface $datasource = NULL);
+  public function getRemainingItemsCount($datasource = NULL);
 
   /**
-   * Get the total number of items that are being monitored.
+   * Retrieves the total number of items that are being tracked for this index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   * @param string|null $datasource
    *   (optional) The datasource to filter the total number of items by.
    *
    * @return int
    *   The total number of items that are being monitored.
    */
-  public function getTotalItemsCount(DatasourceInterface $datasource = NULL);
+  public function getTotalItemsCount($datasource = NULL);
 
   /**
-   * Get the total number of indexed items.
+   * Retrieves the total number of indexed items for this index.
    *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   * @param string|null $datasource
    *   (optional) The datasource to filter the total number of indexed items by.
    *
    * @return int
-   *   The total number of items that are indexed.
+   *   The number of items that have been indexed in their latest state for this
+   *   index (and datasource, if specified).
    */
-  public function getIndexedItemsCount(DatasourceInterface $datasource = NULL);
-
-  /**
-   * Clear all tracked items.
-   *
-   * @return bool
-   *   TRUE if the operation was successful, otherwise FALSE.
-   */
-  public function clear();
+  public function getIndexedItemsCount($datasource = NULL);
 
 }
