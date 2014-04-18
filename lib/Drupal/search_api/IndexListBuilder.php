@@ -12,6 +12,8 @@ use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -145,6 +147,34 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         'class' => array('checkbox'),
       ),
     ) + parent::buildHeader();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+
+    if ($entity instanceof IndexInterface) {
+      $operations['fields'] = array(
+        'title' => t('Fields'),
+        'weight' => 20,
+        'route_name' => 'search_api.index_fields',
+        'route_parameters' => array(
+          'search_api_index' => $entity->id(),
+        ),
+      );
+      $operations['filters'] = array(
+        'title' => t('Filters'),
+        'weight' => 30,
+        'route_name' => 'search_api.index_filters',
+        'route_parameters' => array(
+          'search_api_index' => $entity->id(),
+        ),
+      );
+    }
+
+    return $operations;
   }
 
   /**

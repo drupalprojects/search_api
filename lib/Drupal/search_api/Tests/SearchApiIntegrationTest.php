@@ -177,7 +177,15 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function addAdditionalFieldsToIndex() {
-    // @todo Implement addAdditionalFieldsToIndex() method.
+    // Test that an entity reference field which targets a content entity is
+    // shown.
+    $this->assertFieldByName('additional[field][uid]', NULL, 'Additional entity reference field targeting a content entity type is displayed.');
+
+    // Test that an entity reference field which targets a config entity is not
+    // shown as an additional field option.
+    $this->assertNoFieldByName('additional[field][type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
+
+    // @todo Implement more tests for additional fields.
   }
 
   protected function trackContent() {
