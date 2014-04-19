@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\search_api\Exception\SearchApiException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityFormController;
 use Drupal\Core\Entity\EntityManager;
@@ -208,7 +209,7 @@ class IndexForm extends EntityFormController {
     );
 
     // Check if the datasource plugin changed.
-    if (!empty($form_state['values']['datasourcePluginId'])) {
+    if (!empty($form_state['values']['datasourcePluginIds'])) {
       // Notify the user about the datasource configuration change.
       drupal_set_message($this->t('Please configure the used data type.'), 'warning');
     }
@@ -222,18 +223,19 @@ class IndexForm extends EntityFormController {
     // Attach the admin css
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
-    $form['datasourcePluginId'] = array(
+    $form['datasourcePluginIds'] = array(
       '#type' => 'select',
-      '#title' => $this->t('Data type'),
-      '#description' => $this->t('Select the data type of items that will be indexed in this index. E.g. should it be nodes content or files data. This setting cannot be changed afterwards.'),
+      '#title' => $this->t('Data types'),
+      '#description' => $this->t('Select one or more data type of items that will be stored in this index. E.g. should it be nodes content or files data. This setting cannot be changed afterwards.'),
       '#options' => $this->getDatasourcePluginManager()->getDefinitionLabels(),
-      '#default_value' => $index->hasValidDatasource() ? $index->getDatasource()->getPluginId() : NULL,
+      '#default_value' => $index->getDatasourceIds(),
+      '#multiple' => TRUE,
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),
       '#ajax' => array(
-        'trigger_as' => array('name' => 'datasourcepluginid_configure'),
+        'trigger_as' => array('name' => 'datasourcepluginids_configure'),
         'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
-        'wrapper' => 'search-api-datasource-config-form',
+        'wrapper' => 'search-api-datasources-config-form',
         'method' => 'replace',
         'effect' => 'fade',
       ),
@@ -241,10 +243,10 @@ class IndexForm extends EntityFormController {
     );
 
     // Build the datasource plugin configuration container element.
-    $form['datasourcePluginConfig'] = array(
+    $form['datasourcePluginConfigs'] = array(
       '#type' => 'container',
       '#attributes' => array(
-        'id' => 'search-api-datasource-config-form',
+        'id' => 'search-api-datasources-config-form',
       ),
       '#weight' => 4,
       '#tree' => TRUE,
@@ -252,20 +254,20 @@ class IndexForm extends EntityFormController {
 
     $form['datasourceConfigureButton'] = array(
       '#type' => 'submit',
-      '#name' => 'datasourcepluginid_configure',
+      '#name' => 'datasourcepluginids_configure',
       '#value' => t('Configure'),
-      '#limit_validation_errors' => array(array('datasourcePluginId')),
+      '#limit_validation_errors' => array(array('datasourcePluginIds')),
       '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxDatasourceConfigForm'),
       '#ajax' => array(
         'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
-        'wrapper' => 'search-api-datasource-config-form',
+        'wrapper' => 'search-api-datasources-config-form',
       ),
       '#weight' => 5,
       '#attributes' => array('class' => array('js-hide')),
     );
 
     // Build the datasource configuration form.
-    $this->buildDatasourceConfigForm($form, $form_state, $index);
+    $this->buildDatasourcesConfigForm($form, $form_state, $index);
 
     $form['trackerPluginId'] = array(
       '#type' => 'select',
@@ -391,39 +393,38 @@ class IndexForm extends EntityFormController {
 
 
   /**
-   * Build the datasource configuration form.
+   * Builds the datasource configuration form.
    *
    * @param array $form
    *   An associative array containing the structure of the form.
    * @param array $form_state
    *   An associative array containing the current state of the form.
-   * @param \Drupal\search_api\Server\ServerInterface $server
-   *   An instance of ServerInterface.
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   An instance of IndexInterface.
    */
-  public function buildDatasourceConfigForm(array &$form, array &$form_state, IndexInterface $index) {
-    // Check if the index has a valid datasource configured.
-    if ($index->hasValidDatasource()) {
-      // Get the datasource.
-      $datasource = $index->getDatasource();
-      // Get the datasource plugin definition.
-      $datasource_plugin_definition = $datasource->getPluginDefinition();
-      // Build the datasource configuration form.
-      if (($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state))) {
-        // Modify the datasource plugin configuration container element.
-        $form['datasourcePluginConfig']['#type'] = 'details';
-        $form['datasourcePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $datasource_plugin_definition['name']));
-        $form['datasourcePluginConfig']['#description'] = String::checkPlain($datasource_plugin_definition['description']);
-        $form['datasourcePluginConfig']['#open'] = $index->isNew() ? TRUE : $index->isNew();
+  public function buildDatasourcesConfigForm(array &$form, array &$form_state, IndexInterface $index) {
+    if ($datasource_ids = $index->getDatasourceIds()) {
+      foreach ($datasource_ids as $datasource_id) {
+        try {
+          $datasource = $index->getDatasource($datasource_id);
+        }
+        catch (SearchApiException $e) {
+          drupal_set_message($this->t('The datasource with ID "@datasource" could not be retrieved.', array('@datasource' => $datasource_id)), 'error');
+          continue;
+        }
 
-        // Attach the build datasource plugin configuration form.
-        $form['datasourcePluginConfig'] += $datasource_plugin_config_form;
+        // Build the datasource configuration form.
+        $datasource_plugin_definition = $datasource->getPluginDefinition();
+        if (($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state))) {
+          // Modify the datasource plugin configuration container element.
+          $form['datasourcePluginConfigs'][$datasource_id]['#type'] = 'details';
+          $form['datasourcePluginConfigs'][$datasource_id]['#title'] = $this->t('Configure data type: @datasource_label', array('@datasource_label' => $datasource_plugin_definition['label']));
+          $form['datasourcePluginConfigs'][$datasource_id]['#open'] = $index->isNew() ? TRUE : $index->isNew();
+
+          // Attach the build datasource plugin configuration form.
+          $form['datasourcePluginConfigs'][$datasource_id] += $datasource_plugin_config_form;
+        }
       }
-    }
-    // Do not notify the user about a missing datasource plugin if a new index
-    // is being configured.
-    elseif (!$index->isNew()) {
-      // Notify the user about the missing datasource plugin.
-      drupal_set_message($this->t('The datasource plugin is missing or invalid.'), 'error');
     }
   }
 
@@ -492,7 +493,7 @@ class IndexForm extends EntityFormController {
    */
   public static function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
     // Get the datasource plugin configuration form.
-    return $form['datasourcePluginConfig'];
+    return $form['datasourcePluginConfigs'];
   }
 
   /**
@@ -524,26 +525,26 @@ class IndexForm extends EntityFormController {
     // Get the current datasource plugin ID.
     $datasource_plugin_id = $entity->hasValidDatasource() ? $entity->getDatasource()->getPluginId() : NULL;
     // Check if the datasource plugin changed.
-    if ($datasource_plugin_id !== $form_state['values']['datasourcePluginId']) {
+    if ($datasource_plugin_id !== $form_state['values']['datasourcePluginIds']) {
       // Check if the datasource plugin configuration form input values exist.
-      if (!empty($form_state['input']['datasourcePluginConfig'])) {
+      if (!empty($form_state['input']['datasourcePluginConfigs'])) {
         // Overwrite the plugin configuration form input values with an empty
         // array. This will force the Drupal Form API to use the default values.
-        $form_state['input']['datasourcePluginConfig'] = array();
+        $form_state['input']['datasourcePluginConfigs'] = array();
       }
       // Check if the datasource plugin configuration form values exist.
-      if (!empty($form_state['values']['datasourcePluginConfig'])) {
+      if (!empty($form_state['values']['datasourcePluginConfigs'])) {
         // Overwrite the plugin configuration form values with an empty array.
         // This has no effect on the Drupal Form API but is done to keep the
         // data consistent.
-        $form_state['values']['datasourcePluginConfig'] = array();
+        $form_state['values']['datasourcePluginConfigs'] = array();
       }
     }
     // Check if the entity has a valid datasource plugin.
     elseif ($entity->hasValidDatasource()) {
       // Validate the datasource plugin configuration form.
-      $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfig'];
-      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
+      $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfigs'];
+      $entity->getDatasource()->validateConfigurationForm($form['datasourcePluginConfigs'], $datasource_form_state);
     }
     // Get the current tracker plugin ID.
     $tracker_plugin_id = $entity->hasValidTracker() ? $entity->getTracker()->getPluginId() : NULL;
@@ -596,16 +597,16 @@ class IndexForm extends EntityFormController {
     if ($entity->hasValidDatasource()) {
       // Build the datasource plugin configuration form state.
       $datasource_form_state = array(
-        'values' => $form_state['values']['datasourcePluginConfig'],
+        'values' => $form_state['values']['datasourcePluginConfigs'],
       );
       // Also add all additional values so that we can read them in the plugin.
       // Useful for the status
       $datasource_form_state['values']['index'] = $form_state['values'];
       // Remove the datasource plugin configuration from the index form state
       // as it is already provided.
-      unset($datasource_form_state['values']['index']['datasourcePluginConfig']);
+      unset($datasource_form_state['values']['index']['datasourcePluginConfigs']);
       // Submit the datasource plugin configuration form.
-      $entity->getDatasource()->submitConfigurationForm($form['datasourcePluginConfig'], $datasource_form_state);
+      $entity->getDatasource()->submitConfigurationForm($form['datasourcePluginConfigs'], $datasource_form_state);
     }
     // Check if the entity has a valid tracker plugin.
     if ($entity->hasValidTracker()) {
