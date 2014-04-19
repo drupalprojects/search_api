@@ -139,9 +139,10 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    // First, check if the field is even enabled.
-    $fields = $this->index->getOption('fields');
-    if (empty($fields['search_api_rendered_item'])) {
+    // First, check if the processir is even enabled.
+    $processors = $this->index->getOption('processors');
+
+    if (empty($processors['search_api_rendered_item'])) {
       return;
     }
 
