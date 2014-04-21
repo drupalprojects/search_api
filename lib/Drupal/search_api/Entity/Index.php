@@ -135,7 +135,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string[]
    */
-  public $datasourcePluginIds;
+  public $datasourcePluginIds = array();
 
   /**
    * The configuration for the datasource plugins.

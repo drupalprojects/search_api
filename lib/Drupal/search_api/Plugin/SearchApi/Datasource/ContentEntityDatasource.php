@@ -292,17 +292,6 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Determine whether the index is valid for this datasource.
-   *
-   * @return bool
-   *   TRUE if the index is valid, otherwise FALSE.
-   */
-  protected function isValidIndex() {
-    // Determine whether the index is compatible with the datasource.
-    return $this->getIndex()->getDatasource()->getPluginId() == $this->getPluginId();
-  }
-
-  /**
    * Get the entity bundles which can be used in a select element.
    *
    * @return array

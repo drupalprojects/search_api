@@ -218,8 +218,6 @@ function theme_search_api_index($variables) {
   $index = $variables['index'];
   /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $index->hasValidServer() ? $index->getServer() : NULL;
-  /** @var $server \Drupal\search_api\DataSource\DataSourceInterface */
-  $datasource = $index->hasValidDatasource() ? $index->getDatasource() : NULL;
   /** @var $tracker \Drupal\search_api\Tracker\TrackerInterface */
   $tracker = $index->hasValidTracker() ? $index->getTracker() : NULL;
 
@@ -271,21 +269,21 @@ function theme_search_api_index($variables) {
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
-  // Check if a datasource is available.
-  if ($datasource) {
-    // Get the datasource plugin definition.
-    $datasource_plugin_definition = $datasource->getPluginDefinition();
-    // Use the label defined in the plugin definition.
-    $info = $datasource_plugin_definition['label'];
+  foreach ($index->getDatasourceIds() as $datasource_id) {
+    // Check if a datasource is available.
+    if ($index->isValidDatasource($datasource_id)) {
+      // Use the label defined in the plugin definition.
+      $info = $index->getDatasource($datasource_id)->getPluginDefinition()['label'];
+    }
+    else {
+      $class = 'error';
+      $info = t('Invalid or missing datasource plugin: %datasource_id', array('%datasource_id' => $datasource_id));
+    }
+    // Append the row and reset variables.
+    $label = t('Item type');
+    $rows[] = Utility::deepCopy($row);
+    $class = '';
   }
-  else {
-    $class = 'error';
-    $info = t('Invalid or missing datasource plugin');
-  }
-  // Append the row and reset variables.
-  $label = t('Item type');
-  $rows[] = Utility::deepCopy($row);
-  $class = '';
 
   // Check if a tracker is available.
   if ($tracker) {
