@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Session\SearchApiUserSession;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -67,6 +68,7 @@ class RenderedItem extends ProcessorPluginBase {
   public function defaultConfiguration() {
     return array(
       'view_mode' => NULL,
+      'roles' => array(DRUPAL_ANONYMOUS_RID),
     );
   }
 
@@ -108,6 +110,16 @@ class RenderedItem extends ProcessorPluginBase {
       }
     }
 
+    $form['roles'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('User roles'),
+      '#description' => t('The data will be processed as seen by a user with the selected roles.'),
+      '#options' => user_role_names(),
+      '#multiple' => TRUE,
+      '#default_value' => $this->configuration['roles'],
+      '#required' => TRUE,
+    );
+
     return $form;
   }
 
@@ -127,9 +139,10 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    // First, check if the field is even enabled.
-    $fields = $this->index->getOption('fields');
-    if (empty($fields['search_api_rendered_item'])) {
+    // First, check if the processir is even enabled.
+    $processors = $this->index->getOption('processors');
+
+    if (empty($processors['search_api_rendered_item'])) {
       return;
     }
 
@@ -145,17 +158,17 @@ class RenderedItem extends ProcessorPluginBase {
       return;
     }
 
-    // Change the current user to Anonymous so we don't accidentally expose
-    // non-public information in this field.
+    // Change the current user to our custom AccountInterface implementation
+    // so we don't accidentally expose non-public information in this field.
     $original_user = $this->currentUser->getAccount();
-    $this->currentUser->setAccount(new AnonymousUserSession());
+    $this->currentUser->setAccount(new SearchApiUserSession($this->configuration['roles']));
 
     // Since we can't really know what happens in entity_view() and render(),
     // we use try/catch. This will at least prevent some errors, even though
     // it's no protection against fatal errors and the like.
     $build = array();
     try {
-      $build = $this->index->getDatasource()->viewMultipleItems($item_objects, $this->configuration['mode']);
+      $build = $this->index->getDatasource()->viewMultipleItems($item_objects, $this->configuration['view_mode']);
     }
     catch (\Exception $e) {
       // Do nothing; we still need to reset the account and $build will be empty
