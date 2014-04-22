@@ -302,8 +302,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Retrieves the properties available for this index.
    *
-   * @param string $datasource
-   *   The datasource for which the properties should be retrieved.
+   * @param string $datasource_id
+   *   The ID of the datasource for which the properties should be retrieved.
    * @param bool $alter
    *   (optional) Whether to pass the property definitions to the index's
    *   enabled processors for altering before returning them.
@@ -316,7 +316,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   If the specified datasource isn't enabled for this index, or couldn't be
    *   loaded.
    */
-  public function getPropertyDefinitions($datasource, $alter = TRUE);
+  public function getPropertyDefinitions($datasource_id, $alter = TRUE);
 
   /**
    * Indexes a set amount of items.

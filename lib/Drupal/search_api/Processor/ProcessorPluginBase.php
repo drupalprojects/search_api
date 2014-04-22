@@ -43,13 +43,8 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
 
   /**
    * {@inheritdoc}
-   * @param array $properties
-   *
-   * @return array
    */
-  public function alterPropertyDefinitions(array &$properties) {
-    return array();
-  }
+  public function alterPropertyDefinitions(array &$properties) {}
 
   /**
    * {@inheritdoc}

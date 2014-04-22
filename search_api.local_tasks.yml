@@ -6,6 +6,7 @@ search_api.server_edit:
   route_name: search_api.server_edit
   base_route: search_api.server_view
   title: 'Edit'
+
 search_api.index_view:
   route_name: search_api.index_view
   base_route: search_api.index_view
@@ -16,10 +17,8 @@ search_api.index_edit:
   title: 'Edit'
   weight: 0
 search_api.index_fields:
-  route_name: search_api.index_fields
-  base_route: search_api.index_view
-  title: 'Fields'
-  weight: 10
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  derivative: \Drupal\search_api\Plugin\Derivative\SearchApiFieldsLocalTask
 search_api.index_filters:
   route_name: search_api.index_filters
   base_route: search_api.index_view

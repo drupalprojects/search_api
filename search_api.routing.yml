@@ -109,6 +109,13 @@ search_api.index_fields:
   requirements:
     _entity_access: 'search_api_index.fields'
 
+search_api.index_fields_datasource:
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/{datasource_id}'
+  defaults:
+    _entity_form: 'search_api_index.fields'
+  requirements:
+    _entity_access: 'search_api_index.fields'
+
 search_api.index_filters:
   path: '/admin/config/search/search-api/index/{search_api_index}/filters'
   defaults:

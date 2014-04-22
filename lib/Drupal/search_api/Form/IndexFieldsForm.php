@@ -28,7 +28,14 @@ class IndexFieldsForm extends EntityFormController {
    *
    * @var \Drupal\Core\Entity\EntityManager
    */
-  private $entityManager;
+  protected $entityManager;
+
+  /**
+   * The ID of the datasource plugin.
+   *
+   * @var string
+   */
+  protected $datasourceId;
 
   /**
    * {@inheritdoc}
@@ -78,19 +85,25 @@ class IndexFieldsForm extends EntityFormController {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state) {
+  public function buildForm(array $form, array &$form_state, $datasource_id = NULL) {
     // Get the index
     $index = $this->entity;
     $entity_description_added = FALSE;
+
+    // Set a default datasource plugin ID if none was passed in.
+    if (!$datasource_id) {
+      $datasource_ids = $index->getDatasourceIds();
+      $datasource_id = reset($datasource_ids);
+    }
+    $this->datasourceId = $datasource_id;
 
     // Set a proper title
     $form['#title'] = $this->t('Manage fields for search index @label', array('@label' => $index->label()));
 
     // Get all options
     $options = $index->getFields(FALSE, TRUE);
-    $fields = $options['fields'];
-
-    $additional = $options['additional fields'];
+    $fields = $this->getDatasourceFields($options['fields'], $datasource_id);
+    $additional = $this->getDatasourceFields($options['additional fields'], $datasource_id);
 
     // An array of option arrays for types, keyed by nesting level.
     $types = array(0 => search_api_data_types());
@@ -268,7 +281,6 @@ class IndexFieldsForm extends EntityFormController {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form_state['index'];
     $options = isset($index->options) ? $index->options : array();
-    
 
     $fields = $form_state['values']['fields'];
     foreach ($fields as $name => $field) {
@@ -285,11 +297,19 @@ class IndexFieldsForm extends EntityFormController {
       }
     }
     // Store the fields info
-    $options['fields'] = $fields;
+    if (!empty($options['fields'])) {
+      $existing_fields = $this->getDatasourceFields($options['fields'], $this->datasourceId);
+      $options['fields'] = array_diff_key($options['fields'], $existing_fields);
+    }
+    $options['fields'] += $fields;
 
     // Store the additional fields info
     $additional = $form_state['values']['additional']['field'];
-    $options['additional fields'] = $additional;
+    if (!empty($options['additional fields'])) {
+      $existing_additional_fields = $this->getDatasourceFields($options['additional fields'], $this->datasourceId);
+      $options['additional fields'] = array_diff_key($options['additional fields'], $existing_additional_fields);
+    }
+    $options['additional fields'] += $additional;
 
     $index->setOptions($options);
     $ret = $index->save();
@@ -313,4 +333,25 @@ class IndexFieldsForm extends EntityFormController {
       }
     }
   }
+
+  /**
+   * Returns an array of fields available to a datasource.
+   *
+   * @param array $fields
+   *   An array of fields as returned by
+   *   \Drupal\search_api\Index\IndexInterface::getFields().
+   * @param string $datasource_id
+   *   The ID of the datasource plugin.
+   *
+   * @return array
+   *   An array of the same structure as the $fields argument, filtered by
+   *   $datasource_id.
+   */
+  protected function getDatasourceFields($fields, $datasource_id) {
+    $return = array_filter(array_keys($fields), function($key) use ($datasource_id) {
+      return strpos($key, $datasource_id) !== FALSE;
+    });
+    return array_intersect_key($fields, array_flip($return));
+  }
+
 }
