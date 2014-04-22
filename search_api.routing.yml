@@ -123,13 +123,6 @@ search_api.index_filters:
   requirements:
     _entity_access: 'search_api_index.filters'
 
-search_api.index_filters_datasource:
-  path: '/admin/config/search/search-api/index/{search_api_index}/filters/{datasource_id}'
-  defaults:
-    _entity_form: 'search_api_index.filters'
-  requirements:
-    _entity_access: 'search_api_index.filters'
-
 search_api.index_reindex:
   path: '/admin/config/search/search-api/index/{search_api_index}/reindex'
   defaults:

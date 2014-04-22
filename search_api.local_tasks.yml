@@ -20,5 +20,7 @@ search_api.index_fields:
   class: \Drupal\Core\Menu\LocalTaskDefault
   derivative: \Drupal\search_api\Plugin\Derivative\SearchApiFieldsLocalTask
 search_api.index_filters:
-  class: \Drupal\Core\Menu\LocalTaskDefault
-  derivative: \Drupal\search_api\Plugin\Derivative\SearchApiFiltersLocalTask
+  route_name: search_api.index_filters
+  base_route: search_api.index_view
+  title: 'Filters'
+  weight: 20

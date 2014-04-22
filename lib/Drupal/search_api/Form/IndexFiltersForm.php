@@ -34,18 +34,11 @@ class IndexFiltersForm extends EntityFormController {
   protected $entityManager;
 
   /**
-   * The processor plugin manager.
+   * The datasource manager.
    *
    * @var \Drupal\search_api\Processor\ProcessorPluginManager
    */
   protected $processorPluginManager;
-
-  /**
-   * The ID of the datasource plugin.
-   *
-   * @var string
-   */
-  protected $datasourceId;
 
   /**
    * Constructs a ContentEntityFormController object.
@@ -80,14 +73,7 @@ class IndexFiltersForm extends EntityFormController {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, array &$form_state, $datasource_id = NULL) {
-    // Set a default datasource plugin ID if none was passed in.
-    if (!$datasource_id) {
-      $datasource_ids = $this->entity->getDatasourceIds();
-      $datasource_id = reset($datasource_ids);
-    }
-    $this->datasourceId = $datasource_id;
-
+  public function form(array $form, array &$form_state) {
     // Fetch our active Processors for this index
     $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
     // Fetch all processors
