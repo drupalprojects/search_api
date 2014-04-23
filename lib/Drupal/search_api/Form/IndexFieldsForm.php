@@ -300,16 +300,18 @@ class IndexFieldsForm extends EntityFormController {
     if (!empty($options['fields'])) {
       $existing_fields = $this->getDatasourceFields($options['fields'], $this->datasourceId);
       $options['fields'] = array_diff_key($options['fields'], $existing_fields);
+      $fields += $options['fields'];
     }
-    $options['fields'] += $fields;
+    $options['fields'] = $fields;
 
     // Store the additional fields info
     $additional = $form_state['values']['additional']['field'];
     if (!empty($options['additional fields'])) {
       $existing_additional_fields = $this->getDatasourceFields($options['additional fields'], $this->datasourceId);
       $options['additional fields'] = array_diff_key($options['additional fields'], $existing_additional_fields);
+      $additional += $options['additional fields'];
     }
-    $options['additional fields'] += $additional;
+    $options['additional fields'] = $additional;
 
     $index->setOptions($options);
     $ret = $index->save();
