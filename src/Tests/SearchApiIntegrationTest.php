@@ -66,7 +66,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createServer() {
-    $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add');
+    $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200, 'Server add page exists');
@@ -108,20 +108,19 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createIndex() {
-    $settings_path = $this->urlGenerator->generateFromRoute('search_api.index_add');
+    $settings_path = $this->urlGenerator->generateFromRoute('search_api.index_add', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
     $edit = array(
-      'name' => '',
       'status' => 1,
       'description' => 'An index used for testing.',
-      'datasourcePluginId' => '',
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Data type'))));
+    $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
+    $this->assertText(t('!name field is required.', array('!name' => t('Data types'))));
 
     $this->indexId = 'test_index';
 
@@ -131,7 +130,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       'status' => 1,
       'description' => 'An index used for testing.',
       'serverMachineName' => $this->serverId,
-      'datasourcePluginId' => 'entity:node',
+      'datasourcePluginIds[]' => array('entity:node'),
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));
@@ -147,7 +146,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->assertTrue($index->status, t('Index status correctly inserted.'));
     $this->assertEqual($index->description, $edit['description'], t('Index machine name correctly inserted.'));
     $this->assertEqual($index->serverMachineName, $edit['serverMachineName'], t('Index server machine name correctly inserted.'));
-    $this->assertEqual($index->datasourcePluginId, $edit['datasourcePluginId'], t('Index datasource id correctly inserted.'));
+    $this->assertEqual($index->datasourcePluginIds, $edit['datasourcePluginIds[]'], t('Index datasource id correctly inserted.'));
   }
 
   protected function addFieldsToIndex() {

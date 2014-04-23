@@ -147,7 +147,7 @@ class SearchApiOverviewPageTest extends SearchApiWebTestBase {
     $server = $this->getTestServer();
 
     $this->drupalGet($this->overviewPageUrl);
-    $basic_url = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()));
+    $basic_url = $this->urlGenerator->generateFromRoute('search_api.server_view', array('search_api_server' => $server->id()), array('absolute' => TRUE));
     $this->assertRaw('<a href="' . $basic_url . '/edit">Edit</a>', 'Edit operation presents');
     $this->assertRaw('<a href="' . $basic_url . '/disable">Disable</a>', 'Disable operation presents');
     $this->assertRaw('<a href="' . $basic_url . '/delete">Delete</a>', 'Delete operation presents');

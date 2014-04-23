@@ -529,7 +529,7 @@ class IndexForm extends EntityFormController {
     else {
       foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
         // Validate the datasource plugin configuration form.
-        $datasource_form_state['values'] = $form_state['values']['datasourcePluginConfigs'][$datasource_id];
+        $datasource_form_state['values'] = isset($form_state['values']['datasourcePluginConfigs'][$datasource_id]) ? $form_state['values']['datasourcePluginConfigs'][$datasource_id] : array();
         $entity->getDatasource($datasource_id)->validateConfigurationForm($form['datasourcePluginConfigs'][$datasource_id], $datasource_form_state);
       }
     }
