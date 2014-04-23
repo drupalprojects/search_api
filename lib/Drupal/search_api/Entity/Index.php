@@ -531,7 +531,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
       $tags['search_api_index'] = $this->id();
-//      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
+      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
 
     return $get_additional ? $this->fields[$only_indexed] : $this->fields[$only_indexed]['fields'];
@@ -634,6 +634,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       $fields[$key] = array(
         'name' => $label,
+        'name_prefix' => $this->getDatasource($datasource_id)->label() . ' » ',
         'description' => $description,
         'datasource' => $datasource_id,
         'indexed' => FALSE,
@@ -655,13 +656,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $properties = $this->getDatasource($datasource_id)->getPropertyDefinitions();
-    // @todo Processors need some love.
-//    if ($alter) {
-//      foreach ($this->getProcessors() as $processor) {
-//        $processor->alterPropertyDefinitions($properties);
-//      }
-//    }
+    $datasource = $this->getDatasource($datasource_id);
+    $properties = $datasource->getPropertyDefinitions();
+    if ($alter) {
+      foreach ($this->getProcessors() as $processor) {
+        $processor->alterPropertyDefinitions($properties, $datasource);
+      }
+    }
     return $properties;
   }
 

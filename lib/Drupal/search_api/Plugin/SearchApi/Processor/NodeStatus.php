@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
@@ -14,18 +15,27 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 class NodeStatus extends ProcessorPluginBase {
 
   /**
-   * Alter items before indexing.
-   *
-   * Items which are removed from the array won't be indexed, but will be marked
-   * as clean for future indexing.
-   *
-   * @param array $items
-   *   An array of items to be altered, keyed by item IDs.
+   * {@inheritdoc}
+   */
+  public static function supportsIndex(IndexInterface $index) {
+    // @todo Re-introduce Datasource::getEntityType() for this?
+    foreach ($index->getDatasources() as $datasource) {
+      $definition = $datasource->getPluginDefinition();
+      if (isset($definition['entity_type']) && $definition['entity_type'] === 'node') {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($items as $nid => &$item) {
-      if (empty($item->status)) {
-        unset($items[$nid]);
+    foreach ($items as $id => &$item) {
+      // @todo Only process nodes (check '#datasource' key).
+      if (empty($item['#item']->status)) {
+        unset($items[$id]);
       }
     }
   }

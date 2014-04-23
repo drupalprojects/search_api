@@ -8,10 +8,10 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\TypedDataManager;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Session\SearchApiUserSession;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -67,7 +67,7 @@ class RenderedItem extends ProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'view_mode' => NULL,
+      'view_mode' => array(),
       'roles' => array(DRUPAL_ANONYMOUS_RID),
     );
   }
@@ -78,34 +78,24 @@ class RenderedItem extends ProcessorPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $view_modes = array();
-    foreach ($this->index->getDatasource()->getViewModes() as $key => $mode) {
-      $view_modes[$key] = $mode['label'];
-    }
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $view_modes = array();
+      foreach ($datasource->getViewModes() as $key => $mode) {
+        $view_modes[$key] = $mode['label'];
+      }
 
-    if (count($view_modes) > 1) {
-      $form['view_mode'] = array(
-        '#type' => 'select',
-        '#title' => t('View mode'),
-        '#options' => $view_modes,
-        '#default_value' => $this->configuration['view_mode'],
-      );
-    }
-    else {
-      $form['view_mode'] = array(
-        '#type' => 'value',
-        '#value' => $this->configuration['view_mode'],
-        '#default_value' => key($view_modes),
-      );
-      $type_label = $this->index->getDatasource()->label();
-      if ($view_modes) {
-        $form['note'] = array(
-          '#markup' => '<p>' . $this->t('This index contains entities of type %type and they only have a single view mode. Therefore, no selection needs to be made.', array('%type' => $type_label)) . '</p>',
+      if (count($view_modes) > 1) {
+        $form['view_mode'][$datasource_id] = array(
+          '#type' => 'select',
+          '#title' => t('View mode for data source @datasource', array('@datasource' => $datasource->label())),
+          '#options' => $view_modes,
+          '#default_value' => $this->configuration['view_mode'][$datasource_id],
         );
       }
-      else {
-        $form['note'] = array(
-          '#markup' => '<p>' . $this->t('This index contains items of type %type but they have no defined view modes. This might either mean that they are always displayed the same way, or that they cannot be processed by this alteration at all. Please consider this when using this alteration.', array('%type' => $type_label)) . '</p>',
+      elseif ($view_modes) {
+        $form['view_mode'][$datasource_id] = array(
+          '#type' => 'value',
+          '#value' => key($view_modes),
         );
       }
     }
@@ -126,7 +116,7 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
     $definition = array(
       'type' => 'string',
       'label' => $this->t('Rendered HTML output'),
@@ -139,17 +129,10 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    // First, check if the processir is even enabled.
-    $processors = $this->index->getOption('processors');
-
-    if (empty($processors['search_api_rendered_item'])) {
-      return;
-    }
-
-    // Then, extract all the passed item objects.
+    // First, extract all the passed item objects.
     foreach ($items as $i => $item) {
       if (isset($item['#item'])) {
-        $item_objects[$i] = $item['#item'];
+        $item_objects[$item['#datasource']][$i] = $item['#item'];
       }
     }
 
@@ -163,16 +146,17 @@ class RenderedItem extends ProcessorPluginBase {
     $original_user = $this->currentUser->getAccount();
     $this->currentUser->setAccount(new SearchApiUserSession($this->configuration['roles']));
 
-    // Since we can't really know what happens in entity_view() and render(),
-    // we use try/catch. This will at least prevent some errors, even though
-    // it's no protection against fatal errors and the like.
     $build = array();
-    try {
-      $build = $this->index->getDatasource()->viewMultipleItems($item_objects, $this->configuration['view_mode']);
-    }
-    catch (\Exception $e) {
-      // Do nothing; we still need to reset the account and $build will be empty
-      // anyways.
+    foreach ($item_objects as $datasource_id => $objects) {
+      if (!empty($this->configuration['view_mode'][$datasource_id])) {
+        try {
+          $build += $this->index->getDatasource($datasource_id)->viewMultipleItems($objects, $this->configuration['view_mode'][$datasource_id]);
+        }
+        catch (\InvalidArgumentException $e) {
+          // Do nothing; we still need to reset the account and $build will be empty
+          // anyways.
+        }
+      }
     }
     // Restore the user.
     $this->currentUser->setAccount($original_user);

@@ -18,15 +18,22 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
   * )
   */
 class RoleFilter extends FieldsProcessorPluginBase {
-  
+
   /**
    * {@inheritdoc}
    * This plugin only supports indexes containing users.
    */
   public static function supportsIndex(IndexInterface $index) {
-    return $index->getDatasource()->pluginId === 'entity:user';
+    // @todo Re-introduce Datasource::getEntityType() for this?
+    foreach ($index->getDatasources() as $datasource) {
+      $definition = $datasource->getPluginDefinition();
+      if (isset($definition['entity_type']) && $definition['entity_type'] === 'user') {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -40,7 +47,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
       }
     }
   }
-  
+
   /**
    * {@inheritdoc}
    */

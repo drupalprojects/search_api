@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Processor;
 
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -44,12 +45,14 @@ interface ProcessorInterface extends IndexPluginInterface {
   public static function supportsIndex(IndexInterface $index);
 
   /**
-   * Alters the property definitions for this index's item type.
+   * Alters the property definitions of one of this .
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of property definitions for this item type.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
+   *   The datasource this set of properties belongs to.
    */
-  public function alterPropertyDefinitions(array &$properties);
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource);
 
   /**
    * Preprocess data items for indexing.

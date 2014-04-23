@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Processor;
 
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginBase;
 use Drupal\search_api\Query\QueryInterface;
@@ -44,7 +45,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties) {}
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {}
 
   /**
    * {@inheritdoc}

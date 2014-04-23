@@ -6,8 +6,11 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Query\QueryInterface;
 
 /**
  * @SearchApiProcessor(
@@ -22,36 +25,35 @@ class NodeAccess extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function supportsIndex(IndexInterface $index) {
-    $data_source_definition = $index->getDatasource()->getPluginDefinition();
-
-    if (isset($data_source_definition['entity_type'])) {
-      // Currently only node access is supported.
-      return $data_source_definition['entity_type'] === 'node';
+    // @todo Re-introduce Datasource::getEntityType() for this?
+    foreach ($index->getDatasources() as $datasource) {
+      $definition = $datasource->getPluginDefinition();
+      if (isset($definition['entity_type']) && $definition['entity_type'] === 'node') {
+        return TRUE;
+      }
     }
-    else {
-      return FALSE;
-    }
-  }
-
-  /**
-   * Overrides SearchApiAbstractAlterCallback::propertyInfo().
-   *
-   * Adds the "search_api_access_node" property.
-   */
-  public function propertyInfo() {
-    return array(
-      'search_api_access_node' => array(
-        'label' => t('Node access information'),
-        'description' => t('Data needed to apply node access.'),
-        'type' => 'list<token>',
-      ),
-    );
+    return FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterItems(array &$items) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+    $datasource_definition = $datasource->getPluginDefinition();
+    if (isset($datasource_definition['entity_type']) && $datasource_definition['entity_type'] === 'node') {
+      $definition = array(
+        'label' => t('Node access information'),
+        'description' => t('Data needed to apply node access.'),
+        'type' => 'string',
+      );
+      $properties['search_api_access_node'] = new DataDefinition($definition);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
     static $account;
 
     if (!isset($account)) {
@@ -60,12 +62,13 @@ class NodeAccess extends ProcessorPluginBase {
     }
 
     foreach ($items as $id => $item) {
+      // @todo Only process nodes (check '#datasource' key).
       /** @var $node \Drupal\Node\NodeInterface */
       $node = $this->getNode($item);
       // Check whether all users have access to the node.
       if (!$node->access('view', $account)) {
         // Get node access grants.
-        $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->nid));
+        $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
 
         // Store all grants together with their realms in the item.
         foreach ($result as $grant) {
@@ -99,22 +102,32 @@ class NodeAccess extends ProcessorPluginBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Overrides \Drupal\search_api\Processor\ProcessorPluginBase::submitConfigurationForm().
    *
-   * If the data alteration is being enabled, set "Published" and "Author" to
+   * If the data alteration is being enabled, sets "Published" and "Author" to
    * "indexed", because both are needed for the node access filter.
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
+    // @todo This code is outdated. We need a new, preferably cleaner way to
+    // determine whether the processor was just enabled (and to mark field as
+    // required).
     $old_status = !empty($form_state['index']->options['data_alter_callbacks']['search_api_alter_node_access']['status']);
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
     if (!$old_status && $new_status) {
-      $form_state['index']->options['fields']['status']['type'] = 'boolean';
-      $form_state['index']->options['fields']['author']['type'] = 'integer';
-      $form_state['index']->options['fields']['author']['entity_type'] = 'user';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'status']['type'] = 'boolean';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'author']['type'] = 'integer';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'author']['entity_type'] = 'user';
     }
 
-    return parent::submitConfigurationForm($form, $form_state);
+    parent::submitConfigurationForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessSearchQuery(QueryInterface $query) {
+    // @todo Implement.
   }
 
 }

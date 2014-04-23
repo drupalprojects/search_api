@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
@@ -18,27 +20,27 @@ class AddURL extends ProcessorPluginBase {
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
-      $url = $this->index->getDatasource()->getItemUrl($item);
-      if (!$url) {
-        $item->search_api_url = NULL;
-        continue;
+      // Only run if the field is enabled for the index.
+      if (!empty($item['search_api_url'])) {
+        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item);
+        if ($url) {
+          $item['search_api_url']['value'] = url($url['path'], array('absolute' => TRUE) + $url['options']);
+          $item['search_api_url']['value']['original_type'] = 'uri';
+        }
       }
-      $item->search_api_url = url($url['path'], array('absolute' => TRUE) + $url['options']);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties) {
-    // @todo Port this method to the new method functionality.
-    /*return array(
-      'search_api_url' => array(
-        'label' => t('URI'),
-        'description' => t('A URI where the item can be accessed.'),
-        'type' => 'uri',
-      ),
-    );*/
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+    $definition = array(
+      'label' => t('URI'),
+      'description' => t('A URI where the item can be accessed.'),
+      'type' => 'uri',
+    );
+    $properties['search_api_url'] = new DataDefinition($definition);
   }
 
 }

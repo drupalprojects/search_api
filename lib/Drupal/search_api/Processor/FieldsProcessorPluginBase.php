@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Processor;
 
 use Drupal\Core\Render\Element;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 
@@ -51,8 +52,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     }
     foreach ($fields as $name => $field) {
       if ($this->testType($field['type'])) {
-        $field_options[$name] = $field['name'];
-        if (!empty($default_fields[$name]) || (!isset($this->configuration['fields']) && $this->testField($name, $field))) {
+        $field_options[$name] = $field['name_prefix'] . $field['name'];
+        if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
           $default_fields[$name] = $name;
         }
       }
@@ -315,7 +316,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   TRUE if the field should be processed, FALSE otherwise.
    */
   protected function testField($name, array $field) {
-    if (empty($this->configuration['fields'])) {
+    if (!isset($this->configuration['fields'])) {
       return $this->testType($field['type']);
     }
     return !empty($this->configuration['fields'][$name]);

@@ -132,7 +132,7 @@ class Highlight extends ProcessorPluginBase {
       return;
     }
 
-    foreach ($response['results'] as $id => &$result) {
+    foreach ($response['results'] as $id => $result) {
       if ($this->configuration['excerpt']) {
         $this->postprocessExcerptResults($response['results'], $id, $keys);
       }

@@ -268,6 +268,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - name: The human-readable name for the field.
+   *   - name_prefix: A human-readable name prefix specifying the datasource.
    *   - description: A description of the field, if available.
    *   - indexed: Boolean indicating whether the field is indexed or not.
    *   - type: The type set for this field. One of the types returned by

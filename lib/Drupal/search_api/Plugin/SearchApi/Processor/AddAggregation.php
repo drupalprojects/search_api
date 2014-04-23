@@ -2,8 +2,9 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\Component\Utility\String;
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\search_api\Datasource\DatasourceInterface;
+use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
@@ -12,7 +13,7 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  *   description = @Translation("Create aggregate fields to be additionally indexed.")
  * )
  */
-class AddAggregation extends FieldsProcessorPluginBase {
+class AddAggregation extends ProcessorPluginBase {
 
   /**
    * {@inheritdoc}
@@ -218,20 +219,18 @@ class AddAggregation extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties) {
-    // @todo Port this method to the new method functionality.
-    /*$types = $this->getTypes('type');
-    $ret = array();
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+    $types = $this->getTypes('type');
     if (isset($this->configuration['fields'])) {
       foreach ($this->configuration['fields'] as $name => $field) {
-        $ret[$name] = array(
+        $definition = array(
           'label' => $field['name'],
           'description' => empty($field['description']) ? '' : $field['description'],
           'type' => $types[$field['type']],
         );
+        $properties[$name] = new DataDefinition($definition);
       }
     }
-    return $ret;*/
   }
 
   /**
@@ -248,11 +247,15 @@ class AddAggregation extends FieldsProcessorPluginBase {
   }
 
   /**
-   * Helper method for getting all available aggregation types.
+   * Helper method for getting information about available aggregation types.
    *
-   * @param $info (optional)
-   *   One of "name", "type" or "description", to indicate what values should be
-   *   returned for the types. Defaults to "name".
+   * @param string $info
+   *   (optional) One of "name", "type" or "description", to indicate what
+   *   values should be returned for the types. Defaults to "name".
+   *
+   * @return array
+   *   An array of the identifiers of the available types mapped to, depending
+   *   on $info, their names, their data types or their descriptions.
    */
   protected function getTypes($info = 'name') {
     switch ($info) {
@@ -267,7 +270,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
         );
       case 'type':
         return array(
-          'fulltext' => 'text',
+          'fulltext' => 'string',
           'sum' => 'integer',
           'count' => 'integer',
           'max' => 'integer',
@@ -284,6 +287,7 @@ class AddAggregation extends FieldsProcessorPluginBase {
           'first' => t('The First aggregation will simply keep the first encountered field value. This is helpful foremost when you know that a list field will only have a single value.'),
         );
     }
+    return array();
   }
 
   /**
