@@ -440,14 +440,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
 
       // Copy the field information into the $fields array.
-      list ($datasource_id, $property_path) = explode(self::FIELD_ID_SEPARATOR, $key, 2);
+      list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
       $fields[$datasource_id][$property_path] = $field;
     }
 
     $extracted_items = array();
     $ret = array();
     foreach ($items as $datasource_id => $datasource_items) {
-      $field_prefix = $datasource_id . self::FIELD_ID_SEPARATOR;
+      $field_prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
       foreach ($datasource_items as $item_id => $item) {
         if (empty($fields[$datasource_id])) {
           $variables['%index'] = $this->label();
@@ -561,7 +561,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // All field identifiers should start with the datasource ID.
     if (!$prefix) {
-      $prefix = $datasource_id . self::FIELD_ID_SEPARATOR;
+      $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
     }
 
     // Loop over all properties and handle them accordingly.
@@ -833,7 +833,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         try {
           $ids_indexed = $this->indexItems($items);
           foreach ($ids_indexed as $datasource_id => $ids) {
-            $tracker->trackIndexed($this->getDatasource($datasource_id), $ids);
+            $tracker->trackItemsIndexed($this->getDatasource($datasource_id), $ids);
           }
           $count += count($ids_indexed);
         }
@@ -851,7 +851,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function reindex() {
     if ($this->status() && !$this->isReadOnly() && $this->hasValidTracker()) {
-      $this->getTracker()->trackUpdated();
+      $this->getTracker()->trackItemsUpdated();
       return TRUE;
     }
     return FALSE;
@@ -871,7 +871,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function updateItems($datasource_id, array $ids) {
     if ($this->hasValidTracker()) {
-      $this->getTracker()->trackUpdated($datasource_id, $ids);
+      $this->getTracker()->trackItemsUpdated($datasource_id, $ids);
     }
   }
 
@@ -880,7 +880,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function deleteItems($datasource_id, array $ids) {
     if ($this->hasValidTracker()) {
-      $this->getTracker()->trackDeleted($datasource_id, $ids);
+      $this->getTracker()->trackItemsDeleted($datasource_id, $ids);
       if ($this->isServerEnabled()) {
         $this->getServer()->deleteItems($this, $ids);
       }
@@ -994,7 +994,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     /** @var \Drupal\search_api\Index\IndexInterface[] $entities */
     foreach ($entities as $index) {
       if ($index->hasValidTracker()) {
-        $index->getTracker()->trackDeleted();
+        $index->getTracker()->trackItemsDeleted();
       }
       if ($index->hasValidServer()) {
         $index->getServer()->removeIndex($index);

@@ -131,7 +131,7 @@ interface ServiceSpecificInterface {
    *   and the children map field identifiers to arrays containing the following
    *   keys:
    *   - type: One of the data types recognized by the Search API, or the
-   *     special type "tokens" for tokenized fulltext fields.
+   *     special type "tokens" for tokenized fulltext fields (see below).
    *   - original_type: The original type of the property, as defined by the
    *     datasource controller for the index's item type.
    *   - value: An array of values to be indexed for this field. The service
@@ -145,8 +145,10 @@ interface ServiceSpecificInterface {
    *
    *   @code
    *   $items = array(
-   *     'some_item_id' => array(
+   *     'datasource1|some_item_id' => array(
    *       '#item' => $item1,// object
+   *       '#datasource' => 'datasource1',
+   *       '#item_id' => 'some_item_id',
    *       'id' => array(
    *         'type' => 'integer',
    *         'original_type' => 'field_item:integer',
@@ -159,8 +161,10 @@ interface ServiceSpecificInterface {
    *         'boost' => 4.0,
    *       ),
    *     ),
-   *     'another_item_id' => array(
+   *     'datasource2|another_item_id' => array(
    *       '#item' => $item2,// object
+   *       '#datasource' => 'datasource2',
+   *       '#item_id' => 'another_item_id',
    *       'id' => array(
    *         'type' => 'integer',
    *         'original_type' => 'field_item:integer',
@@ -175,9 +179,6 @@ interface ServiceSpecificInterface {
    *     ),
    *   );
    *   @endcode
-   *
-   *   The special field "search_api_language" contains the item's language and
-   *   is always indexed.
    *
    *   The value of fields with the "tokens" type is an array of tokens. Each
    *   token is an array containing the following keys:

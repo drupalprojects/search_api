@@ -115,9 +115,9 @@ class NodeAccess extends ProcessorPluginBase {
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_node_access']['status']);
 
     if (!$old_status && $new_status) {
-      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'status']['type'] = 'boolean';
-      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'author']['type'] = 'integer';
-      $form_state['index']->options['fields']['entity:node' . IndexInterface::FIELD_ID_SEPARATOR . 'author']['entity_type'] = 'user';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'status']['type'] = 'boolean';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'author']['type'] = 'integer';
+      $form_state['index']->options['fields']['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'author']['entity_type'] = 'user';
     }
 
     parent::submitConfigurationForm($form, $form_state);

@@ -48,7 +48,7 @@ class CommentAccess extends NodeAccess {
     $new_status = !empty($form_state['values']['callbacks']['search_api_alter_comment_access']['status']);
 
     if (!$old_status && $new_status) {
-      $form_state['index']->options['fields']['entity:comment' . IndexInterface::FIELD_ID_SEPARATOR . 'status']['type'] = 'boolean';
+      $form_state['index']->options['fields']['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'status']['type'] = 'boolean';
     }
 
     parent::submitConfigurationForm($form, $form_state);

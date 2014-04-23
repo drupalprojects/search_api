@@ -168,7 +168,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackUpdated($datasource = NULL, array $ids = NULL) {
+  public function trackItemsUpdated($datasource_id = NULL, array $ids = NULL) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large UPDATE
@@ -177,8 +177,8 @@ class DefaultTracker extends TrackerPluginBase {
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
         $update->fields(array('changed' => REQUEST_TIME));
-        if ($datasource) {
-          $update->condition('datasource', $datasource);
+        if ($datasource_id) {
+          $update->condition('datasource', $datasource_id);
           if ($ids_chunk) {
             $update->condition('item_id', $ids_chunk);
           }
@@ -195,7 +195,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackIndexed($datasource, array $ids) {
+  public function trackItemsIndexed($datasource, array $ids) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large UPDATE
@@ -218,7 +218,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackDeleted($datasource = NULL, array $ids = NULL) {
+  public function trackItemsDeleted($datasource = NULL, array $ids = NULL) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large DELETE
