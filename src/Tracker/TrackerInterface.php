@@ -20,7 +20,7 @@ interface TrackerInterface extends IndexPluginInterface {
    * @param array $ids
    *   An array of item IDs.
    */
-  public function trackInserted(array $ids);
+  public function trackItemsInserted(array $ids);
 
   /**
    * Tracks items being updated.
@@ -73,8 +73,7 @@ interface TrackerInterface extends IndexPluginInterface {
    *   retrieved.
    *
    * @return array
-   *   An associative array where the keys are datasource IDs and the values are
-   *   arrays of item IDs to index for those datasources.
+   *   An array of IDs of items that still need to be indexed.
    */
   public function getRemainingItems($limit = -1, $datasource = NULL);
 

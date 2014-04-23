@@ -124,14 +124,10 @@ class DefaultTracker extends TrackerPluginBase {
    */
   protected function createRemainingItemsStatement($datasource = NULL) {
     $select = $this->createSelectStatement();
-    $fields = array('item_id');
+    $select->fields('sai', array('item_id'));
     if ($datasource) {
       $select->condition('datasource', $datasource);
     }
-    else {
-      $fields[] = 'datasource';
-    }
-    $select->fields('sai', $fields);
     $select->condition('sai.changed', 0, '>');
     $select->orderBy('sai.changed', 'ASC');
 
@@ -141,7 +137,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackInserted(array $ids) {
+  public function trackItemsInserted(array $ids) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       $index_id = $this->getIndex()->id();
@@ -281,14 +277,7 @@ class DefaultTracker extends TrackerPluginBase {
     if ($limit >= 0) {
       $select->range(0, $limit);
     }
-    if ($datasource) {
-      return $select->execute()->fetchCol();
-    }
-    $items = array();
-    foreach ($select->execute() as $row) {
-      $items[$row->datasource][] = $row->item_id;
-    }
-    return $items;
+    return $select->execute()->fetchCol();
   }
 
   /**

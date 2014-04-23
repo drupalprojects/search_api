@@ -347,12 +347,10 @@ interface IndexInterface extends ConfigEntityInterface {
    * that were either rejected from indexing or were successfully indexed.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
-   *   An associative array mapping datasource IDs to arrays of items to be
-   *   indexed for that datasource.
+   *   An array of items to be indexed, keyed by their item IDs.
    *
    * @return array
-   *   The IDs of all items that should be marked as indexed, returned nested in
-   *   an associative array keyed by datasource IDs.
+   *   The IDs of all items that should be marked as indexed.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If any error occurred during indexing.
@@ -370,41 +368,50 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Adds items from a specific datasource to the index.
    *
+   * Note that this method receives datasource-specific item IDs as the
+   * parameter, not containing the datasource prefix.
+   *
    * @param string $datasource_id
    *   The ID of the datasource to which the items belong.
    * @param array $ids
-   *   An array of item IDs.
+   *   An array of datasource-specific item IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function insertItems($datasource_id, array $ids);
+  public function trackItemsInserted($datasource_id, array $ids);
 
   /**
    * Updates items from a specific datasource present in the index.
    *
+   * Note that this method receives datasource-specific item IDs as the
+   * parameter, not containing the datasource prefix.
+   *
    * @param string $datasource_id
    *   The ID of the datasource to which the items belong.
    * @param array $ids
-   *   An array of item IDs.
+   *   An array of datasource-specific item IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function updateItems($datasource_id, array $ids);
+  public function trackItemsUpdated($datasource_id, array $ids);
 
   /**
    * Deletes items from the index.
    *
+   * Note that this method receives datasource-specific item IDs as the
+   * parameter, not containing the datasource prefix.
+   *
    * @param string $datasource_id
    *   The ID of the datasource to which the items belong.
    * @param array $ids
-   *   An array of items IDs.
+   *   An array of datasource-specific items IDs.
    *
    * @return bool
    *   TRUE if the operation was successful, otherwise FALSE.
    */
-  public function deleteItems($datasource_id, array $ids);
+  public function trackItemsDeleted($datasource_id, array $ids);
 
   /**
    * Clears all items in this index and marks them for reindexing.

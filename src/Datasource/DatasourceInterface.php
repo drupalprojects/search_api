@@ -10,7 +10,22 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 
 /**
- * Describes a datasource.
+ * Describes a type of search items that can be indexed.
+ *
+ * A datasource is used to abstract the type of data that can be indexed and
+ * searched with the Search API. Content entities are supported by default (with
+ * the \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource
+ * datasource), but others can be added by other modules. Datasources provide
+ * all kinds of metadata for search items of their type, as well as loading and
+ * viewing functionality.
+ *
+ * Modules providing new datasources are also responsible for calling the
+ * appropriate track*() methods on all indexes that use that datasource when an
+ * item of that type is inserted, updated or deleted.
+ *
+ * Note that the two load methods in this interface do not receive the normal
+ * combined item IDs (that also include the datasource ID), but only the raw,
+ * datasource-specific IDs.
  */
 interface DatasourceInterface extends IndexPluginInterface {
 
@@ -26,7 +41,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * Loads an item.
    *
    * @param mixed $id
-   *   The ID of an item.
+   *   The datasource-specific ID of the item.
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface|NULL
    *   The loaded item if it could be found, NULL otherwise.
@@ -37,10 +52,11 @@ interface DatasourceInterface extends IndexPluginInterface {
    * Loads multiple items.
    *
    * @param array $ids
-   *   An array of item IDs.
+   *   An array of datasource-specific item IDs.
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface[]
-   *   An associative array of loaded items, keyed by their IDs.
+   *   An associative array of loaded items, keyed by their
+   *   (datasource-specific) IDs.
    */
   public function loadMultiple(array $ids);
 

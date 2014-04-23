@@ -19,7 +19,6 @@ use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
-use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Defines the search index configuration entity.
@@ -28,7 +27,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
  *   id = "search_api_index",
  *   label = @Translation("Search index"),
  *   controllers = {
- *     "storage" = "Drupal\search_api\IndexStorage",
+ *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
  *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",
@@ -446,27 +445,26 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     $extracted_items = array();
     $ret = array();
-    foreach ($items as $datasource_id => $datasource_items) {
-      $field_prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-      foreach ($datasource_items as $item_id => $item) {
-        if (empty($fields[$datasource_id])) {
-          $variables['%index'] = $this->label();
-          $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
-          throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
-        }
-        $extracted_fields = $fields[$datasource_id];
-        Utility::extractFields($item, $extracted_fields);
-        $extracted_item = array();
-        $extracted_item['#item'] = $item;
-        $extracted_item['#item_id'] = $item_id;
-        $extracted_item['#datasource'] = $datasource_id;
-        foreach ($extracted_fields as $property_path => $field) {
-          $extracted_item[$field_prefix . $property_path] = $field;
-        }
-        $extracted_items[] = $extracted_item;
-        // Remember the items that were initially passed.
-        $ret[$datasource_id][$item_id] = $item_id;
+    foreach ($items as $item_id => $item) {
+      list($datasource_id, $raw_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+      if (empty($fields[$datasource_id])) {
+        $variables['%index'] = $this->label();
+        $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
+        throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
       }
+      $extracted_fields = $fields[$datasource_id];
+      Utility::extractFields($item, $extracted_fields);
+      $extracted_item = array();
+      $extracted_item['#item'] = $item;
+      $extracted_item['#item_id'] = $raw_id;
+      $extracted_item['#datasource'] = $datasource_id;
+      $field_prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
+      foreach ($extracted_fields as $property_path => $field) {
+        $extracted_item[$field_prefix . $property_path] = $field;
+      }
+      $extracted_items[$item_id] = $extracted_item;
+      // Remember the items that were initially passed.
+      $ret[$item_id] = $item_id;
     }
 
     // Preprocess the indexed items.
@@ -476,8 +474,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Remove all items still in $extracted_items from $ret. Thus, only the
     // rejected items' IDs are still contained in $ret, to later be returned
     // along with the successfully indexed ones.
-    foreach ($extracted_items as $item) {
-      unset($ret[$item['#datasource']][$item['#item_id']]);
+    foreach ($extracted_items as $item_id => $item) {
+      unset($ret[$item_id]);
     }
 
     // Items that are rejected should also be deleted from the server.
@@ -490,7 +488,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Return the IDs of all items that were either successfully indexed or
     // rejected before being handed to the server.
-    return array_merge_recursive($ret, $this->getServer()->indexItems($this, $extracted_items));
+    return array_merge($ret, $this->getServer()->indexItems($this, $extracted_items));
   }
 
   /**
@@ -815,15 +813,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1', $datasource_id = NULL) {
-    $count = 0;
-
     if ($this->hasValidTracker()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
+      $items_by_datasource = array();
+      foreach ($next_set as $item_id) {
+        list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+        $items_by_datasource[$datasource_id][] = $raw_id;
+      }
       $items = array();
-      foreach ($next_set as $datasource_id => $item_ids) {
+      foreach ($items_by_datasource as $datasource_id => $item_ids) {
         try {
-          $items[$datasource_id] = $this->getDatasource($datasource_id)->loadMultiple($item_ids);
+          $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
+          foreach ($this->getDatasource($datasource_id)->loadMultiple($item_ids) as $raw_id => $item) {
+            $items["$prefix$raw_id"] = $item;
+          }
         }
         catch (SearchApiException $e) {
           watchdog_exception('search_api', $e);
@@ -832,10 +836,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($items) {
         try {
           $ids_indexed = $this->indexItems($items);
-          foreach ($ids_indexed as $datasource_id => $ids) {
-            $tracker->trackItemsIndexed($this->getDatasource($datasource_id), $ids);
-          }
-          $count += count($ids_indexed);
+          $tracker->trackItemsIndexed($ids_indexed);
+          return count($ids_indexed);
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
@@ -843,7 +845,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
     }
-    return $count;
+    return 0;
   }
 
   /**
@@ -851,7 +853,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function reindex() {
     if ($this->status() && !$this->isReadOnly() && $this->hasValidTracker()) {
-      $this->getTracker()->trackItemsUpdated();
+      $this->getTracker()->trackAllItemsUpdated();
       return TRUE;
     }
     return FALSE;
@@ -860,29 +862,44 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function insertItems($datasource_id, array $ids) {
+  public function trackItemsInserted($datasource_id, array $ids) {
+    // @todo Only do this if index is … enabled? Not read-only? Both?
     if ($this->hasValidTracker()) {
-      $this->getTracker()->trackInserted($datasource_id, $ids);
+      $item_ids = array();
+      foreach ($ids as $id) {
+        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
+      }
+      $this->getTracker()->trackItemsInserted($item_ids);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function updateItems($datasource_id, array $ids) {
+  public function trackItemsUpdated($datasource_id, array $ids) {
+    // @todo Only do this if index is … enabled? Not read-only? Both?
     if ($this->hasValidTracker()) {
-      $this->getTracker()->trackItemsUpdated($datasource_id, $ids);
+      $item_ids = array();
+      foreach ($ids as $id) {
+        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
+      }
+      $this->getTracker()->trackItemsUpdated($item_ids);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteItems($datasource_id, array $ids) {
+  public function trackItemsDeleted($datasource_id, array $ids) {
+    // @todo Only do this if index is … enabled? Not read-only? Both?
     if ($this->hasValidTracker()) {
-      $this->getTracker()->trackItemsDeleted($datasource_id, $ids);
+      $item_ids = array();
+      foreach ($ids as $id) {
+        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
+      }
+      $this->getTracker()->trackItemsDeleted($item_ids);
       if ($this->isServerEnabled()) {
-        $this->getServer()->deleteItems($this, $ids);
+        $this->getServer()->deleteItems($this, $item_ids);
       }
     }
   }
@@ -994,7 +1011,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     /** @var \Drupal\search_api\Index\IndexInterface[] $entities */
     foreach ($entities as $index) {
       if ($index->hasValidTracker()) {
-        $index->getTracker()->trackItemsDeleted();
+        $index->getTracker()->trackAllItemsDeleted();
       }
       if ($index->hasValidServer()) {
         $index->getServer()->removeIndex($index);

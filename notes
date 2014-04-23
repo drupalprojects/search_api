@@ -1,4 +1,4 @@
 Find callers of following methods and add a try/catch:
 - IndexInterface::getDatasource()
 Datasource is not included in field labels => when fields are shown in UI (Fields tab, processor "Fields" setting) either separate by datasource or prefix labels manually
-Redefine Server::deleteItems() argument and Server::indexItems() return value to include datasource (unless they become part of the item IDs)
+Redefine Server::trackItemsDeleted() argument and Server::indexItems() return value to include datasource (unless they become part of the item IDs)

@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
 
@@ -51,12 +52,8 @@ function search_api_permission() {
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    /** @var $storage \Drupal\search_api\IndexStorageInterface */
-    $storage = \Drupal::entityManager()->getStorage('search_api_index');
-    $indexes = $storage->getIndexesForEntity($entity);
-
-    foreach ($indexes as $index) {
-      $index->insertItems($index->getDatasource(), array($entity->id()));
+    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
+      $index->trackItemsInserted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
     }
   }
 }
@@ -70,12 +67,8 @@ function search_api_entity_insert(EntityInterface $entity) {
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    /** @var $storage \Drupal\search_api\IndexStorageInterface */
-    $storage = \Drupal::entityManager()->getStorage('search_api_index');
-    $indexes = $storage->getIndexesForEntity($entity);
-
-    foreach ($indexes as $index) {
-      $index->updateItems($index->getDatasource(), array($entity->id()));
+    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
+      $index->trackItemsUpdated('entity:' . $entity->getEntityTypeId(), array($entity->id()));
     }
   }
 }
@@ -89,12 +82,8 @@ function search_api_entity_update(EntityInterface $entity) {
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    /** @var $storage \Drupal\search_api\IndexStorageInterface */
-    $storage = \Drupal::entityManager()->getStorage('search_api_index');
-    $indexes = $storage->getIndexesForEntity($entity);
-
-    foreach ($indexes as $index) {
-      $index->deleteItems($index->getDatasource(), array($entity->id()));
+    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
+      $index->trackItemsDeleted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
     }
   }
 }

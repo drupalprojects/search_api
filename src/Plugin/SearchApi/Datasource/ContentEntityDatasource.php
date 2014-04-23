@@ -6,6 +6,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -110,7 +111,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // If we were unable to delete some of the items, mark them as deleted.
     if ($diff = array_diff_key(array_flip($ids), $items)) {
       // Remove the items from the index.
-      $this->getIndex()->deleteItems($this, array_keys($diff));
+      $this->getIndex()->trackItemsDeleted($this, array_keys($diff));
     }
     return $items;
   }
@@ -231,7 +232,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be inserted.
     if (($entity_ids = $this->getEntityIds())) {
       // Register entities with the tracker.
-      $this->getIndex()->insertItems($this, $entity_ids);
+      $this->getIndex()->trackItemsInserted($this, $entity_ids);
     }
   }
 
@@ -242,7 +243,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be removed.
     if (($entity_ids = $this->getEntityIds())) {
       // Remove the items from the tracker.
-      $this->getIndex()->deleteItems($this, $entity_ids);
+      $this->getIndex()->trackItemsDeleted($this, $entity_ids);
     }
   }
 
@@ -253,7 +254,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be inserted.
     if (($entity_ids = $this->getEntityIds($bundles))) {
       // Register entities with the tracker.
-      $this->getIndex()->insertItems($this, $entity_ids);
+      $this->getIndex()->trackItemsInserted($this, $entity_ids);
     }
   }
 
@@ -264,7 +265,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be removed.
     if (($entity_ids = $this->getEntityIds($bundles))) {
       // Remove the items from the tracker.
-      $this->getIndex()->deleteItems($this, $entity_ids);
+      $this->getIndex()->trackItemsDeleted($this, $entity_ids);
     }
   }
 
@@ -465,6 +466,42 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       $ret[$i] = isset($build[$i]) ? $build[$i] : array();
     }
     return $ret;
+  }
+
+  /**
+   * Retrieves all indexes that are configured to index the given entity.
+   *
+   * @param ContentEntityInterface $entity
+   *   The entity for which to check.
+   *
+   * @return \Drupal\search_api\Index\IndexInterface[]
+   *   All indexes of this class that are configured to index the given entity.
+   */
+  public static function getIndexesForEntity(ContentEntityInterface $entity) {
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    $entity_bundle = $entity->bundle();
+
+    $index_names = \Drupal::entityQuery('search_api_index')
+      ->condition('datasourcePluginIds', $datasource_id)
+      ->execute();
+
+    if (!$index_names) {
+      return array();
+    }
+
+    // Checks whether the indexes include the given entity's bundle.
+    /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
+    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
+    foreach ($indexes as $index_id => $index) {
+      $config = $index->getDatasource($datasource_id)->getConfiguration();
+      $default = !empty($config['default']);
+      $bundle_set = !empty($config['bundles'][$entity_bundle]);
+      if ($default == $bundle_set) {
+        unset($indexes[$index_id]);
+      }
+    }
+
+    return $indexes;
   }
 
 }
