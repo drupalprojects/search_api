@@ -34,6 +34,22 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
   public function setUp() {
     $this->directoryList = array('search_api' => 'modules/search_api');
     parent::setUp();
+
+    $search_api_index_storage = $this->getMockBuilder('Drupal\Core\Config\Entity\ConfigEntityStorage')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $search_api_index_storage->expects($this->once())
+      ->method('loadMultiple')
+      ->will($this->returnValue(array()));
+
+
+    $entity_manager = $this->getMock('\Drupal\Core\Entity\EntityManagerInterface');
+    $entity_manager->expects($this->any())
+      ->method('getStorage')
+      ->with('search_api_index')
+      ->will($this->returnValue($search_api_index_storage));
+
+    \Drupal::getContainer()->set('entity.manager', $entity_manager);
   }
 
   /**
@@ -55,7 +71,7 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
    */
   public function testSearchAPILocalTasksIndex($route) {
     $tasks = array(
-      0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
+      0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_filters'),
     );
     $this->assertLocalTasks($route, $tasks);
   }
@@ -77,7 +93,6 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
     return array(
       array('search_api.index_view'),
       array('search_api.index_edit'),
-      array('search_api.index_fields'),
       array('search_api.index_filters'),
     );
   }
