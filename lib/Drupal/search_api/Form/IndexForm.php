@@ -511,7 +511,7 @@ class IndexForm extends EntityFormController {
     $entity = $this->getEntity();
 
     // Check if the datasource plugin changed.
-    if ($entity->getDatasourceIds() !== array_keys($form_state['values']['datasourcePluginIds'])) {
+    if (!$entity->isNew() && ($entity->getDatasourceIds() !== array_keys($form_state['values']['datasourcePluginIds']))) {
       foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
         // Overwrite the plugin configuration form input values with an empty
         // array. This will force the Drupal Form API to use the default values.
