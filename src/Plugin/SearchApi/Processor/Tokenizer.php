@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
@@ -38,16 +39,6 @@ class Tokenizer extends FieldsProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-
-    // Only make fulltext fields available as options.
-    $fields = $this->index->getFields();
-    $field_options = array();
-    foreach ($fields as $name => $field) {
-      if (empty($field['real_type']) && search_api_is_text_type($field['type'])) {
-        $field_options[$name] = $field['name'];
-      }
-    }
-    $form['fields']['#options'] = $field_options;
 
     $form += array(
       'spaces' => array(
@@ -86,6 +77,13 @@ class Tokenizer extends FieldsProcessorPluginBase {
       $el = $form['ignorable'];
       \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function testType($type) {
+    return Utility::isTextType($type, array('text', 'tokens'));
   }
 
   /**

@@ -232,7 +232,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be inserted.
     if (($entity_ids = $this->getEntityIds())) {
       // Register entities with the tracker.
-      $this->getIndex()->trackItemsInserted($this, $entity_ids);
+      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
     }
   }
 
@@ -243,7 +243,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be removed.
     if (($entity_ids = $this->getEntityIds())) {
       // Remove the items from the tracker.
-      $this->getIndex()->trackItemsDeleted($this, $entity_ids);
+      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
     }
   }
 
@@ -254,7 +254,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be inserted.
     if (($entity_ids = $this->getEntityIds($bundles))) {
       // Register entities with the tracker.
-      $this->getIndex()->trackItemsInserted($this, $entity_ids);
+      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
     }
   }
 
@@ -265,7 +265,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     // Check whether there are entities which need to be removed.
     if (($entity_ids = $this->getEntityIds($bundles))) {
       // Remove the items from the tracker.
-      $this->getIndex()->trackItemsDeleted($this, $entity_ids);
+      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
     }
   }
 

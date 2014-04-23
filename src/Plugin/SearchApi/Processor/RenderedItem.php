@@ -89,8 +89,10 @@ class RenderedItem extends ProcessorPluginBase {
           '#type' => 'select',
           '#title' => t('View mode for data source @datasource', array('@datasource' => $datasource->label())),
           '#options' => $view_modes,
-          '#default_value' => $this->configuration['view_mode'][$datasource_id],
         );
+        if (isset($this->configuration['view_mode'][$datasource_id])) {
+          $form['view_mode'][$datasource_id]['#default_value'] = $this->configuration['view_mode'][$datasource_id];
+        }
       }
       elseif ($view_modes) {
         $form['view_mode'][$datasource_id] = array(
