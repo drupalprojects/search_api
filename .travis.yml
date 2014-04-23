@@ -35,9 +35,11 @@ install:
 before_script:
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  # Move one up
+  - cd ..
   # Get latest drupal 8 core
   - git clone --depth 1 --branch 8.x http://git.drupal.org/project/drupal.git
-  - chmod go-w $TRAVIS_BUILD_DIR/drupal/sites/default
+  - chmod go-w $TRAVIS_BUILD_DIR/../drupal/sites/default
   - cd drupal
   # Install the site
   - drush si standard --db-url=mysql://root:@localhost/drupal --yes
@@ -50,13 +52,10 @@ before_script:
 
 script:
   # go to our Drupal module directory
-  - cd $TRAVIS_BUILD_DIR/drupal/modules/
-  # Get the latest head of the search_api code.
-  # We should figure out how to copy the files from the original checkout there, so it always matches with the commit
-  # tested
-  - git clone --depth 1 --branch master https://github.com/nickveenhof/search-api-sandbox.git search_api
+  - mkdir $TRAVIS_BUILD_DIR/../drupal/modules/search_api
+  - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api/
   # go to our Drupal main directory
-  - cd $TRAVIS_BUILD_DIR/drupal
+  - cd $TRAVIS_BUILD_DIR/../drupal
   # Run the tests
   - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://127.0.0.1:8080 | tee /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
@@ -68,6 +67,6 @@ script:
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)" /tmp/test.txt > /dev/null)$?
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
-  - /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/drupal/modules/search_api
+  - /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
   # Exit the build
   - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
