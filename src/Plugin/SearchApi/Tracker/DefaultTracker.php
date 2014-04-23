@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Tracker;
 
+use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Tracker\TrackerPluginBase;
@@ -140,7 +141,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackInserted($datasource, array $ids) {
+  public function trackInserted(array $ids) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       $index_id = $this->getIndex()->id();
@@ -149,9 +150,10 @@ class DefaultTracker extends TrackerPluginBase {
       foreach (array_chunk($ids, 1000) as $ids_chunk) {
         $insert = $this->createInsertStatement();
         foreach ($ids_chunk as $item_id) {
+          list($datasource_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
           $insert->values(array(
             'index_id' => $index_id,
-            'datasource' => $datasource,
+            'datasource' => $datasource_id,
             'item_id' => $item_id,
             'changed' => REQUEST_TIME,
           ));
@@ -168,7 +170,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackItemsUpdated($datasource_id = NULL, array $ids = NULL) {
+  public function trackItemsUpdated(array $ids = NULL) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large UPDATE
@@ -177,11 +179,8 @@ class DefaultTracker extends TrackerPluginBase {
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
         $update->fields(array('changed' => REQUEST_TIME));
-        if ($datasource_id) {
-          $update->condition('datasource', $datasource_id);
-          if ($ids_chunk) {
-            $update->condition('item_id', $ids_chunk);
-          }
+        if ($ids_chunk) {
+          $update->condition('item_id', $ids_chunk);
         }
         $update->execute();
       }
@@ -195,7 +194,26 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackItemsIndexed($datasource, array $ids) {
+  public function trackAllItemsUpdated($datasource_id = NULL) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      $update = $this->createUpdateStatement();
+      $update->fields(array('changed' => REQUEST_TIME));
+      if ($datasource_id) {
+        $update->condition('datasource', $datasource_id);
+      }
+      $update->execute();
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function trackItemsIndexed(array $ids) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large UPDATE
@@ -204,7 +222,6 @@ class DefaultTracker extends TrackerPluginBase {
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
         $update->fields(array('changed' => 0));
-        $update->condition('datasource', $datasource);
         $update->condition('item_id', $ids_chunk);
         $update->execute();
       }
@@ -218,7 +235,7 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function trackItemsDeleted($datasource = NULL, array $ids = NULL) {
+  public function trackItemsDeleted(array $ids = NULL) {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       // Process the IDs in chunks so we don't create an overly large DELETE
@@ -226,14 +243,29 @@ class DefaultTracker extends TrackerPluginBase {
       $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
       foreach ($ids_chunks as $ids_chunk) {
         $delete = $this->createDeleteStatement();
-        if ($datasource) {
-          $delete->condition('datasource', $datasource);
-          if ($ids_chunk) {
-            $delete->condition('item_id', $ids_chunk);
-          }
+        if ($ids_chunk) {
+          $delete->condition('item_id', $ids_chunk);
         }
         $delete->execute();
       }
+    }
+    catch (\Exception $e) {
+      watchdog_exception('Search API', $e);
+      $transaction->rollback();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function trackAllItemsDeleted($datasource_id = NULL) {
+    $transaction = $this->getDatabaseConnection()->startTransaction();
+    try {
+      $delete = $this->createDeleteStatement();
+      if ($datasource_id) {
+        $delete->condition('datasource', $datasource_id);
+      }
+      $delete->execute();
     }
     catch (\Exception $e) {
       watchdog_exception('Search API', $e);

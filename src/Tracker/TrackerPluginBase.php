@@ -8,9 +8,6 @@
 namespace Drupal\search_api\Tracker;
 
 use Drupal\search_api\Plugin\IndexPluginBase;
-use Drupal\search_api\Tracker\TrackerInterface;
-use Drupal\search_api\Datasource\DatasourceInterface;
-use Drupal\search_api\Exception\SearchApiException;
 
 /**
  * Defines a base class from which other tracker classes may extend.
@@ -35,21 +32,5 @@ use Drupal\search_api\Exception\SearchApiException;
  * @endcode
  */
 abstract class TrackerPluginBase extends IndexPluginBase implements TrackerInterface {
-
-  /**
-   * Validate whether a datasource is attached to our index.
-   *
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   An instance of DatesourceInterface which needs to be validated.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   Thrown when the datasource is not attached to the index.
-   */
-  protected function validateDatasource(DatasourceInterface $datasource) {
-    // Validate whether the datasource is owned by the index.
-    if (!$this->getIndex()->id() !== $datasource->getIndex()->id()) {
-      throw new SearchApiException('Cannot track datatsource due to index mismatch');
-    }
-  }
 
 }

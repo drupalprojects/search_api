@@ -17,45 +17,50 @@ interface TrackerInterface extends IndexPluginInterface {
   /**
    * Tracks items being inserted.
    *
-   * @param string $datasource
-   *   The datasource to which the inserted items belong.
    * @param array $ids
    *   An array of item IDs.
    */
-  public function trackInserted($datasource, array $ids);
+  public function trackInserted(array $ids);
 
   /**
    * Tracks items being updated.
    *
-   * @param string|null $datasource
-   *   (optional) The datasource to which the updated items belong. If NULL,
-   *   $ids is ignored and all tracked items for this index are marked for
-   *   re-indexing.
-   * @param array|null $ids
-   *   (optional) An array of item IDs. Defaults to all tracked items.
+   * @param array $ids
+   *   An array of item IDs.
    */
-  public function trackUpdated($datasource = NULL, array $ids = NULL);
+  public function trackItemsUpdated(array $ids);
+
+  /**
+   * Marks all items as updated, or only those of a specific datasource.
+   *
+   * @param string|null $datasource_id
+   *   (optional) If given, only items of that datasource are marked as updated.
+   */
+  public function trackAllItemsUpdated($datasource_id = NULL);
 
   /**
    * Tracks items being indexed.
    *
-   * @param string $datasource
-   *   The datasource to which the indexed items belong.
    * @param array $ids
    *   An array of item IDs.
    */
-  public function trackIndexed($datasource, array $ids);
+  public function trackItemsIndexed(array $ids);
 
   /**
    * Tracks items being deleted.
    *
-   * @param string|null $datasource
-   *   (optional) The datasource to which the deleted items belong. If NULL,
-   *   $ids is ignored and all tracked items are deleted for this index.
    * @param array|null $ids
-   *   (optional) An array of item IDs. Defaults to all tracked items.
+   *   An array of item IDs.
    */
-  public function trackDeleted($datasource = NULL, array $ids = NULL);
+  public function trackItemsDeleted(array $ids);
+
+  /**
+   * Marks all items as deleted, or only those of a specific datasource.
+   *
+   * @param string|null $datasource_id
+   *   (optional) If given, only items of that datasource are marked as deleted.
+   */
+  public function trackAllItemsDeleted($datasource_id = NULL);
 
   /**
    * Retrieves a list of item IDs that need to be indexed.
@@ -68,10 +73,8 @@ interface TrackerInterface extends IndexPluginInterface {
    *   retrieved.
    *
    * @return array
-   *   If no datasource ID was given, an associative array where the keys are
-   *   datasource IDs and the values are arrays of item IDs to index for those
-   *   datasources. Otherwise, an array of item IDs to index for the given
-   *   datasource.
+   *   An associative array where the keys are datasource IDs and the values are
+   *   arrays of item IDs to index for those datasources.
    */
   public function getRemainingItems($limit = -1, $datasource = NULL);
 
