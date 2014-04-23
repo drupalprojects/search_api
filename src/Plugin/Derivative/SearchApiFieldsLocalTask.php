@@ -8,8 +8,8 @@
 namespace Drupal\search_api\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DerivativeBase;
+use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
-use Drupal\search_api\IndexStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,18 +20,18 @@ class SearchApiFieldsLocalTask extends DerivativeBase implements ContainerDeriva
   /**
    * The index storage.
    *
-   * @var \Drupal\search_api\IndexStorageInterface
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorage
    */
-  protected $indexStorage;
+  protected $storage;
 
   /**
    * Constructs a new SearchApiFieldsLocalTask object.
    *
-   * @param \Drupal\search_api\IndexStorageInterface $index_storage
+   * @param \Drupal\Core\Config\Entity\ConfigEntityStorage $storage
    *   The index storage.
    */
-  public function __construct(IndexStorageInterface $index_storage) {
-    $this->indexStorage = $index_storage;
+  public function __construct(ConfigEntityStorage $storage) {
+    $this->storage = $storage;
   }
 
   /**
@@ -49,7 +49,7 @@ class SearchApiFieldsLocalTask extends DerivativeBase implements ContainerDeriva
   public function getDerivativeDefinitions($base_plugin_definition) {
     $this->derivatives = array();
 
-    foreach ($this->indexStorage->loadMultiple() as $index) {
+    foreach ($this->storage->loadMultiple() as $index) {
       /** @var $index \Drupal\search_api\Index\IndexInterface */
       $this->derivatives[$index->id()] = array(
         'title' => 'Fields',
