@@ -30,7 +30,8 @@ install:
   - composer global require drush/drush:dev-master --prefer-source
   - cd /home/travis/.composer/vendor/drush/drush && cd -
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-  - composer global require drupal/coder:\>7
+  # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
+  #- composer global require drupal/coder:\>7
 
 before_script:
   # Set sendmail so drush doesn't throw an error during site install.
@@ -67,6 +68,7 @@ script:
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)" /tmp/test.txt > /dev/null)$?
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
-  - /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
+  # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
+  #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
   # Exit the build
   - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
