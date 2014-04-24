@@ -1,10 +1,18 @@
 <?php
 
 /**
- * Class for testing index and search capabilities using the Database search
- * module.
+ * @file
+ * Contains \Drupal\search_api\Tests\SearchApiDbTest.
  */
-class SearchApiDbTest extends DrupalWebTestCase {
+
+namespace Drupal\search_api\Tests;
+
+use Drupal\simpletest\WebTestBase;
+
+/**
+ * Tests index and search capabilities using the Database search service.
+ */
+class SearchApiDbTest extends WebTestBase {
 
   protected $server_id;
   protected $index_id;
