@@ -76,9 +76,9 @@ search_api.index.*:
       label: 'Datasource plugin IDs'
       sequence:
         - type: string
-    datasourcePluginConfigs:
-      # How to do this properly?
-      type: mapping
+    # How to do this properly?
+    #datasourcePluginConfigs:
+    #  type: mapping
     trackerPluginId:
       type: string
       label: 'Tracker plugin ID'

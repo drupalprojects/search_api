@@ -510,19 +510,24 @@ class IndexForm extends EntityFormController {
     /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
 
+    // Store the array of datasource plugin IDs with integer keys.
+    $form_state['values']['datasourcePluginIds'] = array_values($form_state['values']['datasourcePluginIds']);
+
     // Check if the datasource plugin changed.
-    if (!$entity->isNew() && ($entity->getDatasourceIds() !== array_keys($form_state['values']['datasourcePluginIds']))) {
-      foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
-        // Overwrite the plugin configuration form input values with an empty
-        // array. This will force the Drupal Form API to use the default values.
-        if (!empty($form_state['input']['datasourcePluginConfigs'][$datasource_id])) {
-          $form_state['input']['datasourcePluginConfigs'][$datasource_id] = array();
-        }
-        // Overwrite the plugin configuration form values with an empty array.
-        // This has no effect on the Drupal Form API but is done to keep the
-        // data consistent.
-        if (!empty($form_state['values']['datasourcePluginConfigs'][$datasource_id])) {
-          $form_state['values']['datasourcePluginConfigs'][$datasource_id] = array();
+    if ($entity->getDatasourceIds() !== $form_state['values']['datasourcePluginIds']) {
+      if (!$entity->isNew()) {
+        foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
+          // Overwrite the plugin configuration form input values with an empty
+          // array. This will force the Drupal Form API to use the default values.
+          if (!empty($form_state['input']['datasourcePluginConfigs'][$datasource_id])) {
+            $form_state['input']['datasourcePluginConfigs'][$datasource_id] = array();
+          }
+          // Overwrite the plugin configuration form values with an empty array.
+          // This has no effect on the Drupal Form API but is done to keep the
+          // data consistent.
+          if (!empty($form_state['values']['datasourcePluginConfigs'][$datasource_id])) {
+            $form_state['values']['datasourcePluginConfigs'][$datasource_id] = array();
+          }
         }
       }
     }

@@ -482,7 +482,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     $entity_bundle = $entity->bundle();
 
     $index_names = \Drupal::entityQuery('search_api_index')
-      ->condition('datasourcePluginIds', $datasource_id)
+      ->condition('datasourcePluginIds.*', $datasource_id)
       ->execute();
 
     if (!$index_names) {

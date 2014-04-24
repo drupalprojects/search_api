@@ -156,11 +156,11 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->assertResponse(200);
 
     $edit = array(
-      'fields[nid][indexed]' => 1,
-      'fields[title][indexed]' => 1,
-      'fields[title][type]' => 'text',
-      'fields[title][boost]' => '21.0',
-      'fields[body][indexed]' => 1,
+      'fields[entity:node|nid][indexed]' => 1,
+      'fields[entity:node|title][indexed]' => 1,
+      'fields[entity:node|title][type]' => 'text',
+      'fields[entity:node|title][boost]' => '21.0',
+      'fields[entity:node|body][indexed]' => 1,
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
@@ -170,24 +170,24 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields();
 
-    $this->assertEqual($fields['nid']['indexed'], $edit['fields[nid][indexed]'], t('nid field is indexed.'));
-    $this->assertEqual($fields['title']['indexed'], $edit['fields[title][indexed]'], t('title field is indexed.'));
-    $this->assertEqual($fields['title']['type'], $edit['fields[title][type]'], t('title field type is text.'));
-    $this->assertEqual($fields['title']['boost'], $edit['fields[title][boost]'], t('title field boost value is 21.'));
+    $this->assertEqual($fields['entity:node|nid']['indexed'], $edit['fields[entity:node|nid][indexed]'], t('nid field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']['indexed'], $edit['fields[entity:node|title][indexed]'], t('title field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']['type'], $edit['fields[entity:node|title][type]'], t('title field type is text.'));
+    $this->assertEqual($fields['entity:node|title']['boost'], $edit['fields[entity:node|title][boost]'], t('title field boost value is 21.'));
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.
-    $this->assertEqual($fields['body']['type'], 'text', 'Complex field mapping relationship works.');
+    $this->assertEqual($fields['entity:node|body']['type'], 'text', 'Complex field mapping relationship works.');
   }
 
   protected function addAdditionalFieldsToIndex() {
     // Test that an entity reference field which targets a content entity is
     // shown.
-    $this->assertFieldByName('additional[field][uid]', NULL, 'Additional entity reference field targeting a content entity type is displayed.');
+    $this->assertFieldByName('additional[field][entity:node|uid]', NULL, 'Additional entity reference field targeting a content entity type is displayed.');
 
     // Test that an entity reference field which targets a config entity is not
     // shown as an additional field option.
-    $this->assertNoFieldByName('additional[field][type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
+    $this->assertNoFieldByName('additional[field][entity:node|type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
 
     // @todo Implement more tests for additional fields.
   }
@@ -214,9 +214,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfig[default]' => 0,
-      'datasourcePluginConfig[bundles][article]' => FALSE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -231,9 +231,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 0,
-      'datasourcePluginConfig[bundles][article]' => TRUE,
-      'datasourcePluginConfig[bundles][page]' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -249,9 +249,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfig[default]' => 0,
-      'datasourcePluginConfig[bundles][article]' => FALSE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -265,9 +265,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 0,
-      'datasourcePluginConfig[bundles][article]' => TRUE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -282,9 +282,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 0,
-      'datasourcePluginConfig[bundles][article]' => FALSE,
-      'datasourcePluginConfig[bundles][page]' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -297,9 +297,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 1,
-      'datasourcePluginConfig[bundles][article]' => TRUE,
-      'datasourcePluginConfig[bundles][page]' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 1,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -312,9 +312,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfig[default]' => 1,
-      'datasourcePluginConfig[bundles][article]' => FALSE,
-      'datasourcePluginConfig[bundles][page]' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 1,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
