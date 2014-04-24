@@ -34,7 +34,7 @@ class NodeStatus extends ProcessorPluginBase {
   public function preprocessIndexItems(array &$items) {
     foreach ($items as $id => &$item) {
       // @todo Only process nodes (check '#datasource' key).
-      if (empty($item['#item']->status)) {
+      if (!$item['#item']->isPublished()) {
         unset($items[$id]);
       }
     }

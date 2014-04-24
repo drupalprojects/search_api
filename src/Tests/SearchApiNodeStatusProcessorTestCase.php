@@ -1,19 +1,19 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiNodeStatusProcessorTestCase
+ * Contains \Drupal\search_api\Tests\SearchApiNodeStatusProcessorTestCase.
  */
+
 namespace Drupal\search_api\Tests;
 
-use Drupal\node\Entity\Node;
-use \Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus;
-use Drupal\simpletest\DrupalUnitTestBase;
+use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
- * Tests the NodeStatus Processor Plugin
+ * Tests the NodeStatus processor.
  */
-class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
+class SearchApiNodeStatusProcessorTestCase extends EntityUnitTestBase {
 
   /**
    * Modules to enable for this test.
@@ -43,9 +43,15 @@ class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
   /**
    * Creates a new processor object for use in the tests.
    */
-  protected function setUp() {
+  public function setUp() {
     parent::setUp();
     $this->processor = new NodeStatus(array(), 'search_api_node_status_processor', array());
+
+    $this->installSchema('node', array('node', 'node_field_data', 'node_field_revision', 'node_revision'));
+
+    // Create a node type for testing.
+    $type = entity_create('node_type', array('type' => 'page', 'name' => 'page'));
+    $type->save();
   }
 
   /**
@@ -79,7 +85,7 @@ class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
    * Tests that items with status set to 1 are not removed.
    */
   public function testNodeStatusWithOneStatus() {
-    $items = $this->generateItems(50, 1);
+    $items = $this->generateItems(50, TRUE);
     $this->processor->preprocessIndexItems($items);
     $this->assertEqual(count($items), 50);
   }
@@ -122,7 +128,7 @@ class SearchApiNodeStatusProcessorTestCase extends DrupalUnitTestBase {
    *   An array of items to be indexed.
    */
   protected function generateItems($number_of_items, $status = NULL) {
-    $item = new Node(array('status' => $status), 'node');
+    $item = entity_create('node', array('status' => $status, 'type' => 'page'));
     $generated_items = array();
     for ($i = 0; $i < $number_of_items; $i++) {
       $generated_items[] = array(
