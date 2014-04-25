@@ -26,16 +26,33 @@ mysql:
   username: root
   encoding: utf8
 
+# To be able to run a webbrowser
+# If we need anything more powerful
+# than e.g. phantomjs
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+
 install:
+  # Grab Drush
   - composer global require drush/drush:dev-master --prefer-source
   - cd /home/travis/.composer/vendor/drush/drush && cd -
+  # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  # LAMP package installation (mysql is already started)
+  - sudo apt-get install -y --force-yes apache2 libapache2-mod-php5 php5-mysql php5-curl
+  # Apache webserver configuration
+  - sudo sed -i -e "s,/var/www,$TRAVIS_BUILD_DIR/../drupal,g" /etc/apache2/sites-available/default
+  - sudo a2enmod rewrite
+  - sudo a2enmod actions
+  - sudo service apache2 restart
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- composer global require drupal/coder:\>7
 
 before_script:
   # Set sendmail so drush doesn't throw an error during site install.
-  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - sudo echo "sendmail_path='true'" >> sudo `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - sudo echo "error_log=syslog" >> sudo `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Move one up
   - cd ..
   # Get latest drupal 8 core
@@ -43,11 +60,9 @@ before_script:
   - chmod go-w $TRAVIS_BUILD_DIR/../drupal/sites/default
   - cd drupal
   # Install the site
-  - drush si standard --db-url=mysql://root:@localhost/drupal --yes
+  - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
   - drush en --yes simpletest
   - drush cr
-  # Get a server running
-  - drush runserver --server=builtin 8080 &
   - sleep 4
   - phpenv rehash
 
@@ -58,7 +73,7 @@ script:
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
   # Run the tests
-  - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://127.0.0.1:8080 | tee /tmp/test.txt
+  - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://localhost | tee /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
   # Check if we had fails in the run-tests.sh script
   # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
@@ -70,5 +85,8 @@ script:
   # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- /home/travis/.composer/vendor/bin/phpcs --standard=/home/travis/.composer/vendor/drupal/coder/coder_sniffer/Drupal --extensions=php,inc,test,module,install --ignore=css/ $TRAVIS_BUILD_DIR/../drupal/modules/search_api
+  - php -i | grep 'php.ini'
+  - sudo cat /var/log/apache2/error.log
+  - sudo cat /var/log/syslog | grep 'php'
   # Exit the build
   - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
