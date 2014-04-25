@@ -91,4 +91,11 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
     $this->setConfiguration($form_state['values']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    return array();
+  }
+
 }
