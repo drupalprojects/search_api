@@ -51,8 +51,8 @@ install:
 
 before_script:
   # Set sendmail so drush doesn't throw an error during site install.
-  - sudo echo "sendmail_path='true'" >> sudo `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
-  - sudo echo "error_log=syslog" >> sudo `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Move one up
   - cd ..
   # Get latest drupal 8 core
