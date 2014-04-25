@@ -65,7 +65,7 @@ script:
   # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
   # bit.
   # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
-  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)" /tmp/test.txt > /dev/null)$?
+  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
