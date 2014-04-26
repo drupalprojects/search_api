@@ -1036,7 +1036,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     $time_method_called = microtime(TRUE);
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
-    if (empty($this->configuration['indexes'][$index->id()])) {
+    if (!isset($this->configuration['indexes'][$index->id()])) {
       throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
@@ -1206,8 +1206,17 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       $this->warnings[$msg] = 1;
     }
 
+    // Since the 'search_api_language' field might not be always available
+    // anymore, try to use the first field and throw an exception if no field is
+    // defined.
+    // @todo Any other ideas about what to do here?
+    if (empty($fields)) {
+      throw new SearchApiException(t('Unknown field @field specified as search target.', array('@field' => $name)));
+    }
+
     if (!isset($db_query)) {
-      $db_query = $this->database->select($fields['search_api_language']['table'], 't');
+      $field = reset($fields);
+      $db_query = $this->database->select($field['table'], 't');
       $db_query->addField('t', 'item_id', 'item_id');
       $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
       $db_query->distinct();
