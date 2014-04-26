@@ -320,7 +320,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *     "value".
    */
   protected function createFieldTable(IndexInterface $index, $field, &$db) {
-    $type = search_api_extract_inner_type($field['type']);
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -328,19 +327,17 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         'module' => 'search_api_db',
         'fields' => array(
           'item_id' => array(
+            // @todo We can't support any other type until the datasouce can
+            // give us the data definition of the ID property.
+            'type' => 'varchar',
+            // A length of 255 is overkill for IDs. 50 should be more than
+            // enough.
+            'length' => 50,
             'description' => 'The primary identifier of the item.',
             'not null' => TRUE,
           ),
         ),
       );
-      // The type of the item_id field depends on the ID field's type.
-      $id_field = $index->datasource()->getIdFieldInfo();
-      $table['fields']['item_id'] += $this->sqlType($id_field['type'] == 'text' ? 'string' : $id_field['type']);
-      if (isset($table['fields']['item_id']['length'])) {
-        // A length of 255 is overkill for IDs. 50 should be more than enough.
-        $table['fields']['item_id']['length'] = 50;
-      }
-
       $this->database->schema()->createTable($db['table'], $table);
 
       // Some DBMSs will need a character encoding and collation set.
@@ -361,11 +358,11 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     if (!isset($db['column'])) {
       $db['column'] = 'value';
     }
-    $db_field = $this->sqlType($type);
+    $db_field = $this->sqlType($field['type']);
     $db_field += array(
       'description' => "The field's value for this item.",
     );
-    if ($new_table && search_api_is_list_type($field['type'])) {
+    if ($new_table) {
       $db_field['not null'] = TRUE;
     }
     $this->database->schema()->addField($db['table'], $db['column'], $db_field);
@@ -376,15 +373,8 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       $this->database->schema()->addIndex($db['table'], $db['column'], array($db['column']));
     }
     if ($new_table) {
-      if (search_api_is_list_type($field['type'])) {
-        // Add a covering index for lists.
-        $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
-      }
-      else {
-        // Otherwise, a denormalized table with many columns, where we can't
-        // predict the best covering index.
-        $this->database->schema()->addPrimaryKey($db['table'], array('item_id'));
-      }
+      // Add a covering index for lists.
+      $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
     }
   }
 
@@ -402,7 +392,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   If $type is unknown.
    */
   protected function sqlType($type) {
-    $type = search_api_extract_inner_type($type);
     switch ($type) {
       case 'string':
       case 'uri':
@@ -454,38 +443,34 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         $new_type = $new_fields[$name]['type'];
         $fields[$name]['type'] = $new_type;
         $fields[$name]['boost'] = $new_fields[$name]['boost'];
-        $old_inner_type = search_api_extract_inner_type($old_type);
-        $new_inner_type = search_api_extract_inner_type($new_type);
         if ($old_type != $new_type) {
           $change = TRUE;
-          $list_old = (bool) search_api_list_nesting_level($old_type);
-          $list_new = (bool) search_api_list_nesting_level($new_type);
-          if ($old_inner_type == 'text' || $new_inner_type == 'text' || $list_old != $list_new) {
-            // A change in fulltext or list status necessitates completely
-            // clearing the index.
+          if ($old_type == 'text' || $new_type == 'text') {
+            // A change in fulltext status necessitates completely clearing the
+            // index.
             $reindex = TRUE;
             if (!$cleared) {
               $cleared = TRUE;
-              $this->deleteItems('all', $index);
+              $this->deleteAllItems($index);
             }
             $this->removeFieldStorage($name, $field);
             // Keep the table in $new_fields to create the new storage.
             continue;
           }
-          elseif ($this->sqlType($old_inner_type) != $this->sqlType($new_inner_type)) {
+          elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
             // There is a change in SQL type. We don't have to clear the index,
             // since types can be converted.
             $column = isset($field['column']) ? $field['column'] : 'value';
             $this->database->schema()->changeField($field['table'], $column, $column, $this->sqlType($new_type) + array('description' => "The field's value for this item."));
             $reindex = TRUE;
           }
-          elseif ($old_inner_type == 'date' || $new_inner_type == 'date') {
+          elseif ($old_type == 'date' || $new_type == 'date') {
             // Even though the SQL type stays the same, we have to reindex since
             // conversion rules change.
             $reindex = TRUE;
           }
         }
-        elseif ($new_inner_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
+        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
           $change = TRUE;
           if (!$reindex) {
             $multiplier = $new_fields[$name]['boost'] / $field['boost'];
@@ -541,6 +526,12 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           'module' => 'search_api_db',
           'fields' => array(
             'item_id' => array(
+              // @todo We can't support any other type until the datasouce can
+              // give us the data definition of the ID property.
+              'type' => 'varchar',
+              // A length of 255 is overkill for IDs. 50 should be more than
+              // enough.
+              'length' => 50,
               'description' => 'The primary identifier of the item.',
               'not null' => TRUE,
             ),
@@ -570,13 +561,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           // Add a covering index since word is not repeated for each item.
           'primary key' => array('item_id', 'field_name', 'word'),
         );
-        // The type of the item_id field depends on the ID field's type.
-        $id_field = $index->datasource()->getIdFieldInfo();
-        $table['fields']['item_id'] += $this->sqlType($id_field['type'] == 'text' ? 'string' : $id_field['type']);
-        if (isset($table['fields']['item_id']['length'])) {
-          // A length of 255 is overkill for IDs. 50 should be more than enough.
-          $table['fields']['item_id']['length'] = 50;
-        }
         $this->database->schema()->createTable($text_table, $table);
 
         // Some DBMSs will need a character encoding and collation set. Since
@@ -633,7 +617,8 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   only need a single row), FALSE otherwise.
    */
   protected function canDenormalize($field) {
-    return !search_api_is_list_type($field['type']) && !Utility::isTextType($field['type']);
+    // @todo We currently treat all fields as multi-valued fields.
+    return FALSE;
   }
 
   /**
@@ -756,7 +741,16 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           continue;
         }
         $type = $field['type'];
-        $value = $this->convert($field['value'], $type, $field['original_type'], $index);
+        $value = array();
+        foreach ($field['value'] as $field_value) {
+          $converted_value = $this->convert($field_value, $type, $field['original_type'], $index);
+
+          // Don't add NULL values to the return array. Also, adding an empty
+          // array is, of course, a waste of time.
+          if (isset($converted_value) && $converted_value !== array()) {
+            $value = array_merge($value, is_array($converted_value) ? $converted_value : array($converted_value));
+          }
+        }
 
         if (Utility::isTextType($type, array('text', 'tokens'))) {
           $words = array();
@@ -796,7 +790,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             }
           }
         }
-        elseif (search_api_is_list_type($type)) {
+        else {
           $values = array();
           if (is_array($value)) {
             foreach ($value as $v) {
@@ -820,9 +814,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             }
             $insert->execute();
           }
-        }
-        elseif (isset($value)) {
-          $inserts[$table][$fields[$name]['column']] = $value;
         }
       }
       foreach ($inserts as $table => $data) {
@@ -884,23 +875,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   If $type is unknown.
    */
   protected function convert($value, $type, $original_type, IndexInterface $index) {
-    if (search_api_is_list_type($type)) {
-      $type = substr($type, 5, -1);
-      $original_type = search_api_extract_inner_type($original_type);
-      $ret = array();
-      if (is_array($value)) {
-        foreach ($value as $v) {
-          $v = $this->convert($v, $type, $original_type, $index);
-
-          // Don't add NULL values to the return array. Also, adding an empty
-          // array is, of course, a waste of time.
-          if (isset($v) && $v !== array()) {
-            $ret = array_merge($ret, is_array($v) ? $v : array($v));
-          }
-        }
-      }
-      return $ret;
-    }
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
       return Utility::isTextType($type, array('text', 'tokens')) ? array() : NULL;
@@ -1106,27 +1080,28 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             $db_query->orderBy('item_id', $order);
             continue;
           }
-          if (!isset($fields[$field_name])) {
-            throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
-          }
-          $field = $fields[$field_name];
-          if (search_api_is_list_type($field['type'])) {
-            throw new SearchApiException(t('Cannot sort on field @field of a list type.', array('@field' => $field_name)));
-          }
-          if (Utility::isTextType($field['type'])) {
-            throw new SearchApiException(t('Cannot sort on fulltext field @field.', array('@field' => $field_name)));
-          }
-          $alias = $this->getTableAlias($field, $db_query);
-          $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
+          // @todo We cannot sort on anything else right now since all fields
+          // can be multi-valued.
+          throw new SearchApiException(t('Cannot sort on field @field.', array('@field' => $field_name)));
+
+          //if (!isset($fields[$field_name])) {
+          //  throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
+          //}
+          //$field = $fields[$field_name];
+          //if (Utility::isTextType($field['type'])) {
+          //  throw new SearchApiException(t('Cannot sort on fulltext field @field.', array('@field' => $field_name)));
+          //}
+          //$alias = $this->getTableAlias($field, $db_query);
+          //$db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
           // PostgreSQL automatically adds a field to the SELECT list when
           // sorting on it. Therefore, if we have aggregrations present we also
           // have to add the field to the GROUP BY (since Drupal won't do it for
           // us). However, if no aggregations are present, a GROUP BY would lead
           // to another error. Therefore, we only add it if there is already a
           // GROUP BY.
-          if ($db_query->getGroupBy()) {
-            $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
-          }
+          //if ($db_query->getGroupBy()) {
+          //  $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
+          //}
         }
       }
       else {
@@ -1207,7 +1182,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             throw new SearchApiException(t('Unknown field @field specified as search target.', array('@field' => $name)));
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
-            $types = search_api_field_types();
+            $types = Utility::getDataTypes();
             $type = $types[$fields[$name]['type']];
             throw new SearchApiException(t('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }
@@ -1599,9 +1574,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'NOT IN' : 'IN');
         }
         else {
-          $new_join = search_api_is_list_type($field['type'])
-              && ($filter->getConjunction() == 'AND'
-                  || empty($first_join[$f[0]]));
+          $new_join = ($filter->getConjunction() == 'AND' || empty($first_join[$f[0]]));
           if ($new_join || empty($tables[$f[0]])) {
             $tables[$f[0]] = $this->getTableAlias($field, $db_query, $new_join);
             $first_join[$f[0]] = TRUE;
@@ -1687,7 +1660,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         $filters = &$or_query->getFilter()->getFilters();
         $tag = 'facet:' . $facet['field'];
         foreach ($filters as $filter_id => $filter) {
-          if ($filter instanceof SearchApiQueryFilterInterface && $filter->hasTag($tag)) {
+          if ($filter instanceof FilterInterface && $filter->hasTag($tag)) {
             unset($filters[$filter_id]);
           }
         }
