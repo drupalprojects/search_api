@@ -14,6 +14,7 @@ use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Service\ServicePluginBase;
 use Drupal\search_api\Service\ServiceExtraInfoInterface;
@@ -79,7 +80,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   public function buildConfigurationForm(array $form, array &$form_state) {
     // Discern between creation and editing of a server, since we don't allow
     // the database to be changed later on.
-    if (empty($this->options)) {
+    if (empty($this->configuration)) {
       global $databases;
       foreach ($databases as $key => $targets) {
         foreach ($targets as $target => $info) {
@@ -109,22 +110,22 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         'database' => array(
           '#type' => 'value',
           '#title' => t('Database'), // Slight hack for the "View server" page.
-          '#value' => $this->options['database'],
+          '#value' => $this->configuration['database'],
         ),
         'database_text' => array(
           '#type' => 'item',
           '#title' => t('Database'),
-          '#markup' => String::checkPlain(str_replace(':', ' > ', $this->options['database'])),
+          '#markup' => String::checkPlain(str_replace(':', ' > ', $this->configuration['database'])),
         ),
       );
     }
 
     // Set default settings.
-    $options = $this->options + array(
+    $configuration = $this->configuration + array(
       'min_chars' => 1,
       'autocomplete' => array(),
     );
-    $options['autocomplete'] += array(
+    $configuration['autocomplete'] += array(
       'suggest_suffix' => TRUE,
       'suggest_words' => TRUE,
     );
@@ -134,7 +135,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       '#title' => t('Minimum word length'),
       '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
       '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
-      '#default_value' => $options['min_chars'],
+      '#default_value' => $configuration['min_chars'],
     );
 
     if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
@@ -149,13 +150,13 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         '#type' => 'checkbox',
         '#title' => t('Suggest word endings'),
         '#description' => t('Suggest endings for the currently entered word.'),
-        '#default_value' => $options['autocomplete']['suggest_suffix'],
+        '#default_value' => $configuration['autocomplete']['suggest_suffix'],
       );
       $form['autocomplete']['suggest_words'] = array(
         '#type' => 'checkbox',
         '#title' => t('Suggest additional words'),
         '#description' => t('Suggest additional words the user might want to search for.'),
-        '#default_value' => $options['autocomplete']['suggest_words'],
+        '#default_value' => $configuration['autocomplete']['suggest_words'],
       );
     }
 
@@ -185,10 +186,10 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * {@inheritdoc}
    */
   public function preDelete() {
-    if (empty($this->options['indexes'])) {
+    if (empty($this->configuration['indexes'])) {
       return;
     }
-    foreach ($this->options['indexes'] as $index) {
+    foreach ($this->configuration['indexes'] as $index) {
       foreach ($index as $field) {
         // Some fields share a de-normalized table, brute force since
         // everything is going.
@@ -206,19 +207,19 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     try {
       // If there are no fields, we can take a shortcut.
       if (!$index->getFields()) {
-        if (!isset($this->options['indexes'][$index->id()])) {
-          $this->options['indexes'][$index->id()] = array();
+        if (!isset($this->configuration['indexes'][$index->id()])) {
+          $this->configuration['indexes'][$index->id()] = array();
           $this->server->save();
         }
-        elseif ($this->options['indexes'][$index->id()]) {
+        elseif ($this->configuration['indexes'][$index->id()]) {
           $this->removeIndex($index);
-          $this->options['indexes'][$index->id()] = array();
+          $this->configuration['indexes'][$index->id()] = array();
           $this->server->save();
         }
         return;
       }
-      $this->options += array('indexes' => array());
-      $this->options['indexes'] += array($index->id() => array());
+      $this->configuration += array('indexes' => array());
+      $this->configuration['indexes'] += array($index->id() => array());
     }
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
@@ -428,7 +429,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function fieldsUpdated(IndexInterface $index) {
     try {
-      $fields = &$this->options['indexes'][$index->id()];
+      $fields = &$this->configuration['indexes'][$index->id()];
       $new_fields = $index->getFields();
 
       $reindex = FALSE;
@@ -663,12 +664,12 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function removeIndex(IndexInterface $index) {
     try {
-      if (!isset($this->options['indexes'][$index->id()])) {
+      if (!isset($this->configuration['indexes'][$index->id()])) {
         return;
       }
       // Don't delete the index data of read-only indexes!
       if (!$index->isReadOnly()) {
-        foreach ($this->options['indexes'][$index->id()] as $field) {
+        foreach ($this->configuration['indexes'][$index->id()] as $field) {
           // Some fields share a de-normalized table, brute force since
           // everything is going.
           if ($this->database->schema()->tableExists($field['table'])) {
@@ -676,7 +677,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           }
         }
       }
-      unset($this->options['indexes'][$index->id()]);
+      unset($this->configuration['indexes'][$index->id()]);
       $this->server->save();
     }
     // The database operations might throw PDO or other exceptions, so we catch
@@ -690,7 +691,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
-    if (empty($this->options['indexes'][$index->id()])) {
+    if (empty($this->configuration['indexes'][$index->id()])) {
       throw new SearchApiException(t('No field settings for index with id @id.', array('@id' => $index->id())));
     }
     $indexed = array();
@@ -735,10 +736,10 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         // correctly. Therefore, to avoid DB errors, we re-check the tables
         // here before indexing.
         if (empty($fields[$name]['table']) && !$fields_updated) {
-          unset($this->options['indexes'][$index->id()][$name]);
+          unset($this->configuration['indexes'][$index->id()][$name]);
           $this->fieldsUpdated($index);
           $fields_updated = TRUE;
-          $fields = $this->options['indexes'][$index->id()];
+          $fields = $this->configuration['indexes'][$index->id()];
         }
         if (empty($fields[$name]['table'])) {
           watchdog('search_api_db', "Unknown field !field: please check (and re-save) the index's fields settings.",
@@ -771,7 +772,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
-            elseif (drupal_strlen($value) < $this->options['min_chars']) {
+            elseif (drupal_strlen($value) < $this->configuration['min_chars']) {
               continue;
             }
             $value = Unicode::strtolower($value);
@@ -1003,10 +1004,10 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function deleteItems(IndexInterface $index, array $ids) {
     try {
-      if (empty($this->options['indexes'][$index->id()])) {
+      if (empty($this->configuration['indexes'][$index->id()])) {
         return;
       }
-      foreach ($this->options['indexes'][$index->id()] as $field) {
+      foreach ($this->configuration['indexes'][$index->id()] as $field) {
         $this->database->delete($field['table'])
           ->condition('item_id', $ids, 'IN')
           ->execute();
@@ -1025,11 +1026,11 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   public function deleteAllItems(IndexInterface $index = NULL) {
     try {
       if (!$index) {
-        if (empty($this->options['indexes'])) {
+        if (empty($this->configuration['indexes'])) {
           return;
         }
         $truncated = array();
-        foreach ($this->options['indexes'] as $fields) {
+        foreach ($this->configuration['indexes'] as $fields) {
           foreach ($fields as $field) {
             if (isset($field['table']) && !isset($truncated[$field['table']])) {
               $this->database->truncate($field['table'])->execute();
@@ -1040,10 +1041,10 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         return;
       }
 
-      if (empty($this->options['indexes'][$index->id()])) {
+      if (empty($this->configuration['indexes'][$index->id()])) {
         return;
       }
-      foreach ($this->options['indexes'][$index->id()] as $field) {
+      foreach ($this->configuration['indexes'][$index->id()] as $field) {
         $this->database->truncate($field['table'])->execute();
       }
     }
@@ -1061,7 +1062,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     $time_method_called = microtime(TRUE);
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
-    if (empty($this->options['indexes'][$index->id()])) {
+    if (empty($this->configuration['indexes'][$index->id()])) {
       throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
@@ -1318,7 +1319,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       if (is_numeric($proc)) {
         return ltrim($proc, '-0');
       }
-      elseif (drupal_strlen($proc) < $this->options['min_chars']) {
+      elseif (drupal_strlen($proc) < $this->configuration['min_chars']) {
         $this->ignored[$keys] = 1;
         return NULL;
       }
@@ -1537,20 +1538,20 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *
    * Used as a helper method in createDbQuery().
    *
-   * @param SearchApiQueryFilterInterface $filter
+   * @param \Drupal\search_api\Query\FilterInterface $filter
    *   The filter for which a condition should be created.
    * @param array $fields
    *   Internal information about the index's fields.
    * @param \Drupal\Core\Database\Query\SelectInterface $db_query
    *   The database query to which the condition will be added.
    *
-   * @return DatabaseCondition|null
+   * @return \Drupal\Core\Database\Query\Condition|null
    *   The condition to set on the query, or NULL if none is necessary.
    *
    * @throws SearchApiException
    *   If an unknown field was used in the filter.
    */
-  protected function createFilterCondition(SearchApiQueryFilterInterface $filter, array $fields, SelectInterface $db_query) {
+  protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query) {
     $cond = db_condition($filter->getConjunction());
     $empty = TRUE;
     // Store whether a JOIN alrady occurred for a field, so we don't JOIN
@@ -1795,7 +1796,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * Implements SearchApiAutocompleteInterface::getAutocompleteSuggestions().
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
-    $settings = isset($this->options['autocomplete']) ? $this->options['autocomplete'] : array();
+    $settings = isset($this->configuration['autocomplete']) ? $this->configuration['autocomplete'] : array();
     $settings += array(
       'suggest_suffix' => TRUE,
       'suggest_words' => TRUE,
@@ -1807,7 +1808,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     }
 
     $index = $query->getIndex();
-    if (empty($this->options['indexes'][$index->id()])) {
+    if (empty($this->configuration['indexes'][$index->id()])) {
       throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
@@ -1821,7 +1822,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       $incomplete_like = $this->database->escapeLike($incomplete_key) . '%';
     }
     if ($settings['suggest_words']
-        && (!$incomplete_key || strlen($incomplete_key) >= $this->options['min_chars'])) {
+        && (!$incomplete_key || strlen($incomplete_key) >= $this->configuration['min_chars'])) {
       $passes[] = 2;
     }
 
@@ -1919,7 +1920,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   is an associative array with information on the field.
    */
   protected function getFieldInfo(IndexInterface $index) {
-    $fields = $this->options['indexes'][$index->id()];
+    $fields = $this->configuration['indexes'][$index->id()];
     foreach ($fields as $key => $field) {
       // Legacy fields do not have column set.
       if (!isset($field['column'])) {
