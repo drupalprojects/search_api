@@ -54,10 +54,10 @@ queries will have the Search API query object set as "search_api_query", and the
 field settings of the server for the corresponding search index as
 "search_api_db_fields".
 
-Hidden variables
-----------------
+Hidden configuration
+--------------------
 
-- search_api_db_autocomplete_max_occurrences (default: 0.9)
+- search_api_db.settings.autocomplete_max_occurrences (default: 0.9)
   By default, keywords that occur in more than 90% of results are ignored for
   autocomplete suggestions. This setting lets you modify that behaviour by
   providing your own ratio. Use 1 or greater to use all suggestions.

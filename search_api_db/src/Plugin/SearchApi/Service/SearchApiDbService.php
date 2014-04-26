@@ -1835,7 +1835,8 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           ->fields('t', array('item_id'));
         $total = $this->database->query("SELECT COUNT(item_id) FROM {{$table}}")->fetchField();
       }
-      $max_occurrences = max(1, floor($total * variable_get('search_api_db_autocomplete_max_occurrences', 0.9)));
+      $max_occurrences = \Drupal::configFactory()->get('search_api_db.settings')->get('autocomplete_max_occurrences');
+      $max_occurrences = max(1, floor($total * $max_occurrences));
 
       if (!$total) {
         if ($pass == 1) {
