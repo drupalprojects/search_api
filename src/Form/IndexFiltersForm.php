@@ -7,17 +7,16 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\String;
-use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Render\Element;
 
 /**
  * Provides a filters form for the Index entity.
  */
-class IndexFiltersForm extends EntityFormController {
+class IndexFiltersForm extends EntityForm {
 
   /**
    * The index being configured.
@@ -41,7 +40,7 @@ class IndexFiltersForm extends EntityFormController {
   protected $processorPluginManager;
 
   /**
-   * Constructs a ContentEntityFormController object.
+   * Constructs a IndexFiltersForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
