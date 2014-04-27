@@ -179,7 +179,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * {@inheritdoc}
    */
   public function postUpdate() {
-    return !empty($this->server->original) && $this->server->options != $this->server->original->options;
+    return !empty($this->server->original) && $this->server->getServicePluginConfig() != $this->server->original->getServicePluginConfig();
   }
 
   /**
@@ -1209,7 +1209,8 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     // Since the 'search_api_language' field might not be always available
     // anymore, try to use the first field and throw an exception if no field is
     // defined.
-    // @todo Any other ideas about what to do here?
+    // @todo Any other ideas about what to do here? A better exception message
+    // would be a start :)
     if (empty($fields)) {
       throw new SearchApiException(t('Unknown field @field specified as search target.', array('@field' => $name)));
     }
