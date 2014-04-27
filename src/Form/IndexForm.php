@@ -8,7 +8,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\search_api\Exception\SearchApiException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
@@ -18,7 +18,7 @@ use Drupal\Component\Utility\String;
 /**
  * Provides a form for the Index entity.
  */
-class IndexForm extends EntityFormController {
+class IndexForm extends EntityForm {
 
   /**
    * The entity manager.

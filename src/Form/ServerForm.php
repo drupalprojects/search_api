@@ -7,7 +7,7 @@
 namespace Drupal\search_api\Form;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Service\ServicePluginManager;
 use Drupal\search_api\Server\ServerInterface;
@@ -16,7 +16,7 @@ use Drupal\Component\Utility\String;
 /**
  * Provides a form for the Server entity.
  */
-class ServerForm extends EntityFormController {
+class ServerForm extends EntityForm {
 
   /**
    * The server storage controller.

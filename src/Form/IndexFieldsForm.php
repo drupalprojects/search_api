@@ -6,7 +6,7 @@
 
 namespace Drupal\search_api\Form;
 
-use Drupal\Core\Entity\EntityFormController;
+use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Utility\String;
@@ -14,7 +14,7 @@ use Drupal\Component\Utility\String;
 /**
  * Provides a fields form controller for the Index entity.
  */
-class IndexFieldsForm extends EntityFormController {
+class IndexFieldsForm extends EntityForm {
 
   /**
    * The index where the fields will be configured for
@@ -64,7 +64,7 @@ class IndexFieldsForm extends EntityFormController {
   }
 
   /**
-   * Constructs a ContentEntityFormController object.
+   * Constructs a IndexFieldsForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
