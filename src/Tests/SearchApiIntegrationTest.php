@@ -150,7 +150,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function addFieldsToIndex() {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields';
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields/entity:node';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);

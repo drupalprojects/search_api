@@ -219,7 +219,10 @@ class AddAggregation extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
+    if ($datasource) {
+      return;
+    }
     $types = $this->getTypes('type');
     if (isset($this->configuration['fields'])) {
       foreach ($this->configuration['fields'] as $name => $field) {

@@ -519,7 +519,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
-      foreach ($this->datasourcePluginIds as $datasource_id) {
+      foreach (array_merge(array(NULL), $this->datasourcePluginIds) as $datasource_id) {
         try {
           $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource_id), $datasource_id);
         }
@@ -543,8 +543,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of properties on some complex data object.
-   * @param string $datasource_id
-   *   The ID of the datasource to which these properties belong.
+   * @param string|null $datasource_id
+   *   (optional) The ID of the datasource to which these properties belong.
    * @param string $prefix
    *   Internal use only. A prefix to use for the generated field names in this
    *   method.
@@ -552,15 +552,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
    */
-  protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id, $prefix = '', $prefix_label = '') {
+  protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
     $fields = &$this->fields[0]['fields'];
     $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
-    if (!$prefix) {
+    if (!$prefix && $datasource_id) {
       $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
     }
+    $name_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
@@ -632,7 +633,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       $fields[$key] = array(
         'name' => $label,
-        'name_prefix' => $this->getDatasource($datasource_id)->label() . ' » ',
+        'name_prefix' => $name_prefix,
         'description' => $description,
         'datasource' => $datasource_id,
         'indexed' => FALSE,
@@ -654,8 +655,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $datasource = $this->getDatasource($datasource_id);
-    $properties = $datasource->getPropertyDefinitions();
+    $properties = array();
+    $datasource = NULL;
+    if ($datasource_id) {
+      $datasource = $this->getDatasource($datasource_id);
+      $properties = $datasource->getPropertyDefinitions();
+    }
     if ($alter) {
       foreach ($this->getProcessors() as $processor) {
         $processor->alterPropertyDefinitions($properties, $datasource);

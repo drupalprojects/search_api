@@ -49,10 +49,11 @@ interface ProcessorInterface extends IndexPluginInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of property definitions for this item type.
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   The datasource this set of properties belongs to.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource this set of properties belongs to. If NULL, the
+   *   datasource-independent properties should be added (or modified).
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource);
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL);
 
   /**
    * Preprocess data items for indexing.

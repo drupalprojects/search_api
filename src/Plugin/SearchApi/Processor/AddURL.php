@@ -34,7 +34,10 @@ class AddURL extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
+    if ($datasource) {
+      return;
+    }
     $definition = array(
       'label' => t('URI'),
       'description' => t('A URI where the item can be accessed.'),

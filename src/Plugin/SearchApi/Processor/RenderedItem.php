@@ -118,7 +118,10 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
+    if ($datasource) {
+      return;
+    }
     $definition = array(
       'type' => 'string',
       'label' => $this->t('Rendered HTML output'),

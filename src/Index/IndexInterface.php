@@ -18,10 +18,12 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * String used to separate a datasource prefix from the rest of an identifier.
    *
-   * Internal field identifiers of the Search API consist of two parts: the ID
-   * of the datasource to which the field belongs; and the property path to the
-   * field, with properties separated by colons. The two parts are concatenated
-   * using this character as a separator to form the complete field identifier.
+   * Internal field identifiers of datasource-dependent fields in the Search API
+   * consist of two parts: the ID of the datasource to which the field belongs;
+   * and the property path to the field, with properties separated by colons.
+   * The two parts are concatenated using this character as a separator to form
+   * the complete field identifier. (In the case of datasource-independent
+   * fields, the identifier doesn't contain the separator.)
    *
    * Likewise, internal item IDs consist of the datasource ID and the item ID
    * within that datasource, separated by this character.
@@ -276,7 +278,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *   - indexed: Boolean indicating whether the field is indexed or not.
    *   - type: The type set for this field. One of the types returned by
    *     search_api_default_field_types().
-   *   - datasource: The datasource to which this field belongs.
+   *   - datasource: The datasource to which this field belongs, or NULL if it
+   *     is datasource-independent.
    *   - real_type: (optional) If a custom data type was selected for this
    *     field, this type will be stored here, and "type" contain the fallback
    *     default data type.
