@@ -77,7 +77,7 @@ script:
   - cd $TRAVIS_BUILD_DIR/../drupal
   - sudo chgrp -R www-data .
   # Run the tests
-  - sudo -u www-data php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://localhost | tee /tmp/test.txt
+  - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://localhost | tee /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
   # Check if we had fails in the run-tests.sh script
   # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
