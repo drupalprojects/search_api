@@ -8,6 +8,7 @@
 namespace Drupal\search_api_db\Tests;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
@@ -134,12 +135,13 @@ class SearchApiDbTest extends EntityUnitTestBase {
       'name' => 'foo test',
       'body' => 'bar test',
       'type' => 'item',
-      'keywords' => array('orange', 'apple' ,'grape'),
+      'keywords' => array('orange', 'apple', 'grape'),
     ))->save();
     entity_create('entity_test', array(
       'id' => 3,
       'name' => 'bar',
       'body' => 'test foobar',
+      'type' => 'item',
     ))->save();
     entity_create('entity_test', array(
       'id' => 4,
@@ -240,7 +242,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     }
     foreach ($filters as $filter) {
       list($field, $value) = explode(',', $filter, 2);
-      $query->condition($field, $value);
+      $query->condition($this->getFieldId($field), $value);
     }
     $query->range(0, 10);
 
@@ -264,19 +266,19 @@ class SearchApiDbTest extends EntityUnitTestBase {
   protected function searchSuccess1() {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEqual($results['result count'], 4, 'Search for »test« returned correct number of results.');
-    $this->assertEqual(array_keys($results['results']), array(4, 1), 'Search for »test« returned correct result.');
+    $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
     $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
 
     $results = $this->buildSearch('"test foo"')->execute();
     $this->assertEqual($results['result count'], 3, 'Search for »"test foo"« returned correct number of results.');
-    $this->assertEqual(array_keys($results['results']), array(2, 4, 1), 'Search for »"test foo"« returned correct result.');
+    $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2, 4, 1)), 'Search for »"test foo"« returned correct result.');
     $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
 
-    $results = $this->buildSearch('foo', array('type,item'))->sort('id', 'ASC')->execute();
+    $results = $this->buildSearch('foo', array('type,item'))->sort($this->getFieldId('id'), 'ASC')->execute();
     $this->assertEqual($results['result count'], 2, 'Search for »foo« returned correct number of results.');
-    $this->assertEqual(array_keys($results['results']), array(1, 2), 'Search for »foo« returned correct result.');
+    $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2)), 'Search for »foo« returned correct result.');
     $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
 
@@ -297,7 +299,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     );
     $results = $this->buildSearch($keys)->execute();
     $this->assertEqual($results['result count'], 1, 'Complex search 1 returned correct number of results.');
-    $this->assertEqual(array_keys($results['results']), array(4), 'Complex search 1 returned correct result.');
+    $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4)), 'Complex search 1 returned correct result.');
     $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
   }
@@ -305,7 +307,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   protected function checkFacets() {
     $query = $this->buildSearch();
     $filter = $query->createFilter('OR', array('facet:type'));
-    $filter->condition('type', 'article');
+    $filter->condition($this->getFieldId('type'), 'article');
     $query->filter($filter);
     $facets['type'] = array(
       'field' => 'type',
@@ -776,6 +778,34 @@ class SearchApiDbTest extends EntityUnitTestBase {
     drupal_uninstall_modules(array('search_api_db'), FALSE);
     $prefix = Database::getConnection()->prefixTables('{search_api_db_}') . '%';
     $this->assertEqual(db_find_tables($prefix), array(), 'The Database Search module was successfully uninstalled.');
+  }
+
+  /**
+   * Returns the internal field ID for the given entity field name.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return string
+   *   The internal field ID.
+   */
+  protected function getFieldId($field_name) {
+    return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $field_name;
+  }
+
+  /**
+   * Returns the idem IDs for the given entity IDs.
+   *
+   * @param array $entity_ids
+   *   An array of entity IDs.
+   *
+   * @return array
+   *   An array of item IDs.
+   */
+  protected function getItemIds(array $entity_ids) {
+    return array_map(function ($entity_id) {
+      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id;
+    }, $entity_ids);
   }
 
 }
