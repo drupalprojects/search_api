@@ -42,8 +42,10 @@ install:
   # LAMP package installation (mysql is already started)
   - sudo apt-get install -y --force-yes apache2 libapache2-mod-php5 php5-mysql php5-curl
   # Apache webserver configuration
-  - sudo sed -i -e "s,/var/www,/home/travis/build/nickveenhof/drupal,g" /etc/apache2/sites-available/default
   - echo "export PATH=/home/vagrant/.phpenv/bin:$PATH" | sudo tee -a /etc/apache2/envvars > /dev/null
+  # Make sure the apache root is in our wanted directory
+  - echo "$(curl -fsSL https://gist.githubusercontent.com/roderik/16d751c979fdeb5a14e3/raw/gistfile1.txt)" | sed -e "s,PATH,/home/travis/build/nickveenhof/drupal,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
+  # Enable php-env for apache so it uses the correct php version
   - echo "$(curl -fsSL https://gist.github.com/roderik/16d751c979fdeb5a14e3/raw/gistfile1.txt)" | sudo tee /etc/apache2/conf.d/phpconfig > /dev/null
   - sudo a2enmod rewrite
   - sudo a2enmod actions
