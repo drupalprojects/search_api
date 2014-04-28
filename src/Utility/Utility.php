@@ -213,8 +213,7 @@ class Utility {
       $fields[$key]['value'] = array();
       $fields[$key]['original_type'] = NULL;
       try {
-        $item = $item->get($key);
-        self::extractField($item, $fields[$key]);
+        self::extractField($item->get($key), $fields[$key]);
       }
       catch (\InvalidArgumentException $e) {
         // No need to do anything, we already set the defaults.
