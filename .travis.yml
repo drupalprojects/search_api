@@ -63,7 +63,7 @@ before_script:
   - git pull origin 8.x
   # Install the site
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
-  - chmod go-w $TRAVIS_BUILD_DIR../drupal/sites/default
+  - chmod go-w $TRAVIS_BUILD_DIR/../drupal/sites/default
   - drush en --yes simpletest
   - drush cr
   - sleep 4
