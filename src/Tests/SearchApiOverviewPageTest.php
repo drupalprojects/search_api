@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -64,6 +65,16 @@ class SearchApiOverviewPageTest extends SearchApiWebTestBase {
     $this->assertText($index->label(), 'Index present on overview page.');
     $this->assertRaw($index->get('description'), 'Index description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
+
+    // Test that an entity without bundles can be used as data source.
+    $edit = array(
+      'name' => $this->randomName(),
+      'machine_name' => Unicode::strtolower($this->randomName()),
+      'datasourcePluginIds[]' => 'entity:user',
+    );
+    $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, t('Save'));
+    $this->assertText(t('The index was successfully saved.'));
+    $this->assertText($edit['name']);
   }
 
   /**
