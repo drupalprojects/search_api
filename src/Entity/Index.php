@@ -690,11 +690,44 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Get the processors that belong to the index.
-   *
-   * @param bool $all
-   * @param string $sortBy
-   * @return array|\Drupal\search_api\Processor\ProcessorInterface[]
+   * {@inheritdoc}
+   */
+  public function loadItem($item_id) {
+    $items = $this->loadItemsMultiple(array($item_id), TRUE);
+    return $items ? reset($items) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadItemsMultiple(array $item_ids, $flat = FALSE) {
+    $items_by_datasource = array();
+    foreach ($item_ids as $item_id) {
+      list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id);
+      $items_by_datasource[$datasource_id][$item_id] = $raw_id;
+    }
+    $items = array();
+    foreach ($items_by_datasource as $datasource_id => $raw_ids) {
+      try {
+        foreach ($this->getDatasource($datasource_id)->loadMultiple($raw_ids) as $raw_id => $item) {
+          $id = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $raw_id;
+          if ($flat) {
+            $items[$id] = $item;
+          }
+          else {
+            $items[$datasource_id][$id] = $item;
+          }
+        }
+      }
+      catch (SearchApiException $e) {
+        watchdog_exception('search_api', $e);
+      }
+    }
+    return $items;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getProcessors($all = FALSE, $sortBy = 'weight') {
     /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */

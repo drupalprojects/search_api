@@ -323,6 +323,34 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getPropertyDefinitions($datasource_id, $alter = TRUE);
 
   /**
+   * Loads a single search item for this index.
+   *
+   * @param string $item_id
+   *   The internal ID of the item, with datasource prefix.
+   *
+   * @return object|null
+   *   The loaded item, or NULL if the item does not exist.
+   */
+  public function loadItem($item_id);
+
+  /**
+   * Loads multiple search items for this index.
+   *
+   * @param array $item_ids
+   *   The internal IDs of the items, with datasource prefix.
+   * @param bool $flat
+   *   (optional) If set, items will be returned in a single, flat array,
+   *   instead of grouped by datasource.
+   *
+   * @return array
+   *   The loaded items. If $flat was set, a single-dimensional array mapping
+   *   internal item IDs to the loaded items. Otherwise, an array mapping
+   *   datasource IDs to arrays of items (keyed by internal item ID) loaded for
+   *   that datasource.
+   */
+  public function loadItemsMultiple(array $item_ids, $flat = FALSE);
+
+  /**
    * Indexes a set amount of items.
    *
    * Will fetch the items to be indexed from the datasource and send them to
