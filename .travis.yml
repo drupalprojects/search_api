@@ -42,7 +42,8 @@ install:
   # LAMP package installation (mysql is already started)
   - sudo apt-get install -y --force-yes apache2 libapache2-mod-php5 php5-mysql php5-curl
   # Apache webserver configuration
-  - sudo sed -i -e "s,/var/www,$TRAVIS_BUILD_DIR/../drupal,g" /etc/apache2/sites-available/default
+  - sudo sed -i -e "s,/var/www,/home/travis/build/nickveenhof/drupal,g" /etc/apache2/sites-available/default
+  - cat /etc/apache2/sites-available/default
   - sudo a2enmod rewrite
   - sudo a2enmod actions
   # Set sendmail so drush doesn't throw an error during site install.
@@ -57,6 +58,7 @@ install:
   - git clone --depth 1 --branch 8.x http://git.drupal.org/project/drupal.git
   # Make our apache work
   - sudo service apache2 restart
+  - curl -v "http://localhost"
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- composer global require drupal/coder:\>7
 
