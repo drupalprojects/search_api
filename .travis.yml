@@ -43,16 +43,19 @@ install:
   - sudo apt-get install -y --force-yes apache2 libapache2-mod-php5 php5-mysql php5-curl
   # Apache webserver configuration
   - sudo sed -i -e "s,/var/www,$TRAVIS_BUILD_DIR/../drupal,g" /etc/apache2/sites-available/default
+  - cat /etc/apache2/envvars
   - sudo a2enmod rewrite
   - sudo a2enmod actions
+  # Set sendmail so drush doesn't throw an error during site install.
+  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  - echo "export APACHE_RUN_USER=travis >> /etc/apache2/envvars"
+  - echo "export APACHE_RUN_GROUP=travis >> /etc/apache2/envvars"
   - sudo service apache2 restart
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- composer global require drupal/coder:\>7
 
 before_script:
-  # Set sendmail so drush doesn't throw an error during site install.
-  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
-  - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Move one up
   - cd ..
   # Get latest drupal 8 core
@@ -75,7 +78,6 @@ script:
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/modules/search_api/
   # go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - sudo chgrp -R www-data .
   # Run the tests
   - php core/scripts/run-tests.sh --module 'search_api' --color --concurrency 4 --php `which php` --url http://localhost | tee /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
