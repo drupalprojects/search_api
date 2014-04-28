@@ -94,6 +94,7 @@ script:
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
   - cd $TRAVIS_BUILD_DIR/../drupal/core
   - ./vendor/bin/phpunit --group search_api
+  - TEST_PHPUNIT=$?
   # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
   # failed.
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
@@ -102,4 +103,4 @@ script:
   - sudo cat /var/log/apache2/error.log
   - sudo cat /var/log/syslog | grep 'php'
   # Exit the build
-  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] ; then exit 0; else exit 1; fi
+  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ] && [ $TEST_PHPUNIT -eq 0 ]; then exit 0; else exit 1; fi
