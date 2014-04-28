@@ -966,7 +966,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     try {
       // Fake an original for inserts to make code cleaner.
       /** @var \Drupal\search_api\Index\IndexInterface $original */
-      $original = $update ? $this->original : new static(array(), $this->getEntityTypeId());
+      $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
       if ($this->getServerId() != $original->getServerId()) {
         if ($original->isServerEnabled()) {
           $original->getServer()->removeIndex($this);
