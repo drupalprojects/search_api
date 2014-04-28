@@ -48,8 +48,8 @@ install:
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
-  - echo "export APACHE_RUN_USER=travis >> /etc/apache2/envvars"
-  - echo "export APACHE_RUN_GROUP=travis >> /etc/apache2/envvars"
+  - sudo sed -i -e "s/export APACHE_RUN_USER=.*/export APACHE_RUN_USER=travis/ ; s/export APACHE_RUN_GROUP=.*/export APACHE_RUN_GROUP=travis/" /etc/apache2/envvars
+  - sudo chown -R travis:travis /var/lock/apache2
   # Make sure the direcotry exists
   # Move one up
   - cd ..
@@ -61,13 +61,11 @@ install:
   #- composer global require drupal/coder:\>7
 
 before_script:
-  - chmod go-w $TRAVIS_BUILD_DIR/../drupal/sites/default
   - cd $TRAVIS_BUILD_DIR/../drupal
   # Update drupal core
   - git pull origin 8.x
   # Install the site
   - drush -v site-install standard --db-url=mysql://root:@localhost/drupal --yes
-  - chmod go-w $TRAVIS_BUILD_DIR/../drupal/sites/default
   - drush en --yes simpletest
   - drush cr
   - phpenv rehash
