@@ -223,9 +223,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, t('No items are tracked'));
 
-    // Debug it
-    $this->verbose($this->drupalGet($settings_path));
-
     // Test enabling the index
     $this->drupalGet($settings_path);
 
@@ -239,9 +236,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
-
-    // Debug it
-    $this->verbose($this->drupalGet($settings_path));
 
     // Test putting default to zero and no bundles checked.
     // This will ignore all bundles except the ones that are checked.
@@ -271,7 +265,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    $this->verbose($this->drupalGet($settings_path));
+    $this->drupalGet($settings_path);
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
