@@ -446,7 +446,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
-      list($datasource_id, $raw_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+      list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
       if (empty($fields[$datasource_id])) {
         $variables['%index'] = $this->label();
         $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
@@ -519,7 +519,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
-      foreach ($this->datasourcePluginIds as $datasource_id) {
+      foreach (array_merge(array(NULL), $this->datasourcePluginIds) as $datasource_id) {
         try {
           $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource_id), $datasource_id);
         }
@@ -543,8 +543,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
    *   An array of properties on some complex data object.
-   * @param string $datasource_id
-   *   The ID of the datasource to which these properties belong.
+   * @param string|null $datasource_id
+   *   (optional) The ID of the datasource to which these properties belong.
    * @param string $prefix
    *   Internal use only. A prefix to use for the generated field names in this
    *   method.
@@ -552,15 +552,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
    */
-  protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id, $prefix = '', $prefix_label = '') {
+  protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
     $fields = &$this->fields[0]['fields'];
     $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
-    if (!$prefix) {
+    if (!$prefix && $datasource_id) {
       $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
     }
+    $name_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
@@ -632,7 +633,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       $fields[$key] = array(
         'name' => $label,
-        'name_prefix' => $this->getDatasource($datasource_id)->label() . ' » ',
+        'name_prefix' => $name_prefix,
         'description' => $description,
         'datasource' => $datasource_id,
         'indexed' => FALSE,
@@ -654,8 +655,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $datasource = $this->getDatasource($datasource_id);
-    $properties = $datasource->getPropertyDefinitions();
+    $properties = array();
+    $datasource = NULL;
+    if ($datasource_id) {
+      $datasource = $this->getDatasource($datasource_id);
+      $properties = $datasource->getPropertyDefinitions();
+    }
     if ($alter) {
       foreach ($this->getProcessors() as $processor) {
         $processor->alterPropertyDefinitions($properties, $datasource);
@@ -846,12 +851,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1', $datasource_id = NULL) {
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items_by_datasource = array();
       foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+        list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
         $items_by_datasource[$datasource_id][] = $raw_id;
       }
       $items = array();
@@ -896,8 +901,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsInserted($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -910,8 +914,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsUpdated($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -924,8 +927,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsDeleted($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -1019,13 +1021,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       // @todo Is this logic correct?
       if ($this->status() != $original->status() && $this->hasValidTracker()) {
-        foreach ($this->getDatasources() as $datasource) {
-          if ($this->status()) {
-            $datasource->startTracking();
-          }
-          else {
-            $datasource->stopTracking();
-          }
+        if ($this->status()) {
+          $this->startTracking();
+        }
+        else {
+          $this->stopTracking();
         }
       }
 
@@ -1048,6 +1048,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       if ($index->hasValidServer()) {
         $index->getServer()->removeIndex($index);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function stopTracking() {
+    foreach ($this->getDatasources() as $datasource) {
+      $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function startTracking() {
+    foreach ($this->getDatasources() as $datasource) {
+      // Check whether there are entities which need to be inserted.
+      if (($item_ids = $datasource->getItemIds())) {
+        // Register entities with the tracker.
+        $this->trackItemsInserted($datasource->getPluginId(), $item_ids);
       }
     }
   }

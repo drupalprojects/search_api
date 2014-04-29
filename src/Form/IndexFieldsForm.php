@@ -8,6 +8,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Utility\String;
 
@@ -89,12 +90,6 @@ class IndexFieldsForm extends EntityForm {
     // Get the index
     $index = $this->entity;
     $entity_description_added = FALSE;
-
-    // Set a default datasource plugin ID if none was passed in.
-    if (!$datasource_id) {
-      $datasource_ids = $index->getDatasourceIds();
-      $datasource_id = reset($datasource_ids);
-    }
     $this->datasourceId = $datasource_id;
 
     // Set a proper title
@@ -304,19 +299,21 @@ class IndexFieldsForm extends EntityForm {
     }
     $options['fields'] = $fields;
 
-    // Store the additional fields info
-    $additional = $form_state['values']['additional']['field'];
-    if (!empty($options['additional fields'])) {
-      $existing_additional_fields = $this->getDatasourceFields($options['additional fields'], $this->datasourceId);
-      $options['additional fields'] = array_diff_key($options['additional fields'], $existing_additional_fields);
-      $additional += $options['additional fields'];
+    // Store the additional fields info.
+    if (isset($form_state['values']['additional']['field'])) {
+      $additional = $form_state['values']['additional']['field'];
+      if (!empty($options['additional fields'])) {
+        $existing_additional_fields = $this->getDatasourceFields($options['additional fields'], $this->datasourceId);
+        $options['additional fields'] = array_diff_key($options['additional fields'], $existing_additional_fields);
+        $additional += $options['additional fields'];
+      }
+      $options['additional fields'] = $additional;
     }
-    $options['additional fields'] = $additional;
 
     $index->setOptions($options);
     $ret = $index->save();
 
-    // Show a different message based on the button
+    // Show a different message based on the button.
     if ($form_state['values']['op'] == t('Save changes')) {
       if ($ret) {
         drupal_set_message(t('The indexed fields were successfully changed. ' .
@@ -337,23 +334,32 @@ class IndexFieldsForm extends EntityForm {
   }
 
   /**
-   * Returns an array of fields available to a datasource.
+   * Returns an array of fields available to a certain datasource.
    *
    * @param array $fields
    *   An array of fields as returned by
    *   \Drupal\search_api\Index\IndexInterface::getFields().
-   * @param string $datasource_id
-   *   The ID of the datasource plugin.
+   * @param string|null $datasource_id
+   *   (optional) The ID of the datasource plugin. If an empty value is given,
+   *   all datasource-independent fields are returned.
    *
    * @return array
    *   An array of the same structure as the $fields argument, filtered by
    *   $datasource_id.
    */
-  protected function getDatasourceFields($fields, $datasource_id) {
-    $return = array_filter(array_keys($fields), function($key) use ($datasource_id) {
-      return strpos($key, $datasource_id) !== FALSE;
-    });
-    return array_intersect_key($fields, array_flip($return));
+  protected function getDatasourceFields($fields, $datasource_id = NULL) {
+    // Unset all fields that aren't matching.
+    foreach ($fields as $name => $field) {
+      // This is a bit tricky: the strpos() will return FALSE if there is no
+      // separator present, substr() will cast that to 0 and thus return an
+      // empty string – which will equal NULL in the following if statement,
+      // thus including such fields exactly when no datasource is specified.
+      $field_datasource_id = substr($name, 0, strpos($name, IndexInterface::DATASOURCE_ID_SEPARATOR));
+      if ($field_datasource_id != $datasource_id) {
+        unset($fields[$name]);
+      }
+    }
+    return $fields;
   }
 
 }

@@ -38,7 +38,10 @@ class NodeAccess extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
+    if (!$datasource) {
+      return NULL;
+    }
     $datasource_definition = $datasource->getPluginDefinition();
     if (isset($datasource_definition['entity_type']) && $datasource_definition['entity_type'] === 'node') {
       $definition = array(

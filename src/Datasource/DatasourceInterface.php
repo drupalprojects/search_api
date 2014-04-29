@@ -75,16 +75,6 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function getItemUrl($item);
 
   /**
-   * Starts tracking for this index.
-   */
-  public function startTracking();
-
-  /**
-   * Stops tracking for this index.
-   */
-  public function stopTracking();
-
-  /**
    * Returns view mode info for this item type.
    *
    * @return array
@@ -131,5 +121,21 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   Can be thrown when the set of parameters is inconsistent.
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL);
+
+  /**
+   * Returns item ids from this datasource.
+   *
+   * Returns all items IDs by default. Allows for simple paging by passing
+   * along a limit and a pointer from where it should start.
+   *
+   * @param int $limit
+   *   The amount of items to return
+   * @param string $from
+   *   The pointer as from where we want to start returning.
+   *
+   * @return array
+   *   An array with item identifiers
+   */
+  public function getItemIds($limit = -1, $from = NULL);
 
 }

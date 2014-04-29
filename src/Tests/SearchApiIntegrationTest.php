@@ -63,6 +63,12 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
+
+    $this->setReadOnly();
+    $this->disableEnableIndex();
+    $this->changeIndexDatasource();
+    $this->changeIndexServer();
+
   }
 
   protected function createServer() {
@@ -150,7 +156,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function addFieldsToIndex() {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields';
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields/entity:node';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -223,9 +229,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, t('No items are tracked'));
 
-    // Debug it
-    $this->verbose($this->drupalGet($settings_path));
-
     // Test enabling the index
     $this->drupalGet($settings_path);
 
@@ -239,9 +242,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
-
-    // Debug it
-    $this->verbose($this->drupalGet($settings_path));
 
     // Test putting default to zero and no bundles checked.
     // This will ignore all bundles except the ones that are checked.
@@ -271,7 +271,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    $this->verbose($this->drupalGet($settings_path));
+    $this->drupalGet($settings_path);
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
@@ -327,6 +327,8 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 1, t('One item is tracked'));
+
+
   }
 
   /**
@@ -338,6 +340,126 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     /** @var $index \Drupal\search_api\Entity\Index */
     $index = entity_load('search_api_index', $this->indexId);
     return $index->getTracker()->getTotalItemsCount();
+  }
+
+  /**
+   * Sets an index to read only and checks if it reacts accordingly.
+   *
+   * The expected behavior is such that when an index is set to Read Only it
+   * keeps tracking but when it comes to indexing it does not proceed to send
+   * items to the server.
+   */
+  protected function setReadOnly() {
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $index->reindex();
+
+    // Go to the index edit path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    $edit = array(
+      'status' => TRUE,
+      'readOnly' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+    // This should have 2 items in the index
+
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $remaining_before = $index->getTracker()->getRemainingItemsCount();
+    $index->index();
+    $remaining_after = $index->getTracker()->getRemainingItemsCount();
+    $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to readOnly'));
+
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+
+    $edit = array(
+      'status' => TRUE,
+      'readOnly' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $remaining_before = $index->getTracker()->getRemainingItemsCount();
+    $index->index();
+    $remaining_after = $index->getTracker()->getRemainingItemsCount();
+    $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the readOnly flag'));
+
+  }
+
+  /**
+   * Disables and enables an index and checks if it reacts accordingly.
+   *
+   * The expected behavior is such that when an index is disabled, all the items
+   * from this index in the tracker are removed and it also tells the service
+   * to remove all items from this index.
+   *
+   * When it is enabled again, the items are re-added to the tracker.
+   *
+   */
+  protected function disableEnableIndex() {
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $index->reindex();
+
+    // Go to the index edit path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    // Disable the index
+    $edit = array(
+      'status' => FALSE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $tracked_items = $this->countTrackedItems();
+    $this->assertEqual($tracked_items, 0, t('After disabling the index, no items should be tracked'));
+
+    // Go to the index edit path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    // Enable the index
+    $edit = array(
+      'status' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $this->assertNotNull($tracked_items, t('After enabling the index, at least 1 item should be tracked'));
+  }
+
+  /**
+   * Changes datasources from an index and checks if it reacts accordingly.
+   *
+   * The expected behavior is such that, when an index changes the
+   * datasource configurations, the tracker should remove all items from the
+   * datasources it no longer needs to handle and add the new ones.
+   */
+  protected function changeIndexDatasource() {
+
+  }
+
+  /**
+   * Changes the server for an index and checks if it reacts accordingly.
+   *
+   * The expected behavior is such that, when an index changes the
+   * server configurations, the tracker should remove all items from the
+   * server it no longer is attached to and add the new ones.
+   */
+  protected function changeIndexServer() {
+
   }
 
 }

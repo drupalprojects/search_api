@@ -45,7 +45,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource) {}
+  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {}
 
   /**
    * {@inheritdoc}
