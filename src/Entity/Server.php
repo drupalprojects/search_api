@@ -406,16 +406,6 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getExtraInformation() {
-    if ($this->supportsFeature('search_api_service_extra')) {
-      return $this->getService()->getExtraInformation();
-    }
-    return array();
-  }
-
-  /**
    * Adds an entry into a server's list of pending tasks.
    *
    * @param $type

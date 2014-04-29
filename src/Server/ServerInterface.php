@@ -79,18 +79,6 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
   public function getServicePluginConfig();
 
   /**
-   * Retrieves additional information for the server, if available.
-   *
-   * Retrieving such information is only supported if the service class supports
-   * the "search_api_service_extra" feature.
-   *
-   * @return array
-   *   An array containing additional, service class-specific information about
-   *   the server.
-   */
-  public function getExtraInformation();
-
-  /**
    * Adds an entry into this server's list of pending tasks.
    *
    * @param string $type

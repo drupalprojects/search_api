@@ -17,7 +17,6 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Service\ServicePluginBase;
-use Drupal\search_api\Service\ServiceExtraInfoInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -27,7 +26,7 @@ use Drupal\search_api\Utility\Utility;
  *   description = @Translation("Index items using multiple database tables, for simple searches.")
  * )
  */
-class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoInterface {
+class SearchApiDbService extends ServicePluginBase {
 
   /**
    * Multiplier for scores to have precision when converted from float to int.
@@ -1945,26 +1944,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       }
     }
     return $fields;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getExtraInformation() {
-    return array(
-      array(
-        'label' => '',
-        'info' => $this->t('All field types are supported and indexed in a special way, with URI/String and Integer/Duration being equivalent.'),
-      ),
-      array(
-        'label' => '',
-        'info' => $this->t('The "direct" parse mode results in the keys being normally split around white-space, only preprocessing might differ.'),
-      ),
-      array(
-        'label' => '',
-        'info' => $this->t('Currently, phrase queries are not supported.'),
-      ),
-    );
   }
 
 }

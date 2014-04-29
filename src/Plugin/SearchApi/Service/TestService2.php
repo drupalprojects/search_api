@@ -2,10 +2,6 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Service;
 
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Service\ServicePluginBase;
-
 /**
  * @SearchApiService(
  *   id = "search_api_test_service2",

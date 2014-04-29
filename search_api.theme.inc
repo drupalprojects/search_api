@@ -78,7 +78,7 @@ function theme_search_api_admin_fields_table($variables) {
  */
 function theme_search_api_server($variables) {
   // Get the Search API server and index links.
-  /** @var $index \Drupal\search_api\Server\ServerInterface */
+  /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $variables['server'];
   // Initialize the output variable to an empty string.
   $output = '';
@@ -165,15 +165,8 @@ function theme_search_api_server($variables) {
     $rows[] = Utility::deepCopy($row);
   }
 
-  // Check if the server has available view settings.
-  if (($options = $server->viewSettings())) {
-    $label = t('Service options');
-    $info = render($options);
-    $rows[] = Utility::deepCopy($row);
-  }
-
   // Check if the server has extra information available.
-  if (($extra = $server->getExtraInformation())) {
+  if (($extra = $server->viewSettings())) {
     // Iterate through the extra information.
     foreach ($extra as $information) {
       // Convert the extra information and append the information to the row.
