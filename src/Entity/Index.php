@@ -1002,24 +1002,45 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Fake an original for inserts to make code cleaner.
       /** @var \Drupal\search_api\Index\IndexInterface $original */
       $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
-      if ($this->getServerId() != $original->getServerId()) {
-        if ($original->isServerEnabled()) {
-          $original->getServer()->removeIndex($this);
-        }
-        if ($this->isServerEnabled()) {
-          $this->getServer()->addIndex($this);
-        }
-        // When the server changes we also need to re-index. (reindex() will
-        // figure out itself if this is possible.)
-        $this->reindex();
-      }
-      elseif ($this->isServerEnabled()) {
-        if ($this->getServer()->updateIndex($this)) {
+
+      // Actions to take if the index switched servers
+      if ($this->status()) {
+        if ($this->getServerId() != $original->getServerId()) {
+          if ($original->isServerEnabled()) {
+            $original->getServer()->removeIndex($this);
+          }
+          if ($this->isServerEnabled()) {
+            $this->getServer()->addIndex($this);
+          }
+          // When the server changes we also need to trigger reindex.
           $this->reindex();
+        }
+
+        // Tell the server the index configuration got updated
+        if ($this->isServerEnabled()) {
+          $this->getServer()->updateIndex($this);
+        }
+
+        // Actions to take when datasources changed
+        // Take the old datasource list
+        if ($this->datasourcePluginIds != $original->datasourcePluginIds) {
+          // Get the difference between the arrays
+          $removed = array_diff($original->datasourcePluginIds, $this->datasourcePluginIds);
+          $added = array_diff($this->datasourcePluginIds, $original->datasourcePluginIds);
+          // Delete from tracker if the datasource got removed
+          foreach ($removed as $datasource_id) {
+            $this->getTracker()->trackAllItemsDeleted($datasource_id);
+          }
+          // Add to the tracker if the datasource got added
+          foreach ($added as $datasource_id) {
+            $datasource = $this->getDatasource($datasource_id);
+            $item_ids = $datasource->getItemIds();
+            $this->trackItemsInserted($datasource_id, $item_ids);
+          }
         }
       }
 
-      // @todo Is this logic correct?
+      // Stop tracking if the index switch to disabled and vice versa
       if ($this->status() != $original->status() && $this->hasValidTracker()) {
         if ($this->status()) {
           $this->startTracking();

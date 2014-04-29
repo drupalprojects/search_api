@@ -231,7 +231,6 @@ class IndexForm extends EntityForm {
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,
       '#required' => TRUE,
-      '#disabled' => !$index->isNew(),
       '#ajax' => array(
         'trigger_as' => array('name' => 'datasourcepluginids_configure'),
         'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',

@@ -448,7 +448,50 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
    * datasources it no longer needs to handle and add the new ones.
    */
   protected function changeIndexDatasource() {
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $index->reindex();
 
+    $tracked_items = $this->countTrackedItems();
+    $user_count = \Drupal::entityQuery('user')->count()->execute();
+    $node_count = \Drupal::entityQuery('node')->count()->execute();
+
+    // Go to the index edit path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    // enable indexing of users
+    $edit = array(
+      'status' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasourcePluginIds[]' => array('entity:user', 'entity:node'),
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $t_args = array(
+      '!usercount' => $user_count,
+      '!nodecount' => $node_count,
+    );
+    $this->assertEqual($tracked_items, $user_count+$node_count, t('After enabling user and nodes with respectively !usercount users and !nodecount nodes we should have the sum of those to index', $t_args));
+
+    $this->drupalGet($settings_path);
+    // Disable indexing of users
+    $edit = array(
+      'status' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasourcePluginIds[]' => array('entity:node'),
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $t_args = array(
+      '!nodecount' => $node_count,
+    );
+    $this->assertEqual($tracked_items, $node_count, t('After disabling user indexing we should only have !nodecount nodes to index', $t_args));
   }
 
   /**

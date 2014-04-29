@@ -292,10 +292,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function updateIndex(IndexInterface $index) {
     try {
-      if ($this->getService()->updateIndex($index)) {
-        $index->reindex();
-        return TRUE;
-      }
+      $this->getService()->updateIndex($index);
     }
     catch (SearchApiException $e) {
       $vars = array(

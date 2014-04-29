@@ -88,8 +88,7 @@ interface ServiceSpecificInterface {
    *   The updated index.
    *
    * @return bool
-   *   TRUE, if this change affected the server in any way that forces it to
-   *   re-index the content. FALSE otherwise.
+   *   TRUE, if the server triggered a reindex.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while reacting to the change.

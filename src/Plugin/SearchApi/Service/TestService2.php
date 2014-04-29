@@ -30,4 +30,12 @@ class TestService2 extends TestService {
     return $form;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function updateIndex(IndexInterface $index) {
+    $index->reindex();
+    return TRUE;
+  }
+
 }

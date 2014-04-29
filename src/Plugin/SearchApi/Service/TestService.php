@@ -42,6 +42,15 @@ class TestService extends ServicePluginBase {
   /**
    * {@inheritdoc}
    */
+  public function updateIndex(IndexInterface $index) {
+    $index->reindex();
+    return TRUE;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
   public function deleteItems(IndexInterface $index, array $ids) {}
 
   /**

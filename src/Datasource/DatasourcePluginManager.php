@@ -49,8 +49,13 @@ class DatasourcePluginManager extends DefaultPluginManager {
     $options = array();
     // Iterate through the datasource plugin definitions.
     foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
-      // Add the plugin to the list.
-      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
+      /** @var \Drupal\Core\Entity\FieldableEntityStorageInterface $storage */
+      $storage = \Drupal::entityManager()->getStorage($plugin_definition['entity_type']);
+
+      if (!$storage instanceof \Drupal\Core\Entity\ContentEntityNullStorage) {
+        // Add the plugin to the list.
+        $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
+      }
     }
     return $options;
   }
