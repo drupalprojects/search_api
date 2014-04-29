@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Tracker;
 
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Tracker\TrackerPluginBase;
@@ -22,6 +23,13 @@ use Drupal\search_api\Tracker\TrackerPluginBase;
  * )
  */
 class DefaultTracker extends TrackerPluginBase {
+
+  /*
+   * Constants that we use to show the status of an item in the tracking table.
+   * We're using status 0 for all ok and counting up for other statuses.
+   */
+  const STATUS_INDEXED = 0;
+  const STATUS_NOT_INDEXED = 1;
 
   /**
    * A connection to the Drupal database.
@@ -87,7 +95,7 @@ class DefaultTracker extends TrackerPluginBase {
    */
   protected function createInsertStatement() {
     return $this->getDatabaseConnection()->insert('search_api_item')
-            ->fields(array('index_id', 'datasource', 'item_id', 'changed'));
+            ->fields(array('index_id', 'datasource', 'item_id', 'changed', 'status'));
   }
 
   /**
@@ -128,8 +136,11 @@ class DefaultTracker extends TrackerPluginBase {
     if ($datasource) {
       $select->condition('datasource', $datasource);
     }
-    $select->condition('sai.changed', 0, '>');
+    $select->condition('sai.status', $this::STATUS_NOT_INDEXED, '=');
     $select->orderBy('sai.changed', 'ASC');
+    // Add extra orderBy so that we can predict the next set if the changed
+    // timestamp is the same for a large set of items
+    $select->orderBy('sai.item_id', 'ASC');
 
     return $select;
   }
@@ -146,12 +157,13 @@ class DefaultTracker extends TrackerPluginBase {
       foreach (array_chunk($ids, 1000) as $ids_chunk) {
         $insert = $this->createInsertStatement();
         foreach ($ids_chunk as $item_id) {
-          list($datasource_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+          list($datasource_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
           $insert->values(array(
             'index_id' => $index_id,
             'datasource' => $datasource_id,
             'item_id' => $item_id,
             'changed' => REQUEST_TIME,
+            'status' => $this::STATUS_NOT_INDEXED,
           ));
         }
         $insert->execute();
@@ -174,7 +186,7 @@ class DefaultTracker extends TrackerPluginBase {
       $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : array(NULL));
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
-        $update->fields(array('changed' => REQUEST_TIME));
+        $update->fields(array('changed' => REQUEST_TIME, 'status' => $this::STATUS_NOT_INDEXED));
         if ($ids_chunk) {
           $update->condition('item_id', $ids_chunk);
         }
@@ -194,7 +206,7 @@ class DefaultTracker extends TrackerPluginBase {
     $transaction = $this->getDatabaseConnection()->startTransaction();
     try {
       $update = $this->createUpdateStatement();
-      $update->fields(array('changed' => REQUEST_TIME));
+      $update->fields(array('changed' => REQUEST_TIME, 'status' => $this::STATUS_NOT_INDEXED));
       if ($datasource_id) {
         $update->condition('datasource', $datasource_id);
       }
@@ -217,7 +229,7 @@ class DefaultTracker extends TrackerPluginBase {
       $ids_chunks = array_chunk($ids, 1000);
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
-        $update->fields(array('changed' => 0));
+        $update->fields(array('status' => $this::STATUS_INDEXED));
         $update->condition('item_id', $ids_chunk);
         $update->execute();
       }
@@ -307,7 +319,7 @@ class DefaultTracker extends TrackerPluginBase {
    */
   public function getIndexedItemsCount($datasource = NULL) {
     $select = $this->createSelectStatement();
-    $select->condition('sai.changed', 0);
+    $select->condition('sai.status', $this::STATUS_INDEXED);
     if ($datasource) {
       $select->condition('datasource', $datasource);
     }

@@ -347,4 +347,21 @@ class Utility {
     return $copy;
   }
 
+  /**
+   * Returns the datasource identifier from an item id.
+   *
+   * Since the item_id contains the datasource as part of the identifier and
+   * separated by DATASOURCE_ID_SEPARATOR, we can explode on the item id and
+   * retrieve the datasource identifier.
+   *
+   * @param string $item_id
+   *   The item identifier
+   * @return string $datasource_id
+   *   The datasource identifier the item identifier belongs to.
+   */
+  public static function getDataSourceIdentifierFromItemId($item_id) {
+    $datasource_id = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+    return $datasource_id;
+  }
+
 }

@@ -446,7 +446,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
-      list($datasource_id, $raw_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+      list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
       if (empty($fields[$datasource_id])) {
         $variables['%index'] = $this->label();
         $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
