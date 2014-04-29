@@ -620,6 +620,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
         if (!$property) {
           continue;
         }
+
+        // If there are additional properties, add the label for the main
+        // property to make it clear what it refers to.
+        if ($additional) {
+          $label .= ' » ' . $property->getLabel();
+        }
       }
 
       $type = $property->getDataType();
@@ -649,6 +655,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
     foreach ($recurse as $arguments) {
       call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
     }
+
+    // Sort the fields, only do it if the key is empty to avoid unnecessary
+    // processing.
+    uasort($fields, '\Drupal\search_api\Entity\Index::sortField');
+  }
+
+  /**
+   * Helper callback for uasort() to sort configuration entities by weight and label.
+   */
+  public static function sortField($field_a, $field_b) {
+    $a_label = $field_a['name'];
+    $b_label = $field_b['name'];
+    return strnatcasecmp($a_label, $b_label);
   }
 
   /**
