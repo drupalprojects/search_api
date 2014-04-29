@@ -26,9 +26,7 @@ class TestService extends ServicePluginBase implements ServiceExtraInfoInterface
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {
-    return $ids;
-  }
+  public function deleteItems(IndexInterface $index, array $ids) {}
 
   /**
    * {@inheritdoc}
@@ -45,10 +43,12 @@ class TestService extends ServicePluginBase implements ServiceExtraInfoInterface
         1 => array(
           'id' => 1,
           'score' => 1,
+          'datasource' => key($query->getIndex()->getDatasources()),
         ),
         2 => array(
           'id' => 2,
           'score' => 1,
+          'datasource' => key($query->getIndex()->getDatasources()),
         ),
       ),
     );
