@@ -165,16 +165,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   protected function createServer() {
     $this->serverId = 'database_search_server';
-    global $databases;
-    $database = 'default:default';
-    // Make sure to pick an available connection and to not rely on any
-    // defaults.
-    foreach ($databases as $key => $targets) {
-      foreach ($targets as $target => $info) {
-        $database = "$key:$target";
-        break;
-      }
-    }
     $values = array(
       'name' => 'Database search server',
       'machine_name' => $this->serverId,
@@ -183,7 +173,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
       'servicePluginId' => 'search_api_db',
       'servicePluginConfig' => array(
         'min_chars' => 3,
-        'database' => $database,
+        'database' => 'default:default',
       ),
     );
     $success = (bool) entity_create('search_api_server', $values)->save();
