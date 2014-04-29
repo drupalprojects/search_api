@@ -40,22 +40,6 @@ class Utility {
   }
 
   /**
-   * Checks whether it is possible to sort on fields of the given type.
-   *
-   * @param $type
-   *   The type to check for.
-   *
-   * @todo
-   *   Make sure you take the field object and check the isMultiple parameter
-   *
-   * @return bool
-   *   TRUE if this type is sortable, FALSE otherwise.
-   */
-  static function isSortableType($type) {
-    return !static::isTextType($type);
-  }
-
-  /**
    * Returns all field types recognized by the Search API framework.
    *
    * @return array
