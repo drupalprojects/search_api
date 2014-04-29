@@ -186,16 +186,19 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * {@inheritdoc}
    */
   public function preDelete() {
-    if (empty($this->configuration['indexes'])) {
-      return;
-    }
-    foreach ($this->configuration['indexes'] as $index) {
+    // Delete the regular field tables.
+    foreach ($this->configuration['field_tables'] as $index) {
       foreach ($index as $field) {
-        // Some fields share a de-normalized table, brute force since
-        // everything is going.
         if ($this->database->schema()->tableExists($field['table'])) {
           $this->database->schema()->dropTable($field['table']);
         }
+      }
+    }
+
+    // Delete the denormalized field tables.
+    foreach ($this->configuration['index_tables'] as $table) {
+      if ($this->database->schema()->tableExists($table)) {
+        $this->database->schema()->dropTable($table);
       }
     }
   }
@@ -205,21 +208,26 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function addIndex(IndexInterface $index) {
     try {
+      $index_table = $this->findFreeTable('search_api_db_', $index->id());
+
       // If there are no fields, we can take a shortcut.
       if (!$index->getFields()) {
-        if (!isset($this->configuration['indexes'][$index->id()])) {
-          $this->configuration['indexes'][$index->id()] = array();
+        if (!isset($this->configuration['field_tables'][$index->id()])) {
+          $this->configuration['field_tables'][$index->id()] = array();
+          $this->configuration['index_tables'][$index->id()] = NULL;
           $this->server->save();
         }
-        elseif ($this->configuration['indexes'][$index->id()]) {
+        elseif ($this->configuration['field_tables'][$index->id()]) {
           $this->removeIndex($index);
-          $this->configuration['indexes'][$index->id()] = array();
+          $this->configuration['field_tables'][$index->id()] = array();
+          $this->configuration['index_tables'][$index->id()] = NULL;
           $this->server->save();
         }
         return;
       }
-      $this->configuration += array('indexes' => array());
-      $this->configuration['indexes'] += array($index->id() => array());
+      $this->configuration += array('field_tables' => array(), 'index_tables' => array());
+      $this->configuration['field_tables'] += array($index->id() => array());
+      $this->configuration['index_tables'] += array($index->id() => $index_table);
     }
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
@@ -308,8 +316,6 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *
    * Used as a helper method in fieldsUpdated().
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   Search API index for this field.
    * @param array $field
    *   Single field definition from
    *   \Drupal\search_api\Index\IndexInterface::getFields().
@@ -319,7 +325,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   - column: (optional) The column to use in that table. Defaults to
    *     "value".
    */
-  protected function createFieldTable(IndexInterface $index, $field, &$db) {
+  protected function createFieldTable($field, $db) {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -327,11 +333,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         'module' => 'search_api_db',
         'fields' => array(
           'item_id' => array(
-            // @todo We can't support any other type until the datasouce can
-            // give us the data definition of the ID property.
             'type' => 'varchar',
-            // A length of 255 is overkill for IDs. 50 should be more than
-            // enough.
             'length' => 50,
             'description' => 'The primary identifier of the item.',
             'not null' => TRUE,
@@ -373,8 +375,15 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       $this->database->schema()->addIndex($db['table'], $db['column'], array($db['column']));
     }
     if ($new_table) {
-      // Add a covering index for lists.
-      $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
+      // Add a covering index for fields with multiple values.
+      if ($db['column'] === 'value') {
+        $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
+      }
+      // This is a denormalized table with many columns, where we can't
+      // predict the best covering index.
+      else {
+        $this->database->schema()->addPrimaryKey($db['table'], array('item_id'));
+      }
     }
   }
 
@@ -393,6 +402,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   protected function sqlType($type) {
     switch ($type) {
+      case 'text':
       case 'string':
       case 'uri':
         return array('type' => 'varchar', 'length' => 255);
@@ -412,19 +422,27 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   }
 
   /**
-   * Overrides SearchApiAbstractService::fieldsUpdated().
+   * Updates the storage tables when the field configuration changes.
    *
-   * Internally, this is also used by addIndex().
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   A search index.
+   *
+   * @return bool
+   *   TRUE if the data needs to be reindexed, FALSE otherwise.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   All exceptions get re-thrown as SearchApiException.
    */
-  public function fieldsUpdated(IndexInterface $index) {
+  protected function fieldsUpdated(IndexInterface $index) {
     try {
-      $fields = &$this->configuration['indexes'][$index->id()];
+      $fields = &$this->configuration['field_tables'][$index->id()];
       $new_fields = $index->getFields();
 
       $reindex = FALSE;
       $cleared = FALSE;
       $change = FALSE;
       $text_table = NULL;
+      $denormalized_table = $this->configuration['index_tables'][$index->id()];
 
       foreach ($fields as $name => $field) {
         if (!isset($text_table) && Utility::isTextType($field['type'])) {
@@ -434,7 +452,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
 
         if (!isset($new_fields[$name])) {
           // The field is no longer in the index, drop the data.
-          $this->removeFieldStorage($name, $field);
+          $this->removeFieldStorage($name, $field, $denormalized_table);
           unset($fields[$name]);
           $change = TRUE;
           continue;
@@ -453,15 +471,15 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
               $cleared = TRUE;
               $this->deleteAllItems($index);
             }
-            $this->removeFieldStorage($name, $field);
+            $this->removeFieldStorage($name, $field, $denormalized_table);
             // Keep the table in $new_fields to create the new storage.
             continue;
           }
           elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
             // There is a change in SQL type. We don't have to clear the index,
             // since types can be converted.
-            $column = isset($field['column']) ? $field['column'] : 'value';
-            $this->database->schema()->changeField($field['table'], $column, $column, $this->sqlType($new_type) + array('description' => "The field's value for this item."));
+            $this->database->schema()->changeField($field['table'], 'value', 'value', $this->sqlType($new_type) + array('description' => "The field's value for this item."));
+            $this->database->schema()->changeField($denormalized_table, $field['column'], $field['column'], $this->sqlType($new_type) + array('description' => "The field's value for this item."));
             $reindex = TRUE;
           }
           elseif ($old_type == 'date' || $new_type == 'date') {
@@ -484,10 +502,20 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         // we actually add the index for the first time.)
         if (!Utility::isTextType($field['type'])) {
           $storageExists = $this->database->schema()->tableExists($field['table'])
-              && (!isset($field['column'])
-                  || $this->database->schema()->fieldExists($field['table'], $field['column']));
+            && $this->database->schema()->tableExists($denormalized_table)
+            && $this->database->schema()->fieldExists($field['table'], 'value')
+            && $this->database->schema()->fieldExists($denormalized_table, $field['column']);
           if (!$storageExists) {
-            $this->createFieldTable($index, $new_fields[$name], $field);
+            $db = array(
+              'table' => $field['table'],
+              'column' => 'value',
+            );
+            $this->createFieldTable($new_fields[$name], $db);
+            $db = array(
+              'table' => $denormalized_table,
+              'column' => $field['column'],
+            );
+            $this->createFieldTable($new_fields[$name], $db);
           }
         }
         unset($new_fields[$name]);
@@ -505,15 +533,14 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           $fields[$name]['table'] = $text_table;
         }
         else {
-          if ($this->canDenormalize($field)) {
-            $fields[$name]['table'] = $prefix;
-            $fields[$name]['column'] = $this->findFreeColumn($fields[$name]['table'], $name);
-          }
-          else {
-            $fields[$name]['table'] = $this->findFreeTable($prefix . '_', $name);
-          }
-          $this->createFieldTable($index, $field, $fields[$name]);
+          $fields[$name]['table'] = $this->findFreeTable($prefix . '_', $name);
+          $this->createFieldTable($field, $fields[$name]);
         }
+
+        // Always add a column in the denormalized table.
+        $fields[$name]['column'] = $this->findFreeColumn($denormalized_table, $name);
+        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$name]['column']));
+
         $fields[$name]['type'] = $field['type'];
         $fields[$name]['boost'] = $field['boost'];
         $change = TRUE;
@@ -526,11 +553,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           'module' => 'search_api_db',
           'fields' => array(
             'item_id' => array(
-              // @todo We can't support any other type until the datasouce can
-              // give us the data definition of the ID property.
               'type' => 'varchar',
-              // A length of 255 is overkill for IDs. 50 should be more than
-              // enough.
               'length' => 50,
               'description' => 'The primary identifier of the item.',
               'not null' => TRUE,
@@ -603,45 +626,29 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   }
 
   /**
-   * Checks if a field can be denormalized.
-   *
-   * List fields have multiple values, so cannot be denormalized. Text fields
-   * are tokenized into words, so cannot be denormalized either.
-   *
-   * @param array $field
-   *   Single field definition from
-   *   \Drupal\search_api\Index\IndexInterface::getFields().
-   *
-   * @return bool
-   *   TRUE if the field can be stored in a table with other fields (i.e., will
-   *   only need a single row), FALSE otherwise.
-   */
-  protected function canDenormalize($field) {
-    // @todo We currently treat all fields as multi-valued fields.
-    return FALSE;
-  }
-
-  /**
-   * Drops a field's table or column for storage.
+   * Drops a field's table and denormalized column for storage.
    *
    * @param string $name
    *   The field name.
    * @param array $field
    *   Server-internal information about the field.
+   * @param string $index_table
+   *   The table which stores the denormalized data for this field.
    */
-  protected function removeFieldStorage($name, $field) {
+  protected function removeFieldStorage($name, $field, $index_table) {
     if (Utility::isTextType($field['type'])) {
+      // Remove data from the text table.
       $this->database->delete($field['table'])
         ->condition('field_name', self::getTextFieldName($name))
         ->execute();
     }
-    // Legacy non-denormalized fields will not have a column.
-    elseif ($this->canDenormalize($field) && isset($field['column'])) {
-      $this->database->schema()->dropField($field['table'], $field['column']);
-    }
     elseif ($this->database->schema()->tableExists($field['table'])) {
+      // Remove the field table.
       $this->database->schema()->dropTable($field['table']);
     }
+
+    /// Remove the field column from the denormalized table.
+    $this->database->schema()->dropField($index_table, $field['column']);
   }
 
   /**
@@ -649,20 +656,22 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function removeIndex(IndexInterface $index) {
     try {
-      if (!isset($this->configuration['indexes'][$index->id()])) {
+      if (!isset($this->configuration['field_tables'][$index->id()]) && !isset($this->configuration['index_tables'][$index->id()])) {
         return;
       }
       // Don't delete the index data of read-only indexes!
       if (!$index->isReadOnly()) {
-        foreach ($this->configuration['indexes'][$index->id()] as $field) {
-          // Some fields share a de-normalized table, brute force since
-          // everything is going.
+        foreach ($this->configuration['field_tables'][$index->id()] as $field) {
           if ($this->database->schema()->tableExists($field['table'])) {
             $this->database->schema()->dropTable($field['table']);
           }
         }
+        if ($this->database->schema()->tableExists($this->configuration['index_tables'][$index->id()])) {
+          $this->database->schema()->dropTable($this->configuration['index_tables'][$index->id()]);
+        }
       }
-      unset($this->configuration['indexes'][$index->id()]);
+      unset($this->configuration['field_tables'][$index->id()]);
+      unset($this->configuration['index_tables'][$index->id()]);
       $this->server->save();
     }
     // The database operations might throw PDO or other exceptions, so we catch
@@ -676,7 +685,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
-    if (empty($this->configuration['indexes'][$index->id()])) {
+    if (empty($this->configuration['field_tables'][$index->id()])) {
       throw new SearchApiException(t('No field settings for index with id @id.', array('@id' => $index->id())));
     }
     $indexed = array();
@@ -712,6 +721,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   protected function indexItem(IndexInterface $index, $id, array $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
+    $denormalized_table = $this->configuration['index_tables'][$index->id()];
     $txn = $this->database->startTransaction('search_api_indexing');
     try {
       $inserts = array();
@@ -721,10 +731,10 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         // correctly. Therefore, to avoid DB errors, we re-check the tables
         // here before indexing.
         if (empty($fields[$name]['table']) && !$fields_updated) {
-          unset($this->configuration['indexes'][$index->id()][$name]);
+          unset($this->configuration['field_tables'][$index->id()][$name]);
           $this->fieldsUpdated($index);
           $fields_updated = TRUE;
-          $fields = $this->configuration['indexes'][$index->id()];
+          $fields = $this->configuration['field_tables'][$index->id()];
         }
         if (empty($fields[$name]['table'])) {
           watchdog('search_api_db', "Unknown field !field: please check (and re-save) the index's fields settings.",
@@ -734,6 +744,9 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         $table = $fields[$name]['table'];
         $boost = $fields[$name]['boost'];
         $this->database->delete($table)
+          ->condition('item_id', $id)
+          ->execute();
+        $this->database->delete($denormalized_table)
           ->condition('item_id', $id)
           ->execute();
         // Don't index null values
@@ -754,6 +767,14 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
 
         if (Utility::isTextType($type, array('text', 'tokens'))) {
           $words = array();
+          // Store the first 30 characters of the string as the denormalized
+          // value.
+          $field_value = $value;
+          $denormalized_value = '';
+          do {
+            $denormalized_value .= array_shift($field_value)['value'] . ' ';
+          } while (drupal_strlen($denormalized_value) < 30);
+
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
             // in the text.
@@ -804,18 +825,25 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             $values[] = $value;
           }
           if ($values) {
+            $denormalized_value = reset($values);
             $insert = $this->database->insert($table)
-              ->fields(array('item_id', $fields[$name]['column']));
+              ->fields(array('item_id', 'value'));
             foreach ($values as $v) {
               $insert->values(array(
                 'item_id' => $id,
-                $fields[$name]['column'] => $v,
+                'value' => $v,
               ));
             }
             $insert->execute();
           }
         }
+
+        // Insert a value in the denormalized table for all fields.
+        if (isset($denormalized_value)) {
+          $inserts[$denormalized_table][$fields[$name]['column']] = trim($denormalized_value);
+        }
       }
+
       foreach ($inserts as $table => $data) {
         $this->database->insert($table)
           ->fields(array_merge($data, array('item_id' => $id)))
@@ -978,14 +1006,18 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    */
   public function deleteItems(IndexInterface $index, array $ids) {
     try {
-      if (empty($this->configuration['indexes'][$index->id()])) {
+      if (empty($this->configuration['field_tables'][$index->id()])) {
         return;
       }
-      foreach ($this->configuration['indexes'][$index->id()] as $field) {
+      foreach ($this->configuration['field_tables'][$index->id()] as $field) {
         $this->database->delete($field['table'])
           ->condition('item_id', $ids, 'IN')
           ->execute();
       }
+      // Delete the denormalized field data.
+      $this->database->delete($this->configuration['index_tables'][$index->id()])
+        ->condition('item_id', $ids, 'IN')
+        ->execute();
     }
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
@@ -1000,11 +1032,11 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
   public function deleteAllItems(IndexInterface $index = NULL) {
     try {
       if (!$index) {
-        if (empty($this->configuration['indexes'])) {
+        if (empty($this->configuration['field_tables'])) {
           return;
         }
         $truncated = array();
-        foreach ($this->configuration['indexes'] as $fields) {
+        foreach ($this->configuration['field_tables'] as $fields) {
           foreach ($fields as $field) {
             if (isset($field['table']) && !isset($truncated[$field['table']])) {
               $this->database->truncate($field['table'])->execute();
@@ -1012,15 +1044,19 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             }
           }
         }
+        foreach ($this->configuration['index_tables'] as $table) {
+          if (!isset($truncated[$table])) {
+            $this->database->truncate($table)->execute();
+            $truncated[$table] = TRUE;
+          }
+        }
         return;
       }
 
-      if (empty($this->configuration['indexes'][$index->id()])) {
-        return;
-      }
-      foreach ($this->configuration['indexes'][$index->id()] as $field) {
+      foreach ($this->configuration['field_tables'][$index->id()] as $field) {
         $this->database->truncate($field['table'])->execute();
       }
+      $this->database->truncate($this->configuration['index_tables'][$index->id()])->execute();
     }
       // The database operations might throw PDO or other exceptions, so we catch
       // them all and re-wrap them appropriately.
@@ -1036,7 +1072,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     $time_method_called = microtime(TRUE);
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
-    if (!isset($this->configuration['indexes'][$index->id()])) {
+    if (!isset($this->configuration['field_tables'][$index->id()])) {
       throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
@@ -1080,28 +1116,21 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             $db_query->orderBy('item_id', $order);
             continue;
           }
-          // @todo We cannot sort on anything else right now since all fields
-          // can be multi-valued.
-          throw new SearchApiException(t('Cannot sort on field @field.', array('@field' => $field_name)));
 
-          //if (!isset($fields[$field_name])) {
-          //  throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
-          //}
-          //$field = $fields[$field_name];
-          //if (Utility::isTextType($field['type'])) {
-          //  throw new SearchApiException(t('Cannot sort on fulltext field @field.', array('@field' => $field_name)));
-          //}
-          //$alias = $this->getTableAlias($field, $db_query);
-          //$db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
+          if (!isset($fields[$field_name])) {
+            throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
+          }
+          $alias = $this->getTableAlias($this->configuration['index_tables'][$index->id()], $db_query);
+          $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
           // PostgreSQL automatically adds a field to the SELECT list when
           // sorting on it. Therefore, if we have aggregrations present we also
           // have to add the field to the GROUP BY (since Drupal won't do it for
           // us). However, if no aggregations are present, a GROUP BY would lead
           // to another error. Therefore, we only add it if there is already a
           // GROUP BY.
-          //if ($db_query->getGroupBy()) {
-          //  $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
-          //}
+          if ($db_query->getGroupBy()) {
+            $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
+          }
         }
       }
       else {
@@ -1791,7 +1820,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     }
 
     $index = $query->getIndex();
-    if (empty($this->configuration['indexes'][$index->id()])) {
+    if (empty($this->configuration['field_tables'][$index->id()])) {
       throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
@@ -1904,7 +1933,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   is an associative array with information on the field.
    */
   protected function getFieldInfo(IndexInterface $index) {
-    $fields = $this->configuration['indexes'][$index->id()];
+    $fields = $this->configuration['field_tables'][$index->id()];
     foreach ($fields as $key => $field) {
       // Legacy fields do not have column set.
       if (!isset($field['column'])) {
