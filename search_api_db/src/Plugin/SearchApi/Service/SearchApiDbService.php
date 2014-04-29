@@ -1218,7 +1218,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           $fulltext_fields[$name] = $fields[$name];
         }
 
-        $db_query = $this->createKeysQuery($keys, $fulltext_fields, $fields);
+        $db_query = $this->createKeysQuery($keys, $fulltext_fields, $fields, $query->getIndex());
         if (is_array($keys) && !empty($keys['#negation'])) {
           $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
           $db_query->distinct();
@@ -1254,7 +1254,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
 
     $filter = $query->getFilter();
     if ($filter->getFilters()) {
-      $condition = $this->createFilterCondition($filter, $fields, $db_query);
+      $condition = $this->createFilterCondition($filter, $fields, $db_query, $query->getIndex());
       if ($condition) {
         $db_query->condition($condition);
       }
@@ -1400,12 +1400,14 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   to internal information about them.
    * @param array $all_fields
    *   Internal information about all indexed fields on the index.
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index we're searching on.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   A SELECT query returning item_id and score (or only item_id, if
    *   $keys['#negation'] is set).
    */
-  protected function createKeysQuery($keys, array $fields, array $all_fields) {
+  protected function createKeysQuery($keys, array $fields, array $all_fields, IndexInterface $index) {
     if (!is_array($keys)) {
       $keys = array(
         '#conjunction' => 'AND',
@@ -1468,7 +1470,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     if ($nested) {
       $word = '';
       foreach ($nested as $k) {
-        $query = $this->createKeysQuery($k, $fields, $all_fields);
+        $query = $this->createKeysQuery($k, $fields, $all_fields, $index);
         if (!$neg) {
           $word .= ' ';
           $var = ':word' . strlen($word);
@@ -1515,7 +1517,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           $old_query = $db_query;
         }
         // We use this table because all items should be contained exactly once.
-        $db_query = $this->database->select($all_fields['search_api_language']['table'], 't');
+        $db_query = $this->database->select($this->configuration['index_tables'][$index->id()], 't');
         $db_query->addField('t', 'item_id', 'item_id');
         if (!$neg) {
           $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
@@ -1525,13 +1527,13 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
 
       if ($conj == 'AND') {
         foreach ($negated as $k) {
-          $db_query->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields), 'NOT IN');
+          $db_query->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields, $index), 'NOT IN');
         }
       }
       else {
         $or = db_or();
         foreach ($negated as $k) {
-          $or->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields), 'NOT IN');
+          $or->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields, $index), 'NOT IN');
         }
         if (isset($old_query)) {
           $or->condition('t.item_id', $old_query, 'NOT IN');
@@ -1558,6 +1560,8 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    *   Internal information about the index's fields.
    * @param \Drupal\Core\Database\Query\SelectInterface $db_query
    *   The database query to which the condition will be added.
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index we're searching on.
    *
    * @return \Drupal\Core\Database\Query\Condition|null
    *   The condition to set on the query, or NULL if none is necessary.
@@ -1565,7 +1569,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
    * @throws SearchApiException
    *   If an unknown field was used in the filter.
    */
-  protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query) {
+  protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query, IndexInterface $index) {
     $cond = db_condition($filter->getConjunction());
     $empty = TRUE;
     // Store whether a JOIN alrady occurred for a field, so we don't JOIN
@@ -1575,7 +1579,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
     $tables = array();
     foreach ($filter->getFilters() as $f) {
       if (is_object($f)) {
-        $c = $this->createFilterCondition($f, $fields, $db_query);
+        $c = $this->createFilterCondition($f, $fields, $db_query, $index);
         if ($c) {
           $empty = FALSE;
           $cond->condition($c);
@@ -1597,7 +1601,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
         }
         if (Utility::isTextType($field['type'])) {
           $keys = $this->prepareKeys($f[1]);
-          $query = $this->createKeysQuery($keys, array($f[0] => $field), $fields);
+          $query = $this->createKeysQuery($keys, array($f[0] => $field), $fields, $index);
           // We don't need the score, so we remove it. The score might either be
           // an expression or a field.
           $query_expressions = &$query->getExpressions();
