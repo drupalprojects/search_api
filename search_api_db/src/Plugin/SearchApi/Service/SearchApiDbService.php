@@ -1120,7 +1120,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           if (!isset($fields[$field_name])) {
             throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
           }
-          $alias = $this->getTableAlias($this->configuration['index_tables'][$index->id()], $db_query);
+          $alias = $this->getTableAlias(array('table' => $this->configuration['index_tables'][$index->id()]), $db_query);
           $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
           // PostgreSQL automatically adds a field to the SELECT list when
           // sorting on it. Therefore, if we have aggregrations present we also
@@ -1587,9 +1587,9 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
           throw new SearchApiException(t('Unknown field in filter clause: @field.', array('@field' => $f[0])));
         }
         $field = $fields[$f[0]];
-        // If the field is in its own table, we have to check for NULL values in
+        // Fields have their own table, so we have to check for NULL values in
         // a special way (i.e., check for missing entries in that table).
-        if ($f[1] === NULL && $field['column'] === 'value') {
+        if ($f[1] === NULL) {
           $query = $this->database->select($field['table'], 't')
             ->fields('t', array('item_id'));
           $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'IN' : 'NOT IN');
@@ -1618,7 +1618,7 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
             $tables[$f[0]] = $this->getTableAlias($field, $db_query, $new_join);
             $first_join[$f[0]] = TRUE;
           }
-          $column = $tables[$f[0]] . '.' . $field['column'];
+          $column = $tables[$f[0]] . '.' . 'value';
           if ($f[1] !== NULL) {
             $cond->condition($column, $f[1], $f[2]);
           }
@@ -1710,9 +1710,9 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       // If "Include missing facet" is disabled, we use an INNER JOIN and add IS
       // NOT NULL for shared tables.
       $alias = $this->getTableAlias($field, $select, TRUE, $facet['missing'] ? 'leftJoin' : 'innerJoin');
-      $select->addField($alias, Utility::isTextType($field['type']) ? 'word' : $field['column'], 'value');
+      $select->addField($alias, Utility::isTextType($field['type']) ? 'word' : 'value', 'value');
       if (!$facet['missing'] && !Utility::isTextType($field['type'])) {
-        $select->isNotNull($alias . '.' . $field['column']);
+        $select->isNotNull($alias . '.' . 'value');
       }
       $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
       $select->groupBy('value');
@@ -1748,12 +1748,12 @@ class SearchApiDbService extends ServicePluginBase implements ServiceExtraInfoIn
       // facets that weren't added above.
       if ($facet['min_count'] < 1) {
         $select = $this->database->select($field['table'], 't');
-        $select->addField('t', $field['column'], 'value');
+        $select->addField('t', 'value', 'value');
         $select->distinct();
         if ($values) {
-          $select->condition($field['column'], $values, 'NOT IN');
+          $select->condition('value', $values, 'NOT IN');
         }
-        $select->isNotNull($field['column']);
+        $select->isNotNull('value');
         foreach ($select->execute() as $row) {
           $terms[] = array(
             'count' => 0,
