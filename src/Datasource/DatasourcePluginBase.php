@@ -63,18 +63,4 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
     return array_fill_keys(array_keys($items), array());
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function startTracking() {
-    // Implement basic tracking?
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function stopTracking() {
-    // Implement basic tracking?
-  }
 }

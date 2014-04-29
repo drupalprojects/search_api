@@ -851,12 +851,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function index($limit = '-1', $datasource_id = NULL) {
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items_by_datasource = array();
       foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id, 2);
+        list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
         $items_by_datasource[$datasource_id][] = $raw_id;
       }
       $items = array();
@@ -901,8 +901,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsInserted($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -915,8 +914,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsUpdated($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -929,8 +927,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsDeleted($datasource_id, array $ids) {
-    // @todo Only do this if index is … enabled? Not read-only? Both?
-    if ($this->hasValidTracker()) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
@@ -1024,13 +1021,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       // @todo Is this logic correct?
       if ($this->status() != $original->status() && $this->hasValidTracker()) {
-        foreach ($this->getDatasources() as $datasource) {
-          if ($this->status()) {
-            $datasource->startTracking();
-          }
-          else {
-            $datasource->stopTracking();
-          }
+        if ($this->status()) {
+          $this->startTracking();
+        }
+        else {
+          $this->stopTracking();
         }
       }
 
@@ -1053,6 +1048,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       if ($index->hasValidServer()) {
         $index->getServer()->removeIndex($index);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function stopTracking() {
+    foreach ($this->getDatasources() as $datasource) {
+      $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function startTracking() {
+    foreach ($this->getDatasources() as $datasource) {
+      // Check whether there are entities which need to be inserted.
+      if (($item_ids = $datasource->getItemIds())) {
+        // Register entities with the tracker.
+        $this->trackItemsInserted($datasource->getPluginId(), $item_ids);
       }
     }
   }

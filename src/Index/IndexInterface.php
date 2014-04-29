@@ -473,4 +473,14 @@ interface IndexInterface extends ConfigEntityInterface {
    */
   public function query(array $options = array());
 
+  /**
+   * Starts tracking for this index.
+   */
+  public function startTracking();
+
+  /**
+   * Stops tracking for this index.
+   */
+  public function stopTracking();
+
 }

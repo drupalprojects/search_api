@@ -228,23 +228,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function startTracking() {
-    // Check whether there are entities which need to be inserted.
-    if (($entity_ids = $this->getEntityIds())) {
-      // Register entities with the tracker.
-      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function stopTracking() {
-    // Check whether there are entities which need to be removed.
-    if (($entity_ids = $this->getEntityIds())) {
-      // Remove the items from the tracker.
-      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
-    }
+  public function getItemIds($limit = '-1', $from = NULL) {
+    return $this->getEntityIds();
   }
 
   /**
