@@ -45,7 +45,6 @@ function theme_search_api_admin_fields_table($variables) {
   }
 
   $note = isset($form['note']) ? $form['note'] : '';
-  $submit = $form['submit'];
   $additional = isset($form['additional']) ? $form['additional'] : FALSE;
   unset($form['note'], $form['submit'], $form['additional']);
   $output = drupal_render_children($form);
@@ -58,7 +57,6 @@ function theme_search_api_admin_fields_table($variables) {
 
   $output .= drupal_render($build);
   $output .= render($note);
-  $output .= render($submit);
   if ($additional) {
     $output .= render($additional);
   }
