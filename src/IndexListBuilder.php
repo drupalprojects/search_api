@@ -69,11 +69,11 @@ class IndexListBuilder extends ConfigEntityListBuilder {
     $server_groups = array();
     foreach ($servers as $server) {
       $server_group = array(
-        $server->id() => $server,
+        "server." . $server->id() => $server,
       );
 
       foreach ($server->getIndexes() as $server_index) {
-        $server_group[$server_index->id()] = $server_index;
+        $server_group["index." . $server_index->id()] = $server_index;
         // Remove this index which is assigned to a server from the list of all
         // indexes.
         foreach ($indexes as $index_key => $index) {
@@ -83,7 +83,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         }
       }
 
-      $server_groups[$server->id()] = $server_group;
+      $server_groups["server." . $server->id()] = $server_group;
     }
 
     return array(
@@ -196,7 +196,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
     );
     foreach ($entity_groups['servers'] as $server_groups) {
       foreach ($server_groups as $entity) {
-        $list['servers']['#rows'][$entity->id()] = $this->buildRow($entity);
+        $list['servers']['#rows'][$entity->getEntityTypeId() . "." . $entity->id()] = $this->buildRow($entity);
       }
     }
 
