@@ -1067,14 +1067,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
       else if ($this->status() && !$original->status()) {
-        // Start tracking if the index switched to enabled
-        if ($this->hasValidTracker()) {
-          $this->startTracking();
-        }
-        // Add to new server
-        if ($this->isServerEnabled()) {
-          $this->getServer()->addIndex($this);
-        }
+        // Add the index to the server.
+        $this->getServer()->addIndex($this);
+        // Start tracking.
+        $this->startTracking();
       }
 
       $this->resetCaches();
@@ -1087,10 +1083,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Actions to take if the index switches servers.
    *
-   * @param object $original
+   * @param \Drupal\search_api\Index\IndexInterface $original
    *   The previous version of the index.
    */
-  public function actOnServerSwitch($original) {
+  public function actOnServerSwitch(IndexInterface $original) {
     if ($this->getServerId() != $original->getServerId()) {
       // Remove from old server if there was an old server assigned to the
       // index.
@@ -1113,15 +1109,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Actions to take when datasources change.
    *
-   * @param object $original
+   * @param \Drupal\search_api\Index\IndexInterface $original
    *   The previous version of the index.
    */
-  public function actOnDatasourceSwitch($original) {
+  public function actOnDatasourceSwitch(IndexInterface $original) {
     // Take the old datasource list
-    if ($this->datasourcePluginIds != $original->datasourcePluginIds) {
+    if ($this->datasourcePluginIds != $original->getDatasourceIds()) {
       // Get the difference between the arrays
-      $removed = array_diff($original->datasourcePluginIds, $this->datasourcePluginIds);
-      $added = array_diff($this->datasourcePluginIds, $original->datasourcePluginIds);
+      $removed = array_diff($original->getDatasourceIds(), $this->datasourcePluginIds);
+      $added = array_diff($this->datasourcePluginIds, $original->getDatasourceIds());
       // Delete from tracker if the datasource got removed
       foreach ($removed as $datasource_id) {
         $this->getTracker()->trackAllItemsDeleted($datasource_id);
@@ -1139,12 +1135,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Actions to take when trackers change.
    *
-   * @param object $original
+   * @param \Drupal\search_api\Index\IndexInterface $original
    *   The previous version of the index.
    */
-  public function actOnTrackerSwitch($original) {
+  public function actOnTrackerSwitch(IndexInterface $original) {
     // Take the old datasource list
-    if ($this->trackerPluginId != $original->trackerPluginId) {
+    if ($this->trackerPluginId != $original->getTrackerId()) {
       // Delete from old tracker
       $original->stopTracking();
       // Add to the tracker if the datasource got added
