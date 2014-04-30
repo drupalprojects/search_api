@@ -64,6 +64,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
+    $this->removeFieldsFromIndex();
 
     $this->setReadOnly();
     $this->disableEnableIndex();
@@ -157,7 +158,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function addFieldsToIndex() {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/fields/entity:node';
+    $settings_path = $this->getIndexPath($this->indexId) . '/fields';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -197,6 +198,18 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->assertNoFieldByName('additional[field][entity:node|type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
 
     // @todo Implement more tests for additional fields.
+  }
+
+  protected function removeFieldsFromIndex() {
+    $edit = array(
+      'fields[entity:node|body][indexed]' => FALSE,
+    );
+    $this->drupalPostForm($this->getIndexPath($this->indexId) . '/fields', $edit, t('Save changes'));
+
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $fields = $index->getFields();
+    $this->assertTrue(!isset($fields['entity:node|body']), 'The body field has been removed from the index.');
   }
 
   protected function trackContent() {
@@ -381,7 +394,15 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $remaining_before = $this->countRemainingItems();
+
+    $index_path = 'admin/config/search/search-api/index/' . $this->indexId;
+    $this->drupalGet($index_path);
+
+    $this->assertNoText(t('Index now'), t("Making sure that the Index now button does not appear in the UI after setting the index to readOnly"));
+
+    // Let's index using the API also to make sure we can't index
     $index->index();
+
     $remaining_after = $this->countRemainingItems();
     $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to readOnly'));
 
@@ -395,7 +416,10 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $remaining_before = $index->getTracker()->getRemainingItemsCount();
-    $index->index();
+
+    $this->drupalGet($index_path);
+    $this->drupalPostForm(NULL, array(), t('Index now'));
+
     $remaining_after = $index->getTracker()->getRemainingItemsCount();
     $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the readOnly flag'));
 
@@ -555,4 +579,18 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     );
     $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount items left to index after changing servers', $t_args));
   }
+
+  /**
+   * Returns the system path for an index.
+   *
+   * @param string $index_id
+   *   The index ID.
+   *
+   * @return string
+   *   A system path.
+   */
+  protected function getIndexPath($index_id) {
+    return 'admin/config/search/search-api/index/' . $index_id;
+  }
+
 }
