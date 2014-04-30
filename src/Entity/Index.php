@@ -1027,6 +1027,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->status() && !$this->isServerEnabled()) {
       $this->disable();
     }
+
+    // Always enable the "Langue control" processor and corresponding "Item
+    // language" field.
+    // @todo Replace this with a cleaner, more flexible approach. See
+    // https://drupal.org/node/2090341
+    $this->options['processors']['search_api_language_processor']['status'] = TRUE;
+    $this->options['fields']['search_api_language'] = array('type' => 'string');
   }
 
   /**

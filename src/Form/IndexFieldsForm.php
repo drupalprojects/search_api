@@ -230,15 +230,6 @@ class IndexFieldsForm extends EntityForm {
       foreach ($fulltext_types[$level] as $type) {
         $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
-      if ($key == 'search_api_language') {
-        // Is treated specially to always index the language.
-        $build['fields'][$key]['type']['#default_value'] = 'string';
-        $build['fields'][$key]['type']['#disabled'] = TRUE;
-        $build['fields'][$key]['boost']['#default_value'] = '1.0';
-        $build['fields'][$key]['boost']['#disabled'] = TRUE;
-        $build['fields'][$key]['indexed']['#default_value'] = 1;
-        $build['fields'][$key]['indexed']['#disabled'] = TRUE;
-      }
     }
 
     if ($additional) {
