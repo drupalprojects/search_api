@@ -381,7 +381,15 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $remaining_before = $this->countRemainingItems();
+
+    $index_path = 'admin/config/search/search-api/index/' . $this->indexId;
+    $this->drupalGet($index_path);
+
+    $this->assertNoText(t('Index now'), t("Making sure that the Index now button does not appear in the UI after setting the index to readOnly"));
+
+    // Let's index using the API also to make sure we can't index
     $index->index();
+
     $remaining_after = $this->countRemainingItems();
     $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to readOnly'));
 
@@ -395,7 +403,10 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $remaining_before = $index->getTracker()->getRemainingItemsCount();
-    $index->index();
+
+    $this->drupalGet($index_path);
+    $this->drupalPostForm(NULL, array(), t('Index now'));
+
     $remaining_after = $index->getTracker()->getRemainingItemsCount();
     $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the readOnly flag'));
 
