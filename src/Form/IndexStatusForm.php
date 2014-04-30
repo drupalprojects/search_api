@@ -102,19 +102,18 @@ class IndexStatusForm extends FormBase {
         '#name' => 'index_now',
       );
       // Build the index manipulation actions.
-      $form['reindex'] = array(
+      $form['actions']['#type'] = 'actions';
+      $form['actions']['reindex'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Queue all items for reindexing'),
-        '#prefix' => '<div>',
-        '#suffix' => '</div>',
         '#name' => 'reindex',
+        '#button_type' => 'danger',
       );
-      $form['clear'] = array(
+      $form['actions']['clear'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Clear all indexed data'),
-        '#prefix' => '<div>',
-        '#suffix' => '</div>',
         '#name' => 'clear',
+        '#button_type' => 'danger',
       );
     }
     return $form;
