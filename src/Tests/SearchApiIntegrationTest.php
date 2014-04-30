@@ -341,8 +341,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 1, t('One item is tracked'));
-
-
   }
 
   /**

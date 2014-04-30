@@ -106,12 +106,29 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
-    // Load the items from storage.
-    $items = $this->storage->loadMultiple($ids);
-    // If we were unable to delete some of the items, mark them as deleted.
-    if ($diff = array_diff_key(array_flip($ids), $items)) {
-      // Remove the items from the index.
-      $this->getIndex()->trackItemsDeleted($this, array_keys($diff));
+    $entity_ids = array();
+    foreach ($ids as $item_id) {
+      list($entity_id, $langcode) = explode(':', $item_id, 2);
+      $entity_ids[$entity_id][$item_id] = $langcode;
+    }
+
+    /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
+    $entities = $this->storage->loadMultiple(array_keys($entity_ids));
+    $missing = array();
+    $items = array();
+    foreach ($entity_ids as $entity_id => $langcodes) {
+      foreach ($langcodes as $item_id => $langcode) {
+        if (!empty($entities[$entity_id]) && $entities[$entity_id]->hasTranslation($langcode)) {
+          $items[$item_id] = $entities[$entity_id]->getTranslation($langcode);
+        }
+        else {
+          $missing[] = $item_id;
+        }
+      }
+    }
+    // If we were unable to load some of the items, mark them as deleted.
+    if ($missing) {
+      $this->getIndex()->trackItemsDeleted($this->getPluginId(), array_keys($missing));
     }
     return $items;
   }
@@ -220,7 +237,27 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function getItemUrl($item) {
+  public function getItemId(ComplexDataInterface $item) {
+    if ($item instanceof EntityInterface) {
+      return $item->id() . ':' . $item->language();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemLabel(ComplexDataInterface $item) {
+    if ($item instanceof EntityInterface) {
+      return $item->label();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemUrl(ComplexDataInterface $item) {
     if ($item instanceof EntityInterface) {
       return $item->urlInfo();
     }
@@ -231,7 +268,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function getItemIds($limit = '-1', $from = NULL) {
-    return $this->getEntityIds();
+    // @todo Implement paging.
+    return $this->getBundleItemIds();
   }
 
   /**
@@ -239,7 +277,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function startTrackingBundles(array $bundles) {
     // Check whether there are entities which need to be inserted.
-    if (($entity_ids = $this->getEntityIds($bundles))) {
+    if (($entity_ids = $this->getBundleItemIds($bundles))) {
       // Register entities with the tracker.
       $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
     }
@@ -250,7 +288,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function stopTrackingBundles(array $bundles) {
     // Check whether there are entities which need to be removed.
-    if (($entity_ids = $this->getEntityIds($bundles))) {
+    if (($entity_ids = $this->getBundleItemIds($bundles))) {
       // Remove the items from the tracker.
       $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
     }
@@ -348,17 +386,16 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
-   * Gets the affected entity ids.
-   *
-   * By default it takes the bundles from the current settings.
+   * Retrieves all item IDs of entities of specific bundles.
    *
    * @param array $bundles
-   *   List of bundles you want to get the entity id's from
+   *   (optional) The bundles for which all item IDs should be returned.
+   *   Defaults to all enabled bundles.
    *
    * @return array
+   *   An array of all item IDs of these bundles.
    */
-  public function getEntityIds(array $bundles = NULL) {
-    $entity_ids = array();
+  public function getBundleItemIds(array $bundles = NULL) {
     $select = \Drupal::entityQuery($this->getEntityTypeId());
 
     // Get our bundles from the datasource if it was not passed.
@@ -373,7 +410,14 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     }
     $entity_ids = $select->execute();
 
-    return $entity_ids;
+    $item_ids = array();
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    foreach (entity_load_multiple($this->getEntityTypeId(), $entity_ids) as $entity_id => $entity) {
+      foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+        $item_ids[] = "$entity_id:$langcode";
+      }
+    }
+    return $item_ids;
   }
 
   /**

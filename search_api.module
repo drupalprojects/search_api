@@ -46,14 +46,25 @@ function search_api_permission() {
 /**
  * Implements hook_entity_insert().
  *
- * Adds an entry to the tracking table for each index that tracks entities of
- * this type.
+ * Adds entries for all languages of the new entity to the tracking table for
+ * each index that tracks entities of this type.
  */
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsInserted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
+    }
+
+    $item_ids = array();
+    $entity_id = $entity->id();
+    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+      $item_ids[] = $entity_id . ':' . $langcode;
+    }
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    foreach ($indexes as $index) {
+      $index->trackItemsInserted($datasource_id, $item_ids);
     }
   }
 }
@@ -63,12 +74,51 @@ function search_api_entity_insert(EntityInterface $entity) {
  *
  * Updates the entry to the tracking table for each index that tracks this
  * entity.
+ *
+ * Also takes care of new or deleted translations.
  */
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsUpdated('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
+    }
+
+    $entity_id = $entity->id();
+    $combine_id = function($langcode) use ($entity_id) {
+      return $entity_id . ':' . $langcode;
+    };
+    $inserted_item_ids = array();
+    $updated_item_ids = array_keys($entity->getTranslationLanguages());
+    $deleted_item_ids = array();
+    $old_translations = $entity->original->getTranslationLanguages();
+    foreach (array_keys($old_translations) as $langcode) {
+      if (!isset($updated_item_ids[$langcode])) {
+        $deleted_item_ids[] = $langcode;
+      }
+    }
+    foreach ($updated_item_ids as $i => $langcode) {
+      if (!isset($old_translations[$langcode])) {
+        unset($updated_item_ids[$i]);
+        $inserted_item_ids[] = $langcode;
+      }
+    }
+
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    $inserted_item_ids = array_map($combine_id, $inserted_item_ids);
+    $updated_item_ids = array_map($combine_id, $updated_item_ids);
+    $deleted_item_ids = array_map($combine_id, $deleted_item_ids);
+    foreach ($indexes as $index) {
+      if ($inserted_item_ids) {
+        $index->trackItemsInserted($datasource_id, $inserted_item_ids);
+      }
+      if ($updated_item_ids) {
+        $index->trackItemsUpdated($datasource_id, $updated_item_ids);
+      }
+      if ($deleted_item_ids) {
+        $index->trackItemsDeleted($datasource_id, $deleted_item_ids);
+      }
     }
   }
 }
@@ -76,14 +126,25 @@ function search_api_entity_update(EntityInterface $entity) {
 /**
  * Implements hook_entity_delete().
  *
- * Deletes the entry from the tracking table for each index that tracks this
- * entity.
+ * Deletes all entries for this entity from the tracking table for each index
+ * that tracks this entity type.
  */
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsDeleted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
+    }
+
+    $item_ids = array();
+    $entity_id = $entity->id();
+    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+      $item_ids[] = $entity_id . ':' . $langcode;
+    }
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    foreach ($indexes as $index) {
+      $index->trackItemsDeleted($datasource_id, $item_ids);
     }
   }
 }

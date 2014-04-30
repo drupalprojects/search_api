@@ -61,9 +61,31 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function loadMultiple(array $ids);
 
   /**
+   * Retrieves the unique ID of an item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this controller's type.
+   *
+   * @return string
+   *   The datasource-internal, unique ID of the item.
+   */
+  public function getItemId(ComplexDataInterface $item);
+
+  /**
+   * Retrieves a human-readable label for an item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this controller's type.
+   *
+   * @return string|null
+   *   Either a human-readable label for the item, or NULL if none is available.
+   */
+  public function getItemLabel(ComplexDataInterface $item);
+
+  /**
    * Retrieves a URL at which the item can be viewed on the web.
    *
-   * @param mixed $item
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   An item of this DataSource's type.
    *
    * @return array|null
@@ -72,7 +94,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   item has no URL of its own.
    *
    */
-  public function getItemUrl($item);
+  public function getItemUrl(ComplexDataInterface $item);
 
   /**
    * Returns view mode info for this item type.

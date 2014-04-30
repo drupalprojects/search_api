@@ -840,7 +840,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
    */
   protected function getItemIds(array $entity_ids) {
     return array_map(function ($entity_id) {
-      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id;
+      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':und';
     }, $entity_ids);
   }
 
