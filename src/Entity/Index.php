@@ -449,28 +449,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
 
       // Copy the field information into the $fields array.
-      list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
-      $fields[$datasource_id][$property_path] = $field;
+      if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
+        list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
+        $fields[$datasource_id][$property_path] = $field;
+      }
+      else {
+        $fields[NULL][$key] = $field;
+      }
     }
 
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
       list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
-      if (empty($fields[$datasource_id])) {
-        $variables['%index'] = $this->label();
-        $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
-        throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
-      }
-      $extracted_fields = $fields[$datasource_id];
-      Utility::extractFields($item, $extracted_fields);
       $extracted_item = array();
       $extracted_item['#item'] = $item;
       $extracted_item['#item_id'] = $raw_id;
       $extracted_item['#datasource'] = $datasource_id;
-      $field_prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-      foreach ($extracted_fields as $property_path => $field) {
-        $extracted_item[$field_prefix . $property_path] = $field;
+      foreach (array(NULL, $datasource_id) as $fields_key) {
+        if (!empty($fields[$fields_key])) {
+          $extracted_fields = $fields[$fields_key];
+          Utility::extractFields($item, $extracted_fields);
+          $field_prefix = $fields_key ? $fields_key . self::DATASOURCE_ID_SEPARATOR : '';
+          foreach ($extracted_fields as $property_path => $field) {
+            $extracted_item[$field_prefix . $property_path] = $field;
+          }
+        }
       }
       $extracted_items[$item_id] = $extracted_item;
       // Remember the items that were initially passed.
