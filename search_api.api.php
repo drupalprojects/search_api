@@ -69,6 +69,21 @@ function hook_search_api_processor_info_alter(array &$processors) {
 }
 
 /**
+ * Alter the mapping of Drupal data types to Search API data types.
+ *
+ * @param array $mapping
+ *   An array mapping all known (and supported) Drupal data types to their
+ *   corresponding Search API data types. Empty values mean that fields of
+ *   that type should be ignored by the Search API.
+ *
+ * @see \Drupal\search_api\Utility\Utility::getFieldTypeMapping()
+ */
+function hook_search_api_field_type_mapping_alter(array &$mapping) {
+  $mapping['duration_iso8601'] = NULL;
+  $mapping['my_new_type'] = 'string';
+}
+
+/**
  * Allows you to log or alter the items that are indexed.
  *
  * Please be aware that generally preventing the indexing of certain items is

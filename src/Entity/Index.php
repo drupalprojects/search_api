@@ -209,6 +209,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $processors;
 
   /**
+   * List of types that failed to map to a Search API type.
+   *
+   * The unknown types are the keys and map to arrays of fields that were
+   * ignored because they are of this type.
+   *
+   * @var array
+   */
+  protected $unmappedFields = array();
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
@@ -519,6 +529,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
+      // Remember the fields for which we couldn't find a mapping.
+      $this->unmappedFields = array();
       foreach (array_merge(array(NULL), $this->datasourcePluginIds) as $datasource_id) {
         try {
           $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource_id), $datasource_id);
@@ -527,6 +539,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $variables['%index'] = $this->label();
           watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: !message in %function (line %line of %file).', $variables);
         }
+      }
+      if ($this->unmappedFields) {
+        $vars['@fields'] = array();
+        foreach ($this->unmappedFields as $type => $fields) {
+          $vars['@fields'][] = implode(', ', $fields) . ' (' . t('type !type', array('!type' => $type)) . ')';
+        }
+        $vars['@fields'] = implode('; ', $vars['@fields']);
+        $vars['@index'] = $this->label();
+        watchdog('search_api', 'Warning while retrieving available fields for index @index: could not find a type mapping for the following fields: @fields.', $vars, WATCHDOG_WARNING);
       }
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
@@ -633,8 +654,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (isset($parent_type) && isset($type_mapping[$parent_type . '.' . $type])) {
         $field_type = $type_mapping[$parent_type . '.' . $type];
       }
-      else {
+      elseif (!empty($type_mapping[$type])) {
         $field_type = $type_mapping[$type];
+      }
+      else {
+        // Failed to map this type, skip.
+        if (!isset($type_mapping[$type])) {
+          $this->unmappedFields[$type][$key] = $key;
+        }
+        continue;
       }
 
       $fields[$key] = array(
