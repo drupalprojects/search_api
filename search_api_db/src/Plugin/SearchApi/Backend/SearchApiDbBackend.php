@@ -246,6 +246,16 @@ class SearchApiDbBackend extends BackendPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function updateIndex(IndexInterface $index) {
+    // Check if any fields were updated and trigger a reindex if needed.
+    if ($this->fieldsUpdated($index)) {
+      $index->reindex();
+    }
+  }
+
+  /**
    * Finds a free table name using a certain prefix and name base.
    *
    * Used as a helper method in fieldsUpdated().
