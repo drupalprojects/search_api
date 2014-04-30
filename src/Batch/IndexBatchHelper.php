@@ -17,7 +17,7 @@ class IndexBatchHelper {
   /**
    * The translation manager service.
    *
-   * @var \Drupal\Core\Translation\
+   * @var \Drupal\Core\StringTranslation\TranslationInterface
    */
   protected static $translationManager;
 
