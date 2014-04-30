@@ -778,6 +778,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $index->serverMachineName = NULL;
     $index->save();
+
     $server = entity_load('search_api_server', $this->serverId, TRUE);
     $this->assertEqual($server->backendPluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
     $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');
