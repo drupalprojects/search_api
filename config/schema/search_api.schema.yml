@@ -33,11 +33,11 @@ search_api.server.*:
     status:
       type: boolean
       label: 'Status'
-    servicePluginId:
+    backendPluginId:
       type: string
-      label: 'Service Plugin ID'
-    servicePluginConfig:
-      type: search_api.service.plugin.[%parent.servicePluginId]
+      label: 'Backend Plugin ID'
+    backendPluginConfig:
+      type: search_api.backend.plugin.[%parent.backendPluginId]
     langcode:
       type: string
       label: 'Language code'

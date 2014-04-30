@@ -86,27 +86,78 @@ class IndexFieldsForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state, $datasource_id = NULL) {
+  public function buildForm(array $form, array &$form_state) {
     // Get the index
     $index = $this->entity;
-    $entity_description_added = FALSE;
-    $this->datasourceId = $datasource_id;
 
     // Set a proper title
     $form['#title'] = $this->t('Manage fields for search index @label', array('@label' => $index->label()));
 
     // Get all options
     $options = $index->getFields(FALSE, TRUE);
-    $fields = $this->getDatasourceFields($options['fields'], $datasource_id);
-    $additional = $this->getDatasourceFields($options['additional fields'], $datasource_id);
+
+    $form_state['index'] = $index;
+    $form['description'] = array(
+      '#type' => 'item',
+      '#title' => t('Select fields to index'),
+      '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering.' .
+        'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
+        '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
+        'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
+    );
+    if ($index->getServer()) {
+      $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
+          array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
+    }
+
+    if ($fields = $this->getDatasourceFields($options['fields'], NULL)) {
+      $form['general'] = array(
+        '#type' => 'details',
+        '#title' => t('General'),
+        '#open' => TRUE,
+        '#theme' => 'search_api_admin_fields_table',
+      );
+
+      $additional = $this->getDatasourceFields($options['additional fields'], NULL);
+      $form['general'] += $this->buildFields($fields, $additional);
+    }
+
+    foreach ($index->getDatasources() as $datasource_id => $datasource) {
+      $form[$datasource_id] = array(
+        '#type' => 'details',
+        '#title' => $datasource->label(),
+        '#open' => TRUE,
+        '#theme' => 'search_api_admin_fields_table',
+      );
+
+      $fields = $this->getDatasourceFields($options['fields'], $datasource_id);
+      $additional = $this->getDatasourceFields($options['additional fields'], $datasource_id);
+      $form[$datasource_id] += $this->buildFields($fields, $additional);
+    }
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save changes'),
+    );
+
+    return $form;
+  }
+
+  /**
+   * Builds the form fields for a set of fields.
+   *
+   * @param array $fields
+   *   List of fields to display.
+   * @param array $additional
+   *   List of additional fields that can be added.
+   *
+   * @return array
+   *   The build structure.
+   */
+  protected function buildFields(array $fields, array $additional) {
 
     // An array of option arrays for types, keyed by nesting level.
     $types = array(0 => search_api_data_types());
-
-    // Get all entity types
-    $entity_types = $this->getEntityManager()->getDefinitions();
-    $boost_values = array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
-    $boosts = array_combine($boost_values, $boost_values);
 
     $fulltext_types = array(0 => array('text'));
     // Add all custom data types with fallback "text" to fulltext types as well.
@@ -117,113 +168,76 @@ class IndexFieldsForm extends EntityForm {
       $fulltext_types[0][] = $id;
     }
 
-    $form_state['index'] = $index;
-    $form['#theme'] = 'search_api_admin_fields_table';
-    $form['#tree'] = TRUE;
-    $form['description'] = array(
-      '#type' => 'item',
-      '#title' => t('Select fields to index'),
-      '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering.' .
-        'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
-        '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
-        'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
-    );
-    if ($index->getServer()) {
-      $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
-          array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
-    }
+    $build = array();
+
+    $boost_values = array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
+    $boosts = array_combine($boost_values, $boost_values);
+
+    $build['fields']['#tree'] = TRUE;
+
     foreach ($fields as $key => $info) {
-      $form['fields'][$key]['title']['#markup'] = String::checkPlain($info['name']);
-      $form['fields'][$key]['machine_name']['#markup'] = String::checkPlain($key);
+      $build['fields'][$key]['title']['#markup'] = String::checkPlain(
+        $info['name']
+      );
+      $build['fields'][$key]['machine_name']['#markup'] = String::checkPlain(
+        $key
+      );
       if (isset($info['description'])) {
-        $form['fields'][$key]['description'] = array(
+        $build['fields'][$key]['description'] = array(
           '#type' => 'value',
           '#value' => $info['description'],
         );
       }
-      $form['fields'][$key]['indexed'] = array(
+      $build['fields'][$key]['indexed'] = array(
         '#type' => 'checkbox',
         '#default_value' => $info['indexed'],
       );
-      if (empty($info['entity_type'])) {
-        // Determine the correct type options (with the correct nesting level).
-        //$level = search_api_list_nesting_level($info['type']);
-        $level = 1;
-        if (empty($types[$level])) {
-          $types[$level] = array();
-          foreach ($types[0] as $type => $name) {
-            // We use the singular name for list types, since the user usually
-            // doesn't care about the nesting level.
-            $types[$level][$type] = $name;
-          }
-          foreach ($fulltext_types[0] as $type) {
-            $fulltext_types[$level][] = $type;
-          }
+      // Determine the correct type options (with the correct nesting level).
+      //$level = search_api_list_nesting_level($info['type']);
+      $level = 1;
+      if (empty($types[$level])) {
+        $types[$level] = array();
+        foreach ($types[0] as $type => $name) {
+          // We use the singular name for list types, since the user usually
+          // doesn't care about the nesting level.
+          $types[$level][$type] = $name;
         }
-        $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
-        $form['fields'][$key]['type'] = array(
-          '#type' => 'select',
-          '#options' => $types[$level],
-          '#default_value' => isset($info['real_type']) ? $info['real_type'] : $info['type'],
-          '#states' => array(
-            'visible' => array(
-              $css_key . '-indexed' => array('checked' => TRUE),
-            ),
-          ),
-        );
-        $form['fields'][$key]['boost'] = array(
-          '#type' => 'select',
-          '#options' => $boosts,
-          '#default_value' => (isset($info['boost'])) ? $info['boost'] : '',
-          '#states' => array(
-            'visible' => array(
-              $css_key . '-indexed' => array('checked' => TRUE),
-            ),
-          ),
-        );
-        foreach ($fulltext_types[$level] as $type) {
-          $form['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
+        foreach ($fulltext_types[0] as $type) {
+          $fulltext_types[$level][] = $type;
         }
       }
-      else {
-        // This is an entity.
-        $label = $entity_types[$info['entity_type']]['label'];
-        if (!$entity_description_added) {
-          $form['description']['#description'] .= '<p>' .
-            t('Note that indexing an entity-valued field (like %field, which has type %type) directly will only index the entity ID. ' .
-              'This will be used for filtering and also sorting (which might not be what you expect). ' .
-              'The entity label will usually be used when displaying the field, though. ' .
-              'Use the "Add related fields" option at the bottom for indexing other fields of related entities.',
-              array('%field' => $info['name'], '%type' => $label)) . '</p>';
-          $entity_description_added = TRUE;
-        }
-        $form['fields'][$key]['type'] = array(
-          '#type' => 'value',
-          '#value' => $info['type'],
-        );
-        $form['fields'][$key]['entity_type'] = array(
-          '#type' => 'value',
-          '#value' => $info['entity_type'],
-        );
-        $form['fields'][$key]['type_name'] = array(
-          '#markup' => String::checkPlain($label),
-        );
-        $form['fields'][$key]['boost'] = array(
-          '#type' => 'value',
-          '#value' => $info['boost'],
-        );
-        $form['fields'][$key]['boost_text'] = array(
-          '#markup' => '&nbsp;',
-        );
+      $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
+      $build['fields'][$key]['type'] = array(
+        '#type' => 'select',
+        '#options' => $types[$level],
+        '#default_value' => isset($info['real_type']) ? $info['real_type'] : $info['type'],
+        '#states' => array(
+          'visible' => array(
+            $css_key . '-indexed' => array('checked' => TRUE),
+          ),
+        ),
+      );
+      $build['fields'][$key]['boost'] = array(
+        '#type' => 'select',
+        '#options' => $boosts,
+        '#default_value' => (isset($info['boost'])) ? $info['boost'] : '',
+        '#states' => array(
+          'visible' => array(
+            $css_key . '-indexed' => array('checked' => TRUE),
+          ),
+        ),
+      );
+      foreach ($fulltext_types[$level] as $type) {
+        $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
       if ($key == 'search_api_language') {
         // Is treated specially to always index the language.
-        $form['fields'][$key]['type']['#default_value'] = 'string';
-        $form['fields'][$key]['type']['#disabled'] = TRUE;
-        $form['fields'][$key]['boost']['#default_value'] = '1.0';
-        $form['fields'][$key]['boost']['#disabled'] = TRUE;
-        $form['fields'][$key]['indexed']['#default_value'] = 1;
-        $form['fields'][$key]['indexed']['#disabled'] = TRUE;
+        $build['fields'][$key]['type']['#default_value'] = 'string';
+        $build['fields'][$key]['type']['#disabled'] = TRUE;
+        $build['fields'][$key]['boost']['#default_value'] = '1.0';
+        $build['fields'][$key]['boost']['#disabled'] = TRUE;
+        $build['fields'][$key]['indexed']['#default_value'] = 1;
+        $build['fields'][$key]['indexed']['#disabled'] = TRUE;
       }
     }
 
@@ -238,35 +252,33 @@ class IndexFieldsForm extends EntityForm {
       //  $additional_form_default_values[$additional_key] = (!empty($additional_option['enabled'])) ? $additional_key : 0;
       //}
 
-      $form['additional'] = array(
+      $build['additional'] = array(
         '#type' => 'details',
         '#title' => t('Related fields'),
-        '#description' => t('There are entities related to entities of this type. ' .
-            'You can add their fields to the list above so they can be indexed too.') . '<br />',
+        '#description' => t(
+            'There are entities related to entities of this type. ' .
+            'You can add their fields to the list above so they can be indexed too.'
+          ) . '<br />',
         '#open' => TRUE,
+        '#tree' => TRUE,
       );
       foreach ($additional as $additional_key => $additional_option) {
         // We need to loop through each option because we need to disable the
         // checkbox if it's a dependency for another option.
-        $form['additional']['field'][$additional_key] = array(
+        $build['additional']['field'][$additional_key] = array(
           '#type' => 'checkbox',
-          '#title' =>  $additional_option['name'],
+          '#title' => $additional_option['name'],
           '#default_value' => (!empty($additional_option['enabled'])) ? 1 : 0,
           '#disabled' => (!empty($additional_option['dependency'])) ? TRUE : FALSE,
         );
       }
-      $form['additional']['add'] = array(
+      $build['additional']['add'] = array(
         '#type' => 'submit',
         '#value' => t('Update'),
       );
     }
 
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save changes'),
-    );
-
-    return $form;
+    return $build;
   }
 
   /**

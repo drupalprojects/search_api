@@ -127,10 +127,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       // Build the default operation element.
       $form['default'] = array(
         '#type' => 'radios',
-        '#title' => $this->t('Which items should be indexed?'),
+        '#title' => $this->t('What should be indexed?'),
         '#options' => array(
-          0 => $this->t('Only those from the selected bundles'),
-          1 => $this->t('All but those from one of the selected bundles'),
+          1 => $this->t('All except those selected'),
+          0 => $this->t('None except those selected'),
         ),
         '#default_value' => $this->configuration['default'],
       );
@@ -166,51 +166,53 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     $old_config = $this->getConfiguration();
     parent::setConfiguration($new_config);
 
-    // Apply the configusubmitConfigurationFormration changes.
-    $bundles_start = array();
-    $bundles_stop = array();
-    // Check if the datasource configuration changed.
-    if ($old_config['default'] != $new_config['default']) {
-      // Invert the bundles so that the diff also resolves
-      foreach ($old_config['bundles'] as $bundle_key => $bundle) {
-        if ($bundle_key == $bundle) {
-          $old_config['bundles'][$bundle_key] = 0;
-        }
-        else {
-          $old_config['bundles'][$bundle_key] = $bundle_key;
+    if (isset($new_config['default']) && isset($old_config['default'])) {
+      // Apply the configuration changes.
+      $bundles_start = array();
+      $bundles_stop = array();
+      // Check if the datasource configuration changed.
+      if ($old_config['default'] != $new_config['default']) {
+        // Invert the bundles so that the diff also resolves
+        foreach ($old_config['bundles'] as $bundle_key => $bundle) {
+          if ($bundle_key == $bundle) {
+            $old_config['bundles'][$bundle_key] = 0;
+          }
+          else {
+            $old_config['bundles'][$bundle_key] = $bundle_key;
+          }
         }
       }
-    }
 
-    if ((array_diff_assoc($new_config['bundles'], $old_config['bundles']))) {
-       // StopTracking figures out which bundles to remove
-      $diff = array_diff_assoc($new_config['bundles'], $old_config['bundles']);
-      // A bundle is selected when the key equals its value
-      foreach ($diff as $bundle_key => $bundle) {
-        // Default is 0 for "Only those from the selected bundles"
-        if ($new_config['default'] == 0) {
-          if ($bundle_key === $bundle) {
-            $bundles_start[$bundle_key] = $bundle;
+      if ((array_diff_assoc($new_config['bundles'], $old_config['bundles']))) {
+         // StopTracking figures out which bundles to remove
+        $diff = array_diff_assoc($new_config['bundles'], $old_config['bundles']);
+        // A bundle is selected when the key equals its value
+        foreach ($diff as $bundle_key => $bundle) {
+          // Default is 0 for "Only those from the selected bundles"
+          if ($new_config['default'] == 0) {
+            if ($bundle_key === $bundle) {
+              $bundles_start[$bundle_key] = $bundle;
+            }
+            else {
+              $bundles_stop[$bundle_key] = $bundle;
+            }
           }
+          // Default is 1 for "All but those from one of the selected bundles"
           else {
-            $bundles_stop[$bundle_key] = $bundle;
+            if ($bundle_key === $bundle) {
+              $bundles_stop[$bundle_key] = $bundle;
+            }
+            else {
+              $bundles_start[$bundle_key] = $bundle;
+            }
           }
         }
-        // Default is 1 for "All but those from one of the selected bundles"
-        else {
-          if ($bundle_key === $bundle) {
-            $bundles_stop[$bundle_key] = $bundle;
-          }
-          else {
-            $bundles_start[$bundle_key] = $bundle;
-          }
+        if (!empty($bundles_start)) {
+          $this->startTrackingBundles(array_keys($bundles_start));
         }
-      }
-      if (!empty($bundles_start)) {
-        $this->startTrackingBundles(array_keys($bundles_start));
-      }
-      if (!empty($bundles_stop)) {
-        $this->stopTrackingBundles(array_keys($bundles_stop));
+        if (!empty($bundles_stop)) {
+          $this->stopTrackingBundles(array_keys($bundles_stop));
+        }
       }
     }
   }
@@ -356,22 +358,22 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * @return array
    */
   public function getEntityIds(array $bundles = NULL) {
-    $node_ids = array();
+    $entity_ids = array();
+    $select = \Drupal::entityQuery($this->getEntityTypeId());
 
     // Get our bundles from the datasource if it was not passed.
     if (!isset($bundles)) {
       $bundles = $this->getIndexedBundles();
     }
-    // If we have bundles to fetch
+    // If we have bundles to filter on
     if ($bundles) {
-      $select = \Drupal::entityQuery($this->getEntityTypeId());
       if (count($bundles) != count($this->getEntityBundles())) {
         $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');
       }
-      $node_ids = $select->execute();
     }
+    $entity_ids = $select->execute();
 
-    return $node_ids;
+    return $entity_ids;
   }
 
   /**

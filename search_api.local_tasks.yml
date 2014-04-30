@@ -15,10 +15,12 @@ search_api.index_edit:
   route_name: search_api.index_edit
   base_route: search_api.index_view
   title: 'Edit'
-  weight: 0
+  weight: 5
 search_api.index_fields:
-  class: \Drupal\Core\Menu\LocalTaskDefault
-  derivative: \Drupal\search_api\Plugin\Derivative\SearchApiFieldsLocalTask
+  title: 'Fields'
+  route_name: search_api.index_fields
+  base_route: search_api.index_view
+  weight: 10
 search_api.index_filters:
   route_name: search_api.index_filters
   base_route: search_api.index_view

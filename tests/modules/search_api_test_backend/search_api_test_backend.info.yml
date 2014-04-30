@@ -1,0 +1,9 @@
+name: 'Search API Test Backend'
+type: module
+description: 'Support module for Search API Backend Tests.'
+package: Search
+version: VERSION
+dependencies:
+  - search_api
+core: 8.x
+hidden: true

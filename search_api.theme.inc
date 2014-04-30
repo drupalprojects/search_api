@@ -45,7 +45,6 @@ function theme_search_api_admin_fields_table($variables) {
   }
 
   $note = isset($form['note']) ? $form['note'] : '';
-  $submit = $form['submit'];
   $additional = isset($form['additional']) ? $form['additional'] : FALSE;
   unset($form['note'], $form['submit'], $form['additional']);
   $output = drupal_render_children($form);
@@ -58,7 +57,6 @@ function theme_search_api_admin_fields_table($variables) {
 
   $output .= drupal_render($build);
   $output .= render($note);
-  $output .= render($submit);
   if ($additional) {
     $output .= render($additional);
   }
@@ -78,7 +76,7 @@ function theme_search_api_admin_fields_table($variables) {
  */
 function theme_search_api_server($variables) {
   // Get the Search API server and index links.
-  /** @var $index \Drupal\search_api\Server\ServerInterface */
+  /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $variables['server'];
   // Initialize the output variable to an empty string.
   $output = '';
@@ -124,22 +122,22 @@ function theme_search_api_server($variables) {
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
-  // Check if the service used by the server is valid.
-  if ($server->hasValidService()) {
-    // Get the service used by the server.
-    /** @var $service \Drupal\search_api\Service\ServiceInterface */
-    $service = $server->getService();
-    // Get the service plugin definition.
-    $service_plugin_definition = $service->getPluginDefinition();
+  // Check if the backend used by the server is valid.
+  if ($server->hasValidBackend()) {
+    // Get the backend used by the server.
+    /** @var $backend \Drupal\search_api\Backend\BackendInterface */
+    $backend = $server->getBackend();
+    // Get the backend plugin definition.
+    $backend_plugin_definition = $backend->getPluginDefinition();
     // Use the label defined in the plugin definition.
-    $info = String::checkPlain($service_plugin_definition['label']);
+    $info = String::checkPlain($backend_plugin_definition['label']);
   }
   else {
     $class = 'error';
-    $info = t('Invalid or missing service plugin');
+    $info = t('Invalid or missing backend plugin');
   }
   // Append the row and reset variables.
-  $label = t('Service class');
+  $label = t('Backend class');
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
@@ -165,15 +163,8 @@ function theme_search_api_server($variables) {
     $rows[] = Utility::deepCopy($row);
   }
 
-  // Check if the server has available view settings.
-  if (($options = $server->viewSettings())) {
-    $label = t('Service options');
-    $info = render($options);
-    $rows[] = Utility::deepCopy($row);
-  }
-
   // Check if the server has extra information available.
-  if (($extra = $server->getExtraInformation())) {
+  if (($extra = $server->viewSettings())) {
     // Iterate through the extra information.
     foreach ($extra as $information) {
       // Convert the extra information and append the information to the row.

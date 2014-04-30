@@ -44,7 +44,7 @@
   padding-left: 0;
 }
 
-#search-api-service-config-form .messages,
+#search-api-backend-config-form .messages,
 #search-api-datasource-config-form .messages {
   margin-left: 20px;
   margin-right: 20px;

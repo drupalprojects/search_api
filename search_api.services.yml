@@ -3,8 +3,8 @@ services:
     class: Drupal\search_api\Processor\ProcessorPluginManager
     parent: default_plugin_manager
 
-  plugin.manager.search_api.service:
-    class: Drupal\search_api\Service\ServicePluginManager
+  plugin.manager.search_api.backend:
+    class: Drupal\search_api\Backend\BackendPluginManager
     parent: default_plugin_manager
 
   plugin.manager.search_api.datasource:

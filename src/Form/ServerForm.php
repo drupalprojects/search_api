@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
-use Drupal\search_api\Service\ServicePluginManager;
+use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\Component\Utility\String;
 
@@ -29,27 +29,27 @@ class ServerForm extends EntityForm {
   protected $storage;
 
   /**
-   * The service plugin manager.
+   * The backend plugin manager.
    *
    * This object members must be set to anything other than private in order for
    * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
    *
-   * @var \Drupal\search_api\Service\ServicePluginManager
+   * @var \Drupal\search_api\Backend\BackendPluginManager
    */
-  protected $servicePluginManager;
+  protected $backendPluginManager;
 
   /**
    * Create a ServerFormController object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
-   * @param \Drupal\search_api\Service\ServicePluginManager $service_plugin_manager
-   *   The service plugin manager.
+   * @param \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager
+   *   The backend plugin manager.
    */
-  public function __construct(EntityManager $entity_manager, ServicePluginManager $service_plugin_manager) {
+  public function __construct(EntityManager $entity_manager, BackendPluginManager $backend_plugin_manager) {
     // Setup object members.
     $this->storage = $entity_manager->getStorage('search_api_server');
-    $this->servicePluginManager = $service_plugin_manager;
+    $this->backendPluginManager = $backend_plugin_manager;
   }
 
   /**
@@ -63,27 +63,27 @@ class ServerForm extends EntityForm {
   }
 
   /**
-   * Get the service plugin manager.
+   * Get the backend plugin manager.
    *
-   * @return \Drupal\search_api\Service\ServicePluginManager
-   *   An instance of ServicePluginManager.
+   * @return \Drupal\search_api\Backend\BackendPluginManager
+   *   An instance of BackendPluginManager.
    */
-  protected function getServicePluginManager() {
-    return $this->servicePluginManager;
+  protected function getBackendPluginManager() {
+    return $this->backendPluginManager;
   }
 
   /**
-   * Get a list of service plugin definitions for use with a select element.
+   * Get a list of backend plugin definitions for use with a select element.
    *
    * @return array
-   *   An associative array of service plugin names, keyed by the service plugin
+   *   An associative array of backend plugin names, keyed by the backend plugin
    *   ID.
    */
-  protected function getServicePluginDefinitionOptions() {
+  protected function getBackendPluginDefinitionOptions() {
     // Initialize the options variable to an empty array.
     $options = array();
-    // Iterate through the service plugin definitions.
-    foreach ($this->getServicePluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
+    // Iterate through the backend plugin definitions.
+    foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
       // Add the plugin to the list.
       $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
     }
@@ -96,7 +96,7 @@ class ServerForm extends EntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.manager'),
-      $container->get('plugin.manager.search_api.service')
+      $container->get('plugin.manager.search_api.backend')
     );
   }
 
@@ -124,8 +124,8 @@ class ServerForm extends EntityForm {
     }
     // Build the entity form.
     $this->buildEntityForm($form, $form_state, $entity);
-    // Build the service configuration form.
-    $this->buildServiceConfigForm($form, $form_state, $entity);
+    // Build the backend configuration form.
+    $this->buildBackendConfigForm($form, $form_state, $entity);
     // Return the build form.
     return $form;
   }
@@ -174,17 +174,17 @@ class ServerForm extends EntityForm {
       '#description' => $this->t('Enter a description for the server.'),
       '#default_value' => $server->getDescription(),
     );
-    // Build the service plugin selection element.
-    $form['servicePluginId'] = array(
+    // Build the backend plugin selection element.
+    $form['backendPluginId'] = array(
       '#type' => 'select',
-      '#title' => $this->t('Service'),
-      '#description' => $this->t('Choose a service to use for this server.'),
-      '#options' => $this->getServicePluginDefinitionOptions(),
-      '#default_value' => $server->hasValidService() ? $server->getService()->getPluginId() : NULL,
+      '#title' => $this->t('Backend'),
+      '#description' => $this->t('Choose a backend to use for this server.'),
+      '#options' => $this->getBackendPluginDefinitionOptions(),
+      '#default_value' => $server->hasValidBackend() ? $server->getBackend()->getPluginId() : NULL,
       '#required' => TRUE,
       '#ajax' => array(
-        'callback' => array($this, 'buildAjaxServiceConfigForm'),
-        'wrapper' => 'search-api-service-config-form',
+        'callback' => array($this, 'buildAjaxBackendConfigForm'),
+        'wrapper' => 'search-api-backend-config-form',
         'method' => 'replace',
         'effect' => 'fade',
       ),
@@ -195,7 +195,7 @@ class ServerForm extends EntityForm {
   }
 
   /**
-   * Build the service configuration form.
+   * Build the backend configuration form.
    *
    * @param array $form
    *   An associative array containing the structure of the form.
@@ -204,48 +204,48 @@ class ServerForm extends EntityForm {
    * @param \Drupal\search_api\Server\ServerInterface $server
    *   An instance of ServerInterface.
    */
-  public function buildServiceConfigForm(array &$form, array &$form_state, ServerInterface $server) {
-    // Build the service plugin configuration container element.
-    $form['servicePluginConfig'] = array(
+  public function buildBackendConfigForm(array &$form, array &$form_state, ServerInterface $server) {
+    // Build the backend plugin configuration container element.
+    $form['backendPluginConfig'] = array(
       '#type' => 'container',
       '#attributes' => array(
-        'id' => 'search-api-service-config-form',
+        'id' => 'search-api-backend-config-form',
       ),
       '#tree' => TRUE,
     );
-    // Check if the server has a valid service configured.
-    if ($server->hasValidService()) {
-      // Get the service.
-      $service = $server->getService();
-      // Get the service plugin definition.
-      $service_plugin_definition = $service->getPluginDefinition();
-      // Build the service configuration form.
-      if (($service_plugin_config_form = $service->buildConfigurationForm(array(), $form_state))) {
-        // Check if the service plugin changed.
-        if (!empty($form_state['values']['servicePluginId'])) {
-          // Notify the user about the service configuration change.
-          drupal_set_message($this->t('Please configure the used service.'), 'warning');
+    // Check if the server has a valid backend configured.
+    if ($server->hasValidBackend()) {
+      // Get the backend.
+      $backend = $server->getBackend();
+      // Get the backend plugin definition.
+      $backend_plugin_definition = $backend->getPluginDefinition();
+      // Build the backend configuration form.
+      if (($backend_plugin_config_form = $backend->buildConfigurationForm(array(), $form_state))) {
+        // Check if the backend plugin changed.
+        if (!empty($form_state['values']['backendPluginId'])) {
+          // Notify the user about the backend configuration change.
+          drupal_set_message($this->t('Please configure the used backend.'), 'warning');
         }
 
-        // Modify the service plugin configuration container element.
-        $form['servicePluginConfig']['#type'] = 'details';
-        $form['servicePluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $service_plugin_definition['label']));
-        $form['servicePluginConfig']['#description'] = String::checkPlain($service_plugin_definition['description']);
-        $form['servicePluginConfig']['#open'] = TRUE;
-        // Attach the build service plugin configuration form.
-        $form['servicePluginConfig'] += $service_plugin_config_form;
+        // Modify the backend plugin configuration container element.
+        $form['backendPluginConfig']['#type'] = 'details';
+        $form['backendPluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend_plugin_definition['label']));
+        $form['backendPluginConfig']['#description'] = String::checkPlain($backend_plugin_definition['description']);
+        $form['backendPluginConfig']['#open'] = TRUE;
+        // Attach the build backend plugin configuration form.
+        $form['backendPluginConfig'] += $backend_plugin_config_form;
       }
     }
-    // Do not notify the user about a missing service plugin if a new server
+    // Do not notify the user about a missing backend plugin if a new server
     // is being configured.
     elseif (!$server->isNew()) {
-      // Notify the user about the missing service plugin.
-      drupal_set_message($this->t('The service plugin is missing or invalid.'), 'error');
+      // Notify the user about the missing backend plugin.
+      drupal_set_message($this->t('The backend plugin is missing or invalid.'), 'error');
     }
   }
 
   /**
-   * Build the service plugin configuration form in context of an Ajax request.
+   * Build the backend plugin configuration form in context of an Ajax request.
    *
    * @param array $form
    *   An associative array containing the structure of the form.
@@ -255,9 +255,9 @@ class ServerForm extends EntityForm {
    * @return array
    *   An associative array containing the structure of the form.
    */
-  public function buildAjaxServiceConfigForm(array $form, array &$form_state) {
-    // Get the service plugin configuration form.
-    return $form['servicePluginConfig'];
+  public function buildAjaxBackendConfigForm(array $form, array &$form_state) {
+    // Get the backend plugin configuration form.
+    return $form['backendPluginConfig'];
   }
 
   /**
@@ -268,30 +268,30 @@ class ServerForm extends EntityForm {
     parent::validate($form, $form_state);
     // Get the entity.
     $entity = $this->getEntity();
-    // Get the current service plugin ID.
-    $service_plugin_id = $entity->hasValidService() ? $entity->getService()->getPluginId() : NULL;
-    // Check if the service plugin changed.
-    if ($service_plugin_id !== $form_state['values']['servicePluginId']) {
-      // Check if the service plugin configuration form input values exist.
-      if (!empty($form_state['input']['servicePluginConfig'])) {
+    // Get the current backend plugin ID.
+    $backend_plugin_id = $entity->hasValidBackend() ? $entity->getBackend()->getPluginId() : NULL;
+    // Check if the backend plugin changed.
+    if ($backend_plugin_id !== $form_state['values']['backendPluginId']) {
+      // Check if the backend plugin configuration form input values exist.
+      if (!empty($form_state['input']['backendPluginConfig'])) {
         // Overwrite the plugin configuration form input values with an empty
         // array. This will force the Drupal Form API to use the default values.
-        $form_state['input']['servicePluginConfig'] = array();
+        $form_state['input']['backendPluginConfig'] = array();
       }
-      // Check if the service plugin configuration form values exist.
-      if (!empty($form_state['values']['servicePluginConfig'])) {
+      // Check if the backend plugin configuration form values exist.
+      if (!empty($form_state['values']['backendPluginConfig'])) {
         // Overwrite the plugin configuration form values with an empty array.
         // This has no effect on the Drupal Form API but is done to keep the
         // data consistent.
-        $form_state['values']['servicePluginConfig'] = array();
+        $form_state['values']['backendPluginConfig'] = array();
       }
     }
-    // Check if the entity has a valid service plugin.
-    elseif ($entity->hasValidService()) {
-      // Validate the service plugin configuration form.
-      if (isset($form_state['values']['servicePluginConfig'])) {
-        $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
-        $entity->getService()->validateConfigurationForm($form['servicePluginConfig'], $service_form_state);
+    // Check if the entity has a valid backend plugin.
+    elseif ($entity->hasValidBackend()) {
+      // Validate the backend plugin configuration form.
+      if (isset($form_state['values']['backendPluginConfig'])) {
+        $backend_form_state['values'] = $form_state['values']['backendPluginConfig'];
+        $entity->getBackend()->validateConfigurationForm($form['backendPluginConfig'], $backend_form_state);
       }
     }
   }
@@ -302,12 +302,12 @@ class ServerForm extends EntityForm {
   public function submit(array $form, array &$form_state) {
     // Perform default entity form submittion.
     $entity = parent::submit($form, $form_state);
-    // Check if the entity has a valid service plugin.
-    if ($entity->hasValidService()) {
-      // Submit the service plugin configuration form.
-      if (isset($form_state['values']['servicePluginConfig'])) {
-        $service_form_state['values'] = $form_state['values']['servicePluginConfig'];
-        $entity->getService()->submitConfigurationForm($form['servicePluginConfig'], $service_form_state);
+    // Check if the entity has a valid backend plugin.
+    if ($entity->hasValidBackend()) {
+      // Submit the backend plugin configuration form.
+      if (isset($form_state['values']['backendPluginConfig'])) {
+        $backend_form_state['values'] = $form_state['values']['backendPluginConfig'];
+        $entity->getBackend()->submitConfigurationForm($form['backendPluginConfig'], $backend_form_state);
       }
     }
     return $entity;

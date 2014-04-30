@@ -12,7 +12,7 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
- * Tests index and search capabilities using the Database search service.
+ * Tests index and search capabilities using the Database search backend.
  */
 class SearchApiDbTest extends EntityUnitTestBase {
 
@@ -103,7 +103,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   /**
-   * Tests various indexing scenarios for the Database search service.
+   * Tests various indexing scenarios for the Database search backend.
    */
   public function testFramework() {
     $this->insertItems();
@@ -165,25 +165,15 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   protected function createServer() {
     $this->serverId = 'database_search_server';
-    global $databases;
-    $database = 'default:default';
-    // Make sure to pick an available connection and to not rely on any
-    // defaults.
-    foreach ($databases as $key => $targets) {
-      foreach ($targets as $target => $info) {
-        $database = "$key:$target";
-        break;
-      }
-    }
     $values = array(
       'name' => 'Database search server',
       'machine_name' => $this->serverId,
       'status' => 1,
       'description' => 'A server used for testing.',
-      'servicePluginId' => 'search_api_db',
-      'servicePluginConfig' => array(
+      'backendPluginId' => 'search_api_db',
+      'backendPluginConfig' => array(
         'min_chars' => 3,
-        'database' => $database,
+        'database' => 'default:default',
       ),
     );
     $success = (bool) entity_create('search_api_server', $values)->save();
@@ -360,7 +350,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   protected function editServer() {
     $server = entity_load('search_api_server', $this->serverId, TRUE);
-    $server->servicePluginConfig['min_chars'] = 4;
+    $server->backendPluginConfig['min_chars'] = 4;
     $success = (bool) $server->save();
     $this->assertTrue($success, 'The server was successfully edited.');
 
@@ -789,7 +779,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->serverMachineName = NULL;
     $index->save();
     $server = entity_load('search_api_server', $this->serverId, TRUE);
-    $this->assertEqual($server->servicePluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
+    $this->assertEqual($server->backendPluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
     $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');
     $server->delete();
 

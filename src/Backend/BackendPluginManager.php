@@ -1,10 +1,11 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Service\ServicePluginManager.
+ * Contains \Drupal\search_api\Backend\BackendPluginManager.
  */
 
-namespace Drupal\search_api\Service;
+namespace Drupal\search_api\Backend;
 
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -12,12 +13,12 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManager;
 
 /**
- * Search API service plugin manager.
+ * Search API backend plugin manager.
  */
-class ServicePluginManager extends DefaultPluginManager {
+class BackendPluginManager extends DefaultPluginManager {
 
   /**
-   * Create a ServicePluginManager object.
+   * Create a BackendPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -31,10 +32,10 @@ class ServicePluginManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
     // Initialize the parent chain of objects.
-    parent::__construct('Plugin/SearchApi/Service', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiService');
+    parent::__construct('Plugin/SearchApi/Backend', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiBackend');
     // Configure the plugin manager.
-    $this->setCacheBackend($cache_backend, $language_manager, 'search_api_services');
-    $this->alterInfo('search_api_service_info');
+    $this->setCacheBackend($cache_backend, $language_manager, 'search_api_backends');
+    $this->alterInfo('search_api_backend_info');
   }
 
 }

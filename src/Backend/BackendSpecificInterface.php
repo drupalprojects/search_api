@@ -2,21 +2,21 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Service\ServiceSpecificInterface.
+ * Contains \Drupal\search_api\Backend\BackendSpecificInterface.
  */
 
-namespace Drupal\search_api\Service;
+namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 
 /**
- * Interface defining the methods search services have to implement.
+ * Interface defining the methods search backends have to implement.
  */
-interface ServiceSpecificInterface {
+interface BackendSpecificInterface {
 
   /**
-   * Returns additional, service-specific information about this server.
+   * Returns additional, backend-specific information about this server.
    *
    * This information will be then added to the server's "View" tab in some way.
    * In the default theme implementation this data will be output in a table
@@ -33,7 +33,7 @@ interface ServiceSpecificInterface {
   public function viewSettings();
 
   /**
-   * Determines whether the service supports a given feature.
+   * Determines whether the backend supports a given feature.
    *
    * Features are optional extensions to Search API functionality and usually
    * defined and used by third-party modules.
@@ -48,19 +48,19 @@ interface ServiceSpecificInterface {
    *   The name of the optional feature.
    *
    * @return bool
-   *   TRUE if the service knows and supports the specified feature, otherwise
+   *   TRUE if the backend knows and supports the specified feature, otherwise
    *   FALSE.
    */
   public function supportsFeature($feature);
 
   /**
-   * Determines whether the service supports a given add-on data type.
+   * Determines whether the backend supports a given add-on data type.
    *
    * @param string $type
    *   The identifier of the add-on data type.
    *
    * @return bool
-   *   TRUE if the service supports the data type.
+   *   TRUE if the backend supports the data type.
    */
   public function supportsDatatype($type);
 
@@ -88,8 +88,7 @@ interface ServiceSpecificInterface {
    *   The updated index.
    *
    * @return bool
-   *   TRUE, if this change affected the server in any way that forces it to
-   *   re-index the content. FALSE otherwise.
+   *   TRUE, if the server triggered a reindex.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while reacting to the change.
@@ -134,7 +133,7 @@ interface ServiceSpecificInterface {
    *     special type "tokens" for tokenized fulltext fields (see below).
    *   - original_type: The original type of the property, as defined by the
    *     datasource controller for the index's item type.
-   *   - value: An array of values to be indexed for this field. The service
+   *   - value: An array of values to be indexed for this field. The backend
    *     class should also index the first value separately, for single-value
    *     use (e.g., sorting).
    *   - boost: (optional) The (decimal) boost to assign to the field. Usually

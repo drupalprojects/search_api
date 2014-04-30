@@ -11,22 +11,22 @@
  */
 
 /**
- * Alter the available Search API services.
+ * Alter the available Search API backends.
  *
  * Modules may implement this hook to alter the information that defines Search
- * API services. All properties that are available in
- * \Drupal\search_api\Annotation\SearchApiService can be altered here, with the
+ * API backends. All properties that are available in
+ * \Drupal\search_api\Annotation\SearchApiBackend can be altered here, with the
  * addition of the "class" and "provider" keys.
  *
- * @param array $service_info
- *   The Search API service info array, keyed by service ID.
+ * @param array $backend_info
+ *   The Search API backend info array, keyed by backend ID.
  *
- * @see \Drupal\search_api\Service\ServicePluginBase
+ * @see \Drupal\search_api\Backend\BackendPluginBase
  */
-function hook_search_api_service_info_alter(array &$service_info) {
-  foreach ($service_info as $id => $info) {
-    $service_info[$id]['class'] = '\Drupal\my_module\MyServiceDecorator';
-    $service_info[$id]['example_original_class'] = $info['class'];
+function hook_search_api_backend_info_alter(array &$backend_info) {
+  foreach ($backend_info as $id => $info) {
+    $backend_info[$id]['class'] = '\Drupal\my_module\MyBackendDecorator';
+    $backend_info[$id]['example_original_class'] = $info['class'];
   }
 }
 
@@ -79,7 +79,7 @@ function hook_search_api_processor_info_alter(array &$processors) {
  *
  * @param array $items
  *   The items that will be indexed, in the format specified by
- *   \Drupal\search_api\Service\ServiceSpecificInterface::indexItems().
+ *   \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index on which items will be indexed.
  */
