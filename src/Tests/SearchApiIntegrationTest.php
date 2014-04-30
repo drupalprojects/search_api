@@ -57,7 +57,8 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     // Login as an admin user for the rest of the tests.
     $this->drupalLogin($this->adminUser);
 
-    $this->createServer();
+    $server_id = $this->createServer();
+    $this->serverId = $server_id;
     $this->createIndex();
     $this->trackContent();
 
@@ -72,6 +73,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createServer() {
+    $server_id = drupal_strtolower($this->randomName());
     $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
@@ -97,11 +99,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
 
-    $this->serverId = 'test_server';
-
     $edit = array(
       'name' => 'Search API test server',
-      'machine_name' => $this->serverId,
+      'machine_name' => $server_id,
       'status' => 1,
       'description' => 'A server used for testing.',
       'backendPluginId' => 'search_api_test_backend',
@@ -110,7 +110,8 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The server was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/server/' . $this->serverId, array(), t('Correct redirect to server page.'));
+    $this->assertUrl('admin/config/search/search-api/server/' . $server_id, array(), t('Correct redirect to server page.'));
+    return $server_id;
   }
 
   protected function createIndex() {
@@ -343,6 +344,17 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
   }
 
   /**
+   * Counts the number of remaining items from an index.
+   *
+   * @return int
+   */
+  protected function countRemainingItems() {
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId);
+    return $index->getTracker()->getRemainingItemsCount();
+  }
+
+  /**
    * Sets an index to read only and checks if it reacts accordingly.
    *
    * The expected behavior is such that when an index is set to Read Only it
@@ -368,20 +380,16 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     // This should have 2 items in the index
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $remaining_before = $index->getTracker()->getRemainingItemsCount();
+    $remaining_before = $this->countRemainingItems();
     $index->index();
-    $remaining_after = $index->getTracker()->getRemainingItemsCount();
+    $remaining_after = $this->countRemainingItems();
     $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to readOnly'));
 
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
     $this->drupalGet($settings_path);
 
     $edit = array(
-      'status' => TRUE,
       'readOnly' => FALSE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -430,9 +438,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     // Enable the index
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -479,10 +484,6 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     // Disable indexing of users
     $edit = array(
-      'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
       'datasourcePluginIds[]' => array('entity:node'),
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
@@ -502,7 +503,56 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
    * server it no longer is attached to and add the new ones.
    */
   protected function changeIndexServer() {
+    /** @var $index \Drupal\search_api\Entity\Index */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
 
+    $node_count = \Drupal::entityQuery('node')->count()->execute();
+
+    // Go to the index edit path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    // enable indexing of nodes
+    $edit = array(
+      'status' => TRUE,
+      'datasourcePluginConfigs[entity:node][default]' => 0,
+      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
+      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasourcePluginIds[]' => array('entity:node'),
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    // Reindex all so we start from scratch
+    $index->reindex();
+    // We should have as many nodes as the node count
+    $remaining_items = $this->countRemainingItems();
+
+    $t_args = array(
+      '!nodecount' => $node_count,
+    );
+    $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount nodes to index', $t_args));
+    // Index
+    $index->index();
+
+    $remaining_items = $this->countRemainingItems();
+
+    $this->assertEqual($remaining_items, 0, t('We should have nothing left to index', $t_args));
+
+    // Create a second server
+    $serverId2 = $this->createServer();
+
+    // Go to the index edit path
+    $this->drupalGet($settings_path);
+    // Change servers in the UI
+    $edit = array(
+      'serverMachineName' => $serverId2,
+    );
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $remaining_items = $this->countRemainingItems();
+    // After saving the new index, we should have called reindex.
+    $t_args = array(
+      '!nodecount' => $node_count,
+    );
+    $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount items left to index after changing servers', $t_args));
   }
-
 }
