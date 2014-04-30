@@ -1022,21 +1022,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
       /** @var \Drupal\search_api\Index\IndexInterface $original */
       $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
 
+      if ($original->status() && $this->getServerId() != $original->getServerId()) {
+        $original->getServer()->removeIndex($original);
+      }
+
       // Actions to take if the index switched servers
       if ($this->status()) {
         if ($this->getServerId() != $original->getServerId()) {
-          if ($original->isServerEnabled()) {
-            $original->getServer()->removeIndex($this);
-          }
-          if ($this->isServerEnabled()) {
-            $this->getServer()->addIndex($this);
-          }
+          $this->getServer()->addIndex($this);
           // When the server changes we also need to trigger reindex.
           $this->reindex();
         }
-
-        // Tell the server the index configuration got updated
-        if ($this->isServerEnabled()) {
+        elseif ($this->isServerEnabled()) {
+          // Tell the server the index configuration got updated
           $this->getServer()->updateIndex($this);
         }
 
