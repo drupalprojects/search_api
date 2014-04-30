@@ -28,8 +28,8 @@ class Language extends ProcessorPluginBase {
       return;
     }
     $definition = array(
-      'label' => t('Item language'),
-      'description' => t('The language code of the item.'),
+      'label' => $this->t('Item language'),
+      'description' => $this->t('The language code of the item.'),
       'type' => 'string',
     );
     $properties['search_api_language'] = new DataDefinition($definition);
@@ -39,13 +39,13 @@ class Language extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($items as $item) {
-      $item['search_api_language']['original_type'] = 'string';
+    foreach ($items as $i => $item) {
+      $items[$i]['search_api_language']['original_type'] = 'string';
       if ($item['#item'] instanceof TranslatableInterface) {
-        $item['search_api_language']['value'] = array($item['#item']->language());
+        $items[$i]['search_api_language']['value'] = array($item['#item']->language()->id);
       }
       else {
-        $item['search_api_language']['value'] = array(CoreLanguage::LANGCODE_NOT_SPECIFIED);
+        $items[$i]['search_api_language']['value'] = array(CoreLanguage::LANGCODE_NOT_SPECIFIED);
       }
     }
   }
