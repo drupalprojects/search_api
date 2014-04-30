@@ -81,18 +81,18 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       'name' => '',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'servicePluginId' => '',
+      'backendPluginId' => '',
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Service'))));
+    $this->assertText(t('!name field is required.', array('!name' => t('Backend'))));
 
     $edit = array(
       'name' => 'Search API test server',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'servicePluginId' => 'search_api_test_service',
+      'backendPluginId' => 'search_api_test_backend',
     );
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
@@ -104,7 +104,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       'machine_name' => $this->serverId,
       'status' => 1,
       'description' => 'A server used for testing.',
-      'servicePluginId' => 'search_api_test_service',
+      'backendPluginId' => 'search_api_test_backend',
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));
@@ -397,7 +397,7 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
    * Disables and enables an index and checks if it reacts accordingly.
    *
    * The expected behavior is such that when an index is disabled, all the items
-   * from this index in the tracker are removed and it also tells the service
+   * from this index in the tracker are removed and it also tells the backend
    * to remove all items from this index.
    *
    * When it is enabled again, the items are re-added to the tracker.

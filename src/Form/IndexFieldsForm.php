@@ -106,7 +106,7 @@ class IndexFieldsForm extends EntityForm {
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
     if ($index->getServer()) {
-      $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
+      $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
           array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
     }
 

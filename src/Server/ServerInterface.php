@@ -8,12 +8,12 @@ namespace Drupal\search_api\Server;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Service\ServiceSpecificInterface;
+use Drupal\search_api\Backend\BackendSpecificInterface;
 
 /**
  * Defines the interface for server entities.
  */
-interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterface {
+interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterface {
 
   /**
    * Retrieves the server's description.
@@ -24,20 +24,20 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
   public function getDescription();
 
   /**
-   * Determines whether the service is valid.
+   * Determines whether the backend is valid.
    *
    * @return bool
-   *   TRUE if the service is valid, otherwise FALSE.
+   *   TRUE if the backend is valid, otherwise FALSE.
    */
-  public function hasValidService();
+  public function hasValidBackend();
 
   /**
-   * Retrieves the service.
+   * Retrieves the backend.
    *
-   * @return \Drupal\search_api\Service\ServiceInterface
-   *   An instance of ServiceInterface.
+   * @return \Drupal\search_api\Backend\BackendInterface
+   *   An instance of BackendInterface.
    */
-  public function getService();
+  public function getBackend();
 
   /**
    * Retrieves a list of indexes which use this server.
@@ -63,20 +63,20 @@ interface ServerInterface extends ConfigEntityInterface, ServiceSpecificInterfac
   public function search(QueryInterface $query);
 
   /**
-   * Sets the service config of the service from this server.
+   * Sets the backend config of the backend from this server.
    *
    * @param array $config
-   *   the service config
+   *   the backend config
    */
-  public function setServicePluginConfig($config);
+  public function setBackendPluginConfig($config);
 
   /**
-   * Gets the service config of the service from this server.
+   * Gets the backend config of the backend from this server.
    *
    * @return array
-   *   An array with the service config.
+   *   An array with the backend config.
    */
-  public function getServicePluginConfig();
+  public function getBackendPluginConfig();
 
   /**
    * Adds an entry into this server's list of pending tasks.

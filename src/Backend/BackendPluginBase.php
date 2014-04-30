@@ -2,42 +2,42 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Service\ServicePluginBase.
+ * Contains \Drupal\search_api\Backend\BackendPluginBase.
  */
 
-namespace Drupal\search_api\Service;
+namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
- * Defines a base class from which other service classes may extend.
+ * Defines a base class from which other backend classes may extend.
  *
  * Plugins extending this class need to define a plugin definition array through
  * annotation. These definition arrays may be altered through
- * hook_search_api_service_info_alter(). The definition includes the following
+ * hook_search_api_backend_info_alter(). The definition includes the following
  * keys:
- * - id: The unique, system-wide identifier of the service class.
- * - label: The human-readable name of the service class, translated.
- * - description: A human-readable description for the service class,
+ * - id: The unique, system-wide identifier of the backend class.
+ * - label: The human-readable name of the backend class, translated.
+ * - description: A human-readable description for the backend class,
  *   translated.
  *
  * A complete sample plugin definition should be defined as in this example:
  *
  * @code
- * @SearchApiService(
- *   id = "my_service",
- *   label = @Translation("My service"),
+ * @SearchApiBackend(
+ *   id = "my_backend",
+ *   label = @Translation("My backend"),
  *   description = @Translation("Searches with SuperSearch™.")
  * )
  * @endcode
  */
-abstract class ServicePluginBase extends ConfigurablePluginBase implements ServiceInterface {
+abstract class BackendPluginBase extends ConfigurablePluginBase implements BackendInterface {
 
   // @todo: Provide defaults for more methods.
   /**
-   * The server this service is configured for.
+   * The server this backend is configured for.
    *
    * @var \Drupal\search_api\Server\ServerInterface
    */
@@ -79,7 +79,7 @@ abstract class ServicePluginBase extends ConfigurablePluginBase implements Servi
    * {@inheritdoc}
    */
   public function supportsFeature($feature) {
-    return ($feature === 'search_api_service_extra' && $this instanceof ServiceExtraInfoInterface);
+    return $feature === 'search_api_backend_extra';
   }
 
   /**

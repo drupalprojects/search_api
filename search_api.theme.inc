@@ -122,22 +122,22 @@ function theme_search_api_server($variables) {
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
-  // Check if the service used by the server is valid.
-  if ($server->hasValidService()) {
-    // Get the service used by the server.
-    /** @var $service \Drupal\search_api\Service\ServiceInterface */
-    $service = $server->getService();
-    // Get the service plugin definition.
-    $service_plugin_definition = $service->getPluginDefinition();
+  // Check if the backend used by the server is valid.
+  if ($server->hasValidBackend()) {
+    // Get the backend used by the server.
+    /** @var $backend \Drupal\search_api\Backend\BackendInterface */
+    $backend = $server->getBackend();
+    // Get the backend plugin definition.
+    $backend_plugin_definition = $backend->getPluginDefinition();
     // Use the label defined in the plugin definition.
-    $info = String::checkPlain($service_plugin_definition['label']);
+    $info = String::checkPlain($backend_plugin_definition['label']);
   }
   else {
     $class = 'error';
-    $info = t('Invalid or missing service plugin');
+    $info = t('Invalid or missing backend plugin');
   }
   // Append the row and reset variables.
-  $label = t('Service class');
+  $label = t('Backend class');
   $rows[] = Utility::deepCopy($row);
   $class = '';
 

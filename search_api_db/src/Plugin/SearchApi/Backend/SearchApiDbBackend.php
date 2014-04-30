@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api_db\Plugin\SearchApi\Service\SearchApiDbService.
+ * Contains \Drupal\search_api_db\Plugin\SearchApi\Backend\SearchApiDbBackend.
  */
 
-namespace Drupal\search_api_db\Plugin\SearchApi\Service;
+namespace Drupal\search_api_db\Plugin\SearchApi\Backend;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
@@ -16,17 +16,17 @@ use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Service\ServicePluginBase;
+use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 
 /**
- * @SearchApiService(
+ * @SearchApiBackend(
  *   id = "search_api_db",
- *   label = @Translation("Database service"),
+ *   label = @Translation("Database"),
  *   description = @Translation("Index items using multiple database tables, for simple searches.")
  * )
  */
-class SearchApiDbService extends ServicePluginBase {
+class SearchApiDbBackend extends BackendPluginBase {
 
   /**
    * Multiplier for scores to have precision when converted from float to int.
@@ -55,7 +55,7 @@ class SearchApiDbService extends ServicePluginBase {
   protected $warnings = array();
 
   /**
-   * Constructs a new SearchApiDbService object.
+   * Constructs a new SearchApiDbBackend object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -178,7 +178,7 @@ class SearchApiDbService extends ServicePluginBase {
    * {@inheritdoc}
    */
   public function postUpdate() {
-    return !empty($this->server->original) && $this->server->getServicePluginConfig() != $this->server->original->getServicePluginConfig();
+    return !empty($this->server->original) && $this->server->getBackendPluginConfig() != $this->server->original->getBackendPluginConfig();
   }
 
   /**
@@ -947,7 +947,7 @@ class SearchApiDbService extends ServicePluginBase {
                 if (empty($index->getOption('processors')['search_api_tokenizer']['status'])) {
                   watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .
                       'It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. ' .
-                      'Otherwise, the service class has to use its own, fixed tokenizing.', array(), WATCHDOG_WARNING);
+                      'Otherwise, the backend class has to use its own, fixed tokenizing.', array(), WATCHDOG_WARNING);
                 }
                 else {
                   watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .

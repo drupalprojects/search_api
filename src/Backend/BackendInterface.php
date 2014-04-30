@@ -1,27 +1,28 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Service\ServiceInterface.
+ * Contains \Drupal\search_api\Backend\BackendInterface.
  */
 
-namespace Drupal\search_api\Service;
+namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
 
 /**
- * Interface defining the methods search services have to implement.
+ * Interface defining the methods search backends have to implement.
  *
- * Consists of general plugin methods and the service-specific methods defined
- * in \Drupal\search_api\Service\ServiceSpecificInterface, as well as special
+ * Consists of general plugin methods and the backend-specific methods defined
+ * in \Drupal\search_api\Backend\BackendSpecificInterface, as well as special
  * CRUD "hook" methods that cannot be present on the server entity (which also
- * implements \Drupal\search_api\Service\ServiceSpecificInterface.
+ * implements \Drupal\search_api\Backend\BackendSpecificInterface.
  */
-interface ServiceInterface extends ConfigurablePluginInterface, ServiceSpecificInterface {
+interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificInterface {
 
   /**
    * Reacts to the server's creation.
    *
-   * Called once, when the server is first created. Allows the service class to
+   * Called once, when the server is first created. Allows the backend class to
    * set up its necessary infrastructure.
    */
   public function postInsert();

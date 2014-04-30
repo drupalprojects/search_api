@@ -65,7 +65,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    *
    * @param array $items
    *   An array of items to be preprocessed for indexing, formatted as specified
-   *   by \Drupal\search_api\Service\ServiceSpecificInterface::indexItems().
+   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items);
 

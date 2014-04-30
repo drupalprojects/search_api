@@ -52,7 +52,7 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
    *    - text: Textual value of the test field.
    *
    * @return array
-   *   An array structure as defined by ServiceSpecificInterface::indexItems().
+   *   An array structure as defined by BackendSpecificInterface::indexItems().
    */
   public function generateItems(array $items) {
     $extracted_items = array();

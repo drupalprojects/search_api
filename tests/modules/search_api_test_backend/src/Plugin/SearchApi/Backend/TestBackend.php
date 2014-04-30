@@ -1,19 +1,24 @@
 <?php
 
-namespace Drupal\search_api_test_backend\Plugin\SearchApi\Service;
+/**
+ * @file
+ * Contains \Drupal\search_api_test_backend\Plugin\SearchApi\Backend\TestBackend.
+ */
+
+namespace Drupal\search_api_test_backend\Plugin\SearchApi\Backend;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Service\ServicePluginBase;
+use Drupal\search_api\Backend\BackendPluginBase;
 
 /**
- * @SearchApiService(
- *   id = "search_api_test_service",
- *   label = @Translation("Test service"),
- *   description = @Translation("Dummy service implementation")
+ * @SearchApiBackend(
+ *   id = "search_api_test_backend",
+ *   label = @Translation("Test backend"),
+ *   description = @Translation("Dummy backend implementation")
  * )
  */
-class TestService extends ServicePluginBase {
+class TestBackend extends BackendPluginBase {
 
   /**
    * {@inheritdoc}

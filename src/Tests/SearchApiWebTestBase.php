@@ -83,7 +83,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    * @return \Drupal\search_api\Server\ServerInterface
    *   A Search API server.
    */
-  public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $service_id = 'search_api_test_service', $options = array(), $reset = FALSE) {
+  public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $backend_id = 'search_api_test_backend', $options = array(), $reset = FALSE) {
     /** @var $server \Drupal\search_api\Server\ServerInterface */
     $server = entity_load('search_api_server', $machine_name);
 
@@ -93,7 +93,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
       }
     }
     else {
-      $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'servicePluginId' => $service_id));
+      $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'backendPluginId' => $backend_id));
       $server->description = $name;
       $server->save();
     }

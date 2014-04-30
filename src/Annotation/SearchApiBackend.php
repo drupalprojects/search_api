@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Annotation\Service.
+ * Contains \Drupal\search_api\Annotation\Backend.
  */
 
 namespace Drupal\search_api\Annotation;
@@ -9,21 +9,21 @@ namespace Drupal\search_api\Annotation;
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a Search API service annotation object.
+ * Defines a Search API backend annotation object.
  *
  * @Annotation
  */
-class SearchApiService extends Plugin {
+class SearchApiBackend extends Plugin {
 
   /**
-   * The service plugin ID.
+   * The backend plugin ID.
    *
    * @var string
    */
   public $id;
 
   /**
-   * The human-readable name of the service plugin.
+   * The human-readable name of the backend plugin.
    *
    * @ingroup plugin_translatable
    *
@@ -32,7 +32,7 @@ class SearchApiService extends Plugin {
   public $label;
 
   /**
-   * The service description.
+   * The backend description.
    *
    * @ingroup plugin_translatable
    *
