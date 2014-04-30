@@ -109,6 +109,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->insertItems();
     $this->createServer();
     $this->createIndex();
+    $this->updateIndex();
     $this->searchNoResults();
     $this->indexItems();
     $this->searchSuccess1();
@@ -194,20 +195,20 @@ class SearchApiDbTest extends EntityUnitTestBase {
         'cron_limit' => -1,
         'index_directly' => TRUE,
         'fields' => array(
-          'entity:entity_test|id' => array(
+          $this->getFieldId('id') => array(
             'type' => 'integer',
           ),
-          'entity:entity_test|name' => array(
+          $this->getFieldId('name') => array(
             'type' => 'text',
             'boost' => '5.0',
           ),
-          'entity:entity_test|body' => array(
+          $this->getFieldId('body') => array(
             'type' => 'text',
           ),
-          'entity:entity_test|type' => array(
+          $this->getFieldId('type') => array(
             'type' => 'string',
           ),
-          'entity:entity_test|keywords' => array(
+          $this->getFieldId('keywords') => array(
             'type' => 'string',
           ),
         ),
@@ -220,6 +221,30 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertTrue($success, 'The index was successfully created.');
     $this->assertEqual($index->getTracker()->getTotalItemsCount(), 5, 'Correct item count.');
     $this->assertEqual($index->getTracker()->getIndexedItemsCount(), 0, 'All items still need to be indexed.');
+  }
+
+  protected function updateIndex() {
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = entity_load('search_api_index', $this->indexId);
+
+    // Remove a field from the index and check if the change is matched in
+    // the server configuration.
+    unset($index->options['fields'][$this->getFieldId('keywords')]);
+    $index->save();
+
+    /** @var \Drupal\search_api\Server\ServerInterface $server*/
+    $server = entity_load('search_api_server', $this->serverId, TRUE);
+    $index_fields = array_keys($index->options['fields']);
+    $server_fields = array_keys($server->backendPluginConfig['field_tables'][$index->id()]);
+    sort($index_fields);
+    sort($server_fields);
+    $this->assertEqual($index_fields, $server_fields);
+
+    // Add the field back for the next assertions.
+    $index->options['fields'][$this->getFieldId('keywords')] = array(
+      'type' => 'string',
+    );
+    $index->save();
   }
 
   protected function buildSearch($keys = NULL, array $filters = array(), array $fields = array()) {
@@ -778,6 +803,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $index->serverMachineName = NULL;
     $index->save();
+
     $server = entity_load('search_api_server', $this->serverId, TRUE);
     $this->assertEqual($server->backendPluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
     $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');

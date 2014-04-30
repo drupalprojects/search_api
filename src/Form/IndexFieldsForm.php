@@ -135,9 +135,11 @@ class IndexFieldsForm extends EntityForm {
       $form[$datasource_id] += $this->buildFields($fields, $additional);
     }
 
-    $form['submit'] = array(
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save changes'),
+      '#button_type' => 'primary',
     );
 
     return $form;

@@ -1057,55 +1057,101 @@ class Index extends ConfigEntityBase implements IndexInterface {
       /** @var \Drupal\search_api\Index\IndexInterface $original */
       $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
 
-      if ($original->status() && $this->getServerId() != $original->getServerId()) {
-        $original->getServer()->removeIndex($original);
+      if ($this->status() && $original->status()) {
+        // On option changes
+        $this->actOnServerSwitch($original);
+        $this->actOnDatasourceSwitch($original);
+        $this->actOnTrackerSwitch($original);
       }
-
-      // Actions to take if the index switched servers
-      if ($this->status()) {
-        if ($this->getServerId() != $original->getServerId()) {
-          $this->getServer()->addIndex($this);
-          // When the server changes we also need to trigger reindex.
-          $this->reindex();
-        }
-        elseif ($this->isServerEnabled()) {
-          // Tell the server the index configuration got updated
-          $this->getServer()->updateIndex($this);
-        }
-
-        // Actions to take when datasources changed
-        // Take the old datasource list
-        if ($this->datasourcePluginIds != $original->datasourcePluginIds) {
-          // Get the difference between the arrays
-          $removed = array_diff($original->datasourcePluginIds, $this->datasourcePluginIds);
-          $added = array_diff($this->datasourcePluginIds, $original->datasourcePluginIds);
-          // Delete from tracker if the datasource got removed
-          foreach ($removed as $datasource_id) {
-            $this->getTracker()->trackAllItemsDeleted($datasource_id);
-          }
-          // Add to the tracker if the datasource got added
-          foreach ($added as $datasource_id) {
-            $datasource = $this->getDatasource($datasource_id);
-            $item_ids = $datasource->getItemIds();
-            $this->trackItemsInserted($datasource_id, $item_ids);
-          }
-        }
-      }
-
-      // Stop tracking if the index switch to disabled and vice versa
-      if ($this->status() != $original->status() && $this->hasValidTracker()) {
-        if ($this->status()) {
-          $this->startTracking();
-        }
-        else {
+      else if (!$this->status() && $original->status()) {
+        // Stop tracking if the index switched to disabled
+        if ($this->hasValidTracker()) {
           $this->stopTracking();
         }
+        if ($original->isServerEnabled()) {
+          // Let the server know we are disabling the index
+          $original->getServer()->removeIndex($this);
+        }
+      }
+      else if ($this->status() && !$original->status()) {
+        // Add the index to the server.
+        $this->getServer()->addIndex($this);
+        // Start tracking.
+        $this->startTracking();
       }
 
       $this->resetCaches();
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
+    }
+  }
+
+  /**
+   * Actions to take if the index switches servers.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnServerSwitch(IndexInterface $original) {
+    if ($this->getServerId() != $original->getServerId()) {
+      // Remove from old server if there was an old server assigned to the
+      // index.
+      if ($original->isServerEnabled()) {
+        $original->getServer()->removeIndex($this);
+      }
+      // Add to new server
+      if ($this->isServerEnabled()) {
+        $this->getServer()->addIndex($this);
+      }
+      // When the server changes we also need to trigger reindex.
+      $this->reindex();
+    }
+    elseif ($this->isServerEnabled()) {
+      // Tell the server the index configuration got updated
+      $this->getServer()->updateIndex($this);
+    }
+  }
+
+  /**
+   * Actions to take when datasources change.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnDatasourceSwitch(IndexInterface $original) {
+    // Take the old datasource list
+    if ($this->datasourcePluginIds != $original->getDatasourceIds()) {
+      // Get the difference between the arrays
+      $removed = array_diff($original->getDatasourceIds(), $this->datasourcePluginIds);
+      $added = array_diff($this->datasourcePluginIds, $original->getDatasourceIds());
+      // Delete from tracker if the datasource got removed
+      foreach ($removed as $datasource_id) {
+        $this->getTracker()->trackAllItemsDeleted($datasource_id);
+      }
+      // Add to the tracker if the datasource got added
+      foreach ($added as $datasource_id) {
+        $datasource = $this->getDatasource($datasource_id);
+        $item_ids = $datasource->getItemIds();
+        $this->trackItemsInserted($datasource_id, $item_ids);
+      }
+    }
+  }
+
+
+  /**
+   * Actions to take when trackers change.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnTrackerSwitch(IndexInterface $original) {
+    // Take the old datasource list
+    if ($this->trackerPluginId != $original->getTrackerId()) {
+      // Delete from old tracker
+      $original->stopTracking();
+      // Add to the tracker if the datasource got added
+      $this->startTracking();
     }
   }
 
