@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Item\FieldInterface;
 
 /**
  * Base class for processors that work on individual fields.
@@ -91,7 +92,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
-      foreach ($item as $name => &$field) {
+      foreach ($item as $name => $field) {
         if (Element::child($name)) {
           if ($this->testField($name, $field)) {
             $this->processField($field['value'], $field['type']);
@@ -309,15 +310,15 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $name
    *   The field's machine name.
-   * @param array $field
+   * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field's information.
    *
    * @return bool
    *   TRUE if the field should be processed, FALSE otherwise.
    */
-  protected function testField($name, array $field) {
+  protected function testField($name, FieldInterface $field) {
     if (!isset($this->configuration['fields'])) {
-      return $this->testType($field['type']);
+      return $this->testType($field->getType());
     }
     return !empty($this->configuration['fields'][$name]);
   }

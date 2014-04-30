@@ -293,6 +293,22 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFields($only_indexed = TRUE, $get_additional = FALSE);
 
   /**
+   * Returns an array of the fields of a datasource enabled for indexing.
+   *
+   * Also includes datasource independent fields.
+   *
+   * @param string $datasource_id
+   *   The datasource to get the fields for.
+   *
+   * @return array
+   *   To enable proper extraction of fields with Utility::extractFields(),
+   *   $fields will contain the information from $this->options['fields'], but
+   *   in a two-dimensional array, keyed by both parts of the field identifier
+   *   separately – i.e, first by datasource ID, then by property path.
+   */
+  public function getItemFields($datasource_id);
+
+  /**
    * Convenience method for getting all of this index's fulltext fields.
    *
    * @param bool $only_indexed
@@ -377,7 +393,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Will return the IDs of items that should be marked as indexed – i.e., items
    * that were either rejected from indexing or were successfully indexed.
    *
-   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
+   * @param \Drupal\search_api\Item\Item[] $items
    *   An array of items to be indexed, keyed by their item IDs.
    *
    * @return array

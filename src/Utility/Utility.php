@@ -12,6 +12,7 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
+use Drupal\search_api\Item\Field;
 
 /**
  * Utility methods.
@@ -187,13 +188,17 @@ class Utility {
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
    * @param array $fields
-   *   The fields to extract, passed by reference. The array keys here are
-   *   property paths (i.e., the second part of the field identifier, after the
+   *   The fields to extract. The array keys here are property paths
+   *   (i.e., the second part of the field identifier, after the
    *   field ID separator). The values are associative arrays of field
    *   information, at least containing a "type" key. "value" and
    *   "original_type" keys will be added for all fields.
+   *
+   * @return \Drupal\search_api\Item\Field[]
+   *   Array of item field objects.
    */
   static function extractFields(ComplexDataInterface $item, array &$fields) {
+    $item_fields = array();
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $direct_fields = array();
@@ -242,6 +247,11 @@ class Utility {
         }
       }
     }
+    // @TODO Move that into extractField().
+    foreach ($fields as $property_path => $field) {
+      $item_fields[$property_path] = new Field($property_path, $field['type'], $field['value'], $field['original_type']);
+    }
+    return $item_fields;
   }
 
   /**

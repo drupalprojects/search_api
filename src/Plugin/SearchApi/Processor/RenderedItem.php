@@ -136,8 +136,9 @@ class RenderedItem extends ProcessorPluginBase {
   public function preprocessIndexItems(array &$items) {
     // First, extract all the passed item objects.
     foreach ($items as $i => $item) {
-      if (isset($item['#item'])) {
-        $item_objects[$item['#datasource']][$i] = $item['#item'];
+      $source = $item->getSource();
+      if (isset($source)) {
+        $item_objects[$item->getDatasource()->getPluginId()][$i] = $source;
       }
     }
 
@@ -168,8 +169,9 @@ class RenderedItem extends ProcessorPluginBase {
 
     // Now add the rendered items back to the extracted fields.
     foreach ($build as $i => $render) {
-      $items[$i]['search_api_rendered_item']['value'][] = drupal_render($render);
-      $items[$i]['search_api_rendered_item']['original_type'] = 'string';
+      $fields = $items[$i]->extractIndexingFields();
+      $fields['search_api_rendered_item']->setValue(array(drupal_render($render)));
+      $fields['search_api_rendered_item']->setOriginalType('string');
     }
   }
 

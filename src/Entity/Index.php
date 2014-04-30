@@ -19,6 +19,7 @@ use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Item\Item;
 
 /**
  * Defines the search index configuration entity.
@@ -193,6 +194,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var array
    */
   protected $fields;
+
+  /**
+   * Cached fields data for getItemFields().
+   *
+   * @var array
+   */
+  protected $itemFields;
 
   /**
    * Cached fulltext fields data for getFulltextFields().
@@ -413,6 +421,38 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function getItemFields($datasource_id) {
+    // If the item fields weren't evaluated yet do it now.
+    if (empty($this->itemFields)) {
+      $this->itemFields['additional fields'] = array();
+      foreach ($this->options['fields'] as $key => $field) {
+        // Include real type, if known.
+        if (isset($field['real_type'])) {
+          $custom_type = $field['real_type'];
+          if ($this->getServer()->supportsDatatype($custom_type)) {
+            $field['type'] = $field['real_type'];
+          }
+        }
+        $additional = (stristr($key, self::DATASOURCE_ID_SEPARATOR) === FALSE);
+        $field_datasource_id = 'additional fields';
+        $property_path = $key;
+        // If it's a datasource specific field separate the data in the kex.
+        if (!$additional) {
+          list ($field_datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
+        }
+        $this->itemFields[$field_datasource_id][$property_path] = $field;
+      }
+    }
+    // If there are no fields for that datasource return an empty array.
+    if (!isset($this->itemFields[$datasource_id])) {
+      return array();
+    }
+    return $this->itemFields[$datasource_id] + $this->itemFields['additional fields'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function indexItems(array $items) {
     if (!$items || $this->readOnly) {
       return array();
@@ -424,45 +464,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
-    // To enable proper extraction of fields with Utility::extractFields(),
-    // $fields will contain the information from $this->options['fields'], but
-    // in a two-dimensional array, keyed by both parts of the field identifier
-    // separately – i.e, first by datasource ID, then by property path.
-    $fields = array();
-    foreach ($this->options['fields'] as $key => $field) {
-      // Include real type, if known.
-      if (isset($field['real_type'])) {
-        $custom_type = $field['real_type'];
-        if ($this->getServer()->supportsDatatype($custom_type)) {
-          $field['type'] = $field['real_type'];
-        }
-      }
-
-      // Copy the field information into the $fields array.
-      list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
-      $fields[$datasource_id][$property_path] = $field;
-    }
-
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
       list($datasource_id, $raw_id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
-      if (empty($fields[$datasource_id])) {
+      $fields = $this->getItemFields($datasource_id);
+      if (empty($fields)) {
         $variables['%index'] = $this->label();
         $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
         throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
       }
-      $extracted_fields = $fields[$datasource_id];
-      Utility::extractFields($item, $extracted_fields);
-      $extracted_item = array();
-      $extracted_item['#item'] = $item;
-      $extracted_item['#item_id'] = $raw_id;
-      $extracted_item['#datasource'] = $datasource_id;
-      $field_prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-      foreach ($extracted_fields as $property_path => $field) {
-        $extracted_item[$field_prefix . $property_path] = $field;
-      }
-      $extracted_items[$item_id] = $extracted_item;
+
+      // Create a new item to index.
+      $extracted_items[$item_id] = new Item($this, $this->getDatasource($datasource_id), $item, $raw_id);
       // Remember the items that were initially passed.
       $ret[$item_id] = $item_id;
     }
@@ -961,6 +975,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
+    $this->itemFields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
     Cache::invalidateTags(array('search_api_index' => array($this->id())));
