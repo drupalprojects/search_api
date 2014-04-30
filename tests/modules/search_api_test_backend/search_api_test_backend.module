@@ -1,0 +1,6 @@
+<?php
+
+/**
+ * @file
+ * Offers an implementation of the Search API that provides a fake server for indexing content.
+ */

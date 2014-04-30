@@ -19,7 +19,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('node', 'search_api');
+  public static $modules = array('node', 'search_api', 'search_api_test_backend');
 
   /**
    * Account object representing a user with Search API administration
