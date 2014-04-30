@@ -135,6 +135,8 @@ interface DatasourceInterface extends IndexPluginInterface {
    *
    * @return array
    *   An array with item identifiers
+   *
+   * @todo Change to single $page parameter.
    */
   public function getItemIds($limit = -1, $from = NULL);
 
