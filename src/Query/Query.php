@@ -280,10 +280,6 @@ class Query implements QueryInterface {
     if (empty($fields[$field])) {
       throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field)));
     }
-    $type = $fields[$field]['type'];
-    if (!Utility::isSortableType($type)) {
-      throw new SearchApiException(t('Trying to sort on field @field of illegal type @type.', array('@field' => $field, '@type' => $type)));
-    }
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
     $this->sort[$field] = $order;
     return $this;

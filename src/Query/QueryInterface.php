@@ -101,7 +101,8 @@ interface QueryInterface {
    * Adds a new ($field $operator $value) condition filter.
    *
    * @param string $field
-   *   The field to filter on, e.g. 'title'.
+   *   The field to filter on, e.g. 'title'. The special field
+   *   "search_api_datasource" can be used to filter by datasource ID.
    * @param mixed $value
    *   The value the field should have (or be related to by the operator).
    * @param string $operator
@@ -165,7 +166,8 @@ interface QueryInterface {
    *     range restrictions. Might be approximated, for large numbers.
    *   - results: An array of results, ordered as specified. The array keys are
    *     the items' IDs, values are arrays containing the following keys:
-   *     - id: The item's ID.
+   *     - id: The item's internal ID.
+   *     - datasource: The datasource to which this item belongs.
    *     - score: A float measuring how well the item fits the search.
    *     - fields: (optional) If set, an array containing some field values
    *       already ready-to-use. This allows search engines (or postprocessors)

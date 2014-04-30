@@ -36,6 +36,12 @@ function search_api_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
+      'status' => array(
+        'description' => 'Boolean indicating whether the entity should be in the index.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
     ),
     'indexes' => array(
       'indexing' => array('index_id', 'changed'),

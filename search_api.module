@@ -107,24 +107,6 @@ function search_api_is_text_type($type, array $allowed = array('text')) {
 }
 
 /**
- * Checks whether it is possible to sort on fields of the given type.
- *
- * @deprecated
- *
- * @param $type
- *   The type to check for.
- *
- * @todo
- *   Make sure you take the field object and check the isMultiple parameter
- *
- * @return bool
- *   TRUE if this type is sortable, FALSE otherwise.
- */
-function search_api_is_sortable_type($type) {
-  return Utility::isSortableType($type);
-}
-
-/**
  * Returns all field types recognized by the Search API framework.
  *
  * @deprecated
