@@ -27,10 +27,13 @@ class ServerStatusForm extends FormBase {
   public function buildForm(array $form, array &$form_state, ServerInterface $server = NULL) {
     // Attach the server to the form.
     $form['#server'] = $server;
+
     // Allow authorized users to clear the indexed data on this server.
-    $form['clear'] = array(
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['clear'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Delete all indexed data on this server'),
+      '#button_type' => 'danger',
     );
     return $form;
   }
