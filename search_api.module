@@ -85,14 +85,14 @@ function search_api_entity_update(EntityInterface $entity) {
     $inserted_item_ids = array();
     $updated_item_ids = array_keys($entity->getTranslationLanguages());
     $deleted_item_ids = array();
-    $old_translations = $entity->original->getTranslationLanguages();
-    foreach (array_keys($old_translations) as $langcode) {
+    $old_translations = array_keys($entity->original->getTranslationLanguages());
+    foreach ($old_translations as $langcode) {
       if (!in_array($langcode, $updated_item_ids)) {
         $deleted_item_ids[] = $langcode;
       }
     }
     foreach ($updated_item_ids as $i => $langcode) {
-      if (!in_array($langcode, array_keys($old_translations))) {
+      if (!in_array($langcode, $old_translations)) {
         unset($updated_item_ids[$i]);
         $inserted_item_ids[] = $langcode;
       }
