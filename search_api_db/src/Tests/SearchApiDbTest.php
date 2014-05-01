@@ -8,6 +8,7 @@
 namespace Drupal\search_api_db\Tests;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Language\Language;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
@@ -840,7 +841,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
    */
   protected function getItemIds(array $entity_ids) {
     return array_map(function ($entity_id) {
-      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':und';
+      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':' . Language::LANGCODE_NOT_SPECIFIED;
     }, $entity_ids);
   }
 
