@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Base class for processors that work on individual fields.
@@ -335,7 +336,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return search_api_is_text_type($type, array('text', 'tokens', 'string'));
+    return Utility::isTextType($type, array('text', 'tokens', 'string'));
   }
 
   /**

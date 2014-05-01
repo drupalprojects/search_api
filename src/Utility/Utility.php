@@ -46,8 +46,8 @@ class Utility {
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
-   * @see getDefaultDataTypes()
-   * @see getDataTypeInfo()
+   * @see \Drupal\search_api\Utility::getDefaultDataTypes()
+   * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
   static function getDataTypes() {
     $types = self::getDefaultDataTypes();
@@ -157,7 +157,7 @@ class Utility {
   static function getDataTypeInfo($type = NULL) {
     $types = &drupal_static(__FUNCTION__);
     if (!isset($types)) {
-      $default_types = search_api_default_data_types();
+      $default_types = Utility::getDefaultDataTypes();
       $types =  \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
       $types = $types ? $types : array();
       foreach ($types as &$type_info) {
@@ -347,6 +347,7 @@ class Utility {
    *
    * @param string $item_id
    *   The item identifier
+   *
    * @return string $datasource_id
    *   The datasource identifier the item identifier belongs to.
    */

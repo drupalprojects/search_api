@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Utility\String;
 
@@ -160,11 +161,11 @@ class IndexFieldsForm extends EntityForm {
   protected function buildFields(array $fields, array $additional) {
 
     // An array of option arrays for types, keyed by nesting level.
-    $types = array(0 => search_api_data_types());
+    $types = array(0 => Utility::getDataTypes());
 
     $fulltext_types = array(0 => array('text'));
     // Add all custom data types with fallback "text" to fulltext types as well.
-    foreach (search_api_get_data_type_info() as $id => $type) {
+    foreach (Utility::getDataTypeInfo() as $id => $type) {
       if ($type['fallback'] != 'text') {
         continue;
       }

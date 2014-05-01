@@ -105,7 +105,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - type: The type set for this field. One of the types returned by
-   *     search_api_default_data_types().
+   *     \Drupal\search_api\Utility::getDefaultDataTypes().
    *   - real_type: (optional) If a custom data type was selected for this
    *     field, this type will be stored here, and "type" contain the fallback
    *     default data type.
