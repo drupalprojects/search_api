@@ -181,9 +181,7 @@ function theme_search_api_server($variables) {
     '#rows' => $rows,
     '#attributes' => array(
       'class' => array(
-        'search-api-summary',
         'search-api-server-summary',
-        'system-status-report',
       ),
     ),
   );
@@ -359,9 +357,7 @@ function theme_search_api_index($variables) {
     '#rows' => $rows,
     '#attributes' => array(
       'class' => array(
-        'search-api-summary',
         'search-api-index-summary',
-        'system-status-report',
       ),
     ),
   );

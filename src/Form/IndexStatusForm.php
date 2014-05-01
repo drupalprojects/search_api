@@ -29,6 +29,10 @@ class IndexStatusForm extends FormBase {
   public function buildForm(array $form, array &$form_state, IndexInterface $index = NULL) {
     // Attach the search index to the form.
     $form['#index'] = $index;
+
+    // Attach the admin css.
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     // Check if the index has a valid tracker available.
     if ($index->hasValidTracker()) {
       // Build the index now option.
