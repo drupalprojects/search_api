@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\IndexClearConfirmForm.
@@ -39,6 +40,7 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
     // Get the search index entity object.
     $entity = $this->getEntity();
     // Clear the index.
+    /** @var \Drupal\search_api\Index\IndexInterface $entity */
     $entity->clear();
     // Redirect to the index view page.
     $form_state['redirect_route'] = array(

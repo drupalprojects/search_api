@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
@@ -21,6 +22,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
 
   /**
    * {@inheritdoc}
+   *
    * This plugin only supports indexes containing users.
    */
   public static function supportsIndex(IndexInterface $index) {
@@ -55,7 +57,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $options = array_map(function ($item) {
-      return check_plain($item->label());
+      return String::checkPlain($item->label());
     }, user_roles());
 
     $form['default'] = array(

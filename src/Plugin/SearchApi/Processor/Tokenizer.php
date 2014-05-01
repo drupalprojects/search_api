@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -121,6 +126,9 @@ class Tokenizer extends FieldsProcessorPluginBase {
     }
   }
 
+  /**
+   * Prepares the settings.
+   */
   protected function prepare() {
     if (!isset($this->spaces)) {
       $this->spaces = str_replace('/', '\/', $this->configuration['spaces']);

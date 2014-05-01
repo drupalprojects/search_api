@@ -68,7 +68,7 @@ class IndexStatusForm extends FormBase {
         ),
         '#disabled' => !$has_remaining_items,
       );
-      // Here it gets complicated. We want to build a sentence from the form 
+      // Here it gets complicated. We want to build a sentence from the form
       // input elements, but to translate that we have to make the two form
       // elements (for limit and batch size) pseudo-variables in the t() call.
       // Since we can't pass them directly, we split the translated sentence
@@ -166,6 +166,7 @@ class IndexStatusForm extends FormBase {
    */
   public function submitForm(array &$form, array &$form_state) {
     // Get the search index from the form.
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
     // Evaluate the triggering element name.
     switch ($form_state['triggering_element']['#name']) {

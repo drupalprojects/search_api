@@ -1,8 +1,10 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Tests\SearchApiTransliterationProcessorTestCase
  */
+
 namespace Drupal\search_api\Tests;
 
 use \Drupal\search_api\Plugin\SearchApi\Processor;

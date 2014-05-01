@@ -45,6 +45,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    */
   public function submit(array $form, array &$form_state) {
     // Get the search server entity object.
+    /** @var \Drupal\search_api\Server\ServerInterface $entity */
     $entity = $this->getEntity();
     // Initialize the ignored indexes as an empty array. This variable will
     // contain all the index labels that failed to reindex.

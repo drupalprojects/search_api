@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource.

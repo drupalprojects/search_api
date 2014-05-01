@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Defines the theme functions for the Search API module.

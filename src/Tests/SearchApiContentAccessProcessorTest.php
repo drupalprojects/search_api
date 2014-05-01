@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\search_api\Tests;
+
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\search_api\Query\Query;
 

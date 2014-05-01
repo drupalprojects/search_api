@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative.
@@ -43,7 +44,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
   }
 
   /**
-   * Get the entity manager.
+   * Gets the entity manager.
    *
    * @return \Drupal\Core\Entity\EntityManager
    *   An instance of EntityManager.

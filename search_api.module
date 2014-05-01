@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains the Search API hook implementations.
@@ -12,14 +13,6 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
-
-/*
- * Constant definitions.
- */
-
-/*
- * Hook implementations.
- */
 
 /**
  * Implements hook_help().

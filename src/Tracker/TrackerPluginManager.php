@@ -19,7 +19,7 @@ use Drupal\Core\Language\LanguageManager;
 class TrackerPluginManager extends DefaultPluginManager {
 
   /**
-   * Create a TrackerPluginManager object.
+   * Creates a TrackerPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -40,7 +40,7 @@ class TrackerPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Get a list of plugin definition labels.
+   * Gets a list of plugin definition labels.
    *
    * @return array
    *   An associative array containing the plugin label, keyed by the plugin ID.
