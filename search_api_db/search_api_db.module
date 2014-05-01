@@ -1,6 +1,0 @@
-<?php
-
-/**
- * @file
- * Offers an implementation of the Search API that uses database tables for indexing content.
- */

@@ -29,6 +29,10 @@ class IndexStatusForm extends FormBase {
   public function buildForm(array $form, array &$form_state, IndexInterface $index = NULL) {
     // Attach the search index to the form.
     $form['#index'] = $index;
+
+    // Attach the admin css.
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     // Check if the index has a valid tracker available.
     if ($index->hasValidTracker()) {
       // Build the index now option.
@@ -64,7 +68,7 @@ class IndexStatusForm extends FormBase {
         ),
         '#disabled' => !$has_remaining_items,
       );
-      // Here it gets complicated. We want to build a sentence from the form 
+      // Here it gets complicated. We want to build a sentence from the form
       // input elements, but to translate that we have to make the two form
       // elements (for limit and batch size) pseudo-variables in the t() call.
       // Since we can't pass them directly, we split the translated sentence
@@ -162,6 +166,7 @@ class IndexStatusForm extends FormBase {
    */
   public function submitForm(array &$form, array &$form_state) {
     // Get the search index from the form.
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
     // Evaluate the triggering element name.
     switch ($form_state['triggering_element']['#name']) {

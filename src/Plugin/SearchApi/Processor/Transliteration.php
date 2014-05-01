@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\Transliteration.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -30,13 +35,16 @@ class Transliteration extends FieldsProcessorPluginBase {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     /* Store the language code and transliteration class in this
-     * to save recreating it for each 
+     * to save recreating it for each
      */
     $this->langcode = \Drupal::languageManager()->getDefaultLanguage()->id;
 
     $this->transliterator = \Drupal::service('transliteration');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function process(&$value) {
     // We don't touch integers, NULL values or the like.
     if (is_string($value)) {

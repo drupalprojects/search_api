@@ -116,7 +116,7 @@ function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Ind
  *   An array containing the successfully indexed items' IDs.
  */
 function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $index, array $item_ids) {
-  if ($index->getDatasourceId() == 'entity:node') {
+  if ($index->isValidDatasource('entity:node')) {
     drupal_set_message(t('Nodes indexed: @ids.', implode(', ', $item_ids)));
   }
 }
@@ -129,12 +129,14 @@ function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $
  */
 function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $query) {
   // Exclude entities with ID 0. (Assume the ID field is always indexed.)
-  $type = $query->getIndex()->getDatasourceId();
-  list(, $type) = explode(':', $type);
-  $definition = \Drupal::entityManager()->getDefinition($type);
-  if ($definition) {
-    $keys = $definition->getKeys();
-    $query->condition($keys['id'], 0, '!=');
+  $types = $query->getIndex()->getDatasourceIds();
+  foreach ($types as $type) {
+    list(, $type) = explode(':', $type);
+    $definition = \Drupal::entityManager()->getDefinition($type);
+    if ($definition) {
+      $keys = $definition->getKeys();
+      $query->condition($keys['id'], 0, '!=');
+    }
   }
 }
 

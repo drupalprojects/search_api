@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\IndexFiltersFormController.
@@ -211,6 +212,7 @@ class IndexFiltersForm extends EntityForm {
         // get it to save correctly. This ensures we can use submitConfigurationForm
         // in the correct manner, as described in
         $processor_form_state = $this->getFilterFormState($name, $form_state);
+        /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
         $processor->submitConfigurationForm($processor_form, $processor_form_state);
 
         /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
@@ -263,14 +265,18 @@ class IndexFiltersForm extends EntityForm {
   }
 
   /**
-   * Returns the portion of the form_state array used in validate
-   * and submit that corresponds to the filter being processed
+   * Gets the filters from the form_state.
    *
-   * @param $filter_name Name of processor/filter
-   * @param $form_state form_state array passed into validate,submit methods
+   * Returns the portion of the form_state array used in validate and submit
+   * that corresponds to the filter being processed.
+   *
+   * @param $filter_name
+   *   Name of processor/filter
+   * @param $form_state
+   *   The form_state array passed into validate and submit methods
+   *
    * @return array
-   * @see submit
-   * @see validate
+   *   The values of the filter being processed.
    */
   protected function getFilterFormState($filter_name, $form_state) {
     $filter_form_state = array('values' => array());

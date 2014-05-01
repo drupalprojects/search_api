@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Index\IndexInterface.
@@ -39,7 +40,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDescription();
 
   /**
-   * Determine whether this index is read-only.
+   * Determines whether this index is read-only.
    *
    * @return bool
    *   TRUE if this index is read-only, otherwise FALSE.
@@ -47,7 +48,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function isReadOnly();
 
   /**
-   * Get the cache ID prefix used for this index's caches.
+   * Gets the cache ID prefix used for this index's caches.
    *
    * @param $type
    *   The type of cache. Currently only "fields" is used.

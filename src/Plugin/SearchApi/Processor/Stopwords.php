@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\Stopwords.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -108,6 +113,8 @@ class Stopwords extends FieldsProcessorPluginBase {
   }
 
   /**
+   * Gets all the stopwords.
+   *
    * @return
    *   An array whose keys are the stopwords set in either the file or the text
    *   field.

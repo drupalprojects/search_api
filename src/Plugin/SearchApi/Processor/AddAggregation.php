@@ -1,10 +1,16 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\AddAggregation.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
@@ -157,7 +163,7 @@ class AddAggregation extends ProcessorPluginBase {
                 $required_fields[$f]['type'] = $types[$field['type']];
               }
             }
-            search_api_extract_fields($wrapper, $required_fields);
+            Utility::extractFields($wrapper, $required_fields);
             $values = array();
             foreach ($required_fields as $f) {
               if (isset($f['value'])) {

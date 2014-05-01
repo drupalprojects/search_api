@@ -49,3 +49,17 @@
   margin-left: 20px;
   margin-right: 20px;
 }
+
+/**
+ * Styles for index summary page.
+ */
+.search-api-index-status {
+  margin-bottom: 6em;
+}
+/* Remove animation */
+.search-api-index-status .progress__bar {
+  background-image: none;
+}
+.search-api-index-summary {
+  margin-bottom: 2em;
+}

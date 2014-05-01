@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\ServerForm.
@@ -190,7 +191,7 @@ class ServerForm extends EntityForm {
       ),
     );
 
-    // Attach the admin css
+    // Attach the admin css.
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
   }
 

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Index\IndexInterface;

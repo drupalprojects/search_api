@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\IndexReindexConfirmForm.
@@ -39,6 +40,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
     // Get the search index entity object.
     $entity = $this->getEntity();
     // Reindex the search index.
+    /** @var \Drupal\search_api\Index\IndexInterface $entity */
     if ($entity->reindex()) {
       // Notify the user about the reindex being successful.
       drupal_set_message($this->t('The search index %name was successfully reindexed.', array('%name' => $entity->label())));

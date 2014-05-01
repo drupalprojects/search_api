@@ -22,6 +22,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
 
   /**
    * {@inheritdoc}
+   *
    * This plugin only supports indexes containing users.
    */
   public static function supportsIndex(IndexInterface $index) {
