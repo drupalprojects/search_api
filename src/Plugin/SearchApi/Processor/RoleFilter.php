@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
@@ -24,10 +25,8 @@ class RoleFilter extends FieldsProcessorPluginBase {
    * This plugin only supports indexes containing users.
    */
   public static function supportsIndex(IndexInterface $index) {
-    // @todo Re-introduce Datasource::getEntityType() for this?
     foreach ($index->getDatasources() as $datasource) {
-      $definition = $datasource->getPluginDefinition();
-      if (isset($definition['entity_type']) && $definition['entity_type'] === 'user') {
+      if ($datasource->getEntityTypeId() == 'user') {
         return TRUE;
       }
     }
@@ -37,13 +36,33 @@ class RoleFilter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function alterItems(array &$items) {
+  public function preprocessIndexItems(array &$items) {
     $roles = $this->configuration['roles'];
     $default = (bool) $this->configuration['default'];
-    foreach ($items as $id => $account) {
-      $role_match = (count(array_diff_key($account->roles, $roles)) !== count($account->roles));
-      if ($role_match === $default) {
-        unset($items[$id]);
+
+    foreach ($items as $id => $item) {
+      if ($this->index->getDatasource($item['#datasource'])->getEntityTypeId() != 'user') {
+        continue;
+      }
+
+      /** @var \Drupal\user\UserInterface $account */
+      $account = $item['#item'];
+
+      $excess_roles = array_diff_key($account->getRoles(), $roles);
+
+      // All but those from one of the selected roles.
+      if ($default) {
+        // User has some of the selected roles.
+        if (count($excess_roles) < count($account->getRoles())) {
+          unset($items[$id]);
+        }
+      }
+      // Only those from the selected roles.
+      else {
+        // User does not have any of the selected roles.
+        if (count($excess_roles) === count($account->getRoles())) {
+          unset($items[$id]);
+        }
       }
     }
   }
@@ -55,7 +74,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $options = array_map(function ($item) {
-      return check_plain($item->label());
+      return String::checkPlain($item->label());
     }, user_roles());
 
     $form['default'] = array(
