@@ -145,7 +145,15 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL);
 
   /**
-   * Returns item ids from this datasource.
+   * Gets the entity type id.
+   *
+   * @return string|null
+   *   Entity type id if the data source contains entities.
+   *
+   */
+  public function getEntityTypeId();
+
+  /** Returns item ids from this datasource.
    *
    * Returns all items IDs by default. Allows for simple paging by passing
    * along a limit and a pointer from where it should start.
@@ -161,5 +169,4 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @todo Change to single $page parameter.
    */
   public function getItemIds($limit = -1, $from = NULL);
-
 }

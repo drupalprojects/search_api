@@ -363,6 +363,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDatasourceType() {
+    return $this->getEntityType()->id();
+  }
+
+  /**
    * Determine whether the entity type supports bundles.
    *
    * @return bool
