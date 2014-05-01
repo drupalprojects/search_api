@@ -9,6 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\search_api\Batch\IndexBatchHelper;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
@@ -174,7 +175,10 @@ class IndexStatusForm extends FormBase {
         // Get the form state values.
         $form_values = $form_state['values'];
         // Try to create a batch job to index items.
-        if (!IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit'])) {
+        try {
+          IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit']);
+        }
+        catch (SearchApiException $e) {
           // Notify user about failure to scheduling the batch job.
           drupal_set_message($this->t('Failed to create a batch, please check the batch size and limit.'), 'warning');
         }

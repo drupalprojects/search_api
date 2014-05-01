@@ -166,6 +166,9 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @return \Drupal\search_api\Tracker\TrackerInterface
    *   An instance of TrackerInterface.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the tracker couldn't be instantiated.
    */
   public function getTracker();
 
@@ -200,6 +203,9 @@ interface IndexInterface extends ConfigEntityInterface {
    * @return \Drupal\search_api\Server\ServerInterface|null
    *   An instance of ServerInterface, or NULL if the index doesn't have a
    *   server.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the server couldn't be loaded.
    */
   public function getServer();
 
@@ -392,8 +398,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Marks all items in this index for reindexing.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the tracker couldn't be loaded, for example.
    */
   public function reindex();
 
@@ -448,8 +454,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Clears all items in this index and marks them for reindexing.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the server couldn't be loaded, for example.
    */
   public function clear();
 

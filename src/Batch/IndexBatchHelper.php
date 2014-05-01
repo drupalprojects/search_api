@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Batch;
 
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
@@ -85,10 +86,15 @@ class IndexBatchHelper {
       );
       // Schedule the batch.
       batch_set($batch_definition);
-
-      return TRUE;
     }
-    return FALSE;
+    else {
+      $args = array(
+        '%size' => $size,
+        '%limit' => $limit,
+        '%name' => $index->label(),
+      );
+      throw new SearchApiException(static::t('Failed to create a batch of size %size and a limit of %limit items for index %name', $args));
+    }
   }
 
   /**

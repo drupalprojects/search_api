@@ -373,12 +373,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getTracker() {
     // Check if the tracker plugin instance needs to be resolved.
-    if (!$this->trackerPluginInstance && $this->hasValidTracker()) {
+    if (!$this->trackerPluginInstance) {
       // Get the plugin configuration for the tracker.
       $tracker_plugin_configuration = array('index' => $this) + $this->trackerPluginConfig;
-      // Create a tracker plugin instance.
-      $this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration);
+      // Try to create a tracker plugin instance.
+      if (!($this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
+        $args['@tracker'] = $this->trackerPluginId;
+        $args['%index'] = $this->label();
+        throw new SearchApiException(t('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
+      }
     }
+
     return $this->trackerPluginInstance;
   }
 
@@ -400,14 +405,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getServer() {
-    // Check if the server needs to be resolved. Note we do not use
-    // hasValidServer to prevent duplicate load calls to the storage controller.
+    // Check if the server needs to be resolved.
     if (!$this->server) {
-      // Get the server machine name.
-      $server_machine_name = $this->serverMachineName;
-      // Get the server from the storage.
-      $this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($server_machine_name);
+      // Try to get the server from the storage.
+      if (!($this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($this->serverMachineName))) {
+        $args['@server'] = $this->serverMachineName;
+        $args['%index'] = $this->label();
+        throw new SearchApiException(t('The server with ID "@server" could not be retrieved for index %index.', $args));
+      }
     }
+
     return $this->server;
   }
 
@@ -942,11 +949,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    if ($this->status() && !$this->isReadOnly() && $this->hasValidTracker()) {
+    if ($this->status()) {
       $this->getTracker()->trackAllItemsUpdated();
-      return TRUE;
     }
-    return FALSE;
   }
 
   /**
@@ -995,11 +1000,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function clear() {
-    if ($this->reindex() && $this->isServerEnabled()) {
-      $this->getServer()->deleteAllItems($this);
-      return TRUE;
+    if ($this->status()) {
+      $this->reindex();
+      if (!$this->isReadOnly()) {
+        $this->getServer()->deleteAllItems($this);
+      }
     }
-    return FALSE;
   }
 
   /**

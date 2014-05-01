@@ -732,8 +732,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   protected function clearIndex() {
-    $success = entity_load('search_api_index', $this->indexId)->clear();
-    $this->assertTrue($success, 'The index was successfully cleared.');
+    $index = entity_load('search_api_index', $this->indexId);
+    $index->clear();
   }
 
   /**
