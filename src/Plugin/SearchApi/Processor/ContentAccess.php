@@ -7,13 +7,10 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\comment\Entity\Comment;
-use Drupal\Core\Entity\EntityAccessController;
-use Drupal\Core\Language\Language as CoreLanguage;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -29,9 +26,6 @@ use Drupal\search_api\Query\QueryInterface;
  */
 class ContentAccess extends ProcessorPluginBase {
 
-  /** @var \Drupal\node\NodeGrantDatabaseStorageInterface */
-  protected $grantStorage;
-
   /**
    * {@inheritdoc}
    */
@@ -42,14 +36,6 @@ class ContentAccess extends ProcessorPluginBase {
       }
     }
     return FALSE;
-  }
-
-  /**
-   * Construct ContentAccess object.
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->grantStorage = \Drupal::service('node.grant_storage');
   }
 
   /**
