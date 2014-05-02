@@ -33,10 +33,21 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   public function hasValidBackend();
 
   /**
+   * Retrieves the plugin ID of the backend of this server.
+   *
+   * @return string
+   *   The plugin ID of the backend.
+   */
+  public function getBackendId();
+
+  /**
    * Retrieves the backend.
    *
    * @return \Drupal\search_api\Backend\BackendInterface
-   *   An instance of BackendInterface.
+   *   This server's backend plugin.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the backend plugin could not be retrieved.
    */
   public function getBackend();
 
