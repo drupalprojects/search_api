@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchAPI\Processor\HTMLFilter.
+ */
 
 /**
  * @file
@@ -22,8 +26,8 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 class HTMLFilter extends FieldsProcessorPluginBase {
 
   /**
-  * @var array
-  */
+   * @var array
+   */
   protected $tags = array();
 
   /**
@@ -44,7 +48,6 @@ u: 1.5
 DEFAULT_TAGS
     );
 
-    $this->tags = $this->parseTags($this->options['tags']);
   }
 
   /**
@@ -59,31 +62,7 @@ DEFAULT_TAGS
   }
 
   /**
-   *  Parses an array of tags in YAML.
-   *
-   *  @param $yaml
-   *    yaml represenation of array
-   *
-   *  @return array of tags
-   */
-  protected function parseTags($yaml) {
-
-    try {
-      $tags = Yaml::parse($yaml);
-
-      unset($tags['br'], $tags['hr']);
-    }
-    catch(ParseException $exception) {
-      //problem parsing, return empty array
-      $tags = FALSE;
-    }
-
-    return $tags;
-
-  }
-
-  /**
-   * Builds configuration form
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
@@ -101,14 +80,11 @@ DEFAULT_TAGS
       '#description' => t('If set, the alternative text of images will be indexed.'),
       '#default_value' => $this->configuration['alt'],
     );
-
+    $t_args = array('!link' => l('YAML file format', 'https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'));
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => t('Tag boosts'),
-      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@link">YAML file format</a>. ' .
-          'The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. ' .
-          'Assign a boost of 0 to ignore the text content of that HTML element.',
-          array('@link' => url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'))),
+      '#description' => t('Specify special boost values for certain HTML elements, in !link. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
       '#default_value' => $this->configuration['tags'],
     );
 
@@ -116,6 +92,9 @@ DEFAULT_TAGS
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateConfigurationForm(array &$form, array &$form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
@@ -144,57 +123,119 @@ DEFAULT_TAGS
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function processFieldValue(&$value) {
-    $text = str_replace(array('<', '>'), array(' <', '> '), $value); // Let removed tags still delimit words.
+    $tokenized_text = array();
+    // Copy without reference
+    $text = $value;
+    // Put the title properties from html entities in the text blob.
     if ($this->configuration['title']) {
       $text = preg_replace('/((<[-a-z_]+[^>]+)\s+title\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>))/i', '$4$5 $1', $text);
     }
+    // Put the alt text as regular text in the text blob.
     if ($this->configuration['alt']) {
       $text = preg_replace('/(<img[^>]*\s+alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>)/i', '$3$4 $1', $text);
     }
+    // Get any other configured tags.
     if (!empty($this->configuration['tags'])) {
-      $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');
-      // Get rid of unnecessary space symbols
-      $text = trim(preg_replace('/\s+/', ' ', $text));
-      $value = $this->parseText($text);
+      $tags_exploded = '<' . implode('><', array_keys($this->tags)) . '>';
+      // Let removed tags still delimit words.
+      $text = str_replace(array('<', '>'), array(' <', '> '), $text);
+      // Strip all tags except the ones configured
+      $text = strip_tags($text, $tags_exploded);
+      // Get rid of unnecessary space symbols.
+      $tokenized_text = array_merge($tokenized_text, $this->getValueAndScoreFromHTML($text));
     }
-    else {
-      $value = strip_tags($text);
+    // Add also everything as non boosted for the general field.
+    $tokenized_text['content'] = array('value' => $text, 'score' => 1);
+
+    // Clean up all the remaining tags and clean up the different sections.
+    foreach ($tokenized_text as &$text) {
+      $text['value'] = $this->stripHtmlTagsAndControlCharacters($text['value']);
     }
+    $value = array_values($tokenized_text);
   }
 
-  protected function parseText(&$text, $active_tag = NULL, $boost = 1) {
+  /**
+   * Parses text and returns the different segments it found with their boosts.
+   *
+   * @param string $text
+   *
+   * @return array
+   *  Array of parsed values, and their boost attached
+   *  Values that were found that were not enclosed in tags should also get
+   *  added but with a boost as 1
+   */
+  protected function getValueAndScoreFromHTML($text) {
     $ret = array();
-    while (($pos = strpos($text, '<')) !== FALSE) {
-      if ($boost && $pos > 0) {
-        $ret[] = array(
-          'value' => html_entity_decode(substr($text, 0, $pos), ENT_QUOTES, 'UTF-8'),
-          'score' => $boost,
-        );
+    preg_match_all('@<(' . implode('|', array_keys($this->tags)) . ')[^>]*>(.*)</\1>@Ui', $text, $matches);
+
+    foreach ($matches[1] as $key => $tag) {
+      $tag = drupal_strtolower($tag);
+
+      if (!isset($ret[$tag])) {
+        $ret[$tag] = array('value' => '', 'score' => '');
       }
-      $text = substr($text, $pos + 1);
-      preg_match('/^(/?)([-:_a-zA-Z]+)/', $text, $m);
-      $text = substr($text, strpos($text, '>') + 1);
-      if ($m[1]) {
-        // Closing tag.
-        if ($active_tag && $m[2] == $active_tag) {
-          return $ret;
-        }
+      // We don't want to index links auto-generated by the url filter.
+      if ($tag != 'a' || !preg_match('@(?:http://|https://|ftp://|mailto:|smb://|afp://|file://|gopher://|news://|ssl://|sslv2://|sslv3://|tls://|tcp://|udp://|www\.)[a-zA-Z0-9]+@', $matches[2][$key])) {
+        $ret[$tag]['value'] .= $matches[2][$key];
+        $ret[$tag]['score'] = (isset($this->tags[$tag]) ? $this->tags[$tag] : 1);
       }
-      else {
-        // Opening tag => recursive call.
-        $inner_boost = $boost * (isset($this->tags[$m[2]]) ? $this->tags[$m[2]] : 1);
-        $ret = array_merge($ret, $this->parseText($text, $m[2], $inner_boost));
-      }
-    }
-    if ($text) {
-      $ret[] = array(
-        'value' => html_entity_decode($text, ENT_QUOTES, 'UTF-8'),
-        'score' => $boost,
-      );
-      $text = '';
     }
     return $ret;
   }
 
+  /**
+   * Strip html tags and also control characters that cause indexing to fail.
+   *
+   * @param string $text
+   *   The input to clean
+   * @return string
+   *   The clean text
+   */
+  protected function stripHtmlTagsAndControlCharacters($text) {
+    // Remove invisible content.
+    $text = preg_replace('@<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)[^>]*>.*</\1>@siU', ' ', $text);
+    // Add spaces before stripping tags to avoid running words together.
+    $text = \Drupal\Component\Utility\Xss::filter(str_replace(array('<', '>'), array(' <', '> '), $text), array());
+    // Decode entities and then make safe any < or > characters.
+    $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+    // Remove extra spaces.
+    $text = preg_replace('/\s+/s', ' ', $text);
+    // Remove white spaces around punctuation marks probably added
+    // by the safety operations above. This is not a world wide perfect solution,
+    // but a rough attempt for at least US and Western Europe.
+    // Pc: Connector punctuation
+    // Pd: Dash punctuation
+    // Pe: Close punctuation
+    // Pf: Final punctuation
+    // Pi: Initial punctuation
+    // Po: Other punctuation, including ¿?¡!,.:;
+    // Ps: Open punctuation
+    $text = preg_replace('/\s(\p{Pc}|\p{Pd}|\p{Pe}|\p{Pf}|!|\?|,|\.|:|;)/s', '$1', $text);
+    $text = preg_replace('/(\p{Ps}|¿|¡)\s/s', '$1', $text);
+    return $text;
+  }
+
+  /**
+   *  Parses an array of tags in YAML.
+   *
+   *  @param $yaml
+   *    yaml represenation of array
+   *
+   *  @return array of tags
+   */
+  protected function parseTags($yaml) {
+    try {
+      $tags = Yaml::parse($yaml);
+      unset($tags['br'], $tags['hr']);
+    }
+    catch(ParseException $exception) {
+      //problem parsing, return empty array
+      $tags = FALSE;
+    }
+    return $tags;
+  }
 }

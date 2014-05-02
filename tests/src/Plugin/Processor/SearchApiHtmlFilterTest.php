@@ -24,7 +24,7 @@ class HtmlFilterTest extends UnitTestCase {
   public static function getInfo() {
     return array(
       'name' => 'HTML filter processor test',
-      'description' => 'Test if HTML Filter processor works well.',
+      'description' => 'Test if HTML Filter processor works.',
       'group' => 'Search API',
     );
   }
@@ -53,12 +53,12 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function testTitleConfiguration($passedString, $expectedValue, $titleConfig) {
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue', 'parseText'),
+      array('processFieldValue', 'getValueAndScoreFromHTML'),
       array(array('tags' => "div: 2", 'title' => $titleConfig, 'alt' => 0), 'string', array()));
 
     $htmlFilterMock->expects($this->once())
-      ->method('parseText')
-      ->with($this->equalTo($expectedValue));
+      ->method('getValueAndScoreFromHTML')
+      ->with($this->equalTo(array('value' => '', 'score' => '0')));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
@@ -71,12 +71,11 @@ class HtmlFilterTest extends UnitTestCase {
     return array(
       array('word', 'word', 0),
       array('word', 'word', 1),
-      array('<div>word</div>', '<div> word </div>', 1),
-      array('<div title="TITLE"> word </div>', 'TITLE <div title="TITLE"> word </div>', 1),
-      array('<div title="TITLE"> word </div>', '<div title="TITLE"> word </div>', 0),
-      array('<div data-title="TITLE"> word </div>', '<div data-title="TITLE"> word </div>', 1),
-      array("<div title='TITLE'> word </div>", "TITLE <div title='TITLE'> word </div>", 1),
-      array('<div title="TITLE"> word </a>', 'TITLE <div title="TITLE"> word', 1),
+      array('<div>word</div>', 'word', 1),
+      array('<div title="TITLE">word</div>', 'TITLE <div title="TITLE"> word </div> ', 1),
+      array('<div title="TITLE">word</div>', 'word', 0),
+      array('<div data-title="TITLE">word</div>', 'word', 1),
+      array('<div title="TITLE">word</a>', 'TITLE word', 1),
     );
   }
 
@@ -87,12 +86,12 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function testAltConfiguration($passedString, $expectedValue, $altConfig) {
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue', 'parseText'),
+      array('processFieldValue', 'getValueAndScoreFromHTML'),
       array(array('tags' => "img: 2", 'title' => 0, 'alt' => $altConfig), 'string', array()));
 
     $htmlFilterMock->expects($this->once())
-      ->method('parseText')
-      ->with($this->equalTo($expectedValue));
+      ->method('getValueAndScoreFromHTML')
+      ->with($this->equalTo(array('value' => '', 'score' => '0')));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
@@ -121,19 +120,19 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function testTagConfiguration($passedString, $expectedValue, $tagsConfig) {
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue', 'parseText'),
+      array('processFieldValue', 'getValueAndScoreFromHTML'),
       array(array('tags' => $tagsConfig, 'title' => 0, 'alt' => 0), 'string', array()));
 
     if (!empty($tagsConfig)) {
       $htmlFilterMock
         ->expects($this->once())
-        ->method('parseText')
-        ->with($this->equalTo($expectedValue));
+        ->method('getValueAndScoreFromHTML')
+        ->with($this->equalTo(array('value' => '', 'score' => '0')));
     }
     else {
       $htmlFilterMock
         ->expects($this->exactly(0))
-        ->method('parseText');
+        ->method('getValueAndScoreFromHTML');
     }
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
@@ -149,30 +148,33 @@ class HtmlFilterTest extends UnitTestCase {
     return array(
       array('word', '', ''),
       array('word', 'word', "h2: 2"),
-      array('<h2>word</h2>', '<h2> word </h2>', "h2: 2"),
+      array('<h2> word </h2>', '<h2> word </h2>', "h2: 2"),
     );
   }
 
   /**
-   * Test parseText method.
+   * Test getValueAndScoreFromHTML method.
    *
-   * @dataProvider parseTextDataProvider
+   * @dataProvider getValueAndScoreFromHTMLDataProvider
    */
-  public function testParseTextMethod($value, $tagsString, $expected) {
-    $htmlFilter = new HTMLFilter(array('tags' => $tagsString), 'string', array());
+  public function testGetValueAndScoreFromHTMLMethod($value, $tagsString, array $expected) {
 
-    $processFieldValueMethod = $this->getAccessibleMethod('parseText');
-    $result = $processFieldValueMethod->invokeArgs($htmlFilter, array(&$value));
+    $configuration = array('tags' => $tagsString);
+    $plugin_id = 'Test';
+    $plugin_definition = array();
+    $htmlFilter = new HTMLFilter($configuration, $plugin_id, $plugin_definition);
+    $processFieldValueMethod = $this->getAccessibleMethod('getValueAndScoreFromHTML');
+    $result = $processFieldValueMethod->invokeArgs($htmlFilter, array($value));
 
     $this->assertEquals($result, $expected);
   }
 
   /**
-   * Data provider for testParseTextMethod.
+   * Data provider for testGetValueAndScoreFromHTMLMethod.
    *
    * @todo add other cases.
    */
-  public function parseTextDataProvider() {
+  public function getValueAndScoreFromHTMLDataProvider() {
     return array(
       array('word', 'div: 2', array(array('value' => 'word', 'score' => 1))),
     );
