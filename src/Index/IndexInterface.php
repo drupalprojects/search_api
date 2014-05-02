@@ -173,10 +173,10 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getTracker();
 
   /**
-   * Determines whether the server is valid.
+   * Determines whether this index is lying on a valid server.
    *
    * @return bool
-   *   TRUE if the server is valid, otherwise FALSE.
+   *   TRUE if the index's server is set and valid, otherwise FALSE.
    */
   public function hasValidServer();
 

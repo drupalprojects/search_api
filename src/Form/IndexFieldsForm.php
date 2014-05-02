@@ -107,7 +107,7 @@ class IndexFieldsForm extends EntityForm {
         '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
-    if ($index->getServer()) {
+    if ($index->hasValidServer()) {
       $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
           array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
     }

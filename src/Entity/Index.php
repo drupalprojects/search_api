@@ -1186,8 +1186,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function stopTracking() {
-    foreach ($this->getDatasources() as $datasource) {
-      $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+    if ($this->hasValidTracker()) {
+      foreach ($this->getDatasources() as $datasource) {
+        $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+      }
     }
   }
 
