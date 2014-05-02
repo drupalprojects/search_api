@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\String;
+use Drupal\Core\Render\Element;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
@@ -188,7 +189,6 @@ class Highlight extends ProcessorPluginBase {
    *   contained in them for the given result.
    */
   protected function getFulltextFields(array &$results, $i, $load = TRUE) {
-    global $language;
     $data = array();
 
     $result = &$results[$i];
@@ -234,7 +234,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * Loads entities into results array.
    */
-  protected function loadResultsEnities(array &$results) {
+  protected function loadResultsEntities(array &$results) {
     $items = $this->index->loadItems(array_keys($results));
     foreach ($items as $id => $item) {
       $results[$id]['entity'] = $item;
@@ -244,7 +244,7 @@ class Highlight extends ProcessorPluginBase {
   /**
    * Extracts the positive keywords used in a search query.
    *
-   * @param SearchApiQuery $query
+   * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query from which to extract the keywords.
    *
    * @return array
@@ -259,15 +259,17 @@ class Highlight extends ProcessorPluginBase {
       return $this->flattenKeysArray($keys);
     }
 
-    $keywords = preg_split(self::$split, $keys);
+    $keywords_in = preg_split(self::$split, $keys);
     // Assure there are no duplicates. (This is actually faster than
     // array_unique() by a factor of 3 to 4.)
-    $keywords = drupal_map_assoc(array_filter($keywords));
     // Remove quotes from keywords.
-    foreach ($keywords as $key) {
-      $keywords[$key] = trim($key, "'\"");
+    $keywords = array();
+    foreach (array_filter($keywords_in) as $keyword) {
+      if ($keyword = trim($keyword, "'\"")) {
+        $keywords[$keyword] = $keyword;
+      }
     }
-    return drupal_map_assoc(array_filter($keywords));
+    return $keywords;
   }
 
   /**
@@ -286,7 +288,7 @@ class Highlight extends ProcessorPluginBase {
 
     $keywords = array();
     foreach ($keys as $i => $key) {
-      if (!element_child($i)) {
+      if (!Element::child($i)) {
         continue;
       }
       if (is_array($key)) {
