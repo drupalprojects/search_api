@@ -138,15 +138,18 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function getBackend() {
     // Check if the backend plugin instance needs to be resolved.
-    if (!$this->backendPluginInstance && $this->hasValidBackend()) {
-      // Get the ID of the backend plugin.
-      $backend_plugin_id = $this->backendPluginId;
+    if (!$this->backendPluginInstance) {
       // Get the backend plugin manager.
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
-      // Create a backend plugin instance.
+
+      // Try to create a backend plugin instance.
       $config = $this->backendPluginConfig;
       $config['server'] = $this;
-      $this->backendPluginInstance = $backend_plugin_manager->createInstance($backend_plugin_id, $config);
+      if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->backendPluginId, $config))) {
+        $args['@backend'] = $this->backendPluginId;
+        $args['%server'] = $this->label();
+        throw new SearchApiException(t('The backend with ID "@backend" could not be retrieved for server %server.', $args));
+      }
     }
     return $this->backendPluginInstance;
   }
