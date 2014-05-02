@@ -26,12 +26,11 @@ class AddURL extends ProcessorPluginBase {
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
       // Only run if the field is enabled for the index.
-      if (!empty($item[$item['#datasource'] . '|search_api_url'])) {
-        /* @param $url \Drupal\Core\Url */
+      if (!empty($item['search_api_url'])) {
         $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item['#item']);
         if ($url) {
-          $item[$item['#datasource'] . '|search_api_url']['value'][] = $url->toString();
-          $item[$item['#datasource'] . '|search_api_url']['original_type'] = 'uri';
+          $item['search_api_url']['value'][] = $url->toString();
+          $item['search_api_url']['original_type'] = 'uri';
         }
       }
     }

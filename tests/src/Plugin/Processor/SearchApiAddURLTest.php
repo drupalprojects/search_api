@@ -101,7 +101,7 @@ class SearchApiAddURLTest extends UnitTestCase {
           'value' => array('Some text value'),
           'original_type' => 'field_item:text_with_summary',
         ),
-        'entity:node|search_api_url' => array(
+        'search_api_url' => array(
           'type' => 'string',
           'value' => array(),
           'original_type' => NULL,
@@ -111,7 +111,7 @@ class SearchApiAddURLTest extends UnitTestCase {
         '#item' => $node,
         '#item_id' => '2:en',
         '#datasource' => 'entity:node',
-        'entity:node|search_api_url' => array(
+        'search_api_url' => array(
           'type' => 'string',
           'value' => array(),
           'original_type' => NULL,
@@ -123,7 +123,7 @@ class SearchApiAddURLTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     // Check the valid item.
-    $field = $items['entity:node|1:en']['entity:node|search_api_url'];
+    $field = $items['entity:node|1:en']['search_api_url'];
     $this->assertEquals(array('http://www.example.com/node/example'), $field['value'], 'Valid URL added as value to the field.');
     $this->assertEquals('uri', $field['original_type'], 'Type changed to "URI".');
 
@@ -133,7 +133,7 @@ class SearchApiAddURLTest extends UnitTestCase {
     $this->assertEquals('field_item:text_with_summary', $field['original_type'], 'Type not changed.');
 
     // Check the second item to be sure that all are processed.
-    $field = $items['entity:node|2:en']['entity:node|search_api_url'];
+    $field = $items['entity:node|2:en']['search_api_url'];
     $this->assertEquals(array('http://www.example.com/node/example'), $field['value'], 'Valid URL added as value to the field.');
     $this->assertEquals('uri', $field['original_type'], 'Type changed to "URI".');
   }
