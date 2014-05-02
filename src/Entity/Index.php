@@ -406,7 +406,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getServer() {
     // Check if the server needs to be resolved.
-    if (!$this->server) {
+    if (!$this->server && $this->serverMachineName) {
       // Try to get the server from the storage.
       if (!($this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($this->serverMachineName))) {
         $args['@server'] = $this->serverMachineName;
