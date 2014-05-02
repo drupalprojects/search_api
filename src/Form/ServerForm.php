@@ -265,10 +265,11 @@ class ServerForm extends EntityForm {
   public function validate(array $form, array &$form_state) {
     // Perform default entity form validate.
     parent::validate($form, $form_state);
+    /** @var \Drupal\search_api\Server\ServerInterface $entity */
     // Get the entity.
     $entity = $this->getEntity();
     // Get the current backend plugin ID.
-    $backend_plugin_id = $entity->hasValidBackend() ? $entity->getBackend()->getPluginId() : NULL;
+    $backend_plugin_id = $entity->getBackendId();
     // Check if the backend plugin changed.
     if ($backend_plugin_id !== $form_state['values']['backendPluginId']) {
       // Check if the backend plugin configuration form input values exist.
