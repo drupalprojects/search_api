@@ -26,11 +26,12 @@ class AddURL extends ProcessorPluginBase {
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
       // Only run if the field is enabled for the index.
-      if (!empty($item['search_api_url'])) {
-        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item);
+      if (!empty($item[$item['#datasource'] . '|search_api_url'])) {
+        /* @param $url \Drupal\Core\Url */
+        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item['#item']);
         if ($url) {
-          $item['search_api_url']['value'] = url($url['path'], array('absolute' => TRUE) + $url['options']);
-          $item['search_api_url']['value']['original_type'] = 'uri';
+          $item[$item['#datasource'] . '|search_api_url']['value'][] = $url->toString();
+          $item[$item['#datasource'] . '|search_api_url']['original_type'] = 'uri';
         }
       }
     }
@@ -44,8 +45,8 @@ class AddURL extends ProcessorPluginBase {
       return;
     }
     $definition = array(
-      'label' => t('URI'),
-      'description' => t('A URI where the item can be accessed.'),
+      'label' => $this->t('URI'),
+      'description' => $this->t('A URI where the item can be accessed.'),
       'type' => 'uri',
     );
     $properties['search_api_url'] = new DataDefinition($definition);
