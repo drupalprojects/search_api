@@ -517,25 +517,26 @@ class SearchApiDbBackend extends BackendPluginBase {
               ->execute();
           }
         }
+
         // Make sure the table and column now exist. (Especially important when
         // we actually add the index for the first time.)
-        if (!Utility::isTextType($field['type'])) {
-          $storageExists = $this->database->schema()->tableExists($field['table'])
-            && $this->database->schema()->tableExists($denormalized_table)
-            && $this->database->schema()->fieldExists($field['table'], 'value')
-            && $this->database->schema()->fieldExists($denormalized_table, $field['column']);
-          if (!$storageExists) {
-            $db = array(
-              'table' => $field['table'],
-              'column' => 'value',
-            );
-            $this->createFieldTable($new_fields[$name], $db);
-            $db = array(
-              'table' => $denormalized_table,
-              'column' => $field['column'],
-            );
-            $this->createFieldTable($new_fields[$name], $db);
-          }
+        $storage_exists = $this->database->schema()->tableExists($field['table']) && $this->database->schema()->fieldExists($field['table'], 'value');
+        $denormalized_storage_exists = $this->database->schema()->tableExists($denormalized_table) && $this->database->schema()->fieldExists($denormalized_table, $field['column']);
+        if (!Utility::isTextType($field['type']) && !$storage_exists) {
+          $db = array(
+            'table' => $field['table'],
+            'column' => 'value',
+          );
+          $this->createFieldTable($new_fields[$name], $db);
+        }
+        // Ensure that a column is created in the denormalized storage even for
+        // 'text' fields.
+        if (!$denormalized_storage_exists) {
+          $db = array(
+            'table' => $denormalized_table,
+            'column' => $field['column'],
+          );
+          $this->createFieldTable($new_fields[$name], $db);
         }
         unset($new_fields[$name]);
       }

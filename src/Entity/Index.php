@@ -1204,4 +1204,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    parent::calculateDependencies();
+
+    // Indexes that have a server assigned need to depend on it.
+    if ($this->hasValidServer() && ($server = $this->getServer())) {
+      $this->addDependency('entity', $server->getConfigDependencyName());
+    }
+
+    return $this->dependencies;
+  }
+
 }
