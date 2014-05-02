@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Batch;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
@@ -16,7 +15,44 @@ use Drupal\search_api\Index\IndexInterface;
  */
 class IndexBatchHelper {
 
-  use StringTranslationTrait;
+  /**
+   * The translation manager service.
+   *
+   * @var \Drupal\Core\StringTranslation\TranslationInterface
+   */
+  protected static $translationManager;
+
+  /**
+   * Gets the translation manager.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslationInterface
+   *   The translation manager.
+   */
+  protected static function translationManager() {
+    if (!static::$translationManager) {
+      static::$translationManager = \Drupal::service('string_translation');
+    }
+    return static::$translationManager;
+  }
+
+  /**
+   * Translates a string to the current language or to a given language.
+   *
+   * See the t() documentation for details.
+   */
+  protected static function t($string, array $args = array(), array $options = array()) {
+    return static::translationManager()->translate($string, $args, $options);
+  }
+
+  /**
+   * Formats a string containing a count of items.
+   *
+   * See the format_plural() documentation for details.
+   */
+  protected static function formatPlural($count, $singular, $plural, array $args = array(), array $options = array()) {
+    return static::translationManager()->formatPlural($count, $singular, $plural, $args, $options);
+  }
+
 
   /**
    * Creates a batch for a given search index.
