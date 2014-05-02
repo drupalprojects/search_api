@@ -73,7 +73,7 @@ class SearchApiAddURLTest extends UnitTestCase {
     // Create the URL-Processor and set the mocked indexer.
     $this->processor = new AddURL(array(), 'search_api_add_url_processor', array());
     $this->processor->setIndex($this->index);
-    $this->processor->setTranslationManager($this->getStringTranslationStub());
+    $this->processor->setStringTranslation($this->getStringTranslationStub());
   }
 
   /**
