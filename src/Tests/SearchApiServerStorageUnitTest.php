@@ -20,7 +20,7 @@ class SearchApiServerStorageUnitTest extends DrupalUnitTestBase {
    *
    * @var array
    */
-  public static $modules = array('search_api');
+  public static $modules = array('search_api', 'search_api_test_backend');
 
   /**
    * Search API Server storage controller.
@@ -70,6 +70,7 @@ class SearchApiServerStorageUnitTest extends DrupalUnitTestBase {
     $serverData = array(
       'machine_name' => $this->randomName(),
       'name' => $this->randomString(),
+      'backendPluginId' => 'search_api_test_backend',
     );
 
     try {
