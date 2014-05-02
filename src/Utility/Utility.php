@@ -9,6 +9,9 @@ namespace Drupal\search_api\Utility;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
+use Drupal\Core\TypedData\DataReferenceInterface;
+use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
@@ -216,8 +219,17 @@ class Utility {
       $success = FALSE;
       try {
         $item_nested = $item->get($direct);
+        if ($item_nested instanceof DataReferenceInterface) {
+          $item_nested = $item_nested->getTarget();
+        }
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
           self::extractFields($item_nested, $fields_nested);
+          $success = TRUE;
+        }
+        elseif ($item_nested instanceof ListInterface && !$item_nested->isEmpty()) {
+          foreach ($item_nested as $list_item) {
+            self::extractFields($list_item, $fields_nested);
+          }
           $success = TRUE;
         }
       }
