@@ -44,9 +44,7 @@ class SearchApiLanguageTest extends UnitTestCase {
     parent::setUp();
 
     $this->processor = new Language(array(), 'search_api_language_processor', array());
-    /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation_manager */
-    $translation_manager = $this->getStringTranslationStub();
-    $this->processor->setTranslationManager($translation_manager);
+    $this->processor->setStringTranslation($this->getStringTranslationStub());
   }
 
   /**

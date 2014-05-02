@@ -53,6 +53,7 @@ class IndexBatchHelper {
     return static::translationManager()->formatPlural($count, $singular, $plural, $args, $options);
   }
 
+
   /**
    * Creates a batch for a given search index.
    *
@@ -65,7 +66,7 @@ class IndexBatchHelper {
    *   Optional. Maximum number of items to index. Defaults to indexing all
    *   remaining items.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the batch is created successfully, FALSE otherwise.
    */
   public static function create(IndexInterface $index, $size = NULL, $limit = -1) {

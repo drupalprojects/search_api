@@ -176,14 +176,22 @@ function drush_search_api_list() {
  * @param string $index_machine_name
  *   Machine name for index to be enabled.
  */
-function drush_search_api_enable($index_name) {
-
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+function drush_search_api_enable() {
+  if (!search_api_drush_get_index_count()) {
+    drush_set_error(dt('There are no indexes defined. Please define an index before trying to enable it'));
     return;
   }
-  foreach ($indexes as $index) {
-    _drush_search_api_set_index_state($index, TRUE);
+
+  $index_names = func_get_args();
+
+  foreach ($index_names as $index_name) {
+    $indexes = search_api_drush_get_indexes_or_display_list($index_name);
+    if (empty($indexes)) {
+      continue;
+    }
+    foreach ($indexes as $index) {
+      _drush_search_api_set_index_state($index, TRUE);
+    }
   }
 }
 
@@ -202,12 +210,21 @@ function drush_search_api_enable_all() {
  *   Optional machine name for index to be disabled. If absent - disable all.
  */
 function drush_search_api_disable($index_name) {
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+  if (!search_api_drush_get_index_count()) {
+    drush_set_error(dt('There are no indexes defined. Please define an index before trying to enable it'));
     return;
   }
-  foreach ($indexes as $index) {
-    _drush_search_api_set_index_state($index, FALSE);
+
+  $index_names = func_get_args();
+
+  foreach ($index_names as $index_name) {
+    $indexes = search_api_drush_get_indexes_or_display_list($index_name);
+    if (empty($indexes)) {
+      continue;
+    }
+    foreach ($indexes as $index) {
+      _drush_search_api_set_index_state($index, FALSE);
+    }
   }
 }
 
@@ -355,6 +372,16 @@ function drush_search_api_clear($index_name = NULL) {
 }
 
 /**
+ * search_api_drush_get_index_count 
+ * Helper function to return the number of indexes
+ * 
+ * @return integer
+ */
+function search_api_drush_get_index_count() {
+    return count(entity_load_multiple('search_api_index'));
+}
+
+/**
  * Helper function to return an index or all indexes as an array.
  * If the index is not defined or there are no indexes then a friendly message
  * is displayed
@@ -386,6 +413,8 @@ function search_api_drush_get_indexes_or_display_list($index_name) {
   }
   return $indexes;
 }
+
+
 
 /**
  * Helper function to change the state of a single index.
