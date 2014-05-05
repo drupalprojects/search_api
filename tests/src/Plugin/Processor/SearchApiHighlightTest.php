@@ -53,27 +53,15 @@ class SearchApiHighlightTest extends UnitTestCase {
    */
   public function testPostProcessSearchResults() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
-    $query->expects($this->any())
-      ->method('getKeys')
-      ->will($this->returnValue(array()));
 
-    $processor = new Highlight(array(), 'search_api_highlight_processor', array());
-
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
-    $index->expects($this->any())
-      ->method('getFulltextFields')
-      ->will($this->returnValue(array(
-        'entity:node|title'
-      )));
-    $index->expects($this->any())
-      ->method('loadItems')
-      ->will($this->returnValue(array()));
-    $processor->setIndex($index);
-
+    $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
+      ->setMethods(array('getKeywords'))
+      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->getMock();
     $response = array(
       'result count' => 2,
       'results' => array(
-          1 => array(),
+        1 => array(),
         array(
           2 => array(),
         ),
@@ -81,13 +69,24 @@ class SearchApiHighlightTest extends UnitTestCase {
     );
 
     // Trivial case. No keywords.
+    $processor->expects($this->once())
+      ->method('getKeywords');
     $result = $response;
     $processor->postprocessSearchResults($response, $query);
     $this->assertEquals($response, $result, 'Nothing done if no keys selected.');
 
     // Keys are set; and highlight is enabled ('always').
-
-    $processor = new Highlight(array(), 'search_api_highlight_processor', array());
+    $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
+      ->setMethods(array('postprocessExcerptResults', 'postprocessFieldResults', 'getKeywords'))
+      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->getMock();
+    $processor->expects($this->once())
+      ->method('getKeywords')
+      ->will($this->returnValue(array('mail', 'text')));
+    $processor->expects($this->exactly(2))
+      ->method('postprocessFieldResults');
+    $processor->expects($this->never())
+      ->method('postprocessExcerptResults');
     $configuration = array(
       'highlight' => 'always',
       'excerpt' => 0,
@@ -96,11 +95,21 @@ class SearchApiHighlightTest extends UnitTestCase {
     $processor->postprocessSearchResults($response, $query);
 
     // Keys are set; and highlight is disabled. Excerpt is enabled.
-    $processor = new Highlight(array(), 'search_api_highlight_processor', array());
+    $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
+      ->setMethods(array('postprocessExcerptResults', 'postprocessFieldResults', 'getKeywords'))
+      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->getMock();
     $configuration = array(
       'highlight' => 'never',
       'excerpt' => 1,
     );
+    $processor->expects($this->once())
+      ->method('getKeywords')
+      ->will($this->returnValue(array('mail', 'text')));
+    $processor->expects($this->exactly(2))
+      ->method('postprocessExcerptResults');
+    $processor->expects($this->never())
+      ->method('postprocessFieldResults');
     $processor->setConfiguration($configuration);
     $processor->postprocessSearchResults($response, $query);
   }

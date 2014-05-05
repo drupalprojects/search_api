@@ -235,7 +235,7 @@ class Highlight extends ProcessorPluginBase {
    * Loads entities into results array.
    */
   protected function loadResultsEntities(array &$results) {
-    $items = $this->index->loadItems(array_keys($results));
+    $items = $this->index->loadItemsMultiple(array_keys($results));
     foreach ($items as $id => $item) {
       $results[$id]['entity'] = $item;
     }
