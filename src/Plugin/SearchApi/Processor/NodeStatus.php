@@ -23,10 +23,8 @@ class NodeStatus extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function supportsIndex(IndexInterface $index) {
-    // @todo Re-introduce Datasource::getEntityType() for this?
     foreach ($index->getDatasources() as $datasource) {
-      $definition = $datasource->getPluginDefinition();
-      if (isset($definition['entity_type']) && $definition['entity_type'] === 'node') {
+      if ($datasource->getEntityTypeId() == 'node') {
         return TRUE;
       }
     }
@@ -38,8 +36,7 @@ class NodeStatus extends ProcessorPluginBase {
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as $id => &$item) {
-      // @todo Only process nodes (check '#datasource' key).
-      if (!$item['#item']->isPublished()) {
+      if ($this->index->getDatasource($item['#datasource'])->getEntityTypeId() == 'node' && !$item['#item']->isPublished()) {
         unset($items[$id]);
       }
     }
