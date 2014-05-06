@@ -15,6 +15,18 @@ use Drupal\search_api\Item\Item;
 class ResultSet implements ResultSetInterface {
 
   /**
+   * A numeric array of translated warning messages.
+   * @var array
+   */
+  protected $warnings;
+
+  /**
+   * A numeric array of search keys that were ignored.
+   * @var array
+   */
+  protected $ignoredSearchKeys;
+
+  /**
    * The result items.
    * @var \Drupal\search_api\Item\Item[]
    */
@@ -29,8 +41,10 @@ class ResultSet implements ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $result_items) {
-    $this->setResultItems($result_items);
+  public function __construct(array $result_items, array $warnings = array(), array $ignored_search_key = array()) {
+    $this->resultItems  = $result_items;
+    $this->warnings = $warnings;
+    $this->ignoredSearchKeys = $ignored_search_key;
   }
 
   /**
@@ -38,6 +52,20 @@ class ResultSet implements ResultSetInterface {
    */
   public function setResultItems(array $result_items) {
     $this->resultItems = $result_items;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWarnings() {
+    return $this->warnings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIgnoredSearchKeys() {
+    return $this->ignoredSearchKeys;
   }
 
   /**

@@ -95,7 +95,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       foreach ($item as $name => $field) {
         if (Element::child($name)) {
           if ($this->testField($name, $field)) {
-            $this->processField($field['value'], $field['type']);
+            $this->processField($field);
           }
         }
       }
@@ -354,7 +354,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   - score: The relative importance of the token, as a float, with 1 being
    *     the default.
    */
-  protected function processFieldValue(&$value) {
+  protected function processFieldValue(FieldInterface $field) {
     $this->process($value);
   }
 
@@ -398,6 +398,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   directly, nothing has to be returned. Since this can be called for all
    *   value types, $value has to remain a string.
    */
-  protected function process(&$value) {}
+  protected function process(FieldInterface $field) {}
 
 }

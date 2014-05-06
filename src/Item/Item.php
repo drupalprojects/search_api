@@ -57,6 +57,12 @@ class Item implements ItemInterface, \ArrayAccess {
   protected $position = 0;
 
   /**
+   * The HTML text with highlighted text-parts that match the query.
+   * @var string
+   */
+  protected $excerpt;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(IndexInterface $index, DatasourceInterface $datasource, ComplexDataInterface $source, $id) {
@@ -108,6 +114,19 @@ class Item implements ItemInterface, \ArrayAccess {
     return $this->fields;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getExcerpt() {
+    return $this->excerpt;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExcerpt($excerpt) {
+    $this->excerpt = $excerpt;
+  }
 
   /**
    * {@inheritdoc}

@@ -93,4 +93,21 @@ interface ItemInterface extends \Iterator {
 //   */
 //  public function getBoost();
 
+  /**
+   * Return an HTML text with highlighted text-parts that match the query.
+   *
+   * @return string
+   *   If set, an HTML text containing highlighted portions of the fulltext that
+   *   match the query.
+   */
+  public function getExcerpt();
+
+  /**
+   * Set an HTML text with highlighted text-parts that match the query.
+   *
+   * @param string $excerpt
+   *   The HTML text with highlighted text-parts that match the query.
+   */
+  public function setExcerpt($excerpt);
+
 }
