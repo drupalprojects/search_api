@@ -55,13 +55,13 @@ class SearchApiHighlightTest extends UnitTestCase {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
 
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
-      ->setMethods(array('getKeywords', 'getFulltextFields', 'createExcerpt', 'highlightField'))
+      ->setMethods(array('getKeywords'))
       ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
       ->getMock();
     $response = array(
       'result count' => 2,
       'results' => array(
-          1 => array(),
+        1 => array(),
         array(
           2 => array(),
         ),

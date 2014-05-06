@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\AddURL.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
@@ -22,10 +27,10 @@ class AddURL extends ProcessorPluginBase {
     foreach ($items as &$item) {
       // Only run if the field is enabled for the index.
       if (!empty($item['search_api_url'])) {
-        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item);
+        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item['#item']);
         if ($url) {
-          $item['search_api_url']['value'] = url($url['path'], array('absolute' => TRUE) + $url['options']);
-          $item['search_api_url']['value']['original_type'] = 'uri';
+          $item['search_api_url']['value'][] = $url->toString();
+          $item['search_api_url']['original_type'] = 'uri';
         }
       }
     }
@@ -39,8 +44,8 @@ class AddURL extends ProcessorPluginBase {
       return;
     }
     $definition = array(
-      'label' => t('URI'),
-      'description' => t('A URI where the item can be accessed.'),
+      'label' => $this->t('URI'),
+      'description' => $this->t('A URI where the item can be accessed.'),
       'type' => 'uri',
     );
     $properties['search_api_url'] = new DataDefinition($definition);

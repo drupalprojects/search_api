@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Entity\Server.
@@ -135,17 +136,27 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
+  public function getBackendId() {
+    return $this->backendPluginId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getBackend() {
     // Check if the backend plugin instance needs to be resolved.
-    if (!$this->backendPluginInstance && $this->hasValidBackend()) {
-      // Get the ID of the backend plugin.
-      $backend_plugin_id = $this->backendPluginId;
+    if (!$this->backendPluginInstance) {
       // Get the backend plugin manager.
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
-      // Create a backend plugin instance.
+
+      // Try to create a backend plugin instance.
       $config = $this->backendPluginConfig;
       $config['server'] = $this;
-      $this->backendPluginInstance = $backend_plugin_manager->createInstance($backend_plugin_id, $config);
+      if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->backendPluginId, $config))) {
+        $args['@backend'] = $this->backendPluginId;
+        $args['%server'] = $this->label();
+        throw new SearchApiException(t('The backend with ID "@backend" could not be retrieved for server %server.', $args));
+      }
     }
     return $this->backendPluginInstance;
   }
@@ -194,8 +205,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     foreach ($entities as $server) {
       /** @var \Drupal\search_api\Server\ServerInterface $server */
       // Remove the index from the server.
-      $backend = $server->getBackend();
-      if (!empty($backend)) {
+      if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }
     }
@@ -205,21 +215,25 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    return $this->getBackend()->buildConfigurationForm($form, $form_state);
+    return $this->hasValidBackend() ? $this->getBackend()->buildConfigurationForm($form, $form_state) : array();
   }
 
   /**
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, array &$form_state) {
-    return $this->getBackend()->validateConfigurationForm($form, $form_state);
+    if ($this->hasValidBackend()) {
+      $this->getBackend()->validateConfigurationForm($form, $form_state);
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
-    return $this->getBackend()->submitConfigurationForm($form, $form_state);
+    if ($this->hasValidBackend()) {
+      $this->getBackend()->submitConfigurationForm($form, $form_state);
+    }
   }
 
   /**
@@ -247,13 +261,12 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    $backend = $this->getBackend();
-    if (!empty($backend)) {
+    if ($this->hasValidBackend()) {
       if ($update) {
-        return $backend->postUpdate();
+        $this->getBackend()->postUpdate();
       }
       else {
-        return $backend->postInsert();
+        $this->getBackend()->postInsert();
       }
     }
   }
@@ -266,7 +279,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
     return $storage->loadByProperties(array(
-          'serverMachineName' => $this->id(),
+      'serverMachineName' => $this->id(),
     ));
   }
 

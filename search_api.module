@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains the Search API hook implementations.
@@ -12,14 +13,6 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
-
-/*
- * Constant definitions.
- */
-
-/*
- * Hook implementations.
- */
 
 /**
  * Implements hook_help().
@@ -46,14 +39,25 @@ function search_api_permission() {
 /**
  * Implements hook_entity_insert().
  *
- * Adds an entry to the tracking table for each index that tracks entities of
- * this type.
+ * Adds entries for all languages of the new entity to the tracking table for
+ * each index that tracks entities of this type.
  */
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsInserted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
+    }
+
+    $item_ids = array();
+    $entity_id = $entity->id();
+    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+      $item_ids[] = $entity_id . ':' . $langcode;
+    }
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    foreach ($indexes as $index) {
+      $index->trackItemsInserted($datasource_id, $item_ids);
     }
   }
 }
@@ -63,12 +67,51 @@ function search_api_entity_insert(EntityInterface $entity) {
  *
  * Updates the entry to the tracking table for each index that tracks this
  * entity.
+ *
+ * Also takes care of new or deleted translations.
  */
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsUpdated('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
+    }
+
+    $entity_id = $entity->id();
+    $combine_id = function($langcode) use ($entity_id) {
+      return $entity_id . ':' . $langcode;
+    };
+    $inserted_item_ids = array();
+    $updated_item_ids = array_keys($entity->getTranslationLanguages());
+    $deleted_item_ids = array();
+    $old_translations = array_keys($entity->original->getTranslationLanguages());
+    foreach ($old_translations as $langcode) {
+      if (!in_array($langcode, $updated_item_ids)) {
+        $deleted_item_ids[] = $langcode;
+      }
+    }
+    foreach ($updated_item_ids as $i => $langcode) {
+      if (!in_array($langcode, $old_translations)) {
+        unset($updated_item_ids[$i]);
+        $inserted_item_ids[] = $langcode;
+      }
+    }
+
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    $inserted_item_ids = array_map($combine_id, $inserted_item_ids);
+    $updated_item_ids = array_map($combine_id, $updated_item_ids);
+    $deleted_item_ids = array_map($combine_id, $deleted_item_ids);
+    foreach ($indexes as $index) {
+      if ($inserted_item_ids) {
+        $index->trackItemsInserted($datasource_id, $inserted_item_ids);
+      }
+      if ($updated_item_ids) {
+        $index->trackItemsUpdated($datasource_id, $updated_item_ids);
+      }
+      if ($deleted_item_ids) {
+        $index->trackItemsDeleted($datasource_id, $deleted_item_ids);
+      }
     }
   }
 }
@@ -76,154 +119,26 @@ function search_api_entity_update(EntityInterface $entity) {
 /**
  * Implements hook_entity_delete().
  *
- * Deletes the entry from the tracking table for each index that tracks this
- * entity.
+ * Deletes all entries for this entity from the tracking table for each index
+ * that tracks this entity type.
  */
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    foreach (ContentEntityDatasource::getIndexesForEntity($entity) as $index) {
-      $index->trackItemsDeleted('entity:' . $entity->getEntityTypeId(), array($entity->id()));
+    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    if (!$indexes) {
+      return;
     }
-  }
-}
 
-/**
- * Determines whether a field of the given type contains text data.
- *
- * @deprecated
- *
- * @param string $type
- *   A string containing the type to check.
- * @param array $allowed
- *   Optionally, an array of allowed types.
- *
- * @return bool
- *   TRUE if $type is either one of the specified types, or a list of such
- *   values. FALSE otherwise.
- */
-function search_api_is_text_type($type, array $allowed = array('text')) {
-  return Utility::isTextType($type, $allowed);
-}
-
-/**
- * Returns all field types recognized by the Search API framework.
- *
- * @deprecated
- *
- * @return array
- *   An associative array with all recognized types as keys, mapped to their
- *   translated display names.
- *
- * @see search_api_default_index_types()
- * @see search_api_get_data_type_info()
- */
-function search_api_data_types() {
-  return Utility::getDataTypes();
-}
-
-/**
- * Get the mapping between data types and field types
- *
- * @deprecated
- *
- * @return array
- *   $mapping array with the field type that is requested and it's default data type for a sensible default
- */
-function search_api_field_type_mapping() {
-  return Utility::getFieldTypeMapping();
-}
-
-/**
- * Returns the default field types recognized by the Search API framework.
- *
- * @deprecated
- *
- * @return array
- *   An associative array with the default types as keys, mapped to their
- *   translated display names.
- */
-function search_api_default_data_types() {
-  return Utility::getDefaultDataTypes();
-}
-
-/**
- * Returns either all custom field type definitions, or a specific one.
- *
- * @deprecated
- *
- * @param $type
- *   If specified, the type whose definition should be returned.
- *
- * @return array
- *   If $type was not given, an array containing all custom data types, in the
- *   format specified by hook_search_api_data_type_info().
- *   Otherwise, the definition for the given type, or NULL if it is unknown.
- *
- * @see hook_search_api_data_type_info()
- */
-function search_api_get_data_type_info($type = NULL) {
-  return Utility::getDataTypeInfo($type);
-}
-
-/**
- * Extracts specific field values from a complex data object.
- *
- * @deprecated
- *
- * @param \Drupal\Core\TypedData\ComplexDataInterface $item
- *   The item from which fields should be extracted.
- * @param array $fields
- *   The fields to extract, passed by reference. The format is the same as the
- *   "fields" sub-array in the index options, i.e., an array with the field
- *   names as keys and arrays of field information as values, at least
- *   containing a "type" key. "value" and "original_type" keys will be added for
- *   all fields.
- */
-function search_api_extract_fields(ComplexDataInterface $item, array &$fields) {
-  Utility::extractFields($item, $fields);
-}
-
-/**
- * Adds an entry into a server's list of pending tasks.
- *
- * @deprecated
- *
- * @param \Drupal\search_api\Server\ServerInterface $server
- *   The server for which a task should be remembered.
- * @param $type
- *   The type of task to perform.
- * @param \Drupal\search_api\Index\IndexInterface|string|null $index
- *   (optional) If applicable, the index to which the task pertains (or its
- *   machine name).
- * @param mixed $data
- *   (optional) If applicable, some further data necessary for the task.
- */
-function search_api_server_tasks_add(ServerInterface $server, $type, $index = NULL, $data = NULL) {
-  return $server->tasksAdd($type, $index, $data);
-}
-
-/**
- * Removes pending server tasks from the list.
- *
- * @deprecated
- *
- * @param array|null $ids
- *   (optional) The IDs of the pending server tasks to delete. Set to NULL
- *   to not filter by IDs.
- * @param \Drupal\search_api\Server\ServerInterface|null $server
- *   (optional) A server for which the tasks should be deleted. Set to NULL to
- *   delete tasks from all servers.
- * @param \Drupal\search_api\Index\IndexInterface|string|null $index
- *   (optional) An index (or its machine name) for which the tasks should be
- *   deleted. Set to NULL to delete tasks for all indexes.
- */
-function server_api_server_tasks_delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
-  if ($server) {
-    $server->tasksDelete($ids, $index);
-  }
-  else {
-    Utility::serverTasksDeleteAll();
+    $item_ids = array();
+    $entity_id = $entity->id();
+    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+      $item_ids[] = $entity_id . ':' . $langcode;
+    }
+    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    foreach ($indexes as $index) {
+      $index->trackItemsDeleted($datasource_id, $item_ids);
+    }
   }
 }
 

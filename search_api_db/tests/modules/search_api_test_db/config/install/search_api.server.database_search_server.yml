@@ -1,0 +1,44 @@
+machine_name: database_search_server
+name: 'Database search server'
+description: 'A server used for testing.'
+backendPluginId: search_api_db
+backendPluginConfig:
+  min_chars: 3
+  database: 'default:default'
+  field_tables:
+    database_search_index:
+      search_api_language:
+        table: search_api_db_database_search_index_search_api
+        column: search_api_language
+        type: string
+        boost: '1.0'
+      'entity:entity_test|id':
+        table: search_api_db_database_search_index_entity_ent
+        column: entity_entity_test_id
+        type: integer
+        boost: '1.0'
+      'entity:entity_test|name':
+        table: search_api_db_database_search_index_text
+        column: entity_entity_test_name
+        type: text
+        boost: '5.0'
+      'entity:entity_test|type':
+        table: search_api_db_database_search_index_entity_e_1
+        column: entity_entity_test_type
+        type: string
+        boost: '1.0'
+      'entity:entity_test|body':
+        table: search_api_db_database_search_index_text
+        column: entity_entity_test_body
+        type: text
+        boost: '1.0'
+      'entity:entity_test|keywords':
+        table: search_api_db_database_search_index_entity_e_2
+        column: entity_entity_test_keywords
+        type: string
+        boost: '1.0'
+  index_tables:
+    database_search_index: search_api_db_database_search_index
+status: 1
+langcode: en
+dependencies: {  }

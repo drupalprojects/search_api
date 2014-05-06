@@ -7,7 +7,9 @@
 
 namespace Drupal\search_api_db\Tests;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Language\Language;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
@@ -21,21 +23,21 @@ class SearchApiDbTest extends EntityUnitTestBase {
    *
    * @var string
    */
-  protected $serverId;
+  protected $serverId = 'database_search_server';
 
   /**
    * A Search API index ID.
    *
    * @var string
    */
-  protected $indexId;
+  protected $indexId = 'database_search_index';
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = array('field', 'search_api', 'search_api_db');
+  public static $modules = array('field', 'search_api', 'search_api_db', 'search_api_test_db');
 
   /**
    * {@inheritdoc}
@@ -54,6 +56,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
+
+    $this->installConfig(array('search_api_test_db'));
 
     // Create the required bundles.
     entity_test_create_bundle('item');
@@ -107,8 +111,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
    */
   public function testFramework() {
     $this->insertItems();
-    $this->createServer();
-    $this->createIndex();
+    $this->checkDefaultServer();
+    $this->checkDefaultIndex();
+    $this->updateIndex();
     $this->searchNoResults();
     $this->indexItems();
     $this->searchSuccess1();
@@ -163,63 +168,67 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertEqual($count, 5, "$count items inserted.");
   }
 
-  protected function createServer() {
-    $this->serverId = 'database_search_server';
-    $values = array(
-      'name' => 'Database search server',
-      'machine_name' => $this->serverId,
-      'status' => 1,
-      'description' => 'A server used for testing.',
-      'backendPluginId' => 'search_api_db',
-      'backendPluginConfig' => array(
-        'min_chars' => 3,
-        'database' => 'default:default',
-      ),
-    );
-    $success = (bool) entity_create('search_api_server', $values)->save();
-    $this->assertTrue($success, 'The server was successfully created.');
+  /**
+   * Tests the server that was installed through default configuration files.
+   */
+  protected function checkDefaultServer() {
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = entity_load('search_api_server', $this->serverId);
+    $this->assertTrue((bool) $server, 'The server was successfully created.');
+
+    // Since we're adding a few configurable fields above *after* the index was
+    // originally imported as default configuration, make sure to re-save the
+    // index so tables all the necessary tables get created.
+    // This wouldn't be needed if we were providing the fields above as default
+    // config as well.
+    $index = entity_load('search_api_index', $this->indexId);
+    $index->save();
+
+    // Check that all tables and all columns have been created.
+    $normalized_storage_table = $server->getBackendPluginConfig()['index_tables'][$this->indexId];
+    $field_tables = $server->getBackendPluginConfig()['field_tables'][$this->indexId];
+
+    $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
+    foreach ($field_tables as $field_table) {
+      $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), String::format('Field table %table exists', array('%table' => $field_table['table'])));
+      $this->assertTrue(\Drupal::database()->schema()->fieldExists($normalized_storage_table, $field_table['column']), String::format('Field column %column exists', array('%column' => $field_table['column'])));
+    }
   }
 
-  protected function createIndex() {
-    $this->indexId = 'test_index';
-    $values = array(
-      'name' => 'Test index',
-      'machine_name' => $this->indexId,
-      'datasourcePluginIds' => array('entity:entity_test'),
-      'trackerPluginId' => 'default_tracker',
-      'status' => 1,
-      'description' => 'An index used for testing.',
-      'serverMachineName' => $this->serverId,
-      'options' => array(
-        'cron_limit' => -1,
-        'index_directly' => TRUE,
-        'fields' => array(
-          'entity:entity_test|id' => array(
-            'type' => 'integer',
-          ),
-          'entity:entity_test|name' => array(
-            'type' => 'text',
-            'boost' => '5.0',
-          ),
-          'entity:entity_test|body' => array(
-            'type' => 'text',
-          ),
-          'entity:entity_test|type' => array(
-            'type' => 'string',
-          ),
-          'entity:entity_test|keywords' => array(
-            'type' => 'string',
-          ),
-        ),
-      ),
-    );
-
+  /**
+   * Tests the index that was installed through default configuration files.
+   */
+  protected function checkDefaultIndex() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = entity_create('search_api_index', $values);
-    $success = (bool) $index->save();
-    $this->assertTrue($success, 'The index was successfully created.');
+    $index = entity_load('search_api_index', $this->indexId);
+    $this->assertTrue((bool) $index, 'The index was successfully created.');
+
     $this->assertEqual($index->getTracker()->getTotalItemsCount(), 5, 'Correct item count.');
     $this->assertEqual($index->getTracker()->getIndexedItemsCount(), 0, 'All items still need to be indexed.');
+  }
+
+  protected function updateIndex() {
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = entity_load('search_api_index', $this->indexId);
+
+    // Remove a field from the index and check if the change is matched in
+    // the server configuration.
+    unset($index->options['fields'][$this->getFieldId('keywords')]);
+    $index->save();
+
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = entity_load('search_api_server', $this->serverId, TRUE);
+    $index_fields = array_keys($index->options['fields']);
+    $server_fields = array_keys($server->backendPluginConfig['field_tables'][$index->id()]);
+    sort($index_fields);
+    sort($server_fields);
+    $this->assertEqual($index_fields, $server_fields);
+
+    // Add the field back for the next assertions.
+    $index->options['fields'][$this->getFieldId('keywords')] = array(
+      'type' => 'string',
+    );
+    $index->save();
   }
 
   protected function buildSearch($keys = NULL, array $filters = array(), array $fields = array()) {
@@ -706,8 +715,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   protected function clearIndex() {
-    $success = entity_load('search_api_index', $this->indexId)->clear();
-    $this->assertTrue($success, 'The index was successfully cleared.');
+    $index = entity_load('search_api_index', $this->indexId);
+    $index->clear();
   }
 
   /**
@@ -778,6 +787,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $index->serverMachineName = NULL;
     $index->save();
+
     $server = entity_load('search_api_server', $this->serverId, TRUE);
     $this->assertEqual($server->backendPluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
     $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');
@@ -814,7 +824,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
    */
   protected function getItemIds(array $entity_ids) {
     return array_map(function ($entity_id) {
-      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id;
+      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':' . Language::LANGCODE_NOT_SPECIFIED;
     }, $entity_ids);
   }
 

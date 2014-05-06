@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Datasource\DatasourceInterface.
@@ -61,18 +62,39 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function loadMultiple(array $ids);
 
   /**
+   * Retrieves the unique ID of an item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this controller's type.
+   *
+   * @return string
+   *   The datasource-internal, unique ID of the item.
+   */
+  public function getItemId(ComplexDataInterface $item);
+
+  /**
+   * Retrieves a human-readable label for an item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this controller's type.
+   *
+   * @return string|null
+   *   Either a human-readable label for the item, or NULL if none is available.
+   */
+  public function getItemLabel(ComplexDataInterface $item);
+
+  /**
    * Retrieves a URL at which the item can be viewed on the web.
    *
-   * @param mixed $item
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   An item of this DataSource's type.
    *
-   * @return array|null
-   *   Either an array containing the 'path' and 'options' keys used to build
-   *   the URL of the item, and matching the signature of url(), or NULL if the
+   * @return \Drupal\Core\Url|null
+   *   Either an object representing the URL of the given item, or NULL if the
    *   item has no URL of its own.
    *
    */
-  public function getItemUrl($item);
+  public function getItemUrl(ComplexDataInterface $item);
 
   /**
    * Returns view mode info for this item type.
@@ -123,7 +145,16 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL);
 
   /**
-   * Returns item ids from this datasource.
+   * Gets the entity type ID.
+   *
+   * @return string|null
+   *   Entity type ID if the data source contains entities.
+   *
+   */
+  public function getEntityTypeId();
+
+  /**
+   * Returns item IDs from this datasource.
    *
    * Returns all items IDs by default. Allows for simple paging by passing
    * along a limit and a pointer from where it should start.
@@ -135,6 +166,8 @@ interface DatasourceInterface extends IndexPluginInterface {
    *
    * @return array
    *   An array with item identifiers
+   *
+   * @todo Change to single $page parameter.
    */
   public function getItemIds($limit = -1, $from = NULL);
 

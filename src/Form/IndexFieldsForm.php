@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\IndexFieldsForm.
@@ -9,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Utility\String;
 
@@ -105,7 +107,7 @@ class IndexFieldsForm extends EntityForm {
         '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
-    if ($index->getServer()) {
+    if ($index->hasValidServer()) {
       $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
           array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
     }
@@ -135,9 +137,11 @@ class IndexFieldsForm extends EntityForm {
       $form[$datasource_id] += $this->buildFields($fields, $additional);
     }
 
-    $form['submit'] = array(
+    $form['actions']['#type'] = 'actions';
+    $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save changes'),
+      '#button_type' => 'primary',
     );
 
     return $form;
@@ -157,11 +161,11 @@ class IndexFieldsForm extends EntityForm {
   protected function buildFields(array $fields, array $additional) {
 
     // An array of option arrays for types, keyed by nesting level.
-    $types = array(0 => search_api_data_types());
+    $types = array(0 => Utility::getDataTypes());
 
     $fulltext_types = array(0 => array('text'));
     // Add all custom data types with fallback "text" to fulltext types as well.
-    foreach (search_api_get_data_type_info() as $id => $type) {
+    foreach (Utility::getDataTypeInfo() as $id => $type) {
       if ($type['fallback'] != 'text') {
         continue;
       }
@@ -230,15 +234,6 @@ class IndexFieldsForm extends EntityForm {
       foreach ($fulltext_types[$level] as $type) {
         $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
-      if ($key == 'search_api_language') {
-        // Is treated specially to always index the language.
-        $build['fields'][$key]['type']['#default_value'] = 'string';
-        $build['fields'][$key]['type']['#disabled'] = TRUE;
-        $build['fields'][$key]['boost']['#default_value'] = '1.0';
-        $build['fields'][$key]['boost']['#disabled'] = TRUE;
-        $build['fields'][$key]['indexed']['#default_value'] = 1;
-        $build['fields'][$key]['indexed']['#disabled'] = TRUE;
-      }
     }
 
     if ($additional) {
@@ -306,7 +301,7 @@ class IndexFieldsForm extends EntityForm {
     // Store the fields info
     if (!empty($options['fields'])) {
       $existing_fields = $this->getDatasourceFields($options['fields'], $this->datasourceId);
-      $options['fields'] = array_diff_key($options['fields'], $existing_fields);
+      $options['fields'] = array_diff_key($existing_fields, $options['fields']);
       $fields += $options['fields'];
     }
     $options['fields'] = $fields;
@@ -316,7 +311,7 @@ class IndexFieldsForm extends EntityForm {
       $additional = $form_state['values']['additional']['field'];
       if (!empty($options['additional fields'])) {
         $existing_additional_fields = $this->getDatasourceFields($options['additional fields'], $this->datasourceId);
-        $options['additional fields'] = array_diff_key($options['additional fields'], $existing_additional_fields);
+        $options['additional fields'] = array_diff_key($existing_additional_fields, $options['additional fields']);
         $additional += $options['additional fields'];
       }
       $options['additional fields'] = $additional;

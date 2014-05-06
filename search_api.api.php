@@ -69,6 +69,21 @@ function hook_search_api_processor_info_alter(array &$processors) {
 }
 
 /**
+ * Alter the mapping of Drupal data types to Search API data types.
+ *
+ * @param array $mapping
+ *   An array mapping all known (and supported) Drupal data types to their
+ *   corresponding Search API data types. Empty values mean that fields of
+ *   that type should be ignored by the Search API.
+ *
+ * @see \Drupal\search_api\Utility\Utility::getFieldTypeMapping()
+ */
+function hook_search_api_field_type_mapping_alter(array &$mapping) {
+  $mapping['duration_iso8601'] = NULL;
+  $mapping['my_new_type'] = 'string';
+}
+
+/**
  * Allows you to log or alter the items that are indexed.
  *
  * Please be aware that generally preventing the indexing of certain items is
@@ -101,7 +116,7 @@ function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Ind
  *   An array containing the successfully indexed items' IDs.
  */
 function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $index, array $item_ids) {
-  if ($index->getDatasourceId() == 'entity:node') {
+  if ($index->isValidDatasource('entity:node')) {
     drupal_set_message(t('Nodes indexed: @ids.', implode(', ', $item_ids)));
   }
 }
@@ -114,12 +129,14 @@ function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $
  */
 function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $query) {
   // Exclude entities with ID 0. (Assume the ID field is always indexed.)
-  $type = $query->getIndex()->getDatasourceId();
-  list(, $type) = explode(':', $type);
-  $definition = \Drupal::entityManager()->getDefinition($type);
-  if ($definition) {
-    $keys = $definition->getKeys();
-    $query->condition($keys['id'], 0, '!=');
+  $types = $query->getIndex()->getDatasourceIds();
+  foreach ($types as $type) {
+    list(, $type) = explode(':', $type);
+    $definition = \Drupal::entityManager()->getDefinition($type);
+    if ($definition) {
+      $keys = $definition->getKeys();
+      $query->condition($keys['id'], 0, '!=');
+    }
   }
 }
 

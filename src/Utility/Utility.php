@@ -9,6 +9,9 @@ namespace Drupal\search_api\Utility;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
+use Drupal\Core\TypedData\DataReferenceInterface;
+use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
@@ -47,8 +50,8 @@ class Utility {
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
-   * @see getDefaultDataTypes()
-   * @see getDataTypeInfo()
+   * @see \Drupal\search_api\Utility::getDefaultDataTypes()
+   * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
   static function getDataTypes() {
     $types = self::getDefaultDataTypes();
@@ -60,10 +63,14 @@ class Utility {
   }
 
   /**
-   * Get the mapping between data types and field types
+   * Retrieves the mapping for known data types to Search API's internal types.
    *
    * @return array
-   *   $mapping array with the field type that is requested and it's default data type for a sensible default
+   *   An array mapping all known (and supported) Drupal data types to their
+   *   corresponding Search API data types. Empty values mean that fields of
+   *   that type should be ignored by the Search API.
+   *
+   * @see hook_search_api_field_type_mapping_alter()
    */
   static function getFieldTypeMapping() {
     // Check the static cache first.
@@ -98,11 +105,15 @@ class Utility {
         'boolean' => array(
           'boolean',
         ),
+        // Types we know about but want/have to ignore.
+        NULL => array(
+          'language',
+        ),
       );
 
-      foreach ($default_mapping as $key => $value) {
-        foreach ($value as $subkey) {
-          $mapping[$subkey] = $key;
+      foreach ($default_mapping as $search_api_type => $data_types) {
+        foreach ($data_types as $data_type) {
+          $mapping[$data_type] = $search_api_type;
         }
       }
 
@@ -150,7 +161,7 @@ class Utility {
   static function getDataTypeInfo($type = NULL) {
     $types = &drupal_static(__FUNCTION__);
     if (!isset($types)) {
-      $default_types = search_api_default_data_types();
+      $default_types = Utility::getDefaultDataTypes();
       $types =  \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
       $types = $types ? $types : array();
       foreach ($types as &$type_info) {
@@ -213,8 +224,17 @@ class Utility {
       $success = FALSE;
       try {
         $item_nested = $item->get($direct);
+        if ($item_nested instanceof DataReferenceInterface) {
+          $item_nested = $item_nested->getTarget();
+        }
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
           self::extractFields($item_nested, $fields_nested);
+          $success = TRUE;
+        }
+        elseif ($item_nested instanceof ListInterface && !$item_nested->isEmpty()) {
+          foreach ($item_nested as $list_item) {
+            self::extractFields($list_item, $fields_nested);
+          }
           $success = TRUE;
         }
       }
@@ -349,6 +369,7 @@ class Utility {
    *
    * @param string $item_id
    *   The item identifier
+   *
    * @return string $datasource_id
    *   The datasource identifier the item identifier belongs to.
    */

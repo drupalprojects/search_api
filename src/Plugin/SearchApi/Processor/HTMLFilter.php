@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter.
+ */
+
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Symfony\Component\Yaml\Exception\ParseException;

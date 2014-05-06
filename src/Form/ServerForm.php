@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Form\ServerForm.
@@ -180,7 +181,7 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('Backend'),
       '#description' => $this->t('Choose a backend to use for this server.'),
       '#options' => $this->getBackendPluginDefinitionOptions(),
-      '#default_value' => $server->hasValidBackend() ? $server->getBackend()->getPluginId() : NULL,
+      '#default_value' => $server->getBackendId(),
       '#required' => TRUE,
       '#ajax' => array(
         'callback' => array($this, 'buildAjaxBackendConfigForm'),
@@ -190,7 +191,7 @@ class ServerForm extends EntityForm {
       ),
     );
 
-    // Attach the admin css
+    // Attach the admin css.
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
   }
 
@@ -217,8 +218,6 @@ class ServerForm extends EntityForm {
     if ($server->hasValidBackend()) {
       // Get the backend.
       $backend = $server->getBackend();
-      // Get the backend plugin definition.
-      $backend_plugin_definition = $backend->getPluginDefinition();
       // Build the backend configuration form.
       if (($backend_plugin_config_form = $backend->buildConfigurationForm(array(), $form_state))) {
         // Check if the backend plugin changed.
@@ -229,8 +228,8 @@ class ServerForm extends EntityForm {
 
         // Modify the backend plugin configuration container element.
         $form['backendPluginConfig']['#type'] = 'details';
-        $form['backendPluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend_plugin_definition['label']));
-        $form['backendPluginConfig']['#description'] = String::checkPlain($backend_plugin_definition['description']);
+        $form['backendPluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend->label()));
+        $form['backendPluginConfig']['#description'] = String::checkPlain($backend->summary());
         $form['backendPluginConfig']['#open'] = TRUE;
         // Attach the build backend plugin configuration form.
         $form['backendPluginConfig'] += $backend_plugin_config_form;
@@ -266,10 +265,11 @@ class ServerForm extends EntityForm {
   public function validate(array $form, array &$form_state) {
     // Perform default entity form validate.
     parent::validate($form, $form_state);
+    /** @var \Drupal\search_api\Server\ServerInterface $entity */
     // Get the entity.
     $entity = $this->getEntity();
     // Get the current backend plugin ID.
-    $backend_plugin_id = $entity->hasValidBackend() ? $entity->getBackend()->getPluginId() : NULL;
+    $backend_plugin_id = $entity->getBackendId();
     // Check if the backend plugin changed.
     if ($backend_plugin_id !== $form_state['values']['backendPluginId']) {
       // Check if the backend plugin configuration form input values exist.

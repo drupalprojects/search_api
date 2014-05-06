@@ -9,6 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\search_api\Batch\IndexBatchHelper;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
@@ -29,6 +30,10 @@ class IndexStatusForm extends FormBase {
   public function buildForm(array $form, array &$form_state, IndexInterface $index = NULL) {
     // Attach the search index to the form.
     $form['#index'] = $index;
+
+    // Attach the admin css.
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     // Check if the index has a valid tracker available.
     if ($index->hasValidTracker()) {
       // Build the index now option.
@@ -64,7 +69,7 @@ class IndexStatusForm extends FormBase {
         ),
         '#disabled' => !$has_remaining_items,
       );
-      // Here it gets complicated. We want to build a sentence from the form 
+      // Here it gets complicated. We want to build a sentence from the form
       // input elements, but to translate that we have to make the two form
       // elements (for limit and batch size) pseudo-variables in the t() call.
       // Since we can't pass them directly, we split the translated sentence
@@ -102,19 +107,18 @@ class IndexStatusForm extends FormBase {
         '#name' => 'index_now',
       );
       // Build the index manipulation actions.
-      $form['reindex'] = array(
+      $form['actions']['#type'] = 'actions';
+      $form['actions']['reindex'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Queue all items for reindexing'),
-        '#prefix' => '<div>',
-        '#suffix' => '</div>',
         '#name' => 'reindex',
+        '#button_type' => 'danger',
       );
-      $form['clear'] = array(
+      $form['actions']['clear'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Clear all indexed data'),
-        '#prefix' => '<div>',
-        '#suffix' => '</div>',
         '#name' => 'clear',
+        '#button_type' => 'danger',
       );
     }
     return $form;
@@ -163,6 +167,7 @@ class IndexStatusForm extends FormBase {
    */
   public function submitForm(array &$form, array &$form_state) {
     // Get the search index from the form.
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
     // Evaluate the triggering element name.
     switch ($form_state['triggering_element']['#name']) {
@@ -170,7 +175,10 @@ class IndexStatusForm extends FormBase {
         // Get the form state values.
         $form_values = $form_state['values'];
         // Try to create a batch job to index items.
-        if (!IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit'])) {
+        try {
+          IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit']);
+        }
+        catch (SearchApiException $e) {
           // Notify user about failure to scheduling the batch job.
           drupal_set_message($this->t('Failed to create a batch, please check the batch size and limit.'), 'warning');
         }

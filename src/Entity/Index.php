@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Entity\Index.
@@ -105,7 +106,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - type: The type set for this field. One of the types returned by
-   *     search_api_default_data_types().
+   *     \Drupal\search_api\Utility::getDefaultDataTypes().
    *   - real_type: (optional) If a custom data type was selected for this
    *     field, this type will be stored here, and "type" contain the fallback
    *     default data type.
@@ -215,6 +216,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var array
    */
   protected $processors;
+
+  /**
+   * List of types that failed to map to a Search API type.
+   *
+   * The unknown types are the keys and map to arrays of fields that were
+   * ignored because they are of this type.
+   *
+   * @var array
+   */
+  protected $unmappedFields = array();
 
   /**
    * {@inheritdoc}
@@ -370,12 +381,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getTracker() {
     // Check if the tracker plugin instance needs to be resolved.
-    if (!$this->trackerPluginInstance && $this->hasValidTracker()) {
+    if (!$this->trackerPluginInstance) {
       // Get the plugin configuration for the tracker.
       $tracker_plugin_configuration = array('index' => $this) + $this->trackerPluginConfig;
-      // Create a tracker plugin instance.
-      $this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration);
+      // Try to create a tracker plugin instance.
+      if (!($this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
+        $args['@tracker'] = $this->trackerPluginId;
+        $args['%index'] = $this->label();
+        throw new SearchApiException(t('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
+      }
     }
+
     return $this->trackerPluginInstance;
   }
 
@@ -397,14 +413,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getServer() {
-    // Check if the server needs to be resolved. Note we do not use
-    // hasValidServer to prevent duplicate load calls to the storage controller.
-    if (!$this->server) {
-      // Get the server machine name.
-      $server_machine_name = $this->serverMachineName;
-      // Get the server from the storage.
-      $this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($server_machine_name);
+    // Check if the server needs to be resolved.
+    if (!$this->server && $this->serverMachineName) {
+      // Try to get the server from the storage.
+      if (!($this->server = \Drupal::entityManager()->getStorage('search_api_server')->load($this->serverMachineName))) {
+        $args['@server'] = $this->serverMachineName;
+        $args['%index'] = $this->label();
+        throw new SearchApiException(t('The server with ID "@server" could not be retrieved for index %index.', $args));
+      }
     }
+
     return $this->server;
   }
 
@@ -464,19 +482,49 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
+    // To enable proper extraction of fields with Utility::extractFields(),
+    // $fields will contain the information from $this->options['fields'], but
+    // in a two-dimensional array, keyed by both parts of the field identifier
+    // separately – i.e, first by datasource ID, then by property path.
+    $fields = array();
+    foreach ($this->options['fields'] as $key => $field) {
+      // Include real type, if known.
+      if (isset($field['real_type'])) {
+        $custom_type = $field['real_type'];
+        if ($this->getServer()->supportsDatatype($custom_type)) {
+          $field['type'] = $field['real_type'];
+        }
+      }
+
+      // Copy the field information into the $fields array.
+      if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
+        list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
+        $fields[$datasource_id][$property_path] = $field;
+      }
+      else {
+        $fields[NULL][$key] = $field;
+      }
+    }
+
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
       list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
-      $fields = $this->getItemFields($datasource_id);
-      if (empty($fields)) {
-        $variables['%index'] = $this->label();
-        $variables['%datasource'] = $this->getDatasource($datasource_id)->label();
-        throw new SearchApiException(t("Couldn't index values on index %index (no fields selected for datasource %datasource)", $variables));
+      $extracted_item = array();
+      $extracted_item['#item'] = $item;
+      $extracted_item['#item_id'] = $raw_id;
+      $extracted_item['#datasource'] = $datasource_id;
+      foreach (array(NULL, $datasource_id) as $fields_key) {
+        if (!empty($fields[$fields_key])) {
+          $extracted_fields = $fields[$fields_key];
+          Utility::extractFields($item, $extracted_fields);
+          $field_prefix = $fields_key ? $fields_key . self::DATASOURCE_ID_SEPARATOR : '';
+          foreach ($extracted_fields as $property_path => $field) {
+            $extracted_item[$field_prefix . $property_path] = $field;
+          }
+        }
       }
-
-      // Create a new item to index.
-      $extracted_items[$item_id] = new Item($this, $this->getDatasource($datasource_id), $item, $raw_id);
+      $extracted_items[$item_id] = $extracted_item;
       // Remember the items that were initially passed.
       $ret[$item_id] = $item_id;
     }
@@ -533,6 +581,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'additional fields' => array(),
         ),
       );
+      // Remember the fields for which we couldn't find a mapping.
+      $this->unmappedFields = array();
       foreach (array_merge(array(NULL), $this->datasourcePluginIds) as $datasource_id) {
         try {
           $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource_id), $datasource_id);
@@ -541,6 +591,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $variables['%index'] = $this->label();
           watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: !message in %function (line %line of %file).', $variables);
         }
+      }
+      if ($this->unmappedFields) {
+        $vars['@fields'] = array();
+        foreach ($this->unmappedFields as $type => $fields) {
+          $vars['@fields'][] = implode(', ', $fields) . ' (' . t('type !type', array('!type' => $type)) . ')';
+        }
+        $vars['@fields'] = implode('; ', $vars['@fields']);
+        $vars['@index'] = $this->label();
+        watchdog('search_api', 'Warning while retrieving available fields for index @index: could not find a type mapping for the following fields: @fields.', $vars, WATCHDOG_WARNING);
       }
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
@@ -647,8 +706,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (isset($parent_type) && isset($type_mapping[$parent_type . '.' . $type])) {
         $field_type = $type_mapping[$parent_type . '.' . $type];
       }
-      else {
+      elseif (!empty($type_mapping[$type])) {
         $field_type = $type_mapping[$type];
+      }
+      else {
+        // Failed to map this type, skip.
+        if (!isset($type_mapping[$type])) {
+          $this->unmappedFields[$type][$key] = $key;
+        }
+        continue;
       }
 
       $fields[$key] = array(
@@ -923,11 +989,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    if ($this->status() && !$this->isReadOnly() && $this->hasValidTracker()) {
+    if ($this->status()) {
       $this->getTracker()->trackAllItemsUpdated();
-      return TRUE;
     }
-    return FALSE;
   }
 
   /**
@@ -976,11 +1040,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function clear() {
-    if ($this->reindex() && $this->isServerEnabled()) {
-      $this->getServer()->deleteAllItems($this);
-      return TRUE;
+    if ($this->status()) {
+      $this->reindex();
+      if (!$this->isReadOnly()) {
+        $this->getServer()->deleteAllItems($this);
+      }
     }
-    return FALSE;
   }
 
   /**
@@ -1014,6 +1079,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->status() && !$this->isServerEnabled()) {
       $this->disable();
     }
+
+    // Always enable the "Langue control" processor and corresponding "Item
+    // language" field.
+    // @todo Replace this with a cleaner, more flexible approach. See
+    // https://drupal.org/node/2090341
+    $this->options['processors']['search_api_language_processor']['status'] = TRUE;
+    $this->options['fields']['search_api_language'] = array('type' => 'string');
   }
 
   /**
@@ -1037,55 +1109,101 @@ class Index extends ConfigEntityBase implements IndexInterface {
       /** @var \Drupal\search_api\Index\IndexInterface $original */
       $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
 
-      if ($original->status() && $this->getServerId() != $original->getServerId()) {
-        $original->getServer()->removeIndex($original);
+      if ($this->status() && $original->status()) {
+        // On option changes
+        $this->actOnServerSwitch($original);
+        $this->actOnDatasourceSwitch($original);
+        $this->actOnTrackerSwitch($original);
       }
-
-      // Actions to take if the index switched servers
-      if ($this->status()) {
-        if ($this->getServerId() != $original->getServerId()) {
-          $this->getServer()->addIndex($this);
-          // When the server changes we also need to trigger reindex.
-          $this->reindex();
-        }
-        elseif ($this->isServerEnabled()) {
-          // Tell the server the index configuration got updated
-          $this->getServer()->updateIndex($this);
-        }
-
-        // Actions to take when datasources changed
-        // Take the old datasource list
-        if ($this->datasourcePluginIds != $original->datasourcePluginIds) {
-          // Get the difference between the arrays
-          $removed = array_diff($original->datasourcePluginIds, $this->datasourcePluginIds);
-          $added = array_diff($this->datasourcePluginIds, $original->datasourcePluginIds);
-          // Delete from tracker if the datasource got removed
-          foreach ($removed as $datasource_id) {
-            $this->getTracker()->trackAllItemsDeleted($datasource_id);
-          }
-          // Add to the tracker if the datasource got added
-          foreach ($added as $datasource_id) {
-            $datasource = $this->getDatasource($datasource_id);
-            $item_ids = $datasource->getItemIds();
-            $this->trackItemsInserted($datasource_id, $item_ids);
-          }
-        }
-      }
-
-      // Stop tracking if the index switch to disabled and vice versa
-      if ($this->status() != $original->status() && $this->hasValidTracker()) {
-        if ($this->status()) {
-          $this->startTracking();
-        }
-        else {
+      else if (!$this->status() && $original->status()) {
+        // Stop tracking if the index switched to disabled
+        if ($this->hasValidTracker()) {
           $this->stopTracking();
         }
+        if ($original->isServerEnabled()) {
+          // Let the server know we are disabling the index
+          $original->getServer()->removeIndex($this);
+        }
+      }
+      else if ($this->status() && !$original->status()) {
+        // Add the index to the server.
+        $this->getServer()->addIndex($this);
+        // Start tracking.
+        $this->startTracking();
       }
 
       $this->resetCaches();
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
+    }
+  }
+
+  /**
+   * Actions to take if the index switches servers.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnServerSwitch(IndexInterface $original) {
+    if ($this->getServerId() != $original->getServerId()) {
+      // Remove from old server if there was an old server assigned to the
+      // index.
+      if ($original->isServerEnabled()) {
+        $original->getServer()->removeIndex($this);
+      }
+      // Add to new server
+      if ($this->isServerEnabled()) {
+        $this->getServer()->addIndex($this);
+      }
+      // When the server changes we also need to trigger reindex.
+      $this->reindex();
+    }
+    elseif ($this->isServerEnabled()) {
+      // Tell the server the index configuration got updated
+      $this->getServer()->updateIndex($this);
+    }
+  }
+
+  /**
+   * Actions to take when datasources change.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnDatasourceSwitch(IndexInterface $original) {
+    // Take the old datasource list
+    if ($this->datasourcePluginIds != $original->getDatasourceIds()) {
+      // Get the difference between the arrays
+      $removed = array_diff($original->getDatasourceIds(), $this->datasourcePluginIds);
+      $added = array_diff($this->datasourcePluginIds, $original->getDatasourceIds());
+      // Delete from tracker if the datasource got removed
+      foreach ($removed as $datasource_id) {
+        $this->getTracker()->trackAllItemsDeleted($datasource_id);
+      }
+      // Add to the tracker if the datasource got added
+      foreach ($added as $datasource_id) {
+        $datasource = $this->getDatasource($datasource_id);
+        $item_ids = $datasource->getItemIds();
+        $this->trackItemsInserted($datasource_id, $item_ids);
+      }
+    }
+  }
+
+
+  /**
+   * Actions to take when trackers change.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $original
+   *   The previous version of the index.
+   */
+  public function actOnTrackerSwitch(IndexInterface $original) {
+    // Take the old datasource list
+    if ($this->trackerPluginId != $original->getTrackerId()) {
+      // Delete from old tracker
+      $original->stopTracking();
+      // Add to the tracker if the datasource got added
+      $this->startTracking();
     }
   }
 
@@ -1109,8 +1227,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function stopTracking() {
-    foreach ($this->getDatasources() as $datasource) {
-      $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+    if ($this->hasValidTracker()) {
+      foreach ($this->getDatasources() as $datasource) {
+        $this->getTracker()->trackAllItemsDeleted($datasource->getPluginId());
+      }
     }
   }
 
@@ -1125,6 +1245,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $this->trackItemsInserted($datasource->getPluginId(), $item_ids);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    parent::calculateDependencies();
+
+    // Indexes that have a server assigned need to depend on it.
+    if ($this->hasValidServer() && ($server = $this->getServer())) {
+      $this->addDependency('entity', $server->getConfigDependencyName());
+    }
+
+    return $this->dependencies;
   }
 
 }

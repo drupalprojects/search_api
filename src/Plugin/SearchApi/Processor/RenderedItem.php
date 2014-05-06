@@ -42,11 +42,10 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(AccountProxyInterface $current_user, TypedDataManager $typed_data_manager, TranslationInterface $translation_manager, array $configuration, $plugin_id, array $plugin_definition) {
+  public function __construct(AccountProxyInterface $current_user, TypedDataManager $typed_data_manager, array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUser = $current_user;
     $this->typedDataManager = $typed_data_manager;
-    $this->setTranslationManager($translation_manager);
   }
 
   /**
@@ -57,9 +56,7 @@ class RenderedItem extends ProcessorPluginBase {
     $current_user = $container->get('current_user');
     /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */
     $typed_data_manager = $container->get('typed_data_manager');
-    /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation_manager */
-    $translation_manager = $container->get('string_translation');
-    return new static($current_user, $typed_data_manager, $translation_manager, $configuration, $plugin_id, $plugin_definition);
+    return new static($current_user, $typed_data_manager, $configuration, $plugin_id, $plugin_definition);
   }
 
   /**

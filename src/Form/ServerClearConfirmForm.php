@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\search_api\Exception\SearchApiException;
 
 /**
  * Defines a clear confirm form for the Server entity.
@@ -45,6 +46,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    */
   public function submit(array $form, array &$form_state) {
     // Get the search server entity object.
+    /** @var \Drupal\search_api\Server\ServerInterface $entity */
     $entity = $this->getEntity();
     // Initialize the ignored indexes as an empty array. This variable will
     // contain all the index labels that failed to reindex.
@@ -52,7 +54,10 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
     // Iterate through the attached indexes.
     foreach ($entity->getIndexes() as $index) {
       // Check whether clearing the index was successful.
-      if (!$index->clear()) {
+      try {
+        $index->clear();
+      }
+      catch (SearchApiException $e) {
         // Add the index label to the list of ignored or failed indexes.
         $ignored_indexes[] = l($index->label(), $index->getSystemPath('canonical'));
       }

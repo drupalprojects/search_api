@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Index\IndexInterface.
@@ -39,7 +40,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDescription();
 
   /**
-   * Determine whether this index is read-only.
+   * Determines whether this index is read-only.
    *
    * @return bool
    *   TRUE if this index is read-only, otherwise FALSE.
@@ -47,7 +48,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function isReadOnly();
 
   /**
-   * Get the cache ID prefix used for this index's caches.
+   * Gets the cache ID prefix used for this index's caches.
    *
    * @param $type
    *   The type of cache. Currently only "fields" is used.
@@ -165,14 +166,17 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @return \Drupal\search_api\Tracker\TrackerInterface
    *   An instance of TrackerInterface.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the tracker couldn't be instantiated.
    */
   public function getTracker();
 
   /**
-   * Determines whether the server is valid.
+   * Determines whether this index is lying on a valid server.
    *
    * @return bool
-   *   TRUE if the server is valid, otherwise FALSE.
+   *   TRUE if the index's server is set and valid, otherwise FALSE.
    */
   public function hasValidServer();
 
@@ -199,6 +203,9 @@ interface IndexInterface extends ConfigEntityInterface {
    * @return \Drupal\search_api\Server\ServerInterface|null
    *   An instance of ServerInterface, or NULL if the index doesn't have a
    *   server.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the server couldn't be loaded.
    */
   public function getServer();
 
@@ -407,8 +414,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Marks all items in this index for reindexing.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the tracker couldn't be loaded, for example.
    */
   public function reindex();
 
@@ -463,8 +470,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Clears all items in this index and marks them for reindexing.
    *
-   * @return bool
-   *   TRUE if the operation was successful, FALSE otherwise.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the server couldn't be loaded, for example.
    */
   public function clear();
 
