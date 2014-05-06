@@ -100,9 +100,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * Returns view mode info for this item type.
    *
    * @return array
-   *   An associative array, keyed by the view mode names, and with the values
-   *   being associative arrays with at least the following keys:
-   *   - label: A human-readable label for the view mode.
+   *   An associative array of view mode labels, keyed by the view mode name.
    */
   public function getViewModes();
 

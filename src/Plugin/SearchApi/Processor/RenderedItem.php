@@ -76,11 +76,7 @@ class RenderedItem extends ProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
-      $view_modes = array();
-      foreach ($datasource->getViewModes() as $key => $mode) {
-        $view_modes[$key] = $mode['label'];
-      }
-
+      $view_modes = $datasource->getViewModes();
       if (count($view_modes) > 1) {
         $form['view_mode'][$datasource_id] = array(
           '#type' => 'select',

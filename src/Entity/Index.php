@@ -1091,6 +1091,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $this->startTracking();
       }
 
+      if (\Drupal::moduleHandler()->moduleExists('views')) {
+        views_invalidate_cache();
+      }
+
       $this->resetCaches();
     }
     catch (SearchApiException $e) {
@@ -1179,6 +1183,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($index->hasValidServer()) {
         $index->getServer()->removeIndex($index);
       }
+    }
+    if (\Drupal::moduleHandler()->moduleExists('views')) {
+      views_invalidate_cache();
     }
   }
 

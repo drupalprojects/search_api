@@ -85,21 +85,49 @@ class TestBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    return array(
-      'result count' => 1,
-      'results' => array(
-        1 => array(
-          'id' => 1,
-          'score' => 1,
-          'datasource' => key($query->getIndex()->getDatasources()),
-        ),
-        2 => array(
-          'id' => 2,
-          'score' => 1,
-          'datasource' => key($query->getIndex()->getDatasources()),
-        ),
-      ),
-    );
+    $results = array();
+    $datasource = key($query->getIndex()->getDatasources());
+    if ($query->getKeys() && $query->getKeys()[0] == 'test') {
+      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '1'] = array(
+        'id' => 1,
+        'score' => 2,
+        'datasource' => $datasource,
+        'excerpt' => 'test',
+      );
+    }
+    elseif ($query->getOption('search_api_mlt')) {
+      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '2'] = array(
+        'id' => 2,
+        'score' => 2,
+        'datasource' => $datasource,
+        'excerpt' => 'test test',
+      );
+    }
+    else {
+      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '1'] = array(
+        'id' => 1,
+        'score' => 1,
+        'datasource' => $datasource,
+      );
+      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '2'] = array(
+        'id' => 2,
+        'score' => 1,
+        'datasource' => $datasource,
+      );
+    }
+    $results['result count'] = count($results['results']);
+    return $results;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsFeature($feature) {
+    if ($feature == 'search_api_mlt') {
+      return TRUE;
+    }
+    return parent::supportsFeature($feature);
   }
 
 }
