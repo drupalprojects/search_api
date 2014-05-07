@@ -7,28 +7,10 @@
 
 namespace Drupal\search_api\Item;
 
-use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Datasource\DatasourceInterface;
-
 /**
  * Represents a search api indexing or result item.
  */
 interface ItemInterface extends \Iterator {
-
-  /**
-   * Create instance.
-   *
-   * @param \Drupal\search_api\Index\IndexInterface $index
-   *   The search api index.
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   The datasource of this item.
-   * @param \Drupal\Core\TypedData\ComplexDataInterface $source
-   *   The source of this item.
-   * @param string $id
-   *   The id of this item.
-   */
-  public function __construct(IndexInterface $index, DatasourceInterface $datasource, ComplexDataInterface $source, $id);
 
   /**
    * Returns the item id.

@@ -400,7 +400,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Will return the IDs of items that should be marked as indexed – i.e., items
    * that were either rejected from indexing or were successfully indexed.
    *
-   * @param \Drupal\search_api\Item\Item[] $items
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
    *   An array of items to be indexed, keyed by their item IDs.
    *
    * @return array

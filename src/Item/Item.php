@@ -14,10 +14,13 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
  * Represents a search api indexing or result item.
- *
- * @TODO Remove ArrayAccess - used for backward compatibility while porting.
  */
-class Item implements ItemInterface, \ArrayAccess {
+class Item implements ItemInterface {
+
+  /**
+   * @var \Drupal\search_api\Index\IndexInterface
+   */
+  protected $index;
 
   /**
    * The complex data item this search api item bases on.
@@ -32,13 +35,9 @@ class Item implements ItemInterface, \ArrayAccess {
   protected $datasource;
 
   /**
-   * @var \Drupal\search_api\Index\IndexInterface
-   */
-  protected $index;
-
-  /**
    * The extracted fields to index.
-   * @var array
+   *
+   * @var \Drupal\search_api\Item\FieldInterface[]
    */
   protected $fields;
 
@@ -46,30 +45,42 @@ class Item implements ItemInterface, \ArrayAccess {
    * The keys of the extracted fields to index.
    *
    * This is used to implement the iterator.
+   *
    * @var array
    */
   protected $fieldKeys;
 
   /**
    * Defines the position of the iterator.
+   *
    * @var int
    */
-  protected $position = 0;
+  private $position = 0;
 
   /**
    * The HTML text with highlighted text-parts that match the query.
+   *
    * @var string
    */
   protected $excerpt;
 
   /**
-   * {@inheritdoc}
+   * Constructs a new Item object.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The search api index.
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $source
+   *   The source of this item.
+   * @param string $id
+   *   The ID of this item.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
+   *   The datasource of this item.
    */
-  public function __construct(IndexInterface $index, DatasourceInterface $datasource, ComplexDataInterface $source, $id) {
-    $this->source = $source;
+  public function __construct(IndexInterface $index, ComplexDataInterface $source, $id, DatasourceInterface $datasource = NULL) {
     $this->index = $index;
-    $this->datasource = $datasource;
+    $this->source = $source;
     $this->id = $id;
+    $this->datasource = $datasource;
   }
 
   /**
@@ -90,7 +101,6 @@ class Item implements ItemInterface, \ArrayAccess {
    * {@inheritdoc}
    */
   public function getId() {
-    // @todo from where do we get the id?
     return $this->id;
   }
 
@@ -164,63 +174,4 @@ class Item implements ItemInterface, \ArrayAccess {
     $this->position = 0;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetExists($offset) {
-    if (!in_array($offset, array('#datasource', '#item', '#item_id'))) {
-      $this->extractIndexingFields();
-      return isset($this->fields[$offset]);
-    }
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetGet($offset) {
-    switch ($offset) {
-      case '#datasource':
-        return $this->getDatasource()->getPluginId();
-
-      case '#item':
-        return $this->getSource();
-
-      case '#item_id':
-        return $this->getId();
-    }
-    $this->extractIndexingFields();
-    return $this->fields[$offset];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetSet($offset, $value) {
-    $this->extractIndexingFields();
-    if (isset($this->fields[$offset])) {
-      if (isset($value['type'])) {
-        $this->fields[$offset]->setType($value['type']);
-      }
-      if (isset($value['value'])) {
-        $this->fields[$offset]->setValue($value['value']);
-      }
-      if (isset($value['original_type'])) {
-        $this->fields[$offset]->setOriginalType($value['original_type']);
-      }
-    }
-    else {
-      $original_type = isset($value['original_type']) ? $value['original_type'] : NULL;
-      $field_value = isset($value['value']) ? $value['value'] : array();
-      $this->fields[$offset] = new Field($offset, $value['type'], $field_value, $original_type);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function offsetUnset($offset) {
-    $this->extractIndexingFields();
-    unset($this->fields[$offset]);
-  }
 }
