@@ -81,8 +81,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // Discern between creation and editing of a server, since we don't allow
     // the database to be changed later on.
     if (empty($this->configuration)) {
-      global $databases;
-      foreach ($databases as $key => $targets) {
+      foreach (Database::getAllConnectionInfo() as $key => $targets) {
         foreach ($targets as $target => $info) {
           $options[$key]["$key:$target"] = "$key > $target";
         }
