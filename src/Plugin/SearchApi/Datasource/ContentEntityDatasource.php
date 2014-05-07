@@ -11,6 +11,10 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\FieldConfigInterface;
+use Drupal\field\FieldInstanceConfigInterface;
+use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
@@ -545,6 +549,79 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     }
 
     return $indexes;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDependencies() {
+    $dependencies = array(
+      'module' => array($this->getEntityType()->getProvider()),
+    ) + parent::getDependencies();
+
+    $plugin_id = $this->getPluginId();
+    $fields = array();
+    array_filter(array_keys($this->getIndex()->getFields()), function ($value) use ($plugin_id, &$fields) {
+      if (strpos($value, $plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
+        $fields[] = substr($value, strlen($plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR));
+      }
+    });
+    if ($field_dependencies = $this->getFieldDependencies($fields, $this->getEntityTypeId())) {
+      $dependencies += array('entity' => array_keys($field_dependencies));
+    }
+
+    return $dependencies;
+  }
+
+  /**
+   * Returns an array of 'field_config' and 'field_instance_config' config
+   * entity dependencies.
+   *
+   * @param array $fields
+   *   An array of field names, as returned by
+   *   \Drupal\search_api\Index\IndexInterface::getFields().
+   * @param string $entity_type_id
+   *   The entity type to which these fields are attached to.
+   *
+   * @return array
+   *   An array of config entity IDs.
+   */
+  protected function getFieldDependencies($fields, $entity_type_id) {
+    $field_dependencies = array();
+
+    // Figure out which fields are directly on the item and which need to be
+    // extracted from nested items.
+    $direct_fields = array();
+    $nested_fields = array();
+    foreach ($fields as $field) {
+      if (strpos($field, ':entity:') !== FALSE) {
+        list($direct, $nested) = explode(':entity:', $field, 2);
+        $nested_fields[$direct][] = $nested;
+      }
+      elseif (strpos($field, ':') === FALSE) {
+        $direct_fields[] = $field;
+      }
+    }
+
+    // Extract the config dependency name for direct fields.
+    foreach (array_keys($this->entityManager->getBundleInfo($entity_type_id)) as $bundle) {
+      foreach ($this->entityManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+        if ($field_definition instanceof FieldInstanceConfigInterface) {
+          if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
+            $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;
+            $field_dependencies[$field_definition->getField()->getConfigDependencyName()] = TRUE;
+          }
+
+          // Recurse for nested fields.
+          if (isset($nested_fields[$field_name])) {
+            $entity_type = $field_definition->getSetting('target_type');
+            $field_dependencies += $this->getFieldDependencies($nested_fields[$field_name], $entity_type);
+          }
+        }
+      }
+    }
+
+    return $field_dependencies;
   }
 
 }

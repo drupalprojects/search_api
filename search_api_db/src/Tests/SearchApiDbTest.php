@@ -18,6 +18,7 @@ use Drupal\system\Tests\Entity\EntityUnitTestBase;
  * Tests index and search capabilities using the Database search backend.
  */
 class SearchApiDbTest extends EntityUnitTestBase {
+
   use ExampleContentTrait;
 
   /**
@@ -59,9 +60,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
 
-    $this->installConfig(array('search_api_test_db'));
-
     $this->setUpExampleStructure();
+
+    $this->installConfig(array('search_api_test_db'));
   }
 
   /**

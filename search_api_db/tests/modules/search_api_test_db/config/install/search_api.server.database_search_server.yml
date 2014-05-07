@@ -41,4 +41,6 @@ backendPluginConfig:
     database_search_index: search_api_db_database_search_index
 status: 1
 langcode: en
-dependencies: {  }
+dependencies:
+  module:
+    - search_api_db

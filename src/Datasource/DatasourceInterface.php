@@ -169,4 +169,22 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function getItemIds($limit = -1, $from = NULL);
 
+
+  /**
+   * Returns the list of dependencies of this datasource.
+   *
+   * @return array
+   *   An array of dependencies keyed by the type of dependency. For example:
+   * @code
+   * array(
+   *   'module' => array(
+   *     'node',
+   *     'field',
+   *     'image'
+   *   ),
+   * );
+   * @endcode
+   */
+  public function getDependencies();
+
 }
