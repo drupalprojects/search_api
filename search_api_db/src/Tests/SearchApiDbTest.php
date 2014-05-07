@@ -11,12 +11,14 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\Language;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
  * Tests index and search capabilities using the Database search backend.
  */
 class SearchApiDbTest extends EntityUnitTestBase {
+  use ExampleContentTrait;
 
   /**
    * A Search API server ID.
@@ -59,63 +61,19 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
     $this->installConfig(array('search_api_test_db'));
 
-    // Create the required bundles.
-    entity_test_create_bundle('item');
-    entity_test_create_bundle('article');
-
-    // Create a 'body' field on the test entity type.
-    entity_create('field_config', array(
-      'name' => 'body',
-      'entity_type' => 'entity_test',
-      'type' => 'text_with_summary',
-      'cardinality' => 1,
-    ))->save();
-    entity_create('field_instance_config', array(
-      'field_name' => 'body',
-      'entity_type' => 'entity_test',
-      'bundle' => 'item',
-      'label' => 'Body',
-      'settings' => array('display_summary' => TRUE),
-    ))->save();
-    entity_create('field_instance_config', array(
-      'field_name' => 'body',
-      'entity_type' => 'entity_test',
-      'bundle' => 'article',
-      'label' => 'Body',
-      'settings' => array('display_summary' => TRUE),
-    ))->save();
-
-    // Create a 'keywords' field on the test entity type.
-    entity_create('field_config', array(
-      'name' => 'keywords',
-      'entity_type' => 'entity_test',
-      'type' => 'string',
-      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-    ))->save();
-    entity_create('field_instance_config', array(
-      'field_name' => 'keywords',
-      'entity_type' => 'entity_test',
-      'bundle' => 'item',
-      'label' => 'Keywords',
-    ))->save();
-    entity_create('field_instance_config', array(
-      'field_name' => 'keywords',
-      'entity_type' => 'entity_test',
-      'bundle' => 'article',
-      'label' => 'Keywords',
-    ))->save();
+    $this->setUpExampleStructure();
   }
 
   /**
    * Tests various indexing scenarios for the Database search backend.
    */
   public function testFramework() {
-    $this->insertItems();
+    $this->insertExampleContent();
     $this->checkDefaultServer();
     $this->checkDefaultIndex();
     $this->updateIndex();
     $this->searchNoResults();
-    $this->indexItems();
+    $this->indexItems($this->indexId);
     $this->searchSuccess1();
     $this->checkFacets();
     $this->regressionTests();
@@ -125,47 +83,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->searchNoResults();
     $this->regressionTests2();
     $this->uninstallModule();
-  }
-
-  protected function insertItems() {
-    $count = \Drupal::entityQuery('entity_test')->count()->execute();
-
-    entity_create('entity_test', array(
-      'id' => 1,
-      'name' => 'foo bar baz',
-      'body' => 'test test',
-      'type' => 'item',
-      'keywords' => array('orange'),
-    ))->save();
-    entity_create('entity_test', array(
-      'id' => 2,
-      'name' => 'foo test',
-      'body' => 'bar test',
-      'type' => 'item',
-      'keywords' => array('orange', 'apple', 'grape'),
-    ))->save();
-    entity_create('entity_test', array(
-      'id' => 3,
-      'name' => 'bar',
-      'body' => 'test foobar',
-      'type' => 'item',
-    ))->save();
-    entity_create('entity_test', array(
-      'id' => 4,
-      'name' => 'foo baz',
-      'body' => 'test test test',
-      'type' => 'article',
-      'keywords' => array('apple', 'strawberry', 'grape'),
-    ))->save();
-    entity_create('entity_test', array(
-      'id' => 5,
-      'name' => 'bar baz',
-      'body' => 'foo',
-      'type' => 'article',
-      'keywords' => array('orange', 'strawberry', 'grape', 'banana'),
-    ))->save();
-    $count = \Drupal::entityQuery('entity_test')->count()->execute() - $count;
-    $this->assertEqual($count, 5, "$count items inserted.");
   }
 
   /**
@@ -258,18 +175,17 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
   }
 
-  protected function indexItems() {
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = entity_load('search_api_index', $this->indexId);
-    $index->index();
-  }
-
   protected function searchSuccess1() {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEqual($results['result count'], 4, 'Search for »test« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
     $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
     $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+
+    $ids = $this->getItemIds(array(1));
+    $id = reset($ids);
+    $this->assertEqual($results['results'][$id]['id'], 1);
+    $this->assertEqual($results['results'][$id]['datasource'], 'entity:entity_test');
 
     $results = $this->buildSearch('"test foo"')->execute();
     $this->assertEqual($results['result count'], 3, 'Search for »"test foo"« returned correct number of results.');
@@ -364,7 +280,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertTrue($success, 'The server was successfully edited.');
 
     $this->clearIndex();
-    $this->indexItems();
+    $this->indexItems($this->indexId);
 
     // Reset the internal cache so the new values will be available.
     entity_load('search_api_index', $this->indexId, TRUE);
@@ -753,7 +669,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
       'type' => 'item',
     ))->save();
 
-    $this->indexItems();
+    $this->indexItems($this->indexId);
 
     $query = $this->buildSearch(NULL, array('prices,3.25'));
     $results = $query->execute();
@@ -798,34 +714,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully disabled.');
     $prefix = \Drupal::database()->prefixTables('{search_api_db_}') . '%';
     $this->assertEqual(\Drupal::database()->schema()->findTables($prefix), array(), 'The Database Search module was successfully uninstalled.');
-  }
-
-  /**
-   * Returns the internal field ID for the given entity field name.
-   *
-   * @param string $field_name
-   *   The field name.
-   *
-   * @return string
-   *   The internal field ID.
-   */
-  protected function getFieldId($field_name) {
-    return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $field_name;
-  }
-
-  /**
-   * Returns the idem IDs for the given entity IDs.
-   *
-   * @param array $entity_ids
-   *   An array of entity IDs.
-   *
-   * @return array
-   *   An array of item IDs.
-   */
-  protected function getItemIds(array $entity_ids) {
-    return array_map(function ($entity_id) {
-      return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':' . Language::LANGCODE_NOT_SPECIFIED;
-    }, $entity_ids);
   }
 
 }

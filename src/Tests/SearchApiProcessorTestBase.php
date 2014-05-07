@@ -129,7 +129,7 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
         'field_text' => array(
           'type' => 'text',
           'original_type' => 'field_item:string',
-          'value' => array($item['text']),
+          'value' => array(isset($item['text']) ? $item['text'] : $this->randomName()),
         ),
       );
     }
