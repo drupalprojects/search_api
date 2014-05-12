@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2169455 by drunken monkey: Fixed "undefined index" in
+  search_api_update_7116().
 - #2219563 by drunken monkey: Added __toString() methods for queries and
   filters.
 - #1888174 by drunken monkey, ipallian: Fixed problems with date facets.
