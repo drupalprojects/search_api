@@ -103,11 +103,13 @@ abstract class SearchApiViewsHandlerFilterEntity extends SearchApiViewsHandlerFi
   public function value_validate($form, &$form_state) {
     if (!empty($form['value'])) {
       $value = &$form_state['values']['options']['value'];
-      $values = $this->isMultiValued($form_state['values']['options']) ? drupal_explode_tags($value) : array($value);
-      $ids = $this->validate_entity_strings($form['value'], $values);
+      if (strlen($value)) {
+        $values = $this->isMultiValued($form_state['values']['options']) ? drupal_explode_tags($value) : array($value);
+        $ids = $this->validate_entity_strings($form['value'], $values);
 
-      if ($ids) {
-        $value = $ids;
+        if ($ids) {
+          $value = $ids;
+        }
       }
     }
   }
@@ -136,6 +138,7 @@ abstract class SearchApiViewsHandlerFilterEntity extends SearchApiViewsHandlerFi
       return;
     }
 
+    $this->validated_exposed_input = FALSE;
     $identifier = $this->options['expose']['identifier'];
     $input = $form_state['values'][$identifier];
 
@@ -144,13 +147,13 @@ abstract class SearchApiViewsHandlerFilterEntity extends SearchApiViewsHandlerFi
       $input = $this->options['group_info']['group_items'][$input]['value'];
     }
 
+    if (!strlen($input)) {
+      return;
+    }
     $values = $this->isMultiValued() ? drupal_explode_tags($input) : array($input);
 
     if (!$this->options['is_grouped'] || ($this->options['is_grouped'] && ($input != 'All'))) {
       $this->validated_exposed_input = $this->validate_entity_strings($form[$identifier], $values);
-    }
-    else {
-      $this->validated_exposed_input = FALSE;
     }
   }
 
