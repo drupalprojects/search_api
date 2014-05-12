@@ -405,7 +405,9 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
     $text = (isset($newranges[0]) ? '' : $dots[0]) . implode($dots[1], $out) . $dots[2];
     $text = check_plain($text);
 
-    return $this->highlightField($text, $keys);
+    // Since we stripped the tags at the beginning, highlighting doesn't need to
+    // handle HTML anymore.
+    return $this->highlightField($text, $keys, FALSE);
   }
 
   /**
@@ -415,11 +417,21 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
    *   The text of the field.
    * @param array $keys
    *   Search keywords entered by the user.
+   * @param bool $html
+   *   Whether the text can contain HTML tags or not. In the former case, text
+   *   inside tags (i.e., tag names and attributes) won't be highlighted.
    *
    * @return string
    *   The field's text with all occurrences of search keywords highlighted.
    */
-  protected function highlightField($text, array $keys) {
+  protected function highlightField($text, array $keys, $html = TRUE) {
+    if ($html) {
+      $texts = preg_split('#((?:</?[[:alpha:]](?:[^>"\']*|"[^"]*"|\'[^\']\')*>)+)#i', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+      for ($i = 0; $i < count($texts); $i += 2) {
+        $texts[$i] = $this->highlightField($texts[$i], $keys, FALSE);
+      }
+      return implode('', $texts);
+    }
     $replace = $this->options['prefix'] . '\0' . $this->options['suffix'];
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
     $text = preg_replace('/' . self::$boundary . '(' . $keys . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
