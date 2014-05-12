@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- pagination
 - #2198791 by drunken monkey: Fixed empty Views entity filters.
 - #2195469 by freakalis, drunken monkey: Added "Exclude fields" options to
   Highlighting processor.
