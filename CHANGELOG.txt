@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2219553 by drunken monkey: Fixed Views fulltext filter operators.
 - #2135697 by drunken monkey: Fixed handling of HTML attributes in the
   Highlighting processor.
 - #2179755 by drunken monkey, fago: Fixed whitespaces after HTML filter.
