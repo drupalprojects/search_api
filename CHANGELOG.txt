@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2233749 by rjacobs, drunken monkey: Added drush support to change the server
+  used by an index.
 - #2219553 by drunken monkey: Fixed Views fulltext filter operators.
 - #2135697 by drunken monkey: Fixed handling of HTML attributes in the
   Highlighting processor.

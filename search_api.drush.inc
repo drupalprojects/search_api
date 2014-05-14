@@ -108,6 +108,19 @@ function search_api_drush_command() {
     'aliases' => array('sapi-c'),
   );
 
+  $items['search-api-set-index-server'] = array(
+    'description' => 'Set the search server used by a given index.',
+    'examples' => array(
+      'drush search-api-set-index-server default_node_index my_solr_server' => dt('Set the !index index to use the !server server.', array('!index' => 'default_node_index', '!server' => 'my_solr_server')),
+      'drush sapi-sis default_node_index my_solr_server' => dt('Alias to set the !index index to use the !server server.', array('!index' => 'default_node_index', '!server' => 'my_solr_server')),
+    ),
+    'arguments' => array(
+      'index_id' => dt('The numeric ID or machine name of an index.'),
+      'server_id' => dt('The numeric ID or machine name of a server to set on the index.'),
+    ),
+    'aliases' => array('sapi-sis'),
+  );
+
   return $items;
 }
 
@@ -393,12 +406,54 @@ function drush_search_api_clear($index_id = NULL) {
 }
 
 /**
- * Helper function to return an index or all indexes as an array.
+ * Set the server for a given index.
+ */
+function drush_search_api_set_index_server($index_id = NULL, $server_id = NULL) {
+  if (search_api_drush_static(__FUNCTION__)) {
+    return;
+  }
+  // Make sure we have parameters to work with.
+  if (empty($index_id) || empty($server_id)) {
+    drush_log(dt('You must specify both an index and server.'), 'error');
+    return;
+  }
+  // Fetch current index and server data.
+  $indexes = search_api_drush_get_index($index_id);
+  $servers = search_api_drush_get_server($server_id);
+  if (empty($indexes) || empty($servers)) {
+    // If the specified index or server can't be found, just return. An
+    // appropriate error message should have been printed already.
+    return;
+  }
+  // Set the new server on the index.
+  $success = FALSE;
+  $index = reset($indexes);
+  $server = reset($servers);
+  try {
+    $success = $index->update(array('server' => $server->machine_name));
+  }
+  catch (SearchApiException $e) {
+    drush_log($e->getMessage(), 'error');
+  }
+  if ($success === FALSE) {
+    drush_log(dt('There was an error setting index !index to use server !server.', array('!index' => $index->name, '!server' => $server->name)), 'error');
+  }
+  elseif (!$success) {
+    drush_log(dt('Index !index was already using server !server.', array('!index' => $index->name, '!server' => $server->name)), 'ok');
+  }
+  else {
+    drush_log(dt('Index !index has been set to use server !server and items have been queued for indexing.', array('!index' => $index->name, '!server' => $server->name)), 'ok');
+  }
+}
+
+/**
+ * Returns an index or all indexes as an array.
  *
- * @param $index_id
- *   (optional) The provided index id.
+ * @param string|int|null $index_id
+ *   (optional) The ID or machine name of the index to load. Defaults to
+ *   loading all available indexes.
  *
- * @return
+ * @return SearchApiIndex[]
  *   An array of indexes.
  */
 function search_api_drush_get_index($index_id = NULL) {
@@ -413,7 +468,34 @@ function search_api_drush_get_index($index_id = NULL) {
 }
 
 /**
- * Static lookup to prevent Drush 4 from running twice.
+ * Returns a server or all servers as an array.
+ *
+ * @param string|int|null $server_id
+ *   (optional) The ID or machine name of the server to load. Defaults to
+ *   loading all available servers.
+ *
+ * @return SearchApiServer[]
+ *   An array of servers.
+ */
+function search_api_drush_get_server($server_id = NULL) {
+  $ids = isset($server_id) ? array($server_id) : FALSE;
+  $servers = search_api_server_load_multiple($ids);
+  if (empty($servers)) {
+    drush_set_error(dt('Invalid server_id or no servers present.'));
+    // @todo: Maybe add logic to print table of all servers.
+  }
+  return $servers;
+}
+
+/**
+ * Does a static lookup to prevent Drush 4 from running twice.
+ *
+ * @param string $function
+ *   The Drush function being called.
+ *
+ * @return bool
+ *   TRUE if the function was already called in this Drush execution, FALSE
+ *   otherwise.
  *
  * @see http://drupal.org/node/704848
  */
@@ -423,4 +505,5 @@ function search_api_drush_static($function) {
     return TRUE;
   }
   $index[$function] = TRUE;
+  return FALSE;
 }
