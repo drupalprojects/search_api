@@ -388,7 +388,7 @@ function _search_api_facetapi_facet_create_label(array $values, array $options) 
     $entities = entity_load($type, $values);
     foreach ($entities as $id => $entity) {
       $label = entity_label($type, $entity);
-      if ($label) {
+      if ($label !== FALSE) {
         $map[$id] = $label;
       }
     }

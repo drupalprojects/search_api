@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2256891 by justanothermark: Fixed "0" entity labels.
 - #2233749 by rjacobs, drunken monkey: Added drush support to change the server
   used by an index.
 - #2219553 by drunken monkey: Fixed Views fulltext filter operators.
