@@ -11,9 +11,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldInstanceConfigInterface;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManager;
@@ -540,10 +539,15 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
     $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
     foreach ($indexes as $index_id => $index) {
-      $config = $index->getDatasource($datasource_id)->getConfiguration();
-      $default = !empty($config['default']);
-      $bundle_set = !empty($config['bundles'][$entity_bundle]);
-      if ($default == $bundle_set) {
+      try {
+        $config = $index->getDatasource($datasource_id)->getConfiguration();
+        $default = !empty($config['default']);
+        $bundle_set = !empty($config['bundles'][$entity_bundle]);
+        if ($default == $bundle_set) {
+          unset($indexes[$index_id]);
+        }
+      }
+      catch (SearchApiException $e) {
         unset($indexes[$index_id]);
       }
     }

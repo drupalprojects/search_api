@@ -584,6 +584,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @param string $prefix_label
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If $datasource_id is no valid datasource for this index.
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();

@@ -583,12 +583,6 @@ class IndexForm extends EntityForm {
     // merge the fields stored as options from the field form so they do not get lost during save
     $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
 
-    // When creating the index, we add the default field configuration coming
-    // from the entity type object.
-    if ($entity->isNew()) {
-      //$entity->options['fields'] = $entity->getDatasource()->getEntityType()->get('search_api_default_fields');
-    }
-
     foreach ($entity->getDatasourceIds() as $datasource_id) {
       // Build the datasource plugin configuration form state.
       if (isset($form_state['values']['datasourcePluginConfigs'][$datasource_id])) {
@@ -602,7 +596,12 @@ class IndexForm extends EntityForm {
         // as it is already provided.
         unset($datasource_form_state['values']['index']['datasourcePluginConfigs'][$datasource_id]);
         // Submit the datasource plugin configuration form.
-        $entity->getDatasource($datasource_id)->submitConfigurationForm($form['datasourcePluginConfigs'][$datasource_id], $datasource_form_state);
+        try {
+          $entity->getDatasource($datasource_id)->submitConfigurationForm($form['datasourcePluginConfigs'][$datasource_id], $datasource_form_state);
+        }
+        catch (SearchApiException $e) {
+          watchdog_exception('search_api', $e);
+        }
       }
     }
 

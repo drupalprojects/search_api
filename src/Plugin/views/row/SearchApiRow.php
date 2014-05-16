@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\views\row;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
 use Drupal\views\ResultRow;
@@ -118,14 +119,18 @@ class SearchApiRow extends RowPluginBase {
     }
   }
 
-
-
   /**
    * {@inheritdoc}
    */
   public function render($row) {
-    $view_mode = isset($this->options['view_mode'][$row->search_api_datasource]) ? $this->options['view_mode'][$row->search_api_datasource] : 'default';
-    return $this->index->getDataSource($row->search_api_datasource)->viewItem($row->_item, $view_mode);
+    try {
+      $view_mode = isset($this->options['view_mode'][$row->search_api_datasource]) ? $this->options['view_mode'][$row->search_api_datasource] : 'default';
+      return $this->index->getDataSource($row->search_api_datasource)->viewItem($row->_item, $view_mode);
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e);
+      return '';
+    }
   }
 
   public function query() {
