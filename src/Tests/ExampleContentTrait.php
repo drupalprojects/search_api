@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\search_api\Tests\ExampleDataTrait.
+ * Contains \Drupal\search_api\Tests\ExampleContentTrait.
  */
 
 namespace Drupal\search_api\Tests;
@@ -18,54 +19,12 @@ trait ExampleContentTrait {
   protected $entities = array();
 
   /**
-   * Sets up the necessary bundles and fields.
+   * Sets up the necessary bundles.
    */
   protected function setUpExampleStructure() {
     // Create the required bundles.
     entity_test_create_bundle('item');
     entity_test_create_bundle('article');
-
-    // Create a 'body' field on the test entity type.
-    entity_create('field_config', array(
-        'name' => 'body',
-        'entity_type' => 'entity_test',
-        'type' => 'text_with_summary',
-        'cardinality' => 1,
-      ))->save();
-    entity_create('field_instance_config', array(
-        'field_name' => 'body',
-        'entity_type' => 'entity_test',
-        'bundle' => 'item',
-        'label' => 'Body',
-        'settings' => array('display_summary' => TRUE),
-      ))->save();
-    entity_create('field_instance_config', array(
-        'field_name' => 'body',
-        'entity_type' => 'entity_test',
-        'bundle' => 'article',
-        'label' => 'Body',
-        'settings' => array('display_summary' => TRUE),
-      ))->save();
-
-    // Create a 'keywords' field on the test entity type.
-    entity_create('field_config', array(
-        'name' => 'keywords',
-        'entity_type' => 'entity_test',
-        'type' => 'string',
-        'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      ))->save();
-    entity_create('field_instance_config', array(
-        'field_name' => 'keywords',
-        'entity_type' => 'entity_test',
-        'bundle' => 'item',
-        'label' => 'Keywords',
-      ))->save();
-    entity_create('field_instance_config', array(
-        'field_name' => 'keywords',
-        'entity_type' => 'entity_test',
-        'bundle' => 'article',
-        'label' => 'Keywords',
-      ))->save();
   }
 
   protected function insertExampleContent() {

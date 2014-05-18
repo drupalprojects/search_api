@@ -30,8 +30,8 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Tests ContentAccess Processor Plugin',
-      'description' => 'Tests if node access processor lets through only nodes',
+      'name' => '"Content access" tests',
+      'description' => 'Tests if the "Content access" processor works correctly.',
       'group' => 'Search API',
     );
   }
@@ -74,7 +74,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $this->nodes[1]->save();
 
     $fields = $this->index->getOption('fields');
-    $fields['entity:node|node_grants'] = array(
+    $fields['entity:node|search_api_node_grants'] = array(
       'type' => 'string',
     );
     $this->index->setOption('fields', $fields);
@@ -97,7 +97,6 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
    * Tests building the query when content is accessible based on node grants.
    */
   public function testQueryAccessWithNodeGrants() {
-
     // Create user that will be passed into the query.
     $authenticated_user = $this->createUser(array(), array('access content'));
 
@@ -137,12 +136,12 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|node_grants']['value'], array('node_access__all'));
+      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access__all'));
     }
   }
 
   /**
-   * Tests scenario where hook_node_grants() take effect.
+   * Tests scenario where hook_search_api_node_grants() take effect.
    */
   public function testContentAccessWithNodeGrants() {
     $items = array();
@@ -158,7 +157,8 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|node_grants']['value'], array('node_access_search_api_test:0'));
+      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access_search_api_test:0'));
     }
   }
+
 }

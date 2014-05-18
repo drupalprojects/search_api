@@ -70,6 +70,7 @@ class SearchApiIndexStorageUnitTest extends DrupalUnitTestBase {
     $indexData = array(
       'machine_name' => $this->randomName(),
       'name' => $this->randomString(),
+      'trackerPluginId' => 'default_tracker',
     );
 
     try {

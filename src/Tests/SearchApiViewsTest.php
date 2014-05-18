@@ -12,14 +12,14 @@ namespace Drupal\search_api\Tests;
  */
 class SearchApiViewsTest extends SearchApiWebTestBase {
 
+  use ExampleContentTrait;
+
   /**
    * A Search API index ID.
    *
    * @var string
    */
   protected $indexId = 'database_search_index';
-
-  use ExampleContentTrait;
 
   /**
    * Modules to enable.
@@ -41,6 +41,7 @@ class SearchApiViewsTest extends SearchApiWebTestBase {
 
   public function setUp() {
     parent::setUp();
+
     $this->setUpExampleStructure();
   }
 

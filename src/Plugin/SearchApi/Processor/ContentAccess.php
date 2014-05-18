@@ -7,11 +7,13 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\DataDefinition;
-use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -53,7 +55,7 @@ class ContentAccess extends ProcessorPluginBase {
         'description' => t('Data needed to apply node access.'),
         'type' => 'string',
       );
-      $properties['node_grants'] = new DataDefinition($definition);
+      $properties['search_api_node_grants'] = new DataDefinition($definition);
     }
   }
 
@@ -75,6 +77,10 @@ class ContentAccess extends ProcessorPluginBase {
       }
 
       $node = $this->getNode($item['#item']);
+      if (!$node) {
+        // Apparently we were active for a wrong item.
+        return;
+      }
 
       // Collect grant information for item.
       if (!$node->access('view', $account)) {
@@ -82,13 +88,13 @@ class ContentAccess extends ProcessorPluginBase {
         // realms in the item.
         $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
         foreach ($result as $grant) {
-          $items[$id]['entity:node|node_grants']['value'][] = "node_access_{$grant->realm}:{$grant->gid}";
+          $items[$id]['entity:node|search_api_node_grants']['value'][] = "node_access_{$grant->realm}:{$grant->gid}";
         }
       }
       else {
         // Add the generic pseudo view grant if we are not using node access or
         // the node is viewable by anonymous users.
-        $items[$id]['entity:node|node_grants']['value'][] = 'node_access__all';
+        $items[$id]['entity:node|search_api_node_grants']['value'][] = 'node_access__all';
       }
     }
   }
@@ -96,16 +102,21 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * Retrieves the node related to a search item.
    *
-   * @param \Drupal\node\entity\Node|\Drupal\comment\entity\Comment $item
+   * Will be either the node itself, or the node the comment is attached to.
    *
-   * @return \Drupal\node\entity\Node
+   * @param \Drupal\Core\Entity\ContentEntityInterface $item
+   *
+   * @return \Drupal\node\NodeInterface
    */
-  protected function getNode($item) {
-    if ($item instanceof Node) {
+  protected function getNode(ContentEntityInterface $item) {
+    if ($item instanceof CommentInterface) {
+      $item = $item->getCommentedEntity();
+    }
+    if ($item instanceof NodeInterface) {
       return $item;
     }
 
-    return node_load($item->entity_id->value);
+    return NULL;
   }
 
   /**
@@ -163,7 +174,7 @@ class ContentAccess extends ProcessorPluginBase {
     // Get the fields that are being indexed.
     $fields = $query->getIndex()->getOption('fields');
     // Define required fields that needs to be part of the index.
-    $required = array('entity:node|node_grants', 'entity:node|status');
+    $required = array('entity:node|search_api_node_grants', 'entity:node|status');
 
     $datasources_filter = $query->createFilter('OR');
 
@@ -211,12 +222,12 @@ class ContentAccess extends ProcessorPluginBase {
     $grants = node_access_grants('view', $account);
     foreach ($grants as $realm => $gids) {
       foreach ($gids as $gid) {
-        $node_filter->condition('entity:node|node_grants', "node_access_$realm:$gid");
+        $node_filter->condition('entity:node|search_api_node_grants', "node_access_$realm:$gid");
       }
     }
     // Also add items that are accessible for anonymous user by checking the
     // pseudo view grant.
-    $node_filter->condition('entity:node|node_grants', 'node_access__all');
+    $node_filter->condition('entity:node|search_api_node_grants', 'node_access__all');
     $query->filter($node_filter);
   }
 

@@ -241,9 +241,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     // Merge in default options.
+    // @todo Use a dedicated method, like defaultConfiguration() for plugins?
     $this->options += array(
       'cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'),
-      'index_directly' => FALSE,
+      'index_directly' => TRUE,
     );
   }
 
@@ -624,6 +625,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @param string $prefix_label
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If $datasource_id is no valid datasource for this index.
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
@@ -1261,8 +1265,23 @@ class Index extends ConfigEntityBase implements IndexInterface {
     parent::calculateDependencies();
 
     // Indexes that have a server assigned need to depend on it.
-    if ($this->hasValidServer() && ($server = $this->getServer())) {
+    if ($server = $this->getServer()) {
       $this->addDependency('entity', $server->getConfigDependencyName());
+    }
+
+    // Add a dependency on the module that provides the tracker for this index.
+    if ($tracker = $this->getTracker()) {
+      $this->addDependency('module', $tracker->getPluginDefinition()['provider']);
+    }
+
+    // Add dependencies on the modules that provide processors for this index.
+    foreach ($this->getProcessors() as $processor) {
+      $this->addDependency('module', $processor->getPluginDefinition()['provider']);
+    }
+
+    // Add the list of datasource dependencies collected from the plugin itself.
+    foreach ($this->getDatasources() as $datasource) {
+      $this->addDependencies($datasource->calculateDependencies());
     }
 
     return $this->dependencies;

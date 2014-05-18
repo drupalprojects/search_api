@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin;
 
+use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Plugin\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -14,6 +15,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Base class for all configurable plugins.
  */
 abstract class ConfigurablePluginBase extends PluginBase implements ConfigurablePluginInterface {
+
+  use DependencyTrait;
 
   /**
    * Overrides PluginBase::__construct().
@@ -96,7 +99,8 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    return array();
+    $this->addDependency('module', $this->getPluginDefinition()['provider']);
+    return $this->dependencies;
   }
 
 }

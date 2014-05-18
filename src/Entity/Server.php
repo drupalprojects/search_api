@@ -451,4 +451,19 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     }
     $delete->execute();
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    parent::calculateDependencies();
+
+    // Add a dependency on the module that provides the backend for this server.
+    if ($this->hasValidBackend() && ($backend = $this->getBackend())) {
+      $this->addDependency('module', $backend->getPluginDefinition()['provider']);
+    }
+
+    return $this->dependencies;
+  }
+
 }
