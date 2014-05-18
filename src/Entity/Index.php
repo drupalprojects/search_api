@@ -470,7 +470,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
-      list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
+      list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
       $extracted_item = array();
       $extracted_item['#item'] = $item;
       $extracted_item['#item_id'] = $raw_id;
@@ -919,7 +919,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items_by_datasource = array();
       foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
+        list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
         $items_by_datasource[$datasource_id][] = $raw_id;
       }
       $items = array();
