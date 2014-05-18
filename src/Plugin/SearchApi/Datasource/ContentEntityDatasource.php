@@ -558,10 +558,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function getDependencies() {
-    $dependencies = array(
-      'module' => array($this->getEntityType()->getProvider()),
-    ) + parent::getDependencies();
+  public function calculateDependencies() {
+    $this->dependencies += parent::calculateDependencies();
+
+    $this->addDependency('module', $this->getEntityType()->getProvider());
 
     $plugin_id = $this->getPluginId();
     $fields = array();
@@ -571,10 +571,12 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
       }
     });
     if ($field_dependencies = $this->getFieldDependencies($fields, $this->getEntityTypeId())) {
-      $dependencies += array('entity' => array_keys($field_dependencies));
+      foreach (array_keys($field_dependencies) as $field_dependency) {
+        $this->addDependency('entity', $field_dependency);
+      }
     }
 
-    return $dependencies;
+    return $this->dependencies;
   }
 
   /**

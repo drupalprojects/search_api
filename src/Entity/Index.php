@@ -1239,7 +1239,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Add the list of datasource dependencies collected from the plugin itself.
     foreach ($this->getDatasources() as $datasource) {
-      $this->addDependencies($datasource->getDependencies());
+      $this->addDependencies($datasource->calculateDependencies());
     }
 
     return $this->dependencies;
