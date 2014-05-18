@@ -300,20 +300,18 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFields($only_indexed = TRUE, $get_additional = FALSE);
 
   /**
-   * Returns an array of the fields of a datasource enabled for indexing.
+   * Returns information about the enabled fields for a specific datasource.
    *
-   * Also includes datasource independent fields.
-   *
-   * @param string $datasource_id
-   *   The datasource to get the fields for.
+   * @param string|null $datasource_id
+   *   (optional) The datasource to get the fields for, or NULL to get the
+   *   datasource-independent fields.
    *
    * @return array
-   *   To enable proper extraction of fields with Utility::extractFields(),
-   *   $fields will contain the information from $this->options['fields'], but
-   *   in a two-dimensional array, keyed by both parts of the field identifier
-   *   separately – i.e, first by datasource ID, then by property path.
+   *   The indexed fields of the given datasource, as an associative array. The
+   *   keys are property paths (i.e., the second parts of field identifiers),
+   *   the values field information as stored in the index's "fields" option.
    */
-  public function getItemFields($datasource_id);
+  public function getItemFields($datasource_id = NULL);
 
   /**
    * Convenience method for getting all of this index's fulltext fields.

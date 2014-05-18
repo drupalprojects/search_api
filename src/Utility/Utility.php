@@ -361,21 +361,29 @@ class Utility {
   }
 
   /**
-   * Returns the datasource identifier from an item id.
+   * Splits an internal ID into its two parts.
    *
-   * Since the item_id contains the datasource as part of the identifier and
-   * separated by DATASOURCE_ID_SEPARATOR, we can explode on the item id and
-   * retrieve the datasource identifier.
+   * Both internal item IDs and internal field identifiers are prefixed with the
+   * corresponding datasource ID. This method will split these IDs up again into
+   * their two parts.
    *
-   * @param string $item_id
-   *   The item identifier
+   * @param string $combined_id
+   *   The internal ID, with an optional datasource prefix separated with
+   *   \Drupal\search_api\Index\IndexInterface::DATASOURCE_ID_SEPARATOR from the
+   *   raw item ID or property path.
    *
-   * @return string $datasource_id
-   *   The datasource identifier the item identifier belongs to.
+   * @return array
+   *   A numeric array, containing the datasource ID in element 0 and the raw
+   *   item ID or property path in element 1. In the case of
+   *   datasource-independent fields (i.e., when there is no prefix), element 0
+   *   will be NULL.
    */
-  public static function getDataSourceIdentifierFromItemId($item_id) {
-    $datasource_id = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
-    return $datasource_id;
+  public static function splitCombinedId($combined_id) {
+    $pos = strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR);
+    if ($pos === FALSE) {
+      return array(NULL, $combined_id);
+    }
+    return array(substr($combined_id, 0, $pos), substr($combined_id, $pos + 1));
   }
 
 }

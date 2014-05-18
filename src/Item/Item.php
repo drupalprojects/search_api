@@ -18,18 +18,22 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 class Item implements ItemInterface {
 
   /**
+   * The search index with which this item is associated.
+   *
    * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $index;
 
   /**
-   * The complex data item this search api item bases on.
+   * The complex data item this search api item is based on.
    *
    * @var \Drupal\Core\TypedData\ComplexDataInterface
    */
   protected $source;
 
   /**
+   * The datasource of this item.
+   *
    * @var \Drupal\search_api\Datasource\DatasourceInterface
    */
   protected $datasource;

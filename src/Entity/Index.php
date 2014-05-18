@@ -20,7 +20,6 @@ use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
-use Drupal\search_api\Item\Item;
 
 /**
  * Defines the search index configuration entity.
@@ -442,31 +441,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getItemFields($datasource_id) {
     // If the item fields weren't evaluated yet do it now.
-    if (empty($this->itemFields)) {
-      $this->itemFields['additional fields'] = array();
+    if (!isset($this->itemFields)) {
+      // Initialize to empty arrays for all datasources.
+      $this->itemFields = array_fill_keys($this->datasourcePluginIds, array());
+      $this->itemFields[NULL] = array();
       foreach ($this->options['fields'] as $key => $field) {
         // Include real type, if known.
         if (isset($field['real_type'])) {
           $custom_type = $field['real_type'];
-          if ($this->getServer()->supportsDatatype($custom_type)) {
+          if ($this->hasValidServer() && $this->getServer()->supportsDatatype($custom_type)) {
             $field['type'] = $field['real_type'];
           }
         }
-        $additional = (stristr($key, self::DATASOURCE_ID_SEPARATOR) === FALSE);
-        $field_datasource_id = 'additional fields';
+        $field_datasource_id = NULL;
         $property_path = $key;
-        // If it's a datasource specific field separate the data in the kex.
-        if (!$additional) {
+        // If it's a datasource specific field, separate the data in the key.
+        if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
           list ($field_datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
         }
         $this->itemFields[$field_datasource_id][$property_path] = $field;
       }
     }
-    // If there are no fields for that datasource return an empty array.
-    if (!isset($this->itemFields[$datasource_id])) {
-      return array();
-    }
-    return $this->itemFields[$datasource_id] + $this->itemFields['additional fields'];
+    return $this->itemFields[$datasource_id];
   }
 
   /**
@@ -510,7 +506,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $extracted_items = array();
     $ret = array();
     foreach ($items as $item_id => $item) {
-      list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
+      list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
       $extracted_item = array();
       $extracted_item['#item'] = $item;
       $extracted_item['#item_id'] = $raw_id;
@@ -959,7 +955,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items_by_datasource = array();
       foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
+        list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
         $items_by_datasource[$datasource_id][] = $raw_id;
       }
       $items = array();

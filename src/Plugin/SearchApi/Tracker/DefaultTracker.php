@@ -157,7 +157,7 @@ class DefaultTracker extends TrackerPluginBase {
       foreach (array_chunk($ids, 1000) as $ids_chunk) {
         $insert = $this->createInsertStatement();
         foreach ($ids_chunk as $item_id) {
-          list($datasource_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
+          list($datasource_id) = Utility::splitCombinedId($item_id);
           $insert->values(array(
             'index_id' => $index_id,
             'datasource' => $datasource_id,
