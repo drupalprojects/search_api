@@ -187,7 +187,6 @@ class IndexForm extends EntityForm {
    */
   public function buildEntityForm(array &$form, array &$form_state, IndexInterface $index) {
     $form['#tree'] = TRUE;
-    // Build the name element.
     $form['name'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Index name'),
@@ -196,7 +195,6 @@ class IndexForm extends EntityForm {
       '#required' => TRUE,
       '#weight' => 1,
     );
-    // Build the machine name element.
     $form['machine_name'] = array(
       '#type' => 'machine_name',
       '#default_value' => $index->id(),
@@ -215,19 +213,18 @@ class IndexForm extends EntityForm {
       drupal_set_message($this->t('Please configure the used data type.'), 'warning');
     }
 
-    // Check if the datasource plugin changed.
+    // Check if the tracker plugin changed.
     if (!empty($form_state['values']['trackerPluginId'])) {
       // Notify the user about the tracker configuration change.
       drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
     }
 
-    // Attach the admin css
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
     $form['datasourcePluginIds'] = array(
       '#type' => 'select',
       '#title' => $this->t('Data types'),
-      '#description' => $this->t('Select one or more data type of items that will be stored in this index. E.g. should it be nodes content or files data. This setting cannot be changed afterwards.'),
+      '#description' => $this->t('Select one or more data type of items that will be stored in this index. E.g. should it be nodes content or files data.'),
       '#options' => $this->getDatasourcePluginManager()->getDefinitionLabels(),
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,
@@ -242,7 +239,6 @@ class IndexForm extends EntityForm {
       '#weight' => 3,
     );
 
-    // Build the datasource plugin configuration container element.
     $form['datasourcePluginConfigs'] = array(
       '#type' => 'container',
       '#attributes' => array(
@@ -266,13 +262,12 @@ class IndexForm extends EntityForm {
       '#attributes' => array('class' => array('js-hide')),
     );
 
-    // Build the datasource configuration form.
     $this->buildDatasourcesConfigForm($form, $form_state, $index);
 
     $form['trackerPluginId'] = array(
       '#type' => 'select',
       '#title' => $this->t('Tracker'),
-      '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes. This setting cannot be changed afterwards.'),
+      '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes.'),
       '#options' => $this->getTrackerPluginManager()->getDefinitionLabels(),
       '#default_value' => $index->hasValidTracker() ? $index->getTracker()->getPluginId() : NULL,
       '#required' => TRUE,
@@ -287,7 +282,6 @@ class IndexForm extends EntityForm {
       '#weight' => 6,
     );
 
-    // Build the tracker plugin configuration container element.
     $form['trackerPluginConfig'] = array(
       '#type' => 'container',
       '#attributes' => array(
@@ -311,10 +305,8 @@ class IndexForm extends EntityForm {
       '#attributes' => array('class' => array('js-hide')),
     );
 
-    // Build the tracker configuration form.
     $this->buildTrackerConfigForm($form, $form_state, $index);
 
-    // Build the server machine name element.
     $form['serverMachineName'] = array(
       '#type' => 'select',
       '#title' => $this->t('Server'),
@@ -324,7 +316,6 @@ class IndexForm extends EntityForm {
       '#weight' => 9,
     );
 
-    // Build the status element.
     $form['status'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
@@ -340,7 +331,6 @@ class IndexForm extends EntityForm {
       '#weight' => 10,
     );
 
-    // Build the description element.
     $form['description'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
@@ -357,17 +347,17 @@ class IndexForm extends EntityForm {
       '#weight' => 12,
     );
 
-    // Build the read only element.
+    // We display the "read-only" flag along with the other option, even though
+    // it is a property directly on the index object. We use "#parents" to move
+    // it to the correct place in the form values.
     $form['options']['readOnly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Read only'),
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
-      // changed #parents so this option is not saved into options
       '#parents' => array('readOnly'),
       '#weight' => 13,
     );
-    // Build the index directly element.
     $form['options']['index_directly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Index items immediately'),
@@ -375,18 +365,12 @@ class IndexForm extends EntityForm {
       '#default_value' => $index->getOption('index_directly'),
       '#weight' => 14,
     );
-    // Build the cron limit element.
     $form['options']['cron_limit'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Cron batch size'),
       '#description' => $this->t('Set how many items will be indexed at once when indexing items during a cron run. "0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
       '#default_value' => $index->getOption('cron_limit'),
       '#size' => 4,
-      '#states' => array(
-        'invisible' => array(
-          ':input[name="options[index_directly]"]' => array('checked' => TRUE),
-        ),
-      ),
       '#weight' => 15,
     );
   }
