@@ -27,6 +27,24 @@ search_api.index.*:
         index_directly:
           type: boolean
           label: 'Index items immediately'
+        processors:
+          type: sequence
+          label: 'The processors for this index'
+          sequence:
+            - type: 'mapping'
+              label: 'A processor'
+              mapping:
+                status:
+                  type: 'string'
+                  label: 'Status of the processor'
+                weight:
+                  type: 'integer'
+                  label: 'The weight of the processor'
+                processorPluginId:
+                  type: 'string'
+                  label: 'The plugin ID of the processor'
+                settings:
+                  type: 'search_api.processor.plugin.[%parent.processorPluginId]'
 
     datasourcePluginIds:
       type: sequence

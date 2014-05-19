@@ -205,7 +205,11 @@ class IndexFiltersForm extends EntityForm {
     // Store processor settings.
     foreach ($form_state['processors'] as $name => $processor) {
       $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
-      $values['processors'][$name] += array('settings' => array());
+      $default_settings = array(
+        'settings' => array(),
+        'processorPluginId' => $name,
+      );
+      $values['processors'][$name] += $default_settings;
 
       if (!empty($form['#processors'][$name]['status'])) {
         // We have to create our own form_state for the plugin form in order to
