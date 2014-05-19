@@ -71,6 +71,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   public function testFramework() {
     $this->insertExampleContent();
     $this->checkDefaultServer();
+    $this->checkServerTables();
     $this->checkDefaultIndex();
     $this->updateIndex();
     $this->searchNoResults();
@@ -93,16 +94,15 @@ class SearchApiDbTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = entity_load('search_api_server', $this->serverId);
     $this->assertTrue((bool) $server, 'The server was successfully created.');
+  }
 
-    // Since we're adding a few configurable fields above *after* the index was
-    // originally imported as default configuration, make sure to re-save the
-    // index so tables all the necessary tables get created.
-    // This wouldn't be needed if we were providing the fields above as default
-    // config as well.
-    $index = entity_load('search_api_index', $this->indexId);
-    $index->save();
+  /**
+   * Tests that all tables and all columns have been created.
+   */
+  protected function checkServerTables() {
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = entity_load('search_api_server', $this->serverId);
 
-    // Check that all tables and all columns have been created.
     $normalized_storage_table = $server->getBackendPluginConfig()['index_tables'][$this->indexId];
     $field_tables = $server->getBackendPluginConfig()['field_tables'][$this->indexId];
 
