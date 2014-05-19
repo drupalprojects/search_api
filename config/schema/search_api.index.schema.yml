@@ -1,0 +1,52 @@
+search_api.index.*:
+  type: mapping
+  label : 'Search index'
+  mapping:
+    machine_name:
+      type: string
+      label: 'Machine name'
+    name:
+      type: label
+      label: Name'
+    uuid:
+      type: string
+      label: 'UUID'
+    description:
+      type: text
+      label: 'Description'
+    readOnly:
+      type: boolean
+      label: 'Read-only'
+    options:
+      type: mapping
+      label: 'Options'
+      mapping:
+        cron_limit:
+          type: integer
+          label: 'Cron batch size'
+        index_directly:
+          type: boolean
+          label: 'Index items immediately'
+
+    datasourcePluginIds:
+      type: sequence
+      label: 'Datasource plugin IDs'
+      sequence:
+        - type: string
+    # How to do this properly?
+    #datasourcePluginConfigs:
+    #  type: mapping
+    trackerPluginId:
+      type: string
+      label: 'Tracker plugin ID'
+    trackerPluginConfig:
+      type: search_api.tracker.plugin.[%parent.trackerPluginId]
+    serverMachineName:
+      type: string
+      label: 'Server machine name'
+    status:
+      type: boolean
+      label: 'Status'
+    langcode:
+      type: string
+      label: 'Language code'
