@@ -172,16 +172,16 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch('test')->execute();
     $this->assertEqual($results['result count'], 0, 'No search results returned without indexing.');
     $this->assertEqual(array_keys($results['results']), array(), 'No search results returned without indexing.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   protected function searchSuccess1() {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEqual($results['result count'], 4, 'Search for »test« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $ids = $this->getItemIds(array(1));
     $id = reset($ids);
@@ -191,14 +191,14 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch('"test foo"')->execute();
     $this->assertEqual($results['result count'], 3, 'Search for »"test foo"« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2, 4, 1)), 'Search for »"test foo"« returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch('foo', array('type,item'))->sort($this->getFieldId('id'), 'ASC')->execute();
     $this->assertEqual($results['result count'], 2, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2)), 'Search for »foo« returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -218,8 +218,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->execute();
     $this->assertEqual($results['result count'], 1, 'Complex search 1 returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4)), 'Complex search 1 returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   protected function checkFacets() {
@@ -291,26 +291,26 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEqual($results['result count'], 4, 'Search for »test« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch(NULL, array('body,test foobar'))->execute();
     $this->assertEqual($results['result count'], 1, 'Search with multi-term fulltext filter returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3)), 'Search with multi-term fulltext filter returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch('"test foo"')->execute();
     $this->assertEqual($results['result count'], 4, 'Search for »"test foo"« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2, 4, 1, 3)), 'Search for »"test foo"« returned correct result.');
-    $this->assertEqual($results['ignored'], array('foo'), 'Short key was ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch('foo', array('type,item'))->execute();
     $this->assertEqual($results['result count'], 3, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 3)), 'Search for »foo« returned correct result.');
-    $this->assertEqual($results['ignored'], array('foo'), 'Short key was ignored.');
-    $this->assertEqual($results['warnings'], array(t('No valid search keys were present in the query.')), 'No warnings were displayed.');
+    $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
+    $this->assertWarnings($results, array(t('No valid search keys were present in the query.')), 'No warnings were displayed.');
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -330,8 +330,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->execute();
     $this->assertEqual($results['result count'], 1, 'Complex search 1 returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3)), 'Complex search 1 returned correct result.');
-    $this->assertEqual($results['ignored'], array('baz', 'bar'), 'Correct keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results, array('baz', 'bar'), 'Correct keys were ignored.');
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -351,14 +351,14 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->execute();
     $this->assertEqual($results['result count'], 1, 'Complex search 2 returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3)), 'Complex search 2 returned correct result.');
-    $this->assertEqual($results['ignored'], array('baz', 'bar'), 'Correct keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results, array('baz', 'bar'), 'Correct keys were ignored.');
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch(NULL, array('keywords,orange'))->execute();
     $this->assertEqual($results['result count'], 3, 'Filter query 1 on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 5)), 'Filter query 1 on multi-valued field returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'Warning displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $filters = array(
       'keywords,orange',
@@ -367,14 +367,14 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch(NULL, $filters)->execute();
     $this->assertEqual($results['result count'], 1, 'Filter query 2 on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2)), 'Filter query 2 on multi-valued field returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $results = $this->buildSearch()->condition($this->getFieldId('keywords'), NULL)->execute();
     $this->assertEqual($results['result count'], 1, 'Query with NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3)), 'Query with NULL filter returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   /**
@@ -385,8 +385,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch('test')->sort($this->getFieldId('id'), 'ASC')->sort($this->getFieldId('type'), 'ASC')->execute();
     $this->assertEqual($results['result count'], 4, 'Sorting on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 3, 4)), 'Sorting on field with NULLs returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $query = $this->buildSearch();
     $filter = $query->createFilter('OR');
@@ -397,8 +397,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 3, 'OR filter on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3, 4, 5)), 'OR filter on field with NULLs returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     // Regression tests for #1863672.
     $query = $this->buildSearch();
@@ -410,8 +410,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 4, 'OR filter on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 4, 5)), 'OR filter on multi-valued field returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $query = $this->buildSearch();
     $filter = $query->createFilter('OR');
@@ -426,8 +426,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 3, 'Multiple OR filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2, 4, 5)), 'Multiple OR filters on multi-valued field returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $query = $this->buildSearch();
     $filter1 = $query->createFilter('OR');
@@ -444,8 +444,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 3, 'Complex nested filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(2, 4, 5)), 'Complex nested filters on multi-valued field returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     // Regression tests for #2040543.
     $query = $this->buildSearch();
@@ -491,16 +491,16 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 3, 'OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 4)), 'OR keywords returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $query = $this->buildSearch($keys, array(), array($this->getFieldId('name'), $this->getFieldId('body')));
     $query->range(0, 0);
     $results = $query->execute();
     $this->assertEqual($results['result count'], 5, 'Multi-field OR keywords returned correct number of results.');
     $this->assertTrue(empty($results['results']), 'Multi-field OR keywords returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -517,8 +517,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 4, 'Nested OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 4, 5)), 'Nested OR keywords returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -538,8 +538,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 4, 'Nested multi-field OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(1, 2, 4, 5)), 'Nested multi-field OR keywords returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     // Regression tests for #2127001.
     $keys = array(
@@ -551,8 +551,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->sort('search_api_id', 'ASC')->execute();
     $this->assertEqual($results['result count'], 2, 'Negated AND fulltext search returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3, 4)), 'Negated AND fulltext search returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -563,8 +563,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->execute();
     $this->assertEqual($results['result count'], 1, 'Negated OR fulltext search returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3)), 'Negated OR fulltext search returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -579,8 +579,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $this->buildSearch($keys)->sort('search_api_id', 'ASC')->execute();
     $this->assertEqual($results['result count'], 2, 'Nested NOT AND fulltext search returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(3, 4)), 'Nested NOT AND fulltext search returned correct result.');
-    $this->assertEqual($results['ignored'], array(), 'No keys were ignored.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     // Regression tests for #2136409
     // @todo Fix NULL and NOT NULL conditions.
@@ -676,13 +676,15 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results['result count'], 1, 'Filter on decimal field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(6)), 'Filter on decimal field returned correct result.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
 
     $query = $this->buildSearch(NULL, array('prices,3.5'));
     $results = $query->execute();
     $this->assertEqual($results['result count'], 1, 'Filter on decimal field returned correct number of results.');
     $this->assertEqual(array_keys($results['results']), $this->getItemIds(array(6)), 'Filter on decimal field returned correct result.');
-    $this->assertEqual($results['warnings'], array(), 'No warnings were displayed.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   /**
@@ -715,6 +717,20 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully disabled.');
     $prefix = \Drupal::database()->prefixTables('{search_api_db_}') . '%';
     $this->assertEqual(\Drupal::database()->schema()->findTables($prefix), array(), 'The Database Search module was successfully uninstalled.');
+  }
+
+  /**
+   * Asserts ignored fields from a set of search results.
+   */
+  protected function assertIgnored($results, array $ignored = array(), $message = 'No keys were ignored.') {
+    $this->assertEqual($results['ignored'], $ignored, $message);
+  }
+
+  /**
+   * Asserts warnings from a set of search results.
+   */
+  protected function assertWarnings($results, array $warnings = array(), $message = 'No warnings were displayed.') {
+    $this->assertEqual($results['warnings'], $warnings, $message);
   }
 
 }

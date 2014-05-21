@@ -716,7 +716,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       catch (\Exception $e) {
         // We just log the error, hoping we can index the other items.
-        watchdog('search_api_db', String::checkPlain($e->getMessage()), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', String::checkPlain($e->getMessage()), array(), WATCHDOG_WARNING);
       }
     }
     return $indexed;
@@ -1248,7 +1248,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       else {
         $msg = t('Search keys are given but no fulltext fields are defined.');
-        watchdog('search_api_db', $msg, NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', $msg, array(), WATCHDOG_WARNING);
         $this->warnings[$msg] = 1;
       }
     }
