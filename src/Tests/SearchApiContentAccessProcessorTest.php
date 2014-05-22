@@ -98,7 +98,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
    */
   public function testQueryAccessWithNodeGrants() {
     // Create user that will be passed into the query.
-    $authenticated_user = $this->createUser(array(), array('access content'));
+    $authenticated_user = $this->createUser(array('uid' => 2), array('access content'));
 
     db_insert('node_access')
       ->fields(array(

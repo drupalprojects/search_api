@@ -46,7 +46,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
     if (!$datasource) {
-      return NULL;
+      return;
     }
 
     if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
@@ -81,6 +81,9 @@ class ContentAccess extends ProcessorPluginBase {
         // Apparently we were active for a wrong item.
         return;
       }
+
+      $items[$id]['entity:node|search_api_node_grants']['type'] = 'string';
+      $items[$id]['entity:node|search_api_node_grants']['original_type'] = 'string';
 
       // Collect grant information for item.
       if (!$node->access('view', $account)) {
