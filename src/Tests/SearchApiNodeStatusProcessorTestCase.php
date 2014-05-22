@@ -7,9 +7,6 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus;
-use Drupal\system\Tests\Entity\EntityUnitTestBase;
-
 /**
  * Tests the NodeStatus processor.
  */
@@ -118,9 +115,10 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
         'item' => clone $item,
         'datasource' => 'entity:node',
         'item_id' => rand(1, 100000),
+        'field_text' => $this->randomName(),
       );
     }
-    return parent::generateItems($generated_items);
+    return $this->generateItems($generated_items);
   }
 
 }

@@ -46,7 +46,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
     if (!$datasource) {
-      return NULL;
+      return;
     }
 
     if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
@@ -71,15 +71,21 @@ class ContentAccess extends ProcessorPluginBase {
     }
 
     foreach ($items as $id => $item) {
-      // Only for node and comment items.
+      // Only run for node and comment items.
       if (!in_array($this->index->getDatasource($item['#datasource'])->getEntityTypeId(), array('node', 'comment'))) {
+        continue;
+      }
+
+      // Bail if the field is not indexed.
+      $field = $item['#datasource'] . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
+      if (empty($items[$id][$field])) {
         continue;
       }
 
       $node = $this->getNode($item['#item']);
       if (!$node) {
         // Apparently we were active for a wrong item.
-        return;
+        continue;
       }
 
       // Collect grant information for item.
@@ -88,13 +94,13 @@ class ContentAccess extends ProcessorPluginBase {
         // realms in the item.
         $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
         foreach ($result as $grant) {
-          $items[$id]['entity:node|search_api_node_grants']['value'][] = "node_access_{$grant->realm}:{$grant->gid}";
+          $items[$id][$field]['value'][] = "node_access_{$grant->realm}:{$grant->gid}";
         }
       }
       else {
         // Add the generic pseudo view grant if we are not using node access or
         // the node is viewable by anonymous users.
-        $items[$id]['entity:node|search_api_node_grants']['value'][] = 'node_access__all';
+        $items[$id][$field]['value'][] = 'node_access__all';
       }
     }
   }

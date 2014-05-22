@@ -38,6 +38,8 @@ class Utility {
    * @return bool
    *   TRUE if $type is either one of the specified types, or a list of such
    *   values. FALSE otherwise.
+   *
+   * @deprecated Pointless in D8, use == or in_array() instead.
    */
   static function isTextType($type, array $text_types = array('text')) {
     return in_array($type, $text_types);

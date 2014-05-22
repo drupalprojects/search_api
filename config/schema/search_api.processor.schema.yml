@@ -1,0 +1,16 @@
+search_api.processor.plugin.search_api_rendered_item:
+  type: mapping
+  label: 'Rendered item processor configuration'
+  mapping:
+    view_mode:
+      type: 'sequence'
+      label: 'The selected view modes'
+      sequence:
+        - type: string
+          label: 'A view mode'
+    roles:
+      type: 'sequence'
+      label: 'The selected roles'
+      sequence:
+        - type: string
+          label: 'A role'

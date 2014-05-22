@@ -233,7 +233,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
 
     // If dealing with features or stale data or whatever, we might already have
@@ -641,7 +641,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -697,7 +697,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -716,7 +716,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       catch (\Exception $e) {
         // We just log the error, hoping we can index the other items.
-        watchdog('search_api_db', String::checkPlain($e->getMessage()), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', String::checkPlain($e->getMessage()), array(), WATCHDOG_WARNING);
       }
     }
     return $indexed;
@@ -793,7 +793,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           $denormalized_value = '';
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
-          } while (drupal_strlen($denormalized_value) < 30);
+          } while (strlen($denormalized_value) < 30);
 
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
@@ -807,7 +807,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
-            elseif (drupal_strlen($value) < $this->configuration['min_chars']) {
+            elseif (Unicode::strlen($value) < $this->configuration['min_chars']) {
               continue;
             }
             $value = Unicode::strtolower($value);
@@ -1042,7 +1042,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1081,7 +1081,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       // The database operations might throw PDO or other exceptions, so we catch
       // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1248,7 +1248,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       else {
         $msg = t('Search keys are given but no fulltext fields are defined.');
-        watchdog('search_api_db', $msg, NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', $msg, array(), WATCHDOG_WARNING);
         $this->warnings[$msg] = 1;
       }
     }

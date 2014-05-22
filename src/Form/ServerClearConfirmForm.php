@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
@@ -33,11 +34,11 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelRoute() {
-    return array(
-      'route_name' => 'search_api.server_view',
-      'route_parameters' => array(
+    return new Url(
+      'search_api.server_view',
+      array(
         'search_api_server' => $this->entity->id(),
-      ),
+      )
     );
   }
 
