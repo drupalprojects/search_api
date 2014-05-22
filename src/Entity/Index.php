@@ -1043,7 +1043,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->disable();
     }
 
-    // Always enable the "Langue control" processor and corresponding "Item
+    // Always enable the "Language control" processor and corresponding "Item
     // language" field.
     // @todo Replace this with a cleaner, more flexible approach. See
     // https://drupal.org/node/2090341

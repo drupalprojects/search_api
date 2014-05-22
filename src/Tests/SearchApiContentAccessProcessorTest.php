@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
 /**
@@ -77,8 +78,13 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $fields['entity:node|search_api_node_grants'] = array(
       'type' => 'string',
     );
+    $fields['entity:comment|search_api_node_grants'] = array(
+      'type' => 'string',
+    );
     $this->index->setOption('fields', $fields);
     $this->index->save();
+
+    $this->index = entity_load('search_api_index', $this->index->id(), TRUE);
   }
 
   /**
@@ -136,7 +142,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access__all'));
+      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access__all'));
     }
   }
 
@@ -150,14 +156,14 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
         'datasource' => 'entity:comment',
         'item' => $comment,
         'item_id' => $comment->id(),
-        'text' => $this->randomName(),
+        'field_text' => $this->randomName(),
       );
     }
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access_search_api_test:0'));
+      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access_search_api_test:0'));
     }
   }
 

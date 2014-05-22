@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
@@ -88,12 +89,14 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
         'type' => 'boolean',
       ),
     ));
-    $this->index->setOption('processors', array(
-      'search_api_content_access_processor' => array(
-        'status' => TRUE,
-        'weight' => 0,
-      ),
-    ));
+    if ($processor) {
+      $this->index->setOption('processors', array(
+        $processor => array(
+          'status' => TRUE,
+          'weight' => 0,
+        ),
+      ));
+    }
     $this->index->save();
 
     /** @var \Drupal\search_api\Processor\ProcessorPluginManager $plugin_manager */
@@ -115,23 +118,43 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
    *   An array structure as defined by BackendSpecificInterface::indexItems().
    */
   public function generateItems(array $items) {
+    // Convert index "fields" option to datasource-specific arrays suitable for
+    // indexing.
+    $fields = array();
+    foreach ($this->index->getOption('fields', array()) as $key => $field) {
+      $field['original_type'] = "field_item:{$field['type']}";
+      $field['value'] = array();
+      if (strpos($key, IndexInterface::DATASOURCE_ID_SEPARATOR)) {
+        list ($datasource_id, $property_path) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $key, 2);
+        $fields[$datasource_id][$property_path] = $field;
+      }
+      else {
+        $fields[NULL][$key] = $field;
+      }
+    }
+
     $extracted_items = array();
     foreach ($items as $item) {
-      $extracted_items[$item['datasource'] . '|' . $item['item_id']] = array(
+      $id = $item['datasource'] . '|' . $item['item_id'];
+      $extracted_items[$id] = array(
         '#item' => $item['item'],
         '#datasource' => $item['datasource'],
         '#item_id' => $item['item_id'],
-        'id' => array(
-          'type' => 'integer',
-          'original_type' => 'field_item:integer',
-          'value' => array($item['item_id']),
-        ),
-        'field_text' => array(
-          'type' => 'text',
-          'original_type' => 'field_item:string',
-          'value' => array(isset($item['text']) ? $item['text'] : $this->randomName()),
-        ),
       );
+      foreach (array(NULL, $item['datasource']) as $datasource_id) {
+        if (empty($fields[$datasource_id])) {
+          continue;
+        }
+        foreach ($fields[$datasource_id] as $key => $field) {
+          if (isset($item[$key])) {
+            $field['value'][] = $item[$key];
+          }
+          if ($datasource_id) {
+            $key = $datasource_id . IndexInterface::DATASOURCE_ID_SEPARATOR . $key;
+          }
+          $extracted_items[$id][$key] = $field;
+        }
+      }
     }
 
     return $extracted_items;
