@@ -233,7 +233,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
 
     // If dealing with features or stale data or whatever, we might already have
@@ -641,7 +641,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -697,7 +697,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1042,7 +1042,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1081,7 +1081,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       // The database operations might throw PDO or other exceptions, so we catch
       // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
