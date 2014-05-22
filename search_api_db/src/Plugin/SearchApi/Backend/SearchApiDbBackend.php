@@ -793,7 +793,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           $denormalized_value = '';
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
-          } while (drupal_strlen($denormalized_value) < 30);
+          } while (strlen($denormalized_value) < 30);
 
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
@@ -807,7 +807,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
-            elseif (drupal_strlen($value) < $this->configuration['min_chars']) {
+            elseif (Unicode::strlen($value) < $this->configuration['min_chars']) {
               continue;
             }
             $value = Unicode::strtolower($value);
