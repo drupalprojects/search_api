@@ -1431,7 +1431,7 @@ function search_api_index_recalculate_fields($indexes = FALSE) {
     }
     // Use a more accurate method of determining if the fields settings are
     // equal to avoid needlessly re-indexing the whole index.
-    if (!_search_api_settings_equals($fields, $index->options['fields'])) {
+    if ($fields != $index->options['fields']) {
       $options = $index->options;
       $options['fields'] = $fields;
       $index->update(array('options' => $options));
@@ -1442,9 +1442,6 @@ function search_api_index_recalculate_fields($indexes = FALSE) {
 /**
  * Test two setting arrays (or individual settings) for equality.
  *
- * While a simple == also works in some cases, this function takes into account
- * that the order of keys (usually) doesn't matter in settings arrays.
- *
  * @param mixed $setting1
  *   The first setting (array).
  * @param mixed $setting2
@@ -1452,6 +1449,8 @@ function search_api_index_recalculate_fields($indexes = FALSE) {
  *
  * @return bool
  *   TRUE if both settings are identical, FALSE otherwise.
+ *
+ * @deprecated The simple "==" operator will achieve the same.
  */
 function _search_api_settings_equals($setting1, $setting2) {
   if (!is_array($setting1) || !is_array($setting2)) {
