@@ -1,5 +1,5 @@
-Search API 1.x, dev (xx/xx/xxxx):
----------------------------------
+Search API 1.12 (05/23/2014):
+-----------------------------
 - #2265349 by drunken monkey: Marked _search_api_settings_equals() as
   deprecated.
 - #2256891 by justanothermark: Fixed "0" entity labels.
