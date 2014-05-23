@@ -82,13 +82,18 @@ class ContentAccess extends ProcessorPluginBase {
         continue;
       }
 
+      // Get the node object.
       $node = $this->getNode($item['#item']);
       if (!$node) {
         // Apparently we were active for a wrong item.
         continue;
       }
 
-      // Collect grant information for item.
+      // @todo This should be automatically done based on the type of the
+      //   property set in alterPropertyDefinitions().
+      $items[$id][$field]['value']['original_type'] = 'string';
+
+      // Collect grant information for the node.
       if (!$node->access('view', $account)) {
         // If anonymous user has no permission we collect all grants with their
         // realms in the item.
