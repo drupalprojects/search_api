@@ -12,7 +12,8 @@ Search API 1.12 (05/23/2014):
 - #2135697 by drunken monkey: Fixed handling of HTML attributes in the
   Highlighting processor.
 - #2179755 by drunken monkey, fago: Fixed whitespaces after HTML filter.
-- pagination
+- #2204847 by drunken monkey, alanmackenzie: Fixed Views caching issues with
+  pagination.
 - #2198791 by drunken monkey: Fixed empty Views entity filters.
 - #2195469 by freakalis, drunken monkey: Added "Exclude fields" options to
   Highlighting processor.
