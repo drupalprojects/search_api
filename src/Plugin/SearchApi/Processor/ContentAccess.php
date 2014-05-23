@@ -91,7 +91,7 @@ class ContentAccess extends ProcessorPluginBase {
 
       // @todo This should be automatically done based on the type of the
       //   property set in alterPropertyDefinitions().
-      $items[$id][$field]['value']['original_type'] = 'string';
+      $items[$id][$field]['original_type'] = 'string';
 
       // Collect grant information for the node.
       if (!$node->access('view', $account)) {
