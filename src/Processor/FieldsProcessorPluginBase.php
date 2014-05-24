@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Processor\FieldsProcessoPluginBase.
+ * Contains Drupal\search_api\Processor\FieldsProcessorPluginBase.
  */
 
 namespace Drupal\search_api\Processor;
 
 use Drupal\Core\Render\Element;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility\Utility;
@@ -52,8 +52,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       $default_fields = array_combine($default_fields, $default_fields);
     }
     foreach ($fields as $name => $field) {
-      if ($this->testType($field['type'])) {
-        $field_options[$name] = $field['name_prefix'] . $field['name'];
+      if ($this->testType($field->getType())) {
+        $field_options[$name] = $field->getPrefixedLabel();
         if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
           $default_fields[$name] = $name;
         }
@@ -290,15 +290,15 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $name
    *   The field's machine name.
-   * @param array $field
+   * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field's information.
    *
    * @return bool
    *   TRUE if the field should be processed, FALSE otherwise.
    */
-  protected function testField($name, array $field) {
+  protected function testField($name, FieldInterface $field) {
     if (!isset($this->configuration['fields'])) {
-      return $this->testType($field['type']);
+      return $this->testType($field->getType());
     }
     return !empty($this->configuration['fields'][$name]);
   }

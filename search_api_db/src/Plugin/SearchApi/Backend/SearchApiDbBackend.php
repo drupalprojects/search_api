@@ -15,6 +15,7 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
@@ -327,9 +328,8 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * Used as a helper method in fieldsUpdated().
    *
-   * @param array $field
-   *   Single field definition from
-   *   \Drupal\search_api\Index\IndexInterface::getFields().
+   * @param \Drupal\search_api\Item\FieldInterface $field
+   *   The field to add.
    * @param array $db
    *   Associative array containing the following:
    *   - table: The table to use for the field.
@@ -339,7 +339,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   (optional) If TRUE, we create a table with just the 'item_id' column.
    *   Defaults to FALSE.
    */
-  protected function createFieldTable($field, $db, $initial_table_only = FALSE) {
+  protected function createFieldTable(FieldInterface $field, $db, $initial_table_only = FALSE) {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -379,7 +379,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     if (!isset($db['column'])) {
       $db['column'] = 'value';
     }
-    $db_field = $this->sqlType($field['type']);
+    $db_field = $this->sqlType($field->getType());
     $db_field += array(
       'description' => "The field's value for this item.",
     );
@@ -463,23 +463,23 @@ class SearchApiDbBackend extends BackendPluginBase {
       $text_table = NULL;
       $denormalized_table = $this->configuration['index_tables'][$index->id()];
 
-      foreach ($fields as $name => $field) {
+      foreach ($fields as $field_id => $field) {
         if (!isset($text_table) && Utility::isTextType($field['type'])) {
           // Stash the shared text table name for the index.
           $text_table = $field['table'];
         }
 
-        if (!isset($new_fields[$name])) {
+        if (!isset($new_fields[$field_id])) {
           // The field is no longer in the index, drop the data.
-          $this->removeFieldStorage($name, $field, $denormalized_table);
-          unset($fields[$name]);
+          $this->removeFieldStorage($field_id, $field, $denormalized_table);
+          unset($fields[$field_id]);
           $change = TRUE;
           continue;
         }
         $old_type = $field['type'];
-        $new_type = $new_fields[$name]['type'];
-        $fields[$name]['type'] = $new_type;
-        $fields[$name]['boost'] = $new_fields[$name]['boost'];
+        $new_type = $new_fields[$field_id]->getType();
+        $fields[$field_id]['type'] = $new_type;
+        $fields[$field_id]['boost'] = $new_fields[$field_id]->getBoost();
         if ($old_type != $new_type) {
           $change = TRUE;
           if ($old_type == 'text' || $new_type == 'text') {
@@ -490,7 +490,7 @@ class SearchApiDbBackend extends BackendPluginBase {
               $cleared = TRUE;
               $this->deleteAllItems($index);
             }
-            $this->removeFieldStorage($name, $field, $denormalized_table);
+            $this->removeFieldStorage($field_id, $field, $denormalized_table);
             // Keep the table in $new_fields to create the new storage.
             continue;
           }
@@ -507,13 +507,13 @@ class SearchApiDbBackend extends BackendPluginBase {
             $reindex = TRUE;
           }
         }
-        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
+        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$field_id]->getBoost()) {
           $change = TRUE;
           if (!$reindex) {
-            $multiplier = $new_fields[$name]['boost'] / $field['boost'];
+            $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
             $this->database->update($text_table)
               ->expression('score', 'score * :mult', array(':mult' => $multiplier))
-              ->condition('field_name', self::getTextFieldName($name))
+              ->condition('field_name', self::getTextFieldName($field_id))
               ->execute();
           }
         }
@@ -527,7 +527,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             'table' => $field['table'],
             'column' => 'value',
           );
-          $this->createFieldTable($new_fields[$name], $db);
+          $this->createFieldTable($new_fields[$field_id], $db);
         }
         // Ensure that a column is created in the denormalized storage even for
         // 'text' fields.
@@ -536,33 +536,33 @@ class SearchApiDbBackend extends BackendPluginBase {
             'table' => $denormalized_table,
             'column' => $field['column'],
           );
-          $this->createFieldTable($new_fields[$name], $db);
+          $this->createFieldTable($new_fields[$field_id], $db);
         }
-        unset($new_fields[$name]);
+        unset($new_fields[$field_id]);
       }
 
       $prefix = 'search_api_db_' . $index->id();
       // These are new fields that were previously not indexed.
-      foreach ($new_fields as $name => $field) {
+      foreach ($new_fields as $field_id => $field) {
         $reindex = TRUE;
-        if (Utility::isTextType($field['type'])) {
+        if (Utility::isTextType($field->getType())) {
           if (!isset($text_table)) {
             // If we have not encountered a text table, assign a name for it.
             $text_table = $this->findFreeTable($prefix . '_', 'text');
           }
-          $fields[$name]['table'] = $text_table;
+          $fields[$field_id]['table'] = $text_table;
         }
         else {
-          $fields[$name]['table'] = $this->findFreeTable($prefix . '_', $name);
-          $this->createFieldTable($field, $fields[$name]);
+          $fields[$field_id]['table'] = $this->findFreeTable($prefix . '_', $field_id);
+          $this->createFieldTable($field, $fields[$field_id]);
         }
 
         // Always add a column in the denormalized table.
-        $fields[$name]['column'] = $this->findFreeColumn($denormalized_table, $name);
-        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$name]['column']));
+        $fields[$field_id]['column'] = $this->findFreeColumn($denormalized_table, $field_id);
+        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$field_id]['column']));
 
-        $fields[$name]['type'] = $field['type'];
-        $fields[$name]['boost'] = $field['boost'];
+        $fields[$field_id]['type'] = $field->getType();
+        $fields[$field_id]['boost'] = $field->getBoost();
         $change = TRUE;
       }
 

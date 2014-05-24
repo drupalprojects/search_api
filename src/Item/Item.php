@@ -145,6 +145,9 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getField($field_id, $extract = FALSE) {
+    if (isset($this->fields[$field_id])) {
+      return $this->fields[$field_id];
+    }
     $fields = $this->getFields($extract);
     return isset($fields[$field_id]) ? $fields[$field_id] : NULL;
   }

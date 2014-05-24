@@ -563,36 +563,31 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
 
     $this->addDependency('module', $this->getEntityType()->getProvider());
 
-    $plugin_id = $this->getPluginId();
     $fields = array();
-    array_filter(array_keys($this->getIndex()->getFields()), function ($value) use ($plugin_id, &$fields) {
-      if (strpos($value, $plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
-        $fields[] = substr($value, strlen($plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR));
+    foreach ($this->getIndex()->getFields() as $field) {
+      if ($field->getDatasourceId() === $this->pluginId) {
+        $fields[] = $field->getPropertyPath();
       }
-    });
-    if ($field_dependencies = $this->getFieldDependencies($fields, $this->getEntityTypeId())) {
-      foreach (array_keys($field_dependencies) as $field_dependency) {
-        $this->addDependency('entity', $field_dependency);
-      }
+    }
+    if ($field_dependencies = $this->getFieldDependencies($this->getEntityTypeId(), $fields)) {
+      $this->addDependencies(array('entity' => $field_dependencies));
     }
 
     return $this->dependencies;
   }
 
   /**
-   * Returns an array of 'field_config' and 'field_instance_config' config
-   * entity dependencies.
+   * Returns an array of config entity dependencies.
    *
-   * @param array $fields
-   *   An array of field names, as returned by
-   *   \Drupal\search_api\Index\IndexInterface::getFields().
    * @param string $entity_type_id
-   *   The entity type to which these fields are attached to.
+   *   The entity type to which these fields are attached.
+   * @param string[] $fields
+   *   An array of property paths on items of this entity type.
    *
-   * @return array
-   *   An array of config entity IDs.
+   * @return string[]
+   *   An array of IDs of entities on which this datasource depends.
    */
-  protected function getFieldDependencies($fields, $entity_type_id) {
+  protected function getFieldDependencies($entity_type_id, $fields) {
     $field_dependencies = array();
 
     // Figure out which fields are directly on the item and which need to be
@@ -621,13 +616,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
           // Recurse for nested fields.
           if (isset($nested_fields[$field_name])) {
             $entity_type = $field_definition->getSetting('target_type');
-            $field_dependencies += $this->getFieldDependencies($nested_fields[$field_name], $entity_type);
+            $field_dependencies += $this->getFieldDependencies($entity_type, $nested_fields[$field_name]);
           }
         }
       }
     }
 
-    return $field_dependencies;
+    return array_keys($field_dependencies);
   }
 
 }

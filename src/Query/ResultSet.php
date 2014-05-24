@@ -34,14 +34,14 @@ class ResultSet implements ResultSetInterface, \IteratorAggregate {
   /**
    * A numeric array of translated, sanitized warning messages.
    *
-   * @var array
+   * @var string[]
    */
   protected $warnings = array();
 
   /**
    * A numeric array of search keys that were ignored.
    *
-   * @var array
+   * @var string[]
    */
   protected $ignoredSearchKeys = array();
 

@@ -792,20 +792,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFulltextFields($only_indexed = TRUE) {
     $i = $only_indexed ? 1 : 0;
-    $fields = array();
     if (!isset($this->fulltextFields[$i])) {
       $this->fulltextFields[$i] = array();
       if ($only_indexed) {
         if (isset($this->options['fields'])) {
-          $fields = $this->options['fields'];
+          foreach ($this->options['fields'] as $key => $field) {
+            if (Utility::isTextType($field['type'])) {
+              $this->fulltextFields[$i][] = $key;
+            }
+          }
         }
       }
       else {
-        $fields = $this->getFields(FALSE);
-      }
-      foreach ($fields as $key => $field) {
-        if (Utility::isTextType($field['type'])) {
-          $this->fulltextFields[$i][] = $key;
+        foreach ($this->getFields(FALSE) as $key => $field) {
+          if (Utility::isTextType($field->getType())) {
+            $this->fulltextFields[$i][] = $key;
+          }
         }
       }
     }

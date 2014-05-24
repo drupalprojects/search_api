@@ -77,7 +77,7 @@ class Field implements FieldInterface {
    * {@inheritdoc}
    */
   public function setValues(array $values) {
-    $this->values = $values;
+    $this->values = array_values($values);
     return $this;
   }
 

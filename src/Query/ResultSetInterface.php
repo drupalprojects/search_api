@@ -64,7 +64,7 @@ interface ResultSetInterface extends \Traversable {
   /**
    * Returns the warnings triggered by the search query.
    *
-   * @return array
+   * @return string[]
    *   An array of translated, sanitized warning messages that may be displayed
    *   to the user.
    */
@@ -73,7 +73,7 @@ interface ResultSetInterface extends \Traversable {
   /**
    * Sets the warnings triggered by the search query.
    *
-   * @param array $warnings
+   * @param string[] $warnings
    *   An array of translated, sanitized warning messages that may be displayed
    *   to the user.
    *
@@ -97,7 +97,7 @@ interface ResultSetInterface extends \Traversable {
   /**
    * Returns the ignored search keys, if any.
    *
-   * @return array
+   * @return string[]
    *   A numeric array of search keys that were ignored for this search
    *   (e.g., because of being too short or stop words).
    */
@@ -106,7 +106,7 @@ interface ResultSetInterface extends \Traversable {
   /**
    * Sets the ignored search keys of the search query.
    *
-   * @param array $ignored_search_keys
+   * @param string[] $ignored_search_keys
    *   An array of search keys (individual words) that were ignored in the
    *   search.
    *
