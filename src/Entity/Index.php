@@ -19,6 +19,7 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
 
@@ -947,23 +948,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Postprocesses search results before display.
-   *
-   * If a class is used for both pre- and post-processing a search query, the
-   * same object will be used for both calls (so preserving some data or state
-   * locally is possible).
-   *
-   * @param array $response
-   *   An array containing the search results. See
-   *   \Drupal\search_api\Plugin\search_api\QueryInterface::execute() for the
-   *   detailed format.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The object representing the executed query.
+   * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
+  public function postprocessSearchResults(ResultSetInterface $results) {
     foreach (array_reverse($this->getProcessors()) as $processor) {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-      $processor->postprocessSearchResults($response, $query);
+      $processor->postprocessSearchResults($results);
     }
   }
 

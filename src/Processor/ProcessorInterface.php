@@ -11,6 +11,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * Represents a Search API pre- and/or post-processor.
@@ -89,13 +90,9 @@ interface ProcessorInterface extends IndexPluginInterface {
    * same object will be used for both calls (so preserving some data or state
    * locally is possible).
    *
-   * @param array $response
-   *   An array containing the search results, passed by reference. See the
-   *   return value of \Drupal\search_api\Query\QueryInterface::execute() for
-   *   the detailed format.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The object representing the executed query.
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
+   *   The search results.
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query);
+  public function postprocessSearchResults(ResultSetInterface $results);
 
 }

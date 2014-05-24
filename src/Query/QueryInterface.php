@@ -83,7 +83,7 @@ interface QueryInterface {
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If one of the fields isn't of type "text".
    */
-  // @todo Allow calling with NULL.
+  // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
   public function fields(array $fields);
 
   /**
@@ -159,33 +159,11 @@ interface QueryInterface {
   /**
    * Executes this search query.
    *
-   * @return array
-   *   An associative array containing the search results. The following keys
-   *   are standardized:
-   *   - 'result count': The overall number of results for this query, without
-   *     range restrictions. Might be approximated, for large numbers.
-   *   - results: An array of results, ordered as specified. The array keys are
-   *     a unique identifier of the item including the datasource, values are
-   *     arrays containing the following keys:
-   *     - id: The item's internal ID.
-   *     - datasource: The datasource to which this item belongs.
-   *     - score: A float measuring how well the item fits the search.
-   *     - fields: (optional) If set, an array containing some field values
-   *       already ready-to-use. This allows search engines (or postprocessors)
-   *       to store extracted fields so other modules don't have to extract them
-   *       again. This fields should always be checked by modules that want to
-   *       use field contents of the result items.
-   *     - entity: (optional) If set, the fully loaded result item. This field
-   *       should always be used by modules using search results, to avoid
-   *       duplicate item loads.
-   *     - excerpt: (optional) If set, an HTML text containing highlighted
-   *       portions of the fulltext that match the query.
-   *   - warnings: A numeric array of translated warning messages that may be
-   *     displayed to the user.
-   *   - ignored: A numeric array of search keys that were ignored for this
-   *     search (e.g., because of being too short or stop words).
-   *   Additional metadata may be returned in other keys. Only 'result count'
-   *   and 'result' always have to be set, all other entries are optional.
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   The results of the search.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred during the search.
    */
   public function execute();
 
@@ -194,6 +172,10 @@ interface QueryInterface {
    *
    * This method should always be called by execute() and contain all necessary
    * operations before the query is passed to the server's search() method.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If any wrong options were set on the query (e.g., conditions or sorts on
+   *   unknown fields).
    */
   public function preExecute();
 
@@ -203,11 +185,10 @@ interface QueryInterface {
    * This method should always be called by execute() and contain all necessary
    * operations after the results are returned from the server.
    *
-   * @param array $results
-   *   The results returned by the server, which may be altered. The data
-   *   structure is the same as returned by execute().
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
+   *   The search results returned by the server.
    */
-  public function postExecute(array &$results);
+  public function postExecute(ResultSetInterface $results);
 
   /**
    * Retrieves the index associated with this search.
@@ -297,7 +278,28 @@ interface QueryInterface {
    * Sets an option for this search query.
    *
    * @param string $name
-   *   The name of an option.
+   *   The name of an option. The following options are recognized by default:
+   *   - conjunction: The type of conjunction to use for this query - either
+   *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
+   *     filters will always use AND by default.
+   *   - 'parse mode': The mode with which to parse the $keys variable, if it
+   *     is set and not already an array. See DefaultQuery::parseModes() for
+   *     recognized parse modes.
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
+   *   - 'filter class': Can be used to change the FilterInterface
+   *     implementation to use.
+   *   - 'search id': A string that will be used as the identifier when storing
+   *     this search in the Search API's static cache.
+   *   - search_api_access_account: The account which will be used for entity
+   *     access checks, if available and enabled for the index.
+   *   - search_api_bypass_access: If set to TRUE, entity access checks will be
+   *     skipped, even if enabled for the index.
+   *   However, contrib modules might introduce arbitrary other keys with their
+   *   own, special meaning. (Usually they should be prefixed with the module
+   *   name, though.)
    * @param mixed $value
    *   The new value of the option.
    *

@@ -197,7 +197,12 @@ interface ItemInterface extends \Traversable {
    * Retrieves extra data for this item.
    *
    * @param string $key
-   *   The key of the extra data.
+   *   The key of the extra data. The following keys are used in the Search API
+   *   project itself:
+   *   - highlighted_fields: A sub-array of the item's fields, with their field
+   *     data highlighted for display to the user. Only used for search results.
+   *   However, contrib modules can define arbitrary other keys. (Usually they
+   *   should be prefixed with the module name, though.)
    * @param mixed $default
    *   (optional) The value to return if the data is not set.
    *

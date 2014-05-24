@@ -11,6 +11,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginBase;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * Defines a base class from which other processors may extend.
@@ -60,6 +61,6 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {}
+  public function postprocessSearchResults(ResultSetInterface $results) {}
 
 }

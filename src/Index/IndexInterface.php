@@ -9,6 +9,7 @@ namespace Drupal\search_api\Index;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -285,14 +286,10 @@ interface IndexInterface extends ConfigEntityInterface {
    * same object will be used for both calls (so preserving some data or state
    * locally is possible).
    *
-   * @param array $response
-   *   An array containing the search results. See
-   *   \Drupal\search_api\Plugin\search_api\QueryInterface::execute() for the
-   *   detailed format.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The object representing the executed query.
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
+   *   The search results.
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query);
+  public function postprocessSearchResults(ResultSetInterface $results);
 
   /**
    * Returns a list of all known fields of this index.

@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -118,11 +119,11 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::postprocessSearchResults().
+   * Overrides \Drupal\search_api\Processor\ProcessorPluginBase::postprocessSearchResults().
    *
    * Does nothing by default.
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
+  public function postprocessSearchResults(ResultSetInterface $results) {
     return;
   }
 

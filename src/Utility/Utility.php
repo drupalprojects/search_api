@@ -295,7 +295,9 @@ class Utility {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index on which to search.
    * @param array $options
-   *   (optional) The options to set for the query.
+   *   (optional) The options to set for the query. See
+   *   \Drupal\search_api\Query\QueryInterface::setOption() for a list of
+   *   options that are recognized by default.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   A search query object to use.

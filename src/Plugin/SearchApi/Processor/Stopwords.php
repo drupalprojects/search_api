@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * @SearchApiProcessor(
@@ -101,21 +102,16 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
-    if ($this->ignored) {
-      if (isset($response['ignored'])) {
-        $response['ignored'] = array_merge($response['ignored'], $this->ignored);
-      }
-      else {
-        $response['ignored'] = $this->ignored;
-      }
+  public function postprocessSearchResults(ResultSetInterface $results) {
+    foreach ($this->ignored as $ignored_search_key) {
+      $results->addIgnoredSearchKey($ignored_search_key);
     }
   }
 
   /**
    * Gets all the stopwords.
    *
-   * @return
+   * @return array
    *   An array whose keys are the stopwords set in either the file or the text
    *   field.
    */
