@@ -133,8 +133,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
    *
-   * @param $value
-   *   The value to process, passed by reference.
+   * @param $values
+   *   The values to process, passed by reference.
    * @param $type
    *   The field's type.
    */
@@ -153,10 +153,15 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       // Don't tokenize non-fulltext content!
       if (in_array($type, array('text', 'tokenized_text'))) {
         $type = 'tokenized_text';
-        $value = $this->normalizeTokens($value);
+        // @todo : needs work to validate the data schema of drupal
+        if (is_array($value)) {
+          $value = $this->normalizeTokens($value);
+        }
       }
       else {
-        $value = $this->implodeTokens($value);
+        if (is_array($value)) {
+          $value = $this->implodeTokens($value);
+        }
       }
     }
   }
