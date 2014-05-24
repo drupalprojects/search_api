@@ -40,7 +40,7 @@ interface GenericFieldInterface {
   /**
    * Returns the datasource of this field.
    *
-   * @return \Drupal\Core\TypedData\ComplexDataInterface|null
+   * @return \Drupal\search_api\Datasource\DatasourceInterface|null
    *   The datasource to which this field belongs. NULL if the field is
    *   datasource-independent.
    *
@@ -80,6 +80,27 @@ interface GenericFieldInterface {
    *   The invoked object.
    */
   public function setLabel($label);
+
+  /**
+   * Retrieves this field's description.
+   *
+   * @return string|null
+   *   A human-readable description for this field, or NULL if the field has no
+   *   description.
+   */
+  public function getDescription();
+
+  /**
+   * Sets this field's description.
+   *
+   * @param string|null $description
+   *   A human-readable description for this field, or NULL if the field has no
+   *   description.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setDescription($description);
 
   /**
    * Retrieves this field's label along with datasource prefix.

@@ -51,7 +51,7 @@ interface ItemInterface extends \Traversable {
   /**
    * Returns the datasource of this item.
    *
-   * @return \Drupal\Core\TypedData\ComplexDataInterface
+   * @return \Drupal\search_api\Datasource\DatasourceInterface
    *   The datasource to which this item belongs.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException

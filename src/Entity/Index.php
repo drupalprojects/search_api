@@ -16,6 +16,7 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
@@ -166,16 +167,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Cached properties for this index's datasources.
    *
-   * @var array
+   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][][]
    */
   protected $properties = array();
 
   /**
-   * Cached fields data for getFields().
+   * Cached fields data.
    *
-   * @var array
+   * The array contains two elements: 0 for all fields, 1 for indexed fields.
+   * The elements under these keys are arrays with keys "fields" and "additional
+   * fields", corresponding to return values for getFields() and
+   * getAdditionalFields(), respectively.
+   *
+   * @var \Drupal\search_api\Item\GenericFieldInterface[][][]
+   *
+   * @see computeFields()
+   * @see getFields()
+   * @see getFieldsByDatasource()
+   * @see getAdditionalFields()
    */
   protected $fields;
+
+  /**
+   * Cached fields data, grouped by datasource.
+   *
+   * The array contains two elements: 0 for all fields, 1 for indexed fields.
+   * The elements under these keys are arrays with datasource IDs as keys and
+   * return values for getFieldsByDatasource() as values.
+   *
+   * @var \Drupal\search_api\Item\FieldInterface[][][]
+   *
+   * @see getFieldsByDatasource()
+   */
+  protected $datasourceFields;
 
   /**
    * Cached fulltext fields data for getFulltextFields().
@@ -185,7 +209,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $fulltextFields;
 
   /**
-   * Cached fulltext fields data for getProcessors().
+   * Cached return value for getProcessors().
    *
    * @var array
    */
@@ -500,8 +524,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getFields($only_indexed = TRUE) {
+    $this->computeFields();
     $only_indexed = $only_indexed ? 1 : 0;
+    return $this->fields[$only_indexed]['fields'];
+  }
 
+  /**
+   * Populates the $fields property with information about the index's fields.
+   *
+   * Used by getFields(), getFieldsByDatasource() and getAdditionalFields().
+   */
+  protected function computeFields() {
     // First, try the static cache and the persistent cache bin.
     $cid = $this->getCacheId();
     if (empty($this->fields)) {
@@ -510,8 +543,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
     }
 
-    // If not cached, fetch the list of fields and their properties
-    if (empty($this->fields[$only_indexed])) {
+    // If not cached, fetch the list of fields and their properties.
+    if (empty($this->fields)) {
       $this->fields = array(
         0 => array(
           'fields' => array(),
@@ -544,8 +577,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
-
-    return $this->fields[$only_indexed]['fields'];
   }
 
   /**
@@ -571,13 +602,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
     $fields = &$this->fields[0]['fields'];
+    $field_options = $this->options['fields'];
     $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
     if (!$prefix && $datasource_id) {
       $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
     }
-    $name_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
+    $label_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
@@ -620,10 +652,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
 
         if ($additional) {
-          $this->fields[0]['additional fields'][$key] = array(
-            'name' => "$label [$key]",
-            'enabled' => !empty($recurse_for_prefixes[$key]),
-          );
+          $field = Utility::createAdditionalField($this, $key);
+          $field->setLabel("$label [$key]");
+          $field->setDescription($description);
+          $field->setEnabled(!empty($recurse_for_prefixes[$key]));
+          $this->fields[0]['additional fields'][$key] = $field;
         }
         // If the complex data type has a main property, we can index that
         // directly here. Otherwise, we don't add it and continue with the next
@@ -660,19 +693,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
         continue;
       }
 
-      $fields[$key] = array(
-        'name' => $label,
-        'name_prefix' => $name_prefix,
-        'description' => $description,
-        'datasource' => $datasource_id,
-        'indexed' => FALSE,
-        'type' => $field_type,
-        'boost' => '1.0',
-      );
-      if (isset($this->options['fields'][$key])) {
-        $fields[$key] = $this->options['fields'][$key] + $fields[$key];
-        $fields[$key]['indexed'] = TRUE;
-        $this->fields[1]['fields'][$key] = $fields[$key];
+      $field = Utility::createField($this, $key);
+      $field->setType($field_type);
+      $field->setLabel($label);
+      $field->setLabelPrefix($label_prefix);
+      $field->setDescription($description);
+      $field->setIndexed(FALSE);
+      $fields[$key] = $field;
+      if (isset($field_options[$key])) {
+        $field->setIndexed(TRUE);
+        $field->setType($field_options[$key]['type']);
+        if (isset($field_options[$key])) {
+          $field->setBoost($field_options[$key]['boost']);
+        }
+        $this->fields[1]['fields'][$key] = $field;
       }
     }
     foreach ($recurse as $arguments) {
@@ -683,22 +717,51 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Compares two field entries by their label.
+   * Compares two fields by their labels.
    *
    * Used as a callback for uasort() in convertPropertyDefinitionsToFields().
    *
-   * @param $field_a
-   *   The first field entry.
-   * @param $field_b
-   *   The second field entry.
+   * @param \Drupal\search_api\Item\GenericFieldInterface $field1
+   *   The first field.
+   * @param \Drupal\search_api\Item\GenericFieldInterface $field2
+   *   The second field.
    *
    * @return int
    *   An integer less than, equal to, or greater than zero if the first
    *   argument is considered to be respectively less than, equal to, or greater
    *   than the second.
    */
-  public static function sortField($field_a, $field_b) {
-    return strnatcasecmp($field_a['name'], $field_b['name']);
+  public static function sortField(GenericFieldInterface $field1, GenericFieldInterface $field2) {
+    return strnatcasecmp($field1->getLabel(), $field2->getLabel());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldsByDatasource($datasource_id, $only_indexed = TRUE) {
+    $only_indexed = $only_indexed ? 1 : 0;
+    if (!isset($this->datasourceFields)) {
+      $this->computeFields();
+      $this->datasourceFields = array_fill_keys($this->datasourcePluginIds, array());
+      $this->datasourceFields[NULL] = array();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($this->fields[0]['fields'] as $field_id => $field) {
+        $datasource_id = $field->getDatasourceId();
+        $this->datasourceFields[0][$datasource_id][$field_id] = $field;
+        if ($field->isIndexed()) {
+          $this->datasourceFields[1][$datasource_id][$field_id] = $field;
+        }
+      }
+    }
+    return $this->datasourceFields[$only_indexed][$datasource_id];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAdditionalFields() {
+    $this->computeFields();
+    return $this->fields[0]['additional fields'];
   }
 
   /**
@@ -1012,6 +1075,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
+    $this->datasourceFields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
     Cache::invalidateTags(array('search_api_index' => array($this->id())));

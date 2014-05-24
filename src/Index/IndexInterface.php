@@ -307,6 +307,21 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getFields($only_indexed = TRUE);
 
   /**
+   * Returns a list of all known fields of a specific datasource.
+   *
+   * @param string|null $datasource_id
+   *   The ID of the datasource whose fields should be retrieved, or NULL to
+   *   retrieve all datasource-independent fields.
+   * @param bool $only_indexed
+   *   (optional) Return only indexed fields, not all known fields.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface[]
+   *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
+   *   the given datasource, keyed by field identifier.
+   */
+  public function getFieldsByDatasource($datasource_id, $only_indexed = TRUE);
+
+  /**
    * Retrieves a list of complex fields on this index.
    *
    * The related properties of these fields can be added to the index.

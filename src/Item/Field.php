@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\search_api\Exception\SearchApiException;
+
 /**
  * Represents a field on a search item that can be indexed.
  */
@@ -91,6 +93,15 @@ class Field implements FieldInterface {
    * {@inheritdoc}
    */
   public function getOriginalType() {
+    if (!isset($this->originalType)) {
+      $this->originalType = 'string';
+      try {
+        $this->originalType = $this->getDataDefinition()->getDataType();
+      }
+      catch (SearchApiException $e) {
+        watchdog_exception('search_api', $e);
+      }
+    }
     return $this->originalType;
   }
 
@@ -164,6 +175,15 @@ class Field implements FieldInterface {
       $this->index->setOption('fields', $fields);
     }
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep() {
+    $properties = $this->getSerializationProperties();
+    unset($properties['values']);
+    return array_keys($properties);
   }
 
 }

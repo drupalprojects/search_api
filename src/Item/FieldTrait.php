@@ -26,6 +26,16 @@ trait FieldTrait {
   protected $index;
 
   /**
+   * The ID of the index this field is attached to.
+   *
+   * This is only used to avoid serialization of the index in __sleep() and
+   * __wakeup().
+   *
+   * @var string
+   */
+  protected $index_id;
+
+  /**
    * The field's identifier.
    *
    * @var string
@@ -42,7 +52,7 @@ trait FieldTrait {
   /**
    * The field's datasource.
    *
-   * @var \Drupal\Core\TypedData\ComplexDataInterface|null
+   * @var \Drupal\search_api\Datasource\DatasourceInterface|null
    */
   protected $datasource;
 
@@ -66,6 +76,13 @@ trait FieldTrait {
    * @var string
    */
   protected $label;
+
+  /**
+   * The human-readable description for this field.
+   *
+   * @var string|null
+   */
+  protected $description;
 
   /**
    * The human-readable label for this field's datasource.
@@ -128,7 +145,7 @@ trait FieldTrait {
   /**
    * Returns the datasource of this field.
    *
-   * @return \Drupal\Core\TypedData\ComplexDataInterface|null
+   * @return \Drupal\search_api\Datasource\DatasourceInterface|null
    *   The datasource to which this field belongs. NULL if the field is
    *   datasource-independent.
    *
@@ -208,6 +225,44 @@ trait FieldTrait {
   }
 
   /**
+   * Retrieves this field's description.
+   *
+   * @return string|null
+   *   A human-readable description for this field, or NULL if the field has no
+   *   description.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getDescription()
+   */
+  public function getDescription() {
+    if (!isset($this->description)) {
+      try {
+        $this->description = $this->getDataDefinition()->getDescription();
+      }
+      catch (SearchApiException $e) {
+        watchdog_exception('search_api', $e);
+      }
+    }
+    return $this->description;
+  }
+
+  /**
+   * Sets this field's description.
+   *
+   * @param string|null $description
+   *   A human-readable description for this field, or NULL if the field has no
+   *   description.
+   *
+   * @return self
+   *   The invoked object.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::setDescription()
+   */
+  public function setDescription($description) {
+    $this->description = $description;
+    return $this;
+  }
+
+  /**
    * Retrieves this field's label along with datasource prefix.
    *
    * Returns a value similar to getLabel(), but also contains the datasource
@@ -275,6 +330,40 @@ trait FieldTrait {
       $this->dataDefinition = $definitions[$this->fieldIdentifier];
     }
     return $this->dataDefinition;
+  }
+
+  /**
+   * Implements the magic __sleep() method to control object serialization.
+   */
+  public function __sleep() {
+    $properties = $this->getSerializationProperties();
+    return array_keys($properties);
+  }
+
+  /**
+   * Retrieves the properties that should be serialized.
+   *
+   * Used in __sleep(), but extracted to be more easily usable for subclasses.
+   *
+   * @return array
+   *   An array mapping property names of this object to their values.
+   */
+  protected function getSerializationProperties() {
+    $this->index_id = $this->index->id();
+    $properties = get_object_vars($this);
+    // Don't serialize objects in properties.
+    unset($properties['index'], $properties['datasource'], $properties['dataDefinition']);
+    return $properties;
+  }
+
+  /**
+   * Implements the magic __wakeup() method to control object unserialization.
+   */
+  public function __wakeup() {
+    if ($this->index_id) {
+      $this->index = entity_load('search_api_index', $this->index_id);
+      unset($this->index_id);
+    }
   }
 
 }
