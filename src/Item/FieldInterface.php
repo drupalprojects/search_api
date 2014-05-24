@@ -8,26 +8,12 @@
 namespace Drupal\search_api\Item;
 
 /**
- * Represents a field on a search api item.
+ * Represents a field on a search item that can be indexed.
  */
-interface FieldInterface {
+interface FieldInterface extends GenericFieldInterface {
 
   /**
-   * Create instance.
-   *
-   * @param string $property_path
-   *   The property path of this field.
-   * @param string $type
-   *   The simple data type of this field.
-   * @param mixed $value
-   *   The value of this field.
-   * @param string $original_type
-   *   The original type of this field.
-   */
-  public function __construct($property_path, $type, $value, $original_type = NULL);
-
-  /**
-   * Return the data type of the field.
+   * Retrieves the Search API data type of this field.
    *
    * @return string
    *   The data type of the field.
@@ -35,31 +21,54 @@ interface FieldInterface {
   public function getType();
 
   /**
-   * Set the data type of the field.
+   * Sets the Search API data type of this field.
    *
    * @param string $type
    *   The data type of the field.
+   *
+   * @return self
+   *   The invoked object.
    */
   public function setType($type);
 
   /**
-   * Return the value of the field.
+   * Retrieves the value of this field.
    *
-   * @return mixed
-   *   The value of the field.
+   * @return array
+   *   A numeric array of zero or more values for this field, with indices
+   *   starting with 0.
    */
-  public function getValue();
+  public function getValues();
 
   /**
-   * Set the value of the field.
+   * Sets the values of this field.
+   *
+   * @param array $values
+   *   The values of the field.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setValues(array $values);
+
+  /**
+   * Adds a value to this field.
    *
    * @param mixed $value
-   *   The value of the field.
+   *   A value to add to this field.
+   *
+   * @return self
+   *   The invoked object.
    */
-  public function setValue($value);
+  public function addValue($value);
 
   /**
-   * Return the original data type.
+   * Retrieves the original data type of this field.
+   *
+   * This is the Drupal data type of the original property definition, which
+   * might not be a valid Search API data type. Instead it has to be a type that
+   * is recognized by
+   * \Drupal\Core\TypedData\TypedDataManager::createDataDefinition().
    *
    * @return string
    *   The original data type.
@@ -67,26 +76,59 @@ interface FieldInterface {
   public function getOriginalType();
 
   /**
-   * Set the original data type.
+   * Sets the original data type of this field.
    *
    * @param string $original_type
-   *   The original data type.
+   *   The field's original data type.
+   *
+   * @return self
+   *   The invoked object.
    */
   public function setOriginalType($original_type);
 
   /**
-   * Return the property path.
+   * Determines whether this field is indexed in the index.
    *
-   * @return string
-   *   The property path.
+   * @return bool
+   *   TRUE if this field is indexed in its index, FALSE otherwise.
    */
-  public function getPropertyPath();
+  public function isIndexed();
 
   /**
-   * Set the property path.
+   * Sets whether this field is indexed in the index.
    *
-   * @param string $property_path
-   *   The property path.
+   * @param boolean $indexed
+   *   The new indexed state of this field.
+   * @param bool $notify
+   *   (optional) Whether to notify the index of the change, i.e., set the field
+   *   to indexed in its options, too.
+   *
+   * @return self
+   *   The invoked object.
    */
-  public function setPropertyPath($property_path);
+  public function setIndexed($indexed, $notify = FALSE);
+
+  /**
+   * Retrieves the field's boost value.
+   *
+   * @return float
+   *   The boost set for this field. Defaults to 1.0 and is mostly only relevant
+   *   for fulltext fields.
+   */
+  public function getBoost();
+
+  /**
+   * Sets the field's boost value.
+   *
+   * @param float $boost
+   *   The new boost value.
+   * @param bool $notify
+   *   (optional) Whether to notify the index of the change, i.e., set the
+   *   field's boost in its options, too.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setBoost($boost, $notify = FALSE);
+
 }

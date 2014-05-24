@@ -8,9 +8,9 @@
 namespace Drupal\search_api\Processor;
 
 use Drupal\Core\Render\Element;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -92,10 +92,10 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
-      foreach ($item as $name => $field) {
+      foreach ($item as $name => &$field) {
         if (Element::child($name)) {
           if ($this->testField($name, $field)) {
-            $this->processField($field);
+            $this->processField($field['value'], $field['type']);
           }
         }
       }
@@ -290,15 +290,15 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $name
    *   The field's machine name.
-   * @param \Drupal\search_api\Item\FieldInterface $field
+   * @param array $field
    *   The field's information.
    *
    * @return bool
    *   TRUE if the field should be processed, FALSE otherwise.
    */
-  protected function testField($name, FieldInterface $field) {
+  protected function testField($name, array $field) {
     if (!isset($this->configuration['fields'])) {
-      return $this->testType($field->getType());
+      return $this->testType($field['type']);
     }
     return !empty($this->configuration['fields'][$name]);
   }
@@ -334,7 +334,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   - score: The relative importance of the token, as a float, with 1 being
    *     the default.
    */
-  protected function processFieldValue(FieldInterface $field) {
+  protected function processFieldValue(&$value) {
     $this->process($value);
   }
 
@@ -378,6 +378,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   directly, nothing has to be returned. Since this can be called for all
    *   value types, $value has to remain a string.
    */
-  protected function process(FieldInterface $field) {}
+  protected function process(&$value) {}
 
 }

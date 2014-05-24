@@ -97,36 +97,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public $readOnly = FALSE;
 
   /**
-   * An array of options for configuring this index. The layout is as follows:
-   * - cron_limit: The maximum number of items to be indexed per cron batch.
-   * - index_directly: Boolean setting whether entities are indexed immediately
-   *   after they are created or updated.
-   * - fields: An array of all indexed fields for this index. Keys are the field
-   *   identifiers, the values are arrays for specifying the field settings. The
-   *   structure of those arrays looks like this:
-   *   - type: The type set for this field. One of the types returned by
-   *     \Drupal\search_api\Utility::getDefaultDataTypes().
-   *   - real_type: (optional) If a custom data type was selected for this
-   *     field, this type will be stored here, and "type" contain the fallback
-   *     default data type.
-   *   - boost: (optional) A boost value for terms found in this field during
-   *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
-   *   - entity_type (optional): If set, the type of this field is really an
-   *     entity. The "type" key will then just contain the primitive data type
-   *     of the ID field, meaning that servers will ignore this and merely index
-   *     the entity's ID. Components displaying this field, though, are advised
-   *     to use the entity label instead of the ID.
-   * - additional fields: An associative array with keys and values being the
-   *   field identifiers of related entities whose fields should be displayed.
-   * - processors: An array of all processors available for the index. The keys
-   *   are the processor identifiers, the values are arrays containing the
-   *   settings for that processor. The inner structure looks like this:
-   *   - status: Boolean indicating whether the processor is enabled.
-   *   - weight: Used for sorting the processors.
-   *   - settings: Processor-specific settings, configured via the processor's
-   *     configuration form.
+   * An array of options for configuring this index.
    *
    * @var array
+   *
+   * @see getOptions()
    */
   public $options = array();
 
@@ -189,18 +164,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $server;
 
   /**
+   * Cached properties for this index's datasources.
+   *
+   * @var array
+   */
+  protected $properties = array();
+
+  /**
    * Cached fields data for getFields().
    *
    * @var array
    */
   protected $fields;
-
-  /**
-   * Cached fields data for getItemFields().
-   *
-   * @var array
-   */
-  protected $itemFields;
 
   /**
    * Cached fulltext fields data for getFulltextFields().
@@ -287,9 +262,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getOption($name, $default = NULL) {
-    // Get the options.
     $options = $this->getOptions();
-    // Get the option value for the given key.
     return isset($options[$name]) ? $options[$name] : $default;
   }
 
@@ -303,8 +276,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function setOptions($options) {
+  public function setOptions(array $options) {
     $this->options = $options;
+    return $this;
   }
 
   /**
@@ -312,6 +286,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function setOption($name, $option) {
     $this->options[$name] = $option;
+    return $this;
   }
 
   /**
@@ -439,37 +414,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getItemFields($datasource_id) {
-    // If the item fields weren't evaluated yet do it now.
-    if (!isset($this->itemFields)) {
-      // Initialize to empty arrays for all datasources.
-      $this->itemFields = array_fill_keys($this->datasourcePluginIds, array());
-      $this->itemFields[NULL] = array();
-      foreach ($this->options['fields'] as $key => $field) {
-        // Include real type, if known.
-        if (isset($field['real_type'])) {
-          $custom_type = $field['real_type'];
-          if ($this->hasValidServer() && $this->getServer()->supportsDatatype($custom_type)) {
-            $field['type'] = $field['real_type'];
-          }
-        }
-        $field_datasource_id = NULL;
-        $property_path = $key;
-        // If it's a datasource specific field, separate the data in the key.
-        if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
-          list ($field_datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
-        }
-        $this->itemFields[$field_datasource_id][$property_path] = $field;
-      }
-    }
-    return $this->itemFields[$datasource_id];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function indexItems(array $items) {
-    if (!$items || $this->readOnly) {
+  public function indexItems(array $search_objects) {
+    if (!$search_objects || $this->readOnly) {
       return array();
     }
     if (!$this->status) {
@@ -505,7 +451,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     $extracted_items = array();
     $ret = array();
-    foreach ($items as $item_id => $item) {
+    foreach ($search_objects as $item_id => $item) {
       list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
       $extracted_item = array();
       $extracted_item['#item'] = $item;
@@ -553,7 +499,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
+  public function getFields($only_indexed = TRUE) {
     $only_indexed = $only_indexed ? 1 : 0;
 
     // First, try the static cache and the persistent cache bin.
@@ -573,9 +519,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
         ),
         1 => array(
           'fields' => array(),
-          // This should never be used, but we still include it to be on the
-          // safe side.
-          'additional fields' => array(),
         ),
       );
       // Remember the fields for which we couldn't find a mapping.
@@ -602,7 +545,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
 
-    return $get_additional ? $this->fields[$only_indexed] : $this->fields[$only_indexed]['fields'];
+    return $this->fields[$only_indexed]['fields'];
   }
 
   /**
@@ -736,36 +679,49 @@ class Index extends ConfigEntityBase implements IndexInterface {
       call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
     }
 
-    // Sort the fields, only do it if the key is empty to avoid unnecessary
-    // processing.
     uasort($fields, '\Drupal\search_api\Entity\Index::sortField');
   }
 
   /**
-   * Helper callback for uasort() to sort configuration entities by weight and label.
+   * Compares two field entries by their label.
+   *
+   * Used as a callback for uasort() in convertPropertyDefinitionsToFields().
+   *
+   * @param $field_a
+   *   The first field entry.
+   * @param $field_b
+   *   The second field entry.
+   *
+   * @return int
+   *   An integer less than, equal to, or greater than zero if the first
+   *   argument is considered to be respectively less than, equal to, or greater
+   *   than the second.
    */
   public static function sortField($field_a, $field_b) {
-    $a_label = $field_a['name'];
-    $b_label = $field_b['name'];
-    return strnatcasecmp($a_label, $b_label);
+    return strnatcasecmp($field_a['name'], $field_b['name']);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $properties = array();
-    $datasource = NULL;
-    if ($datasource_id) {
-      $datasource = $this->getDatasource($datasource_id);
-      $properties = $datasource->getPropertyDefinitions();
-    }
-    if ($alter) {
-      foreach ($this->getProcessors() as $processor) {
-        $processor->alterPropertyDefinitions($properties, $datasource);
+    $alter = $alter ? 1 : 0;
+    if (!isset($this->properties[$datasource_id][$alter])) {
+      if ($datasource_id) {
+        $datasource = $this->getDatasource($datasource_id);
+        $this->properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
+      }
+      else {
+        $datasource = NULL;
+        $this->properties[$datasource_id][$alter] = array();
+      }
+      if ($alter) {
+        foreach ($this->getProcessors() as $processor) {
+          $processor->alterPropertyDefinitions($this->properties[$datasource_id][$alter], $datasource);
+        }
       }
     }
-    return $properties;
+    return $this->properties[$datasource_id][$alter];
   }
 
   /**
@@ -1056,7 +1012,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
-    $this->itemFields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
     Cache::invalidateTags(array('search_api_index' => array($this->id())));

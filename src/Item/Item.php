@@ -13,9 +13,9 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
- * Represents a search api indexing or result item.
+ * Represents a Search API indexing or result item.
  */
-class Item implements ItemInterface {
+class Item implements ItemInterface, \IteratorAggregate {
 
   /**
    * The search index with which this item is associated.
@@ -25,11 +25,11 @@ class Item implements ItemInterface {
   protected $index;
 
   /**
-   * The complex data item this search api item is based on.
+   * The complex data item this Search API item is based on.
    *
    * @var \Drupal\Core\TypedData\ComplexDataInterface
    */
-  protected $source;
+  protected $originalObject;
 
   /**
    * The datasource of this item.
@@ -39,27 +39,11 @@ class Item implements ItemInterface {
   protected $datasource;
 
   /**
-   * The extracted fields to index.
+   * The extracted fields of this item.
    *
    * @var \Drupal\search_api\Item\FieldInterface[]
    */
   protected $fields;
-
-  /**
-   * The keys of the extracted fields to index.
-   *
-   * This is used to implement the iterator.
-   *
-   * @var array
-   */
-  protected $fieldKeys;
-
-  /**
-   * Defines the position of the iterator.
-   *
-   * @var int
-   */
-  private $position = 0;
 
   /**
    * The HTML text with highlighted text-parts that match the query.
@@ -69,20 +53,39 @@ class Item implements ItemInterface {
   protected $excerpt;
 
   /**
+   * The score this item had as a result in a corresponding search query.
+   *
+   * @var float
+   */
+  protected $score = 1.0;
+
+  /**
+   * The boost of this item at indexing time.
+   *
+   * @var float
+   */
+  protected $boost = 1.0;
+
+  /**
+   * Extra data set on this item.
+   *
+   * @var array
+   */
+  protected $extraData = array();
+
+  /**
    * Constructs a new Item object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   The search api index.
-   * @param \Drupal\Core\TypedData\ComplexDataInterface $source
-   *   The source of this item.
+   *   The item's search index.
    * @param string $id
    *   The ID of this item.
-   * @param \Drupal\search_api\Datasource\DatasourceInterface $datasource
-   *   The datasource of this item.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource of this item. If not set, it will be determined
+   *   from the ID and loaded from the index.
    */
-  public function __construct(IndexInterface $index, ComplexDataInterface $source, $id, DatasourceInterface $datasource = NULL) {
+  public function __construct(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
     $this->index = $index;
-    $this->source = $source;
     $this->id = $id;
     $this->datasource = $datasource;
   }
@@ -91,6 +94,10 @@ class Item implements ItemInterface {
    * {@inheritdoc}
    */
   public function getDatasource() {
+    if (!isset($this->datasource)) {
+      list($datasource_id) = Utility::splitCombinedId($this->id);
+      $this->datasource = $this->index->getDatasource($datasource_id);
+    }
     return $this->datasource;
   }
 
@@ -111,21 +118,84 @@ class Item implements ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSource() {
-    return $this->source;
+  public function getOriginalObject($load = TRUE) {
+    if (!isset($this->originalObject) && $load) {
+      $this->originalObject = $this->index->loadItem($this->id);
+    }
+    return $this->originalObject;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function extractIndexingFields() {
-    // If the fields weren't extracted yet extract and "cache" them now.
-    if ($this->fields === NULL) {
+  public function setOriginalObject(ComplexDataInterface $original_object) {
+    $this->originalObject = $original_object;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getField($field_id, $extract = FALSE) {
+    $fields = $this->getFields($extract);
+    return isset($fields[$field_id]) ? $fields[$field_id] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFields($extract = FALSE) {
+    if (!isset($this->fields) && $extract) {
       $fields = $this->getIndex()->getItemFields($this->getDatasource()->getPluginId());
-      $this->fields = Utility::extractFields($this->source, $fields);
-      $this->fieldKeys = array_keys($this->fields);
+      $this->fields = Utility::extractFields($this->originalObject, $fields);
     }
-    return $this->fields;
+    return $this->fields ?: array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setField($field_id, FieldInterface $field = NULL) {
+    // @todo Implement setField() method.
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFields(array $fields) {
+    // @todo Implement setFields() method.
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getScore() {
+    // @todo Implement getScore() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setScore($score) {
+    // @todo Implement setScore() method.
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBoost() {
+    // @todo Implement getBoost() method.
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setBoost($boost) {
+    // @todo Implement setBoost() method.
+    return $this;
   }
 
   /**
@@ -140,42 +210,50 @@ class Item implements ItemInterface {
    */
   public function setExcerpt($excerpt) {
     $this->excerpt = $excerpt;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function next() {
-    $this->position++;
+  public function hasExtraData($key) {
+    // @todo Implement hasExtraData() method.
   }
 
   /**
    * {@inheritdoc}
    */
-  public function current() {
-    return $this->fields[$this->fieldKeys[$this->position]];
+  public function getExtraData($key, $default = NULL) {
+    // @todo Implement getExtraData() method.
   }
 
   /**
    * {@inheritdoc}
    */
-  public function key() {
-    return $this->fieldKeys[$this->position];
+  public function getAllExtraData() {
+    // @todo Implement getAllExtraData() method.
   }
 
   /**
    * {@inheritdoc}
    */
-  public function valid() {
-    return isset($this->fieldKeys[$this->position]);
+  public function setExtraData($key, $data = NULL) {
+    // @todo Implement setExtraData() method.
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function rewind() {
-    $this->extractIndexingFields();
-    $this->position = 0;
+  public function getIterator() {
+    // @todo Implement getIterator() method.
+  }
+
+  /**
+   * Implements the magic __clone() method to implement a deep clone.
+   */
+  public function __clone() {
+
   }
 
 }

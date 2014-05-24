@@ -68,11 +68,34 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @return mixed
    *   The value of the option.
+   *
+   * @see getOptions()
    */
   public function getOption($name, $default = NULL);
 
   /**
    * Retrieves an array of all options.
+   *
+   * The following options are known:
+   * - cron_limit: The maximum number of items to be indexed per cron batch.
+   * - index_directly: Boolean setting whether entities are indexed immediately
+   *   after they are created or updated.
+   * - fields: An array of all indexed fields for this index. Keys are the field
+   *   identifiers, the values are arrays for specifying the field settings. The
+   *   structure of those arrays looks like this:
+   *   - type: The type set for this field. One of the types returned by
+   *     \Drupal\search_api\Utility::getDefaultDataTypes().
+   *   - boost: (optional) A boost value for terms found in this field during
+   *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
+   * - additional fields: An associative array with keys and values being the
+   *   field identifiers of related entities whose fields should be displayed.
+   * - processors: An array of all processors available for the index. The keys
+   *   are the processor identifiers, the values are arrays containing the
+   *   settings for that processor. The inner structure looks like this:
+   *   - status: Boolean indicating whether the processor is enabled.
+   *   - weight: Used for sorting the processors.
+   *   - settings: Processor-specific settings, configured via the processor's
+   *     configuration form.
    *
    * @return array
    *   An associative array of option values, keyed by the option name.
@@ -80,10 +103,15 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
-   * Sets the options.
+   * Sets the index's options.
    *
+   * @param array $options
+   *   The new index options.
+   *
+   * @return self
+   *   The invoked object.
    */
-  public function setOptions($options);
+  public function setOptions(array $options);
 
   /**
    * Sets an option.
@@ -93,8 +121,8 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param $option
    *   The new option.
    *
-   * @return mixed
-   *   The value of the option.
+   * @return self
+   *   The invoked object.
    */
   public function setOption($name, $option);
 
@@ -267,51 +295,25 @@ interface IndexInterface extends ConfigEntityInterface {
   public function postprocessSearchResults(array &$response, QueryInterface $query);
 
   /**
-   * Returns a list of all known fields for one datasource of this index.
+   * Returns a list of all known fields of this index.
    *
    * @param bool $only_indexed
    *   (optional) Return only indexed fields, not all known fields.
-   * @param bool $get_additional
-   *   (optional) Return not only known/indexed fields, but also related
-   *   entities whose fields could additionally be added to the index.
    *
-   * @return array
-   *   An array of all known fields for this index. Keys are the field
-   *   identifiers, the values are arrays for specifying the field settings. The
-   *   structure of those arrays looks like this:
-   *   - name: The human-readable name for the field.
-   *   - name_prefix: A human-readable name prefix specifying the datasource.
-   *   - description: A description of the field, if available.
-   *   - indexed: Boolean indicating whether the field is indexed or not.
-   *   - type: The type set for this field. One of the types returned by
-   *     search_api_default_field_types().
-   *   - datasource: The datasource to which this field belongs, or NULL if it
-   *     is datasource-independent.
-   *   - real_type: (optional) If a custom data type was selected for this
-   *     field, this type will be stored here, and "type" contain the fallback
-   *     default data type.
-   *   - boost: A boost value for terms found in this field during searches.
-   *     Usually only relevant for fulltext fields.
-   *   If $get_additional is TRUE, this array is encapsulated in another
-   *   associative array, which contains the above array under the "fields" key,
-   *   and a list of related entities under the "additional fields" key,
-   *   mapping field keys to arrays with the keys "name" and "enabled".
+   * @return \Drupal\search_api\Item\FieldInterface[]
+   *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
+   *   this index, keyed by field identifier.
    */
-  public function getFields($only_indexed = TRUE, $get_additional = FALSE);
+  public function getFields($only_indexed = TRUE);
 
   /**
-   * Returns information about the enabled fields for a specific datasource.
+   * Retrieves a list of complex fields on this index.
    *
-   * @param string|null $datasource_id
-   *   (optional) The datasource to get the fields for, or NULL to get the
-   *   datasource-independent fields.
+   * The related properties of these fields can be added to the index.
    *
-   * @return array
-   *   The indexed fields of the given datasource, as an associative array. The
-   *   keys are property paths (i.e., the second parts of field identifiers),
-   *   the values field information as stored in the index's "fields" option.
+   * @return \Drupal\search_api\Item\AdditionalFieldInterface[]
    */
-  public function getItemFields($datasource_id = NULL);
+  public function getAdditionalFields();
 
   /**
    * Convenience method for getting all of this index's fulltext fields.
@@ -347,26 +349,26 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getPropertyDefinitions($datasource_id, $alter = TRUE);
 
   /**
-   * Loads a single search item for this index.
+   * Loads a single search object of this index.
    *
    * @param string $item_id
-   *   The internal ID of the item, with datasource prefix.
+   *   The internal item ID of the object, with datasource prefix.
    *
-   * @return object|null
-   *   The loaded item, or NULL if the item does not exist.
+   * @return \Drupal\Core\TypedData\ComplexDataInterface|null
+   *   The loaded object, or NULL if the item does not exist.
    */
   public function loadItem($item_id);
 
   /**
-   * Loads multiple search items for this index.
+   * Loads multiple search objects for this index.
    *
    * @param array $item_ids
-   *   The internal IDs of the items, with datasource prefix.
+   *   The internal item IDs of the objects, with datasource prefix.
    * @param bool $flat
-   *   (optional) If set, items will be returned in a single, flat array,
+   *   (optional) If set, objects will be returned in a single, flat array,
    *   instead of grouped by datasource.
    *
-   * @return array
+   * @return \Drupal\Core\TypedData\ComplexDataInterface[]
    *   The loaded items. If $flat was set, a single-dimensional array mapping
    *   internal item IDs to the loaded items. Otherwise, an array mapping
    *   datasource IDs to arrays of items (keyed by internal item ID) loaded for
@@ -393,13 +395,13 @@ interface IndexInterface extends ConfigEntityInterface {
   public function index($limit = -1, $datasource_id = NULL);
 
   /**
-   * Indexes items on this index.
+   * Indexes some objects on this index.
    *
    * Will return the IDs of items that should be marked as indexed – i.e., items
    * that were either rejected from indexing or were successfully indexed.
    *
-   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $items
-   *   An array of items to be indexed, keyed by their item IDs.
+   * @param \Drupal\Core\TypedData\ComplexDataInterface[] $search_objects
+   *   An array of search objects to be indexed, keyed by their item IDs.
    *
    * @return array
    *   The IDs of all items that should be marked as indexed.
@@ -407,7 +409,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If any error occurred during indexing.
    */
-  public function indexItems(array $items);
+  public function indexItems(array $search_objects);
 
   /**
    * Marks all items in this index for reindexing.

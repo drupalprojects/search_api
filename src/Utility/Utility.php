@@ -13,9 +13,11 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Query\Query;
 use Drupal\search_api\Item\Field;
+use Drupal\search_api\Item\Item;
+use Drupal\search_api\Query\Query;
 
 /**
  * Utility methods.
@@ -184,18 +186,10 @@ class Utility {
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
-   * @param array $fields
-   *   The fields to extract. The array keys here are property paths
-   *   (i.e., the second part of the field identifier, after the
-   *   field ID separator). The values are associative arrays of field
-   *   information, at least containing a "type" key. "value" and
-   *   "original_type" keys will be added for all fields.
-   *
-   * @return \Drupal\search_api\Item\Field[]
-   *   Array of item field objects.
+   * @param \Drupal\search_api\Item\FieldInterface[] $fields
+   *   The field objects into which data should be extracted.
    */
   static function extractFields(ComplexDataInterface $item, array &$fields) {
-    $item_fields = array();
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $direct_fields = array();
@@ -252,11 +246,6 @@ class Utility {
         }
       }
     }
-    // @TODO Move that into extractField().
-    foreach ($fields as $property_path => $field) {
-      $item_fields[$property_path] = new Field($property_path, $field['type'], $field['value'], $field['original_type']);
-    }
-    return $item_fields;
   }
 
   /**
@@ -332,6 +321,72 @@ class Utility {
    */
   public static function createQuery(IndexInterface $index, array $options = array()) {
     return Query::create($index, $options);
+  }
+
+  /**
+   * Creates a Search API item.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The item's search index.
+   * @param string $id
+   *   The item's (combined) ID.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource of the item. If not set, it will be determined
+   *   from the ID and loaded from the index if needed.
+   *
+   * @return \Drupal\search_api\Item\ItemInterface
+   *   A Search API item with the given values.
+   */
+  public static function createItem(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
+    return new Item($index, $id, $datasource);
+  }
+
+  /**
+   * Creates a Search API item by wrapping an existing complex data object.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The item's search index.
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $original_object
+   *   The original object to wrap.
+   * @param string $id
+   *   (optional) The item's (combined) ID. If not set, it will be determined
+   *   with the \Drupal\search_api\Datasource\DatasourceInterface::getItemId()
+   *   method of $datasource. In this case, $datasource must not be NULL.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource of the item. If not set, it will be determined
+   *   from the ID and loaded from the index if needed.
+   *
+   * @return \Drupal\search_api\Item\ItemInterface
+   *   A Search API item with the given values.
+   *
+   * @throws \InvalidArgumentException
+   *   If both $datasource and $id are NULL.
+   */
+  public static function createItemFromObject(IndexInterface $index, ComplexDataInterface $original_object, $id = NULL, DatasourceInterface $datasource = NULL) {
+    if (!isset($id)) {
+      if (!isset($datasource)) {
+        throw new \InvalidArgumentException(t('Need either an item ID or the datasource to create a search item from an object.'));
+      }
+      $id = $datasource->getItemId($original_object);
+    }
+    $item = new Item($index, $id, $datasource);
+    $item->setOriginalObject($original_object);
+    return $item;
+  }
+
+  /**
+   * Creates a new field object wrapping a field of the given index.
+   *
+   * @param IndexInterface $index
+   *   The index to which this field should be attached.
+   * @param string $field_identifier
+   *   The field identifier.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface
+   *   An object containing information about the field on the given index.
+   */
+  public static function createField(IndexInterface $index, $field_identifier) {
+    return new Field($index, $field_identifier);
   }
 
   /**

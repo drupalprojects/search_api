@@ -62,10 +62,10 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function loadMultiple(array $ids);
 
   /**
-   * Retrieves the unique ID of an item.
+   * Retrieves the unique ID of an object from this datasource.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
-   *   An item of this controller's type.
+   *   An object from this datasource.
    *
    * @return string
    *   The datasource-internal, unique ID of the item.
