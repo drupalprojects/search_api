@@ -128,7 +128,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function hasValidBackend() {
     // Get the backend plugin definition.
-    $backend_plugin_definition = \Drupal::service('plugin.manager.search_api.backend')->getDefinition($this->backendPluginId);
+    $backend_plugin_definition = \Drupal::service('plugin.manager.search_api.backend')->getDefinition($this->getBackendId(), false);
     // Determine whether the backend is valid.
     return !empty($backend_plugin_definition);
   }
@@ -152,8 +152,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       // Try to create a backend plugin instance.
       $config = $this->backendPluginConfig;
       $config['server'] = $this;
-      if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->backendPluginId, $config))) {
-        $args['@backend'] = $this->backendPluginId;
+      if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
+        $args['@backend'] = $this->getBackendId();
         $args['%server'] = $this->label();
         throw new SearchApiException(t('The backend with ID "@backend" could not be retrieved for server %server.', $args));
       }
