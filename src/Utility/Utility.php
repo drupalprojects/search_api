@@ -15,6 +15,7 @@ use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\AdditionalField;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\Item;
 use Drupal\search_api\Query\Query;
@@ -387,6 +388,22 @@ class Utility {
    */
   public static function createField(IndexInterface $index, $field_identifier) {
     return new Field($index, $field_identifier);
+  }
+
+  /**
+   * Creates a new field object wrapping an additional field of the given index.
+   *
+   * @param IndexInterface $index
+   *   The index to which this field should be attached.
+   * @param string $field_identifier
+   *   The field identifier.
+   *
+   * @return \Drupal\search_api\Item\AdditionalFieldInterface
+   *   An object containing information about the additional field on the given
+   *   index.
+   */
+  public static function createAdditionalField(IndexInterface $index, $field_identifier) {
+    return new AdditionalField($index, $field_identifier);
   }
 
   /**

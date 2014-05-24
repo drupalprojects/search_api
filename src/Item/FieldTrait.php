@@ -93,6 +93,8 @@ trait FieldTrait {
    *
    * @return \Drupal\search_api\Index\IndexInterface
    *   The index to which this field belongs.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getIndex()
    */
   public function getIndex() {
     return $this->index;
@@ -103,6 +105,8 @@ trait FieldTrait {
    *
    * @return string
    *   The identifier of this field.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getFieldIdentifier()
    */
   public function getFieldIdentifier() {
     return $this->fieldIdentifier;
@@ -114,6 +118,8 @@ trait FieldTrait {
    * @return string|null
    *   The plugin ID of this field's datasource, or NULL if the field is
    *   datasource-independent.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getDatasourceId()
    */
   public function getDatasourceId() {
     return $this->datasource_id;
@@ -128,6 +134,8 @@ trait FieldTrait {
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the field's datasource couldn't be loaded.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getDatasource()
    */
   public function getDatasource() {
     if (!isset($this->datasource) && isset($this->datasource_id)) {
@@ -141,6 +149,8 @@ trait FieldTrait {
    *
    * @return string
    *   The property path.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getPropertyPath()
    */
   public function getPropertyPath() {
     return $this->propertyPath;
@@ -156,6 +166,8 @@ trait FieldTrait {
    *
    * @return string
    *   A human-readable label representing this field's property path.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getLabel()
    */
   public function getLabel() {
     if (!isset($this->label)) {
@@ -187,6 +199,8 @@ trait FieldTrait {
    *
    * @return self
    *   The invoked object.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::setLabel()
    */
   public function setLabel($label) {
     $this->label = $label;
@@ -202,6 +216,8 @@ trait FieldTrait {
    * @return string
    *   A human-readable label representing this field's property path and
    *   datasource.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getPrefixedLabel()
    */
   public function getPrefixedLabel() {
     if (!isset($this->labelPrefix)) {
@@ -229,6 +245,8 @@ trait FieldTrait {
    *
    * @return self
    *   The invoked object.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::setLabelPrefix()
    */
   public function setLabelPrefix($label_prefix) {
     $this->labelPrefix = $label_prefix;
@@ -243,6 +261,8 @@ trait FieldTrait {
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the field's data definition is unknown.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::getDataDefinition()
    */
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {

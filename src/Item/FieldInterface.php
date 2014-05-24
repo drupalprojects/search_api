@@ -97,7 +97,7 @@ interface FieldInterface extends GenericFieldInterface {
   /**
    * Sets whether this field is indexed in the index.
    *
-   * @param boolean $indexed
+   * @param bool $indexed
    *   The new indexed state of this field.
    * @param bool $notify
    *   (optional) Whether to notify the index of the change, i.e., set the field

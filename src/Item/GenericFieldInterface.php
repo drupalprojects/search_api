@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Item;
 
 /**
- * Represents a complex field whose properties can be added to the index.
+ * Represents any field attached to an index.
  */
 interface GenericFieldInterface {
 
