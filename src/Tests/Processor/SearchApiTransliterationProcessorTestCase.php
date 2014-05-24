@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiTransliterationProcessorTestCase
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiTransliterationProcessorTestCase
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
 use \Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\simpletest\DrupalUnitTestBase;

@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiProcessorTestBase.
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiProcessorTestBase.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;

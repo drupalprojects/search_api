@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiContentAccessProcessorTest.
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiContentAccessProcessorTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\search_api\Index\IndexInterface;
