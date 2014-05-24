@@ -17,6 +17,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\AdditionalField;
 use Drupal\search_api\Item\Field;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
 use Drupal\search_api\Query\Query;
 
@@ -188,9 +189,10 @@ class Utility {
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
    * @param \Drupal\search_api\Item\FieldInterface[] $fields
-   *   The field objects into which data should be extracted.
+   *   The field objects into which data should be extracted, keyed by their
+   *   property paths on $item.
    */
-  static function extractFields(ComplexDataInterface $item, array &$fields) {
+  static function extractFields(ComplexDataInterface $item, array $fields) {
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $direct_fields = array();
@@ -198,7 +200,7 @@ class Utility {
     foreach (array_keys($fields) as $key) {
       if (strpos($key, ':') !== FALSE) {
         list($direct, $nested) = explode(':', $key, 2);
-        $nested_fields[$direct][$nested] = &$fields[$key];
+        $nested_fields[$direct][$nested] = $fields[$key];
       }
       else {
         $direct_fields[] = $key;
@@ -206,19 +208,10 @@ class Utility {
     }
     // Extract the direct fields.
     foreach ($direct_fields as $key) {
-      // Set defaults if something fails or the field is empty.
-      $fields[$key]['value'] = array();
-      $fields[$key]['original_type'] = NULL;
-      try {
-        self::extractField($item->get($key), $fields[$key]);
-      }
-      catch (\InvalidArgumentException $e) {
-        // No need to do anything, we already set the defaults.
-      }
+      self::extractField($item->get($key), $fields[$key]);
     }
     // Recurse for all nested fields.
     foreach ($nested_fields as $direct => $fields_nested) {
-      $success = FALSE;
       try {
         $item_nested = $item->get($direct);
         if ($item_nested instanceof DataReferenceInterface) {
@@ -226,25 +219,15 @@ class Utility {
         }
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
           self::extractFields($item_nested, $fields_nested);
-          $success = TRUE;
         }
         elseif ($item_nested instanceof ListInterface && !$item_nested->isEmpty()) {
           foreach ($item_nested as $list_item) {
             self::extractFields($list_item, $fields_nested);
           }
-          $success = TRUE;
         }
       }
       catch (\InvalidArgumentException $e) {
-        // Will be automatically handled because $success == FALSE.
-      }
-      // If the values couldn't be extracted from the nested item, we have to
-      // set the defaults here.
-      if (!$success) {
-        foreach (array_keys($fields_nested) as $key) {
-          $fields[$key]['value'] = array();
-          $fields[$key]['original_type'] = $fields[$key]['type'];
-        }
+        // Just leave the values at their defaults then.
       }
     }
   }
@@ -254,10 +237,10 @@ class Utility {
    *
    * @param \Drupal\Core\TypedData\TypedDataInterface $data
    *   The piece of data from which to extract information.
-   * @param array $field
-   *   The field information array into which to put the extracted information.
+   * @param \Drupal\search_api\Item\FieldInterface $field
+   *   The field into which to put the extracted data.
    */
-  static function extractField(TypedDataInterface $data, array &$field) {
+  static function extractField(TypedDataInterface $data, FieldInterface $field) {
     if ($data->getDataDefinition()->isList()) {
       foreach ($data as $piece) {
         self::extractField($piece, $field);
@@ -269,17 +252,13 @@ class Utility {
     if ($definition instanceof ComplexDataDefinitionInterface) {
       $property = $definition->getMainPropertyName();
       if (isset($value[$property])) {
-        $field['value'][] = $value[$property];
+        $field->addValue($value[$property]);
       }
     }
     else {
-      $field['value'][] = reset($value);
+      $field->addValue(reset($value));
     }
-    // @todo Figure out how to make this less specific. fago mentioned some
-    // hierarchy/inheritance for types, with non-complex types inheriting from
-    // one of a few primitive types – maybe we can track that back?
-    // Also, is the "field_item:" prefix necessary or always there?
-    $field['original_type'] = $definition->getDataType();
+    $field->setOriginalType($definition->getDataType());
   }
 
   /**
@@ -370,7 +349,7 @@ class Utility {
       }
       $id = $datasource->getItemId($original_object);
     }
-    $item = new Item($index, $id, $datasource);
+    $item = static::createItem($index, $id, $datasource);
     $item->setOriginalObject($original_object);
     return $item;
   }

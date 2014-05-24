@@ -8,12 +8,13 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 
 /**
- * Represents a Search API indexing or result item.
+ * Provides a default implementation for a search item.
  */
 class Item implements ItemInterface, \IteratorAggregate {
 
@@ -43,7 +44,14 @@ class Item implements ItemInterface, \IteratorAggregate {
    *
    * @var \Drupal\search_api\Item\FieldInterface[]
    */
-  protected $fields;
+  protected $fields = array();
+
+  /**
+   * Whether the fields were already extracted for this item.
+   *
+   * @var bool
+   */
+  protected $fieldsExtracted = FALSE;
 
   /**
    * The HTML text with highlighted text-parts that match the query.
@@ -74,7 +82,7 @@ class Item implements ItemInterface, \IteratorAggregate {
   protected $extraData = array();
 
   /**
-   * Constructs a new Item object.
+   * Constructs a new search item.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The item's search index.
@@ -145,18 +153,42 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getFields($extract = FALSE) {
-    if (!isset($this->fields) && $extract) {
-      $fields = $this->getIndex()->getItemFields($this->getDatasource()->getPluginId());
-      $this->fields = Utility::extractFields($this->originalObject, $fields);
+    if ($extract && !$this->fieldsExtracted) {
+      foreach (array(NULL, $this->getDatasource()->getPluginId()) as $datasource_id) {
+        $fields_by_property_path = array();
+        foreach ($this->index->getFieldsByDatasource($datasource_id) as $field_id => $field) {
+          // Don't overwrite fields that were previously set.
+          if (empty($this->fields[$field_id])) {
+            $this->fields[$field_id] = clone $field;
+            $fields_by_property_path[$field->getPropertyPath()] = $this->fields[$field_id];
+          }
+        }
+        if ($datasource_id && $fields_by_property_path) {
+          try {
+            Utility::extractFields($this->getOriginalObject(), $fields_by_property_path);
+          }
+          catch (SearchApiException $e) {
+            // If we couldn't load the object, just log an error and fail
+            // silently to set the values.
+            watchdog_exception('search_api', $e);
+          }
+        }
+      }
+      $this->fieldsExtracted = TRUE;
     }
-    return $this->fields ?: array();
+    return $this->fields;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setField($field_id, FieldInterface $field = NULL) {
-    // @todo Implement setField() method.
+    if ($field) {
+      $this->fields[$field_id] = $field;
+    }
+    else {
+      unset($this->fields[$field_id]);
+    }
     return $this;
   }
 
@@ -164,7 +196,7 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function setFields(array $fields) {
-    // @todo Implement setFields() method.
+    $this->fields = $fields;
     return $this;
   }
 
@@ -172,14 +204,14 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getScore() {
-    // @todo Implement getScore() method.
+    return $this->score;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setScore($score) {
-    // @todo Implement setScore() method.
+    $this->score = $score;
     return $this;
   }
 
@@ -187,14 +219,14 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getBoost() {
-    // @todo Implement getBoost() method.
+    return $this->boost;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setBoost($boost) {
-    // @todo Implement setBoost() method.
+    $this->boost = $boost;
     return $this;
   }
 
@@ -217,28 +249,33 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function hasExtraData($key) {
-    // @todo Implement hasExtraData() method.
+    return array_key_exists($key, $this->extraData);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getExtraData($key, $default = NULL) {
-    // @todo Implement getExtraData() method.
+    return isset($this->extraData[$key]) ? $this->extraData[$key] : $default;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getAllExtraData() {
-    // @todo Implement getAllExtraData() method.
+    return $this->extraData;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setExtraData($key, $data = NULL) {
-    // @todo Implement setExtraData() method.
+    if (isset($data)) {
+      $this->extraData[$key] = $data;
+    }
+    else {
+      unset($this->extraData[$key]);
+    }
     return $this;
   }
 
@@ -246,14 +283,26 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getIterator() {
-    // @todo Implement getIterator() method.
+    return new \ArrayIterator($this->getFields(TRUE));
   }
 
   /**
    * Implements the magic __clone() method to implement a deep clone.
    */
   public function __clone() {
-
+    // The fields definitely need to be cloned. For the extra data its hard (or,
+    // rather, impossible) to tell, but we opt for cloning objects there, too,
+    // to be on the (hopefully) safer side. (Ideas for later: introduce an
+    // interface that tells us to not clone the data object; or check whether
+    // its an entity; or introduce some other system to override this default.)
+    foreach ($this->fields as $field_id => $field) {
+      $this->fields[$field_id] = clone $field;
+    }
+    foreach ($this->extraData as $key => $data) {
+      if (is_object($data)) {
+        $this->extraData[$key] = clone $data;
+      }
+    }
   }
 
 }
