@@ -7,44 +7,88 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\search_api\Item\Item;
-
 /**
  * Represents the result set of a search query.
  */
-class ResultSet implements ResultSetInterface {
+class ResultSet implements ResultSetInterface, \IteratorAggregate {
 
   /**
-   * A numeric array of translated warning messages.
-   * @var array
+   * The executed query.
+   *
+   * @var \Drupal\search_api\Query\QueryInterface
    */
-  protected $warnings;
+  protected $query;
 
   /**
-   * A numeric array of search keys that were ignored.
-   * @var array
+   * The total result count.
    */
-  protected $ignoredSearchKeys;
+  protected $resultCount;
 
   /**
    * The result items.
-   * @var \Drupal\search_api\Item\Item[]
+   *
+   * @var \Drupal\search_api\Item\ItemInterface[]
    */
   protected $resultItems = array();
 
   /**
-   *  The position within the result items.
-   * @var int
+   * A numeric array of translated, sanitized warning messages.
+   *
+   * @var array
    */
-  protected $position = 0;
+  protected $warnings = array();
+
+  /**
+   * A numeric array of search keys that were ignored.
+   *
+   * @var array
+   */
+  protected $ignoredSearchKeys = array();
+
+  /**
+   * Extra data set on this search result.
+   *
+   * @var array
+   */
+  protected $extraData = array();
+
+  /**
+   * Creates a new search result.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The executed query.
+   */
+  public function __construct(QueryInterface $query) {
+    $this->query = $query;
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $result_items, array $warnings = array(), array $ignored_search_key = array()) {
-    $this->resultItems  = $result_items;
-    $this->warnings = $warnings;
-    $this->ignoredSearchKeys = $ignored_search_key;
+  public function getQuery() {
+    return $this->query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResultCount() {
+    return $this->resultCount;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResultCount($result_count) {
+    $this->resultCount = $result_count;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResultItems() {
+    return $this->resultItems;
   }
 
   /**
@@ -52,6 +96,7 @@ class ResultSet implements ResultSetInterface {
    */
   public function setResultItems(array $result_items) {
     $this->resultItems = $result_items;
+    return $this;
   }
 
   /**
@@ -64,6 +109,22 @@ class ResultSet implements ResultSetInterface {
   /**
    * {@inheritdoc}
    */
+  public function setWarnings(array $warnings) {
+    $this->warnings = $warnings;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addWarning($warning) {
+    $this->warnings[] = $warning;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIgnoredSearchKeys() {
     return $this->ignoredSearchKeys;
   }
@@ -71,45 +132,58 @@ class ResultSet implements ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  public function count() {
-    return count($this->resultItems);
+  public function setIgnoredSearchKeys(array $ignored_search_keys) {
+    $this->ignoredSearchKeys = $ignored_search_keys;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function next() {
-    $this->position++;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @return \Drupal\search_api\Item\Item
-   *   The current result item.
-   */
-  public function current() {
-    return $this->resultItems[$this->position];
+  public function addIgnoredSearchKey($ignored_search_key) {
+    $this->ignoredSearchKeys[] = $ignored_search_key;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function key() {
-    return $this->position;
+  public function hasExtraData($key) {
+    return array_key_exists($key, $this->extraData);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function valid() {
-    return isset($this->resultItems[$this->position]);
+  public function getExtraData($key, $default = NULL) {
+    return array_key_exists($key, $this->extraData) ? $this->extraData[$key] : $default;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function rewind() {
-    $this->position = 0;
+  public function getAllExtraData() {
+    return $this->extraData;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExtraData($key, $data = NULL) {
+    if (isset($data)) {
+      $this->extraData[$key] = $data;
+    }
+    else {
+      unset($this->extraData[$key]);
+    }
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIterator() {
+    return new \ArrayIterator($this->resultItems);
+  }
+
 }

@@ -256,7 +256,7 @@ class Item implements ItemInterface, \IteratorAggregate {
    * {@inheritdoc}
    */
   public function getExtraData($key, $default = NULL) {
-    return isset($this->extraData[$key]) ? $this->extraData[$key] : $default;
+    return array_key_exists($key, $this->extraData) ? $this->extraData[$key] : $default;
   }
 
   /**

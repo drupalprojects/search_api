@@ -9,7 +9,6 @@ namespace Drupal\search_api\Query;
 
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * Provides a standard implementation of the QueryInterface.

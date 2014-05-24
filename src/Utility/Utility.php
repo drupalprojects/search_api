@@ -20,6 +20,8 @@ use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
 use Drupal\search_api\Query\Query;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSet;
 
 /**
  * Utility methods.
@@ -289,7 +291,7 @@ class Utility {
   /**
    * Creates a new search query object.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index on which to search.
    * @param array $options
    *   (optional) The options to set for the query.
@@ -301,6 +303,19 @@ class Utility {
    */
   public static function createQuery(IndexInterface $index, array $options = array()) {
     return Query::create($index, $options);
+  }
+
+  /**
+   * Creates a new search result set.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The executed search query.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   A search result set for the given query.
+   */
+  public static function createSearchResultSet(QueryInterface $query) {
+    return new ResultSet($query);
   }
 
   /**
