@@ -128,7 +128,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function hasValidBackend() {
     // Get the backend plugin definition.
-    $backend_plugin_definition = \Drupal::service('plugin.manager.search_api.backend')->getDefinition($this->getBackendId(), false);
+    $backend_plugin_definition = \Drupal::service('plugin.manager.search_api.backend')->getDefinition($this->getBackendId(), FALSE);
     // Determine whether the backend is valid.
     return !empty($backend_plugin_definition);
   }

@@ -132,7 +132,7 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $qu
   $types = $query->getIndex()->getDatasourceIds();
   foreach ($types as $type) {
     list(, $type) = explode(':', $type);
-    $definition = \Drupal::entityManager()->getDefinition($type);
+    $definition = \Drupal::entityManager()->getDefinition($type, FALSE);
     if ($definition) {
       $keys = $definition->getKeys();
       $query->condition($keys['id'], 0, '!=');
