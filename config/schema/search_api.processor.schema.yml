@@ -97,3 +97,54 @@ search_api.processor.plugin.search_api_highlight_processor:
     highlight:
       type: string
       label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
+search_api.processor.plugin.search_api_role_filter_processor:
+  type: mapping
+  label: 'Role filter processor'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'The field name'
+    default:
+      type: boolean
+      label: 'Default'
+    roles:
+      type: sequence
+      label: 'The selected roles'
+      sequence:
+        - type: string
+          label: 'The role name'
+search_api.processor.plugin.search_api_html_filter_processor:
+  type: mapping
+  label: 'HTML filter processor'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'The field name'
+    title:
+      type: boolean
+      label: 'Title'
+    alt:
+      type: boolean
+      label: 'Alt'
+    tags:
+      type: text
+      label: 'Tag boosts'
+search_api.processor.plugin.search_api_add_aggregation_processor:
+  type: mapping
+  label: 'Add aggregation processor'
+search_api.processor.plugin.search_api_ignorecase_processor:
+  type: mapping
+  label: 'Ignore case processor'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'The field name'
