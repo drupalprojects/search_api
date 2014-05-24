@@ -3,14 +3,97 @@ search_api.processor.plugin.search_api_rendered_item:
   label: 'Rendered item processor configuration'
   mapping:
     view_mode:
-      type: 'sequence'
+      type: sequence
       label: 'The selected view modes'
       sequence:
         - type: string
           label: 'A view mode'
     roles:
-      type: 'sequence'
+      type: sequence
       label: 'The selected roles'
       sequence:
         - type: string
           label: 'A role'
+search_api.processor.plugin.search_api_node_status_processor:
+  type: mapping
+  label: 'Node status processor configuration'
+search_api.processor.plugin.search_api_stopwords_processor:
+  type: mapping
+  label: 'Stopwords processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    file:
+      type: string
+      label: 'The file path'
+    stopwords:
+      type: text
+      label: 'Defined stopwords'
+search_api.processor.plugin.search_api_tokenizer_processor:
+  type: mapping
+  label: 'Tokenizer processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    spaces:
+      type: string
+      label: 'Regular expression for spaces'
+    ignorable:
+      type: string
+      label: 'Regular expression for ignorables'
+search_api.processor.plugin.search_api_transliteration_processor:
+  type: mapping
+  label: 'Transliteration processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+search_api.processor.plugin.search_api_language_processor:
+  type: mapping
+  label: 'Language processor configuration'
+search_api.processor.plugin.search_api_ignorecase_processor:
+  type: mapping
+  label: 'Ignore case processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+search_api.processor.plugin.search_api_add_url_processor:
+  type: mapping
+  label: 'Add URL processor configuration'
+search_api.processor.plugin.search_api_content_access_processor:
+  type: mapping
+  label: 'Content access processor configuration'
+search_api.processor.plugin.search_api_highlight_processor:
+  type: mapping
+  label: 'Highlight processor configuration'
+  mapping:
+    prefix:
+      type: string
+      label: 'Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'
+    suffix:
+      type: string
+      label: 'Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'
+    excerpt:
+      type: boolean
+      label: 'When enabled, an excerpt will be created for searches with keywords, containing all occurrences of keywords in a fulltext field.'
+    excerpt_length:
+      type: integer
+      label: 'The requested length of the excerpt, in characters.'
+    highlight:
+      type: string
+      label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
