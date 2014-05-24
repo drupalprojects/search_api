@@ -365,7 +365,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidTracker() {
-    $tracker_plugin_definition = \Drupal::service('plugin.manager.search_api.tracker')->getDefinition($this->getTrackerId());
+    $tracker_plugin_definition = \Drupal::service('plugin.manager.search_api.tracker')->getDefinition($this->getTrackerId(), FALSE);
     return !empty($tracker_plugin_definition);
   }
 

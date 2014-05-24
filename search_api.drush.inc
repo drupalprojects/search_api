@@ -156,7 +156,7 @@ function drush_search_api_list() {
   );
   /** @var $index \Drupal\search_api\Entity\Index */
   foreach ($indexes as $index) {
-    $plugin_info = \Drupal::service('plugin.manager.search_api.datasource')->getDefinition($index->datasourcePluginId);
+    $plugin_info = \Drupal::service('plugin.manager.search_api.datasource')->getDefinition($index->datasourcePluginId, FALSE);
     $row = array(
       $index->machine_name,
       $index->name,

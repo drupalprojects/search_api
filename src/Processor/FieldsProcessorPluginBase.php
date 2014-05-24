@@ -133,55 +133,35 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
    *
-   * @param $value
-   *   The value to process, passed by reference.
+   * @param $values
+   *   The values to process, passed by reference.
    * @param $type
    *   The field's type.
    */
-  protected function processField(&$value, &$type) {
-    if (!isset($value) || $value === '') {
+  protected function processField(&$values, &$type) {
+    if (!isset($values) || $values === '') {
       return;
     }
-    if (substr($type, 0, 5) == 'list<') {
-      $inner_type = $t = $t1 = substr($type, 5, -1);
-      foreach ($value as &$v) {
-        $t1 = $inner_type;
-        $this->processField($v, $t1);
-        // If one value got tokenized, all others have to follow.
-        if ($t1 != $inner_type) {
-          $t = $t1;
-        }
-      }
-      if ($t == 'tokens') {
-        foreach ($value as $i => &$v) {
-          if (!$v) {
-            unset($value[$i]);
-            continue;
-          }
-          if (!is_array($v)) {
-            $v = array(array('value' => $v, 'score' => 1));
-          }
-        }
-      }
-      $type = "list<$t>";
-      return;
-    }
-    if ($type == 'tokens') {
-      foreach ($value as &$token) {
-        $this->processFieldValue($token['value']);
-      }
-    }
-    else {
-      $this->processFieldValue($value);
-    }
-    if (is_array($value)) {
-      // Don't tokenize non-fulltext content!
-      if (in_array($type, array('text', 'tokens'))) {
-        $type = 'tokens';
-        $value = $this->normalizeTokens($value);
+
+    foreach ($values as &$value) {
+      if ($type == 'tokenized_text') {
+        $this->processFieldValue($value['value']);
       }
       else {
-        $value = $this->implodeTokens($value);
+        $this->processFieldValue($value);
+      }
+      // Don't tokenize non-fulltext content!
+      if (in_array($type, array('text', 'tokenized_text'))) {
+        $type = 'tokenized_text';
+        // @todo : needs work to validate the data schema of drupal
+        if (is_array($value)) {
+          $value = $this->normalizeTokens($value);
+        }
+      }
+      else {
+        if (is_array($value)) {
+          $value = $this->implodeTokens($value);
+        }
       }
     }
   }

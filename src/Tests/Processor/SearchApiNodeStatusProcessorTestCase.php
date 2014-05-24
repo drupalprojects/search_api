@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiNodeStatusProcessorTestCase.
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiNodeStatusProcessorTestCase.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
 /**
  * Tests the NodeStatus processor.

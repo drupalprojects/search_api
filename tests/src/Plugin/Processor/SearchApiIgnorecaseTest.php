@@ -55,23 +55,23 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
    */
   public function testIgnorecase() {
     $orig = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
-    $processed = Unicode::strtolower($orig);
+    $expected = array(Unicode::strtolower($orig));
     $items = array(
       1 => array(
         'name' => array(
           'type' => 'text',
           'original_type' => 'text',
-          'value' => $orig,
+          'value' => array($orig),
         ),
         'mail' => array(
           'type' => 'string',
           'original_type' => 'text',
-          'value' => $orig,
+          'value' => array($orig),
         ),
         'search_api_language' => array(
           'type' => 'string',
           'original_type' => 'string',
-          'value' => Language::LANGCODE_NOT_SPECIFIED,
+          'value' => array(Language::LANGCODE_NOT_SPECIFIED),
         ),
       ),
     );
@@ -93,14 +93,14 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
     $tmp = $items;
     $this->processor->setConfiguration(array('fields' => array('name' => 'name')));
     $this->processor->preprocessIndexItems($tmp);
-    $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
-    $this->assertEquals($tmp[1]['mail']['value'], $orig, "Mail field wasn't procesed.");
+    $this->assertEquals($tmp[1]['name']['value'], $expected, 'Name field was processed.');
+    $this->assertEquals($tmp[1]['mail']['value'], array($orig), "Mail field wasn't procesed.");
 
     $tmp = $items;
     $this->processor->setConfiguration(array('fields' => array('name' => 'name', 'mail' => 'mail')));
     $this->processor->preprocessIndexItems($tmp);
-    $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
-    $this->assertEquals($tmp[1]['mail']['value'], $processed, 'Mail field was processed.');
+    $this->assertEquals($tmp[1]['name']['value'], $expected, 'Name field was processed.');
+    $this->assertEquals($tmp[1]['mail']['value'], $expected, 'Mail field was processed.');
   }
 
 }

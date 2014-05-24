@@ -88,7 +88,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokens'));
+    return Utility::isTextType($type, array('text', 'tokenized_text'));
   }
 
   /**

@@ -785,7 +785,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           }
         }
 
-        if (Utility::isTextType($type, array('text', 'tokens'))) {
+        if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
           $words = array();
           // Store the first 30 characters of the string as the denormalized
           // value.
@@ -944,7 +944,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
         $value = $ret;
         // FALL-THROUGH!
-      case 'tokens':
+      case 'tokenized_text':
         while (TRUE) {
           foreach ($value as $i => $v) {
             // Check for over-long tokens.
