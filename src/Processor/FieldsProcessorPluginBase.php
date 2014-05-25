@@ -89,6 +89,10 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::preprocessIndexItems().
    *
    * Calls processField() for all fields for which testField() returns TRUE.
+   *
+   * @param array $items
+   *   An array of items to be preprocessed for indexing, formatted as specified
+   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
