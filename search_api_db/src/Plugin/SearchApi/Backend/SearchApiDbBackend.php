@@ -812,7 +812,7 @@ class SearchApiDbBackend extends BackendPluginBase {
               continue;
             }
             $value = Unicode::strtolower($value);
-            $token['score'] *= $focus;
+            $token['score'] = $token['score'] * $focus;
             if (!isset($words[$value])) {
               $words[$value] = $token;
             }
