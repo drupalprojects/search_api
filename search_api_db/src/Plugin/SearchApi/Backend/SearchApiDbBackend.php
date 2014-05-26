@@ -804,7 +804,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             // at 500 words and 0.3 at 1000 words.
             $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
 
-            $value = &$token['value'];
+            $value = $token['value'];
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
@@ -819,6 +819,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             else {
               $words[$value]['score'] += $token['score'];
             }
+            $token['value'] = $value;
           }
           if ($words) {
             $field_name = self::getTextFieldName($name);
@@ -943,8 +944,9 @@ class SearchApiDbBackend extends BackendPluginBase {
             );
           }
         }
-        $value = $ret;
-        // FALL-THROUGH!
+        // This used to fall through the tokenized case
+        return $ret;
+        break;
       case 'tokenized_text':
         while (TRUE) {
           foreach ($value as $i => $v) {
