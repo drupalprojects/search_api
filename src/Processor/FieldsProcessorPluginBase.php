@@ -155,8 +155,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
         $this->processFieldValue($value);
       }
       // Don't tokenize non-fulltext content!
-      if (in_array($type, array('text', 'tokenized_text'))) {
-        $type = 'tokenized_text';
+      if (in_array($type, array('tokenized_text'))) {
         // @todo : needs work to validate the data schema of drupal
         if (is_array($value)) {
           $value = $this->normalizeTokens($value);
@@ -320,7 +319,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokens', 'string'));
+    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
   }
 
   /**

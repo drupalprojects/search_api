@@ -47,18 +47,6 @@ string: 2
 b: 2
 em: 1.5
 u: 1.5",
-      'strip' => array(
-        'character_sets' => array(
-          'Pc' => 'Pc',
-          'Pd' => 'Pd',
-          'Pe' => 'Pe',
-          'Pf' => 'Pf',
-          'Pi' => 'Pi',
-          'Po' => 'Po',
-          'Ps' => 'Ps',
-          'Do' => 'Do',
-        ),
-      ),
     );
 
   }
@@ -100,22 +88,6 @@ u: 1.5",
       '#title' => t('Tag boosts'),
       '#description' => t('Specify special boost values for certain HTML elements, in !link. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
       '#default_value' => $this->configuration['tags'],
-    );
-
-    $character_sets = $this->getCharacterSets();
-    $form['strip'] = array(
-      '#type' => 'details',
-      '#title' => t('Character Sets to remove from text'),
-      '#description' => t('These character set remove any punctuation characters or any other that you configure. This allows you to send only useful characters to your search index.'),
-      '#open' => FALSE,
-    );
-    // Build the bundle selection element.
-    $form['strip']['character_sets'] = array(
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Strip Character Sets'),
-      '#options' => $character_sets,
-      '#default_value' => $this->configuration['strip']['character_sets'],
-      '#multiple' => TRUE,
     );
 
     return $form;
@@ -192,53 +164,6 @@ u: 1.5",
   }
 
   /**
-   * Lists the different UTF8 character sets
-   *
-   */
-  protected function getCharacterSets() {
-    return array(
-      'Pc' => t("Punctuation, Connector Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pc/list.htm"))),
-      'Pd' => t("Punctuation, Dash Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pd/list.htm"))),
-      'Pe' => t("Punctuation, Close Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pe/list.htm"))),
-      'Pf' => t("Punctuation, Final quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pf/list.htm"))),
-      'Pi' => t("Punctuation, Initial quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pi/list.htm"))),
-      'Po' => t("Punctuation, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Po/list.htm"))),
-      'Ps' => t("Punctuation, Open Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ps/list.htm"))),
-
-      'Do' => t("Drupal, Other Normal Punctuation Characters (! ?, . : ; )"),
-
-      'Cc' => t("Other, Control Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cc/list.htm"))),
-      'Cf' => t("Other, Format Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cf/list.htm"))),
-      'Co' => t("Other, Private Use Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Co/list.htm"))),
-      'Cs' => t("other, Surrogate Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cs/list.htm"))),
-
-      'LC' => t("Letter, Cased Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/LC/list.htm"))),
-      'Ll' => t("Letter, Lowercase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ll/list.htm"))),
-      'Lm' => t("Letter, Modifier Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ln/list.htm"))),
-      'Lo' => t("Letter, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lo/list.htm"))),
-      'Lt' => t("Letter, Titlecase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lt/list.htm"))),
-      'Lu' => t("Letter, Uppercase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lu/list.htm"))),
-
-      'Mc' => t("Mark, Spacing Combining Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mc/list.htm"))),
-      'Me' => t("Mark, Enclosing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Me/list.htm"))),
-      'Mn' => t("Mark, Nonspacing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mn/list.htm"))),
-
-      'Nd' => t("Number, Decimal Digit Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Nd/list.htm"))),
-      'Nl' => t("Number, Letter Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Nl/list.htm"))),
-      'No' => t("Number, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/No/list.htm"))),
-
-      'Sc' => t("Symbol, Currency Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sc/list.htm"))),
-      'Sk' => t("Symbol, Modifier Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sk/list.htm"))),
-      'Sm' => t("Symbol, Math Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sm/list.htm"))),
-      'So' => t("Symbol, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/So/list.htm"))),
-
-      'Zl' => t("Separator, Line Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zl/list.htm"))),
-      'Zp' => t("Separator, Paragraph Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zp/list.htm"))),
-      'Zs' => t("Separator, Space Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zs/list.htm"))),
-    );
-  }
-
-  /**
    * Parses text and returns the different segments it found with their boosts.
    *
    * @param string $text
@@ -278,7 +203,6 @@ u: 1.5",
    *   entities.
    *   "I'll &quot;walk&quot;" to "I'll \"walk\"" to.
    * - Remove extra spaces. No need to index extra spaces.
-   * - Also remove punctuation characters
    *
    * @param string $text
    *   The input to clean
@@ -294,22 +218,6 @@ u: 1.5",
     $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
     // Remove extra spaces.
     $text = preg_replace('/\s+/s', ' ', $text);
-
-    // Get our configuration
-    $character_sets = $this->configuration['strip']['character_sets'];
-
-    // Custom Extra Drupal Characters that we want to remove
-    if (isset($character_sets['Do'])) {
-      $character_set_regex = '!|\?|,|\.|:|;';
-    }
-    // Add a pipe so we don't end up with an invalid regular expression
-    if (!empty($character_set_regex)) {
-      $character_set_regex += "|" . $character_set_regex;
-    }
-
-    $character_set_regex += '\p{' . implode('}|\p{', $character_sets) . '}';
-    $text = preg_replace('/\s(' . $character_set_regex . ')/s', '$1', $text);
-    $text = preg_replace('/(\p{Ps}|¿|¡)\s/s', '$1', $text);
     $text = trim($text);
     return $text;
   }

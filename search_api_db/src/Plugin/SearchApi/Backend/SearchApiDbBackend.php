@@ -791,6 +791,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           // value.
           $field_value = $value;
           $denormalized_value = '';
+
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
           } while (strlen($denormalized_value) < 30);
@@ -925,7 +926,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return Utility::isTextType($type, array('text', 'tokens')) ? array() : NULL;
+      return Utility::isTextType($type, array('text', 'tokenized_text')) ? array() : NULL;
     }
     switch ($type) {
       case 'text':
