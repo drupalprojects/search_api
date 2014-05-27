@@ -150,19 +150,21 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
 
     foreach ($values as &$value) {
       if ($type == 'tokenized_text') {
-        //$this->processFieldValue($value['value']);
+        foreach ($value as &$tokenized_value) {
+          $this->processFieldValue($tokenized_value['value']);
+        }
       }
       else {
         $this->processFieldValue($value);
         // If we got an array back from processFieldValue it means it
         // transformed to a tokenized set of things.
-        if (is_array($value)) {
+        if (is_array($value) && isset($value['0']) && isset($value['0']['score']) && isset($value['0']['value'])) {
           $type_changed_to_tokenized = TRUE;
         }
       }
 
       // Don't tokenize non-fulltext content!
-      if (in_array($type, array('text', 'tokenized_text'))) {
+      if (in_array($type, array('text', 'tokenized_text')) || $type_changed_to_tokenized) {
         // @todo : needs work to validate the data schema of drupal
         if (is_array($value)) {
           $value = $this->normalizeTokens($value);
@@ -174,7 +176,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
         }
       }
     }
-    if ($type_changed_to_tokenized == TRUE) {
+    if ($type_changed_to_tokenized) {
       $type = "tokenized_text";
     }
   }

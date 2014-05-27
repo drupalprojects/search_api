@@ -743,6 +743,8 @@ class SearchApiDbBackend extends BackendPluginBase {
     $fields_updated = FALSE;
     $denormalized_table = $this->configuration['index_tables'][$index->id()];
     $txn = $this->database->startTransaction('search_api_indexing');
+    $text_table = $denormalized_table . '_text';
+
     try {
       $inserts = array();
       $text_inserts = array();
@@ -762,6 +764,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           continue;
         }
         $table = $fields[$name]['table'];
+
         $boost = $fields[$name]['boost'];
         $this->database->delete($table)
           ->condition('item_id', $id)
@@ -824,7 +827,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           if ($words) {
             $field_name = self::getTextFieldName($name);
             foreach ($words as $word) {
-              $text_inserts[$table][] = array(
+              $text_inserts[$text_table][] = array(
                 'item_id'    => $id,
                 'field_name' => $field_name,
                 'word'       => $word['value'],
