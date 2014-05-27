@@ -14,7 +14,7 @@ namespace Drupal\search_api\Plugin\views\filter;
  *
  * @ViewsFilter("search_api_term")
  */
-class SearchApiTermBase extends SearchApiFilterEntityBase {
+class SearchApiTerm extends SearchApiFilterEntityBase {
 
   /**
    * {@inheritdoc}
