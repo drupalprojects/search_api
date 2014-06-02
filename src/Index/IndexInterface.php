@@ -307,9 +307,9 @@ interface IndexInterface extends ConfigEntityInterface {
    *   returned. Otherwise, this method will return all available fulltext
    *   fields.
    *
-   * @return array
-   *   An array containing all (or all indexed) fulltext fields defined for this
-   *   index.
+   * @return string[]
+   *   An array containing the IDs of all (or all indexed) fulltext fields
+   *   defined for this index.
    */
   public function getFulltextFields($only_indexed = TRUE);
 
