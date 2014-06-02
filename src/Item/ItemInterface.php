@@ -32,8 +32,8 @@ interface ItemInterface extends \Traversable {
    *   NULL will be returned if the object isn't available.
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface|null
-   *   NULL if $load is FALSE and the object wasn't set or loaded previously.
-   *   Otherwise, the wrapped object.
+   *   The wrapped object if it was previously set or could be loaded. NULL
+   *   otherwise.
    */
   public function getOriginalObject($load = TRUE);
 
@@ -47,6 +47,14 @@ interface ItemInterface extends \Traversable {
    *   The invoked object.
    */
   public function setOriginalObject(ComplexDataInterface $original_object);
+
+  /**
+   * Returns the ID of this item's datasource.
+   *
+   * @return string
+   *   The plugin ID of this item's datasource.
+   */
+  public function getDatasourceId();
 
   /**
    * Returns the datasource of this item.

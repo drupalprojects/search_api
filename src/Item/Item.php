@@ -33,6 +33,13 @@ class Item implements ItemInterface, \IteratorAggregate {
   protected $originalObject;
 
   /**
+   * The ID of this item's datasource.
+   *
+   * @var string
+   */
+  protected $datasource_id;
+
+  /**
    * The datasource of this item.
    *
    * @var \Drupal\search_api\Datasource\DatasourceInterface
@@ -95,7 +102,20 @@ class Item implements ItemInterface, \IteratorAggregate {
   public function __construct(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
     $this->index = $index;
     $this->id = $id;
-    $this->datasource = $datasource;
+    if ($datasource) {
+      $this->datasource = $datasource;
+      $this->datasource_id = $datasource->getPluginId();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDatasourceId() {
+    if (!isset($this->datasource_id)) {
+      list($this->datasource_id) = Utility::splitCombinedId($this->id);
+    }
+    return $this->datasource_id;
   }
 
   /**
@@ -103,8 +123,7 @@ class Item implements ItemInterface, \IteratorAggregate {
    */
   public function getDatasource() {
     if (!isset($this->datasource)) {
-      list($datasource_id) = Utility::splitCombinedId($this->id);
-      $this->datasource = $this->index->getDatasource($datasource_id);
+      $this->datasource = $this->index->getDatasource($this->getDatasourceId());
     }
     return $this->datasource;
   }
