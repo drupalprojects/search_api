@@ -415,21 +415,13 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $search_objects
    *   An array of search objects to be indexed, keyed by their item IDs.
    *
-   * @return array
+   * @return string[]
    *   The IDs of all items that should be marked as indexed.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If any error occurred during indexing.
    */
   public function indexItems(array $search_objects);
-
-  /**
-   * Marks all items in this index for reindexing.
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   If the tracker couldn't be loaded, for example.
-   */
-  public function reindex();
 
   /**
    * Adds items from a specific datasource to the index.
@@ -478,6 +470,15 @@ interface IndexInterface extends ConfigEntityInterface {
    *   TRUE if the operation was successful, otherwise FALSE.
    */
   public function trackItemsDeleted($datasource_id, array $ids);
+
+  /**
+   * Marks all items in this index for reindexing.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an internal error prevented the operation from succeeding. E.g., if
+   *   the tracker couldn't be loaded.
+   */
+  public function reindex();
 
   /**
    * Clears all items in this index and marks them for reindexing.

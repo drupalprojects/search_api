@@ -964,23 +964,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
-      $items_by_datasource = array();
-      foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
-        $items_by_datasource[$datasource_id][] = $raw_id;
-      }
-      $items = array();
-      foreach ($items_by_datasource as $datasource_id => $item_ids) {
-        try {
-          $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-          foreach ($this->getDatasource($datasource_id)->loadMultiple($item_ids) as $raw_id => $item) {
-            $items["$prefix$raw_id"] = $item;
-          }
-        }
-        catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
-        }
-      }
+      $items = $this->loadItemsMultiple($next_set, TRUE);
       if ($items) {
         try {
           $ids_indexed = $this->indexItems($items);

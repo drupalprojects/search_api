@@ -324,7 +324,7 @@ class Query implements QueryInterface {
     $this->index->postprocessSearchResults($results);
 
     // Let modules alter the results.
-    \Drupal::moduleHandler()->alter('search_api_results', $this);
+    \Drupal::moduleHandler()->alter('search_api_results', $results);
   }
 
   /**

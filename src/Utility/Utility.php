@@ -9,7 +9,6 @@ namespace Drupal\search_api\Utility;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
@@ -24,13 +23,20 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSet;
 
 /**
- * Utility methods.
+ * Contains utility methods for the Search API.
  *
- * Presently just a wrapper around the previous procedural functions.
- * @todo Needs breaking up. Field related methods seperate?
+ * @todo Maybe move some of these methods to other classes (and/or split this
+ *   class into several utility classes.
  */
 class Utility {
 
+  /**
+   * Static cache for field type mapping.
+   *
+   * @var array
+   *
+   * @see getFieldTypeMapping()
+   */
   static $fieldTypeMapping = array();
 
   /**

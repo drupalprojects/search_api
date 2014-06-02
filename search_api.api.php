@@ -4,6 +4,7 @@
  * @file
  * Hooks provided by the Search API module.
  */
+use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * @addtogroup hooks
@@ -122,7 +123,10 @@ function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $
 }
 
 /**
- * Lets modules alter a search query before executing it.
+ * Alter a search query before it gets executed.
+ *
+ * The hook is invoked after all (enabled) processors have preprocessed the
+ * query.
  *
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The query that will be executed.
@@ -138,6 +142,19 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $qu
       $query->condition($keys['id'], 0, '!=');
     }
   }
+}
+
+/**
+ * Alter a search query's result set.
+ *
+ * The hook is invoked after all (enabled) processors have postprocessed the
+ * results.
+ *
+ * @param \Drupal\search_api\Query\ResultSetInterface $results
+ *   The search results to alter.
+ */
+function hook_search_api_results_alter(ResultSetInterface $results) {
+  $results->setExtraData('example_hook_invoked', microtime(TRUE));
 }
 
 /**
