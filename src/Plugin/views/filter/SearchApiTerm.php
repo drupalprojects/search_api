@@ -14,7 +14,7 @@ namespace Drupal\search_api\Plugin\views\filter;
  *
  * @ViewsFilter("search_api_term")
  */
-class SearchApiTermBase extends SearchApiFilterEntityBase {
+class SearchApiTerm extends SearchApiFilterEntityBase {
 
   /**
    * {@inheritdoc}
@@ -271,8 +271,8 @@ class SearchApiTermBase extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function buildExposedForm(&$form, &$form_state) {
-    parent::buildExposedForm($form, $form_state);
+  public function buildExposeForm(&$form, &$form_state) {
+    parent::buildExposeForm($form, $form_state);
     if ($this->options['type'] != 'select') {
       unset($form['expose']['reduce']);
     }

@@ -82,6 +82,20 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->editServer();
     $this->searchSuccess2();
     $this->clearIndex();
+
+    $this->enableHTMLFilter();
+    $this->indexItems($this->indexId);
+    $this->disableHTMLFilter();
+    $this->clearIndex();
+
+    //$this->enableIgnoreCaseFilter();
+    //$this->indexItems($this->indexId);
+    //$this->clearIndex();
+
+    //$this->enableTokenizerFilter();
+    //$this->indexItems($this->indexId);
+    //$this->clearIndex();
+
     $this->searchNoResults();
     $this->regressionTests2();
     $this->uninstallModule();
@@ -146,6 +160,38 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->options['fields'][$this->getFieldId('keywords')] = array(
       'type' => 'string',
     );
+    $index->save();
+  }
+
+  protected function enableHTMLFilter() {
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = entity_load('search_api_index', $this->indexId);
+
+    $index->options['fields'][$this->getFieldId('body')] = array(
+      'type' => 'text',
+    );
+
+    $index->setOption('processors', array(
+      'search_api_html_filter_processor' => array(
+        'status' => TRUE,
+        'weight' => 0,
+      ),
+    ));
+    $index->save();
+  }
+
+  protected function disableHTMLFilter() {
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = entity_load('search_api_index', $this->indexId);
+    $index->setOption('processors', array(
+      'search_api_html_filter_processor' => array(
+        'status' => FALSE,
+        'weight' => 0,
+      ),
+    ));
+    // Remove a field from the index and check if the change is matched in
+    // the server configuration.
+    unset($index->options['fields'][$this->getFieldId('body')]);
     $index->save();
   }
 

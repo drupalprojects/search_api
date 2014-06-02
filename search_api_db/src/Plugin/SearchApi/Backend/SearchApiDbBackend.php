@@ -743,6 +743,8 @@ class SearchApiDbBackend extends BackendPluginBase {
     $fields_updated = FALSE;
     $denormalized_table = $this->configuration['index_tables'][$index->id()];
     $txn = $this->database->startTransaction('search_api_indexing');
+    $text_table = $denormalized_table . '_text';
+
     try {
       $inserts = array();
       $text_inserts = array();
@@ -762,6 +764,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           continue;
         }
         $table = $fields[$name]['table'];
+
         $boost = $fields[$name]['boost'];
         $this->database->delete($table)
           ->condition('item_id', $id)
@@ -791,6 +794,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           // value.
           $field_value = $value;
           $denormalized_value = '';
+
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
           } while (strlen($denormalized_value) < 30);
@@ -803,7 +807,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             // at 500 words and 0.3 at 1000 words.
             $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
 
-            $value = &$token['value'];
+            $value = $token['value'];
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
@@ -811,18 +815,19 @@ class SearchApiDbBackend extends BackendPluginBase {
               continue;
             }
             $value = Unicode::strtolower($value);
-            $token['score'] *= $focus;
+            $token['score'] = $token['score'] * $focus;
             if (!isset($words[$value])) {
               $words[$value] = $token;
             }
             else {
               $words[$value]['score'] += $token['score'];
             }
+            $token['value'] = $value;
           }
           if ($words) {
             $field_name = self::getTextFieldName($name);
             foreach ($words as $word) {
-              $text_inserts[$table][] = array(
+              $text_inserts[$text_table][] = array(
                 'item_id'    => $id,
                 'field_name' => $field_name,
                 'word'       => $word['value'],
@@ -925,7 +930,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return Utility::isTextType($type, array('text', 'tokens')) ? array() : NULL;
+      return Utility::isTextType($type, array('text', 'tokenized_text')) ? array() : NULL;
     }
     switch ($type) {
       case 'text':
@@ -942,8 +947,9 @@ class SearchApiDbBackend extends BackendPluginBase {
             );
           }
         }
-        $value = $ret;
-        // FALL-THROUGH!
+        // This used to fall through the tokenized case
+        return $ret;
+        break;
       case 'tokenized_text':
         while (TRUE) {
           foreach ($value as $i => $v) {

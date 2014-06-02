@@ -90,6 +90,10 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::preprocessIndexItems().
    *
    * Calls processField() for all fields for which testField() returns TRUE.
+   *
+   * @param array $items
+   *   An array of items to be preprocessed for indexing, formatted as specified
+   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($items as &$item) {
@@ -143,17 +147,25 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     if (!isset($values) || $values === '') {
       return;
     }
+    $type_changed_to_tokenized = FALSE;
 
     foreach ($values as &$value) {
       if ($type == 'tokenized_text') {
-        $this->processFieldValue($value['value']);
+        foreach ($value as &$tokenized_value) {
+          $this->processFieldValue($tokenized_value['value']);
+        }
       }
       else {
         $this->processFieldValue($value);
+        // If we got an array back from processFieldValue it means it
+        // transformed to a tokenized set of things.
+        if (is_array($value) && isset($value['0']) && isset($value['0']['score']) && isset($value['0']['value'])) {
+          $type_changed_to_tokenized = TRUE;
+        }
       }
+
       // Don't tokenize non-fulltext content!
-      if (in_array($type, array('text', 'tokenized_text'))) {
-        $type = 'tokenized_text';
+      if (in_array($type, array('text', 'tokenized_text')) || $type_changed_to_tokenized) {
         // @todo : needs work to validate the data schema of drupal
         if (is_array($value)) {
           $value = $this->normalizeTokens($value);
@@ -164,6 +176,9 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
           $value = $this->implodeTokens($value);
         }
       }
+    }
+    if ($type_changed_to_tokenized) {
+      $type = "tokenized_text";
     }
   }
 
@@ -317,7 +332,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokens', 'string'));
+    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
   }
 
   /**
