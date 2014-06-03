@@ -16,6 +16,7 @@ use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
@@ -731,14 +732,14 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   The index for which the item is being indexed.
    * @param string $id
    *   The item's ID.
-   * @param array $item
-   *   The extracted fields of the item.
+   * @param \Drupal\search_api\Item\ItemInterface $item
+   *   The item to index.
    *
    * @throws \Exception
    *   Any encountered database (or other) exceptions are passed on, out of this
    *   method.
    */
-  protected function indexItem(IndexInterface $index, $id, array $item) {
+  protected function indexItem(IndexInterface $index, $id, ItemInterface $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
     $denormalized_table = $this->configuration['index_tables'][$index->id()];
@@ -748,6 +749,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     try {
       $inserts = array();
       $text_inserts = array();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($item as $name => $field) {
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables
@@ -772,14 +774,11 @@ class SearchApiDbBackend extends BackendPluginBase {
         $this->database->delete($denormalized_table)
           ->condition('item_id', $id)
           ->execute();
-        // Don't index null values
-        if ($field['value'] === NULL) {
-          continue;
-        }
-        $type = $field['type'];
+
+        $type = $field->getType();
         $value = array();
-        foreach ($field['value'] as $field_value) {
-          $converted_value = $this->convert($field_value, $type, $field['original_type'], $index);
+        foreach ($field->getValues() as $field_value) {
+          $converted_value = $this->convert($field_value, $type, $field->getOriginalType(), $index);
 
           // Don't add NULL values to the return array. Also, adding an empty
           // array is, of course, a waste of time.
