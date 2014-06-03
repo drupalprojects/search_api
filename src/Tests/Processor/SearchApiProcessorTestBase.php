@@ -45,8 +45,9 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
   public function setUp($processor = NULL) {
     parent::setUp();
 
-    $this->installSchema('node', array('node', 'node_field_data', 'node_field_revision', 'node_revision', 'node_access'));
-    $this->installSchema('comment', array('comment'));
+    $this->installEntitySchema('node');
+    $this->installSchema('node', array('node_access'));
+    $this->installEntitySchema('comment');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     $server_name = $this->randomName();

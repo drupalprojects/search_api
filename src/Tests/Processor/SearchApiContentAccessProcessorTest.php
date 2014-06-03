@@ -56,10 +56,9 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
 
     // Insert anonymous user into the database as the user table is inner joined
     // by the CommentStorage.
-    $anonymous_user = new AnonymousUserSession();
     entity_create('user', array(
-      'uid' => $anonymous_user->id(),
-      'name' => $anonymous_user->getUsername(),
+      'uid' => 0,
+      'name' => '',
     ))->save();
 
     // Create a node with attached comment.
