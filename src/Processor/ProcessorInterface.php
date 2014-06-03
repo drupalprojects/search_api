@@ -58,16 +58,10 @@ interface ProcessorInterface extends IndexPluginInterface {
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL);
 
   /**
-   * Preprocess data items for indexing.
+   * Preprocess search items for indexing.
    *
-   * Typically, a preprocessor will execute its preprocessing (e.g. stemming,
-   * n-grams, word splitting, stripping stop words, etc.) only on the items'
-   * search_api_fulltext fields, if set. Other fields should usually be left
-   * untouched.
-   *
-   * @param array $items
-   *   An array of items to be preprocessed for indexing, formatted as specified
-   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be preprocessed for indexing, passed by reference.
    */
   public function preprocessIndexItems(array &$items);
 

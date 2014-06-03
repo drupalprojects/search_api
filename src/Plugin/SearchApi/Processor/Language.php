@@ -44,13 +44,19 @@ class Language extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($items as $i => $item) {
-      $items[$i]['search_api_language']['original_type'] = 'string';
-      if ($item['#item'] instanceof TranslatableInterface) {
-        $items[$i]['search_api_language']['value'] = array($item['#item']->language()->id);
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item) {
+      if (!($field = $item->getField('search_api_language'))) {
+        continue;
+      }
+      $object = $item->getOriginalObject();
+      if ($object instanceof TranslatableInterface) {
+        $field->addValue($object->language()->id);
       }
       else {
-        $items[$i]['search_api_language']['value'] = array(CoreLanguage::LANGCODE_NOT_SPECIFIED);
+        $field->addValue(CoreLanguage::LANGCODE_NOT_SPECIFIED);
       }
     }
   }

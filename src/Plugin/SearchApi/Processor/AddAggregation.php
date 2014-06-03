@@ -19,6 +19,9 @@ use Drupal\search_api\Utility\Utility;
  *   description = @Translation("Create aggregate fields to be additionally indexed.")
  * )
  */
+// @todo Port this.
+//   - New preprocessIndexItems() style.
+//   - Probably also some handling for the different datasources.
 class AddAggregation extends ProcessorPluginBase {
 
   /**

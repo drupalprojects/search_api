@@ -127,15 +127,26 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface[] $items */
+
+    // To exploit any performance improvements that come with viewing multiple
+    // objects at once,
     // First, extract all the passed item objects.
-    foreach ($items as $i => $item) {
-      if (isset($item['#item'])) {
-        $item_objects[$item['#datasource']][$i] = $item['#item'];
+    $item_objects = array();
+    /** @var \Drupal\search_api\Item\FieldInterface[] $item_fields */
+    $item_fields = array();
+    foreach ($items as $item_id => $item) {
+      if (!($field = $item->getField('search_api_rendered_item'))) {
+        continue;
       }
+      $item_fields[$item_id] = $field;
+      $item_objects[$item->getDatasourceId()][$item_id] = $item->getOriginalObject();
     }
 
     // Were there any objects passed?
-    if (empty($item_objects)) {
+    if (!$item_objects) {
       return;
     }
 
@@ -151,18 +162,17 @@ class RenderedItem extends ProcessorPluginBase {
           $build += $this->index->getDatasource($datasource_id)->viewMultipleItems($objects, $this->configuration['view_mode'][$datasource_id]);
         }
         catch (\InvalidArgumentException $e) {
-          // Do nothing; we still need to reset the account and $build will be empty
-          // anyways.
+          // Do nothing; we still need to reset the account and $build will be
+          // empty anyways.
         }
       }
     }
     // Restore the user.
     $this->currentUser->setAccount($original_user);
 
-    // Now add the rendered items back to the extracted fields.
-    foreach ($build as $i => $render) {
-      $items[$i]['search_api_rendered_item']['value'][] = drupal_render($render);
-      $items[$i]['search_api_rendered_item']['original_type'] = 'string';
+    // Now add the rendered items to their respective fields.
+    foreach ($build as $item_id => $render) {
+      $item_fields[$item_id]->addValue(drupal_render($render));
     }
   }
 

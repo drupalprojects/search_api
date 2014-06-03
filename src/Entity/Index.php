@@ -450,75 +450,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
-    // To enable proper extraction of fields with Utility::extractFields(),
-    // $fields will contain the information from $this->options['fields'], but
-    // in a two-dimensional array, keyed by both parts of the field identifier
-    // separately – i.e, first by datasource ID, then by property path.
-    $fields = array();
-    foreach ($this->options['fields'] as $key => $field) {
-      // Include real type, if known.
-      if (isset($field['real_type'])) {
-        $custom_type = $field['real_type'];
-        if ($this->getServer()->supportsDatatype($custom_type)) {
-          $field['type'] = $field['real_type'];
-        }
-      }
-
-      // Copy the field information into the $fields array.
-      if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
-        list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
-        $fields[$datasource_id][$property_path] = $field;
-      }
-      else {
-        $fields[NULL][$key] = $field;
-      }
+    /** @var \Drupal\search_api\Item\ItemInterface[] $items */
+    $items = array();
+    foreach ($search_objects as $item_id => $object) {
+      $items[$item_id] = Utility::createItemFromObject($this, $object, $item_id);
+      $items[$item_id]->getFields(TRUE);
     }
 
-    $extracted_items = array();
-    $ret = array();
-    foreach ($search_objects as $item_id => $item) {
-      list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
-      $extracted_item = array();
-      $extracted_item['#item'] = $item;
-      $extracted_item['#item_id'] = $raw_id;
-      $extracted_item['#datasource'] = $datasource_id;
-      foreach (array(NULL, $datasource_id) as $fields_key) {
-        if (!empty($fields[$fields_key])) {
-          $extracted_fields = $fields[$fields_key];
-          Utility::extractFields($item, $extracted_fields);
-          $field_prefix = $fields_key ? $fields_key . self::DATASOURCE_ID_SEPARATOR : '';
-          foreach ($extracted_fields as $property_path => $field) {
-            $extracted_item[$field_prefix . $property_path] = $field;
-          }
-        }
-      }
-      $extracted_items[$item_id] = $extracted_item;
-      // Remember the items that were initially passed.
-      $ret[$item_id] = $item_id;
-    }
+    // Remember the items that were initially passed.
+    $ret = array_keys($items);
+    $ret = array_combine($ret, $ret);
 
     // Preprocess the indexed items.
-    \Drupal::moduleHandler()->alter('search_api_index_items', $extracted_items, $this);
-    $this->preprocessIndexItems($extracted_items);
+    \Drupal::moduleHandler()->alter('search_api_index_items', $items, $this);
+    $this->preprocessIndexItems($items);
 
-    // Remove all items still in $extracted_items from $ret. Thus, only the
-    // rejected items' IDs are still contained in $ret, to later be returned
-    // along with the successfully indexed ones.
-    foreach ($extracted_items as $item_id => $item) {
+    // Remove all items still in $items from $ret. Thus, only the rejected
+    // items' IDs are still contained in $ret, to later be returned along with
+    // the successfully indexed ones.
+    foreach ($items as $item_id => $item) {
       unset($ret[$item_id]);
     }
 
     // Items that are rejected should also be deleted from the server.
     if ($ret) {
       $this->getServer()->deleteItems($this, $ret);
-      if (!$extracted_items) {
+      if (!$items) {
         return $ret;
       }
     }
 
     // Return the IDs of all items that were either successfully indexed or
     // rejected before being handed to the server.
-    return array_merge($ret, $this->getServer()->indexItems($this, $extracted_items));
+    return array_merge(array_values($ret), array_values($this->getServer()->indexItems($this, $items)));
   }
 
   /**
@@ -924,8 +888,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * Lets all enabled processors for this index preprocess the indexed data.
    *
-   * @param array $items
-   *   An array of items to be preprocessed for indexing.
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be preprocessed for indexing, passed by reference.
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($this->getProcessors() as $processor) {

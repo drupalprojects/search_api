@@ -23,22 +23,6 @@ class AddURL extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function preprocessIndexItems(array &$items) {
-    foreach ($items as &$item) {
-      // Only run if the field is enabled for the index.
-      if (!empty($item['search_api_url'])) {
-        $url = $this->index->getDatasource($item['#datasource'])->getItemUrl($item['#item']);
-        if ($url) {
-          $item['search_api_url']['value'][] = $url->toString();
-          $item['search_api_url']['original_type'] = 'uri';
-        }
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
     if ($datasource) {
       return;
@@ -49,6 +33,24 @@ class AddURL extends ProcessorPluginBase {
       'type' => 'uri',
     );
     $properties['search_api_url'] = new DataDefinition($definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array &$items) {
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item) {
+      // Only run if the field is enabled for the index.
+      if ($field = $item->getField('search_api_url')) {
+        $url = $item->getDatasource()->getItemUrl($item->getOriginalObject());
+        if ($url) {
+          $field->addValue($url->toString());
+        }
+      }
+    }
   }
 
 }

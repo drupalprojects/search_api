@@ -10,8 +10,9 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\Component\Utility\String;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\user\UserInterface;
 
- /**
+/**
   * @SearchApiProcessor(
   *   id = "search_api_role_filter_processor",
   *   label = @Translation("Role Filter"),
@@ -41,28 +42,31 @@ class RoleFilter extends FieldsProcessorPluginBase {
     $roles = $this->configuration['roles'];
     $default = (bool) $this->configuration['default'];
 
-    foreach ($items as $id => $item) {
-      if ($this->index->getDatasource($item['#datasource'])->getEntityTypeId() != 'user') {
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item_id => $item) {
+      $account = $item->getOriginalObject();
+      if (!($account instanceof UserInterface)) {
         continue;
       }
 
-      /** @var \Drupal\user\UserInterface $account */
-      $account = $item['#item'];
-
+      // @todo Could probably be simplified with array_intersect_key() and
+      // if ($default == $has_some_roles).
       $excess_roles = array_diff_key($account->getRoles(), $roles);
 
       // All but those from one of the selected roles.
       if ($default) {
         // User has some of the selected roles.
         if (count($excess_roles) < count($account->getRoles())) {
-          unset($items[$id]);
+          unset($items[$item_id]);
         }
       }
       // Only those from the selected roles.
       else {
         // User does not have any of the selected roles.
         if (count($excess_roles) === count($account->getRoles())) {
-          unset($items[$id]);
+          unset($items[$item_id]);
         }
       }
     }

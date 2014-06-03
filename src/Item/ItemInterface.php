@@ -81,27 +81,27 @@ interface ItemInterface extends \Traversable {
    * @param string $field_id
    *   The identifier of the field to retrieve.
    * @param bool $extract
-   *   (optional) If TRUE, a missing field will be extracted from the original
-   *   object. Defaults to only return the field if it was previously set with
-   *   setField() or setFields().
+   *   (optional) If FALSE, only returns the field if it was previously set or
+   *   extracted. Defaults to extracting all fields from the original object if
+   *   necessary.
    *
    * @return \Drupal\search_api\Item\FieldInterface|null
    *   The field object with this identifier, or NULL if the field is unknown.
    */
-  public function getField($field_id, $extract = FALSE);
+  public function getField($field_id, $extract = TRUE);
 
   /**
    * Returns the item's fields.
    *
    * @param bool $extract
-   *   (optional) If TRUE, missing fields will be extracted from the original
-   *   object. Defaults to only return those fields previously set with
-   *   setField() or setFields().
+   *   (optional) If FALSE, only returns the fields that were previously set or
+   *   extracted. Defaults to extracting the fields from the original object if
+   *   necessary.
    *
    * @return \Drupal\search_api\Item\FieldInterface[]
    *   An array with the fields of this item, keyed by field identifier.
    */
-  public function getFields($extract = FALSE);
+  public function getFields($extract = TRUE);
 
   /**
    * Sets one of the item's fields.

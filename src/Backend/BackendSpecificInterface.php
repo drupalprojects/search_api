@@ -184,8 +184,8 @@ interface BackendSpecificInterface {
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
-   * @return array
-   *   An array of the ids of all items that were successfully indexed.
+   * @return string[]
+   *   The IDs of all items that were successfully indexed.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If indexing was prevented by a fundamental configuration error.
@@ -199,7 +199,7 @@ interface BackendSpecificInterface {
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index for which items should be deleted.
-   * @param array $ids
+   * @param string[] $ids
    *   An array of item IDs.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException

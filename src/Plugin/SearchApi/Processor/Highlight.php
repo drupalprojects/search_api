@@ -235,8 +235,8 @@ class Highlight extends ProcessorPluginBase {
       $datasource_id = $result_item->getDatasourceId();
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($fulltext_fields[$datasource_id] as $field_id => $field) {
-        if ($result_item->getField($field_id)) {
-          $items[$item_id][$field_id] = $result_item->getField($field_id);
+        if ($result_item->getField($field_id, FALSE)) {
+          $items[$item_id][$field_id] = $result_item->getField($field_id, FALSE);
         }
         elseif ($load) {
           $needs_extraction[$item_id][$field->getPropertyPath()] = clone $field;
