@@ -61,8 +61,15 @@ class Field implements FieldInterface {
   /**
    * {@inheritdoc}
    */
-  public function setType($type) {
+  public function setType($type, $notify = FALSE) {
     $this->type = $type;
+    if ($notify) {
+      $fields = $this->index->getOption('fields', array());
+      if (isset($fields[$this->fieldIdentifier])) {
+        $fields[$this->fieldIdentifier]['type'] = $type;
+      }
+      $this->index->setOption('fields', $fields);
+    }
     return $this;
   }
 

@@ -190,17 +190,29 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $fields;
 
   /**
-   * Cached fields data, grouped by datasource.
+   * Cached fields data, grouped by datasource and indexed state.
    *
-   * The array contains two elements: 0 for all fields, 1 for indexed fields.
-   * The elements under these keys are arrays with datasource IDs as keys and
-   * return values for getFieldsByDatasource() as values.
+   * The array is three-dimensional, with the first two keys corresponding to
+   * the parameters of a getFieldsByDatasource() call and the last one being the
+   * field ID.
    *
    * @var \Drupal\search_api\Item\FieldInterface[][][]
    *
    * @see getFieldsByDatasource()
    */
   protected $datasourceFields;
+
+  /**
+   * Cached additional fields data, grouped by datasource.
+   *
+   * The array is two-dimensional, with the first key corresponding to the
+   * datasource ID and the second key being a field ID.
+   *
+   * @var \Drupal\search_api\Item\FieldInterface[][]
+   *
+   * @see getAdditionalFieldsByDatasource()
+   */
+  protected $datasourceAdditionalFields;
 
   /**
    * Cached fulltext fields data for getFulltextFields().
@@ -568,7 +580,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $type_mapping = Utility::getFieldTypeMapping();
     $fields = &$this->fields[0]['fields'];
     $field_options = $this->options['fields'];
-    $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
+    $enabled_additional_fields = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
     if (!$prefix && $datasource_id) {
@@ -578,8 +590,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
-    foreach ($properties as $key => $property) {
-      $key = "$prefix$key";
+    foreach ($properties as $property_path => $property) {
+      $key = "$prefix$property_path";
       $label = $prefix_label . $property->getLabel();
       $description = $property->getDescription();
       while ($property instanceof ListDataDefinitionInterface) {
@@ -604,7 +616,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
 
         $additional = count($nested_properties) > 1;
-        if (!empty($recurse_for_prefixes[$key]) && $nested_properties) {
+        if (!empty($enabled_additional_fields[$key]) && $nested_properties) {
           // We allow the main property to be indexed directly, so we don't
           // have to add it again for the nested fields.
           if ($main_property) {
@@ -620,8 +632,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $field = Utility::createAdditionalField($this, $key);
           $field->setLabel("$label [$key]");
           $field->setDescription($description);
-          $field->setEnabled(!empty($recurse_for_prefixes[$key]));
+          $field->setEnabled(!empty($enabled_additional_fields[$key]));
+          $field->setLocked(FALSE);
           $this->fields[0]['additional fields'][$key] = $field;
+          if ($field->isEnabled()) {
+            while ($pos = strrpos($property_path, ':')) {
+              $property_path = substr($property_path, 0, $pos);
+              /** @var \Drupal\search_api\Item\AdditionalFieldInterface $field */
+              $field = $this->fields[0]['additional fields'][$property_path];
+              $field->setEnabled(TRUE);
+              $field->setLocked(TRUE);
+            }
+          }
         }
         // If the complex data type has a main property, we can index that
         // directly here. Otherwise, we don't add it and continue with the next
@@ -707,18 +729,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $only_indexed = $only_indexed ? 1 : 0;
     if (!isset($this->datasourceFields)) {
       $this->computeFields();
-      $this->datasourceFields = array_fill_keys($this->datasourcePluginIds, array());
-      $this->datasourceFields[NULL] = array();
+      $this->datasourceFields = array_fill_keys($this->datasourcePluginIds, array(array(), array()));
+      $this->datasourceFields[NULL] = array(array(), array());
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($this->fields[0]['fields'] as $field_id => $field) {
-        $datasource_id = $field->getDatasourceId();
-        $this->datasourceFields[0][$datasource_id][$field_id] = $field;
+        $this->datasourceFields[$field->getDatasourceId()][0][$field_id] = $field;
         if ($field->isIndexed()) {
-          $this->datasourceFields[1][$datasource_id][$field_id] = $field;
+          $this->datasourceFields[$field->getDatasourceId()][1][$field_id] = $field;
         }
       }
     }
-    return $this->datasourceFields[$only_indexed][$datasource_id];
+    return $this->datasourceFields[$datasource_id][$only_indexed];
   }
 
   /**
@@ -727,6 +748,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function getAdditionalFields() {
     $this->computeFields();
     return $this->fields[0]['additional fields'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAdditionalFieldsByDatasource($datasource_id) {
+    if (!isset($this->datasourceAdditionalFields)) {
+      $this->computeFields();
+      $this->datasourceAdditionalFields = array_fill_keys($this->datasourcePluginIds, array());
+      $this->datasourceAdditionalFields[NULL] = array();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($this->fields[0]['additional fields'] as $field_id => $field) {
+        $this->datasourceAdditionalFields[$field->getDatasourceId()][$field_id] = $field;
+      }
+    }
+    return $this->datasourceAdditionalFields[$datasource_id];
   }
 
   /**

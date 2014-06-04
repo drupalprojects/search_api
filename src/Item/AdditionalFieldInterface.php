@@ -34,4 +34,24 @@ interface AdditionalFieldInterface extends GenericFieldInterface {
    */
   public function setEnabled($enabled, $notify = FALSE);
 
+  /**
+   * Determines whether this additional field's state is locked.
+   *
+   * @return bool
+   *   TRUE if a child of this additional field is enabled or the field was
+   *   nevertheless marked as locked, FALSE otherwise.
+   */
+  public function isLocked();
+
+  /**
+   * Sets whether this additional field's state should be locked.
+   *
+   * @param bool $locked
+   *   TRUE if the state should be locked, FALSE otherwise.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setLocked($locked);
+
 }

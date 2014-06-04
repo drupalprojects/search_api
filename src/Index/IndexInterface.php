@@ -324,8 +324,23 @@ interface IndexInterface extends ConfigEntityInterface {
    * The related properties of these fields can be added to the index.
    *
    * @return \Drupal\search_api\Item\AdditionalFieldInterface[]
+   *   The additional fields available for the index, keyed by field IDs.
    */
   public function getAdditionalFields();
+
+  /**
+   * Retrieves a list of complex fields from a specific datasource.
+   *
+   * The related properties of these fields can be added to the index.
+   *
+   * @param string|null $datasource_id
+   *   The ID of the datasource whose additional fields should be retrieved, or
+   *   NULL to retrieve all datasource-independent additional fields.
+   *
+   * @return \Drupal\search_api\Item\AdditionalFieldInterface[]
+   *   The additional fields available for the datasource, keyed by field IDs.
+   */
+  public function getAdditionalFieldsByDatasource($datasource_id);
 
   /**
    * Convenience method for getting all of this index's fulltext fields.

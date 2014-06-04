@@ -22,6 +22,13 @@ class AdditionalField implements AdditionalFieldInterface {
   protected $enabled;
 
   /**
+   * Whether this additional field's state is locked.
+   *
+   * @var bool
+   */
+  protected $locked;
+
+  /**
    * {@inheritdoc}
    */
   public function isEnabled() {
@@ -36,6 +43,9 @@ class AdditionalField implements AdditionalFieldInterface {
    * {@inheritdoc}
    */
   public function setEnabled($enabled, $notify = FALSE) {
+    if ($this->isLocked()) {
+      return $this;
+    }
     $this->enabled = $enabled;
     if ($notify) {
       $additional_fields = $this->index->getOption('additional fields', array());
@@ -47,6 +57,34 @@ class AdditionalField implements AdditionalFieldInterface {
       }
       $this->index->setOption('additional fields', $additional_fields);
     }
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isLocked() {
+    if (!isset($this->locked)) {
+      $additional_fields = $this->index->getOption('additional fields', array());
+      $prefix = $this->getFieldIdentifier() . ':';
+      $prefix_len = strlen($prefix);
+      $this->locked = FALSE;
+      foreach (array_keys($additional_fields) as $field_id) {
+        if (substr($field_id, 0, $prefix_len) == $prefix) {
+          $this->locked = TRUE;
+          break;
+        }
+      }
+
+    }
+    return $this->locked;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLocked($locked = TRUE) {
+    $this->locked = $locked;
     return $this;
   }
 

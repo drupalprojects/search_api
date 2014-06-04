@@ -59,7 +59,7 @@ class Utility {
   }
 
   /**
-   * Returns all field types recognized by the Search API framework.
+   * Returns all field data types known by the Search API as an options list.
    *
    * @return array
    *   An associative array with all recognized types as keys, mapped to their
@@ -68,6 +68,7 @@ class Utility {
    * @see \Drupal\search_api\Utility::getDefaultDataTypes()
    * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
+  // @todo Rename to something more self-documenting, like getDataTypeOptions().
   static function getDataTypes() {
     $types = self::getDefaultDataTypes();
     foreach (self::getDataTypeInfo() as $id => $type) {
