@@ -12,7 +12,7 @@ use Drupal\search_api\Exception\SearchApiException;
 /**
  * Represents a field on a search item that can be indexed.
  */
-class Field implements FieldInterface {
+class Field implements \IteratorAggregate, FieldInterface {
 
   use FieldTrait;
 
@@ -191,6 +191,13 @@ class Field implements FieldInterface {
     $properties = $this->getSerializationProperties();
     unset($properties['values']);
     return array_keys($properties);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIterator() {
+    return new \ArrayIterator($this->values);
   }
 
 }

@@ -16,7 +16,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 /**
  * Provides a default implementation for a search item.
  */
-class Item implements ItemInterface, \IteratorAggregate {
+class Item implements \IteratorAggregate, ItemInterface {
 
   /**
    * The search index with which this item is associated.

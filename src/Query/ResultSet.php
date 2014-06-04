@@ -12,7 +12,7 @@ use Drupal\search_api\Item\ItemInterface;
 /**
  * Represents the result set of a search query.
  */
-class ResultSet implements ResultSetInterface, \IteratorAggregate {
+class ResultSet implements \IteratorAggregate, ResultSetInterface {
 
   /**
    * The executed query.
