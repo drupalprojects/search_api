@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Query;
 
+use Drupal\search_api\Item\ItemInterface;
+
 /**
  * Represents the result set of a search query.
  */
@@ -89,6 +91,14 @@ class ResultSet implements ResultSetInterface, \IteratorAggregate {
    */
   public function getResultItems() {
     return $this->resultItems;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addResultItem(ItemInterface $result_item) {
+    $this->resultItems[$result_item->getId()] = $result_item;
+    return $this;
   }
 
   /**

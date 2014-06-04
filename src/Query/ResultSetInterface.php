@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Query;
 
+use Drupal\search_api\Item\ItemInterface;
+
 /**
  * Represents the result set of a search query.
  *
@@ -49,6 +51,20 @@ interface ResultSetInterface extends \Traversable {
    *   The query result items, keyed by item ID.
    */
   public function getResultItems();
+
+  /**
+   * Adds a new result item.
+   *
+   * This method has to be invoked in the correct order, with the first-ordered
+   * item being added first and so on.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface $result_item
+   *   One of the search results.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function addResultItem(ItemInterface $result_item);
 
   /**
    * Sets the query result items.

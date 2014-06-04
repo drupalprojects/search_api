@@ -1094,7 +1094,6 @@ class SearchApiDbBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    $time_method_called = microtime(TRUE);
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
     if (!isset($this->configuration['field_tables'][$index->id()])) {
@@ -1104,18 +1103,17 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     $db_query = $this->createDbQuery($query, $fields);
 
-    $time_processing_done = microtime(TRUE);
-    $results = array();
+    $results = Utility::createSearchResultSet($query);
 
     $skip_count = $query->getOption('skip result count');
     if (!$skip_count) {
       $count_query = $db_query->countQuery();
-      $results['result count'] = $count_query->execute()->fetchField();
+      $results->setResultCount($count_query->execute()->fetchField());
     }
 
-    if ($skip_count || $results['result count']) {
+    if ($skip_count || $results->getResultCount()) {
       if ($query->getOption('search_api_facets')) {
-        $results['search_api_facets'] = $this->getFacets($query, clone $db_query);
+        $results->setExtraData('search_api_facets', $this->getFacets($query, clone $db_query));
       }
 
       $query_options = $query->getOptions();
@@ -1163,35 +1161,19 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
 
       $result = $db_query->execute();
-      $time_queries_done = microtime(TRUE);
 
       foreach ($result as $row) {
-        list($datasource, $id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $row->item_id);
-        $results['results'][$row->item_id] = array(
-          'id' => $id,
-          'datasource' => $datasource,
-          'score' => $row->score / self::SCORE_MULTIPLIER,
-        );
+        $item = Utility::createItem($index, $row->item_id);
+        $item->setScore($row->score / self::SCORE_MULTIPLIER);
+        $results->addResultItem($item);
       }
-      if ($skip_count) {
-        $results['result count'] = !empty($results['results']);
+      if ($skip_count && !empty($item)) {
+        $results->setResultCount(1);
       }
     }
-    else {
-      $time_queries_done = microtime(TRUE);
-      $results['results'] = array();
-    }
 
-    $results['warnings'] = array_keys($this->warnings);
-    $results['ignored'] = array_keys($this->ignored);
-
-    $time_end = microtime(TRUE);
-    $results['performance'] = array(
-      'complete' => $time_end - $time_method_called,
-      'preprocessing' => $time_processing_done - $time_method_called,
-      'execution' => $time_queries_done - $time_processing_done,
-      'postprocessing' => $time_end - $time_queries_done,
-    );
+    $results->setWarnings(array_keys($this->warnings));
+    $results->setIgnoredSearchKeys(array_keys($this->ignored));
 
     return $results;
   }
