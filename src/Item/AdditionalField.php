@@ -88,4 +88,19 @@ class AdditionalField implements AdditionalFieldInterface {
     return $this;
   }
 
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    $out = $this->getLabel() . ' [' . $this->getFieldIdentifier() . ']: ';
+    if (!$this->isEnabled()) {
+      $out .= 'not ';
+    }
+    $out .= 'enabled';
+    if ($this->isLocked()) {
+      $out .= ' (LOCKED)';
+    }
+    return $out;
+  }
+
 }

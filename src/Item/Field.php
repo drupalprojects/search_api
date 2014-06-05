@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Represents a field on a search item that can be indexed.
@@ -198,6 +199,30 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function getIterator() {
     return new \ArrayIterator($this->values);
+  }
+
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    $out = $this->getLabel() . ' [' . $this->getFieldIdentifier() . ']: ';
+    if ($this->isIndexed()) {
+      $out .= 'indexed as type ' . $this->getType();
+      if (Utility::isTextType($this->getType())) {
+        $out .= ' (boost ' . $this->getBoost() . ')';
+      }
+    }
+    else {
+      $out .= 'not indexed';
+    }
+    if ($this->getValues()) {
+      $out .= "\nValues:";
+      foreach ($this->getValues() as $value) {
+        $value = str_replace("\n", "\n  ", "$value");
+        $out .= "\n- " . $value;
+      }
+    }
+    return $out;
   }
 
 }

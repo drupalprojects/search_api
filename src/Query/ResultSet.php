@@ -196,4 +196,35 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
     return new \ArrayIterator($this->resultItems);
   }
 
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    $out = $this->getResultCount() . ' results';
+    if ($this->getResultItems()) {
+      $out .= ':';
+      foreach ($this->getResultItems() as $item) {
+        $item = str_replace("\n", "\n  ", "$item");
+        $out .= "\n- " . $item;
+      }
+    }
+    if ($this->getWarnings()) {
+      $out .= "\nWarnings:";
+      foreach ($this->getWarnings() as $warning) {
+        $out .= "\n- " . $warning;
+      }
+    }
+    if ($this->getIgnoredSearchKeys()) {
+      $out .= "\nIgnored keys:";
+      foreach ($this->getIgnoredSearchKeys() as $ignored_key) {
+        $out .= "\n- " . $ignored_key;
+      }
+    }
+    if ($this->getAllExtraData()) {
+      $data = str_replace("\n", "\n  ", print_r($this->getAllExtraData(), TRUE));
+      $out .= "\nExtra data: " . $data;
+    }
+    return $out;
+  }
+
 }

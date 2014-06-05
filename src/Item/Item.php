@@ -327,4 +327,33 @@ class Item implements \IteratorAggregate, ItemInterface {
     }
   }
 
+  /**
+   * Implements the magic __toString() method to simplify debugging.
+   */
+  public function __toString() {
+    $out = 'Item ' . $this->getId();
+    if ($this->getScore() != 1) {
+      $out .= "\nScore: " . $this->getScore();
+    }
+    if ($this->getBoost() != 1) {
+      $out .= "\nBoost: " . $this->getBoost();
+    }
+    if ($this->getExcerpt()) {
+      $excerpt = str_replace("\n", "\n  ", $this->getExcerpt());
+      $out .= "\nExcerpt: $excerpt";
+    }
+    if ($this->getFields()) {
+      $out .= "\nFields:";
+      foreach ($this->getFields() as $field) {
+        $field = str_replace("\n", "\n  ", "$field");
+        $out .= "\n- " . $field;
+      }
+    }
+    if ($this->getAllExtraData()) {
+      $data = str_replace("\n", "\n  ", print_r($this->getAllExtraData(), TRUE));
+      $out .= "\nExtra data: " . $data;
+    }
+    return $out;
+  }
+
 }
