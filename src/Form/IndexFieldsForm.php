@@ -193,7 +193,7 @@ class IndexFieldsForm extends EntityForm {
       $build['fields'][$key]['boost'] = array(
         '#type' => 'select',
         '#options' => $boosts,
-        '#default_value' => $field->getBoost(),
+        '#default_value' => sprintf('%.1f', $field->getBoost()),
         '#states' => array(
           'visible' => array(
             $css_key . '-indexed' => array('checked' => TRUE),

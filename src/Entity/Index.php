@@ -578,8 +578,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
-    $fields = &$this->fields[0]['fields'];
-    $field_options = $this->options['fields'];
+    $field_options = isset($this->options['fields']) ? $this->options['fields'] : array();
     $enabled_additional_fields = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
@@ -629,19 +628,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
 
         if ($additional) {
-          $field = Utility::createAdditionalField($this, $key);
-          $field->setLabel("$label [$key]");
-          $field->setDescription($description);
-          $field->setEnabled(!empty($enabled_additional_fields[$key]));
-          $field->setLocked(FALSE);
-          $this->fields[0]['additional fields'][$key] = $field;
-          if ($field->isEnabled()) {
+          $additional_field = Utility::createAdditionalField($this, $key);
+          $additional_field->setLabel("$label [$key]");
+          $additional_field->setDescription($description);
+          $additional_field->setEnabled(!empty($enabled_additional_fields[$key]));
+          $additional_field->setLocked(FALSE);
+          $this->fields[0]['additional fields'][$key] = $additional_field;
+          if ($additional_field->isEnabled()) {
             while ($pos = strrpos($property_path, ':')) {
               $property_path = substr($property_path, 0, $pos);
-              /** @var \Drupal\search_api\Item\AdditionalFieldInterface $field */
-              $field = $this->fields[0]['additional fields'][$property_path];
-              $field->setEnabled(TRUE);
-              $field->setLocked(TRUE);
+              /** @var \Drupal\search_api\Item\AdditionalFieldInterface $additional_field */
+              $additional_field = $this->fields[0]['additional fields'][$property_path];
+              $additional_field->setEnabled(TRUE);
+              $additional_field->setLocked(TRUE);
             }
           }
         }
@@ -686,11 +685,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $field->setLabelPrefix($label_prefix);
       $field->setDescription($description);
       $field->setIndexed(FALSE);
-      $fields[$key] = $field;
+      $this->fields[0]['fields'][$key] = $field;
       if (isset($field_options[$key])) {
         $field->setIndexed(TRUE);
         $field->setType($field_options[$key]['type']);
-        if (isset($field_options[$key])) {
+        if (isset($field_options[$key]['boost'])) {
           $field->setBoost($field_options[$key]['boost']);
         }
         $this->fields[1]['fields'][$key] = $field;
@@ -700,7 +699,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
     }
 
-    uasort($fields, '\Drupal\search_api\Entity\Index::sortField');
+    uasort($this->fields[0]['fields'], '\Drupal\search_api\Entity\Index::sortField');
   }
 
   /**

@@ -202,6 +202,8 @@ function theme_search_api_server($variables) {
  * @return string
  *   The rendered HTML for a Search API index.
  */
+// @todo This executes a search in the theme layer, amongst other thing.
+//   Definitely not cool.
 function theme_search_api_index($variables) {
   // Get the Search API index
   /** @var $index \Drupal\search_api\Index\IndexInterface */
@@ -313,7 +315,7 @@ function theme_search_api_index($variables) {
       $vars = array('@url' => url('https://drupal.org/node/2009804#server-index-status'));
       // Build the server index status info.
       $label = t('Server index status');
-      $info = \Drupal::translation()->formatPlural($response['result count'], 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+      $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
       $rows[] = Utility::deepCopy($row);
     }
     // Get the configured options, merge in default options to prevent notice

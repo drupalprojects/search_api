@@ -211,7 +211,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     try {
       // Create the denormalized table now.
       $index_table = $this->findFreeTable('search_api_db_', $index->id());
-      $this->createFieldTable(array(), array('table' => $index_table), TRUE);
+      $this->createFieldTable(NULL, array('table' => $index_table));
 
       // If there are no fields, we can take a shortcut.
       if (!$index->getFields()) {
@@ -329,18 +329,16 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * Used as a helper method in fieldsUpdated().
    *
-   * @param \Drupal\search_api\Item\FieldInterface $field
-   *   The field to add.
+   * @param \Drupal\search_api\Item\FieldInterface|null $field
+   *   The field to add. Or NULL if only the initial table with an "item_id"
+   *   column should be created.
    * @param array $db
    *   Associative array containing the following:
    *   - table: The table to use for the field.
    *   - column: (optional) The column to use in that table. Defaults to
    *     "value".
-   * @param bool $initial_table_only
-   *   (optional) If TRUE, we create a table with just the 'item_id' column.
-   *   Defaults to FALSE.
    */
-  protected function createFieldTable(FieldInterface $field, $db, $initial_table_only = FALSE) {
+  protected function createFieldTable(FieldInterface $field = NULL, $db) {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -373,7 +371,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     }
 
     // Stop here if we want to create a table with just the 'item_id' column.
-    if ($initial_table_only) {
+    if (!isset($field)) {
       return;
     }
 

@@ -277,7 +277,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   of \Drupal\search_api\Query\FilterInterface::getFilters().
    */
   protected function processFilters(array &$filters) {
-    $fields = $this->index->getOption('fields');
+    $fields = $this->index->getFields();
     foreach ($filters as $key => &$f) {
       if (is_array($f)) {
         if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
