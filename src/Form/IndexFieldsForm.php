@@ -122,7 +122,7 @@ class IndexFieldsForm extends EntityForm {
         '#theme' => 'search_api_admin_fields_table',
       );
 
-      $fields = $index->getFieldsByDatasource($datasource_id);
+      $fields = $index->getFieldsByDatasource($datasource_id, FALSE);
       $additional = $index->getAdditionalFieldsByDatasource($datasource_id);
       $form[$datasource_id] += $this->buildFields($fields, $additional);
     }
