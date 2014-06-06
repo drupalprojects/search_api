@@ -13,6 +13,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
+use Drupal\search_api\Processor\ProcessorPluginBase;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -66,7 +67,34 @@ u: 1.5",
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = parent::buildConfigurationForm($form, $form_state);
+    $form = array();
+
+    // Only include full text fields. Important as only those can be tokenized.
+    $fields = $this->index->getFields();
+    $field_options = array();
+    $default_fields = array();
+    if (isset($this->configuration['fields'])) {
+      $default_fields = array_keys($this->configuration['fields']);
+      $default_fields = array_combine($default_fields, $default_fields);
+    }
+
+    foreach ($fields as $name => $field) {
+      if ($field['type'] == 'text') {
+        if ($this->testType($field['type'])) {
+          $field_options[$name] = $field['name_prefix'] . $field['name'];
+          if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
+            $default_fields[$name] = $name;
+          }
+        }
+      }
+    }
+
+    $form['fields'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Fields to run on'),
+      '#options' => $field_options,
+      '#default_value' => $default_fields,
+    );
 
     $form['title'] = array(
       '#type' => 'checkbox',
