@@ -17,6 +17,8 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Symfony\Component\Yaml\Parser;
+use Symfony\Component\Yaml\Dumper;
 
 /**
  * @SearchApiProcessor(
@@ -40,16 +42,16 @@ class HTMLFilter extends FieldsProcessorPluginBase {
     return array(
       'title' => FALSE,
       'alt' => TRUE,
-      'tags' => "
-h1: 5
-h2: 3
-h3: 2
-string: 2
-b: 2
-em: 1.5
-u: 1.5",
+      'tags' => array(
+        'h1' => 5,
+        'h2' => 3,
+        'h3' => 2,
+        'string' => 2,
+        'b' => 2,
+        'em' => 1.5,
+        'u' => 1.5,
+      ),
     );
-
   }
 
   /**
@@ -59,7 +61,7 @@ u: 1.5",
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     if (!empty($configuration['tags'])) {
-      $this->tags = $this->parseTags($configuration['tags']);
+      $this->tags = $configuration['tags'];
     }
   }
 
@@ -91,7 +93,7 @@ u: 1.5",
 
     $form['fields'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Fields to run on'),
+      '#title' => t('Enable this processor on the following fields'),
       '#options' => $field_options,
       '#default_value' => $default_fields,
     );
@@ -111,11 +113,16 @@ u: 1.5",
     );
     $t_args = array('!link' => l('YAML file format', 'https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'));
 
+    $dumper = new Dumper();
+    $tags = $dumper->dump($this->configuration['tags'], 2);
+    $tags = str_replace('\r\n', "\n", $tags);
+    $tags = str_replace('"', '', $tags);
+
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => t('Tag boosts'),
       '#description' => t('Specify special boost values for certain HTML elements, in !link. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
-      '#default_value' => $this->configuration['tags'],
+      '#default_value' => $tags,
     );
 
     return $form;
@@ -258,15 +265,17 @@ u: 1.5",
    *
    *  @return array of tags
    */
-  protected function parseTags($yaml) {
+  protected function parseTags($yaml_input) {
     try {
-      $tags = Yaml::parse($yaml);
+      $parser = new Parser();
+      $tags = $parser->parse($yaml_input);
       unset($tags['br'], $tags['hr']);
     }
     catch(ParseException $exception) {
       //problem parsing, return empty array
       $tags = FALSE;
     }
+    dpm($tags);
     return $tags;
   }
 }

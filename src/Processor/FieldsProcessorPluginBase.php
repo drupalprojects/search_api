@@ -62,7 +62,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
 
     $form['fields'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Fields to run on'),
+      '#title' => t('Enable this processor on the following fields'),
       '#options' => $field_options,
       '#default_value' => $default_fields,
     );
