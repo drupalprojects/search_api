@@ -114,6 +114,10 @@ interface ItemInterface extends \Traversable {
    *
    * @return self
    *   The invoked object.
+   *
+   * @throws \InvalidArgumentException
+   *   If a $field is passed but has another field identifier than given as
+   *   $field_id.
    */
   public function setField($field_id, FieldInterface $field = NULL);
 

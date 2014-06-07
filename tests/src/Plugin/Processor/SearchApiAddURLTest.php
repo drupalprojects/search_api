@@ -7,6 +7,7 @@
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\AddURL;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
@@ -16,6 +17,8 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
  */
 class SearchApiAddURLTest extends UnitTestCase {
 
@@ -93,9 +96,15 @@ class SearchApiAddURLTest extends UnitTestCase {
       ->getMock();
 
     $body_value = array('Some text value');
+    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
     $fields = array(
-      'search_api_language' => array('type' => 'string'),
-      'entity:node|body' => array('type' => 'text', 'values' => $body_value),
+      'search_api_url' => array(
+        'type' => 'string'
+      ),
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_value,
+      ),
     );
     $items = $this->createItems($this->index, 2, $fields, $node);
 
@@ -103,15 +112,15 @@ class SearchApiAddURLTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     // Check the valid item.
-    $field = $items['entity:node|1:en']->getField('search_api_url');
+    $field = $items[$this->item_ids[0]]->getField('search_api_url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field.');
 
     // Check that no other fields where changed.
-    $field = $items['entity:node|1:en']->getField('entity:node|body');
+    $field = $items[$this->item_ids[0]]->getField($body_field_id);
     $this->assertEquals($body_value, $field->getValues(), 'Body field was not changed.');
 
     // Check the second item to be sure that all are processed.
-    $field = $items['entity:node|2:en']->getField('search_api_url');
+    $field = $items[$this->item_ids[1]]->getField('search_api_url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field in the second item.');
   }
 

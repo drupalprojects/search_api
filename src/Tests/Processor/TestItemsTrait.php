@@ -18,6 +18,13 @@ use Drupal\search_api\Utility\Utility;
 trait TestItemsTrait {
 
   /**
+   * The used item IDs for test items.
+   *
+   * @var array
+   */
+  protected $item_ids = array();
+
+  /**
    * Creates an array with a single item which has the given field.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
@@ -29,16 +36,19 @@ trait TestItemsTrait {
    * @param \Drupal\search_api\Item\FieldInterface $field
    *   (optional) A variable, passed by reference, into which the created field
    *   will be saved.
-   * @param string $field_id
+   * @param string|null $field_id
    *   (optional) The field ID to set for the field.
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing a single item with the specified field.
    */
-  public function createSingleFieldItem(IndexInterface $index, $field_type, $field_value, FieldInterface &$field = NULL, $field_id = 'entity:node|field_test') {
-    $item_id = 'entity:node|1:en';
+  public function createSingleFieldItem(IndexInterface $index, $field_type, $field_value, FieldInterface &$field = NULL, $field_id = NULL) {
+    if (!isset($field_id)) {
+      $field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_test';
+    }
+    $this->item_ids[0] = $item_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en';
     $item = Utility::createItem($index, $item_id);
-    $field = Utility::createField($index, 'entity:node|field_test');
+    $field = Utility::createField($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_test');
     $field->setType($field_type);
     $field->addValue($field_value);
     $item->setField($field_id, $field);
@@ -68,7 +78,7 @@ trait TestItemsTrait {
   public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL) {
     $items = array();
     for ($i = 1; $i <= $count; ++$i) {
-      $item_id = "entity:node|$i:en";
+      $this->item_ids[$i - 1] = $item_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . "$i:en";
       $item = Utility::createItem($index, $item_id);
       if (isset($object)) {
         $item->setOriginalObject($object);
