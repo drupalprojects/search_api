@@ -151,16 +151,13 @@ class Tokenizer extends FieldsProcessorPluginBase {
     // Get our configuration
     $character_sets = $this->configuration['strip']['character_sets'];
 
-    // Custom Extra Drupal Characters that we want to remove
+    $character_set_regex = '';
+    // Custom Extra Drupal Characters that we want to remove.
     if (isset($character_sets['Do'])) {
-      $character_set_regex = '!|\?|,|\.|:|;';
-    }
-    // Add a pipe so we don't end up with an invalid regular expression
-    if (!empty($character_set_regex)) {
-      $character_set_regex += "|" . $character_set_regex;
+      $character_set_regex .= '!|\?|,|\.|:|;|';
     }
 
-    $character_set_regex += '\p{' . implode('}|\p{', $character_sets) . '}';
+    $character_set_regex .= '\p{' . implode('}|\p{', $character_sets) . '}';
     $text = preg_replace('/\s(' . $character_set_regex . ')/s', '$1', $text);
     $text = preg_replace('/(\p{Ps}|¿|¡)\s/s', '$1', $text);
     $text = trim($text);

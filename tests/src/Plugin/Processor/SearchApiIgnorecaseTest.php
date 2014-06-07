@@ -11,7 +11,6 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Unicode;
 
 /**
