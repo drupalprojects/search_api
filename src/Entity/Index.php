@@ -845,14 +845,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function loadItem($item_id) {
-    $items = $this->loadItemsMultiple(array($item_id), TRUE);
+    $items = $this->loadItemsMultiple(array($item_id));
     return $items ? reset($items) : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function loadItemsMultiple(array $item_ids, $flat = FALSE) {
+  public function loadItemsMultiple(array $item_ids, $flat = TRUE) {
     $items_by_datasource = array();
     foreach ($item_ids as $item_id) {
       list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id);
@@ -990,7 +990,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
-      $items = $this->loadItemsMultiple($next_set, TRUE);
+      $items = $this->loadItemsMultiple($next_set);
       if ($items) {
         try {
           $ids_indexed = $this->indexItems($items);
@@ -1052,7 +1052,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->getTracker()->$tracker_method($item_ids);
       if ($this->options['index_directly']) {
         try {
-          $items = $this->loadItemsMultiple($item_ids, TRUE);
+          $items = $this->loadItemsMultiple($item_ids);
           if ($items) {
             $indexed_ids = $this->indexItems($items);
             if ($indexed_ids) {

@@ -450,7 +450,7 @@ class SearchApiQuery extends QueryPluginBase {
 
     // Load items of those rows which haven't got all field values, yet.
     if (!empty($item_ids)) {
-      foreach ($this->index->loadItemsMultiple($item_ids, TRUE) as $item_id => $object) {
+      foreach ($this->index->loadItemsMultiple($item_ids) as $item_id => $object) {
         $results[$item_id]->setOriginalObject($object);
         $rows[$item_id]->_item = $object;
       }

@@ -252,7 +252,7 @@ class Highlight extends ProcessorPluginBase {
     }
 
     if ($needs_load) {
-      foreach ($this->index->loadItemsMultiple($needs_load, TRUE) as $item_id => $object) {
+      foreach ($this->index->loadItemsMultiple($needs_load) as $item_id => $object) {
         $result_items[$item_id]->setOriginalObject($object);
         unset($needs_load[$item_id]);
       }

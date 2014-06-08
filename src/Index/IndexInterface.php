@@ -392,16 +392,16 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param array $item_ids
    *   The internal item IDs of the objects, with datasource prefix.
    * @param bool $flat
-   *   (optional) If set, objects will be returned in a single, flat array,
-   *   instead of grouped by datasource.
+   *   (optional) If TRUE, objects will be returned in a single, flat array.
+   *   Otherwise, they are returned grouped by datasource.
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface[]
-   *   The loaded items. If $flat was set, a single-dimensional array mapping
+   *   The loaded items. If $flat is TRUE, a single-dimensional array mapping
    *   internal item IDs to the loaded items. Otherwise, an array mapping
    *   datasource IDs to arrays of items (keyed by internal item ID) loaded for
    *   that datasource.
    */
-  public function loadItemsMultiple(array $item_ids, $flat = FALSE);
+  public function loadItemsMultiple(array $item_ids, $flat = TRUE);
 
   /**
    * Indexes a set amount of items.
