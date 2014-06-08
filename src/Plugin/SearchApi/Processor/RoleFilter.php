@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\Component\Utility\String;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -78,7 +79,7 @@ class RoleFilter extends FieldsProcessorPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $options = array_map(function ($item) {
+    $options = array_map(function (RoleInterface $item) {
       return String::checkPlain($item->label());
     }, user_roles());
 
@@ -101,4 +102,5 @@ class RoleFilter extends FieldsProcessorPluginBase {
     );
     return $form;
   }
+
 }

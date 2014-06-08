@@ -7,8 +7,9 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\Core\Language\Language;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter;
+use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -27,6 +28,13 @@ class SearchApiRoleFilterTest extends UnitTestCase {
   protected $processor;
 
   /**
+   * The test items to use.
+   *
+   * @var \Drupal\search_api\Item\ItemInterface[]
+   */
+  protected $items = array();
+
+  /**
    * {@inheritdoc}
    */
   public static function getInfo() {
@@ -42,99 +50,82 @@ class SearchApiRoleFilterTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->processor = new RoleFilter(array(), 'search_api_role_filter_processor', array());;
+
+    $this->processor = new RoleFilter(array(), 'search_api_role_filter_processor', array());
+
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $node_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $node_datasource->expects($this->any())
+      ->method('getEntityTypeId')
+      ->will($this->returnValue('node'));
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $node_datasource */
+    $user_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $user_datasource->expects($this->any())
+      ->method('getEntityTypeId')
+      ->will($this->returnValue('user'));
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
+
+    $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $node_datasource);
+    $node = $this->getMockBuilder('Drupal\node\NodeInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    /** @var \Drupal\node\NodeInterface $node */
+    $item->setOriginalObject($node);
+    $this->items[$item->getId()] = $item;
+
+    $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $user_datasource);
+    $account1 = $this->getMockBuilder('Drupal\user\UserInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $account1->expects($this->any())
+      ->method('getRoles')
+      ->will($this->returnValue(array('authenticated' => 'authenticated', 'editor' => 'editor')));
+    /** @var \Drupal\user\UserInterface $account1 */
+    $item->setOriginalObject($account1);
+    $this->items[$item->getId()] = $item;
+
+    $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $user_datasource);
+    $account2 = $this->getMockBuilder('Drupal\user\UserInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $account2->expects($this->any())
+      ->method('getRoles')
+      ->will($this->returnValue(array('authenticated' => 'authenticated')));
+    /** @var \Drupal\user\UserInterface $account2 */
+    $item->setOriginalObject($account2);
+    $this->items[$item->getId()] = $item;
   }
 
   /**
-   * Test processing of index items process.
+   * Tests preprocessing search items with an inclusive filter.
    */
-  public function testProcessIndexItems() {
-
-    $items = array(
-      'entity:node|1' => array(
-        '#datasource' => 'entity:node',
-        '#item_id' => 1,
-      ),
-    );
-    $items['entity:node|1']['#item'] = $this->getMockBuilder('Drupal\node\Entity\Node')
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $items['entity:user|2'] = array(
-      '#datasource' => 'entity:user',
-      '#item_id' => 2,
-    );
-    $items['entity:user|2']['#item'] = $this->getMockBuilder('Drupal\user\Entity\User')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $items['entity:user|2']['#item']->expects($this->any())
-      ->method('getRoles')
-      ->will($this->returnValue(array('authenticated' => 'authenticated', 'editor' => 'editor')));
-
-    $items['entity:user|3'] = array(
-      '#datasource' => 'entity:user',
-      '#item_id' => 3,
-    );
-    $items['entity:user|3']['#item'] = $this->getMockBuilder('Drupal\user\Entity\User')
-      ->disableOriginalConstructor()
-      ->getMock();
-    $items['entity:user|3']['#item']->expects($this->any())
-      ->method('getRoles')
-      ->will($this->returnValue(array('authenticated' => 'authenticated')));
-
-    // Create Index mock.
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
-
-    // Create datasource mocks.
-    $node = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
-    $node->expects($this->any())
-      ->method('getEntityTypeId')
-      ->will($this->returnValue('node'));
-
-    $user = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
-    $user->expects($this->any())
-      ->method('getEntityTypeId')
-      ->will($this->returnValue('user'));
-
-    // Add datasources to index.
-    $index->expects($this->any())
-      ->method('getDataSource')
-      ->will($this->returnValueMap(
-        array(
-          array('entity:node', $node),
-          array('entity:user', $user),
-        )
-      ));
-
-    // Set the mocked index into the processor.
-    $this->processor->setIndex($index);
-
-    // Scenario 1 - users without editor role.
-    $configuration = $this->processor->getConfiguration();
-    $configuration['roles'] = array('editor' => 'editor');
-    $configuration['default'] = 1;
-    $this->processor->setConfiguration($configuration);
-
-    $items_to_process = $items;
-    $this->processor->preprocessIndexItems($items_to_process);
-
-    $this->assertTrue(empty($items_to_process['entity:user|2']), 'User 2 with the editor role should have been removed');
-    $this->assertTrue(!empty($items_to_process['entity:user|3']), 'User 3 without the editor role should have remained in the items list');
-    $this->assertTrue(!empty($items_to_process['entity:node|1']), 'Node item should have stayed intact');
-
-    // Scenario 2 - all users with authenticated role.
-    $configuration = $this->processor->getConfiguration();
+  public function testFilterInclusive() {
     $configuration['roles'] = array('authenticated' => 'authenticated');
     $configuration['default'] = 0;
     $this->processor->setConfiguration($configuration);
 
-    $items_to_process = $items;
-    $this->processor->preprocessIndexItems($items_to_process);
+    $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertTrue(!empty($items_to_process['entity:user|2']), 'User 2 with both roles should have remained in the items list');
-    $this->assertTrue(!empty($items_to_process['entity:user|3']), 'User 3 with the authenticated role should have remained in the list.');
-    $this->assertTrue(!empty($items_to_process['entity:node|1']), 'Node item should have stayed intact');
+    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'User with two roles was not removed.');
+    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en']), 'User with only the authenticated role was not removed.');
+    $this->assertTrue(!empty($this->items['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'Node item was not removed.');
+  }
 
+  /**
+   * Tests preprocessing search items with an exclusive filter.
+   */
+  public function testFilterExclusive() {
+    $configuration['roles'] = array('editor' => 'editor');
+    $configuration['default'] = 1;
+    $this->processor->setConfiguration($configuration);
+
+    $this->processor->preprocessIndexItems($this->items);
+
+    $this->assertTrue(empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'User with editor role was successfully removed.');
+    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en']), 'User without the editor role was not removed.');
+    $this->assertTrue(!empty($this->items['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'Node item was not removed.');
   }
 
 }
