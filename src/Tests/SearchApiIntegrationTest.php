@@ -171,11 +171,11 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
-    $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
+    $this->assertText(t('The indexed fields were successfully changed.'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $fields = $index->getFields();
+    $fields = $index->getFields(FALSE);
 
     $this->assertEqual($fields['entity:node|nid']->isIndexed(), $edit['fields[entity:node|nid][indexed]'], t('nid field is indexed.'));
     $this->assertEqual($fields['entity:node|title']->isIndexed(), $edit['fields[entity:node|title][indexed]'], t('title field is indexed.'));

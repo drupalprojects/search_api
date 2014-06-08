@@ -304,13 +304,15 @@ function theme_search_api_index($variables) {
   if ($index->status()) {
     // Check if a valid server is available.
     if ($server) {
-      // Create a default search query.
+      // Here we want to get a raw count of the total number of items on the
+      // server for this index. Therefore we circumvent the whole preprocessing
+      // (which could add facets, access filters, etc.) and hand the query
+      // directly to the server.
+      // @todo Add a cleaner way for doing this (i.e., skipping preprocessing).
       $query = $index->query();
-      // Configure the query so that we get a raw count of the index items
-      // without any facets or filters.
       $query->fields(array())->range(0, 0);
-      // Query the server and process the result.
       $response = $server->search($query);
+
       // Build the server index status translation variables.
       $vars = array('@url' => url('https://drupal.org/node/2009804#server-index-status'));
       // Build the server index status info.

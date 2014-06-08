@@ -439,6 +439,31 @@ class Utility {
   }
 
   /**
+   * Creates a combined ID from a raw ID and an optional datasource prefix.
+   *
+   * This can be used to created an internal item ID or field identifier from a
+   * datasource ID and a datasource-specific raw item ID or property path.
+   *
+   * @param string|null $datasource_id
+   *   If NULL, the returned ID should be that for a datasource-independent
+   *   field. Otherwise, the ID of the datasource to which the item or field
+   *   belongs.
+   * @param string $raw_id
+   *   The datasource-specific raw item ID or property path of the item or
+   *   field.
+   *
+   * @return string
+   *   The combined ID, with optional datasource prefix separated by
+   *   \Drupal\search_api\Index\IndexInterface::DATASOURCE_ID_SEPARATOR.
+   */
+  public static function createCombinedId($datasource_id, $raw_id) {
+    if (!isset($datasource_id)) {
+      return $raw_id;
+    }
+    return $datasource_id . IndexInterface::DATASOURCE_ID_SEPARATOR . $raw_id;
+  }
+
+  /**
    * Splits an internal ID into its two parts.
    *
    * Both internal item IDs and internal field identifiers are prefixed with the
