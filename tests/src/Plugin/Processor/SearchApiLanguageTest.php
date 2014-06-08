@@ -103,14 +103,14 @@ class SearchApiLanguageTest extends UnitTestCase {
     );
     $items = $this->createItems($this->index, 3, $fields);
 
-    $object1 = $this->getMock('Drupal\Core\Entity\ContentEntityInterface');
+    $object1 = $this->getMock('Drupal\search_api\Tests\TestContentEntityInterface');
     $object1->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'en'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object1 */
     $items[$this->item_ids[0]]->setOriginalObject($object1);
 
-    $object2 = $this->getMock('Drupal\Core\Entity\ContentEntityInterface');
+    $object2 = $this->getMock('Drupal\search_api\Tests\TestContentEntityInterface');
     $object2->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'es'))));
