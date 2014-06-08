@@ -88,8 +88,9 @@ class TestBackend extends BackendPluginBase {
   public function search(QueryInterface $query) {
     $results = Utility::createSearchResultSet($query);
     $result_items = array();
+    $datasources = $query->getIndex()->getDatasources();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
-    $datasource = reset($query->getIndex()->getDatasources());
+    $datasource = reset($datasources);
     if ($query->getKeys() && $query->getKeys()[0] == 'test') {
       $item_id = Utility::createCombinedId($datasource->getPluginId(), '1');
       $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
