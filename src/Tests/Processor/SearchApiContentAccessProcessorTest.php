@@ -95,7 +95,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query = Query::create($this->index);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 2, 'The result should contain all items');
+    $this->assertEqual($result->getResultCount(), 2, 'The result contains all items.');
   }
 
   /**

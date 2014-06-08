@@ -486,32 +486,41 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
-    $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
-    // Langcode passed, use that for viewing.
-    if (isset($langcode)) {
-      if (reset($items) instanceof EntityInterface) {
-        return $view_builder->viewMultiple($items, $view_mode, $langcode);
+    try {
+      $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
+      // Langcode passed, use that for viewing.
+      if (isset($langcode)) {
+        if (reset($items) instanceof EntityInterface) {
+          return $view_builder->viewMultiple($items, $view_mode, $langcode);
+        }
+        return array();
       }
+      // Otherwise, separate the items by language, keeping the keys.
+      $items_by_language = array();
+      foreach ($items as $i => $item) {
+        if ($item instanceof EntityInterface) {
+          $items_by_language[$item->language()->id][$i] = $item;
+        }
+      }
+      // Then build the items for each language.
+      $build = array();
+      foreach ($items_by_language as $langcode => $language_items) {
+        $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
+      }
+      // Lastly, bring the viewed items into the correct order again.
+      $ret = array();
+      foreach ($items as $i => $item) {
+        $ret[$i] = isset($build[$i]) ? $build[$i] : array();
+      }
+      return $ret;
+    }
+    catch (\Exception $e) {
+      // The most common reason for this would be a
+      // \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException in
+      // getViewBuilder(), because the entity type definition doesn't specify a
+      // view_builder class.
       return array();
     }
-    // Otherwise, separate the items by language, keeping the keys.
-    $items_by_language = array();
-    foreach ($items as $i => $item) {
-      if ($item instanceof EntityInterface) {
-        $items_by_language[$item->language()->id][$i] = $item;
-      }
-    }
-    // Then build the items for each language.
-    $build = array();
-    foreach ($items_by_language as $langcode => $language_items) {
-      $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
-    }
-    // Lastly, bring the viewed items into the correct order again.
-    $ret = array();
-    foreach ($items as $i => $item) {
-      $ret[$i] = isset($build[$i]) ? $build[$i] : array();
-    }
-    return $ret;
   }
 
   /**
