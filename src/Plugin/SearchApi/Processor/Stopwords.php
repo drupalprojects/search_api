@@ -93,9 +93,9 @@ class Stopwords extends FieldsProcessorPluginBase {
     }
 
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'text') {
-        if ($this->testType($field['type'])) {
-          $field_options[$name] = $field['name_prefix'] . $field['name'];
+      if ($field->getType() == 'text') {
+        if ($this->testType($field->getType())) {
+          $field_options[$name] = $field->getPrefixedLabel();
           if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
             $default_fields[$name] = $name;
           }
@@ -119,7 +119,7 @@ class Stopwords extends FieldsProcessorPluginBase {
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
       '#description' => $this->t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
-      '#default_value' => implode(PHP_EOL, $this->configuration['stopwords']),
+      '#default_value' => implode("\n", $this->configuration['stopwords']),
     );
 
     return $form;
@@ -143,8 +143,8 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    // Convert our text input to an array
-    $this->configuration['stopwords'] = explode(PHP_EOL, $form_state['values']['stopwords']);
+    // Convert our text input to an array.
+    $this->configuration['stopwords'] = explode("\n", $form_state['values']['stopwords']);
   }
 
   /**

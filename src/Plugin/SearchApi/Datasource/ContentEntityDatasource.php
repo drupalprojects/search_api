@@ -475,9 +475,17 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
-    if ($item instanceof EntityInterface) {
-      $langcode = $langcode ?: $item->language()->id;
-      return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+    try {
+      if ($item instanceof EntityInterface) {
+        $langcode = $langcode ? : $item->language()->id;
+        return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+      }
+    }
+    catch (\Exception $e) {
+      // The most common reason for this would be a
+      // \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException in
+      // getViewBuilder(), because the entity type definition doesn't specify a
+      // view_builder class.
     }
     return array();
   }
