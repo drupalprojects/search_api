@@ -218,7 +218,13 @@ class Utility {
     }
     // Extract the direct fields.
     foreach ($direct_fields as $key) {
-      self::extractField($item->get($key), $fields[$key]);
+      try {
+        self::extractField($item->get($key), $fields[$key]);
+      }
+      catch (\InvalidArgumentException $e) {
+        // This can happen with properties added by processors.
+        // @todo Find a cleaner solution for this.
+      }
     }
     // Recurse for all nested fields.
     foreach ($nested_fields as $direct => $fields_nested) {
@@ -237,7 +243,8 @@ class Utility {
         }
       }
       catch (\InvalidArgumentException $e) {
-        // Just leave the values at their defaults then.
+        // This can happen with properties added by processors.
+        // @todo Find a cleaner solution for this.
       }
     }
   }
