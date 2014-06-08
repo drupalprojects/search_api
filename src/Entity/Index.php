@@ -1052,7 +1052,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->getTracker()->$tracker_method($item_ids);
       if ($this->options['index_directly']) {
         try {
-          $items = $this->loadItemsMultiple($item_ids);
+          $items = $this->loadItemsMultiple($item_ids, TRUE);
           if ($items) {
             $indexed_ids = $this->indexItems($items);
             if ($indexed_ids) {
