@@ -1019,25 +1019,51 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsInserted($datasource_id, array $ids) {
-    if ($this->hasValidTracker() && $this->status()) {
-      $item_ids = array();
-      foreach ($ids as $id) {
-        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
-      }
-      $this->getTracker()->trackItemsInserted($item_ids);
-    }
+    $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
   public function trackItemsUpdated($datasource_id, array $ids) {
+    $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
+  }
+
+  /**
+   * Tracks insertion or updating of items.
+   *
+   * Used as a helper method in trackItemsInserted() and trackItemsUpdated() to
+   * avoid code duplication.
+   *
+   * @param string $datasource_id
+   *   The ID of the datasource to which the items belong.
+   * @param array $ids
+   *   An array of datasource-specific item IDs.
+   * @param string $tracker_method
+   *   The method to call on the tracker. Must be either "trackItemsInserted" or
+   *   "trackItemsUpdated".
+   */
+  protected function trackItemsInsertedOrUpdated($datasource_id, array $ids, $tracker_method) {
     if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
-        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
+        $item_ids[] = Utility::createCombinedId($datasource_id, $id);
       }
-      $this->getTracker()->trackItemsUpdated($item_ids);
+      $this->getTracker()->$tracker_method($item_ids);
+      if ($this->options['index_directly']) {
+        try {
+          $items = $this->loadItemsMultiple($item_ids);
+          if ($items) {
+            $indexed_ids = $this->indexItems($items);
+            if ($indexed_ids) {
+              $this->getTracker()->trackItemsIndexed($indexed_ids);
+            }
+          }
+        }
+        catch (SearchApiException $e) {
+          watchdog_exception('search_api', $e);
+        }
+      }
     }
   }
 
