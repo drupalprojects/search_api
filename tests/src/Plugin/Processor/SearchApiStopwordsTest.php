@@ -49,7 +49,7 @@ class SearchApiStopwordsTest extends UnitTestCase {
    */
   public function testStopwords() {
     $string = 'String containing some stop words and that is to be tested.';
-    $configuration = array('file' => '', 'stopwords' => 'some and that');
+    $configuration = array('file' => '', 'stopwords' => array('some', 'and', 'that'));
     $this->processor->setConfiguration($configuration);
     $this->processor->process($string);
     $this->assertEquals($string, 'String containing stop words is to be tested.');
@@ -63,19 +63,19 @@ class SearchApiStopwordsTest extends UnitTestCase {
     $getStopwords = $reflectionStopwords->getMethod('getStopwords');
     $getStopwords->setAccessible(TRUE);
 
-    $configuration = array('file' => '', 'stopwords' => "String containing both\nspaces\nand Newlines ÄÖÜÀÁ<>»«");
+    $configuration = array('file' => '', 'stopwords' => array("String", "containing", "both", "spaces", "and", "Newlines", "ÄÖÜÀÁ<>»«"));
     $stopwords = array(
-      'String' => 0,
-      'containing' => 1,
-      'both' => 2,
-      'spaces' => 3,
-      'and' => 4,
-      'Newlines' => 5,
-      'ÄÖÜÀÁ<>»«' => 6,
+      'String',
+      'containing',
+      'both',
+      'spaces',
+      'and',
+      'Newlines',
+      'ÄÖÜÀÁ<>»«',
     );
     $this->processor->setConfiguration($configuration);
     $result = $getStopwords->invoke($this->processor);
-    $this->assertTrue(!array_diff_key($stopwords, $result), 'All stopwords returned');
+    $this->assertTrue(!array_diff($stopwords, $result), 'All stopwords returned');
   }
 
 }

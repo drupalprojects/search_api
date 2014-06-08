@@ -32,7 +32,43 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'stopwords' => "but\ndid\nthe this that those\netc",
+      'stopwords' => array(
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "but",
+        "by",
+        "for",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "no",
+        "not",
+        "of",
+        "on",
+        "or",
+        "s",
+        "such",
+        "t",
+        "that",
+        "the",
+        "their",
+        "then",
+        "there",
+        "these",
+        "they",
+        "this",
+        "to",
+        "was",
+        "will",
+        "with",
+      ),
       'file' => '',
     );
   }
@@ -41,10 +77,39 @@ class Stopwords extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = parent::buildConfigurationForm($form, $form_state);
+    $form = array();
 
     $form['help'] = array(
-      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about <a href="!stopwords">stopwords</a>.', array('!stopwords' => 'https://en.wikipedia.org/wiki/Stop_words')) . '</p>');
+      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about <a href="!stopwords">stopwords</a>.', array('!stopwords' => 'https://en.wikipedia.org/wiki/Stop_words')) . '</p>'
+    );
+
+    // Only include full text fields. Important as only those can be tokenized.
+    $fields = $this->index->getFields();
+    $field_options = array();
+    $default_fields = array();
+    if (isset($this->configuration['fields'])) {
+      $default_fields = array_keys($this->configuration['fields']);
+      $default_fields = array_combine($default_fields, $default_fields);
+    }
+
+    foreach ($fields as $name => $field) {
+      if ($field['type'] == 'text') {
+        if ($this->testType($field['type'])) {
+          $field_options[$name] = $field['name_prefix'] . $field['name'];
+          if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
+            $default_fields[$name] = $name;
+          }
+        }
+      }
+    }
+
+    $form['fields'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Enable this processor on the following fields'),
+      '#options' => $field_options,
+      '#default_value' => $default_fields,
+    );
+
     $form['file'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Stopwords file'),
@@ -54,7 +119,7 @@ class Stopwords extends FieldsProcessorPluginBase {
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
       '#description' => $this->t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
-      '#default_value' => $this->configuration['stopwords'],
+      '#default_value' => implode(PHP_EOL, $this->configuration['stopwords']),
     );
 
     return $form;
@@ -76,19 +141,24 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function submitConfigurationForm(array &$form, array &$form_state) {
+    parent::submitConfigurationForm($form, $form_state);
+    // Convert our text input to an array
+    $this->configuration['stopwords'] = explode(PHP_EOL, $form_state['values']['stopwords']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function process(&$value) {
     $stopwords = $this->getStopWords();
     if (empty($stopwords) || !is_string($value)) {
       return;
     }
-    $words = preg_split('/\s+/', $value);
-    foreach ($words as $sub_key => $sub_value) {
-      if (isset($stopwords[$sub_value])) {
-        unset($words[$sub_key]);
-        $this->ignored[] = $sub_value;
-      }
-    }
-    $value = implode(' ', $words);
+    $stopwords_preg_replace = implode('|', $stopwords);
+    $value = preg_replace('@('. $stopwords_preg_replace .')@siU', '', $value);
+    // Remove extra spaces.
+    $value = preg_replace('/\s+/s', ' ', $value);
   }
 
   /**
@@ -124,9 +194,9 @@ class Stopwords extends FieldsProcessorPluginBase {
       $file_words = preg_split('/\s+/', $stopwords_file);
     }
     if (!empty($this->configuration['stopwords'])) {
-      $form_words = preg_split('/\s+/', $this->configuration['stopwords']);
+      $form_words = $this->configuration['stopwords'];
     }
-    $this->stopwords = array_flip(array_merge($file_words, $form_words));
+    $this->stopwords = array_merge($file_words, $form_words);
     return $this->stopwords;
   }
 }

@@ -89,7 +89,7 @@ class HtmlFilterTest extends UnitTestCase {
     //Initialize them with the default values as given in the arguments.
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
       array('processFieldValue'),
-      array(array('tags' => "img: 2", 'title' => 0, 'alt' => $altBoost), 'string', array()));
+      array(array('tags' => array('img' => '2'), 'title' => 0, 'alt' => $altBoost), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
@@ -137,8 +137,8 @@ class HtmlFilterTest extends UnitTestCase {
   public function tagConfigurationDataProvider() {
     return array(
       array('h2word', array(array('value' => 'h2word', 'score' => '1')), ''),
-      array('h2word', array(array('value' => 'h2word', 'score' => '1')), "h2: 2"),
-      array('<h2> h2word </h2>', array(array('value' => 'h2word', 'score' => '2'), array('value' => 'h2word', 'score' => '1')), "h2: 2"),
+      array('h2word', array(array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
+      array('<h2> h2word </h2>', array(array('value' => 'h2word', 'score' => '2'), array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
     );
   }
 
@@ -165,7 +165,7 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function getValueAndScoreFromHTMLDataProvider() {
     return array(
-      array('<div>word</div>', array('div' => array('value' => 'word', 'score' => 2)), 'div: 2'),
+      array('<div>word</div>', array('div' => array('value' => 'word', 'score' => 2)), array('div' => '2')),
     );
   }
 
