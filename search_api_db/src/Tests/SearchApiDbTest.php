@@ -233,7 +233,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
     $ids = $this->getItemIds(array(1));
     $id = reset($ids);
-    $this->assertEqual($results->getResultItems()[$id]->getId(), 1);
+    $this->assertEqual($results->getResultItems()[$id]->getId(), $this->getItemIds(array(1))[0]);
     $this->assertEqual($results->getResultItems()[$id]->getDatasourceId(), 'entity:entity_test');
 
     $results = $this->buildSearch('"test foo"')->execute();
