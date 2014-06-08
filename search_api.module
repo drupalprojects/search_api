@@ -7,19 +7,14 @@
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
-use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * Implements hook_help().
  */
-function search_api_help($path, $arg) {
-  switch ($path) {
-    case 'admin/config/search/search-api':
+function search_api_help($route_name) {
+  switch ($route_name) {
+    case 'search_api.overview':
       return t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g. an Apache Solr or MongoDB server). An index is the definition of the actual indexed content that will be searched against (e.g. A core within Solr).');
   }
 }
