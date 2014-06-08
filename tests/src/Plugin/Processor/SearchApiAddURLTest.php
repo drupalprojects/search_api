@@ -6,7 +6,7 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\AddURL;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
@@ -137,12 +137,19 @@ class SearchApiAddURLTest extends UnitTestCase {
     $property_added = array_key_exists('search_api_url', $properties);
     $this->assertTrue($property_added, 'The "search_api_url" property was added to the properties.');
     if ($property_added) {
-      $this->assertTrue($properties['search_api_url'] instanceof DataDefinition, 'The "search_api_url" property contains a valid DataDefinition instance.');
-      if ($properties['search_api_url'] instanceof DataDefinition) {
-        $this->assertEquals('uri', $properties['search_api_url']->getDataType(), 'Correct data type set in the DataDefinition.');
-        $this->assertEquals('URI', $properties['search_api_url']->getLabel(), 'Correct label set in the DataDefinition.');
-        $this->assertEquals('A URI where the item can be accessed.', $properties['search_api_url']->getDescription(), 'Correct description set in the DataDefinition.');
+      $this->assertInstanceOf('Drupal\Core\TypedData\DataDefinitionInterface', $properties['search_api_url'], 'The "search_api_url" property contains a valid data definition.');
+      if ($properties['search_api_url'] instanceof DataDefinitionInterface) {
+        $this->assertEquals('uri', $properties['search_api_url']->getDataType(), 'Correct data type set in the data definition.');
+        $this->assertEquals('URI', $properties['search_api_url']->getLabel(), 'Correct label set in the data definition.');
+        $this->assertEquals('A URI where the item can be accessed.', $properties['search_api_url']->getDescription(), 'Correct description set in the data definition.');
       }
     }
+
+    // Tests whether the properties of specific datasources stay untouched.
+    $properties = array();
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $this->processor->alterPropertyDefinitions($properties, $datasource);
+    $this->assertEmpty($properties, 'Datasource-specific properties did not get changed.');
   }
 }
