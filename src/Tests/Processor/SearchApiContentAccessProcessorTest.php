@@ -120,7 +120,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 1, 'The result should contain only one item to which the user has granted access');
+    $this->assertEqual($result->getResultCount(), 1, 'The result should contain only one item to which the user has granted access');
   }
 
   /**
@@ -140,8 +140,10 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access__all'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access__all'));
     }
   }
 
@@ -161,8 +163,10 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access_search_api_test:0'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access_search_api_test:0'));
     }
   }
 
