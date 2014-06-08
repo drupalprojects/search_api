@@ -118,6 +118,33 @@ trait FieldTrait {
   }
 
   /**
+   * Returns the index of this field.
+   *
+   * This is useful when retrieving fields from cache, to have the index always
+   * set to the same object that is returning them. The method shouldn't be used
+   * in any other case.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index to which this field belongs.
+   *
+   * @return self
+   *   The invoked object.
+   *
+   * @throws \InvalidArgumentException
+   *   If the ID of the given index is not the same as the ID of the index that
+   *   was set up to now.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::setIndex()
+   */
+  public function setIndex(IndexInterface $index) {
+    if ($this->index->getOriginalId() != $index->getOriginalId()) {
+      throw new \InvalidArgumentException(t('Attempted to change the index of a field object.'));
+    }
+    $this->index = $index;
+    return $this;
+  }
+
+  /**
    * Returns the field identifier of this field.
    *
    * @return string

@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\search_api\Index\IndexInterface;
+
 /**
  * Represents any field attached to an index.
  */
@@ -19,6 +21,25 @@ interface GenericFieldInterface {
    *   The index to which this field belongs.
    */
   public function getIndex();
+
+  /**
+   * Returns the index of this field.
+   *
+   * This is useful when retrieving fields from cache, to have the index always
+   * set to the same object that is returning them. The method shouldn't be used
+   * in any other case.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index to which this field belongs.
+   *
+   * @return self
+   *   The invoked object.
+   *
+   * @throws \InvalidArgumentException
+   *   If the ID of the given index is not the same as the ID of the index that
+   *   was set up to now.
+   */
+  public function setIndex(IndexInterface $index);
 
   /**
    * Returns the field identifier of this field.

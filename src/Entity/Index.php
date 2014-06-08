@@ -16,6 +16,7 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -517,6 +518,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (empty($this->fields)) {
       if ($cached = \Drupal::cache()->get($cid)) {
         $this->fields = $cached->data;
+        if ($this->fields) {
+          $this->updateFieldsIndex($this->fields);
+        }
       }
     }
 
@@ -553,6 +557,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
+    }
+  }
+
+  /**
+   * Sets this object as the index for all fields contained in the given array.
+   *
+   * This is important when loading fields from the cache, because their index
+   * objects might then point to another instance of this index.
+   *
+   * @param array $fields
+   *   An array containing various values, some of which might be
+   *   \Drupal\search_api\Item\GenericFieldInterface objects and some of which
+   *   might be nested arrays containing such objects.
+   */
+  protected function updateFieldsIndex(array $fields) {
+    foreach ($fields as $value) {
+      if (is_array($value)) {
+        $this->updateFieldsIndex($value);
+      }
+      elseif ($value instanceof GenericFieldInterface) {
+        $value->setIndex($this);
+      }
     }
   }
 
