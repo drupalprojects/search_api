@@ -111,10 +111,10 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
    *
    * @param array $items
    *   Data to populate test items.
-   *    - datasource: The datasource plugin id.
-   *    - item: The item object to be indexed.
-   *    - item_id: Unique item id.
-   *    - text: Textual value of the test field.
+   *   - datasource: The datasource plugin id.
+   *   - item: The item object to be indexed.
+   *   - item_id: Datasource-specific raw item id.
+   *   - text: Textual value of the test field.
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   The populated test items.
@@ -124,7 +124,7 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
     $extracted_items = array();
     foreach ($items as $item) {
       $id = $item['datasource'] . IndexInterface::DATASOURCE_ID_SEPARATOR . $item['item_id'];
-      $extracted_items[$id] = Utility::createItemFromObject($this->index, $item['item'], $item['item_id']);
+      $extracted_items[$id] = Utility::createItemFromObject($this->index, $item['item'], $id);
       foreach (array(NULL, $item['datasource']) as $datasource_id) {
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $key => $field) {
           /** @var \Drupal\search_api\Item\FieldInterface $field */

@@ -379,7 +379,7 @@ class Utility {
       if (!isset($datasource)) {
         throw new \InvalidArgumentException(t('Need either an item ID or the datasource to create a search item from an object.'));
       }
-      $id = $datasource->getPluginId() . IndexInterface::DATASOURCE_ID_SEPARATOR . $datasource->getItemId($original_object);
+      $id = self::createCombinedId($datasource->getPluginId(), $datasource->getItemId($original_object));
     }
     $item = static::createItem($index, $id, $datasource);
     $item->setOriginalObject($original_object);

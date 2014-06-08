@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
@@ -15,6 +14,13 @@ use Drupal\search_api\Query\Query;
  * Tests the ContentAccess processor.
  */
 class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
+
+  /**
+   * Stores the processor to be tested.
+   *
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+   */
+  protected $processor;
 
   /**
    * @var \Drupal\comment\Entity\Comment[]
