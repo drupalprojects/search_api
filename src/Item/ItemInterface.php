@@ -133,6 +133,32 @@ interface ItemInterface extends \Traversable {
   public function setFields(array $fields);
 
   /**
+   * Determines whether fields have been extracted already for this item.
+   *
+   * @return bool
+   *   TRUE if all field values have been extracted already for this item. FALSE
+   *   otherwise.
+   */
+  public function isFieldsExtracted();
+
+  /**
+   * Sets the field extraction state of this item.
+   *
+   * Can be used to tell an item that all its fields have been set already and
+   * it shouldn't attempt to extract more when getFields() is called. Or that
+   * some of its extracted fields have been removed and that it should extract
+   * them again when necessary.
+   *
+   * @param bool $fieldsExtracted
+   *   TRUE if all field values have been extracted already for this item. FALSE
+   *   otherwise.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setFieldsExtracted($fieldsExtracted);
+
+  /**
    * Returns the score of the item.
    *
    * Defaults to 1 if not previously set.

@@ -176,7 +176,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function getFields($extract = FALSE) {
     if ($extract && !$this->fieldsExtracted) {
-      foreach (array(NULL, $this->getDatasource()->getPluginId()) as $datasource_id) {
+      foreach (array(NULL, $this->getDatasourceId()) as $datasource_id) {
         $fields_by_property_path = array();
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $field_id => $field) {
           // Don't overwrite fields that were previously set.
@@ -222,6 +222,21 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function setFields(array $fields) {
     $this->fields = $fields;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isFieldsExtracted() {
+    return $this->fieldsExtracted;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFieldsExtracted($fieldsExtracted) {
+    $this->fieldsExtracted = $fieldsExtracted;
     return $this;
   }
 

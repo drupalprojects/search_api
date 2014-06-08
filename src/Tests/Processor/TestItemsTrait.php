@@ -52,6 +52,7 @@ trait TestItemsTrait {
     $field->setType($field_type);
     $field->addValue($field_value);
     $item->setField($field_id, $field);
+    $item->setFieldsExtracted(TRUE);
 
     return array($item_id => $item);
   }
@@ -91,6 +92,7 @@ trait TestItemsTrait {
         }
         $item->setField($field_id, $field);
       }
+      $item->setFieldsExtracted(TRUE);
       $items[$item_id] = $item;
     }
     return $items;
