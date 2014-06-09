@@ -87,6 +87,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'datasourcePluginIds' => array('entity:' . $this->testEntityTypeId),
       'trackerPluginId' => 'default_tracker',
       'serverMachineName' => $this->server->id(),
+      'options' => array('index_directly' => FALSE),
     ));
     $this->index->save();
 
