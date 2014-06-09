@@ -96,11 +96,11 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
     $fields = array(
       $this->fulltext_field_id => array(
         'type' => 'text',
-        'values' => $this->unprocessed_value,
+        'values' => array($this->unprocessed_value),
       ),
       $this->string_field_id => array(
         'type' => 'string',
-        'values' => $this->unprocessed_value,
+        'values' => array($this->unprocessed_value),
       ),
     );
     $this->items = $this->createItems($index, 1, $fields);
@@ -131,12 +131,14 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
     };
     $tokenized_value = array_map($tokenize, explode(' ', $this->unprocessed_value));
     $this->processed_value = array_map($tokenize, explode(' ', $this->processed_value));
-    $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->setValues(array($tokenized_value));
+    $field = $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id);
+    $field->setValues(array($tokenized_value));
+    $field->setType('tokenized_text');
 
     $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), array($this->processed_value), 'Tokenized Name field was correctly processed.');
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), array($this->unprocessed_value), 'Mail field was not processed.');
+    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Tokenized Name field was correctly processed.');
+    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was not processed.');
   }
 
   /**
@@ -148,8 +150,8 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), array($this->unprocessed_value), 'Name field was not processed.');
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), array($this->processed_value), 'Mail field was correctly processed.');
+    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Name field was not processed.');
+    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was correctly processed.');
   }
 
 }
