@@ -121,71 +121,16 @@ interface BackendSpecificInterface {
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The search index for which items should be indexed.
-   * @param array $items
-   *   An array of items to be indexed, keyed by their IDs. They are represented
-   *   as element arrays. The settings of these arrays (i.e., keys prefixed with
-   *   '#') are arbitrary meta information (only "#item", containing the loaded
-   *   item object (if available); "#item_id", containing the item's datasource-
-   *   specific ID; and "#datasource", the datasource of the item, are defined)
-   *   and the children map field identifiers to arrays containing the following
-   *   keys:
-   *   - type: One of the data types recognized by the Search API, or the
-   *     special type "tokens" for tokenized fulltext fields (see below).
-   *   - original_type: The original type of the property, as defined by the
-   *     datasource controller for the index's item type.
-   *   - value: An array of values to be indexed for this field. The backend
-   *     class should also index the first value separately, for single-value
-   *     use (e.g., sorting).
-   *   - boost: (optional) The (decimal) boost to assign to the field. Usually
-   *     only used for fulltext fields. Should default to 1.
-   *
-   *   An example of a $items arrays passed to this method would therefore look
-   *   as follows:
-   *
-   *   @code
-   *   $items = array(
-   *     'datasource1|some_item_id' => array(
-   *       '#item' => $item1,// object
-   *       '#datasource' => 'datasource1',
-   *       '#item_id' => 'some_item_id',
-   *       'id' => array(
-   *         'type' => 'integer',
-   *         'original_type' => 'field_item:integer',
-   *         'value' => 1,
-   *       ),
-   *       'field_text' => array(
-   *         'type' => 'text',
-   *         'original_type' => 'field_item:string',
-   *         'value' => 'This is some text on the item.',
-   *         'boost' => 4.0,
-   *       ),
-   *     ),
-   *     'datasource2|another_item_id' => array(
-   *       '#item' => $item2,// object
-   *       '#datasource' => 'datasource2',
-   *       '#item_id' => 'another_item_id',
-   *       'id' => array(
-   *         'type' => 'integer',
-   *         'original_type' => 'field_item:integer',
-   *         'value' => 2,
-   *       ),
-   *       'field_text' => array(
-   *         'type' => 'text',
-   *         'original_type' => 'field_item:string',
-   *         'value' => 'This is some text on the second item.',
-   *         'boost' => 4.0,
-   *       ),
-   *     ),
-   *   );
-   *   @endcode
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be indexed, keyed by their item IDs.
    *
    *   The value of fields with the "tokens" type is an array of tokens. Each
    *   token is an array containing the following keys:
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
-   * @return array
-   *   An array of the ids of all items that were successfully indexed.
+   * @return string[]
+   *   The IDs of all items that were successfully indexed.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If indexing was prevented by a fundamental configuration error.
@@ -199,7 +144,7 @@ interface BackendSpecificInterface {
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index for which items should be deleted.
-   * @param array $ids
+   * @param string[] $ids
    *   An array of item IDs.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
@@ -225,9 +170,8 @@ interface BackendSpecificInterface {
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query to execute.
    *
-   * @return array
-   *   An associative array containing the search results, as required by
-   *   \Drupal\search_api\Query\QueryInterface::execute().
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   An associative array containing the search results.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error prevented the search from completing.

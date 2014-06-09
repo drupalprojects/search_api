@@ -4,7 +4,7 @@ description: 'An index used for testing.'
 readOnly: false
 options:
   cron_limit: -1
-  index_directly: true
+  index_directly: false
   fields:
     'entity:entity_test|id':
       type: integer

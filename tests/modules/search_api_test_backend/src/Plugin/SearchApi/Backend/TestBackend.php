@@ -10,6 +10,7 @@ namespace Drupal\search_api_test_backend\Plugin\SearchApi\Backend;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiBackend(
@@ -85,37 +86,36 @@ class TestBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    $results = array();
-    $datasource = key($query->getIndex()->getDatasources());
+    $results = Utility::createSearchResultSet($query);
+    $result_items = array();
+    $datasources = $query->getIndex()->getDatasources();
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    $datasource = reset($datasources);
     if ($query->getKeys() && $query->getKeys()[0] == 'test') {
-      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '1'] = array(
-        'id' => 1,
-        'score' => 2,
-        'datasource' => $datasource,
-        'excerpt' => 'test',
-      );
+      $item_id = Utility::createCombinedId($datasource->getPluginId(), '1');
+      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item->setScore(2);
+      $item->setExcerpt('test');
+      $result_items[$item_id] = $item;
     }
     elseif ($query->getOption('search_api_mlt')) {
-      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '2'] = array(
-        'id' => 2,
-        'score' => 2,
-        'datasource' => $datasource,
-        'excerpt' => 'test test',
-      );
+      $item_id = Utility::createCombinedId($datasource->getPluginId(), '2');
+      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item->setScore(2);
+      $item->setExcerpt('test test');
+      $result_items[$item_id] = $item;
     }
     else {
-      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '1'] = array(
-        'id' => 1,
-        'score' => 1,
-        'datasource' => $datasource,
-      );
-      $results['results'][$datasource . IndexInterface::DATASOURCE_ID_SEPARATOR . '2'] = array(
-        'id' => 2,
-        'score' => 1,
-        'datasource' => $datasource,
-      );
+      $item_id = Utility::createCombinedId($datasource->getPluginId(), '1');
+      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item->setScore(1);
+      $result_items[$item_id] = $item;
+      $item_id = Utility::createCombinedId($datasource->getPluginId(), '2');
+      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item->setScore(1);
+      $result_items[$item_id] = $item;
     }
-    $results['result count'] = count($results['results']);
+    $results->setResultCount(count($result_items));
     return $results;
   }
 

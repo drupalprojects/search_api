@@ -17,6 +17,8 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Transliteration;
  */
 class SearchApiTransliterationTest extends SearchApiProcessorTestBase {
 
+  use TestItemsTrait;
+
   /**
    * Stores the processor to be tested.
    *
@@ -44,73 +46,48 @@ class SearchApiTransliterationTest extends SearchApiProcessorTestBase {
   }
 
   /**
-   * Test that integers are not affected
+   * Tests that integers are not affected.
    */
   public function testTransliterationWithInteger() {
     $field_value = 5;
-    $field_type = 'int';
-
-    $items = array();
-    $items['entity:node|1:en']['entity:node|field_testing'] = $this->createStubItem($field_value, $field_type);
+    /** @var \Drupal\search_api\Item\FieldInterface $field */
+    $items = $this->createSingleFieldItem($this->index, 'int', $field_value, $field);
     $this->processor->preprocessIndexItems($items);
-    // All fields are multivalued fields now
-    $this->assertTrue($items["entity:node|1:en"]["entity:node|field_testing"]['value'][0] === $field_value);
+    $this->assertEqual($field->getValues(), array($field_value), 'Integer not affected by transliteration.');
   }
 
   /**
-   * Test that integers are not affected
+   * Tests that floating point numbers are not affected.
    */
   public function testTransliterationWithDouble() {
     $field_value = 3.14;
-    $field_type = 'double';
-    $items = array();
-    $items['entity:node|1:en']['entity:node|field_testing'] = $this->createStubItem($field_value, $field_type);
+    /** @var \Drupal\search_api\Item\FieldInterface $field */
+    $items = $this->createSingleFieldItem($this->index, 'double', $field_value, $field);
     $this->processor->preprocessIndexItems($items);
-    $this->assertTrue($items["entity:node|1:en"]["entity:node|field_testing"]['value'][0] === $field_value);
+    $this->assertEqual($field->getValues(), array($field_value), 'Floating point number not affected by transliteration.');
   }
 
   /**
-   * Test that USAscii strings are not affected
+   * Tests that ASCII strings are not affected.
    */
   public function testTransliterationWithUSAscii() {
-    $field_value = "ABCDE12345";
-    $field_type = 'string';
-    $items = array();
-    $items['entity:node|1:en']['entity:node|field_testing'] = $this->createStubItem($field_value, $field_type);
+    $field_value = 'ABCDEfghijk12345/$*';
+    /** @var \Drupal\search_api\Item\FieldInterface $field */
+    $items = $this->createSingleFieldItem($this->index, 'string', $field_value, $field);
     $this->processor->preprocessIndexItems($items);
-    $this->assertTrue($items["entity:node|1:en"]["entity:node|field_testing"]['value'][0] === $field_value);
+    $this->assertEqual($field->getValues(), array($field_value), 'ASCII strings are not affected by transliteration.');
   }
 
   /**
-   * Test that non-USAscii strings are affected
+   * Tests correct transliteration of umlaut and accented characters.
    */
   public function testTransliterationWithNonUSAscii() {
-    //this should come back as 'Grosse'
-    $field_value = "Größe";
-    $field_type = 'string';
-    $items = array();
-    $items['entity:node|1:en']['entity:node|field_testing'] = $this->createStubItem($field_value, $field_type);
+    $field_value = 'Größe à férfi';
+    $transliterated_value = 'Grosse a ferfi';
+    /** @var \Drupal\search_api\Item\FieldInterface $field */
+    $items = $this->createSingleFieldItem($this->index, 'string', $field_value, $field);
     $this->processor->preprocessIndexItems($items);
-    $this->assertFalse($items["entity:node|1:en"]["entity:node|field_testing"]['value'][0] === $field_value);
-  }
-
-  /**
-   * createStubItem
-   * Helper method to create an item for use with preprocessIndexItems
-   *
-   * @param mixed $field_name
-   * @param mixed $field_value
-   * @param mixed $field_type
-   * @return array formatted for use with preProcessIndexItems
-   */
-  protected function createStubItem($field_value, $field_type) {
-    return array(
-      'type' => $field_type,
-      'value' => array(
-        "0" => $field_value,
-      ),
-      'original_type' => 'field_item:text',
-    );
+    $this->assertEqual($field->getValues(), array($transliterated_value), 'Umlauts and accented characters are properly transliterated.');
   }
 
 }

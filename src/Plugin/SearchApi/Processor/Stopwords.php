@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * @SearchApiProcessor(
@@ -92,9 +93,9 @@ class Stopwords extends FieldsProcessorPluginBase {
     }
 
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'text') {
-        if ($this->testType($field['type'])) {
-          $field_options[$name] = $field['name_prefix'] . $field['name'];
+      if ($field->getType() == 'text') {
+        if ($this->testType($field->getType())) {
+          $field_options[$name] = $field->getPrefixedLabel();
           if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
             $default_fields[$name] = $name;
           }
@@ -118,7 +119,7 @@ class Stopwords extends FieldsProcessorPluginBase {
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
       '#description' => $this->t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
-      '#default_value' => implode(PHP_EOL, $this->configuration['stopwords']),
+      '#default_value' => implode("\n", $this->configuration['stopwords']),
     );
 
     return $form;
@@ -142,8 +143,8 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    // Convert our text input to an array
-    $this->configuration['stopwords'] = explode(PHP_EOL, $form_state['values']['stopwords']);
+    // Convert our text input to an array.
+    $this->configuration['stopwords'] = explode("\n", $form_state['values']['stopwords']);
   }
 
   /**
@@ -171,21 +172,16 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
-    if ($this->ignored) {
-      if (isset($response['ignored'])) {
-        $response['ignored'] = array_merge($response['ignored'], $this->ignored);
-      }
-      else {
-        $response['ignored'] = $this->ignored;
-      }
+  public function postprocessSearchResults(ResultSetInterface $results) {
+    foreach ($this->ignored as $ignored_search_key) {
+      $results->addIgnoredSearchKey($ignored_search_key);
     }
   }
 
   /**
    * Gets all the stopwords.
    *
-   * @return
+   * @return array
    *   An array whose keys are the stopwords set in either the file or the text
    *   field.
    */

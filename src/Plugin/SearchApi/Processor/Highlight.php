@@ -12,6 +12,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -77,31 +78,32 @@ class Highlight extends ProcessorPluginBase {
 
     $form['prefix'] = array(
       '#type' => 'textfield',
-      '#title' => t('Highlighting prefix'),
-      '#description' => t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'),
+      '#title' => $this->t('Highlighting prefix'),
+      '#description' => $this->t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'),
       '#default_value' => $this->configuration['prefix'],
     );
     $form['suffix'] = array(
       '#type' => 'textfield',
-      '#title' => t('Highlighting suffix'),
-      '#description' => t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'),
+      '#title' => $this->t('Highlighting suffix'),
+      '#description' => $this->t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'),
       '#default_value' => $this->configuration['suffix'],
     );
     $form['excerpt'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Create excerpt'),
-      '#description' => t('When enabled, an excerpt will be created for searches with keywords, containing all occurrences of keywords in a fulltext field.'),
+      '#title' => $this->t('Create excerpt'),
+      '#description' => $this->t('When enabled, an excerpt will be created for searches with keywords, containing all occurrences of keywords in a fulltext field.'),
       '#default_value' => $this->configuration['excerpt'],
     );
     $form['excerpt_length'] = array(
       '#type' => 'textfield',
-      '#title' => t('Excerpt length'),
-      '#description' => t('The requested length of the excerpt, in characters.'),
+      '#title' => $this->t('Excerpt length'),
+      '#description' => $this->t('The requested length of the excerpt, in characters.'),
       '#default_value' => $this->configuration['excerpt_length'],
       '#element_validate' => array('form_validate_number'),
       '#min' => 1,
       '#states' => array(
         'visible' => array(
+          // @todo This shouldn't be dependent on the form array structure.
           '#edit-processors-search-api-highlighting-settings-excerpt' => array(
             'checked' => TRUE,
           ),
@@ -110,12 +112,12 @@ class Highlight extends ProcessorPluginBase {
     );
     $form['highlight'] = array(
       '#type' => 'select',
-      '#title' => t('Highlight returned field data'),
-      '#description' => t('Select whether returned fields should be highlighted.'),
+      '#title' => $this->t('Highlight returned field data'),
+      '#description' => $this->t('Select whether returned fields should be highlighted.'),
       '#options' => array(
-        'always' => t('Always'),
-        'server' => t('If the server returns fields'),
-        'never' => t('Never'),
+        'always' => $this->t('Always'),
+        'server' => $this->t('If the server returns fields'),
+        'never' => $this->t('Never'),
       ),
       '#default_value' => $this->configuration['highlight'],
     );
@@ -126,119 +128,149 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
-    // Overridden so $form['fields'] is not checked.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
-    if (!$response['result count'] || !($keys = $this->getKeywords($query))) {
+  public function postprocessSearchResults(ResultSetInterface $results) {
+    if (!$results->getResultCount() || !($keys = $this->getKeywords($results->getQuery()))) {
       return;
     }
 
-    foreach ($response['results'] as $id => $result) {
-      if ($this->configuration['excerpt']) {
-        $this->postprocessExcerptResults($response['results'], $id, $keys);
+    $result_items = $results->getResultItems();
+    if ($this->configuration['excerpt']) {
+      foreach ($result_items as $id => $result) {
+        $this->postprocessExcerptResults($result_items, $id, $keys);
       }
-      if ($this->configuration['highlight'] != 'never') {
-        $this->postprocessFieldResults($response['results'], $id, $keys);
+    }
+    if ($this->configuration['highlight'] != 'never') {
+      $higlighted_fields = $this->postprocessFieldResults($result_items, $keys);
+      if ($higlighted_fields) {
+        // Maybe the backend or some other processor has already set highlighted
+        // field values.
+        foreach ($results->getExtraData('highlighted_fields', array()) as $item_id => $old_highlighting) {
+          $higlighted_fields += array($item_id => array());
+          $higlighted_fields[$item_id] += $old_highlighting;
+        }
+        $results->setExtraData('highlighted_fields', $higlighted_fields);
       }
     }
   }
 
   /**
-   * For a single result retrieve fields and create an highlighted excerpt.
+   * For a single result retrieve fields and create a highlighted excerpt.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $results
+   *   All results returned by the search.
+   * @param string $id
+   *   The item ID of the item whose fields should be highlighted.
+   * @param array $keys
+   *   The search keys to use for highlighting.
    */
-  protected function postprocessExcerptResults(array &$results, $id, $keys) {
+  protected function postprocessExcerptResults(array $results, $id, array $keys) {
     $text = array();
     $fields = $this->getFulltextFields($results, $id);
-    foreach ($fields as $data) {
-      $text = array_merge($text, $data);
+    foreach ($fields as $field) {
+      $text = array_merge($text, $field->getValues());
     }
-    $result['excerpt'] = $this->createExcerpt(implode("\n\n", $text), $keys);
+    $results[$id]->setExcerpt($this->createExcerpt(implode("\n\n", $text), $keys));
   }
 
   /**
-   * For a single result retrieve fields and highlight.
+   * Retrieves highlighted field values for result items.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $results
+   *   All result items returned by the search.
+   * @param array $keys
+   *   The search keys to use for highlighting.
+   *
+   * @return string[][][]
+   *   An array with either zero or one entries. The possible entry has a key of
+   *   $id and maps field IDs to the highlighted versions of the values for that
+   *   field.
    */
-  protected function postprocessFieldResults(array &$results, $id, $keys) {
-    $fields = $this->getFulltextFields($results, $id, $this->configuration['highlight'] == 'always');
-    foreach ($fields as $field => $data) {
-      foreach ($data as $i => $text) {
-        $results['fields'][$field][$i] = $this->highlightField($text, $keys);
+  protected function postprocessFieldResults(array $results, array $keys) {
+    $items = $this->getFulltextFields($results, $this->configuration['highlight'] == 'always');
+    $highlighted_fields = array();
+    foreach ($items as $item_id => $fields) {
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($fields as $field_id => $field) {
+        $values = $field->getValues();
+        $change = FALSE;
+        foreach ($values as $i => $value) {
+          $values[$i] = $this->highlightField($value, $keys);
+          if ($values[$i] !== $value) {
+            $change = TRUE;
+          }
+        }
+        if ($change) {
+          $highlighted_fields[$item_id][$field_id] = $values;
+        }
       }
     }
+    return $highlighted_fields;
   }
 
   /**
    * Retrieves the fulltext data of a result.
    *
-   * @param array $results
-   *   All results returned in the search, by reference.
-   * @param int|string $i
-   *   The index in the results array of the result whose data should be
-   *   returned.
+   * @param \Drupal\search_api\Item\ItemInterface[] $result_items
+   *   All results returned by the search, keyed by item ID.
    * @param bool $load
    *   TRUE if the item should be loaded if necessary, FALSE if only fields
    *   already returned in the results should be used.
    *
-   * @return array
-   *   An array containing fulltext field names mapped to the text data
-   *   contained in them for the given result.
+   * @return \Drupal\search_api\Item\FieldInterface[][]
+   *   Fields of the item for which data should be extracted.
    */
-  protected function getFulltextFields(array &$results, $i, $load = TRUE) {
-    $data = array();
+  protected function getFulltextFields(array $result_items, $load = TRUE) {
+    $items = array();
 
-    $result = &$results[$i];
-    // Act as if $load is TRUE if we have a loaded item.
-    $load |= !empty($result['entity']);
-    $result += array('fields' => array());
-    $fulltext_fields = $this->index->getFulltextFields();
-    // We only need detailed fields data if $load is TRUE.
-    $fields = $load ? $this->index->getFields() : array();
+    // All the index's fulltext fields, grouped by datasource.
+    $fulltext_fields = array();
+    foreach ($this->index->getFields() as $field_id => $field) {
+      if (Utility::isTextType($field->getType())) {
+        $fulltext_fields[$field->getDatasourceId()][$field_id] = $field;
+      }
+    }
+
     $needs_extraction = array();
-    foreach ($fulltext_fields as $field) {
-      if (array_key_exists($field, $result['fields'])) {
-        $data[$field] = $result['fields'][$field];
-      }
-      elseif ($load) {
-        $needs_extraction[$field] = $fields[$field];
-      }
-    }
-
-    if (!$needs_extraction) {
-      return $data;
-    }
-
-    if (empty($result['entity'])) {
-      $this->loadResultsEntities($results);
-    }
-    // If we still don't have a loaded item, we should stop trying.
-    if (empty($result['entity'])) {
-      return $data;
-    }
-
-    Utility::extractFields($result['entity'], $needs_extraction);
-
-    foreach ($needs_extraction as $field => $info) {
-      if (isset($info['value'])) {
-        $data[$field] = $info['value'];
+    foreach ($result_items as $item_id => $result_item) {
+      $datasource_id = $result_item->getDatasourceId();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($fulltext_fields[$datasource_id] as $field_id => $field) {
+        if ($result_item->getField($field_id, FALSE)) {
+          $items[$item_id][$field_id] = $result_item->getField($field_id, FALSE);
+        }
+        elseif ($load) {
+          $needs_extraction[$item_id][$field->getPropertyPath()] = clone $field;
+        }
       }
     }
 
-    return $data;
-  }
-
-  /**
-   * Loads entities into results array.
-   */
-  protected function loadResultsEntities(array &$results) {
-    $items = $this->index->loadItemsMultiple(array_keys($results));
-    foreach ($items as $id => $item) {
-      $results[$id]['entity'] = $item;
+    $needs_load = array();
+    foreach ($needs_extraction as $item_id => $fields) {
+      if (!$result_items[$item_id]->getOriginalObject(FALSE)) {
+        $needs_load[$item_id] = $item_id;
+      }
     }
+
+    if ($needs_load) {
+      foreach ($this->index->loadItemsMultiple($needs_load) as $item_id => $object) {
+        $result_items[$item_id]->setOriginalObject($object);
+        unset($needs_load[$item_id]);
+      }
+    }
+
+    // Remove the fields for all items that couldn't be loaded.
+    $needs_extraction = array_diff_key($needs_extraction, $needs_load);
+
+    foreach ($needs_extraction as $item_id => $fields) {
+      Utility::extractFields($result_items[$item_id]->getOriginalObject(), $fields);
+      foreach ($fields as $field) {
+        $field_id = $field->getFieldIdentifier();
+        $result_items[$item_id]->setField($field_id, $field);
+        $items[$item_id][$field_id] = $field;
+      }
+    }
+
+    return $items;
   }
 
   /**
@@ -315,6 +347,7 @@ class Highlight extends ProcessorPluginBase {
    * @return string
    *   A string containing HTML for the excerpt.
    */
+  // @todo Update to new D8 search_excerpt().
   protected function createExcerpt($text, array $keys) {
     // Prepare text by stripping HTML tags and decoding HTML entities.
     $text = strip_tags(str_replace(array('<', '>'), array(' <', '> '), $text));
@@ -437,7 +470,7 @@ class Highlight extends ProcessorPluginBase {
     $replace = $this->configuration['prefix'] . '\0' . $this->configuration['suffix'];
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
     $text = preg_replace('/' . self::$boundary . '(' . $keys . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
-    return trim(substr($text, 1, -1));
+    return trim($text);
   }
 
 }

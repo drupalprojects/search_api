@@ -86,10 +86,10 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
     $items = $this->generateNodes(50);
     $non_empty_count = 0;
     foreach ($items as $item) {
-      $value = rand(0,1);
+      $value = rand(0, 1);
       $non_empty_count += $value;
       /** @var \Drupal\node\NodeInterface $node */
-      $node = $item['#item'];
+      $node = $item->getOriginalObject();
       $node->setPublished($value);
     }
     $this->processor->preprocessIndexItems($items);
@@ -104,7 +104,7 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
    * @param mixed $status
    *   The status to set for the nodes in the array.
    *
-   * @return array
+   * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array of items to be indexed.
    */
   public function generateNodes($number_of_items, $status = NULL) {
@@ -114,7 +114,7 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
       $generated_items[] = array(
         'item' => clone $item,
         'datasource' => 'entity:node',
-        'item_id' => rand(1, 100000),
+        'item_id' => rand(1, 100000) . ':und',
         'field_text' => $this->randomName(),
       );
     }

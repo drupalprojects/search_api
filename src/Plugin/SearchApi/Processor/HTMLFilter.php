@@ -13,9 +13,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
-use Drupal\search_api\Processor\ProcessorPluginBase;
 use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Symfony\Component\Yaml\Parser;
 use Symfony\Component\Yaml\Dumper;
@@ -81,9 +79,9 @@ class HTMLFilter extends FieldsProcessorPluginBase {
     }
 
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'text') {
-        if ($this->testType($field['type'])) {
-          $field_options[$name] = $field['name_prefix'] . $field['name'];
+      if ($field->getType() == 'text') {
+        if ($this->testType($field->getType())) {
+          $field_options[$name] = $field->getPrefixedLabel();
           if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
             $default_fields[$name] = $name;
           }
@@ -144,15 +142,17 @@ class HTMLFilter extends FieldsProcessorPluginBase {
       $errors[] = t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
       $tags = array();
     }
+    $form_state['values']['tags'] = $tags;
     foreach ($tags as $key => $value) {
+      $key = "<$key>";
       if (is_array($value)) {
-        $errors[] = t("Boost value for tag &lt;@tag&gt; can't be an array.", array('@tag' => $key));
+        $errors[] = t("Boost value for tag @tag can't be an array.", array('@tag' => $key));
       }
       elseif (!is_numeric($value)) {
-        $errors[] = t("Boost value for tag &lt;@tag&gt; must be numeric.", array('@tag' => $key));
+        $errors[] = t("Boost value for tag @tag must be numeric.", array('@tag' => $key));
       }
       elseif ($value < 0) {
-        $errors[] = t('Boost value for tag &lt;@tag&gt; must be non-negative.', array('@tag' => $key));
+        $errors[] = t('Boost value for tag @tag must be non-negative.', array('@tag' => $key));
       }
     }
     if ($errors) {
@@ -275,7 +275,6 @@ class HTMLFilter extends FieldsProcessorPluginBase {
       //problem parsing, return empty array
       $tags = FALSE;
     }
-    dpm($tags);
     return $tags;
   }
 }

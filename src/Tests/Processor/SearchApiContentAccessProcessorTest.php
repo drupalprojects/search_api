@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
@@ -15,6 +14,13 @@ use Drupal\search_api\Query\Query;
  * Tests the ContentAccess processor.
  */
 class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
+
+  /**
+   * Stores the processor to be tested.
+   *
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+   */
+  protected $processor;
 
   /**
    * @var \Drupal\comment\Entity\Comment[]
@@ -95,7 +101,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query = Query::create($this->index);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 2, 'The result should contain all items');
+    $this->assertEqual($result->getResultCount(), 2, 'The result contains all items.');
   }
 
   /**
@@ -120,7 +126,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 1, 'The result should contain only one item to which the user has granted access');
+    $this->assertEqual($result->getResultCount(), 1, 'The result should contain only one item to which the user has granted access');
   }
 
   /**
@@ -140,8 +146,10 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access__all'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access__all'));
     }
   }
 
@@ -161,8 +169,10 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants']['value'], array('node_access_search_api_test:0'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access_search_api_test:0'));
     }
   }
 

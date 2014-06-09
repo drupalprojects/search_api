@@ -50,7 +50,7 @@ class SearchApiViewsTest extends SearchApiWebTestBase {
    */
   public function testFulltextSearch() {
     $this->insertExampleContent();
-    $this->indexItems($this->indexId);
+    $this->assertEqual($this->indexItems($this->indexId), 5, '5 items were indexed.');
 
     $this->drupalGet('search-api-test-fulltext');
     // By default, it should show all entities.

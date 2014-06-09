@@ -171,20 +171,20 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save changes'));
-    $this->assertText(t('The indexed fields were successfully changed. The index was cleared and will have to be re-indexed with the new settings.'));
+    $this->assertText(t('The indexed fields were successfully changed.'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $fields = $index->getFields();
+    $fields = $index->getFields(FALSE);
 
-    $this->assertEqual($fields['entity:node|nid']['indexed'], $edit['fields[entity:node|nid][indexed]'], t('nid field is indexed.'));
-    $this->assertEqual($fields['entity:node|title']['indexed'], $edit['fields[entity:node|title][indexed]'], t('title field is indexed.'));
-    $this->assertEqual($fields['entity:node|title']['type'], $edit['fields[entity:node|title][type]'], t('title field type is text.'));
-    $this->assertEqual($fields['entity:node|title']['boost'], $edit['fields[entity:node|title][boost]'], t('title field boost value is 21.'));
+    $this->assertEqual($fields['entity:node|nid']->isIndexed(), $edit['fields[entity:node|nid][indexed]'], t('nid field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']->isIndexed(), $edit['fields[entity:node|title][indexed]'], t('title field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']->getType(), $edit['fields[entity:node|title][type]'], t('title field type is text.'));
+    $this->assertEqual($fields['entity:node|title']->getBoost(), $edit['fields[entity:node|title][boost]'], t('title field boost value is 21.'));
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.
-    $this->assertEqual($fields['entity:node|body']['type'], 'text', 'Complex field mapping relationship works.');
+    $this->assertEqual($fields['entity:node|body']->getType(), 'text', 'Complex field mapping relationship works.');
   }
 
   protected function addAdditionalFieldsToIndex() {

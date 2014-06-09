@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
@@ -110,50 +111,28 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
    *
    * @param array $items
    *   Data to populate test items.
-   *    - datasource: The datasource plugin id.
-   *    - item: The item object to be indexed.
-   *    - item_id: Unique item id.
-   *    - text: Textual value of the test field.
+   *   - datasource: The datasource plugin id.
+   *   - item: The item object to be indexed.
+   *   - item_id: Datasource-specific raw item id.
+   *   - text: Textual value of the test field.
    *
-   * @return array
-   *   An array structure as defined by BackendSpecificInterface::indexItems().
+   * @return \Drupal\search_api\Item\ItemInterface[]
+   *   The populated test items.
    */
   public function generateItems(array $items) {
-    // Convert index "fields" option to datasource-specific arrays suitable for
-    // indexing.
-    $fields = array();
-    foreach ($this->index->getOption('fields', array()) as $key => $field) {
-      $field['original_type'] = "field_item:{$field['type']}";
-      $field['value'] = array();
-      if (strpos($key, IndexInterface::DATASOURCE_ID_SEPARATOR)) {
-        list ($datasource_id, $property_path) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $key, 2);
-        $fields[$datasource_id][$property_path] = $field;
-      }
-      else {
-        $fields[NULL][$key] = $field;
-      }
-    }
-
+    /** @var \Drupal\search_api\Item\ItemInterface[] $extracted_items */
     $extracted_items = array();
     foreach ($items as $item) {
-      $id = $item['datasource'] . '|' . $item['item_id'];
-      $extracted_items[$id] = array(
-        '#item' => $item['item'],
-        '#datasource' => $item['datasource'],
-        '#item_id' => $item['item_id'],
-      );
+      $id = $item['datasource'] . IndexInterface::DATASOURCE_ID_SEPARATOR . $item['item_id'];
+      $extracted_items[$id] = Utility::createItemFromObject($this->index, $item['item'], $id);
       foreach (array(NULL, $item['datasource']) as $datasource_id) {
-        if (empty($fields[$datasource_id])) {
-          continue;
-        }
-        foreach ($fields[$datasource_id] as $key => $field) {
-          if (isset($item[$key])) {
-            $field['value'][] = $item[$key];
+        foreach ($this->index->getFieldsByDatasource($datasource_id) as $key => $field) {
+          /** @var \Drupal\search_api\Item\FieldInterface $field */
+          $field = clone $field;
+          if (isset($item[$field->getPropertyPath()])) {
+            $field->addValue($item[$field->getPropertyPath()]);
           }
-          if ($datasource_id) {
-            $key = $datasource_id . IndexInterface::DATASOURCE_ID_SEPARATOR . $key;
-          }
-          $extracted_items[$id][$key] = $field;
+          $extracted_items[$id]->setField($key, $field);
         }
       }
     }

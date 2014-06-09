@@ -34,11 +34,8 @@ class Transliteration extends FieldsProcessorPluginBase {
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    /* Store the language code and transliteration class in this
-     * to save recreating it for each
-     */
+    // @todo Replace this with proper dependency injection.
     $this->langcode = \Drupal::languageManager()->getDefaultLanguage()->id;
-
     $this->transliterator = \Drupal::service('transliteration');
   }
 
