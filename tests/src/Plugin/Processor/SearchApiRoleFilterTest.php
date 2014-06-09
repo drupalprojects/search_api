@@ -68,7 +68,7 @@ class SearchApiRoleFilterTest extends UnitTestCase {
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $node_datasource);
-    $node = $this->getMockBuilder('Drupal\node\NodeInterface')
+    $node = $this->getMockBuilder('Drupal\search_api\Tests\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
     /** @var \Drupal\node\NodeInterface $node */
@@ -76,7 +76,7 @@ class SearchApiRoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $user_datasource);
-    $account1 = $this->getMockBuilder('Drupal\user\UserInterface')
+    $account1 = $this->getMockBuilder('Drupal\search_api\Tests\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
     $account1->expects($this->any())
@@ -87,7 +87,7 @@ class SearchApiRoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $user_datasource);
-    $account2 = $this->getMockBuilder('Drupal\user\UserInterface')
+    $account2 = $this->getMockBuilder('Drupal\search_api\Tests\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
     $account2->expects($this->any())
