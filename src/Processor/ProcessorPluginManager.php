@@ -10,7 +10,6 @@ namespace Drupal\search_api\Processor;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Language\LanguageManager;
 
 /**
  * Search API processor plugin manager.
@@ -25,16 +24,14 @@ class ProcessorPluginManager extends DefaultPluginManager {
    *   keyed by the corresponding namespace to look for plugin implementations.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   Cache backend instance to use.
-   * @param \Drupal\Core\Language\LanguageManager $language_manager
-   *   The language manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, LanguageManager $language_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Processor', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiProcessor');
     // Configure the plugin manager.
-    $this->setCacheBackend($cache_backend, $language_manager, 'search_api_processors');
+    $this->setCacheBackend($cache_backend, 'search_api_processors');
     $this->alterInfo('search_api_processor_info');
   }
 
