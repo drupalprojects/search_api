@@ -119,7 +119,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function processFieldValue(&$value) {
+  protected function processFieldValue(&$value, &$type) {
     $this->prepare();
     if ($this->ignorable) {
       $value = preg_replace('/(' . $this->ignorable . ')+/u', '', $value);

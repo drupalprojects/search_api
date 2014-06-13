@@ -163,8 +163,7 @@ class HTMLFilter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function processFieldValue(&$value) {
-    $tokenized_text = array();
+  protected function processFieldValue(&$value, &$type) {
     // Copy without reference
     $text = $value;
     // Put the title properties from html entities in the text blob.
@@ -175,8 +174,10 @@ class HTMLFilter extends FieldsProcessorPluginBase {
     if ($this->configuration['alt']) {
       $text = preg_replace('/(<img[^>]*\s+alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>)/i', '$3$4 $1', $text);
     }
-    // Get any other configured tags.
-    if (!empty($this->configuration['tags'])) {
+
+    // Process the individual tags for text or tokenized_text types.
+    if (!empty($this->configuration['tags']) && in_array($type, array('text', 'tokenized_text'))) {
+      $tokenized_text = array();
       $tags_exploded = '<' . implode('><', array_keys($this->tags)) . '>';
       // Let removed tags still delimit words.
       $text = str_replace(array('<', '>'), array(' <', '> '), $text);
@@ -187,15 +188,20 @@ class HTMLFilter extends FieldsProcessorPluginBase {
       if (!empty($get_tag_scores)) {
         $tokenized_text = array_merge($tokenized_text, $get_tag_scores);
       }
-    }
-    // Add also everything as non boosted for the general field.
-    $tokenized_text['content'] = array('value' => $text, 'score' => 1);
+      // Add also everything as non boosted for the general field.
+      $tokenized_text['content'] = array('value' => $text, 'score' => 1);
 
-    // Clean up all the remaining tags and clean up the different sections.
-    foreach ($tokenized_text as &$text) {
-      $text['value'] = $this->stripHtmlTagsAndPunctuation($text['value']);
+      // Clean up all the remaining tags and clean up the different sections.
+      foreach ($tokenized_text as &$token) {
+        $token['value'] = $this->stripHtmlTagsAndPunctuation($token['value']);
+      }
+      $value = array_values($tokenized_text);
+      // Tell the upstream that we changed the type from text to tokenized_text
+      $type = "tokenized_text";
     }
-    $value = array_values($tokenized_text);
+    else {
+      $value = $this->stripHtmlTagsAndPunctuation($text);
+    }
   }
 
   /**
