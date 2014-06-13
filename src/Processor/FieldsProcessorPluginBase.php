@@ -144,30 +144,21 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   The field to process.
    */
   protected function processField(FieldInterface $field) {
-    $type_changed_to_tokenized = FALSE;
-
     $values = $field->getValues();
+
     foreach ($values as &$value) {
       $type = $field->getType();
       if ($type == 'tokenized_text') {
         foreach ($value as &$tokenized_value) {
-          $this->processFieldValue($tokenized_value['value']);
+          $this->processFieldValue($tokenized_value['value'], $type);
         }
       }
       else {
-        $this->processFieldValue($value);
-        // If we got an array back from processFieldValue() it means it
-        // transformed to a tokenized set of things.
-        if (is_array($value) && isset($value['0']) && isset($value['0']['score']) && isset($value['0']['value'])) {
-          $type_changed_to_tokenized = TRUE;
-        }
+        $this->processFieldValue($value, $type);
       }
 
-      // Don't tokenize non-fulltext content!
-      if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
-        if (is_array($value)) {
+      if ($type == 'tokenized_text') {
           $value = $this->normalizeTokens($value);
-        }
       }
       else {
         if (is_array($value)) {
@@ -175,9 +166,9 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
         }
       }
     }
-    if ($type_changed_to_tokenized) {
-      $field->setType('tokenized_text');
-    }
+
+    // We're setting the type and values here as it could have changed.
+    $field->setType($type);
     $field->setValues($values);
   }
 
@@ -348,8 +339,13 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *     The score of nested tokens will be multiplied by their parent's score.
    *   - score: The relative importance of the token, as a float, with 1 being
    *     the default.
+   * @param string $type
+   *   The field type as a reference. Can be manipulated
+   *   directly, nothing has to be returned. Can contain any of the supported
+   *   item types such as string, text. The processFieldValue is responsible
+   *   of changing the type. Common example is changing text to tokenized_text.
    */
-  protected function processFieldValue(&$value) {
+  protected function processFieldValue(&$value, &$type) {
     $this->process($value);
   }
 

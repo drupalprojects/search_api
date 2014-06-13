@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
+use Drupal\comment\Entity\CommentType;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
@@ -49,6 +50,8 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
   public function setUp() {
     parent::setUp('search_api_content_access_processor');
 
+    $this->installSchema('comment', array('comment_entity_statistics'));
+
     // Create a node type for testing.
     $type = entity_create('node_type', array('type' => 'page', 'name' => 'page'));
     $type->save();
@@ -70,8 +73,22 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     // Create a node with attached comment.
     $this->nodes[0] = entity_create('node', array('status' => NODE_PUBLISHED, 'type' => 'page', 'title' => 'test title'));
     $this->nodes[0]->save();
-    entity_reference_create_instance('node', 'page', 'comments', 'Comments', 'comment');
-    $comment = entity_create('comment', array('entity_type' => 'node', 'entity_id' => $this->nodes[0]->id(), 'field_id' => 'node__comments', 'body' => 'test body'));
+
+    $comment_type = CommentType::create(array(
+      'id' => 'comment',
+      'target_entity_type_id' => 'node',
+    ));
+    $comment_type->save();
+
+    $this->container->get('comment.manager')->addDefaultField('node', 'page');
+
+    $comment = entity_create('comment', array(
+      'entity_type' => 'node',
+      'entity_id' => $this->nodes[0]->id(),
+      'field_name' => 'comment',
+      'body' => 'test body',
+      'comment_type' => $comment_type->id(),
+    ));
     $comment->save();
 
     $this->comments[] = $comment;

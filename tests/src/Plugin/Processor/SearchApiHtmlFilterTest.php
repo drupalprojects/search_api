@@ -51,13 +51,13 @@ class HtmlFilterTest extends UnitTestCase {
    *
    * @dataProvider titleConfigurationDataProvider
    */
-  public function testTitleConfiguration($passedString, array $expectedValue, $titleConfig) {
+  public function testTitleConfiguration($passedString, $expectedValue, $titleConfig) {
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
       array('processFieldValue'),
       array(array('tags' => "", 'title' => $titleConfig, 'alt' => 0), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
+    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'string'));
 
     $this->assertEquals($passedString, $expectedValue);
 
@@ -68,13 +68,13 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function titleConfigurationDataProvider() {
     return array(
-      array('word', array(array('value' => 'word', 'score' => 1)), 0),
-      array('word', array(array('value' => 'word', 'score' => 1)), 1),
-      array('<div>word</div>', array(array('value' => 'word', 'score' => 1)), 1),
-      array('<div title="TITLE">word</div>', array(array('value' => 'TITLE word', 'score' => 1)), 1),
-      array('<div title="TITLE">word</div>', array(array('value' => 'word', 'score' => 1)), 0),
-      array('<div data-title="TITLE">word</div>', array(array('value' => 'word', 'score' => 1)), 1),
-      array('<div title="TITLE">word</a>', array(array('value' => 'TITLE word', 'score' => 1)), 1),
+      array('word', 'word', 0),
+      array('word', 'word', 1),
+      array('<div>word</div>', 'word', 1),
+      array('<div title="TITLE">word</div>', 'TITLE word', 1),
+      array('<div title="TITLE">word</div>', 'word', 0),
+      array('<div data-title="TITLE">word</div>', 'word', 1),
+      array('<div title="TITLE">word</a>', 'TITLE word', 1),
     );
   }
 
@@ -84,7 +84,7 @@ class HtmlFilterTest extends UnitTestCase {
    *
    * @dataProvider altConfigurationDataProvider
    */
-  public function testAltConfiguration($passedString, array $expectedValue, $altBoost) {
+  public function testAltConfiguration($passedString, $expectedValue, $altBoost) {
     // Mock the HTMLFilter class and fetch the two methods we want to test.
     //Initialize them with the default values as given in the arguments.
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
@@ -92,7 +92,7 @@ class HtmlFilterTest extends UnitTestCase {
       array(array('tags' => array('img' => '2'), 'title' => 0, 'alt' => $altBoost), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
+    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'string'));
 
     $this->assertEquals($passedString, $expectedValue);
 
@@ -103,13 +103,13 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function altConfigurationDataProvider() {
     return array(
-      array('word', array(array('value' => 'word', 'score' => 1)), 0),
-      array('word', array(array('value' => 'word', 'score' => 1)), 1),
-      array('<img src"href">word', array(array('value' => "word", 'score' => 1)), 1),
-      array('<img alt="ALT"> word', array(array('value' => "ALT word", 'score' => 1)), 1),
-      array('<img alt="ALT"> word', array(array('value' => "word", 'score' => 1)), 0),
-      array('<img data-alt="ALT"> word', array(array('value' => "word", 'score' => 1)), 1),
-      array('<img alt="ALT"> word </a>', array(array('value' => "ALT word", 'score' => 1)), 1),
+      array('word', 'word', 0),
+      array('word', 'word', 1),
+      array('<img src"href">word', "word", 1),
+      array('<img alt="ALT"> word', "ALT word", 1),
+      array('<img alt="ALT"> word', "word", 0),
+      array('<img data-alt="ALT"> word', "word", 1),
+      array('<img alt="ALT"> word </a>', "ALT word", 1),
     );
   }
 
@@ -118,13 +118,13 @@ class HtmlFilterTest extends UnitTestCase {
    *
    * @dataProvider tagConfigurationDataProvider
    */
-  public function testTagConfiguration($passedString, array $expectedValue, $tagsConfig) {
+  public function testTagConfiguration($passedString, $expectedValue, $tagsConfig) {
     $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
       array('processFieldValue'),
       array(array('tags' => $tagsConfig, 'title' => 0, 'alt' => 0), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString));
+    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'text'));
     $this->assertEquals($passedString, $expectedValue);
 
   }
@@ -136,7 +136,7 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function tagConfigurationDataProvider() {
     return array(
-      array('h2word', array(array('value' => 'h2word', 'score' => '1')), ''),
+      array('h2word', 'h2word', ''),
       array('h2word', array(array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
       array('<h2> h2word </h2>', array(array('value' => 'h2word', 'score' => '2'), array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
     );

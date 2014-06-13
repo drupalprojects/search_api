@@ -110,11 +110,6 @@ class Stopwords extends FieldsProcessorPluginBase {
       '#default_value' => $default_fields,
     );
 
-    $form['file'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Stopwords file'),
-      '#description' => $this->t('This must be a stream-type description like <code>public://stopwords/stopwords.txt</code> or <code>http://example.com/stopwords.txt</code> or <code>private://stopwords.txt</code>.'),
-    );
     $form['stopwords'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
@@ -123,19 +118,6 @@ class Stopwords extends FieldsProcessorPluginBase {
     );
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
-    parent::validateConfigurationForm($form, $form_state);
-
-    $uri = $form_state['values']['file'];
-    if (!empty($uri) && !@file_get_contents($uri)) {
-      $el = $form['file'];
-      \Drupal::formBuilder()->setError($el, $form_state, $this->t('Stopwords file') . ': ' . $this->t('The file %uri is not readable or does not exist.', array('%uri' => $uri)));
-    }
   }
 
   /**
