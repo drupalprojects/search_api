@@ -210,14 +210,13 @@ interface BackendSpecificInterface {
   /**
    * Deletes all the items from the index.
    *
-   * @param \Drupal\search_api\Index\IndexInterface|null $index
-   *   The index for which items should be deleted, or NULL to delete all items
-   *   on this server.
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index for which items should be deleted.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while trying to delete the items.
    */
-  public function deleteAllItems(IndexInterface $index = NULL);
+  public function deleteAllIndexItems(IndexInterface $index);
 
   /**
    * Executes a search on the server represented by this object.

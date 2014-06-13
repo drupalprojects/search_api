@@ -693,7 +693,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     // Regression test for #2156151.
     $server = entity_load('search_api_server', $this->serverId, TRUE);
     $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $server->deleteAllItems($index);
+    $server->deleteAllIndexItems($index);
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEqual($results['result count'], 0, 'Clearing the server worked correctly.');

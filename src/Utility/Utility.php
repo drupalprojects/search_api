@@ -281,15 +281,6 @@ class Utility {
   }
 
   /**
-   * Removes all pending server tasks from the list.
-   *
-   * To remove tasks from an individual server see Server::tasksDelete().
-   */
-  static function serverTasksDeleteAll() {
-    db_delete('search_api_task')->execute();
-  }
-
-  /**
    * Sorts arrays on weight.
    */
   static function sortByWeight($element_a, $element_b) {

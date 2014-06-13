@@ -79,7 +79,7 @@ class TestBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteAllItems(IndexInterface $index = NULL) {}
+  public function deleteAllIndexItems(IndexInterface $index) {}
 
   /**
    * {@inheritdoc}

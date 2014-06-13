@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Backend;
 
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\Server\ServerInterface;
@@ -110,7 +111,16 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function preDelete() {
-    $this->deleteAllItems();
+    try {
+      $this->getServer()->deleteAllItems();
+    }
+    catch (SearchApiException $e) {
+      $vars = array(
+        '%server' => $this->getServer()->label(),
+      );
+      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
+      drupal_set_message(t('Deleting some of the items on the server failed. Check the logs for details. The server was still removed.'), 'error');
+    }
   }
 
   /**

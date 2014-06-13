@@ -208,6 +208,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }
+      // Delete all remaining tasks for the server.
+      \Drupal::service('search_api.server_task_manager')->delete(NULL, $server);
     }
   }
 
@@ -274,13 +276,13 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function getIndexes() {
+  public function getIndexes(array $properties = array()) {
     // Get the index storage.
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
     return $storage->loadByProperties(array(
       'serverMachineName' => $this->id(),
-    ));
+    ) + $properties);
   }
 
   /**
@@ -296,7 +298,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
-      $this->tasksAdd(__FUNCTION__, $index);
+      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
     }
   }
 
@@ -313,7 +315,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
-      $this->tasksAdd(__FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
+      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
     }
     return FALSE;
   }
@@ -324,7 +326,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   public function removeIndex(IndexInterface $index) {
     // When removing an index from a server, it doesn't make any sense anymore to
     // delete items from it, or react to other changes.
-    $this->tasksDelete(NULL, $index);
+    \Drupal::service('search_api.server_task_manager')->delete(NULL, NULL, $index);
 
     try {
       $this->getBackend()->removeIndex($index);
@@ -335,7 +337,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => is_object($index) ? $index->label() : $index,
       );
       watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
-      $this->tasksAdd(__FUNCTION__, $index);
+      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
     }
   }
 
@@ -349,7 +351,15 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index = NULL, array $ids) {
+  public function deleteItems(IndexInterface $index, array $ids) {
+    if ($index->isReadOnly()) {
+      $vars = array(
+        '%index' => $index->label(),
+      );
+      watchdog('search_api', 'Trying to delete items of index %index which is marked as read-only.', $vars, WATCHDOG_WARNING);
+      return;
+    }
+
     try {
       $this->getBackend()->deleteItems($index, $ids);
     }
@@ -358,23 +368,44 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%server' => $this->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      $this->tasksAdd(__FUNCTION__, $index, $ids);
+      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index, $ids);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteAllItems(IndexInterface $index = NULL) {
+  public function deleteAllIndexItems(IndexInterface $index) {
+    if ($index->isReadOnly()) {
+      $vars = array(
+        '%index' => $index->label(),
+      );
+      watchdog('search_api', 'Trying to delete items of index %index which is marked as read-only.', $vars, WATCHDOG_WARNING);
+      return;
+    }
+
     try {
-      $this->getBackend()->deleteAllItems($index);
+      $this->getBackend()->deleteAllIndexItems($index);
     }
     catch (SearchApiException $e) {
       $vars = array(
         '%server' => $this->label(),
+        '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      $this->tasksAdd(__FUNCTION__, $index);
+      watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: !message in %function (line %line of %file).', $vars);
+      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAllItems() {
+    // @todo Maybe make this more intelligent to try all indexes before
+    // re-throwing a possibly encountered exception (or a wrapper for several).
+    $properties['readOnly'] = FALSE;
+    foreach ($this->getIndexes($properties) as $index) {
+      $this->getBackend()->deleteAllIndexItems($index);
     }
   }
 
@@ -413,43 +444,6 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    */
   public function getBackendPluginConfig() {
     return $this->backendPluginConfig;
-  }
-
-  /**
-   * Adds an entry into a server's list of pending tasks.
-   *
-   * @param $type
-   *   The type of task to perform.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) If applicable, the index to which the task pertains (or its
-   *   machine name).
-   * @param mixed $data
-   *   (optional) If applicable, some further data necessary for the task.
-   */
-  public function tasksAdd($type, $index = NULL, $data = NULL) {
-    db_insert('search_api_task')
-      ->fields(array(
-        'server_id' => $this->id(),
-        'type' => $type,
-        'index_id' => $index ? (is_object($index) ? $index->id() : $index) : NULL,
-        'data' => isset($data) ? serialize($data) : NULL,
-      ))
-      ->execute();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function tasksDelete(array $ids = NULL, $index = NULL) {
-    $delete = db_delete('search_api_task');
-    $delete->condition('server_id', $this->id());
-    if ($ids) {
-      $delete->condition('id', $ids);
-    }
-    if ($index) {
-      $delete->condition('index_id', is_object($index) ? $this->id() : $index);
-    }
-    $delete->execute();
   }
 
   /**

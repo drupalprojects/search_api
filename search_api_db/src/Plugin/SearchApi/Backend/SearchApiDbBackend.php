@@ -488,7 +488,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             $reindex = TRUE;
             if (!$cleared) {
               $cleared = TRUE;
-              $this->deleteAllItems($index);
+              $this->deleteAllIndexItems($index);
             }
             $this->removeFieldStorage($name, $field, $denormalized_table);
             // Keep the table in $new_fields to create the new storage.
@@ -1049,38 +1049,16 @@ class SearchApiDbBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteAllItems(IndexInterface $index = NULL) {
+  public function deleteAllIndexItems(IndexInterface $index) {
     try {
-      if (!$index) {
-        if (empty($this->configuration['field_tables'])) {
-          return;
-        }
-        $truncated = array();
-        foreach ($this->configuration['field_tables'] as $fields) {
-          foreach ($fields as $field) {
-            if (isset($field['table']) && !isset($truncated[$field['table']])) {
-              $this->database->truncate($field['table'])->execute();
-              $truncated[$field['table']] = TRUE;
-            }
-          }
-        }
-        foreach ($this->configuration['index_tables'] as $table) {
-          if (!isset($truncated[$table])) {
-            $this->database->truncate($table)->execute();
-            $truncated[$table] = TRUE;
-          }
-        }
-        return;
-      }
-
       foreach ($this->configuration['field_tables'][$index->id()] as $field) {
         $this->database->truncate($field['table'])->execute();
       }
       $this->database->truncate($this->configuration['index_tables'][$index->id()])->execute();
     }
+    catch (\Exception $e) {
       // The database operations might throw PDO or other exceptions, so we catch
       // them all and re-wrap them appropriately.
-    catch (\Exception $e) {
       throw new SearchApiException($e->getMessage());
     }
   }

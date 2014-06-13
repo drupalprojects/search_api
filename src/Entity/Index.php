@@ -1003,7 +1003,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->status()) {
       $this->reindex();
       if (!$this->isReadOnly()) {
-        $this->getServer()->deleteAllItems($this);
+        $this->getServer()->deleteAllIndexItems($this);
       }
     }
   }

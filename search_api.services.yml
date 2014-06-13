@@ -14,3 +14,7 @@ services:
   plugin.manager.search_api.tracker:
     class: Drupal\search_api\Tracker\TrackerPluginManager
     parent: default_plugin_manager
+
+  search_api.server_task_manager:
+    class: Drupal\search_api\Task\ServerTaskManager
+    arguments: ['@database', '@entity.manager']

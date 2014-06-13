@@ -54,10 +54,21 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   /**
    * Retrieves a list of indexes which use this server.
    *
+   * @param array $properties
+   *   (optional) Additional properties that the indexes should have.
+   *
    * @return \Drupal\search_api\Index\IndexInterface[]
    *   An array of IndexInterface instances.
    */
-  public function getIndexes();
+  public function getIndexes(array $properties = array());
+
+  /**
+   * Deletes all items on this server, except those from read-only indexes.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If an error occurred while trying to delete the items.
+   */
+  public function deleteAllItems();
 
   /**
    * Executes a search on the server represented by this object.
@@ -89,30 +100,5 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
    *   An array with the backend config.
    */
   public function getBackendPluginConfig();
-
-  /**
-   * Adds an entry into this server's list of pending tasks.
-   *
-   * @param string $type
-   *   The type of task to perform.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) If applicable, the index to which the task pertains (or its
-   *   machine name).
-   * @param mixed $data
-   *   (optional) If applicable, some further data necessary for the task.
-   */
-  public function tasksAdd($type, $index = NULL, $data = NULL);
-
-  /**
-   * Removes pending tasks for this server from the list.
-   *
-   * @param array|null $ids
-   *   (optional) The IDs of the pending server tasks to delete. Set to NULL
-   *   to not filter by IDs.
-   * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) An index (or its machine name) for which the tasks should be
-   *   deleted. Set to NULL to delete tasks for all indexes.
-   */
-  public function tasksDelete(array $ids = NULL, $index = NULL);
 
 }
