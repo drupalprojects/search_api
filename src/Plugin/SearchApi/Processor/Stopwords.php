@@ -77,6 +77,19 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    // The configuration default, or previously saved,
+    // stopwords are usually passed in as a string.
+    if (isset($configuration['stopwords']) && is_string($configuration['stopwords'])) {
+      $configuration['stopwords'] = explode("\n", $configuration['stopwords']);
+    }
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
