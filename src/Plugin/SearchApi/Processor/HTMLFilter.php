@@ -13,6 +13,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Symfony\Component\Yaml\Parser;
@@ -67,34 +68,7 @@ class HTMLFilter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
-    $form = array();
-
-    // Only include full text fields. Important as only those can be tokenized.
-    $fields = $this->index->getFields();
-    $field_options = array();
-    $default_fields = array();
-    if (isset($this->configuration['fields'])) {
-      $default_fields = array_keys($this->configuration['fields']);
-      $default_fields = array_combine($default_fields, $default_fields);
-    }
-
-    foreach ($fields as $name => $field) {
-      if ($field->getType() == 'text') {
-        if ($this->testType($field->getType())) {
-          $field_options[$name] = $field->getPrefixedLabel();
-          if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
-            $default_fields[$name] = $name;
-          }
-        }
-      }
-    }
-
-    $form['fields'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Enable this processor on the following fields'),
-      '#options' => $field_options,
-      '#default_value' => $default_fields,
-    );
+    $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['title'] = array(
       '#type' => 'checkbox',
@@ -124,7 +98,13 @@ class HTMLFilter extends FieldsProcessorPluginBase {
     );
 
     return $form;
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function testType($type) {
+    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
   }
 
   /**
