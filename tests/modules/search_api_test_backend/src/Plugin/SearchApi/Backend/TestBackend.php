@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_test_backend\Plugin\SearchApi\Backend;
 
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
@@ -20,6 +21,16 @@ use Drupal\search_api\Utility\Utility;
  * )
  */
 class TestBackend extends BackendPluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsFeature($feature) {
+    if ($feature == 'search_api_mlt') {
+      return TRUE;
+    }
+    return parent::supportsFeature($feature);
+  }
 
   /**
    * {@inheritdoc}
@@ -61,13 +72,22 @@ class TestBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
+    $this->checkError(__FUNCTION__);
     return array_keys($items);
   }
 
   /**
    * {@inheritdoc}
    */
+  public function addIndex(IndexInterface $index) {
+    $this->checkError(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function updateIndex(IndexInterface $index) {
+    $this->checkError(__FUNCTION__);
     $index->reindex();
     return TRUE;
   }
@@ -75,17 +95,30 @@ class TestBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {}
+  public function removeIndex($index) {
+    $this->checkError(__FUNCTION__);
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteAllIndexItems(IndexInterface $index) {}
+  public function deleteItems(IndexInterface $index, array $ids) {
+    $this->checkError(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteAllIndexItems(IndexInterface $index) {
+    $this->checkError(__FUNCTION__);
+  }
 
   /**
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
+    $this->checkError(__FUNCTION__);
+
     $results = Utility::createSearchResultSet($query);
     $result_items = array();
     $datasources = $query->getIndex()->getDatasources();
@@ -119,15 +152,26 @@ class TestBackend extends BackendPluginBase {
     return $results;
   }
 
-
   /**
-   * {@inheritdoc}
+   * Throws an exception if set in the Drupal state for the given method.
+   *
+   * Also records (successful) calls to these methods.
+   *
+   * @param string $method
+   *   The method on this object from which this method was called.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If state "search_api_test_backend.exception.$method" is TRUE.
    */
-  public function supportsFeature($feature) {
-    if ($feature == 'search_api_mlt') {
-      return TRUE;
+  protected function checkError($method) {
+    $state = \Drupal::state();
+    if ($state->get("search_api_test_backend.exception.$method")) {
+      throw new SearchApiException($method);
     }
-    return parent::supportsFeature($feature);
+    $key = 'search_api_test_backend.methods_called.' . $this->server->id();
+    $methods_called = $state->get($key, array());
+    $methods_called[] = $method;
+    $state->set($key, $methods_called);
   }
 
 }
