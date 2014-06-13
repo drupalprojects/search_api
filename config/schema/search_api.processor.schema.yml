@@ -97,7 +97,7 @@ search_api.processor.plugin.highlight:
     highlight:
       type: string
       label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
-search_api.processor.plugin.search_api_role_filter_processor:
+search_api.processor.plugin.role_filter:
   type: mapping
   label: 'Role filter processor'
   mapping:
