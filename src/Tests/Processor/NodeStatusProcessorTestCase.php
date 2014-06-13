@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\SearchApiNodeStatusProcessorTestCase.
+ * Contains \Drupal\search_api\Tests\Processor\NodeStatusProcessorTestCase.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests\Processor;
 /**
  * Tests the NodeStatus processor.
  */
-class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
+class NodeStatusProcessorTestCase extends ProcessorTestBase {
 
   /**
    * {@inheritdoc}

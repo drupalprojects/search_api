@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\SearchApiProcessorTestBase.
+ * Contains \Drupal\search_api\Tests\Processor\ProcessorTestBase.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -14,7 +14,7 @@ use Drupal\system\Tests\Entity\EntityUnitTestBase;
 /**
  * Search API Processor tests base class.
  */
-abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
+abstract class ProcessorTestBase extends EntityUnitTestBase {
 
   /**
    * Modules to enable for this test.

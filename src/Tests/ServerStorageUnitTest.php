@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiServerStorageUnitTest.
+ * Contains \Drupal\search_api\Tests\ServerStorageUnitTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -13,7 +13,7 @@ use Drupal\search_api\Entity\Server;
 /**
  * Tests Search API Server entity storage
  */
-class SearchApiServerStorageUnitTest extends KernelTestBase {
+class ServerStorageUnitTest extends KernelTestBase {
 
   /**
    * Modules to enabled.

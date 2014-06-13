@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiIntegrationTest.
+ * Contains \Drupal\search_api\Tests\IntegrationTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests;
 /**
  * Provides integration tests for Search API.
  */
-class SearchApiIntegrationTest extends SearchApiWebTestBase {
+class IntegrationTest extends SearchApiWebTestBase {
 
   /**
    * A Search API server ID.

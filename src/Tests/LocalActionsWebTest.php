@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\action\Tests\Menu\SearchApiLocalActionsWebTest.
+ * Contains \Drupal\action\Tests\Menu\LocalActionsWebTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -12,7 +12,7 @@ use Drupal\system\Tests\Menu\LocalActionTest;
 /**
  * Tests that local actions are available.
  */
-class SearchApiLocalActionsWebTest extends LocalActionTest {
+class LocalActionsWebTest extends LocalActionTest {
 
   /**
    * {@inheritdoc}

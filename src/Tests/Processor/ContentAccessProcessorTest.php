@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\SearchApiContentAccessProcessorTest.
+ * Contains \Drupal\search_api\Tests\Processor\ContentAccessProcessorTest.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -14,7 +14,7 @@ use Drupal\search_api\Query\Query;
 /**
  * Tests the ContentAccess processor.
  */
-class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
+class ContentAccessProcessorTest extends ProcessorTestBase {
 
   /**
    * Stores the processor to be tested.

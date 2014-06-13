@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiIndexStorageUnitTest.
+ * Contains \Drupal\search_api\Tests\IndexStorageUnitTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -13,7 +13,7 @@ use Drupal\search_api\Entity\Index;
 /**
  * Tests Search API Index entity storage
  */
-class SearchApiIndexStorageUnitTest extends KernelTestBase {
+class IndexStorageUnitTest extends KernelTestBase {
 
   /**
    * Modules to enabled.
