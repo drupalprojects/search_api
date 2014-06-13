@@ -63,7 +63,7 @@ class SearchApiHighlightTest extends UnitTestCase {
     parent::setUp();
 
     // @todo Also set up an index here.
-    $this->processor = new Highlight(array(), 'search_api_highlight_processor', array());
+    $this->processor = new Highlight(array(), 'highlight', array());
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
     $this->processor->setStringTranslation($translation);
@@ -81,7 +81,7 @@ class SearchApiHighlightTest extends UnitTestCase {
 
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
       ->setMethods(array('getKeywords'))
-      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->setConstructorArgs(array(array(), 'highlight', array()))
       ->getMock();
     $response = array(
       'result count' => 2,
@@ -103,7 +103,7 @@ class SearchApiHighlightTest extends UnitTestCase {
     // Keys are set; and highlight is enabled ('always').
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
       ->setMethods(array('postprocessExcerptResults', 'postprocessFieldResults', 'getKeywords'))
-      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->setConstructorArgs(array(array(), 'highlight', array()))
       ->getMock();
     $processor->expects($this->once())
       ->method('getKeywords')
@@ -122,7 +122,7 @@ class SearchApiHighlightTest extends UnitTestCase {
     // Keys are set; and highlight is disabled. Excerpt is enabled.
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
       ->setMethods(array('postprocessExcerptResults', 'postprocessFieldResults', 'getKeywords'))
-      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->setConstructorArgs(array(array(), 'highlight', array()))
       ->getMock();
     $configuration = array(
       'highlight' => 'never',
@@ -149,7 +149,7 @@ class SearchApiHighlightTest extends UnitTestCase {
     // Old code:
     /*
     $processor = $this->getMockBuilder('\Drupal\search_api\Plugin\SearchApi\Processor\Highlight')
-      ->setConstructorArgs(array(array(), 'search_api_highlight_processor', array()))
+      ->setConstructorArgs(array(array(), 'highlight', array()))
       ->getMock();
     // Access protected createExcerpt method.
     $reflectionProcessor = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\Highlight');

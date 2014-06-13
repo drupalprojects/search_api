@@ -78,7 +78,7 @@ search_api.processor.plugin.add_url:
 search_api.processor.plugin.search_api_content_access_processor:
   type: mapping
   label: 'Content access processor configuration'
-search_api.processor.plugin.search_api_highlight_processor:
+search_api.processor.plugin.highlight:
   type: mapping
   label: 'Highlight processor configuration'
   mapping:
