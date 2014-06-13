@@ -80,6 +80,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
         if (!$server || $server->id() != $task->server_id) {
           $server = $this->loadServer($task->server_id);
           if (!$server) {
+            $failing_servers[$task->server_id] = TRUE;
             continue;
           }
         }
