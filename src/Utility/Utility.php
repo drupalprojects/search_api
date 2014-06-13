@@ -295,6 +295,16 @@ class Utility {
   }
 
   /**
+   * Retrieves the server task manager to use.
+   *
+   * @return \Drupal\search_api\Task\ServerTaskManagerInterface
+   *   The server task manager to use.
+   */
+  public static function getServerTaskManager() {
+    return \Drupal::service('search_api.server_task_manager');
+  }
+
+  /**
    * Creates a new search query object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index

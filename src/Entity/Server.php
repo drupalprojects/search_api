@@ -14,6 +14,7 @@ use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Defines the search server configuration entity.
@@ -209,9 +210,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         $server->getBackend()->preDelete();
       }
       // Delete all remaining tasks for the server.
-      /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
-      $server_task_manager = \Drupal::service('search_api.server_task_manager');
-      $server_task_manager->delete(NULL, $server);
+      Utility::getServerTaskManager()->delete(NULL, $server);
     }
   }
 
@@ -300,7 +299,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
-      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
+      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
     }
   }
 
@@ -317,7 +316,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
-      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
+      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
     }
     return FALSE;
   }
@@ -328,9 +327,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   public function removeIndex($index) {
     // When removing an index from a server, it doesn't make any sense anymore to
     // delete items from it, or react to other changes.
-    /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
-    $server_task_manager = \Drupal::service('search_api.server_task_manager');
-    $server_task_manager->delete(NULL, $this, $index);
+    Utility::getServerTaskManager()->delete(NULL, $this, $index);
 
     try {
       $this->getBackend()->removeIndex($index);
@@ -341,7 +338,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => is_object($index) ? $index->label() : $index,
       );
       watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
-      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
+      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
     }
   }
 
@@ -372,7 +369,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%server' => $this->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index, $ids);
+      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, $ids);
     }
   }
 
@@ -397,7 +394,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: !message in %function (line %line of %file).', $vars);
-      \Drupal::service('search_api.server_task_manager')->add($this, __FUNCTION__, $index);
+      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
     }
   }
 
