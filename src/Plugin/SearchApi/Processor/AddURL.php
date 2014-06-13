@@ -13,7 +13,7 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_add_url_processor",
+ *   id = "add_url",
  *   label = @Translation("URL field"),
  *   description = @Translation("Adds the item's URL to the indexed data.")
  * )

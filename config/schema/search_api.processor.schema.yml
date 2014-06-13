@@ -72,7 +72,7 @@ search_api.processor.plugin.ignorecase:
       sequence:
         - type: string
           label: 'Selected field'
-search_api.processor.plugin.search_api_add_url_processor:
+search_api.processor.plugin.add_url:
   type: mapping
   label: 'Add URL processor configuration'
 search_api.processor.plugin.search_api_content_access_processor:
