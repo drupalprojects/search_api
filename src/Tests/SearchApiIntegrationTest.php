@@ -65,6 +65,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->addAdditionalFieldsToIndex();
     $this->removeFieldsFromIndex();
 
+    $this->addFilter();
+    $this->configureFilterFields();
+
     $this->setReadOnly();
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
@@ -575,6 +578,40 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       '!nodecount' => $node_count,
     );
     $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount items left to index after changing servers', $t_args));
+  }
+
+  /**
+   * Test that a filter can be added.
+   */
+  protected function addFilter() {
+    // Go to the index filter path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+
+    $edit = array(
+      'processors[search_api_ignorecase_processor][status]' => 1,
+    );
+    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $processors = $index->getProcessors();
+    $this->assertTrue($processors['search_api_ignorecase_processor']->getConfiguration(), 'Ignore case processor enabled');
+  }
+
+  /**
+   * Test that the filter can have fields configured.
+   */
+  protected function configureFilterFields() {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+
+    $edit = array(
+      'processors[search_api_ignorecase_processor][status]' => 1,
+      'processors[search_api_ignorecase_processor][settings][fields][search_api_language]' => FALSE,
+      'processors[search_api_ignorecase_processor][settings][fields][entity:node|title]' => 'entity:node|title',
+    );
+    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $processors = $index->getProcessors();
+    $configuration = $processors['search_api_ignorecase_processor']->getConfiguration();
+    $this->assertEqual($configuration['fields']['search_api_language'], 0, 'Language field disabled for ignore case filter.');
   }
 
   /**

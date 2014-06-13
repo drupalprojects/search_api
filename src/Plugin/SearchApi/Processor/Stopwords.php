@@ -88,8 +88,7 @@ class Stopwords extends FieldsProcessorPluginBase {
     $field_options = array();
     $default_fields = array();
     if (isset($this->configuration['fields'])) {
-      $default_fields = array_keys($this->configuration['fields']);
-      $default_fields = array_combine($default_fields, $default_fields);
+      $default_fields = array_filter($this->configuration['fields']);
     }
 
     foreach ($fields as $name => $field) {
