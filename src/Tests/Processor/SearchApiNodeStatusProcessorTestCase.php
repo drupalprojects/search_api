@@ -27,7 +27,7 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
    * Creates a new processor object for use in the tests.
    */
   public function setUp() {
-    parent::setUp('search_api_node_status_processor');
+    parent::setUp('node_status');
 
     // Create a node type for testing.
     $type = entity_create('node_type', array('type' => 'page', 'name' => 'page'));

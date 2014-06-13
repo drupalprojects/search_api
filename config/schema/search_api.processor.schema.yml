@@ -14,7 +14,7 @@ search_api.processor.plugin.search_api_rendered_item:
       sequence:
         - type: string
           label: 'A role'
-search_api.processor.plugin.search_api_node_status_processor:
+search_api.processor.plugin.node_status:
   type: mapping
   label: 'Node status processor configuration'
 search_api.processor.plugin.search_api_stopwords_processor:
