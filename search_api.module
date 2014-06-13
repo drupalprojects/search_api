@@ -42,7 +42,9 @@ function search_api_permission() {
  */
 function search_api_cron() {
   // Execute pending server tasks.
-  \Drupal::service('search_api.server_task_manager')->execute();
+  /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
+  $server_task_manager = \Drupal::service('search_api.server_task_manager');
+  $server_task_manager->execute();
 
   // Load all enabled, not read-only indexes.
   $conditions = array(

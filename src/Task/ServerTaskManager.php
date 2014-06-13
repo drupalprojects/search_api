@@ -33,7 +33,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   protected $entity_manager;
 
   /**
-   * Creates a new ServerTaskManager service.
+   * Creates a new server task manager.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
@@ -49,12 +49,14 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    * {@inheritdoc}
    */
   public function execute(ServerInterface $server = NULL) {
-    $database = $this->database;
-    $select = $database->select('search_api_task', 't');
+    $select = $this->database->select('search_api_task', 't');
     $select->fields('t')
       // Only retrieve tasks we can handle.
       ->condition('t.type', array('addIndex', 'updateIndex', 'removeIndex', 'deleteItems', 'deleteAllIndexItems'));
     if ($server) {
+      if (!$server->status()) {
+        return FALSE;
+      }
       $select->condition('t.server_id', $server->id());
     }
     else {
@@ -76,18 +78,21 @@ class ServerTaskManager implements ServerTaskManagerInterface {
       if (isset($failing_servers[$task->server_id])) {
         continue;
       }
+      if (!$server || $server->id() != $task->server_id) {
+        $server = $this->loadServer($task->server_id);
+        if (!$server) {
+          $failing_servers[$task->server_id] = TRUE;
+          continue;
+        }
+      }
+      if (!$server->status()) {
+        continue;
+      }
+      $index = NULL;
+      if ($task->index_id) {
+        $index = $this->loadIndex($task->index_id);
+      }
       try {
-        if (!$server || $server->id() != $task->server_id) {
-          $server = $this->loadServer($task->server_id);
-          if (!$server) {
-            $failing_servers[$task->server_id] = TRUE;
-            continue;
-          }
-        }
-        $index = NULL;
-        if ($task->index_id) {
-          $index = $this->loadIndex($task->index_id);
-        }
         switch ($task->type) {
           case 'addIndex':
             if ($index) {

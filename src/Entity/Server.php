@@ -204,12 +204,14 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     // Iterate through the servers, executing the backend's preDelete() methods.
     foreach ($entities as $server) {
       /** @var \Drupal\search_api\Server\ServerInterface $server */
-      // Remove the index from the server.
+      // Execute the backend's preDelete() hook method.
       if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }
       // Delete all remaining tasks for the server.
-      \Drupal::service('search_api.server_task_manager')->delete(NULL, $server);
+      /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
+      $server_task_manager = \Drupal::service('search_api.server_task_manager');
+      $server_task_manager->delete(NULL, $server);
     }
   }
 
