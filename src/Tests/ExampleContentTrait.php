@@ -76,7 +76,7 @@ trait ExampleContentTrait {
   protected function indexItems($index_id) {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $index_id);
-    $index->index();
+    return $index->index();
   }
 
   /**

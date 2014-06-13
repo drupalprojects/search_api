@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\node\NodeInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
@@ -35,9 +36,13 @@ class NodeStatus extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($items as $id => &$item) {
-      if ($this->index->getDatasource($item['#datasource'])->getEntityTypeId() == 'node' && !$item['#item']->isPublished()) {
-        unset($items[$id]);
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item_id => $item) {
+      $object = $item->getOriginalObject();
+      if ($object instanceof NodeInterface && !$object->isPublished()) {
+        unset($items[$item_id]);
       }
     }
   }

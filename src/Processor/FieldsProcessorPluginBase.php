@@ -2,15 +2,16 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Processor\FieldsProcessoPluginBase.
+ * Contains Drupal\search_api\Processor\FieldsProcessorPluginBase.
  */
 
 namespace Drupal\search_api\Processor;
 
 use Drupal\Core\Render\Element;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -52,8 +53,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       $default_fields = array_combine($default_fields, $default_fields);
     }
     foreach ($fields as $name => $field) {
-      if ($this->testType($field['type'])) {
-        $field_options[$name] = $field['name_prefix'] . $field['name'];
+      if ($this->testType($field->getType())) {
+        $field_options[$name] = $field->getPrefixedLabel();
         if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
           $default_fields[$name] = $name;
         }
@@ -62,7 +63,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
 
     $form['fields'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Fields to run on'),
+      '#title' => t('Enable this processor on the following fields'),
       '#options' => $field_options,
       '#default_value' => $default_fields,
     );
@@ -89,14 +90,20 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::preprocessIndexItems().
    *
    * Calls processField() for all fields for which testField() returns TRUE.
+   *
+   * @param array $items
+   *   An array of items to be preprocessed for indexing, formatted as specified
+   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($items as &$item) {
-      foreach ($item as $name => &$field) {
-        if (Element::child($name)) {
-          if ($this->testField($name, $field)) {
-            $this->processField($field['value'], $field['type']);
-          }
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item) {
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($item as $name => $field) {
+        if ($this->testField($name, $field)) {
+          $this->processField($field);
         }
       }
     }
@@ -118,11 +125,11 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::postprocessSearchResults().
+   * Overrides \Drupal\search_api\Processor\ProcessorPluginBase::postprocessSearchResults().
    *
    * Does nothing by default.
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
+  public function postprocessSearchResults(ResultSetInterface $results) {
     return;
   }
 
@@ -133,57 +140,45 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
    *
-   * @param $value
-   *   The value to process, passed by reference.
-   * @param $type
-   *   The field's type.
+   * @param \Drupal\search_api\Item\FieldInterface $field
+   *   The field to process.
    */
-  protected function processField(&$value, &$type) {
-    if (!isset($value) || $value === '') {
-      return;
-    }
-    if (substr($type, 0, 5) == 'list<') {
-      $inner_type = $t = $t1 = substr($type, 5, -1);
-      foreach ($value as &$v) {
-        $t1 = $inner_type;
-        $this->processField($v, $t1);
-        // If one value got tokenized, all others have to follow.
-        if ($t1 != $inner_type) {
-          $t = $t1;
+  protected function processField(FieldInterface $field) {
+    $type_changed_to_tokenized = FALSE;
+
+    $values = $field->getValues();
+    foreach ($values as &$value) {
+      $type = $field->getType();
+      if ($type == 'tokenized_text') {
+        foreach ($value as &$tokenized_value) {
+          $this->processFieldValue($tokenized_value['value']);
         }
-      }
-      if ($t == 'tokens') {
-        foreach ($value as $i => &$v) {
-          if (!$v) {
-            unset($value[$i]);
-            continue;
-          }
-          if (!is_array($v)) {
-            $v = array(array('value' => $v, 'score' => 1));
-          }
-        }
-      }
-      $type = "list<$t>";
-      return;
-    }
-    if ($type == 'tokens') {
-      foreach ($value as &$token) {
-        $this->processFieldValue($token['value']);
-      }
-    }
-    else {
-      $this->processFieldValue($value);
-    }
-    if (is_array($value)) {
-      // Don't tokenize non-fulltext content!
-      if (in_array($type, array('text', 'tokens'))) {
-        $type = 'tokens';
-        $value = $this->normalizeTokens($value);
       }
       else {
-        $value = $this->implodeTokens($value);
+        $this->processFieldValue($value);
+        // If we got an array back from processFieldValue() it means it
+        // transformed to a tokenized set of things.
+        if (is_array($value) && isset($value['0']) && isset($value['0']['score']) && isset($value['0']['value'])) {
+          $type_changed_to_tokenized = TRUE;
+        }
+      }
+
+      // Don't tokenize non-fulltext content!
+      if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
+        if (is_array($value)) {
+          $value = $this->normalizeTokens($value);
+        }
+      }
+      else {
+        if (is_array($value)) {
+          $value = $this->implodeTokens($value);
+        }
       }
     }
+    if ($type_changed_to_tokenized) {
+      $field->setType('tokenized_text');
+    }
+    $field->setValues($values);
   }
 
   /**
@@ -281,7 +276,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   of \Drupal\search_api\Query\FilterInterface::getFilters().
    */
   protected function processFilters(array &$filters) {
-    $fields = $this->index->getOption('fields');
+    $fields = $this->index->getFields();
     foreach ($filters as $key => &$f) {
       if (is_array($f)) {
         if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
@@ -310,15 +305,15 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $name
    *   The field's machine name.
-   * @param array $field
+   * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field's information.
    *
    * @return bool
    *   TRUE if the field should be processed, FALSE otherwise.
    */
-  protected function testField($name, array $field) {
+  protected function testField($name, FieldInterface $field) {
     if (!isset($this->configuration['fields'])) {
-      return $this->testType($field['type']);
+      return $this->testType($field->getType());
     }
     return !empty($this->configuration['fields'][$name]);
   }
@@ -336,7 +331,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokens', 'string'));
+    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
   }
 
   /**

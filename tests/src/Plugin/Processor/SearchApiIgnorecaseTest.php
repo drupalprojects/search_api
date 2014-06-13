@@ -7,18 +7,23 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
+use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Unicode;
 
 /**
- * Tests the Ignorecase processor plugin.
+ * Tests the "Ignore case" processor plugin.
  *
  * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
  */
 class SearchApiIgnorecaseTest extends UnitTestCase {
+
+  use TestItemsTrait;
 
   /**
    * Stores the processor to be tested.
@@ -26,6 +31,41 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
    */
   protected $processor;
+
+  /**
+   * The test items to use for testing.
+   *
+   * @var \Drupal\search_api\Item\ItemInterface[]
+   */
+  protected $items;
+
+  /**
+   * The field ID of the fulltext field used in the tests.
+   *
+   * @var string
+   */
+  protected $fulltext_field_id;
+
+  /**
+   * The field ID of the string field used in the tests.
+   *
+   * @var string
+   */
+  protected $string_field_id;
+
+  /**
+   * The expected field value for unprocessed fields.
+   *
+   * @var string
+   */
+  protected $unprocessed_value = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
+
+  /**
+   * The expected field value for processed fields.
+   *
+   * @var string
+   */
+  protected $processed_value;
 
   /**
    * {@inheritdoc}
@@ -44,63 +84,74 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
     $this->processor = new Ignorecase(array(), 'search_api_ignorecase_processor', array());
+
+    $this->fulltext_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_name';
+    $this->string_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_mail';
+
+    $this->processed_value = Unicode::strtolower($this->unprocessed_value);
+    $fields = array(
+      $this->fulltext_field_id => array(
+        'type' => 'text',
+        'values' => array($this->unprocessed_value),
+      ),
+      $this->string_field_id => array(
+        'type' => 'string',
+        'values' => array($this->unprocessed_value),
+      ),
+    );
+    $this->items = $this->createItems($index, 1, $fields);
   }
 
   /**
-   * Test ignorecase method AND processor configuration.
-   *
-   * @todo Two tests. One for the processor configuration; and one for the
-   *   ignore case processor - using reflection to access the protected method.
+   * Tests preprocessing of fulltext fields.
    */
-  public function testIgnorecase() {
-    $orig = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
-    $processed = Unicode::strtolower($orig);
-    $items = array(
-      1 => array(
-        'name' => array(
-          'type' => 'text',
-          'original_type' => 'text',
-          'value' => $orig,
-        ),
-        'mail' => array(
-          'type' => 'string',
-          'original_type' => 'text',
-          'value' => $orig,
-        ),
-        'search_api_language' => array(
-          'type' => 'string',
-          'original_type' => 'string',
-          'value' => Language::LANGCODE_NOT_SPECIFIED,
-        ),
-      ),
-    );
-    $keys1 = $keys2 = array(
-      'foo',
-      'bar baz',
-      'foobar1',
-      '#conjunction' => 'AND',
-    );
-    $filters1 = array(
-      array('name', 'foo', '='),
-      array('mail', 'BAR', '='),
-    );
-    $filters2 = array(
-      array('name', 'foo', '='),
-      array('mail', 'bar', '='),
-    );
+  public function testPreprocessFulltextFields() {
+    $configuration['fields'][$this->fulltext_field_id] = $this->fulltext_field_id;
+    $this->processor->setConfiguration($configuration);
 
-    $tmp = $items;
-    $this->processor->setConfiguration(array('fields' => array('name' => 'name')));
-    $this->processor->preprocessIndexItems($tmp);
-    $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
-    $this->assertEquals($tmp[1]['mail']['value'], $orig, "Mail field wasn't procesed.");
+    $this->processor->preprocessIndexItems($this->items);
 
-    $tmp = $items;
-    $this->processor->setConfiguration(array('fields' => array('name' => 'name', 'mail' => 'mail')));
-    $this->processor->preprocessIndexItems($tmp);
-    $this->assertEquals($tmp[1]['name']['value'], $processed, 'Name field was processed.');
-    $this->assertEquals($tmp[1]['mail']['value'], $processed, 'Mail field was processed.');
+    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), array($this->processed_value), 'Name field was correctly processed.');
+    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), array($this->unprocessed_value), 'Mail field was not processed.');
+  }
+
+  /**
+   * Tests preprocessing of tokenized fulltext fields.
+   */
+  public function testPreprocessTokenizedFulltextFields() {
+    $configuration['fields'][$this->fulltext_field_id] = $this->fulltext_field_id;
+    $this->processor->setConfiguration($configuration);
+
+    $tokenize = function ($value) {
+      return array('value' => $value, 'score' => 1);
+    };
+    $tokenized_value = array_map($tokenize, explode(' ', $this->unprocessed_value));
+    $this->processed_value = array_map($tokenize, explode(' ', $this->processed_value));
+    $field = $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id);
+    $field->setValues(array($tokenized_value));
+    $field->setType('tokenized_text');
+
+    $this->processor->preprocessIndexItems($this->items);
+
+    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Tokenized Name field was correctly processed.');
+    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was not processed.');
+  }
+
+  /**
+   * Tests preprocessing of string fields.
+   */
+  public function testPreprocessStringFields() {
+    $configuration['fields'][$this->string_field_id] = $this->string_field_id;
+    $this->processor->setConfiguration($configuration);
+
+    $this->processor->preprocessIndexItems($this->items);
+
+    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Name field was not processed.');
+    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was correctly processed.');
   }
 
 }

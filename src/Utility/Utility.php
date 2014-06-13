@@ -9,21 +9,34 @@ namespace Drupal\search_api\Utility;
 
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\AdditionalField;
+use Drupal\search_api\Item\Field;
+use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Item\Item;
 use Drupal\search_api\Query\Query;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSet;
 
 /**
- * Utility methods.
+ * Contains utility methods for the Search API.
  *
- * Presently just a wrapper around the previous procedural functions.
- * @todo Needs breaking up. Field related methods seperate?
+ * @todo Maybe move some of these methods to other classes (and/or split this
+ *   class into several utility classes.
  */
 class Utility {
 
+  /**
+   * Static cache for field type mapping.
+   *
+   * @var array
+   *
+   * @see getFieldTypeMapping()
+   */
   static $fieldTypeMapping = array();
 
   /**
@@ -38,12 +51,15 @@ class Utility {
    *   TRUE if $type is either one of the specified types, or a list of such
    *   values. FALSE otherwise.
    */
+  // @todo Currently, this is useless, but later we could also check
+  //   automatically for custom types that have one of the passed types as their
+  //   fallback.
   static function isTextType($type, array $text_types = array('text')) {
     return in_array($type, $text_types);
   }
 
   /**
-   * Returns all field types recognized by the Search API framework.
+   * Returns all field data types known by the Search API as an options list.
    *
    * @return array
    *   An associative array with all recognized types as keys, mapped to their
@@ -52,6 +68,7 @@ class Utility {
    * @see \Drupal\search_api\Utility::getDefaultDataTypes()
    * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
+  // @todo Rename to something more self-documenting, like getDataTypeOptions().
   static function getDataTypes() {
     $types = self::getDefaultDataTypes();
     foreach (self::getDataTypeInfo() as $id => $type) {
@@ -181,14 +198,11 @@ class Utility {
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
-   * @param array $fields
-   *   The fields to extract, passed by reference. The array keys here are
-   *   property paths (i.e., the second part of the field identifier, after the
-   *   field ID separator). The values are associative arrays of field
-   *   information, at least containing a "type" key. "value" and
-   *   "original_type" keys will be added for all fields.
+   * @param \Drupal\search_api\Item\FieldInterface[] $fields
+   *   The field objects into which data should be extracted, keyed by their
+   *   property paths on $item.
    */
-  static function extractFields(ComplexDataInterface $item, array &$fields) {
+  static function extractFields(ComplexDataInterface $item, array $fields) {
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $direct_fields = array();
@@ -196,7 +210,7 @@ class Utility {
     foreach (array_keys($fields) as $key) {
       if (strpos($key, ':') !== FALSE) {
         list($direct, $nested) = explode(':', $key, 2);
-        $nested_fields[$direct][$nested] = &$fields[$key];
+        $nested_fields[$direct][$nested] = $fields[$key];
       }
       else {
         $direct_fields[] = $key;
@@ -204,19 +218,16 @@ class Utility {
     }
     // Extract the direct fields.
     foreach ($direct_fields as $key) {
-      // Set defaults if something fails or the field is empty.
-      $fields[$key]['value'] = array();
-      $fields[$key]['original_type'] = NULL;
       try {
         self::extractField($item->get($key), $fields[$key]);
       }
       catch (\InvalidArgumentException $e) {
-        // No need to do anything, we already set the defaults.
+        // This can happen with properties added by processors.
+        // @todo Find a cleaner solution for this.
       }
     }
     // Recurse for all nested fields.
     foreach ($nested_fields as $direct => $fields_nested) {
-      $success = FALSE;
       try {
         $item_nested = $item->get($direct);
         if ($item_nested instanceof DataReferenceInterface) {
@@ -224,25 +235,16 @@ class Utility {
         }
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
           self::extractFields($item_nested, $fields_nested);
-          $success = TRUE;
         }
         elseif ($item_nested instanceof ListInterface && !$item_nested->isEmpty()) {
           foreach ($item_nested as $list_item) {
             self::extractFields($list_item, $fields_nested);
           }
-          $success = TRUE;
         }
       }
       catch (\InvalidArgumentException $e) {
-        // Will be automatically handled because $success == FALSE.
-      }
-      // If the values couldn't be extracted from the nested item, we have to
-      // set the defaults here.
-      if (!$success) {
-        foreach (array_keys($fields_nested) as $key) {
-          $fields[$key]['value'] = array();
-          $fields[$key]['original_type'] = $fields[$key]['type'];
-        }
+        // This can happen with properties added by processors.
+        // @todo Find a cleaner solution for this.
       }
     }
   }
@@ -252,10 +254,10 @@ class Utility {
    *
    * @param \Drupal\Core\TypedData\TypedDataInterface $data
    *   The piece of data from which to extract information.
-   * @param array $field
-   *   The field information array into which to put the extracted information.
+   * @param \Drupal\search_api\Item\FieldInterface $field
+   *   The field into which to put the extracted data.
    */
-  static function extractField(TypedDataInterface $data, array &$field) {
+  static function extractField(TypedDataInterface $data, FieldInterface $field) {
     if ($data->getDataDefinition()->isList()) {
       foreach ($data as $piece) {
         self::extractField($piece, $field);
@@ -267,17 +269,13 @@ class Utility {
     if ($definition instanceof ComplexDataDefinitionInterface) {
       $property = $definition->getMainPropertyName();
       if (isset($value[$property])) {
-        $field['value'][] = $value[$property];
+        $field->addValue($value[$property]);
       }
     }
     else {
-      $field['value'][] = reset($value);
+      $field->addValue(reset($value));
     }
-    // @todo Figure out how to make this less specific. fago mentioned some
-    // hierarchy/inheritance for types, with non-complex types inheriting from
-    // one of a few primitive types – maybe we can track that back?
-    // Also, is the "field_item:" prefix necessary or always there?
-    $field['original_type'] = $definition->getDataType();
+    $field->setOriginalType($definition->getDataType());
   }
 
   /**
@@ -299,10 +297,12 @@ class Utility {
   /**
    * Creates a new search query object.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index on which to search.
    * @param array $options
-   *   (optional) The options to set for the query.
+   *   (optional) The options to set for the query. See
+   *   \Drupal\search_api\Query\QueryInterface::setOption() for a list of
+   *   options that are recognized by default.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   A search query object to use.
@@ -311,6 +311,101 @@ class Utility {
    */
   public static function createQuery(IndexInterface $index, array $options = array()) {
     return Query::create($index, $options);
+  }
+
+  /**
+   * Creates a new search result set.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The executed search query.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   A search result set for the given query.
+   */
+  public static function createSearchResultSet(QueryInterface $query) {
+    return new ResultSet($query);
+  }
+
+  /**
+   * Creates a Search API item.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The item's search index.
+   * @param string $id
+   *   The item's (combined) ID.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource of the item. If not set, it will be determined
+   *   from the ID and loaded from the index if needed.
+   *
+   * @return \Drupal\search_api\Item\ItemInterface
+   *   A Search API item with the given values.
+   */
+  public static function createItem(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
+    return new Item($index, $id, $datasource);
+  }
+
+  /**
+   * Creates a Search API item by wrapping an existing complex data object.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The item's search index.
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $original_object
+   *   The original object to wrap.
+   * @param string $id
+   *   (optional) The item's (combined) ID. If not set, it will be determined
+   *   with the \Drupal\search_api\Datasource\DatasourceInterface::getItemId()
+   *   method of $datasource. In this case, $datasource must not be NULL.
+   * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
+   *   (optional) The datasource of the item. If not set, it will be determined
+   *   from the ID and loaded from the index if needed.
+   *
+   * @return \Drupal\search_api\Item\ItemInterface
+   *   A Search API item with the given values.
+   *
+   * @throws \InvalidArgumentException
+   *   If both $datasource and $id are NULL.
+   */
+  public static function createItemFromObject(IndexInterface $index, ComplexDataInterface $original_object, $id = NULL, DatasourceInterface $datasource = NULL) {
+    if (!isset($id)) {
+      if (!isset($datasource)) {
+        throw new \InvalidArgumentException(t('Need either an item ID or the datasource to create a search item from an object.'));
+      }
+      $id = self::createCombinedId($datasource->getPluginId(), $datasource->getItemId($original_object));
+    }
+    $item = static::createItem($index, $id, $datasource);
+    $item->setOriginalObject($original_object);
+    return $item;
+  }
+
+  /**
+   * Creates a new field object wrapping a field of the given index.
+   *
+   * @param IndexInterface $index
+   *   The index to which this field should be attached.
+   * @param string $field_identifier
+   *   The field identifier.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface
+   *   An object containing information about the field on the given index.
+   */
+  public static function createField(IndexInterface $index, $field_identifier) {
+    return new Field($index, $field_identifier);
+  }
+
+  /**
+   * Creates a new field object wrapping an additional field of the given index.
+   *
+   * @param IndexInterface $index
+   *   The index to which this field should be attached.
+   * @param string $field_identifier
+   *   The field identifier.
+   *
+   * @return \Drupal\search_api\Item\AdditionalFieldInterface
+   *   An object containing information about the additional field on the given
+   *   index.
+   */
+  public static function createAdditionalField(IndexInterface $index, $field_identifier) {
+    return new AdditionalField($index, $field_identifier);
   }
 
   /**
@@ -342,21 +437,54 @@ class Utility {
   }
 
   /**
-   * Returns the datasource identifier from an item id.
+   * Creates a combined ID from a raw ID and an optional datasource prefix.
    *
-   * Since the item_id contains the datasource as part of the identifier and
-   * separated by DATASOURCE_ID_SEPARATOR, we can explode on the item id and
-   * retrieve the datasource identifier.
+   * This can be used to created an internal item ID or field identifier from a
+   * datasource ID and a datasource-specific raw item ID or property path.
    *
-   * @param string $item_id
-   *   The item identifier
+   * @param string|null $datasource_id
+   *   If NULL, the returned ID should be that for a datasource-independent
+   *   field. Otherwise, the ID of the datasource to which the item or field
+   *   belongs.
+   * @param string $raw_id
+   *   The datasource-specific raw item ID or property path of the item or
+   *   field.
    *
-   * @return string $datasource_id
-   *   The datasource identifier the item identifier belongs to.
+   * @return string
+   *   The combined ID, with optional datasource prefix separated by
+   *   \Drupal\search_api\Index\IndexInterface::DATASOURCE_ID_SEPARATOR.
    */
-  public static function getDataSourceIdentifierFromItemId($item_id) {
-    $datasource_id = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $item_id, 2);
-    return $datasource_id;
+  public static function createCombinedId($datasource_id, $raw_id) {
+    if (!isset($datasource_id)) {
+      return $raw_id;
+    }
+    return $datasource_id . IndexInterface::DATASOURCE_ID_SEPARATOR . $raw_id;
+  }
+
+  /**
+   * Splits an internal ID into its two parts.
+   *
+   * Both internal item IDs and internal field identifiers are prefixed with the
+   * corresponding datasource ID. This method will split these IDs up again into
+   * their two parts.
+   *
+   * @param string $combined_id
+   *   The internal ID, with an optional datasource prefix separated with
+   *   \Drupal\search_api\Index\IndexInterface::DATASOURCE_ID_SEPARATOR from the
+   *   raw item ID or property path.
+   *
+   * @return array
+   *   A numeric array, containing the datasource ID in element 0 and the raw
+   *   item ID or property path in element 1. In the case of
+   *   datasource-independent fields (i.e., when there is no prefix), element 0
+   *   will be NULL.
+   */
+  public static function splitCombinedId($combined_id) {
+    $pos = strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR);
+    if ($pos === FALSE) {
+      return array(NULL, $combined_id);
+    }
+    return array(substr($combined_id, 0, $pos), substr($combined_id, $pos + 1));
   }
 
 }

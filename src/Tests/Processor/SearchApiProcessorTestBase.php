@@ -2,11 +2,13 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiProcessorTestBase.
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiProcessorTestBase.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
+use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
@@ -44,8 +46,9 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
   public function setUp($processor = NULL) {
     parent::setUp();
 
-    $this->installSchema('node', array('node', 'node_field_data', 'node_field_revision', 'node_revision', 'node_access'));
-    $this->installSchema('comment', array('comment'));
+    $this->installEntitySchema('node');
+    $this->installSchema('node', array('node_access'));
+    $this->installEntitySchema('comment');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     $server_name = $this->randomName();
@@ -88,12 +91,14 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
         'type' => 'boolean',
       ),
     ));
-    $this->index->setOption('processors', array(
-      'search_api_content_access_processor' => array(
-        'status' => TRUE,
-        'weight' => 0,
-      ),
-    ));
+    if ($processor) {
+      $this->index->setOption('processors', array(
+        $processor => array(
+          'status' => TRUE,
+          'weight' => 0,
+        ),
+      ));
+    }
     $this->index->save();
 
     /** @var \Drupal\search_api\Processor\ProcessorPluginManager $plugin_manager */
@@ -106,32 +111,30 @@ abstract class SearchApiProcessorTestBase extends EntityUnitTestBase {
    *
    * @param array $items
    *   Data to populate test items.
-   *    - datasource: The datasource plugin id.
-   *    - item: The item object to be indexed.
-   *    - item_id: Unique item id.
-   *    - text: Textual value of the test field.
+   *   - datasource: The datasource plugin id.
+   *   - item: The item object to be indexed.
+   *   - item_id: Datasource-specific raw item id.
+   *   - text: Textual value of the test field.
    *
-   * @return array
-   *   An array structure as defined by BackendSpecificInterface::indexItems().
+   * @return \Drupal\search_api\Item\ItemInterface[]
+   *   The populated test items.
    */
   public function generateItems(array $items) {
+    /** @var \Drupal\search_api\Item\ItemInterface[] $extracted_items */
     $extracted_items = array();
     foreach ($items as $item) {
-      $extracted_items[$item['datasource'] . '|' . $item['item_id']] = array(
-        '#item' => $item['item'],
-        '#datasource' => $item['datasource'],
-        '#item_id' => $item['item_id'],
-        'id' => array(
-          'type' => 'integer',
-          'original_type' => 'field_item:integer',
-          'value' => array($item['item_id']),
-        ),
-        'field_text' => array(
-          'type' => 'text',
-          'original_type' => 'field_item:string',
-          'value' => array(isset($item['text']) ? $item['text'] : $this->randomName()),
-        ),
-      );
+      $id = $item['datasource'] . IndexInterface::DATASOURCE_ID_SEPARATOR . $item['item_id'];
+      $extracted_items[$id] = Utility::createItemFromObject($this->index, $item['item'], $id);
+      foreach (array(NULL, $item['datasource']) as $datasource_id) {
+        foreach ($this->index->getFieldsByDatasource($datasource_id) as $key => $field) {
+          /** @var \Drupal\search_api\Item\FieldInterface $field */
+          $field = clone $field;
+          if (isset($item[$field->getPropertyPath()])) {
+            $field->addValue($item[$field->getPropertyPath()]);
+          }
+          $extracted_items[$id]->setField($key, $field);
+        }
+      }
     }
 
     return $extracted_items;

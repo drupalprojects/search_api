@@ -9,9 +9,9 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
@@ -46,7 +46,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
     if (!$datasource) {
-      return NULL;
+      return;
     }
 
     if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
@@ -70,45 +70,57 @@ class ContentAccess extends ProcessorPluginBase {
       $account = new AnonymousUserSession();
     }
 
-    foreach ($items as $id => $item) {
-      // Only for node and comment items.
-      if (!in_array($this->index->getDatasource($item['#datasource'])->getEntityTypeId(), array('node', 'comment'))) {
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $item) {
+      // Only run for node and comment items.
+      if (!in_array($item->getDatasource()->getEntityTypeId(), array('node', 'comment'))) {
         continue;
       }
 
-      $node = $this->getNode($item['#item']);
-      if (!$node) {
-        // Apparently we were active for a wrong item.
-        return;
+      // Bail if the field is not indexed.
+      $field_id = $item->getDatasourceId() . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
+      if (!($field = $item->getField($field_id))) {
+        continue;
       }
 
-      // Collect grant information for item.
+      // Get the node object.
+      $node = $this->getNode($item->getOriginalObject());
+      if (!$node) {
+        // Apparently we were active for a wrong item.
+        continue;
+      }
+
+      // Collect grant information for the node.
       if (!$node->access('view', $account)) {
         // If anonymous user has no permission we collect all grants with their
         // realms in the item.
         $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
         foreach ($result as $grant) {
-          $items[$id]['entity:node|search_api_node_grants']['value'][] = "node_access_{$grant->realm}:{$grant->gid}";
+          $field->addValue("node_access_{$grant->realm}:{$grant->gid}");
         }
       }
       else {
         // Add the generic pseudo view grant if we are not using node access or
         // the node is viewable by anonymous users.
-        $items[$id]['entity:node|search_api_node_grants']['value'][] = 'node_access__all';
+        $field->addValue('node_access__all');
       }
     }
   }
 
   /**
-   * Retrieves the node related to a search item.
+   * Retrieves the node related to an indexed search object.
    *
    * Will be either the node itself, or the node the comment is attached to.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $item
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   A search object that is being indexed.
    *
-   * @return \Drupal\node\NodeInterface
+   * @return \Drupal\node\NodeInterface|null
+   *   The node related to that search object.
    */
-  protected function getNode(ContentEntityInterface $item) {
+  protected function getNode(ComplexDataInterface $item) {
     if ($item instanceof CommentInterface) {
       $item = $item->getCommentedEntity();
     }
@@ -124,7 +136,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     // @todo - here we need to secure that the author and published fields are
-    //   being indexed as we need it for the access filter.
+    //   being indexed as we need them for the access filter.
 
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -138,7 +150,7 @@ class ContentAccess extends ProcessorPluginBase {
     if (!empty($processors['search_api_content_access_processor']['status']) && !$query->getOption('search_api_bypass_access')) {
       $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
       if (is_numeric($account)) {
-        $account = user_load($account);
+        $account = entity_load('user', $account);
       }
       if (is_object($account)) {
         try {

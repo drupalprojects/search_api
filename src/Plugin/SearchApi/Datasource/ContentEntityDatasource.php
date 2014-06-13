@@ -11,9 +11,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldInstanceConfigInterface;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManager;
@@ -476,9 +475,17 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
-    if ($item instanceof EntityInterface) {
-      $langcode = $langcode ?: $item->language()->id;
-      return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+    try {
+      if ($item instanceof EntityInterface) {
+        $langcode = $langcode ? : $item->language()->id;
+        return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+      }
+    }
+    catch (\Exception $e) {
+      // The most common reason for this would be a
+      // \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException in
+      // getViewBuilder(), because the entity type definition doesn't specify a
+      // view_builder class.
     }
     return array();
   }
@@ -487,32 +494,41 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
-    $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
-    // Langcode passed, use that for viewing.
-    if (isset($langcode)) {
-      if (reset($items) instanceof EntityInterface) {
-        return $view_builder->viewMultiple($items, $view_mode, $langcode);
+    try {
+      $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
+      // Langcode passed, use that for viewing.
+      if (isset($langcode)) {
+        if (reset($items) instanceof EntityInterface) {
+          return $view_builder->viewMultiple($items, $view_mode, $langcode);
+        }
+        return array();
       }
+      // Otherwise, separate the items by language, keeping the keys.
+      $items_by_language = array();
+      foreach ($items as $i => $item) {
+        if ($item instanceof EntityInterface) {
+          $items_by_language[$item->language()->id][$i] = $item;
+        }
+      }
+      // Then build the items for each language.
+      $build = array();
+      foreach ($items_by_language as $langcode => $language_items) {
+        $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
+      }
+      // Lastly, bring the viewed items into the correct order again.
+      $ret = array();
+      foreach ($items as $i => $item) {
+        $ret[$i] = isset($build[$i]) ? $build[$i] : array();
+      }
+      return $ret;
+    }
+    catch (\Exception $e) {
+      // The most common reason for this would be a
+      // \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException in
+      // getViewBuilder(), because the entity type definition doesn't specify a
+      // view_builder class.
       return array();
     }
-    // Otherwise, separate the items by language, keeping the keys.
-    $items_by_language = array();
-    foreach ($items as $i => $item) {
-      if ($item instanceof EntityInterface) {
-        $items_by_language[$item->language()->id][$i] = $item;
-      }
-    }
-    // Then build the items for each language.
-    $build = array();
-    foreach ($items_by_language as $langcode => $language_items) {
-      $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
-    }
-    // Lastly, bring the viewed items into the correct order again.
-    $ret = array();
-    foreach ($items as $i => $item) {
-      $ret[$i] = isset($build[$i]) ? $build[$i] : array();
-    }
-    return $ret;
   }
 
   /**
@@ -540,10 +556,15 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
     $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
     foreach ($indexes as $index_id => $index) {
-      $config = $index->getDatasource($datasource_id)->getConfiguration();
-      $default = !empty($config['default']);
-      $bundle_set = !empty($config['bundles'][$entity_bundle]);
-      if ($default == $bundle_set) {
+      try {
+        $config = $index->getDatasource($datasource_id)->getConfiguration();
+        $default = !empty($config['default']);
+        $bundle_set = !empty($config['bundles'][$entity_bundle]);
+        if ($default == $bundle_set) {
+          unset($indexes[$index_id]);
+        }
+      }
+      catch (SearchApiException $e) {
         unset($indexes[$index_id]);
       }
     }
@@ -554,39 +575,36 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public function getDependencies() {
-    $dependencies = array(
-      'module' => array($this->getEntityType()->getProvider()),
-    ) + parent::getDependencies();
+  public function calculateDependencies() {
+    $this->dependencies += parent::calculateDependencies();
 
-    $plugin_id = $this->getPluginId();
+    $this->addDependency('module', $this->getEntityType()->getProvider());
+
     $fields = array();
-    array_filter(array_keys($this->getIndex()->getFields()), function ($value) use ($plugin_id, &$fields) {
-      if (strpos($value, $plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
-        $fields[] = substr($value, strlen($plugin_id . IndexInterface::DATASOURCE_ID_SEPARATOR));
+    foreach ($this->getIndex()->getFields() as $field) {
+      if ($field->getDatasourceId() === $this->pluginId) {
+        $fields[] = $field->getPropertyPath();
       }
-    });
-    if ($field_dependencies = $this->getFieldDependencies($fields, $this->getEntityTypeId())) {
-      $dependencies += array('entity' => array_keys($field_dependencies));
+    }
+    if ($field_dependencies = $this->getFieldDependencies($this->getEntityTypeId(), $fields)) {
+      $this->addDependencies(array('entity' => $field_dependencies));
     }
 
-    return $dependencies;
+    return $this->dependencies;
   }
 
   /**
-   * Returns an array of 'field_config' and 'field_instance_config' config
-   * entity dependencies.
+   * Returns an array of config entity dependencies.
    *
-   * @param array $fields
-   *   An array of field names, as returned by
-   *   \Drupal\search_api\Index\IndexInterface::getFields().
    * @param string $entity_type_id
-   *   The entity type to which these fields are attached to.
+   *   The entity type to which these fields are attached.
+   * @param string[] $fields
+   *   An array of property paths on items of this entity type.
    *
-   * @return array
-   *   An array of config entity IDs.
+   * @return string[]
+   *   An array of IDs of entities on which this datasource depends.
    */
-  protected function getFieldDependencies($fields, $entity_type_id) {
+  protected function getFieldDependencies($entity_type_id, $fields) {
     $field_dependencies = array();
 
     // Figure out which fields are directly on the item and which need to be
@@ -615,13 +633,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
           // Recurse for nested fields.
           if (isset($nested_fields[$field_name])) {
             $entity_type = $field_definition->getSetting('target_type');
-            $field_dependencies += $this->getFieldDependencies($nested_fields[$field_name], $entity_type);
+            $field_dependencies += $this->getFieldDependencies($entity_type, $nested_fields[$field_name]);
           }
         }
       }
     }
 
-    return $field_dependencies;
+    return array_keys($field_dependencies);
   }
 
 }

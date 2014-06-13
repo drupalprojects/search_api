@@ -7,13 +7,13 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\simpletest\DrupalUnitTestBase;
+use Drupal\simpletest\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 
 /**
  * Tests Search API Index entity storage
  */
-class SearchApiIndexStorageUnitTest extends DrupalUnitTestBase {
+class SearchApiIndexStorageUnitTest extends KernelTestBase {
 
   /**
    * Modules to enabled.

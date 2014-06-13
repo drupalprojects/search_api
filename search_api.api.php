@@ -92,19 +92,20 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
  * If your module will use this hook to reject certain items from indexing,
  * please document this clearly to avoid confusion.
  *
- * @param array $items
+ * @param \Drupal\search_api\Item\ItemInterface[] $items
  *   The items that will be indexed, in the format specified by
  *   \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index on which items will be indexed.
  */
 function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Index\IndexInterface $index) {
-  foreach ($items as $id => $item) {
-    if ($id % 5 == 0) {
-      unset($items[$id]);
+  foreach ($items as $item_id => $item) {
+    list(, $raw_id) = \Drupal\search_api\Utility\Utility::splitCombinedId($item->getId());
+    if ($raw_id % 5 == 0) {
+      unset($items[$item_id]);
     }
   }
-  drupal_set_message(t('Indexing @type items with the following IDs: @ids', array('@type' => $index->getDatasourceId(), '@ids' => implode(', ', array_keys($items)))));
+  drupal_set_message(t('Indexing items on index %index with the following IDs: @ids', array('%index' => $index->label(), '@ids' => implode(', ', array_keys($items)))));
 }
 
 /**
@@ -122,7 +123,10 @@ function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $
 }
 
 /**
- * Lets modules alter a search query before executing it.
+ * Alter a search query before it gets executed.
+ *
+ * The hook is invoked after all (enabled) processors have preprocessed the
+ * query.
  *
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The query that will be executed.
@@ -132,12 +136,25 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $qu
   $types = $query->getIndex()->getDatasourceIds();
   foreach ($types as $type) {
     list(, $type) = explode(':', $type);
-    $definition = \Drupal::entityManager()->getDefinition($type);
+    $definition = \Drupal::entityManager()->getDefinition($type, FALSE);
     if ($definition) {
       $keys = $definition->getKeys();
       $query->condition($keys['id'], 0, '!=');
     }
   }
+}
+
+/**
+ * Alter a search query's result set.
+ *
+ * The hook is invoked after all (enabled) processors have postprocessed the
+ * results.
+ *
+ * @param \Drupal\search_api\Query\ResultSetInterface $results
+ *   The search results to alter.
+ */
+function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterface $results) {
+  $results->setExtraData('example_hook_invoked', microtime(TRUE));
 }
 
 /**
@@ -193,7 +210,7 @@ function hook_search_api_server_presave(\Drupal\search_api\Server\ServerInterfac
  *   The edited server.
  */
 function hook_search_api_server_update(\Drupal\search_api\Server\ServerInterface $server) {
-  if ($server->name != $server->original->name) {
+  if ($server->label() != $server->original->label()) {
     db_insert('example_search_server_name_update')
       ->fields(array(
         'server' => $server->id(),
@@ -274,7 +291,7 @@ function hook_search_api_index_presave(\Drupal\search_api\Index\IndexInterface $
  *   The edited index.
  */
 function hook_search_api_index_update(\Drupal\search_api\Index\IndexInterface $index) {
-  if ($index->name != $index->original->name) {
+  if ($index->label() != $index->original->label()) {
     db_insert('example_search_index_name_update')
       ->fields(array(
         'index' => $index->id(),
@@ -323,29 +340,15 @@ function hook_search_api_index_reindex(\Drupal\search_api\Index\IndexInterface $
 /**
  * Alter the query before executing the query.
  *
- * @param \Drupal\views\Entity\View $view
+ * @param \Drupal\views\ViewExecutable $view
  *   The view object about to be processed.
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The Search API Views query to be altered.
  *
  * @see hook_views_query_alter()
  */
-function hook_search_api_views_query_alter(\Drupal\views\Entity\View &$view, Drupal\search_api\Query\QueryInterface &$query) {
-  // (Example assuming a view with an exposed filter on node title.)
-  // If the input for the title filter is a positive integer, filter against
-  // node ID instead of node title.
-  if ($view->name == 'my_view' && is_numeric($view->exposed_raw_input['title']) && $view->exposed_raw_input['title'] > 0) {
-    // Traverse through the 'where' part of the query.
-    foreach ($query->where as &$condition_group) {
-      foreach ($condition_group['conditions'] as &$condition) {
-        // If this is the part of the query filtering on title, chang the
-        // condition to filter on node ID.
-        if (reset($condition) == 'node.title') {
-          $condition = array('node.nid', $view->exposed_raw_input['title'],'=');
-        }
-      }
-    }
-  }
+function hook_search_api_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\search_api\Query\QueryInterface &$query) {
+  // @todo Add proper example.
 }
 
 /**

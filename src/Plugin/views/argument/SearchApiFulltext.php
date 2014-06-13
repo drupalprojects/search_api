@@ -97,15 +97,15 @@ class SearchApiFulltext extends SearchApiArgument {
    * Helper method to get an option list of all available fulltext fields.
    */
   protected function getFulltextFields() {
-    $ret = array();
-    $index = entity_load('search_api_index', substr($this->table, 17));
-    if (!empty($index->options['fields'])) {
-      $fields = $index->getFields();
-      foreach ($index->getFulltextFields() as $field) {
-        $ret[$field] = $fields[$field]['name'];
-      }
+    $fields = array();
+    $index = $this->query->getIndex();
+
+    $fields_info = $index->getFields();
+    foreach ($index->getFulltextFields() as $field_id) {
+      $fields[$field_id] = $fields_info[$field_id]->getPrefixedLabel();
     }
-    return $ret;
+
+    return $fields;
   }
 
 }

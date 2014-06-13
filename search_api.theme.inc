@@ -202,6 +202,8 @@ function theme_search_api_server($variables) {
  * @return string
  *   The rendered HTML for a Search API index.
  */
+// @todo This executes a search in the theme layer, amongst other thing.
+//   Definitely not cool.
 function theme_search_api_index($variables) {
   // Get the Search API index
   /** @var $index \Drupal\search_api\Index\IndexInterface */
@@ -302,18 +304,20 @@ function theme_search_api_index($variables) {
   if ($index->status()) {
     // Check if a valid server is available.
     if ($server) {
-      // Create a default search query.
+      // Here we want to get a raw count of the total number of items on the
+      // server for this index. Therefore we circumvent the whole preprocessing
+      // (which could add facets, access filters, etc.) and hand the query
+      // directly to the server.
+      // @todo Add a cleaner way for doing this (i.e., skipping preprocessing).
       $query = $index->query();
-      // Configure the query so that we get a raw count of the index items
-      // without any facets or filters.
       $query->fields(array())->range(0, 0);
-      // Query the server and process the result.
       $response = $server->search($query);
+
       // Build the server index status translation variables.
       $vars = array('@url' => url('https://drupal.org/node/2009804#server-index-status'));
       // Build the server index status info.
       $label = t('Server index status');
-      $info = \Drupal::translation()->formatPlural($response['result count'], 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+      $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
       $rows[] = Utility::deepCopy($row);
     }
     // Get the configured options, merge in default options to prevent notice

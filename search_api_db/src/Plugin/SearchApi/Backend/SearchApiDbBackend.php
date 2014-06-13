@@ -15,6 +15,8 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
@@ -209,7 +211,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     try {
       // Create the denormalized table now.
       $index_table = $this->findFreeTable('search_api_db_', $index->id());
-      $this->createFieldTable(array(), array('table' => $index_table), TRUE);
+      $this->createFieldTable(NULL, array('table' => $index_table));
 
       // If there are no fields, we can take a shortcut.
       if (!$index->getFields()) {
@@ -233,7 +235,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
 
     // If dealing with features or stale data or whatever, we might already have
@@ -327,19 +329,16 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * Used as a helper method in fieldsUpdated().
    *
-   * @param array $field
-   *   Single field definition from
-   *   \Drupal\search_api\Index\IndexInterface::getFields().
+   * @param \Drupal\search_api\Item\FieldInterface|null $field
+   *   The field to add. Or NULL if only the initial table with an "item_id"
+   *   column should be created.
    * @param array $db
    *   Associative array containing the following:
    *   - table: The table to use for the field.
    *   - column: (optional) The column to use in that table. Defaults to
    *     "value".
-   * @param bool $initial_table_only
-   *   (optional) If TRUE, we create a table with just the 'item_id' column.
-   *   Defaults to FALSE.
    */
-  protected function createFieldTable($field, $db, $initial_table_only = FALSE) {
+  protected function createFieldTable(FieldInterface $field = NULL, $db) {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -372,14 +371,14 @@ class SearchApiDbBackend extends BackendPluginBase {
     }
 
     // Stop here if we want to create a table with just the 'item_id' column.
-    if ($initial_table_only) {
+    if (!isset($field)) {
       return;
     }
 
     if (!isset($db['column'])) {
       $db['column'] = 'value';
     }
-    $db_field = $this->sqlType($field['type']);
+    $db_field = $this->sqlType($field->getType());
     $db_field += array(
       'description' => "The field's value for this item.",
     );
@@ -463,23 +462,23 @@ class SearchApiDbBackend extends BackendPluginBase {
       $text_table = NULL;
       $denormalized_table = $this->configuration['index_tables'][$index->id()];
 
-      foreach ($fields as $name => $field) {
+      foreach ($fields as $field_id => $field) {
         if (!isset($text_table) && Utility::isTextType($field['type'])) {
           // Stash the shared text table name for the index.
           $text_table = $field['table'];
         }
 
-        if (!isset($new_fields[$name])) {
+        if (!isset($new_fields[$field_id])) {
           // The field is no longer in the index, drop the data.
-          $this->removeFieldStorage($name, $field, $denormalized_table);
-          unset($fields[$name]);
+          $this->removeFieldStorage($field_id, $field, $denormalized_table);
+          unset($fields[$field_id]);
           $change = TRUE;
           continue;
         }
         $old_type = $field['type'];
-        $new_type = $new_fields[$name]['type'];
-        $fields[$name]['type'] = $new_type;
-        $fields[$name]['boost'] = $new_fields[$name]['boost'];
+        $new_type = $new_fields[$field_id]->getType();
+        $fields[$field_id]['type'] = $new_type;
+        $fields[$field_id]['boost'] = $new_fields[$field_id]->getBoost();
         if ($old_type != $new_type) {
           $change = TRUE;
           if ($old_type == 'text' || $new_type == 'text') {
@@ -490,7 +489,7 @@ class SearchApiDbBackend extends BackendPluginBase {
               $cleared = TRUE;
               $this->deleteAllIndexItems($index);
             }
-            $this->removeFieldStorage($name, $field, $denormalized_table);
+            $this->removeFieldStorage($field_id, $field, $denormalized_table);
             // Keep the table in $new_fields to create the new storage.
             continue;
           }
@@ -507,13 +506,13 @@ class SearchApiDbBackend extends BackendPluginBase {
             $reindex = TRUE;
           }
         }
-        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$name]['boost']) {
+        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$field_id]->getBoost()) {
           $change = TRUE;
           if (!$reindex) {
-            $multiplier = $new_fields[$name]['boost'] / $field['boost'];
+            $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
             $this->database->update($text_table)
               ->expression('score', 'score * :mult', array(':mult' => $multiplier))
-              ->condition('field_name', self::getTextFieldName($name))
+              ->condition('field_name', self::getTextFieldName($field_id))
               ->execute();
           }
         }
@@ -527,7 +526,7 @@ class SearchApiDbBackend extends BackendPluginBase {
             'table' => $field['table'],
             'column' => 'value',
           );
-          $this->createFieldTable($new_fields[$name], $db);
+          $this->createFieldTable($new_fields[$field_id], $db);
         }
         // Ensure that a column is created in the denormalized storage even for
         // 'text' fields.
@@ -536,33 +535,33 @@ class SearchApiDbBackend extends BackendPluginBase {
             'table' => $denormalized_table,
             'column' => $field['column'],
           );
-          $this->createFieldTable($new_fields[$name], $db);
+          $this->createFieldTable($new_fields[$field_id], $db);
         }
-        unset($new_fields[$name]);
+        unset($new_fields[$field_id]);
       }
 
       $prefix = 'search_api_db_' . $index->id();
       // These are new fields that were previously not indexed.
-      foreach ($new_fields as $name => $field) {
+      foreach ($new_fields as $field_id => $field) {
         $reindex = TRUE;
-        if (Utility::isTextType($field['type'])) {
+        if (Utility::isTextType($field->getType())) {
           if (!isset($text_table)) {
             // If we have not encountered a text table, assign a name for it.
             $text_table = $this->findFreeTable($prefix . '_', 'text');
           }
-          $fields[$name]['table'] = $text_table;
+          $fields[$field_id]['table'] = $text_table;
         }
         else {
-          $fields[$name]['table'] = $this->findFreeTable($prefix . '_', $name);
-          $this->createFieldTable($field, $fields[$name]);
+          $fields[$field_id]['table'] = $this->findFreeTable($prefix . '_', $field_id);
+          $this->createFieldTable($field, $fields[$field_id]);
         }
 
         // Always add a column in the denormalized table.
-        $fields[$name]['column'] = $this->findFreeColumn($denormalized_table, $name);
-        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$name]['column']));
+        $fields[$field_id]['column'] = $this->findFreeColumn($denormalized_table, $field_id);
+        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$field_id]['column']));
 
-        $fields[$name]['type'] = $field['type'];
-        $fields[$name]['boost'] = $field['boost'];
+        $fields[$field_id]['type'] = $field->getType();
+        $fields[$field_id]['boost'] = $field->getBoost();
         $change = TRUE;
       }
 
@@ -641,7 +640,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -697,7 +696,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -716,7 +715,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       catch (\Exception $e) {
         // We just log the error, hoping we can index the other items.
-        watchdog('search_api_db', String::checkPlain($e->getMessage()), NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', String::checkPlain($e->getMessage()), array(), WATCHDOG_WARNING);
       }
     }
     return $indexed;
@@ -731,21 +730,24 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   The index for which the item is being indexed.
    * @param string $id
    *   The item's ID.
-   * @param array $item
-   *   The extracted fields of the item.
+   * @param \Drupal\search_api\Item\ItemInterface $item
+   *   The item to index.
    *
    * @throws \Exception
    *   Any encountered database (or other) exceptions are passed on, out of this
    *   method.
    */
-  protected function indexItem(IndexInterface $index, $id, array $item) {
+  protected function indexItem(IndexInterface $index, $id, ItemInterface $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
     $denormalized_table = $this->configuration['index_tables'][$index->id()];
     $txn = $this->database->startTransaction('search_api_indexing');
+    $text_table = $denormalized_table . '_text';
+
     try {
       $inserts = array();
       $text_inserts = array();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($item as $name => $field) {
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables
@@ -762,6 +764,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           continue;
         }
         $table = $fields[$name]['table'];
+
         $boost = $fields[$name]['boost'];
         $this->database->delete($table)
           ->condition('item_id', $id)
@@ -769,14 +772,11 @@ class SearchApiDbBackend extends BackendPluginBase {
         $this->database->delete($denormalized_table)
           ->condition('item_id', $id)
           ->execute();
-        // Don't index null values
-        if ($field['value'] === NULL) {
-          continue;
-        }
-        $type = $field['type'];
+
+        $type = $field->getType();
         $value = array();
-        foreach ($field['value'] as $field_value) {
-          $converted_value = $this->convert($field_value, $type, $field['original_type'], $index);
+        foreach ($field->getValues() as $field_value) {
+          $converted_value = $this->convert($field_value, $type, $field->getOriginalType(), $index);
 
           // Don't add NULL values to the return array. Also, adding an empty
           // array is, of course, a waste of time.
@@ -785,15 +785,16 @@ class SearchApiDbBackend extends BackendPluginBase {
           }
         }
 
-        if (Utility::isTextType($type, array('text', 'tokens'))) {
+        if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
           $words = array();
           // Store the first 30 characters of the string as the denormalized
           // value.
           $field_value = $value;
           $denormalized_value = '';
+
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
-          } while (drupal_strlen($denormalized_value) < 30);
+          } while (strlen($denormalized_value) < 30);
 
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
@@ -803,26 +804,27 @@ class SearchApiDbBackend extends BackendPluginBase {
             // at 500 words and 0.3 at 1000 words.
             $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
 
-            $value = &$token['value'];
+            $value = $token['value'];
             if (is_numeric($value)) {
               $value = ltrim($value, '-0');
             }
-            elseif (drupal_strlen($value) < $this->configuration['min_chars']) {
+            elseif (Unicode::strlen($value) < $this->configuration['min_chars']) {
               continue;
             }
             $value = Unicode::strtolower($value);
-            $token['score'] *= $focus;
+            $token['score'] = $token['score'] * $focus;
             if (!isset($words[$value])) {
               $words[$value] = $token;
             }
             else {
               $words[$value]['score'] += $token['score'];
             }
+            $token['value'] = $value;
           }
           if ($words) {
             $field_name = self::getTextFieldName($name);
             foreach ($words as $word) {
-              $text_inserts[$table][] = array(
+              $text_inserts[$text_table][] = array(
                 'item_id'    => $id,
                 'field_name' => $field_name,
                 'word'       => $word['value'],
@@ -925,7 +927,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return Utility::isTextType($type, array('text', 'tokens')) ? array() : NULL;
+      return Utility::isTextType($type, array('text', 'tokenized_text')) ? array() : NULL;
     }
     switch ($type) {
       case 'text':
@@ -942,9 +944,10 @@ class SearchApiDbBackend extends BackendPluginBase {
             );
           }
         }
-        $value = $ret;
-        // FALL-THROUGH!
-      case 'tokens':
+        // This used to fall through the tokenized case
+        return $ret;
+        break;
+      case 'tokenized_text':
         while (TRUE) {
           foreach ($value as $i => $v) {
             // Check for over-long tokens.
@@ -1042,7 +1045,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.
     catch (\Exception $e) {
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1059,7 +1062,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     catch (\Exception $e) {
       // The database operations might throw PDO or other exceptions, so we catch
       // them all and re-wrap them appropriately.
-      throw new SearchApiException($e->getMessage());
+      throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
@@ -1067,7 +1070,6 @@ class SearchApiDbBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    $time_method_called = microtime(TRUE);
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
     if (!isset($this->configuration['field_tables'][$index->id()])) {
@@ -1077,18 +1079,17 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     $db_query = $this->createDbQuery($query, $fields);
 
-    $time_processing_done = microtime(TRUE);
-    $results = array();
+    $results = Utility::createSearchResultSet($query);
 
     $skip_count = $query->getOption('skip result count');
     if (!$skip_count) {
       $count_query = $db_query->countQuery();
-      $results['result count'] = $count_query->execute()->fetchField();
+      $results->setResultCount($count_query->execute()->fetchField());
     }
 
-    if ($skip_count || $results['result count']) {
+    if ($skip_count || $results->getResultCount()) {
       if ($query->getOption('search_api_facets')) {
-        $results['search_api_facets'] = $this->getFacets($query, clone $db_query);
+        $results->setExtraData('search_api_facets', $this->getFacets($query, clone $db_query));
       }
 
       $query_options = $query->getOptions();
@@ -1136,35 +1137,19 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
 
       $result = $db_query->execute();
-      $time_queries_done = microtime(TRUE);
 
       foreach ($result as $row) {
-        list($datasource, $id) = explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $row->item_id);
-        $results['results'][$row->item_id] = array(
-          'id' => $id,
-          'datasource' => $datasource,
-          'score' => $row->score / self::SCORE_MULTIPLIER,
-        );
+        $item = Utility::createItem($index, $row->item_id);
+        $item->setScore($row->score / self::SCORE_MULTIPLIER);
+        $results->addResultItem($item);
       }
-      if ($skip_count) {
-        $results['result count'] = !empty($results['results']);
+      if ($skip_count && !empty($item)) {
+        $results->setResultCount(1);
       }
     }
-    else {
-      $time_queries_done = microtime(TRUE);
-      $results['results'] = array();
-    }
 
-    $results['warnings'] = array_keys($this->warnings);
-    $results['ignored'] = array_keys($this->ignored);
-
-    $time_end = microtime(TRUE);
-    $results['performance'] = array(
-      'complete' => $time_end - $time_method_called,
-      'preprocessing' => $time_processing_done - $time_method_called,
-      'execution' => $time_queries_done - $time_processing_done,
-      'postprocessing' => $time_end - $time_queries_done,
-    );
+    $results->setWarnings(array_keys($this->warnings));
+    $results->setIgnoredSearchKeys(array_keys($this->ignored));
 
     return $results;
   }
@@ -1226,7 +1211,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       else {
         $msg = t('Search keys are given but no fulltext fields are defined.');
-        watchdog('search_api_db', $msg, NULL, WATCHDOG_WARNING);
+        watchdog('search_api_db', $msg, array(), WATCHDOG_WARNING);
         $this->warnings[$msg] = 1;
       }
     }

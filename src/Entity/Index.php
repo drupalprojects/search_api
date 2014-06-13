@@ -16,8 +16,11 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\search_api\Utility\Utility;
 
@@ -97,36 +100,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public $readOnly = FALSE;
 
   /**
-   * An array of options for configuring this index. The layout is as follows:
-   * - cron_limit: The maximum number of items to be indexed per cron batch.
-   * - index_directly: Boolean setting whether entities are indexed immediately
-   *   after they are created or updated.
-   * - fields: An array of all indexed fields for this index. Keys are the field
-   *   identifiers, the values are arrays for specifying the field settings. The
-   *   structure of those arrays looks like this:
-   *   - type: The type set for this field. One of the types returned by
-   *     \Drupal\search_api\Utility::getDefaultDataTypes().
-   *   - real_type: (optional) If a custom data type was selected for this
-   *     field, this type will be stored here, and "type" contain the fallback
-   *     default data type.
-   *   - boost: (optional) A boost value for terms found in this field during
-   *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
-   *   - entity_type (optional): If set, the type of this field is really an
-   *     entity. The "type" key will then just contain the primitive data type
-   *     of the ID field, meaning that servers will ignore this and merely index
-   *     the entity's ID. Components displaying this field, though, are advised
-   *     to use the entity label instead of the ID.
-   * - additional fields: An associative array with keys and values being the
-   *   field identifiers of related entities whose fields should be displayed.
-   * - processors: An array of all processors available for the index. The keys
-   *   are the processor identifiers, the values are arrays containing the
-   *   settings for that processor. The inner structure looks like this:
-   *   - status: Boolean indicating whether the processor is enabled.
-   *   - weight: Used for sorting the processors.
-   *   - settings: Processor-specific settings, configured via the processor's
-   *     configuration form.
+   * An array of options for configuring this index.
    *
    * @var array
+   *
+   * @see getOptions()
    */
   public $options = array();
 
@@ -189,11 +167,53 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $server;
 
   /**
-   * Cached fields data for getFields().
+   * Cached properties for this index's datasources.
    *
-   * @var array
+   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][][]
+   */
+  protected $properties = array();
+
+  /**
+   * Cached fields data.
+   *
+   * The array contains two elements: 0 for all fields, 1 for indexed fields.
+   * The elements under these keys are arrays with keys "fields" and "additional
+   * fields", corresponding to return values for getFields() and
+   * getAdditionalFields(), respectively.
+   *
+   * @var \Drupal\search_api\Item\GenericFieldInterface[][][]
+   *
+   * @see computeFields()
+   * @see getFields()
+   * @see getFieldsByDatasource()
+   * @see getAdditionalFields()
    */
   protected $fields;
+
+  /**
+   * Cached fields data, grouped by datasource and indexed state.
+   *
+   * The array is three-dimensional, with the first two keys corresponding to
+   * the parameters of a getFieldsByDatasource() call and the last one being the
+   * field ID.
+   *
+   * @var \Drupal\search_api\Item\FieldInterface[][][]
+   *
+   * @see getFieldsByDatasource()
+   */
+  protected $datasourceFields;
+
+  /**
+   * Cached additional fields data, grouped by datasource.
+   *
+   * The array is two-dimensional, with the first key corresponding to the
+   * datasource ID and the second key being a field ID.
+   *
+   * @var \Drupal\search_api\Item\FieldInterface[][]
+   *
+   * @see getAdditionalFieldsByDatasource()
+   */
+  protected $datasourceAdditionalFields;
 
   /**
    * Cached fulltext fields data for getFulltextFields().
@@ -203,7 +223,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $fulltextFields;
 
   /**
-   * Cached fulltext fields data for getProcessors().
+   * Cached return value for getProcessors().
    *
    * @var array
    */
@@ -233,9 +253,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     // Merge in default options.
+    // @todo Use a dedicated method, like defaultConfiguration() for plugins?
     $this->options += array(
       'cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'),
-      'index_directly' => FALSE,
+      'index_directly' => TRUE,
     );
   }
 
@@ -279,9 +300,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getOption($name, $default = NULL) {
-    // Get the options.
     $options = $this->getOptions();
-    // Get the option value for the given key.
     return isset($options[$name]) ? $options[$name] : $default;
   }
 
@@ -295,8 +314,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function setOptions($options) {
+  public function setOptions(array $options) {
     $this->options = $options;
+    return $this;
   }
 
   /**
@@ -304,6 +324,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function setOption($name, $option) {
     $this->options[$name] = $option;
+    return $this;
   }
 
   /**
@@ -357,7 +378,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidTracker() {
-    $tracker_plugin_definition = \Drupal::service('plugin.manager.search_api.tracker')->getDefinition($this->getTrackerId());
+    $tracker_plugin_definition = \Drupal::service('plugin.manager.search_api.tracker')->getDefinition($this->getTrackerId(), FALSE);
     return !empty($tracker_plugin_definition);
   }
 
@@ -431,8 +452,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function indexItems(array $items) {
-    if (!$items || $this->readOnly) {
+  public function indexItems(array $search_objects) {
+    if (!$search_objects || $this->readOnly) {
       return array();
     }
     if (!$this->status) {
@@ -442,93 +463,69 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
-    // To enable proper extraction of fields with Utility::extractFields(),
-    // $fields will contain the information from $this->options['fields'], but
-    // in a two-dimensional array, keyed by both parts of the field identifier
-    // separately – i.e, first by datasource ID, then by property path.
-    $fields = array();
-    foreach ($this->options['fields'] as $key => $field) {
-      // Include real type, if known.
-      if (isset($field['real_type'])) {
-        $custom_type = $field['real_type'];
-        if ($this->getServer()->supportsDatatype($custom_type)) {
-          $field['type'] = $field['real_type'];
-        }
-      }
-
-      // Copy the field information into the $fields array.
-      if (strpos($key, self::DATASOURCE_ID_SEPARATOR)) {
-        list ($datasource_id, $property_path) = explode(self::DATASOURCE_ID_SEPARATOR, $key, 2);
-        $fields[$datasource_id][$property_path] = $field;
-      }
-      else {
-        $fields[NULL][$key] = $field;
-      }
+    /** @var \Drupal\search_api\Item\ItemInterface[] $items */
+    $items = array();
+    foreach ($search_objects as $item_id => $object) {
+      $items[$item_id] = Utility::createItemFromObject($this, $object, $item_id);
+      $items[$item_id]->getFields(TRUE);
     }
 
-    $extracted_items = array();
-    $ret = array();
-    foreach ($items as $item_id => $item) {
-      list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
-      $extracted_item = array();
-      $extracted_item['#item'] = $item;
-      $extracted_item['#item_id'] = $raw_id;
-      $extracted_item['#datasource'] = $datasource_id;
-      foreach (array(NULL, $datasource_id) as $fields_key) {
-        if (!empty($fields[$fields_key])) {
-          $extracted_fields = $fields[$fields_key];
-          Utility::extractFields($item, $extracted_fields);
-          $field_prefix = $fields_key ? $fields_key . self::DATASOURCE_ID_SEPARATOR : '';
-          foreach ($extracted_fields as $property_path => $field) {
-            $extracted_item[$field_prefix . $property_path] = $field;
-          }
-        }
-      }
-      $extracted_items[$item_id] = $extracted_item;
-      // Remember the items that were initially passed.
-      $ret[$item_id] = $item_id;
-    }
+    // Remember the items that were initially passed.
+    $ret = array_keys($items);
+    $ret = array_combine($ret, $ret);
 
     // Preprocess the indexed items.
-    \Drupal::moduleHandler()->alter('search_api_index_items', $extracted_items, $this);
-    $this->preprocessIndexItems($extracted_items);
+    \Drupal::moduleHandler()->alter('search_api_index_items', $items, $this);
+    $this->preprocessIndexItems($items);
 
-    // Remove all items still in $extracted_items from $ret. Thus, only the
-    // rejected items' IDs are still contained in $ret, to later be returned
-    // along with the successfully indexed ones.
-    foreach ($extracted_items as $item_id => $item) {
+    // Remove all items still in $items from $ret. Thus, only the rejected
+    // items' IDs are still contained in $ret, to later be returned along with
+    // the successfully indexed ones.
+    foreach ($items as $item_id => $item) {
       unset($ret[$item_id]);
     }
 
     // Items that are rejected should also be deleted from the server.
     if ($ret) {
       $this->getServer()->deleteItems($this, $ret);
-      if (!$extracted_items) {
+      if (!$items) {
         return $ret;
       }
     }
 
     // Return the IDs of all items that were either successfully indexed or
     // rejected before being handed to the server.
-    return array_merge($ret, $this->getServer()->indexItems($this, $extracted_items));
+    return array_merge(array_values($ret), array_values($this->getServer()->indexItems($this, $items)));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFields($only_indexed = TRUE, $get_additional = FALSE) {
+  public function getFields($only_indexed = TRUE) {
+    $this->computeFields();
     $only_indexed = $only_indexed ? 1 : 0;
+    return $this->fields[$only_indexed]['fields'];
+  }
 
+  /**
+   * Populates the $fields property with information about the index's fields.
+   *
+   * Used by getFields(), getFieldsByDatasource() and getAdditionalFields().
+   */
+  protected function computeFields() {
     // First, try the static cache and the persistent cache bin.
     $cid = $this->getCacheId();
     if (empty($this->fields)) {
       if ($cached = \Drupal::cache()->get($cid)) {
         $this->fields = $cached->data;
+        if ($this->fields) {
+          $this->updateFieldsIndex($this->fields);
+        }
       }
     }
 
-    // If not cached, fetch the list of fields and their properties
-    if (empty($this->fields[$only_indexed])) {
+    // If not cached, fetch the list of fields and their properties.
+    if (empty($this->fields)) {
       $this->fields = array(
         0 => array(
           'fields' => array(),
@@ -536,9 +533,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
         ),
         1 => array(
           'fields' => array(),
-          // This should never be used, but we still include it to be on the
-          // safe side.
-          'additional fields' => array(),
         ),
       );
       // Remember the fields for which we couldn't find a mapping.
@@ -564,8 +558,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tags['search_api_index'] = $this->id();
       \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
     }
+  }
 
-    return $get_additional ? $this->fields[$only_indexed] : $this->fields[$only_indexed]['fields'];
+  /**
+   * Sets this object as the index for all fields contained in the given array.
+   *
+   * This is important when loading fields from the cache, because their index
+   * objects might then point to another instance of this index.
+   *
+   * @param array $fields
+   *   An array containing various values, some of which might be
+   *   \Drupal\search_api\Item\GenericFieldInterface objects and some of which
+   *   might be nested arrays containing such objects.
+   */
+  protected function updateFieldsIndex(array $fields) {
+    foreach ($fields as $value) {
+      if (is_array($value)) {
+        $this->updateFieldsIndex($value);
+      }
+      elseif ($value instanceof GenericFieldInterface) {
+        $value->setIndex($this);
+      }
+    }
   }
 
   /**
@@ -584,22 +598,25 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @param string $prefix_label
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If $datasource_id is no valid datasource for this index.
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $prefix_label = '') {
     $type_mapping = Utility::getFieldTypeMapping();
-    $fields = &$this->fields[0]['fields'];
-    $recurse_for_prefixes = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
+    $field_options = isset($this->options['fields']) ? $this->options['fields'] : array();
+    $enabled_additional_fields = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
 
     // All field identifiers should start with the datasource ID.
     if (!$prefix && $datasource_id) {
       $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
     }
-    $name_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
+    $label_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
-    foreach ($properties as $key => $property) {
-      $key = "$prefix$key";
+    foreach ($properties as $property_path => $property) {
+      $key = "$prefix$property_path";
       $label = $prefix_label . $property->getLabel();
       $description = $property->getDescription();
       while ($property instanceof ListDataDefinitionInterface) {
@@ -624,7 +641,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
 
         $additional = count($nested_properties) > 1;
-        if (!empty($recurse_for_prefixes[$key]) && $nested_properties) {
+        if (!empty($enabled_additional_fields[$key]) && $nested_properties) {
           // We allow the main property to be indexed directly, so we don't
           // have to add it again for the nested fields.
           if ($main_property) {
@@ -637,10 +654,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
 
         if ($additional) {
-          $this->fields[0]['additional fields'][$key] = array(
-            'name' => "$label [$key]",
-            'enabled' => !empty($recurse_for_prefixes[$key]),
-          );
+          $additional_field = Utility::createAdditionalField($this, $key);
+          $additional_field->setLabel("$label [$key]");
+          $additional_field->setDescription($description);
+          $additional_field->setEnabled(!empty($enabled_additional_fields[$key]));
+          $additional_field->setLocked(FALSE);
+          $this->fields[0]['additional fields'][$key] = $additional_field;
+          if ($additional_field->isEnabled()) {
+            while ($pos = strrpos($property_path, ':')) {
+              $property_path = substr($property_path, 0, $pos);
+              /** @var \Drupal\search_api\Item\AdditionalFieldInterface $additional_field */
+              $additional_field = $this->fields[0]['additional fields'][$property_path];
+              $additional_field->setEnabled(TRUE);
+              $additional_field->setLocked(TRUE);
+            }
+          }
         }
         // If the complex data type has a main property, we can index that
         // directly here. Otherwise, we don't add it and continue with the next
@@ -677,55 +705,113 @@ class Index extends ConfigEntityBase implements IndexInterface {
         continue;
       }
 
-      $fields[$key] = array(
-        'name' => $label,
-        'name_prefix' => $name_prefix,
-        'description' => $description,
-        'datasource' => $datasource_id,
-        'indexed' => FALSE,
-        'type' => $field_type,
-        'boost' => '1.0',
-      );
-      if (isset($this->options['fields'][$key])) {
-        $fields[$key] = $this->options['fields'][$key] + $fields[$key];
-        $fields[$key]['indexed'] = TRUE;
-        $this->fields[1]['fields'][$key] = $fields[$key];
+      $field = Utility::createField($this, $key);
+      $field->setType($field_type);
+      $field->setLabel($label);
+      $field->setLabelPrefix($label_prefix);
+      $field->setDescription($description);
+      $field->setIndexed(FALSE);
+      $this->fields[0]['fields'][$key] = $field;
+      if (isset($field_options[$key])) {
+        $field->setIndexed(TRUE);
+        $field->setType($field_options[$key]['type']);
+        if (isset($field_options[$key]['boost'])) {
+          $field->setBoost($field_options[$key]['boost']);
+        }
+        $this->fields[1]['fields'][$key] = $field;
       }
     }
     foreach ($recurse as $arguments) {
       call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
     }
 
-    // Sort the fields, only do it if the key is empty to avoid unnecessary
-    // processing.
-    uasort($fields, '\Drupal\search_api\Entity\Index::sortField');
+    uasort($this->fields[0]['fields'], '\Drupal\search_api\Entity\Index::sortField');
   }
 
   /**
-   * Helper callback for uasort() to sort configuration entities by weight and label.
+   * Compares two fields by their labels.
+   *
+   * Used as a callback for uasort() in convertPropertyDefinitionsToFields().
+   *
+   * @param \Drupal\search_api\Item\GenericFieldInterface $field1
+   *   The first field.
+   * @param \Drupal\search_api\Item\GenericFieldInterface $field2
+   *   The second field.
+   *
+   * @return int
+   *   An integer less than, equal to, or greater than zero if the first
+   *   argument is considered to be respectively less than, equal to, or greater
+   *   than the second.
    */
-  public static function sortField($field_a, $field_b) {
-    $a_label = $field_a['name'];
-    $b_label = $field_b['name'];
-    return strnatcasecmp($a_label, $b_label);
+  public static function sortField(GenericFieldInterface $field1, GenericFieldInterface $field2) {
+    return strnatcasecmp($field1->getLabel(), $field2->getLabel());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldsByDatasource($datasource_id, $only_indexed = TRUE) {
+    $only_indexed = $only_indexed ? 1 : 0;
+    if (!isset($this->datasourceFields)) {
+      $this->computeFields();
+      $this->datasourceFields = array_fill_keys($this->datasourcePluginIds, array(array(), array()));
+      $this->datasourceFields[NULL] = array(array(), array());
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($this->fields[0]['fields'] as $field_id => $field) {
+        $this->datasourceFields[$field->getDatasourceId()][0][$field_id] = $field;
+        if ($field->isIndexed()) {
+          $this->datasourceFields[$field->getDatasourceId()][1][$field_id] = $field;
+        }
+      }
+    }
+    return $this->datasourceFields[$datasource_id][$only_indexed];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAdditionalFields() {
+    $this->computeFields();
+    return $this->fields[0]['additional fields'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAdditionalFieldsByDatasource($datasource_id) {
+    if (!isset($this->datasourceAdditionalFields)) {
+      $this->computeFields();
+      $this->datasourceAdditionalFields = array_fill_keys($this->datasourcePluginIds, array());
+      $this->datasourceAdditionalFields[NULL] = array();
+      /** @var \Drupal\search_api\Item\FieldInterface $field */
+      foreach ($this->fields[0]['additional fields'] as $field_id => $field) {
+        $this->datasourceAdditionalFields[$field->getDatasourceId()][$field_id] = $field;
+      }
+    }
+    return $this->datasourceAdditionalFields[$datasource_id];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $properties = array();
-    $datasource = NULL;
-    if ($datasource_id) {
-      $datasource = $this->getDatasource($datasource_id);
-      $properties = $datasource->getPropertyDefinitions();
-    }
-    if ($alter) {
-      foreach ($this->getProcessors() as $processor) {
-        $processor->alterPropertyDefinitions($properties, $datasource);
+    $alter = $alter ? 1 : 0;
+    if (!isset($this->properties[$datasource_id][$alter])) {
+      if ($datasource_id) {
+        $datasource = $this->getDatasource($datasource_id);
+        $this->properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
+      }
+      else {
+        $datasource = NULL;
+        $this->properties[$datasource_id][$alter] = array();
+      }
+      if ($alter) {
+        foreach ($this->getProcessors() as $processor) {
+          $processor->alterPropertyDefinitions($this->properties[$datasource_id][$alter], $datasource);
+        }
       }
     }
-    return $properties;
+    return $this->properties[$datasource_id][$alter];
   }
 
   /**
@@ -733,20 +819,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFulltextFields($only_indexed = TRUE) {
     $i = $only_indexed ? 1 : 0;
-    $fields = array();
     if (!isset($this->fulltextFields[$i])) {
       $this->fulltextFields[$i] = array();
       if ($only_indexed) {
         if (isset($this->options['fields'])) {
-          $fields = $this->options['fields'];
+          foreach ($this->options['fields'] as $key => $field) {
+            if (Utility::isTextType($field['type'])) {
+              $this->fulltextFields[$i][] = $key;
+            }
+          }
         }
       }
       else {
-        $fields = $this->getFields(FALSE);
-      }
-      foreach ($fields as $key => $field) {
-        if (Utility::isTextType($field['type'])) {
-          $this->fulltextFields[$i][] = $key;
+        foreach ($this->getFields(FALSE) as $key => $field) {
+          if (Utility::isTextType($field->getType())) {
+            $this->fulltextFields[$i][] = $key;
+          }
         }
       }
     }
@@ -757,14 +845,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function loadItem($item_id) {
-    $items = $this->loadItemsMultiple(array($item_id), TRUE);
+    $items = $this->loadItemsMultiple(array($item_id));
     return $items ? reset($items) : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function loadItemsMultiple(array $item_ids, $flat = FALSE) {
+  public function loadItemsMultiple(array $item_ids, $group_by_datasource = FALSE) {
     $items_by_datasource = array();
     foreach ($item_ids as $item_id) {
       list($datasource_id, $raw_id) = explode(self::DATASOURCE_ID_SEPARATOR, $item_id);
@@ -775,11 +863,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
       try {
         foreach ($this->getDatasource($datasource_id)->loadMultiple($raw_ids) as $raw_id => $item) {
           $id = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $raw_id;
-          if ($flat) {
-            $items[$id] = $item;
+          if ($group_by_datasource) {
+            $items[$datasource_id][$id] = $item;
           }
           else {
-            $items[$datasource_id][$id] = $item;
+            $items[$id] = $item;
           }
         }
       }
@@ -862,8 +950,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * Lets all enabled processors for this index preprocess the indexed data.
    *
-   * @param array $items
-   *   An array of items to be preprocessed for indexing.
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be preprocessed for indexing, passed by reference.
    */
   public function preprocessIndexItems(array &$items) {
     foreach ($this->getProcessors() as $processor) {
@@ -886,23 +974,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Postprocesses search results before display.
-   *
-   * If a class is used for both pre- and post-processing a search query, the
-   * same object will be used for both calls (so preserving some data or state
-   * locally is possible).
-   *
-   * @param array $response
-   *   An array containing the search results. See
-   *   \Drupal\search_api\Plugin\search_api\QueryInterface::execute() for the
-   *   detailed format.
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The object representing the executed query.
+   * {@inheritdoc}
    */
-  public function postprocessSearchResults(array &$response, QueryInterface $query) {
+  public function postprocessSearchResults(ResultSetInterface $results) {
     foreach (array_reverse($this->getProcessors()) as $processor) {
       /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-      $processor->postprocessSearchResults($response, $query);
+      $processor->postprocessSearchResults($results);
     }
   }
 
@@ -913,23 +990,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
-      $items_by_datasource = array();
-      foreach ($next_set as $item_id) {
-        list($datasource_id, $raw_id) = Utility::getDataSourceIdentifierFromItemId($item_id);
-        $items_by_datasource[$datasource_id][] = $raw_id;
-      }
-      $items = array();
-      foreach ($items_by_datasource as $datasource_id => $item_ids) {
-        try {
-          $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-          foreach ($this->getDatasource($datasource_id)->loadMultiple($item_ids) as $raw_id => $item) {
-            $items["$prefix$raw_id"] = $item;
-          }
-        }
-        catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
-        }
-      }
+      $items = $this->loadItemsMultiple($next_set);
       if ($items) {
         try {
           $ids_indexed = $this->indexItems($items);
@@ -958,25 +1019,51 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsInserted($datasource_id, array $ids) {
-    if ($this->hasValidTracker() && $this->status()) {
-      $item_ids = array();
-      foreach ($ids as $id) {
-        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
-      }
-      $this->getTracker()->trackItemsInserted($item_ids);
-    }
+    $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
   public function trackItemsUpdated($datasource_id, array $ids) {
+    $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
+  }
+
+  /**
+   * Tracks insertion or updating of items.
+   *
+   * Used as a helper method in trackItemsInserted() and trackItemsUpdated() to
+   * avoid code duplication.
+   *
+   * @param string $datasource_id
+   *   The ID of the datasource to which the items belong.
+   * @param array $ids
+   *   An array of datasource-specific item IDs.
+   * @param string $tracker_method
+   *   The method to call on the tracker. Must be either "trackItemsInserted" or
+   *   "trackItemsUpdated".
+   */
+  protected function trackItemsInsertedOrUpdated($datasource_id, array $ids, $tracker_method) {
     if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
-        $item_ids[] = $datasource_id . self::DATASOURCE_ID_SEPARATOR . $id;
+        $item_ids[] = Utility::createCombinedId($datasource_id, $id);
       }
-      $this->getTracker()->trackItemsUpdated($item_ids);
+      $this->getTracker()->$tracker_method($item_ids);
+      if ($this->options['index_directly']) {
+        try {
+          $items = $this->loadItemsMultiple($item_ids);
+          if ($items) {
+            $indexed_ids = $this->indexItems($items);
+            if ($indexed_ids) {
+              $this->getTracker()->trackItemsIndexed($indexed_ids);
+            }
+          }
+        }
+        catch (SearchApiException $e) {
+          watchdog_exception('search_api', $e);
+        }
+      }
     }
   }
 
@@ -1016,6 +1103,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->trackerPluginInstance = NULL;
     $this->server = NULL;
     $this->fields = NULL;
+    $this->datasourceFields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
     Cache::invalidateTags(array('search_api_index' => array($this->id())));
@@ -1039,7 +1127,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->disable();
     }
 
-    // Always enable the "Langue control" processor and corresponding "Item
+    // Always enable the "Language control" processor and corresponding "Item
     // language" field.
     // @todo Replace this with a cleaner, more flexible approach. See
     // https://drupal.org/node/2090341
@@ -1236,7 +1324,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Add the list of datasource dependencies collected from the plugin itself.
     foreach ($this->getDatasources() as $datasource) {
-      $this->addDependencies($datasource->getDependencies());
+      $this->addDependencies($datasource->calculateDependencies());
     }
 
     return $this->dependencies;

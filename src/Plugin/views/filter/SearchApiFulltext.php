@@ -206,13 +206,13 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   protected function getFulltextFields() {
     $fields = array();
-    $index = entity_load('search_api_index', substr($this->table, 17));
-    if (!empty($index->options['fields'])) {
-      $f = $index->getFields();
-      foreach ($index->getFulltextFields() as $name) {
-        $fields[$name] = $f[$name]['name'];
-      }
+    $index = $this->query->getIndex();
+
+    $fields_info = $index->getFields();
+    foreach ($index->getFulltextFields() as $field_id) {
+      $fields[$field_id] = $fields_info[$field_id]->getPrefixedLabel();
     }
+
     return $fields;
   }
 

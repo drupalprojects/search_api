@@ -307,11 +307,7 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Executes the query and fills the associated view object with according
-   * values.
-   *
-   * Values to set: $view->result, $view->total_rows, $view->execute_time,
-   * $view->pager['current_page'].
+   * {@inheritdoc}
    */
   public function execute(ViewExecutable $view) {
     if ($this->errors || $this->abort) {
@@ -356,18 +352,16 @@ class SearchApiQuery extends QueryPluginBase {
 
       // Store the results.
       if (!$skip_result_count) {
-        $view->pager->total_items = $view->total_rows = $results['result count'];
+        $view->pager->total_items = $view->total_rows = $results->getResultCount();
         if (!empty($this->pager->options['offset'])) {
           $this->pager->total_items -= $this->pager->options['offset'];
         }
         $view->pager->updatePageInfo();
       }
       $view->result = array();
-      if (!empty($results['results'])) {
-        $this->addResults($results['results'], $view);
+      if ($results->getResultItems()) {
+        $this->addResults($results->getResultItems(), $view);
       }
-      // We shouldn't use $results['performance']['complete'] here, since
-      // extracting the results probably takes considerable time as well.
       $view->execute_time = microtime(TRUE) - $start;
 
       // Trigger pager postExecute().
@@ -397,18 +391,23 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Helper function for adding results to a view in the format expected by the
-   * view.
+   * Adds Search API result items to a view's result set.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $results
+   *   The search results.
+   * @param \Drupal\views\ViewExecutable $view
+   *   The executed view.
    */
-  protected function addResults(array $results, $view) {
+  protected function addResults(array $results, ViewExecutable $view) {
+    /** @var \Drupal\views\ResultRow[] $rows */
     $rows = array();
     $missing = array();
-    $items = array();
 
     // First off, we try to gather as much field values as possible without
     // loading any items.
-    foreach ($results as $key => $result) {
-      $id = $result['id'];
+    foreach ($results as $item_id => $result) {
+      $datasource_id = $result->getDatasourceId();
+
       /*if (!empty($this->options['entity_access'])) {
         $entity = entity_load($this->index->item_type, $id);
         if (!$entity[$id]->access('view')) {
@@ -416,76 +415,58 @@ class SearchApiQuery extends QueryPluginBase {
         }
       }*/
 
-      $values['search_api_id'] = $id;
-      $values['search_api_datasource'] = $result['datasource'];
+      $values['search_api_id'] = $item_id;
+      $values['search_api_datasource'] = $datasource_id;
 
       // Include the loaded item for this result row, if present, or the item
       // ID.
-      if (!empty($result['_item'])) {
-        $values['_item'] = $result['_item'];
-      }
-      else {
-        $values['_item'] = $id;
+      $values['_item'] = $result->getOriginalObject(FALSE);
+      if (!$values['_item']) {
+        $values['_item'] = $item_id;
       }
 
-      $values['search_api_relevance'] = $result['score'];
-      $values['search_api_excerpt'] = empty($result['excerpt']) ? '' : $result['excerpt'];
+      $values['search_api_relevance'] = $result->getScore();
+      $values['search_api_excerpt'] = $result->getExcerpt() ?: '';
 
       // Gather any fields from the search results.
-      if (!empty($result['fields'])) {
-        $values += $result['fields'];
+      foreach ($result->getFields(FALSE) as $field_id => $field) {
+        if ($field->getValues()) {
+          $values[$field_id] = $field->getValues();
+        }
       }
 
       // Check whether we need to extract any properties from the result item.
       $missing_fields = array_diff_key($this->fields, $values);
       if ($missing_fields) {
-        $missing[$result['datasource']][$id] = $missing_fields;
-        if (is_object($values['_item'])) {
-          $items[$id] = $values['_item'];
-        }
-        else {
-          $item_ids[] = $key;
+        $missing[$item_id] = $missing_fields;
+        if (!is_object($values['_item'])) {
+          $item_ids[] = $item_id;
         }
       }
 
       // Save the row values for adding them to the Views result afterwards.
-      $rows[$key] = new ResultRow($values);
+      $rows[$item_id] = new ResultRow($values);
     }
 
     // Load items of those rows which haven't got all field values, yet.
     if (!empty($item_ids)) {
-      // Load the items and assign them to the rows.
-      foreach ($this->index->loadItemsMultiple($item_ids) as $datasource_id => $items) {
-        foreach ($items as $key => $item) {
-          // Extract item properties.
-          //$wrapper = $this->index->entityWrapper($item, FALSE);
-          //$rows[$id]->_entity_properties += $this->extractFields($wrapper, $missing[$id]);
-          $rows[$key]->_item = $item;
+      foreach ($this->index->loadItemsMultiple($item_ids) as $item_id => $object) {
+        $results[$item_id]->setOriginalObject($object);
+        $rows[$item_id]->_item = $object;
+      }
+    }
+
+    foreach ($missing as $item_id => $missing_fields) {
+      foreach ($missing_fields as $field_id) {
+        $field = $results[$item_id]->getField($field_id);
+        if ($field) {
+          $rows[$item_id]->$field_id = $field->getValues();
         }
       }
     }
 
     // Finally, add all rows to the Views result set.
     $view->result = array_values($rows);
-  }
-
-  /**
-   * Helper function for extracting all necessary fields from a result item.
-   *
-   * Usually, this method isn't needed anymore as the properties are now
-   * extracted by the field handlers themselves.
-   */
-  protected function extractFields(EntityMetadataWrapper $wrapper, array $all_fields) {
-    $fields = array();
-    foreach ($all_fields as $key => $true) {
-      $fields[$key]['type'] = 'string';
-    }
-    $fields = search_api_extract_fields($wrapper, $fields, array('sanitized' => TRUE));
-    $ret = array();
-    foreach ($all_fields as $key => $true) {
-      $ret[$key] = isset($fields[$key]['value']) ? $fields[$key]['value'] : '';
-    }
-    return $ret;
   }
 
   /**

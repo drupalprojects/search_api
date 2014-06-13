@@ -2,18 +2,25 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiContentAccessProcessorTest.
+ * Contains \Drupal\search_api\Tests\Processor\SearchApiContentAccessProcessorTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\search_api\Tests\Processor;
 
-use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
 /**
  * Tests the ContentAccess processor.
  */
 class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
+
+  /**
+   * Stores the processor to be tested.
+   *
+   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+   */
+  protected $processor;
 
   /**
    * @var \Drupal\comment\Entity\Comment[]
@@ -55,10 +62,9 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
 
     // Insert anonymous user into the database as the user table is inner joined
     // by the CommentStorage.
-    $anonymous_user = new AnonymousUserSession();
     entity_create('user', array(
-      'uid' => $anonymous_user->id(),
-      'name' => $anonymous_user->getUsername(),
+      'uid' => 0,
+      'name' => '',
     ))->save();
 
     // Create a node with attached comment.
@@ -77,8 +83,13 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $fields['entity:node|search_api_node_grants'] = array(
       'type' => 'string',
     );
+    $fields['entity:comment|search_api_node_grants'] = array(
+      'type' => 'string',
+    );
     $this->index->setOption('fields', $fields);
     $this->index->save();
+
+    $this->index = entity_load('search_api_index', $this->index->id(), TRUE);
   }
 
   /**
@@ -90,7 +101,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query = Query::create($this->index);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 2, 'The result should contain all items');
+    $this->assertEqual($result->getResultCount(), 2, 'The result contains all items.');
   }
 
   /**
@@ -98,7 +109,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
    */
   public function testQueryAccessWithNodeGrants() {
     // Create user that will be passed into the query.
-    $authenticated_user = $this->createUser(array(), array('access content'));
+    $authenticated_user = $this->createUser(array('uid' => 2), array('access content'));
 
     db_insert('node_access')
       ->fields(array(
@@ -115,7 +126,7 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertEqual($result['result count'], 1, 'The result should contain only one item to which the user has granted access');
+    $this->assertEqual($result->getResultCount(), 1, 'The result should contain only one item to which the user has granted access');
   }
 
   /**
@@ -135,8 +146,10 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access__all'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access__all'));
     }
   }
 
@@ -150,14 +163,16 @@ class SearchApiContentAccessProcessorTest extends SearchApiProcessorTestBase {
         'datasource' => 'entity:comment',
         'item' => $comment,
         'item_id' => $comment->id(),
-        'text' => $this->randomName(),
+        'field_text' => $this->randomName(),
       );
     }
     $items = $this->generateItems($items);
 
     $this->processor->preprocessIndexItems($items);
+
+    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
     foreach ($items as $item) {
-      $this->assertEqual($item['entity:node|search_api_node_grants']['value'], array('node_access_search_api_test:0'));
+      $this->assertEqual($item->getField($field_id)->getValues(), array('node_access_search_api_test:0'));
     }
   }
 

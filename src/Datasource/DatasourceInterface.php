@@ -62,10 +62,10 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function loadMultiple(array $ids);
 
   /**
-   * Retrieves the unique ID of an item.
+   * Retrieves the unique ID of an object from this datasource.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
-   *   An item of this controller's type.
+   *   An object from this datasource.
    *
    * @return string
    *   The datasource-internal, unique ID of the item.
@@ -168,23 +168,5 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @todo Change to single $page parameter.
    */
   public function getItemIds($limit = -1, $from = NULL);
-
-
-  /**
-   * Returns the list of dependencies of this datasource.
-   *
-   * @return array
-   *   An array of dependencies keyed by the type of dependency. For example:
-   * @code
-   * array(
-   *   'module' => array(
-   *     'node',
-   *     'field',
-   *     'image'
-   *   ),
-   * );
-   * @endcode
-   */
-  public function getDependencies();
 
 }
