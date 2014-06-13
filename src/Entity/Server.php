@@ -304,7 +304,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
     }
-    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
+    $server_task_manager->add($this, __FUNCTION__, $index);
   }
 
   /**
@@ -332,9 +332,10 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function removeIndex($index) {
+    $server_task_manager = Utility::getServerTaskManager();
     // When removing an index from a server, it doesn't make any sense anymore
     // to delete items from it, or react to other changes.
-    Utility::getServerTaskManager()->delete(NULL, $this, $index);
+    $server_task_manager->delete(NULL, $this, $index);
 
     try {
       $this->getBackend()->removeIndex($index);
@@ -345,7 +346,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => is_object($index) ? $index->label() : $index,
       );
       watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
-      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
+      $server_task_manager->add($this, __FUNCTION__, $index);
     }
   }
 
@@ -381,7 +382,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
     }
-    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, $ids);
+    $server_task_manager->add($this, __FUNCTION__, $index, $ids);
   }
 
   /**
@@ -410,7 +411,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       );
       watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: !message in %function (line %line of %file).', $vars);
     }
-    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
+    $server_task_manager->add($this, __FUNCTION__, $index);
   }
 
   /**
