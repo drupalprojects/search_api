@@ -145,9 +145,9 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    */
   protected function processField(FieldInterface $field) {
     $values = $field->getValues();
+    $type = $field->getType();
 
     foreach ($values as &$value) {
-      $type = $field->getType();
       if ($type == 'tokenized_text') {
         foreach ($value as &$tokenized_value) {
           $this->processFieldValue($tokenized_value['value'], $type);
