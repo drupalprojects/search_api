@@ -116,7 +116,7 @@ search_api.processor.plugin.role_filter:
       sequence:
         - type: string
           label: 'The role name'
-search_api.processor.plugin.search_api_html_filter_processor:
+search_api.processor.plugin.html_filter:
   type: mapping
   label: 'HTML filter processor'
   mapping:
