@@ -46,6 +46,7 @@ class SearchApiServerStorageUnitTest extends KernelTestBase {
   protected function setUp() {
     parent::setUp();
 
+    $this->installSchema('search_api', array('search_api_task'));
     $this->controller = $this->container->get('entity.manager')->getStorage('search_api_server');
   }
 
