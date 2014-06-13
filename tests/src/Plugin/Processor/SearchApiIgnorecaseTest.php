@@ -87,7 +87,7 @@ class SearchApiIgnorecaseTest extends UnitTestCase {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
 
-    $this->processor = new Ignorecase(array(), 'search_api_ignorecase_processor', array());
+    $this->processor = new Ignorecase(array(), 'ignorecase', array());
 
     $this->fulltext_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_name';
     $this->string_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_mail';

@@ -62,7 +62,7 @@ search_api.processor.plugin.transliteration:
 search_api.processor.plugin.search_api_language_processor:
   type: mapping
   label: 'Language processor configuration'
-search_api.processor.plugin.search_api_ignorecase_processor:
+search_api.processor.plugin.ignorecase:
   type: mapping
   label: 'Ignore case processor configuration'
   mapping:
@@ -138,13 +138,3 @@ search_api.processor.plugin.search_api_html_filter_processor:
 search_api.processor.plugin.search_api_add_aggregation_processor:
   type: mapping
   label: 'Add aggregation processor'
-search_api.processor.plugin.search_api_ignorecase_processor:
-  type: mapping
-  label: 'Ignore case processor'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'The field name'

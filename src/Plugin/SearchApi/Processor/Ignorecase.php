@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Unicode;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_ignorecase_processor",
+ *   id = "ignorecase",
  *   label = @Translation("Ignore case processor"),
  *   description = @Translation("Ignore case in strings")
  * )
