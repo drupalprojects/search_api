@@ -354,7 +354,11 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
-    return $this->getBackend()->indexItems($index, $items);
+    $server_task_manager = Utility::getServerTaskManager();
+    if ($server_task_manager->execute($this)) {
+      return $this->getBackend()->indexItems($index, $items);
+    }
+    throw new SearchApiException(t('Could not index items because pending server tasks could not be executed.'));
   }
 
   /**
