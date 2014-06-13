@@ -38,13 +38,6 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
   protected $index;
 
   /**
-   * The content entity datasource.
-   *
-   * @var \Drupal\search_api\Datasource\DatasourceInterface
-   */
-  protected $datasource;
-
-  /**
    * Modules to enable.
    *
    * @var array
@@ -90,8 +83,6 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'options' => array('index_directly' => FALSE),
     ));
     $this->index->save();
-
-    $this->datasource = $this->index->getDatasource('entity:' . $this->testEntityTypeId);
   }
 
   /**
@@ -105,7 +96,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_1->save();
-    $this->assertEqual($entity_1->language()->id, Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_1->language()->getId(), Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity_2 */
@@ -115,11 +106,12 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_2->save();
-    $this->assertEqual($entity_2->language()->id, Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_2->language()->getId(), Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_2->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
-    $datasource_item_ids = $this->datasource->getItemIds();
+    $datasource = $this->index->getDatasource('entity:' . $this->testEntityTypeId);
+    $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . Language::LANGCODE_NOT_SPECIFIED,
@@ -135,13 +127,13 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
 
     // Now, make the first entity language-specific by assigning a language.
     $default_langcode = $this->langcodes[0];
-    $entity_1->langcode->value = $default_langcode;
+    $entity_1->get('langcode')->setValue($default_langcode);
     $entity_1->save();
     $this->assertEqual($entity_1->language(), \Drupal::languageManager()->getLanguage($this->langcodes[0]), String::format('%entity_type: Entity language retrieved.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
-    $datasource_item_ids = $this->datasource->getItemIds();
+    $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
@@ -155,11 +147,14 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
 
     // Set two translations for the first entity and test that the datasource
     // returns three separate item IDs for each translation.
-    $entity_1->getTranslation($this->langcodes[1])->save();
-    $entity_1->getTranslation($this->langcodes[2])->save();
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $translation */
+    $translation = $entity_1->getTranslation($this->langcodes[1]);
+    $translation->save();
+    $translation = $entity_1->getTranslation($this->langcodes[2]);
+    $translation->save();
     $this->assertTrue($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: Translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
-    $datasource_item_ids = $this->datasource->getItemIds();
+    $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
@@ -178,7 +173,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $entity_1->removeTranslation($this->langcodes[2]);
     $entity_1->save();
 
-    $datasource_item_ids = $this->datasource->getItemIds();
+    $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
