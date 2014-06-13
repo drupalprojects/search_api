@@ -13,7 +13,7 @@ use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_stopwords_processor",
+ *   id = "stopwords",
  *   label = @Translation("Stop words processor"),
  *   description = @Translation("Words to be filtered out before indexing")
  * )

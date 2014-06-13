@@ -17,7 +17,7 @@ search_api.processor.plugin.search_api_rendered_item:
 search_api.processor.plugin.node_status:
   type: mapping
   label: 'Node status processor configuration'
-search_api.processor.plugin.search_api_stopwords_processor:
+search_api.processor.plugin.stopwords:
   type: mapping
   label: 'Stopwords processor configuration'
   mapping:
@@ -33,7 +33,7 @@ search_api.processor.plugin.search_api_stopwords_processor:
     stopwords:
       type: text
       label: 'Defined stopwords'
-search_api.processor.plugin.search_api_tokenizer_processor:
+search_api.processor.plugin.tokenizer:
   type: mapping
   label: 'Tokenizer processor configuration'
   mapping:
