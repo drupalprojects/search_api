@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiOverviewPageTest.
+ * Contains \Drupal\search_api\Tests\OverviewPageTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -13,7 +13,7 @@ use Drupal\search_api\Server\ServerInterface;
 /**
  * Tests the Search API overview page.
  */
-class SearchApiOverviewPageTest extends SearchApiWebTestBase {
+class OverviewPageTest extends SearchApiWebTestBase {
 
   /**
    * The path of the overview page.

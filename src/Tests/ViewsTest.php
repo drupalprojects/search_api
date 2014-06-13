@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiViewsTest.
+ * Contains \Drupal\search_api\Tests\ViewsTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests;
 /**
  * Provides views tests for Search API.
  */
-class SearchApiViewsTest extends SearchApiWebTestBase {
+class ViewsTest extends SearchApiWebTestBase {
 
   use ExampleContentTrait;
 

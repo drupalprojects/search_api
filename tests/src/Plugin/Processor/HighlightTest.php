@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiHighlightTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -36,7 +36,7 @@ $field = Utility::createField($this->index, 'field1');
 $result_items['test:1']->setField('field1', $field);
 …
 */
-class SearchApiHighlightTest extends UnitTestCase {
+class HighlightTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.

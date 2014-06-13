@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Menu\SearchApiLocalTasksTest.
+ * Contains \Drupal\search_api\Tests\Menu\LocalTasksTest.
  */
 
 namespace Drupal\search_api\Tests\Menu;
@@ -15,7 +15,7 @@ use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
  * @group Drupal
  * @group search_api
  */
-class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
+class LocalTasksTest extends LocalTaskIntegrationTest {
 
   /**
    * {@inheritdoc}
@@ -38,9 +38,9 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
   /**
    * Tests local task existence.
    *
-   * @dataProvider getSearchAPIPageRoutesServer
+   * @dataProvider getPageRoutesServer
    */
-  public function testSearchAPILocalTasksServer($route) {
+  public function testLocalTasksServer($route) {
     $tasks = array(
       0 => array('search_api.server_view', 'search_api.server_edit'),
     );
@@ -50,9 +50,9 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
   /**
    * Tests local task existence.
    *
-   * @dataProvider getSearchAPIPageRoutesIndex
+   * @dataProvider getPageRoutesIndex
    */
-  public function testSearchAPILocalTasksIndex($route) {
+  public function testLocalTasksIndex($route) {
     $tasks = array(
       0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
     );
@@ -62,7 +62,7 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
   /**
    * Provides a list of routes to test.
    */
-  public function getSearchAPIPageRoutesServer() {
+  public function getPageRoutesServer() {
     return array(
       array('search_api.server_view'),
       array('search_api.server_edit'),
@@ -72,7 +72,7 @@ class SearchApiLocalTasksTest extends LocalTaskIntegrationTest {
   /**
    * Provides a list of routes to test.
    */
-  public function getSearchAPIPageRoutesIndex() {
+  public function getPageRoutesIndex() {
     return array(
       array('search_api.index_view'),
       array('search_api.index_edit'),
