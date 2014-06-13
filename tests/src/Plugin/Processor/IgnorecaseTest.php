@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiIgnorecaseTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\IgnoreCaseTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -21,7 +21,7 @@ use Drupal\Component\Utility\Unicode;
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
  */
-class SearchApiIgnorecaseTest extends UnitTestCase {
+class IgnoreCaseTest extends UnitTestCase {
 
   use TestItemsTrait;
 

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Menu\SearchApiLocalActionsTest.
+ * Contains \Drupal\search_api\Tests\Menu\LocalActionsTest.
  */
 
 namespace Drupal\search_api\Tests\Menu;
@@ -15,7 +15,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class SearchApiLocalActionsTest extends UnitTestCase {
+class LocalActionsTest extends UnitTestCase {
 
   /**
    * {@inheritdoc}

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiStopwordsTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -18,7 +18,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class SearchApiRoleFilterTest extends UnitTestCase {
+class RoleFilterTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.

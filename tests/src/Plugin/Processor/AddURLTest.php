@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiAddURLTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\AddUrlTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -20,7 +20,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
  */
-class SearchApiAddURLTest extends UnitTestCase {
+class AddUrlTest extends UnitTestCase {
 
   use TestItemsTrait;
 
