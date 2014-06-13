@@ -323,10 +323,12 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function removeIndex(IndexInterface $index) {
+  public function removeIndex($index) {
     // When removing an index from a server, it doesn't make any sense anymore to
     // delete items from it, or react to other changes.
-    \Drupal::service('search_api.server_task_manager')->delete(NULL, NULL, $index);
+    /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
+    $server_task_manager = \Drupal::service('search_api.server_task_manager');
+    $server_task_manager->delete(NULL, $this, $index);
 
     try {
       $this->getBackend()->removeIndex($index);

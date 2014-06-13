@@ -57,6 +57,6 @@ interface ServerTaskManagerInterface {
    *   (optional) An index (or its machine name) for which the tasks should be
    *   deleted. Set to NULL to delete tasks for all indexes.
    */
-  public function delete(array $ids = NULL, ServerInterface $server = NULL, IndexInterface $index = NULL);
+  public function delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL);
 
 }

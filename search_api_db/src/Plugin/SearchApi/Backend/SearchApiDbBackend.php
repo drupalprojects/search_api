@@ -12,7 +12,6 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Render\Element;
-use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
@@ -673,7 +672,15 @@ class SearchApiDbBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function removeIndex(IndexInterface $index) {
+  public function removeIndex($index) {
+    if (!is_object($index)) {
+      // If the index got deleted, create a dummy to simplify the code.
+      $index = entity_create('search_api_index', array(
+        'id' => $index,
+        'readOnly' => TRUE,
+      ));
+    }
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     try {
       if (!isset($this->configuration['field_tables'][$index->id()]) && !isset($this->configuration['index_tables'][$index->id()])) {
         return;

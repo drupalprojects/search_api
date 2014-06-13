@@ -136,5 +136,5 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * {@inheritdoc}
    */
-  public function removeIndex(IndexInterface $index) {}
+  public function removeIndex($index) {}
 }

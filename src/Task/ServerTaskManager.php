@@ -9,6 +9,7 @@ namespace Drupal\search_api\Task;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Server\ServerInterface;
 
@@ -57,15 +58,12 @@ class ServerTaskManager implements ServerTaskManagerInterface {
       $select->condition('t.server_id', $server->id());
     }
     else {
-      // By ordering by the server, we can later just load them when we reach them
-      // while looping through the tasks. It is very unlikely there will be tasks
-      // for more than one or two servers, so a *_load_multiple() probably
+      // By ordering by the server, we can later just load them when we reach
+      // them while looping through the tasks. It is very unlikely there will be
+      // tasks for more than one or two servers, so a *_load_multiple() probably
       // wouldn't bring any significant advantages, but complicate the code.
       $select->orderBy('t.server_id');
     }
-    // Store a count query for later checking whether all tasks were processed
-    // successfully.
-    $count_query = $select->countQuery();
 
     // Sometimes the order of tasks might be important, so make sure to order by
     // the task ID (which should be in order of insertion).
@@ -73,64 +71,79 @@ class ServerTaskManager implements ServerTaskManagerInterface {
     $tasks = $select->execute();
 
     $executed_tasks = array();
+    $failing_servers = array();
     foreach ($tasks as $task) {
-      if (!$server || $server->id() != $task->server_id) {
-        $server = $this->loadServer($task->server_id);
-        if (!$server) {
-          continue;
+      if (isset($failing_servers[$task->server_id])) {
+        continue;
+      }
+      try {
+        if (!$server || $server->id() != $task->server_id) {
+          $server = $this->loadServer($task->server_id);
+          if (!$server) {
+            continue;
+          }
         }
-      }
-      $index = NULL;
-      if ($task->index_id) {
-        $index = $this->loadIndex($task->index_id);
-      }
-      switch ($task->type) {
-        case 'addIndex':
-          if ($index) {
-            $server->addIndex($index);
-          }
-          break;
-
-        case 'updateIndex':
-          if ($index) {
-            if ($task->data) {
-              $index->original = unserialize($task->data);
+        $index = NULL;
+        if ($task->index_id) {
+          $index = $this->loadIndex($task->index_id);
+        }
+        switch ($task->type) {
+          case 'addIndex':
+            if ($index) {
+              $server->getBackend()->addIndex($index);
             }
-            $server->updateIndex($index);
-          }
-          break;
+            break;
 
-        case 'removeIndex':
-          if ($index) {
-            $server->removeIndex($index ? $index : $task->index_id);
-          }
-          break;
+          case 'updateIndex':
+            if ($index) {
+              if ($task->data) {
+                $index->original = unserialize($task->data);
+              }
+              $server->getBackend()->updateIndex($index);
+            }
+            break;
 
-        case 'deleteItems':
-          $ids = unserialize($task->data);
-          $server->deleteItems($index, $ids);
-          break;
+          case 'removeIndex':
+            if ($index) {
+              $server->getBackend()->removeIndex($index ? $index : $task->index_id);
+              $this->delete(NULL, $server, $index);
+            }
+            break;
 
-        case 'deleteAllIndexItems':
-          if ($index) {
-            $server->deleteAllIndexItems($index);
-          }
-          break;
+          case 'deleteItems':
+            if ($index && !$index->isReadOnly()) {
+              $ids = unserialize($task->data);
+              $server->getBackend()->deleteItems($index, $ids);
+            }
+            break;
 
-        default:
-          // This should never happen.
-          continue;
+          case 'deleteAllIndexItems':
+            if ($index && !$index->isReadOnly()) {
+              $server->getBackend()->deleteAllIndexItems($index);
+            }
+            break;
+
+          default:
+            // This should never happen.
+            continue;
+        }
+        $executed_tasks[] = $task->id;
       }
-      $executed_tasks[] = $task->id;
+      catch (SearchApiException $e) {
+        // If a task fails, we don't want to execute any other tasks for that
+        // server (since order might be important).
+        watchdog_exception('search_api', $e);
+        $failing_servers[$task->server_id] = TRUE;
+      }
     }
 
-    // If there were no tasks (we recognized), return TRUE.
-    if (!$executed_tasks) {
-      return TRUE;
+    // Delete all successfully executed tasks.
+    if ($executed_tasks) {
+      $this->delete($executed_tasks);
     }
-    // Otherwise, delete the executed tasks and check if new tasks were created.
-    $this->delete($executed_tasks);
-    return $count_query->execute()->fetchField() === 0;
+    // Return TRUE if no tasks failed (i.e., if we didn't mark any server as
+    // failing).
+    return (bool) $failing_servers;
   }
 
   /**
@@ -150,7 +163,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function delete(array $ids = NULL, ServerInterface $server = NULL, IndexInterface $index = NULL) {
+  public function delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
     $delete = $this->database->delete('search_api_task');
     if ($ids) {
       $delete->condition('id', $ids);
@@ -159,7 +172,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
       $delete->condition('server_id', $server->id());
     }
     if ($index) {
-      $delete->condition('index_id', $index->id());
+      $delete->condition('index_id', $index instanceof IndexInterface ? $index->id() : $index);
     }
     $delete->execute();
   }
@@ -167,10 +180,10 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   /**
    * Loads a search server.
    *
-   * @param $server_id
+   * @param string $server_id
    *   The server's machine name.
    *
-   * @return \Drupal\search_api\Server\ServerInterface
+   * @return \Drupal\search_api\Server\ServerInterface|null
    *   The loaded server, or NULL if it could not be loaded.
    */
   protected function loadServer($server_id) {
@@ -180,10 +193,10 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   /**
    * Loads a search index.
    *
-   * @param $index_id
+   * @param string $index_id
    *   The index's machine name.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\Index\IndexInterface|null
    *   The loaded index, or NULL if it could not be loaded.
    */
   protected function loadIndex($index_id) {

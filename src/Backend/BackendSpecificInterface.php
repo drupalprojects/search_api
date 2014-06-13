@@ -107,14 +107,14 @@ interface BackendSpecificInterface {
    * Implementations of this method should also check whether $index->read_only
    * is set, and don't delete any indexed data if it is.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface|string $index
    *   Either an object representing the index to remove, or its machine name
    *   (if the index was completely deleted).
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while removing the index.
    */
-  public function removeIndex(IndexInterface $index);
+  public function removeIndex($index);
 
   /**
    * Indexes the specified items.
