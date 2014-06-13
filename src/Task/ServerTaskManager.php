@@ -149,7 +149,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
     }
     // Return TRUE if no tasks failed (i.e., if we didn't mark any server as
     // failing).
-    return (bool) $failing_servers;
+    return !$failing_servers;
   }
 
   /**
