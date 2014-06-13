@@ -164,8 +164,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       }
 
       // Don't tokenize non-fulltext content!
-      if (Utility::isTextType($type, array('text', 'tokenized_text')) || $type_changed_to_tokenized) {
-        // @todo : needs work to validate the data schema of drupal
+      if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
         if (is_array($value)) {
           $value = $this->normalizeTokens($value);
         }
