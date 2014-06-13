@@ -42,7 +42,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
    *
    * @var \Drupal\search_api\Datasource\DatasourceInterface
    */
-  protected $datasouce;
+  protected $datasource;
 
   /**
    * Modules to enable.
@@ -91,7 +91,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     ));
     $this->index->save();
 
-    $this->datasouce = $this->index->getDatasource('entity:' . $this->testEntityTypeId);
+    $this->datasource = $this->index->getDatasource('entity:' . $this->testEntityTypeId);
   }
 
   /**
@@ -119,7 +119,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertFalse($entity_2->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
-    $datasource_item_ids = $this->datasouce->getItemIds();
+    $datasource_item_ids = $this->datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . Language::LANGCODE_NOT_SPECIFIED,
@@ -141,7 +141,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
-    $datasource_item_ids = $this->datasouce->getItemIds();
+    $datasource_item_ids = $this->datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
@@ -159,7 +159,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $entity_1->getTranslation($this->langcodes[2])->save();
     $this->assertTrue($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: Translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
-    $datasource_item_ids = $this->datasouce->getItemIds();
+    $datasource_item_ids = $this->datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
@@ -178,7 +178,7 @@ class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $entity_1->removeTranslation($this->langcodes[2]);
     $entity_1->save();
 
-    $datasource_item_ids = $this->datasouce->getItemIds();
+    $datasource_item_ids = $this->datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
