@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_rendered_item",
+ *   id = "rendered_item",
  *   label = @Translation("Rendered Item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed.")
  * );
@@ -120,7 +120,7 @@ class RenderedItem extends ProcessorPluginBase {
       'label' => $this->t('Rendered HTML output'),
       'description' => $this->t('The complete HTML which would be created when viewing the item.'),
     );
-    $properties['search_api_rendered_item'] = new DataDefinition($definition);
+    $properties['rendered_item'] = new DataDefinition($definition);
   }
 
   /**
@@ -138,7 +138,7 @@ class RenderedItem extends ProcessorPluginBase {
     /** @var \Drupal\search_api\Item\FieldInterface[] $item_fields */
     $item_fields = array();
     foreach ($items as $item_id => $item) {
-      if (!($field = $item->getField('search_api_rendered_item'))) {
+      if (!($field = $item->getField('rendered_item'))) {
         continue;
       }
       $item_fields[$item_id] = $field;

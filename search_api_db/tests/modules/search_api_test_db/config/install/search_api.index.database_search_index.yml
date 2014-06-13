@@ -20,7 +20,7 @@ options:
     search_api_language:
       type: string
   processors:
-    search_api_language_processor:
+    language:
       status: true
 datasourcePluginIds:
   - 'entity:entity_test'

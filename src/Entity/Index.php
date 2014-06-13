@@ -1131,7 +1131,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // language" field.
     // @todo Replace this with a cleaner, more flexible approach. See
     // https://drupal.org/node/2090341
-    $this->options['processors']['search_api_language_processor']['status'] = TRUE;
+    $this->options['processors']['language']['status'] = TRUE;
     $this->options['fields']['search_api_language'] = array('type' => 'string');
   }
 

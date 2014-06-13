@@ -1,4 +1,4 @@
-search_api.processor.plugin.search_api_rendered_item:
+search_api.processor.plugin.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
   mapping:
@@ -59,7 +59,7 @@ search_api.processor.plugin.transliteration:
       sequence:
         - type: string
           label: 'Selected field'
-search_api.processor.plugin.search_api_language_processor:
+search_api.processor.plugin.language:
   type: mapping
   label: 'Language processor configuration'
 search_api.processor.plugin.ignorecase:
