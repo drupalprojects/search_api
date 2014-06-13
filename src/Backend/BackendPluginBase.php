@@ -80,7 +80,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function supportsFeature($feature) {
-    return $feature === 'search_api_backend_extra';
+    return FALSE;
   }
 
   /**
