@@ -290,8 +290,12 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function addIndex(IndexInterface $index) {
+    $server_task_manager = Utility::getServerTaskManager();
     try {
-      $this->getBackend()->addIndex($index);
+      if ($server_task_manager->execute($this)) {
+        $this->getBackend()->addIndex($index);
+        return;
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -299,16 +303,19 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
-      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
     }
+    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
   }
 
   /**
    * {@inheritdoc}
    */
   public function updateIndex(IndexInterface $index) {
+    $server_task_manager = Utility::getServerTaskManager();
     try {
-      $this->getBackend()->updateIndex($index);
+      if ($server_task_manager->execute($this)) {
+        return $this->getBackend()->updateIndex($index);
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -316,8 +323,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
-      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
     }
+    $server_task_manager->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
     return FALSE;
   }
 
@@ -325,8 +332,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function removeIndex($index) {
-    // When removing an index from a server, it doesn't make any sense anymore to
-    // delete items from it, or react to other changes.
+    // When removing an index from a server, it doesn't make any sense anymore
+    // to delete items from it, or react to other changes.
     Utility::getServerTaskManager()->delete(NULL, $this, $index);
 
     try {
@@ -361,16 +368,20 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       return;
     }
 
+    $server_task_manager = Utility::getServerTaskManager();
     try {
-      $this->getBackend()->deleteItems($index, $ids);
+      if ($server_task_manager->execute($this)) {
+        $this->getBackend()->deleteItems($index, $ids);
+        return;
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
         '%server' => $this->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
-      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, $ids);
     }
+    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index, $ids);
   }
 
   /**
@@ -385,8 +396,12 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       return;
     }
 
+    $server_task_manager = Utility::getServerTaskManager();
     try {
-      $this->getBackend()->deleteAllIndexItems($index);
+      if ($server_task_manager->execute($this)) {
+        $this->getBackend()->deleteAllIndexItems($index);
+        return;
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -394,8 +409,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: !message in %function (line %line of %file).', $vars);
-      Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
     }
+    Utility::getServerTaskManager()->add($this, __FUNCTION__, $index);
   }
 
   /**

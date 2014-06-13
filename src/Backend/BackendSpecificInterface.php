@@ -104,8 +104,8 @@ interface BackendSpecificInterface {
    *
    * If the index wasn't added to the server, the method call should be ignored.
    *
-   * Implementations of this method should also check whether $index->read_only
-   * is set, and don't delete any indexed data if it is.
+   * Implementations of this method should also check whether
+   * $index->isReadOnly() and don't delete any indexed data if it is.
    *
    * @param \Drupal\search_api\Index\IndexInterface|string $index
    *   Either an object representing the index to remove, or its machine name
