@@ -11,7 +11,7 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_transliteration_processor",
+ *   id = "transliteration",
  *   label = @Translation("Transliteration processor"),
  *   description = @Translation("Processor for making searches insensitive to accents and other non-ASCII characters.")
  * )

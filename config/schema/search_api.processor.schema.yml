@@ -49,7 +49,7 @@ search_api.processor.plugin.search_api_tokenizer_processor:
     ignorable:
       type: string
       label: 'Regular expression for ignorables'
-search_api.processor.plugin.search_api_transliteration_processor:
+search_api.processor.plugin.transliteration:
   type: mapping
   label: 'Transliteration processor configuration'
   mapping:
