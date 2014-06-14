@@ -104,17 +104,14 @@ class IgnoreCharacterTest extends UnitTestCase {
       array('wo᧧rds', 'words', 'So'),
       array('w᧶ord᧲s', 'words', 'So'),
 
-      array('wor—ds', 'words', 'Cc'),
-      array('woœrd™s', 'words', 'Cc'),
+      //array('worœds', 'words', 'Cc'),
+      //array('woƒrds', 'words', 'Cc'),
 
       array('word۝s', 'words', 'Cf'),
       array('wo᠎rd؁s', 'words', 'Cf'),
 
       array('words', 'words', 'Co'),
       array('wo󿿽rds', 'words', 'Co'),
-
-      array('word�s', 'words', 'Cs'),
-      array('w�ord�s', 'words', 'Cs'),
 
       array('wordॊs', 'words', 'Mc'),
       array('worौdংs', 'words', 'Mc'),

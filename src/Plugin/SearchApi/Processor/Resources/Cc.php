@@ -24,6 +24,5 @@ class Cc implements unicodeListInterface {
       '\x{0090}\x{0091}\x{0092}\x{0093}\x{0094}\x{0095}\x{0096}' .
       '\x{0097}\x{0098}\x{0099}\x{009A}\x{009B}\x{009C}\x{009D}' .
       '\x{009E}\x{009F}';
-
   }
 }
