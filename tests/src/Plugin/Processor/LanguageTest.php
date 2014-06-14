@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\LanguageTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
