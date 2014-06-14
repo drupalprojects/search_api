@@ -24,6 +24,6 @@ class Pe implements unicodeListInterface {
       '\x{3017}\x{3019}\x{301B}\x{301E}\x{301F}\x{FD3F}\x{FE18}' .
       '\x{FE36}\x{FE38}\x{FE3A}\x{FE3C}\x{FE3E}\x{FE40}\x{FE42}' .
       '\x{FE44}\x{FE48}\x{FE5A}\x{FE5C}\x{FE5E}\x{FF09}\x{FF3D}' .
-      '\x{FF5D}\x{FF60}\x{FF63}' .
+      '\x{FF5D}\x{FF60}\x{FF63}';
   }
 }

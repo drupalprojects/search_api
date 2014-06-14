@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\Component\Utility\String;
+use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -49,14 +50,14 @@ class IgnoreCharacterTest extends UnitTestCase {
   }
 
   /**
-   * Test processFieldValue method with title fetching enabled.
+   * Test processFieldValue method with Punctuation Connector Ignores.
    *
-   * @dataProvider textDataProvider
+   * @dataProvider textCharacterSetsIgnoreCharacterDataProvider
    */
-  public function testStringIgnoreCharacter($passedString, $expectedValue) {
+  public function testCharacterSetsIgnoreCharacter($passedString, $expectedValue, $character_class) {
     $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter',
       array('processFieldValue'),
-      array(array('strip' => array('ignorable' => "[']", 'character_sets' => array('Pc' => 'Pc'))), 'string', array()));
+      array(array('strip' => array('ignorable' => "['¿¡!?,.:;]", 'character_sets' => array($character_class => $character_class))), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     // Decode entities to UTF-8
@@ -68,11 +69,62 @@ class IgnoreCharacterTest extends UnitTestCase {
   /**
    * Data provider for testValueConfiguration().
    */
-  public function textDataProvider() {
+  public function textCharacterSetsIgnoreCharacterDataProvider() {
     return array(
-      array('word¡!', 'word'),
-      array('word\'s', 'words'),
-      array('word_s', 'words'),
+      array('word_s', 'words', 'Pc'),
+      array('word⁔s', 'words', 'Pc'),
+
+      array('word〜s', 'words', 'Pd'),
+      array('w–ord⸗s', 'words', 'Pd'),
+
+      array('word⌉s', 'words', 'Pe'),
+      array('word⦊s〕', 'words', 'Pe'),
+
+      array('word»s', 'words', 'Pf'),
+      array('word⸍s', 'words', 'Pf'),
+
+      array('word⸂s', 'words', 'Pi'),
+      array('w«ord⸉s', 'words', 'Pi'),
+
+      array('words%', 'words', 'Po'),
+      array('wo*rd/s', 'words', 'Po'),
+
+      array('word༺s', 'words', 'Ps'),
+      array('w❮ord⌈s', 'words', 'Ps'),
+
+      array('word៛s', 'words', 'Sc'),
+      array('wo₥rd₦s', 'words', 'Sc'),
+
+      array('w˓ords', 'words', 'Sk'),
+      array('wo˘rd˳s', 'words', 'Sk'),
+
+      array('word×s', 'words', 'Sm'),
+      array('wo±rd؈s', 'words', 'Sm'),
+
+      array('wo᧧rds', 'words', 'So'),
+      array('w᧶ord᧲s', 'words', 'So'),
+
+      array('wor—ds', 'words', 'Cc'),
+      array('woœrd™s', 'words', 'Cc'),
+
+      array('word۝s', 'words', 'Cf'),
+      array('wo᠎rd؁s', 'words', 'Cf'),
+
+      array('words', 'words', 'Co'),
+      array('wo󿿽rds', 'words', 'Co'),
+
+      array('word�s', 'words', 'Cs'),
+      array('w�ord�s', 'words', 'Cs'),
+
+      array('wordॊs', 'words', 'Mc'),
+      array('worौdংs', 'words', 'Mc'),
+
+      array('wo⃞rds', 'words', 'Me'),
+      array('wor⃤⃟ds', 'words', 'Me'),
+
+      array('woྰrds', 'words', 'Mn'),
+      array('worྵdྶs', 'words', 'Mn'),
     );
   }
+
 }

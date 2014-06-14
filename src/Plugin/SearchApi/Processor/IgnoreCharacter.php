@@ -45,7 +45,6 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    */
   protected $ignorable;
 
-
   /**
    * {@inheritdoc}
    */
