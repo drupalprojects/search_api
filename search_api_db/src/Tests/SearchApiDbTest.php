@@ -85,9 +85,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->searchSuccess2();
     $this->clearIndex();
 
-    $this->enableHTMLFilter();
+    $this->enableHtmlFilter();
     $this->indexItems($this->indexId);
-    $this->disableHTMLFilter();
+    $this->disableHtmlFilter();
     $this->clearIndex();
 
     //$this->enableIgnoreCaseFilter();
@@ -165,7 +165,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->save();
   }
 
-  protected function enableHTMLFilter() {
+  protected function enableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
 
@@ -182,7 +182,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->save();
   }
 
-  protected function disableHTMLFilter() {
+  protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
     $index->setOption('processors', array(

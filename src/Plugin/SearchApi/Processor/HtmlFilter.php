@@ -1,12 +1,8 @@
 <?php
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\SearchAPI\Processor\HTMLFilter.
- */
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter.
+ * Contains \Drupal\search_api\Plugin\SearchAPI\Processor\HtmlFilter.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
@@ -25,7 +21,7 @@ use Symfony\Component\Yaml\Dumper;
  * )
  *
  */
-class HTMLFilter extends FieldsProcessorPluginBase {
+class HtmlFilter extends FieldsProcessorPluginBase {
 
   /**
    * @var array

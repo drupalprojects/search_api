@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter;
+use Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
@@ -31,10 +31,10 @@ class HtmlFilterTest extends UnitTestCase {
   }
 
   /**
-   * Get an accessible method of HTMLFilter using reflection.
+   * Get an accessible method of the processor class using reflection.
    */
   public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter');
+    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter');
     $method = $class->getMethod($methodName);
     $method->setAccessible(TRUE);
     return $method;
@@ -46,7 +46,7 @@ class HtmlFilterTest extends UnitTestCase {
    * @dataProvider titleConfigurationDataProvider
    */
   public function testTitleConfiguration($passedString, $expectedValue, $titleConfig) {
-    $processor = new HTMLFilter(array('tags' => array(), 'title' => $titleConfig, 'alt' => FALSE), 'html_filter', array());
+    $processor = new HtmlFilter(array('tags' => array(), 'title' => $titleConfig, 'alt' => FALSE), 'html_filter', array());
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($processor, array(&$passedString, 'text'));
@@ -76,7 +76,7 @@ class HtmlFilterTest extends UnitTestCase {
    * @dataProvider altConfigurationDataProvider
    */
   public function testAltConfiguration($passedString, $expectedValue, $altBoost) {
-    $processor = new HTMLFilter(array('tags' => array('img' => '2'), 'title' => FALSE, 'alt' => $altBoost), 'html_filter', array());
+    $processor = new HtmlFilter(array('tags' => array('img' => '2'), 'title' => FALSE, 'alt' => $altBoost), 'html_filter', array());
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($processor, array(&$passedString, 'text'));
@@ -105,7 +105,7 @@ class HtmlFilterTest extends UnitTestCase {
    * @dataProvider tagConfigurationDataProvider
    */
   public function testTagConfiguration($passedString, $expectedValue, array $tagsConfig) {
-    $processor = new HTMLFilter(array('tags' => $tagsConfig, 'title' => TRUE, 'alt' => TRUE), 'html_filter', array());
+    $processor = new HtmlFilter(array('tags' => $tagsConfig, 'title' => TRUE, 'alt' => TRUE), 'html_filter', array());
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     $processFieldValueMethod->invokeArgs($processor, array(&$passedString, 'text'));
@@ -157,7 +157,7 @@ class HtmlFilterTest extends UnitTestCase {
    * @dataProvider stringProcessingDataProvider
    */
   public function testStringProcessing(array $config) {
-    $processor = new HTMLFilter($config, 'html_filter', array());
+    $processor = new HtmlFilter($config, 'html_filter', array());
 
     $passedString = '<h2>Foo Bar <em>Baz</em></h2>
 

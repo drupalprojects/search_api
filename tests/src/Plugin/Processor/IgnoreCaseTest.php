@@ -81,7 +81,7 @@ class IgnoreCaseTest extends UnitTestCase {
   }
 
   /**
-   * Get an accessible method of HTMLFilter using reflection.
+   * Get an accessible method of the processor class using reflection.
    */
   public function getAccessibleMethod($methodName) {
     $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase');
