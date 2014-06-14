@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\RoleFilterTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
