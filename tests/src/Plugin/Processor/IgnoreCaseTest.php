@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
+use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -19,6 +19,8 @@ use Drupal\Tests\UnitTestCase;
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase
  */
 class IgnoreCaseTest extends UnitTestCase {
+
+  use ProcessorTestTrait;
 
   /**
    * {@inheritdoc}
@@ -36,58 +38,33 @@ class IgnoreCaseTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->processor = new IgnoreCase(array(), 'string', array());
   }
 
   /**
-   * Test processFieldValue method fot the ignoreCaseProcessor. (text)
+   * Tests the process() method.
    *
-   * @dataProvider ignoreCaseDataProvider
+   * @dataProvider processDataProvider
    */
-  public function testIgnoreCaseText($passedString, $expectedValue) {
-    $ignoreCaseFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase',
-      array('processFieldValue'),
-      array(array(), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($ignoreCaseFilterMock, array(&$passedString, 'text'));
+  public function testProcess($passedString, $expectedValue) {
+    $this->invokeMethod('process', array(&$passedString));
     $this->assertEquals($passedString, $expectedValue);
   }
 
   /**
-   * Test processFieldValue method fot the ignoreCaseProcessor. (string)
+   * Provides sets of arguments for testProcess().
    *
-   * @dataProvider ignoreCaseDataProvider
+   * @return array[]
+   *   Arrays of arguments for testProcess().
    */
-  public function testIgnoreCaseString($passedString, $expectedValue) {
-    $ignoreCaseFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase',
-      array('processFieldValue'),
-      array(array(), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($ignoreCaseFilterMock, array(&$passedString, 'string'));
-    $this->assertEquals($passedString, $expectedValue);
-  }
-
-  /**
-   * Data provider method for testIgnoreCaseText() and testIgnoreCaseString()
-   */
-  public function ignoreCaseDataProvider() {
+  public function processDataProvider() {
     return array(
       array('Foo bar', 'foo bar'),
       array('foo Bar', 'foo bar'),
       array('Foo Bar', 'foo bar'),
       array('Foo bar BaZ, ÄÖÜÀÁ<>»«.', 'foo bar baz, äöüàá<>»«.')
     );
-  }
-
-  /**
-   * Get an accessible method of the processor class using reflection.
-   */
-  public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase');
-    $method = $class->getMethod($methodName);
-    $method->setAccessible(TRUE);
-    return $method;
   }
 
 }
