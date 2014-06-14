@@ -237,6 +237,42 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
    * Tests task system integration for the deleteAllIndexItems() method.
    */
   public function testDeleteAllIndexItems() {
+    // Set exception for deleteAllIndexItems() and reset the list of successful
+    // backend method calls.
+    $this->state->set('search_api_test_backend.exception.deleteAllIndexItems', TRUE);
+    $this->getCalledServerMethods();
+
+    // Try to update the index.
+    $this->server->deleteAllIndexItems($this->index);
+    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteAllIndexItems correctly threw an exception.');
+    $tasks = $this->getServerTasks();
+    if (count($tasks) == 1) {
+      $task_created = $tasks[0]->type === 'deleteAllIndexItems';
+    }
+    $this->assertTrue(!empty($task_created), 'The deleteAllIndexItems task was successfully added.');
+    if ($tasks) {
+      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the deleteAllIndexItems task.');
+    }
+
+    // Check whether other task-system-integrated methods now fail, too.
+    $this->server->updateIndex($this->index);
+    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex was not executed.');
+    $tasks = $this->getServerTasks();
+    if (count($tasks) == 2) {
+      $this->pass("Second task ('updateIndex') was added.");
+      $this->assertEqual($tasks[0]->type, 'deleteAllIndexItems', 'First task stayed the same.');
+      $this->assertEqual($tasks[1]->type, 'updateIndex', 'New task was queued as last.');
+    }
+    else {
+      $this->fail("Second task (updateIndex) was not added.");
+    }
+
+    // Let deleteAllIndexItems() succeed again, then trigger the task execution
+    // with a call to indexItems().
+    $this->state->set('search_api_test_backend.exception.deleteAllIndexItems', FALSE);
+    $this->server->indexItems($this->index, array());
+    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
+    $this->assertEqual($this->getCalledServerMethods(), array('deleteAllIndexItems', 'updateIndex', 'indexItems'), 'Right methods were called during task execution.');
   }
 
   /**
