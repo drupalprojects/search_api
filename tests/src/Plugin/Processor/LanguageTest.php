@@ -18,6 +18,8 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language
  */
 class LanguageTest extends UnitTestCase {
 
