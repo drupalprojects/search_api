@@ -65,7 +65,6 @@ class StopwordsTest extends UnitTestCase {
     $configuration = array('file' => '', 'stopwords' => $stopwordsConfig);
     $this->processor->setConfiguration($configuration);
     $process->invokeArgs($this->processor, array(&$passedString));
-    fwrite(STDERR, var_export($expectedString, true) . "\n" . var_export($passedString, true) . "\n\n");
     $this->assertEquals($passedString, $expectedString);
   }
 
