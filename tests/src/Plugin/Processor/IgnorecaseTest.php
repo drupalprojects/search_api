@@ -7,11 +7,8 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase;
-use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Component\Utility\Unicode;
 
 /**
  * Tests the "Ignore case" processor plugin.
@@ -22,50 +19,6 @@ use Drupal\Component\Utility\Unicode;
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase
  */
 class IgnoreCaseTest extends UnitTestCase {
-
-  use TestItemsTrait;
-
-  /**
-   * Stores the processor to be tested.
-   *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
-   */
-  protected $processor;
-
-  /**
-   * The test items to use for testing.
-   *
-   * @var \Drupal\search_api\Item\ItemInterface[]
-   */
-  protected $items;
-
-  /**
-   * The field ID of the fulltext field used in the tests.
-   *
-   * @var string
-   */
-  protected $fulltext_field_id;
-
-  /**
-   * The field ID of the string field used in the tests.
-   *
-   * @var string
-   */
-  protected $string_field_id;
-
-  /**
-   * The expected field value for unprocessed fields.
-   *
-   * @var string
-   */
-  protected $unprocessed_value = 'Foo bar BaZ, ÄÖÜÀÁ<>»«.';
-
-  /**
-   * The expected field value for processed fields.
-   *
-   * @var string
-   */
-  protected $processed_value;
 
   /**
    * {@inheritdoc}
@@ -83,75 +36,58 @@ class IgnoreCaseTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+  }
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+  /**
+   * Test processFieldValue method fot the ignoreCaseProcessor. (text)
+   *
+   * @dataProvider ignoreCaseDataProvider
+   */
+  public function testIgnoreCaseText($passedString, $expectedValue) {
+    $ignoreCaseFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase',
+      array('processFieldValue'),
+      array(array(), 'string', array()));
 
-    $this->processor = new IgnoreCase(array(), 'ignorecase', array());
+    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
+    $processFieldValueMethod->invokeArgs($ignoreCaseFilterMock, array(&$passedString, 'text'));
+    $this->assertEquals($passedString, $expectedValue);
+  }
 
-    $this->fulltext_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_name';
-    $this->string_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_mail';
+  /**
+   * Test processFieldValue method fot the ignoreCaseProcessor. (string)
+   *
+   * @dataProvider ignoreCaseDataProvider
+   */
+  public function testIgnoreCaseString($passedString, $expectedValue) {
+    $ignoreCaseFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase',
+      array('processFieldValue'),
+      array(array(), 'string', array()));
 
-    $this->processed_value = Unicode::strtolower($this->unprocessed_value);
-    $fields = array(
-      $this->fulltext_field_id => array(
-        'type' => 'text',
-        'values' => array($this->unprocessed_value),
-      ),
-      $this->string_field_id => array(
-        'type' => 'string',
-        'values' => array($this->unprocessed_value),
-      ),
+    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
+    $processFieldValueMethod->invokeArgs($ignoreCaseFilterMock, array(&$passedString, 'string'));
+    $this->assertEquals($passedString, $expectedValue);
+  }
+
+  /**
+   * Data provider method for testIgnoreCaseText() and testIgnoreCaseString()
+   */
+  public function ignoreCaseDataProvider() {
+    return array(
+      array('Foo bar', 'foo bar'),
+      array('foo Bar', 'foo bar'),
+      array('Foo Bar', 'foo bar'),
+      array('Foo bar BaZ, ÄÖÜÀÁ<>»«.', 'foo bar baz, äöüàá<>»«.')
     );
-    $this->items = $this->createItems($index, 1, $fields);
   }
 
   /**
-   * Tests preprocessing of fulltext fields.
+   * Get an accessible method of HTMLFilter using reflection.
    */
-  public function testPreprocessFulltextFields() {
-    $configuration['fields'][$this->fulltext_field_id] = $this->fulltext_field_id;
-    $this->processor->setConfiguration($configuration);
-
-    $this->processor->preprocessIndexItems($this->items);
-
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), array($this->processed_value), 'Name field was correctly processed.');
-    $this->assertEquals($this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), array($this->unprocessed_value), 'Mail field was not processed.');
-  }
-
-  /**
-   * Tests preprocessing of tokenized fulltext fields.
-   */
-  public function testPreprocessTokenizedFulltextFields() {
-    $configuration['fields'][$this->fulltext_field_id] = $this->fulltext_field_id;
-    $this->processor->setConfiguration($configuration);
-
-    $tokenize = function ($value) {
-      return array('value' => $value, 'score' => 1);
-    };
-    $tokenized_value = array_map($tokenize, explode(' ', $this->unprocessed_value));
-    $this->processed_value = array_map($tokenize, explode(' ', $this->processed_value));
-    $field = $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id);
-    $field->setValues(array($tokenized_value));
-    $field->setType('tokenized_text');
-
-    $this->processor->preprocessIndexItems($this->items);
-
-    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Tokenized Name field was correctly processed.');
-    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was not processed.');
-  }
-
-  /**
-   * Tests preprocessing of string fields.
-   */
-  public function testPreprocessStringFields() {
-    $configuration['fields'][$this->string_field_id] = $this->string_field_id;
-    $this->processor->setConfiguration($configuration);
-
-    $this->processor->preprocessIndexItems($this->items);
-
-    $this->assertEquals(array($this->unprocessed_value), $this->items[$this->item_ids[0]]->getField($this->fulltext_field_id)->getValues(), 'Name field was not processed.');
-    $this->assertEquals(array($this->processed_value), $this->items[$this->item_ids[0]]->getField($this->string_field_id)->getValues(), 'Mail field was correctly processed.');
+  public function getAccessibleMethod($methodName) {
+    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase');
+    $method = $class->getMethod($methodName);
+    $method->setAccessible(TRUE);
+    return $method;
   }
 
 }
