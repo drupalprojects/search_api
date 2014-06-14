@@ -9,7 +9,6 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
-
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pd;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pe;
@@ -17,6 +16,20 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pf;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pi;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Po;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Ps;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cs;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sk;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sm;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\So;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zl;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zp;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zs;
 
 /**
  * @SearchApiProcessor(
@@ -38,7 +51,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'ignorable' => "[']",
+      'ignorable' => "['¿¡!?,.:;]",
       'strip' => array(
         'character_sets' => array(
           'Pc' => 'Pc',
@@ -62,7 +75,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     $form['ignorable'] = array(
       '#type' => 'textfield',
       '#title' => t('Ignorable characters'),
-      '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). The same format as above is used.'),
+      '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). It is placed in a regular expression function as such: preg_replace(\[\'¿¡!?,.:;]+/u)'),
       '#default_value' => $this->configuration['ignorable'],
     );
 
@@ -82,7 +95,6 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
       '#multiple' => TRUE,
     );
 
-
     return $form;
   }
 
@@ -100,8 +112,6 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     }
   }
 
-
-
   /**
    * {@inheritdoc}
    */
@@ -114,11 +124,12 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    */
   protected function processFieldValue(&$value, &$type) {
     $this->prepare();
-    print_r($this->ignorable);
+    // Remove the characters we do not want
     if ($this->ignorable) {
       $value = preg_replace('/(' . $this->ignorable . ')+/u', '', $value);
     }
 
+    // Strip the character sets
     if (!empty($this->configuration['strip']['character_sets'])) {
       $value = $this->stripCharacterSets($value);
     }
@@ -135,7 +146,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     // Get our configuration
     $character_sets = $this->configuration['strip']['character_sets'];
 
-    $character_set_regex = '';
+    // Loop over the character sets and strip the characters from the text
     if (!empty($character_sets) && is_array($character_sets)) {
       foreach ($character_sets as $character_set) {
         $regex = $this->getFormatRegularExpression($character_set);
@@ -144,55 +155,8 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
         }
       }
     }
-    print_r($text);
-    #$text = preg_replace('/\s(' . $character_set_regex . ')/s', ' ', $text);
-
-    $text = preg_replace('/(¿|¡|!|\?|,|\.|:|;)/s', '', $text);
     $text = trim($text);
-    print_r($text);
     return $text;
-  }
-
-  /**
-   * @param $character_set
-   * @return bool|string
-   */
-  private function getFormatRegularExpression($character_set) {
-    switch ($character_set) {
-      case 'Pc':
-        return Pc::getRegularExpression();
-        break;
-      case 'Pd':
-        return Pc::getRegularExpression();
-        break;
-      case 'Pe':
-        return Pc::getRegularExpression();
-        break;
-      case 'Pf':
-        return Pc::getRegularExpression();
-        break;
-      case 'Pi':
-        return Pc::getRegularExpression();
-        break;
-      case 'Po':
-        return Pc::getRegularExpression();
-        break;
-      case 'Ps':
-        return Pc::getRegularExpression();
-        break;
-      case 'Cc':
-        return Pc::getRegularExpression();
-        break;
-      case 'Cf':
-        return Pc::getRegularExpression();
-        break;
-      case 'Pc':
-        return Pc::getRegularExpression();
-        break;
-
-
-    }
-    return FALSE;
   }
 
   /**
@@ -219,6 +183,58 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     if (!isset($this->ignorable)) {
       $this->ignorable = str_replace('/', '\/', $this->configuration['ignorable']);
     }
+  }
+
+  /**
+   * @param $character_set
+   * @return bool|string
+   */
+  private function getFormatRegularExpression($character_set) {
+    switch ($character_set) {
+      case 'Pc':
+        return Pc::getRegularExpression();
+      case 'Pd':
+        return Pd::getRegularExpression();
+      case 'Pe':
+        return Pe::getRegularExpression();
+      case 'Pf':
+        return Pf::getRegularExpression();
+      case 'Pi':
+        return Pi::getRegularExpression();
+      case 'Po':
+        return Po::getRegularExpression();
+      case 'Ps':
+        return Ps::getRegularExpression();
+      case 'Cc':
+        return Cc::getRegularExpression();
+      case 'Cf':
+        return Cf::getRegularExpression();
+      case 'Co':
+        return Co::getRegularExpression();
+      case 'Cs':
+        return Cs::getRegularExpression();
+      case 'Mc':
+        return Mc::getRegularExpression();
+      case 'Me':
+        return Me::getRegularExpression();
+      case 'Mn':
+        return Mn::getRegularExpression();
+      case 'Sc':
+        return Sc::getRegularExpression();
+      case 'Sk':
+        return Sk::getRegularExpression();
+      case 'Sm':
+        return Sm::getRegularExpression();
+      case 'So':
+        return So::getRegularExpression();
+      case 'Zl':
+        return Zl::getRegularExpression();
+      case 'Zp':
+        return Zp::getRegularExpression();
+      case 'Zs':
+        return Zs::getRegularExpression();
+    }
+    return FALSE;
   }
 
   /**
