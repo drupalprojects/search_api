@@ -56,7 +56,7 @@ class IgnoreCharacterTest extends UnitTestCase {
   public function testStringIgnoreCharacter($passedString, $expectedValue) {
     $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter',
       array('processFieldValue'),
-      array(array('strip' => array('character_sets' => array('Pd' => 'Pd'))), 'string', array()));
+      array(array('strip' => array('ignorable' => "[']", 'character_sets' => array('Pc' => 'Pc'))), 'string', array()));
 
     $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
     // Decode entities to UTF-8
@@ -70,7 +70,9 @@ class IgnoreCharacterTest extends UnitTestCase {
    */
   public function textDataProvider() {
     return array(
-      array('word', 'word'),
+      array('word¡!', 'word'),
+      array('word\'s', 'words'),
+      array('word_s', 'words'),
     );
   }
 }

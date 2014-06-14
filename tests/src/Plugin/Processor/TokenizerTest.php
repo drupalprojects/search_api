@@ -68,7 +68,7 @@ class TokenizerTest extends UnitTestCase {
     return array(
       array('word', array(0 => array('value' => 'word'))),
       array('word word', array(0 => array('value' => 'word'), 1 => array('value' => 'word'))),
-      array('word\'s word', array(0 => array('value' => 'words'), 1 => array('value' => 'word'))),
+      array('words word', array(0 => array('value' => 'words'), 1 => array('value' => 'word'))),
     );
   }
 

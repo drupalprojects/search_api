@@ -27,17 +27,11 @@ class Tokenizer extends FieldsProcessorPluginBase {
   protected $spaces;
 
   /**
-   * @var string
-   */
-  protected $ignorable;
-
-  /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
     return array(
       'spaces' => "",
-      'ignorable' => "[']",
       'overlap_cjk' => TRUE,
       'minimum_word_size' => 3,
     );
@@ -57,13 +51,6 @@ class Tokenizer extends FieldsProcessorPluginBase {
           'Note: For non-English content, the default setting might not be suitable.',
           array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
       '#default_value' => $this->configuration['spaces'],
-    );
-
-    $form['ignorable'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Ignorable characters'),
-      '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). The same format as above is used.'),
-      '#default_value' => $this->configuration['ignorable'],
     );
 
     $form['overlap_cjk'] = array(
@@ -92,13 +79,8 @@ class Tokenizer extends FieldsProcessorPluginBase {
     parent::validateConfigurationForm($form, $form_state);
 
     $spaces = str_replace('/', '\/', $form_state['values']['spaces']);
-    $ignorable = str_replace('/', '\/', $form_state['values']['ignorable']);
     if (@preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
       $el = $form['spaces'];
-      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
-    }
-    if (@preg_match('/(' . $ignorable . ')+/u', '') === FALSE) {
-      $el = $form['ignorable'];
       \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
     }
   }
@@ -180,10 +162,6 @@ class Tokenizer extends FieldsProcessorPluginBase {
    */
   protected function processFieldValue(&$value, &$type) {
     $this->prepare();
-    if ($this->ignorable) {
-      $value = preg_replace('/(' . $this->ignorable . ')+/u', '', $value);
-    }
-
     // Split it based on our configuration
     $value = $this->split($value);
   }
@@ -317,9 +295,6 @@ class Tokenizer extends FieldsProcessorPluginBase {
     // We don't touch integers, NULL values or the like.
     if (is_string($value)) {
       $this->prepare();
-      if ($this->ignorable) {
-        $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
-      }
       $value = trim($this->simplifyText($value));
     }
   }
@@ -330,7 +305,6 @@ class Tokenizer extends FieldsProcessorPluginBase {
   protected function prepare() {
     if (!isset($this->spaces)) {
       $this->spaces = str_replace('/', '\/', $this->configuration['spaces']);
-      $this->ignorable = str_replace('/', '\/', $this->configuration['ignorable']);
     }
   }
 
