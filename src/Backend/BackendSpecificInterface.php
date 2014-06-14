@@ -164,7 +164,7 @@ interface BackendSpecificInterface {
   public function deleteAllIndexItems(IndexInterface $index);
 
   /**
-   * Executes a search on the server represented by this object.
+   * Executes a search on this server.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query to execute.

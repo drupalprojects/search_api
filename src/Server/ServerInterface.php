@@ -71,21 +71,6 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   public function deleteAllItems();
 
   /**
-   * Executes a search on the server represented by this object.
-   *
-   * @param QueryInterface $query
-   *   The query to execute.
-   *
-   * @return array
-   *   An associative array containing the search results, as required by
-   *   \Drupal\search_api\Query\QueryInterface::execute().
-   *
-   * @throws \Drupal\search_api\Exception\SearchApiException
-   *   If an error prevented the search from completing.
-   */
-  public function search(QueryInterface $query);
-
-  /**
    * Sets the backend config of the backend from this server.
    *
    * @param array $config
