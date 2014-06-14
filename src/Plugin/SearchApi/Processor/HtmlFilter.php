@@ -19,21 +19,15 @@ use Symfony\Component\Yaml\Dumper;
  *   label = @Translation("HTML Filter"),
  *   description = @Translation("Strips HTML tags from fulltext fields and decodes HTML entities. Use this processor when indexing HTML data, e.g., node bodies for certain text formats. The processor also allows to boost (or ignore) the contents of specific elements.")
  * )
- *
  */
 class HtmlFilter extends FieldsProcessorPluginBase {
-
-  /**
-   * @var array
-   */
-  protected $tags = array();
 
   /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
     return array(
-      'title' => FALSE,
+      'title' => TRUE,
       'alt' => TRUE,
       'tags' => array(
         'h1' => 5,
@@ -45,17 +39,6 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         'u' => 1.5,
       ),
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    if (!empty($configuration['tags'])) {
-      $this->tags = $configuration['tags'];
-    }
   }
 
   /**
@@ -162,8 +145,8 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         $text = preg_replace('/<[-a-z_]+[^>]*["\s]alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' <img>$2$3</img> ', $text);
       }
     }
-    if ($this->tags && $is_text_type) {
-      $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');
+    if ($this->configuration['tags'] && $is_text_type) {
+      $text = strip_tags($text, '<' . implode('><', array_keys($this->configuration['tags'])) . '>');
       $value = $this->parseHtml($text);
       $type = 'tokenized_text';
     }
@@ -209,7 +192,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
       }
       elseif (!$empty_tag) {
         // Opening tag => recursive call.
-        $inner_boost = $boost * (isset($this->tags[$m[2]]) ? $this->tags[$m[2]] : 1);
+        $inner_boost = $boost * (isset($this->configuration['tags'][$m[2]]) ? $this->configuration['tags'][$m[2]] : 1);
         $ret = array_merge($ret, $this->parseHtml($text, $m[2], $inner_boost));
       }
     }

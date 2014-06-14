@@ -53,7 +53,7 @@ class Language extends ProcessorPluginBase {
       }
       $object = $item->getOriginalObject();
       if ($object instanceof TranslatableInterface) {
-        $field->addValue($object->language()->id);
+        $field->addValue($object->language()->getId());
       }
       else {
         $field->addValue(CoreLanguage::LANGCODE_NOT_SPECIFIED);

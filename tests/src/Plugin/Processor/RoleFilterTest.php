@@ -17,6 +17,8 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter
  */
 class RoleFilterTest extends UnitTestCase {
 
