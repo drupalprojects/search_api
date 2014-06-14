@@ -124,17 +124,24 @@ class Stopwords extends FieldsProcessorPluginBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Processes a single string value.
+   *
+   * Requires both ignorecase and tokenize processors to be run first.
+   *
+   * @param string $value
+   *   The string value to preprocess, as a reference. Can be manipulated
+   *   directly, nothing has to be returned. Since this can be called for all
+   *   value types, $value has to remain a string.
    */
-  public function process(&$value) {
+  protected function process(&$value) {
     $stopwords = $this->getStopWords();
     if (empty($stopwords) || !is_string($value)) {
       return;
     }
-    $stopwords_preg_replace = implode('|', $stopwords);
-    $value = preg_replace('@('. $stopwords_preg_replace .')@siU', '', $value);
-    // Remove extra spaces.
-    $value = preg_replace('/\s+/s', ' ', $value);
+    $value = trim($value);
+    if (in_array($value, $stopwords)) {
+      $value = '';
+    }
   }
 
   /**
