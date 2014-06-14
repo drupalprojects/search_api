@@ -419,6 +419,24 @@ class Utility {
   }
 
   /**
+   * Creates a single token for the "tokenized_text" type.
+   *
+   * @param string $value
+   *   The word or other token value.
+   * @param float $score
+   *   (optional) The token's score.
+   *
+   * @return array
+   *   An array with appropriate "value" and "score" keys set.
+   */
+  public static function createTextToken($value, $score = 1.0) {
+    return array(
+      'value' => $value,
+      'score' => (float) $score,
+    );
+  }
+
+  /**
    * Returns a deep copy of the input array.
    *
    * The behavior of PHP regarding arrays with references pointing to it is
