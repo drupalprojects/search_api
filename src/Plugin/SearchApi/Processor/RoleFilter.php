@@ -52,8 +52,8 @@ class RoleFilter extends FieldsProcessorPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $options = array_map(function (RoleInterface $item) {
-      return String::checkPlain($item->label());
+    $options = array_map(function (RoleInterface $role) {
+      return String::checkPlain($role->label());
     }, user_roles());
 
     $form['default'] = array(
@@ -102,25 +102,14 @@ class RoleFilter extends FieldsProcessorPluginBase {
         continue;
       }
 
-      // @todo Could probably be simplified with array_intersect_key() and
-      // if ($default == $has_some_roles).
       $account_roles = $account->getRoles();
-      $account_roles = array_combine($account_roles, $account_roles);
-      $excess_roles = array_diff_key($account_roles, $selected_roles);
+      $account_roles = array_flip($account_roles);
+      $has_some_roles = (bool) array_intersect_key($account_roles, $selected_roles);
 
-      // All but those from one of the selected roles.
-      if ($default) {
-        // User has some of the selected roles.
-        if (count($excess_roles) < count($account_roles)) {
-          unset($items[$item_id]);
-        }
-      }
-      // Only those from the selected roles.
-      else {
-        // User does not have any of the selected roles.
-        if (count($excess_roles) === count($account_roles)) {
-          unset($items[$item_id]);
-        }
+      // If $default is TRUE, we want to remove those users with at least one of
+      // the selected roles. Otherwise, we want to remove those.
+      if ($default == $has_some_roles) {
+        unset($items[$item_id]);
       }
     }
   }
