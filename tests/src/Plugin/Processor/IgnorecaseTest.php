@@ -19,7 +19,7 @@ use Drupal\Component\Utility\Unicode;
  * @group Drupal
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\Ignorecase
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase
  */
 class IgnoreCaseTest extends UnitTestCase {
 
@@ -87,7 +87,7 @@ class IgnoreCaseTest extends UnitTestCase {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
 
-    $this->processor = new Ignorecase(array(), 'ignorecase', array());
+    $this->processor = new IgnoreCase(array(), 'ignorecase', array());
 
     $this->fulltext_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_name';
     $this->string_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'field_mail';

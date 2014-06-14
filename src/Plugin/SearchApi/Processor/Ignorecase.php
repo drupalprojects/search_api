@@ -17,7 +17,7 @@ use Drupal\Component\Utility\Unicode;
  *   description = @Translation("Ignore case in strings")
  * )
  */
-class Ignorecase extends FieldsProcessorPluginBase {
+class IgnoreCase extends FieldsProcessorPluginBase {
 
   /**
    * {@inheritdoc}
