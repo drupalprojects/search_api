@@ -290,13 +290,14 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function addIndex(IndexInterface $index) {
-    // @todo Instead delete index's server tasks?
     $server_task_manager = Utility::getServerTaskManager();
+    // When freshly adding an index to a server, it doesn't make any sense
+    // to execute possible other tasks for that server/index combination.
+    // (removeIndex() is implicit when adding an index which was already added.)
+    $server_task_manager->delete(NULL, $this, $index);
+
     try {
-      if ($server_task_manager->execute($this)) {
-        $this->getBackend()->addIndex($index);
-        return;
-      }
+      $this->getBackend()->addIndex($index);
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -304,8 +305,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
+      $server_task_manager->add($this, __FUNCTION__, $index);
     }
-    $server_task_manager->add($this, __FUNCTION__, $index);
   }
 
   /**

@@ -162,16 +162,16 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
     }
 
     // Check whether other task-system-integrated methods now fail, too.
-    $this->server->addIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'addIndex was not executed.');
+    $this->server->deleteAllIndexItems($this->index);
+    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteAllIndexItems was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
-      $this->pass("Second task ('addIndex') was added.");
+      $this->pass("Second task ('deleteAllIndexItems') was added.");
       $this->assertEqual($tasks[0]->type, 'updateIndex', 'First task stayed the same.');
-      $this->assertEqual($tasks[1]->type, 'addIndex', 'New task was queued as last.');
+      $this->assertEqual($tasks[1]->type, 'deleteAllIndexItems', 'New task was queued as last.');
     }
     else {
-      $this->fail("Second task (addIndex) was not added.");
+      $this->fail("Second task (deleteAllIndexItems) was not added.");
     }
 
     // Let updateIndex() succeed again, then trigger the task execution with a
@@ -179,7 +179,7 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
     $this->state->set('search_api_test_backend.exception.updateIndex', FALSE);
     $this->server->indexItems($this->index, array());
     $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('updateIndex', 'addIndex', 'indexItems'), 'Right methods were called during task execution.');
+    $this->assertEqual($this->getCalledServerMethods(), array('updateIndex', 'deleteAllIndexItems', 'indexItems'), 'Right methods were called during task execution.');
   }
 
   /**
