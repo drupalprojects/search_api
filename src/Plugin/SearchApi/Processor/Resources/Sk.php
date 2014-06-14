@@ -12,7 +12,7 @@ class Sk implements unicodeListInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegularExpression() {
+  public static function getRegularExpression() {
     return '\x{21}\x{23}\x{25}';
   }
 }

@@ -158,16 +158,39 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    * @return bool|string
    */
   private function getFormatRegularExpression($character_set) {
-    if (class_exists($character_set)) {
-      $character_class = new $character_set();
-      /** @var \Drupal\search_api\Plugin\SearchApi\Processor\Resources\Unicode $character_class */
-      $character_class->getCharacters();
-    }
     switch ($character_set) {
       case 'Pc':
-        $pc = new Pc();
-        return $pc->getCharacters();
+        return Pc::getRegularExpression();
         break;
+      case 'Pd':
+        return Pc::getRegularExpression();
+        break;
+      case 'Pe':
+        return Pc::getRegularExpression();
+        break;
+      case 'Pf':
+        return Pc::getRegularExpression();
+        break;
+      case 'Pi':
+        return Pc::getRegularExpression();
+        break;
+      case 'Po':
+        return Pc::getRegularExpression();
+        break;
+      case 'Ps':
+        return Pc::getRegularExpression();
+        break;
+      case 'Cc':
+        return Pc::getRegularExpression();
+        break;
+      case 'Cf':
+        return Pc::getRegularExpression();
+        break;
+      case 'Pc':
+        return Pc::getRegularExpression();
+        break;
+
+
     }
     return FALSE;
   }
