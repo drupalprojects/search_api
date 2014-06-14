@@ -165,9 +165,11 @@ class Highlight extends ProcessorPluginBase {
    */
   protected function postprocessExcerptResults(array $results, $id, array $keys) {
     $text = array();
-    $fields = $this->getFulltextFields($results, $id);
-    foreach ($fields as $field) {
-      $text = array_merge($text, $field->getValues());
+    $items = $this->getFulltextFields($results, $id);
+    foreach ($items as $item_id => $items) {
+      foreach ($items as $field_id => $field) {
+        $text = array_merge($text, $field->getValues());
+      }
     }
     $results[$id]->setExcerpt($this->createExcerpt(implode("\n\n", $text), $keys));
   }
