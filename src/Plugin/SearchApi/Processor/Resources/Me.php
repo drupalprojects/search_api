@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Me implements unicodeList {
+class Me implements unicodeListInterface {
 
   /**
    * {@inheritdoc}
