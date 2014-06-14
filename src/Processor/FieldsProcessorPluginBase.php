@@ -95,8 +95,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items) {
-    // Annoyingly, this doc comment is needed for PHPStorm. See
-    // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
       /** @var \Drupal\search_api\Item\FieldInterface $field */
