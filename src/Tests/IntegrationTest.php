@@ -588,12 +588,12 @@ class IntegrationTest extends SearchApiWebTestBase {
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
 
     $edit = array(
-      'processors[search_api_ignorecase_processor][status]' => 1,
+      'processors[ignorecase][status]' => 1,
     );
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
-    $this->assertTrue($processors['search_api_ignorecase_processor']->getConfiguration(), 'Ignore case processor enabled');
+    $this->assertTrue($processors['ignorecase']->getConfiguration(), 'Ignore case processor enabled');
   }
 
   /**
@@ -603,14 +603,14 @@ class IntegrationTest extends SearchApiWebTestBase {
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
 
     $edit = array(
-      'processors[search_api_ignorecase_processor][status]' => 1,
-      'processors[search_api_ignorecase_processor][settings][fields][search_api_language]' => FALSE,
-      'processors[search_api_ignorecase_processor][settings][fields][entity:node|title]' => 'entity:node|title',
+      'processors[ignorecase][status]' => 1,
+      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
+      'processors[ignorecase][settings][fields][entity:node|title]' => 'entity:node|title',
     );
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
-    $configuration = $processors['search_api_ignorecase_processor']->getConfiguration();
+    $configuration = $processors['ignorecase']->getConfiguration();
     $this->assertEqual($configuration['fields']['search_api_language'], 0, 'Language field disabled for ignore case filter.');
   }
 
