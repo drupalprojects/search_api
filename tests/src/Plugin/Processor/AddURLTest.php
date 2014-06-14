@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiAddURLTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\AddUrlTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -20,7 +20,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
  */
-class SearchApiAddURLTest extends UnitTestCase {
+class AddUrlTest extends UnitTestCase {
 
   use TestItemsTrait;
 
@@ -78,7 +78,7 @@ class SearchApiAddURLTest extends UnitTestCase {
       ->will($this->returnValue($datasource));
 
     // Create the URL-Processor and set the mocked indexer.
-    $this->processor = new AddURL(array(), 'search_api_add_url_processor', array());
+    $this->processor = new AddURL(array(), 'add_url', array());
     $this->processor->setIndex($this->index);
     $this->processor->setStringTranslation($this->getStringTranslationStub());
   }

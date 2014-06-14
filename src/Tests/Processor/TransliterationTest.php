@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiIgnorecaseTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\TransliterationTest.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -15,7 +15,7 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Transliteration;
  * @group Drupal
  * @group search_api
  */
-class SearchApiTransliterationTest extends SearchApiProcessorTestBase {
+class TransliterationTest extends ProcessorTestBase {
 
   use TestItemsTrait;
 
@@ -41,8 +41,8 @@ class SearchApiTransliterationTest extends SearchApiProcessorTestBase {
    * {@inheritdoc}
    */
   public function setUp() {
-    parent::setUp('search_api_transliteration_processor');
-    $this->processor = new Transliteration(array(), 'search_api_transliteration_processor', array());
+    parent::setUp('transliteration');
+    $this->processor = new Transliteration(array(), 'transliteration', array());
   }
 
   /**

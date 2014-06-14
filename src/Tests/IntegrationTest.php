@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiIntegrationTest.
+ * Contains \Drupal\search_api\Tests\IntegrationTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests;
 /**
  * Provides integration tests for Search API.
  */
-class SearchApiIntegrationTest extends SearchApiWebTestBase {
+class IntegrationTest extends SearchApiWebTestBase {
 
   /**
    * A Search API server ID.
@@ -64,6 +64,9 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
     $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
     $this->removeFieldsFromIndex();
+
+    $this->addFilter();
+    $this->configureFilterFields();
 
     $this->setReadOnly();
     $this->disableEnableIndex();
@@ -575,6 +578,40 @@ class SearchApiIntegrationTest extends SearchApiWebTestBase {
       '!nodecount' => $node_count,
     );
     $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount items left to index after changing servers', $t_args));
+  }
+
+  /**
+   * Test that a filter can be added.
+   */
+  protected function addFilter() {
+    // Go to the index filter path
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+
+    $edit = array(
+      'processors[ignorecase][status]' => 1,
+    );
+    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $processors = $index->getProcessors();
+    $this->assertTrue($processors['ignorecase']->getConfiguration(), 'Ignore case processor enabled');
+  }
+
+  /**
+   * Test that the filter can have fields configured.
+   */
+  protected function configureFilterFields() {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+
+    $edit = array(
+      'processors[ignorecase][status]' => 1,
+      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
+      'processors[ignorecase][settings][fields][entity:node|title]' => 'entity:node|title',
+    );
+    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    $processors = $index->getProcessors();
+    $configuration = $processors['ignorecase']->getConfiguration();
+    $this->assertEqual($configuration['fields']['search_api_language'], 0, 'Language field disabled for ignore case filter.');
   }
 
   /**

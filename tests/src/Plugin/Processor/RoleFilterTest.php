@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiStopwordsTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -18,7 +18,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class SearchApiRoleFilterTest extends UnitTestCase {
+class RoleFilterTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
@@ -51,7 +51,7 @@ class SearchApiRoleFilterTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->processor = new RoleFilter(array(), 'search_api_role_filter_processor', array());
+    $this->processor = new RoleFilter(array(), 'role_filter', array());
 
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\Index\IndexInterface');

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiStopwordsTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -16,7 +16,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class SearchApiStopwordsTest extends UnitTestCase {
+class StopwordsTest extends UnitTestCase {
 
   /**
    * Stores the processor to be tested.
@@ -41,7 +41,7 @@ class SearchApiStopwordsTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->processor = new Stopwords(array(), 'search_api_stopwords_processor', array());;
+    $this->processor = new Stopwords(array(), 'stopwords', array());;
   }
 
   /**

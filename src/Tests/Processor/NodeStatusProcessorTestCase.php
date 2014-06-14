@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\SearchApiNodeStatusProcessorTestCase.
+ * Contains \Drupal\search_api\Tests\Processor\NodeStatusProcessorTestCase.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests\Processor;
 /**
  * Tests the NodeStatus processor.
  */
-class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
+class NodeStatusProcessorTestCase extends ProcessorTestBase {
 
   /**
    * {@inheritdoc}
@@ -27,7 +27,7 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
    * Creates a new processor object for use in the tests.
    */
   public function setUp() {
-    parent::setUp('search_api_node_status_processor');
+    parent::setUp('node_status');
 
     // Create a node type for testing.
     $type = entity_create('node_type', array('type' => 'page', 'name' => 'page'));
@@ -114,7 +114,7 @@ class SearchApiNodeStatusProcessorTestCase extends SearchApiProcessorTestBase {
       $generated_items[] = array(
         'item' => clone $item,
         'datasource' => 'entity:node',
-        'item_id' => rand(1, 100000) . ':und',
+        'item_id' => $i . ':und',
         'field_text' => $this->randomName(),
       );
     }

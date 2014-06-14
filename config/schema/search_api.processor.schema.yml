@@ -1,4 +1,4 @@
-search_api.processor.plugin.search_api_rendered_item:
+search_api.processor.plugin.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
   mapping:
@@ -14,10 +14,10 @@ search_api.processor.plugin.search_api_rendered_item:
       sequence:
         - type: string
           label: 'A role'
-search_api.processor.plugin.search_api_node_status_processor:
+search_api.processor.plugin.node_status:
   type: mapping
   label: 'Node status processor configuration'
-search_api.processor.plugin.search_api_stopwords_processor:
+search_api.processor.plugin.stopwords:
   type: mapping
   label: 'Stopwords processor configuration'
   mapping:
@@ -33,7 +33,7 @@ search_api.processor.plugin.search_api_stopwords_processor:
     stopwords:
       type: text
       label: 'Defined stopwords'
-search_api.processor.plugin.search_api_tokenizer_processor:
+search_api.processor.plugin.tokenizer:
   type: mapping
   label: 'Tokenizer processor configuration'
   mapping:
@@ -49,7 +49,7 @@ search_api.processor.plugin.search_api_tokenizer_processor:
     ignorable:
       type: string
       label: 'Regular expression for ignorables'
-search_api.processor.plugin.search_api_transliteration_processor:
+search_api.processor.plugin.transliteration:
   type: mapping
   label: 'Transliteration processor configuration'
   mapping:
@@ -59,10 +59,10 @@ search_api.processor.plugin.search_api_transliteration_processor:
       sequence:
         - type: string
           label: 'Selected field'
-search_api.processor.plugin.search_api_language_processor:
+search_api.processor.plugin.language:
   type: mapping
   label: 'Language processor configuration'
-search_api.processor.plugin.search_api_ignorecase_processor:
+search_api.processor.plugin.ignorecase:
   type: mapping
   label: 'Ignore case processor configuration'
   mapping:
@@ -72,13 +72,13 @@ search_api.processor.plugin.search_api_ignorecase_processor:
       sequence:
         - type: string
           label: 'Selected field'
-search_api.processor.plugin.search_api_add_url_processor:
+search_api.processor.plugin.add_url:
   type: mapping
   label: 'Add URL processor configuration'
 search_api.processor.plugin.search_api_content_access_processor:
   type: mapping
   label: 'Content access processor configuration'
-search_api.processor.plugin.search_api_highlight_processor:
+search_api.processor.plugin.highlight:
   type: mapping
   label: 'Highlight processor configuration'
   mapping:
@@ -97,7 +97,7 @@ search_api.processor.plugin.search_api_highlight_processor:
     highlight:
       type: string
       label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
-search_api.processor.plugin.search_api_role_filter_processor:
+search_api.processor.plugin.role_filter:
   type: mapping
   label: 'Role filter processor'
   mapping:
@@ -116,7 +116,7 @@ search_api.processor.plugin.search_api_role_filter_processor:
       sequence:
         - type: string
           label: 'The role name'
-search_api.processor.plugin.search_api_html_filter_processor:
+search_api.processor.plugin.html_filter:
   type: mapping
   label: 'HTML filter processor'
   mapping:
@@ -135,16 +135,6 @@ search_api.processor.plugin.search_api_html_filter_processor:
     tags:
       type: text
       label: 'Tag boosts'
-search_api.processor.plugin.search_api_add_aggregation_processor:
+search_api.processor.plugin.add_aggregation:
   type: mapping
   label: 'Add aggregation processor'
-search_api.processor.plugin.search_api_ignorecase_processor:
-  type: mapping
-  label: 'Ignore case processor'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'The field name'

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\SearchApiLanguageIntegrationUnitTest.
+ * Contains \Drupal\search_api\Tests\LanguageIntegrationUnitTest.
  */
 
 namespace Drupal\search_api\Tests;
@@ -14,7 +14,7 @@ use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 /**
  * Tests translation handling of the content entity datasource.
  */
-class SearchApiLanguageIntegrationUnitTest extends EntityLanguageTestBase {
+class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
 
   /**
    * The test entity type used in the test.

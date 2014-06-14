@@ -14,7 +14,7 @@ use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_add_aggregation_processor",
+ *   id = "add_aggregation",
  *   label = @Translation("Aggregation processor"),
  *   description = @Translation("Create aggregate fields to be additionally indexed.")
  * )

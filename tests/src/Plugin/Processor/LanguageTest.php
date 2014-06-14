@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\SearchApiHighlightTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -19,7 +19,7 @@ use Drupal\Tests\UnitTestCase;
  * @group Drupal
  * @group search_api
  */
-class SearchApiLanguageTest extends UnitTestCase {
+class LanguageTest extends UnitTestCase {
 
   use TestItemsTrait;
 
@@ -58,7 +58,7 @@ class SearchApiLanguageTest extends UnitTestCase {
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
-    $this->processor = new Language(array(), 'search_api_language_processor', array());
+    $this->processor = new Language(array(), 'language', array());
     $this->processor->setStringTranslation($translation);
   }
 

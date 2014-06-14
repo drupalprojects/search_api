@@ -12,7 +12,7 @@ use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_tokenizer_processor",
+ *   id = "tokenizer",
  *   label = @Translation("Tokenizer processor"),
  *   description = @Translation("Remove characters from search strings.")
  * )
