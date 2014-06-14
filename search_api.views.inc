@@ -117,7 +117,7 @@ function search_api_views_data() {
       $table['search_api_excerpt']['group'] = t('Search');
       $table['search_api_excerpt']['title'] = t('Excerpt');
       $table['search_api_excerpt']['help'] = t('The search result excerpted to show found search terms.');
-      $table['search_api_excerpt']['field']['id'] = 'standard';
+      $table['search_api_excerpt']['field']['id'] = 'search_api_excerpt';
 
       $table['search_api_fulltext']['group'] = t('Search');
       $table['search_api_fulltext']['title'] = t('Fulltext search');
