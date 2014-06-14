@@ -290,6 +290,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function addIndex(IndexInterface $index) {
+    // @todo Instead delete index's server tasks?
     $server_task_manager = Utility::getServerTaskManager();
     try {
       if ($server_task_manager->execute($this)) {
