@@ -13,6 +13,7 @@ class Co implements unicodeListInterface {
    * {@inheritdoc}
    */
   public static function getRegularExpression() {
-    return '\x{21}\x{23}\x{25}';
+    return
+      '\x{E000}\x{F8FF}\x{F0000}\x{FFFFD}\x{100000}\x{10FFFD}';
   }
 }
