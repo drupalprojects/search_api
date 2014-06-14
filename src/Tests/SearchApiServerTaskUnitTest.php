@@ -231,6 +231,42 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
    * Tests task system integration for the server's deleteItems() method.
    */
   public function testDeleteItems() {
+    // Set exception for deleteItems() and reset the list of successful
+    // backend method calls.
+    $this->state->set('search_api_test_backend.exception.deleteItems', TRUE);
+    $this->getCalledServerMethods();
+
+    // Try to update the index.
+    $this->server->deleteItems($this->index, array());
+    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteItems correctly threw an exception.');
+    $tasks = $this->getServerTasks();
+    if (count($tasks) == 1) {
+      $task_created = $tasks[0]->type === 'deleteItems';
+    }
+    $this->assertTrue(!empty($task_created), 'The deleteItems task was successfully added.');
+    if ($tasks) {
+      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the deleteItems task.');
+    }
+
+    // Check whether other task-system-integrated methods now fail, too.
+    $this->server->updateIndex($this->index);
+    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex was not executed.');
+    $tasks = $this->getServerTasks();
+    if (count($tasks) == 2) {
+      $this->pass("Second task ('updateIndex') was added.");
+      $this->assertEqual($tasks[0]->type, 'deleteItems', 'First task stayed the same.');
+      $this->assertEqual($tasks[1]->type, 'updateIndex', 'New task was queued as last.');
+    }
+    else {
+      $this->fail("Second task (updateIndex) was not added.");
+    }
+
+    // Let deleteItems() succeed again, then trigger the task execution
+    // with a cron run.
+    $this->state->set('search_api_test_backend.exception.deleteItems', FALSE);
+    search_api_cron();
+    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
+    $this->assertEqual($this->getCalledServerMethods(), array('deleteItems', 'updateIndex'), 'Right methods were called during task execution.');
   }
 
   /**
