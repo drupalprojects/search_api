@@ -58,7 +58,7 @@ class LanguageTest extends UnitTestCase {
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
-    $this->processor = new Language(array(), 'search_api_language_processor', array());
+    $this->processor = new Language(array(), 'language', array());
     $this->processor->setStringTranslation($translation);
   }
 

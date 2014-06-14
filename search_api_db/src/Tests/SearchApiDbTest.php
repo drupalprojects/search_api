@@ -174,7 +174,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     );
 
     $index->setOption('processors', array(
-      'search_api_html_filter_processor' => array(
+      'html_filter' => array(
         'status' => TRUE,
         'weight' => 0,
       ),
@@ -186,7 +186,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
     $index->setOption('processors', array(
-      'search_api_html_filter_processor' => array(
+      'html_filter' => array(
         'status' => FALSE,
         'weight' => 0,
       ),

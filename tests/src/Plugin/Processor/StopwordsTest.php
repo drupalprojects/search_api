@@ -41,7 +41,7 @@ class StopwordsTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->processor = new Stopwords(array(), 'search_api_stopwords_processor', array());;
+    $this->processor = new Stopwords(array(), 'stopwords', array());;
   }
 
   /**

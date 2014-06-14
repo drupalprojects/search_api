@@ -17,7 +17,7 @@ use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_highlight_processor",
+ *   id = "highlight",
  *   label = @Translation("Hightlight processor"),
  *   description = @Translation("Excerpt and field result hightlighting")
  * )

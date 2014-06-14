@@ -51,7 +51,7 @@ class RoleFilterTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->processor = new RoleFilter(array(), 'search_api_role_filter_processor', array());
+    $this->processor = new RoleFilter(array(), 'role_filter', array());
 
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\Index\IndexInterface');

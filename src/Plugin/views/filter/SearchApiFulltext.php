@@ -67,6 +67,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     );
 
     $fields = $this->getFulltextFields();
+//    $fields = array();
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
@@ -206,7 +207,7 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   protected function getFulltextFields() {
     $fields = array();
-    $index = $this->query->getIndex();
+    $index = entity_load('search_api_index', substr($this->table, 17));
 
     $fields_info = $index->getFields();
     foreach ($index->getFulltextFields() as $field_id) {
