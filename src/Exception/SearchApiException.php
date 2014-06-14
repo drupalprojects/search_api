@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Exception;
 
 /**
- * Represents an exception or error that occurred in some part of the Search API
- * framework.
+ * Represents an exception that occurred in some part of the Search API.
  */
 class SearchApiException extends \Exception { }

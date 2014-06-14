@@ -424,11 +424,21 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function deleteAllItems() {
-    // @todo Maybe make this more intelligent to try all indexes before
-    // re-throwing a possibly encountered exception (or a wrapper for several).
+    $failed = array();
     $properties['readOnly'] = FALSE;
     foreach ($this->getIndexes($properties) as $index) {
-      $this->getBackend()->deleteAllIndexItems($index);
+      try {
+        $this->getBackend()->deleteAllIndexItems($index);
+      }
+      catch (SearchApiException $e) {
+        $failed[] = $index->label();
+      }
+    }
+    if (!empty($e)) {
+      $args['%server'] = $this->label();
+      $args['@indexes'] = implode(', ', $failed);
+      $message = t('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
+      throw new SearchApiException($message, 0, $e);
     }
   }
 
