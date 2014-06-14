@@ -85,9 +85,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->searchSuccess2();
     $this->clearIndex();
 
-    $this->enableHTMLFilter();
+    $this->enableHtmlFilter();
     $this->indexItems($this->indexId);
-    $this->disableHTMLFilter();
+    $this->disableHtmlFilter();
     $this->clearIndex();
 
     //$this->enableIgnoreCaseFilter();
@@ -165,7 +165,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->save();
   }
 
-  protected function enableHTMLFilter() {
+  protected function enableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
 
@@ -182,7 +182,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->save();
   }
 
-  protected function disableHTMLFilter() {
+  protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
     $index->setOption('processors', array(
@@ -225,20 +225,20 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   protected function searchSuccess1() {
-    $results = $this->buildSearch('test')->range(1, 2)->execute();
+    $results = $this->buildSearch('test')->range(1, 2)->sort($this->getFieldId('id'), 'ASC')->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Search for »test« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 3)), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $ids = $this->getItemIds(array(1));
+    $ids = $this->getItemIds(array(2));
     $id = reset($ids);
-    $this->assertEqual($results->getResultItems()[$id]->getId(), $this->getItemIds(array(1))[0]);
+    $this->assertEqual($results->getResultItems()[$id]->getId(), $this->getItemIds(array(2))[0]);
     $this->assertEqual($results->getResultItems()[$id]->getDatasourceId(), 'entity:entity_test');
 
-    $results = $this->buildSearch('"test foo"')->execute();
+    $results = $this->buildSearch('test foo')->sort($this->getFieldId('id'), 'ASC')->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Search for »"test foo"« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 1)), 'Search for »"test foo"« returned correct result.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'Search for »"test foo"« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 

@@ -7,7 +7,8 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter;
+use Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter;
+use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -17,6 +18,8 @@ use Drupal\Tests\UnitTestCase;
  * @group search_api
  */
 class HtmlFilterTest extends UnitTestCase {
+
+  use ProcessorTestTrait;
 
   /**
    * {@inheritdoc}
@@ -32,34 +35,21 @@ class HtmlFilterTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  public function setUp() {
     parent::setUp();
+
+    $this->processor = new HtmlFilter(array(), 'html_filter', array());
   }
 
   /**
-   * Get an accessible method of HTMLFilter using reflection.
-   */
-  public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter');
-    $method = $class->getMethod($methodName);
-    $method->setAccessible(TRUE);
-    return $method;
-  }
-
-  /**
-   * Test processFieldValue method with title fetching enabled.
+   * Tests processFieldValue method with title fetching enabled.
    *
    * @dataProvider titleConfigurationDataProvider
    */
   public function testTitleConfiguration($passedString, $expectedValue, $titleConfig) {
-    $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue'),
-      array(array('tags' => "", 'title' => $titleConfig, 'alt' => 0), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'string'));
-
-    $this->assertEquals($passedString, $expectedValue);
+    $this->processor->setConfiguration(array('tags' => array(), 'title' => $titleConfig, 'alt' => FALSE));
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->assertEquals($expectedValue, $passedString);
 
   }
 
@@ -68,34 +58,25 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function titleConfigurationDataProvider() {
     return array(
-      array('word', 'word', 0),
-      array('word', 'word', 1),
-      array('<div>word</div>', 'word', 1),
-      array('<div title="TITLE">word</div>', 'TITLE word', 1),
-      array('<div title="TITLE">word</div>', 'word', 0),
-      array('<div data-title="TITLE">word</div>', 'word', 1),
-      array('<div title="TITLE">word</a>', 'TITLE word', 1),
+      array('word', 'word', FALSE),
+      array('word', 'word', TRUE),
+      array('<div>word</div>', 'word', TRUE),
+      array('<div title="TITLE">word</div>', 'TITLE word', TRUE),
+      array('<div title="TITLE">word</div>', 'word', FALSE),
+      array('<div data-title="TITLE">word</div>', 'word', TRUE),
+      array('<div title="TITLE">word</a>', 'TITLE word', TRUE),
     );
   }
 
   /**
-   * Test processFieldValue method with alt fetching enabled.
-   * The arguments are being filled by the altConfigurationDataProvider
+   * Tests processFieldValue method with alt fetching enabled.
    *
    * @dataProvider altConfigurationDataProvider
    */
   public function testAltConfiguration($passedString, $expectedValue, $altBoost) {
-    // Mock the HTMLFilter class and fetch the two methods we want to test.
-    //Initialize them with the default values as given in the arguments.
-    $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue'),
-      array(array('tags' => array('img' => '2'), 'title' => 0, 'alt' => $altBoost), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'string'));
-
-    $this->assertEquals($passedString, $expectedValue);
-
+    $this->processor->setConfiguration(array('tags' => array('img' => '2'), 'title' => FALSE, 'alt' => $altBoost));
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
@@ -103,70 +84,112 @@ class HtmlFilterTest extends UnitTestCase {
    */
   public function altConfigurationDataProvider() {
     return array(
-      array('word', 'word', 0),
-      array('word', 'word', 1),
-      array('<img src"href">word', "word", 1),
-      array('<img alt="ALT"> word', "ALT word", 1),
-      array('<img alt="ALT"> word', "word", 0),
-      array('<img data-alt="ALT"> word', "word", 1),
-      array('<img alt="ALT"> word </a>', "ALT word", 1),
+      array('word', array(Utility::createTextToken('word')), FALSE),
+      array('word', array(Utility::createTextToken('word')), TRUE),
+      array('<img src="href" />word', array(Utility::createTextToken('word')), TRUE),
+      array('<img alt="ALT"/> word', array(Utility::createTextToken('ALT', 2), Utility::createTextToken('word')), TRUE),
+      array('<img alt="ALT" /> word', array(Utility::createTextToken('word')), FALSE),
+      array('<img data-alt="ALT"/> word', array(Utility::createTextToken('word')), TRUE),
+      array('<img src="href" alt="ALT" title="Bar" /> word </a>', array(Utility::createTextToken('ALT', 2), Utility::createTextToken('word')), TRUE),
     );
   }
 
   /**
-   * Test processFieldValue method with tag provided fetching enabled.
+   * Tests processFieldValue method with tag provided fetching enabled.
    *
    * @dataProvider tagConfigurationDataProvider
    */
-  public function testTagConfiguration($passedString, $expectedValue, $tagsConfig) {
-    $htmlFilterMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\HTMLFilter',
-      array('processFieldValue'),
-      array(array('tags' => $tagsConfig, 'title' => 0, 'alt' => 0), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($htmlFilterMock, array(&$passedString, 'text'));
-    $this->assertEquals($passedString, $expectedValue);
-
+  public function testTagConfiguration($passedString, $expectedValue, array $tagsConfig) {
+    $this->processor->setConfiguration(array('tags' => $tagsConfig, 'title' => TRUE, 'alt' => TRUE));
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
    * Data provider method for testTagConfiguration()
-   *
-   * @todo add some more cases.
    */
   public function tagConfigurationDataProvider() {
+    $complex_test = array(
+      '<h2>Foo Bar <em>Baz</em></h2>
+
+<p>Bla Bla Bla. <strong title="Foobar">Important:</strong> Bla.</p>
+<img src="/foo.png" alt="Some picture" />
+<span>This is hidden</span>',
+      array(
+        Utility::createTextToken('Foo Bar', 3.0),
+        Utility::createTextToken('Baz', 4.5),
+        Utility::createTextToken('Bla Bla Bla.', 1.0),
+        Utility::createTextToken('Foobar Important:', 2.0),
+        Utility::createTextToken('Bla.', 1.0),
+        Utility::createTextToken('Some picture', 0.5),
+      ),
+      array(
+        'em' => 1.5,
+        'strong' => 2.0,
+        'h2' => 3.0,
+        'img' => 0.5,
+        'span' => 0,
+      ),
+    );
+    $tags_config = array('h2' => '2');
     return array(
-      array('h2word', 'h2word', ''),
-      array('h2word', array(array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
-      array('<h2> h2word </h2>', array(array('value' => 'h2word', 'score' => '2'), array('value' => 'h2word', 'score' => '1')), array('h2' => '2')),
+      array('h2word', 'h2word', array()),
+      array('h2word', array(Utility::createTextToken('h2word')), $tags_config),
+      array('foo bar <h2> h2word </h2>', array(Utility::createTextToken('foo bar'), Utility::createTextToken('h2word', 2.0)), $tags_config),
+      array('foo bar <h2>h2word</h2>', array(Utility::createTextToken('foo bar'), Utility::createTextToken('h2word', 2.0)), $tags_config),
+      array('<div>word</div>', array(Utility::createTextToken('word', 2)), array('div' => 2)),
+      $complex_test,
     );
   }
 
   /**
-   * Test getValueAndScoreFromHTML method.
+   * Tests whether strings are correctly handled.
    *
-   * @dataProvider getValueAndScoreFromHTMLDataProvider
+   * String field handling should be completely independent of configuration.
+   *
+   * @param array $config
+   *   The configuration to set on the processor.
+   *
+   * @dataProvider stringProcessingDataProvider
    */
-  public function testGetValueAndScoreFromHTMLMethod($value, array $expectedValue, $tagsString) {
+  public function testStringProcessing(array $config) {
+    $this->processor->setConfiguration($config);
 
-    $configuration = array('tags' => $tagsString);
-    $plugin_id = 'Test';
-    $plugin_definition = array();
-    $htmlFilter = new HTMLFilter($configuration, $plugin_id, $plugin_definition);
-    $processFieldValueMethod = $this->getAccessibleMethod('getValueAndScoreFromHTML');
-    $result = $processFieldValueMethod->invokeArgs($htmlFilter, array($value));
-    $this->assertEquals($result, $expectedValue);
+    $passedString = '<h2>Foo Bar <em>Baz</em></h2>
+
+<p>Bla Bla Bla. <strong title="Foobar">Important:</strong> Bla.</p>
+<img src="/foo.png" alt="Some picture" />
+<span>This is hidden</span>';
+    $expectedValue = preg_replace('/\s+/', ' ', strip_tags($passedString));
+
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'string'));
+    $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
-   * Data provider for testGetValueAndScoreFromHTMLMethod.
+   * Provides a few sets of HTML filter configuration.
    *
-   * @todo add other cases.
+   * @return array
+   *   An array of argument arrays for testStringProcessing(), where each array
+   *   contains a HTML filter configuration as the only value.
    */
-  public function getValueAndScoreFromHTMLDataProvider() {
-    return array(
-      array('<div>word</div>', array('div' => array('value' => 'word', 'score' => 2)), array('div' => '2')),
+  public function stringProcessingDataProvider() {
+    $configs = array();
+    $configs[] = array(array());
+    $config['tags'] = array(
+      'h2' => 2.0,
+      'span' => 4.0,
+      'strong' => 1.5,
+      'p' => 0,
     );
+    $configs[] = array($config);
+    $config['title'] = TRUE;
+    $configs[] = array($config);
+    $config['alt'] = TRUE;
+    $configs[] = array($config);
+    unset($config['tags']);
+    $configs[] = array($config);
+    return $configs;
   }
 
 }

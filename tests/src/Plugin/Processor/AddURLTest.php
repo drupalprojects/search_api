@@ -71,7 +71,8 @@ class AddUrlTest extends UnitTestCase {
       ->will($this->returnValue($url));
 
     // Create a mock for the indexer to get the dataSource object which holds the URL.
-    $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
     $this->index->expects($this->any())
       ->method('getDatasource')
       ->with('entity:node')
@@ -79,8 +80,10 @@ class AddUrlTest extends UnitTestCase {
 
     // Create the URL-Processor and set the mocked indexer.
     $this->processor = new AddURL(array(), 'add_url', array());
-    $this->processor->setIndex($this->index);
-    $this->processor->setStringTranslation($this->getStringTranslationStub());
+    $this->processor->setIndex($index);
+    /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
+    $translation = $this->getStringTranslationStub();
+    $this->processor->setStringTranslation($translation);
   }
 
   /**
@@ -132,7 +135,7 @@ class AddUrlTest extends UnitTestCase {
   public function testAlterPropertyDefinitions() {
     $properties = array();
 
-    // Check for modified properties when no DataSource is given.
+    // Check for modified properties when no data source is given.
     $this->processor->alterPropertyDefinitions($properties, NULL);
     $property_added = array_key_exists('search_api_url', $properties);
     $this->assertTrue($property_added, 'The "search_api_url" property was added to the properties.');

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
+ * Contains \Drupal\search_api\Tests\Plugin\Processor\LanguageTest.
  */
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
@@ -18,6 +18,8 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language
  */
 class LanguageTest extends UnitTestCase {
 

@@ -45,23 +45,74 @@ class StopwordsTest extends UnitTestCase {
   }
 
   /**
-   * Test stopwords process.
+   * Get an accessible method of the processor class using reflection.
    */
-  public function testStopwords() {
-    $string = 'String containing some stop words and that is to be tested.';
-    $configuration = array('file' => '', 'stopwords' => array('some', 'and', 'that'));
+  public function getAccessibleMethod($methodName) {
+    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\Stopwords');
+    $method = $class->getMethod($methodName);
+    $method->setAccessible(TRUE);
+    return $method;
+  }
+
+  /**
+   * Test stopwords process.
+   *
+   * @dataProvider stopwordsDataProvider
+   */
+  public function testStopwords($passedString, $expectedString, $stopwordsConfig) {
+    $process = $this->getAccessibleMethod('process');
+
+    $configuration = array('file' => '', 'stopwords' => $stopwordsConfig);
     $this->processor->setConfiguration($configuration);
-    $this->processor->process($string);
-    $this->assertEquals($string, 'String containing stop words is to be tested.');
+    $process->invokeArgs($this->processor, array(&$passedString));
+    $this->assertEquals($passedString, $expectedString);
+  }
+
+  /**
+   * Data provider for testStopwords().
+   *
+   * Processor checks for exact case, and tokenized content.
+   */
+  public function stopwordsDataProvider() {
+    return array(
+      array(
+        "or",
+        "",
+        array('or'),
+      ),
+       array(
+        "orb",
+        "orb",
+        array('or'),
+      ),
+      array(
+        "orbital",
+        "orbital",
+        array('or'),
+      ),
+      array(
+        "ÄÖÜÀÁ<>»«û",
+        "ÄÖÜÀÁ<>»«û",
+        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ<>»«', )
+      ),
+      array(
+        "ÄÖÜÀÁ",
+        "",
+        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ', )
+      ),
+      array(
+        " ÄÖÜÀÁ ",
+        "",
+        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ', )
+      ),
+    );
   }
 
   /**
    * Test configuration getStopwords.
    */
   public function testGetStopwords() {
-    $reflectionStopwords = new \ReflectionClass('\Drupal\search_api\Plugin\SearchApi\Processor\Stopwords');
-    $getStopwords = $reflectionStopwords->getMethod('getStopwords');
-    $getStopwords->setAccessible(TRUE);
+    $getStopwords = $this->getAccessibleMethod('getStopwords');
 
     $configuration = array('file' => '', 'stopwords' => array("String", "containing", "both", "spaces", "and", "Newlines", "ÄÖÜÀÁ<>»«"));
     $stopwords = array(
