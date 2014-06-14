@@ -114,7 +114,7 @@ class NodeStatusProcessorTestCase extends ProcessorTestBase {
       $generated_items[] = array(
         'item' => clone $item,
         'datasource' => 'entity:node',
-        'item_id' => rand(1, 100000) . ':und',
+        'item_id' => $i . ':und',
         'field_text' => $this->randomName(),
       );
     }
