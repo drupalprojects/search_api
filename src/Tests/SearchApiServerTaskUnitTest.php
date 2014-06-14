@@ -8,12 +8,12 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\search_api\Exception\SearchApiException;
-use Drupal\system\Tests\Entity\EntityUnitTestBase;
+use Drupal\simpletest\KernelTestBase;
 
 /**
  * Tests correct working of the server task system.
  */
-class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
+class SearchApiServerTaskUnitTest extends KernelTestBase {
 
   /**
    * The test server.
@@ -41,7 +41,14 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
    *
    * @var array
    */
-  public static $modules = array('search_api', 'search_api_test_backend');
+  public static $modules = array('entity', 'user', 'search_api', 'search_api_test_backend');
+
+  /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
 
   /**
    * The server task manager to use for the tests.
@@ -67,6 +74,9 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
   public function setUp() {
     parent::setUp();
 
+    $this->state = $this->container->get('state');
+
+    $this->installEntitySchema('user');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     // Create a test server.
@@ -83,7 +93,7 @@ class SearchApiServerTaskUnitTest extends EntityUnitTestBase {
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
-      'datasourcePluginIds' => array('entity:entity_test'),
+      'datasourcePluginIds' => array('entity:user'),
       'trackerPluginId' => 'default_tracker',
       'serverMachineName' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
