@@ -11,8 +11,6 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\Xss;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -83,17 +81,17 @@ class HTMLFilter extends FieldsProcessorPluginBase {
       '#description' => t('If set, the alternative text of images will be indexed.'),
       '#default_value' => $this->configuration['alt'],
     );
-    $t_args = array('!link' => l('YAML file format', 'https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8'));
 
     $dumper = new Dumper();
     $tags = $dumper->dump($this->configuration['tags'], 2);
     $tags = str_replace('\r\n', "\n", $tags);
     $tags = str_replace('"', '', $tags);
 
+    $t_args['@url'] = url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8');
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => t('Tag boosts'),
-      '#description' => t('Specify special boost values for certain HTML elements, in !link. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
+      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@url">YAML file format</a>. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
       '#default_value' => $tags,
     );
 
@@ -114,15 +112,19 @@ class HTMLFilter extends FieldsProcessorPluginBase {
     parent::validateConfigurationForm($form, $form_state);
 
     $values = $form_state['values'];
-    if (empty($values['tags'])) {
+    $values['tags'] = trim($values['tags']);
+    if (!$values['tags']) {
       return;
     }
     $errors = array();
-    if (!$tags = $this->parseTags($values['tags'])) {
+    try {
+      $parser = new Parser();
+      $tags = $parser->parse($values['tags']);
+    }
+    catch (ParseException $exception) {
       $errors[] = t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
       $tags = array();
     }
-    $form_state['values']['tags'] = $tags;
     foreach ($tags as $key => $value) {
       $key = "<$key>";
       if (is_array($value)) {
@@ -134,7 +136,14 @@ class HTMLFilter extends FieldsProcessorPluginBase {
       elseif ($value < 0) {
         $errors[] = t('Boost value for tag @tag must be non-negative.', array('@tag' => $key));
       }
+      elseif ($value == 1) {
+        unset($tags[$key]);
+      }
+      else {
+        $tags[$key] = (float) $tags[$key];
+      }
     }
+    $form_state['values']['tags'] = $tags;
     if ($errors) {
       \Drupal::formBuilder()->setError($form['tags'], $form_state, implode("<br />\n", $errors));
     }
@@ -144,123 +153,95 @@ class HTMLFilter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function processFieldValue(&$value, &$type) {
-    // Copy without reference
-    $text = $value;
-    // Put the title properties from html entities in the text blob.
-    if ($this->configuration['title']) {
-      $text = preg_replace('/((<[-a-z_]+[^>]+)\s+title\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>))/i', '$4$5 $1', $text);
-    }
-    // Put the alt text as regular text in the text blob.
-    if ($this->configuration['alt']) {
-      $text = preg_replace('/(<img[^>]*\s+alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>)/i', '$3$4 $1', $text);
-    }
-
-    // Process the individual tags for text or tokenized_text types.
-    if (!empty($this->configuration['tags']) && in_array($type, array('text', 'tokenized_text'))) {
-      $tokenized_text = array();
-      $tags_exploded = '<' . implode('><', array_keys($this->tags)) . '>';
-      // Let removed tags still delimit words.
+    // Remove invisible content.
+    $text = preg_replace('@<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)[^>]*>.*</\1>@siU', ' ', $value);
+    // Let removed tags still delimit words.
+    $is_text_type = Utility::isTextType($type, array('text', 'tokenized_text'));
+    if ($is_text_type) {
       $text = str_replace(array('<', '>'), array(' <', '> '), $text);
-      // Strip all tags except the ones configured
-      $text = strip_tags($text, $tags_exploded);
-      // Get rid of unnecessary space symbols.
-      $get_tag_scores = $this->getValueAndScoreFromHTML($text);
-      if (!empty($get_tag_scores)) {
-        $tokenized_text = array_merge($tokenized_text, $get_tag_scores);
+      if ($this->configuration['title']) {
+        $text = preg_replace('/(<[-a-z_]+[^>]*["\s])title\s*=\s*("([^"]+)"|\'([^\']+)\')([^>]*>)/i', '$1 $5 $3$4 ', $text);
       }
-      // Add also everything as non boosted for the general field.
-      $tokenized_text['content'] = array('value' => $text, 'score' => 1);
-
-      // Clean up all the remaining tags and clean up the different sections.
-      foreach ($tokenized_text as &$token) {
-        $token['value'] = $this->stripHtmlTagsAndPunctuation($token['value']);
+      if ($this->configuration['alt']) {
+        $text = preg_replace('/<[-a-z_]+[^>]*["\s]alt\s*=\s*("([^"]+)"|\'([^\']+)\')[^>]*>/i', ' <img>$2$3</img> ', $text);
       }
-      $value = array_values($tokenized_text);
-      // Tell the upstream that we changed the type from text to tokenized_text
-      $type = "tokenized_text";
+    }
+    if ($this->tags && $is_text_type) {
+      $text = strip_tags($text, '<' . implode('><', array_keys($this->tags)) . '>');
+      $value = $this->parseHtml($text);
+      $type = 'tokenized_text';
     }
     else {
-      $value = $this->stripHtmlTagsAndPunctuation($text);
+      $text = strip_tags($text);
+      $value = $this->normalizeText(trim($text));
     }
   }
 
   /**
-   * Parses text and returns the different segments it found with their boosts.
+   * Parses an HTML string to group the text by containing tags.
    *
    * @param string $text
+   *   The HTML string to parse.
+   * @param string|null $active_tag
+   *   (optional) The currently active tag, for which a closing tag has to be
+   *   found. Internal use only.
+   * @param float $boost
+   *   (optional) The currently active boost value. Internal use only.
    *
    * @return array
-   *  Array of parsed values, and their boost attached
-   *  Values that were found that were not enclosed in tags should also get
-   *  added but with a boost as 1
+   *   Tokenized text with appropriate scores.
    */
-  protected function getValueAndScoreFromHTML($text) {
+  protected function parseHtml(&$text, $active_tag = NULL, $boost = 1.0) {
     $ret = array();
-    preg_match_all('@<(' . implode('|', array_keys($this->tags)) . ')[^>]*>(.*)</\1>@Ui', $text, $matches);
-
-    foreach ($matches[1] as $key => $tag) {
-      $tag = Unicode::strtolower($tag);
-
-      if (!isset($ret[$tag])) {
-        $ret[$tag] = array('value' => '', 'score' => '');
+    while (($pos = strpos($text, '<')) !== FALSE) {
+      if ($boost && $pos > 0) {
+        $value = $this->normalizeText(substr($text, 0, $pos));
+        if ($value !== '') {
+          $ret[] = Utility::createTextToken($value, $boost);
+        }
       }
-      // We don't want to index links auto-generated by the url filter.
-      if ($tag != 'a' || !preg_match('@(?:http://|https://|ftp://|mailto:|smb://|afp://|file://|gopher://|news://|ssl://|sslv2://|sslv3://|tls://|tcp://|udp://|www\.)[a-zA-Z0-9]+@', $matches[2][$key])) {
-        $ret[$tag]['value'] .= $matches[2][$key];
-        $ret[$tag]['score'] = (isset($this->tags[$tag]) ? $this->tags[$tag] : 1);
+      $text = substr($text, $pos + 1);
+      preg_match('#^(/?)([-:_a-zA-Z0-9]+)#', $text, $m);
+      $pos = strpos($text, '>');
+      $empty_tag = $text[$pos - 1] == '/';
+      $text = substr($text, $pos + 1);
+      if ($m[1]) {
+        // Closing tag.
+        if ($active_tag && $m[2] == $active_tag) {
+          return $ret;
+        }
       }
+      elseif (!$empty_tag) {
+        // Opening tag => recursive call.
+        $inner_boost = $boost * (isset($this->tags[$m[2]]) ? $this->tags[$m[2]] : 1);
+        $ret = array_merge($ret, $this->parseHtml($text, $m[2], $inner_boost));
+      }
+    }
+    if ($text) {
+      $value = $this->normalizeText($text);
+      if ($value !== '') {
+        $ret[] = Utility::createTextToken($value, $boost);
+      }
+      $text = '';
     }
     return $ret;
   }
 
   /**
-   * The following function strips a couple of things from the text that passes
-   * in through the filter.
+   * Removes superfluous whitespace and unescapes HTML entities.
    *
-   * - Strips invisible content from tags such as canvas, embed, iframe etc..
-   * - Adds spaces before stripping tags to avoid the following scenario.
-   *   test<p>test</p> => testtest. This should become test test.
-   * - Decode html entities so we index characters and not html encoded
-   *   entities.
-   *   "I'll &quot;walk&quot;" to "I'll \"walk\"" to.
-   * - Remove extra spaces. No need to index extra spaces.
+   * @param string $value
+   *   The text to process.
    *
-   * @param string $text
-   *   The input to clean
    * @return string
-   *   The clean text
+   *   The text without unnecessary whitespace and HTML entities transformed
+   *   back to plain text.
    */
-  protected function stripHtmlTagsAndPunctuation($text) {
-    // Remove invisible content.
-    $text = preg_replace('@<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)[^>]*>.*</\1>@siU', ' ', $text);
-    // Add spaces before stripping tags to avoid running words together.
-    $text = Xss::filter(str_replace(array('<', '>'), array(' <', '> '), $text), array());
-    // Decode entities and then make safe any < or > characters.
-    $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
-    // Remove extra spaces.
-    $text = preg_replace('/\s+/s', ' ', $text);
-    $text = trim($text);
-    return $text;
+  protected function normalizeText($value) {
+    $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    $value = trim($value);
+    $value = preg_replace('/\s+/', ' ', $value);
+    return $value;
   }
 
-  /**
-   *  Parses an array of tags in YAML.
-   *
-   *  @param $yaml
-   *    yaml represenation of array
-   *
-   *  @return array of tags
-   */
-  protected function parseTags($yaml_input) {
-    try {
-      $parser = new Parser();
-      $tags = $parser->parse($yaml_input);
-      unset($tags['br'], $tags['hr']);
-    }
-    catch(ParseException $exception) {
-      //problem parsing, return empty array
-      $tags = FALSE;
-    }
-    return $tags;
-  }
 }
