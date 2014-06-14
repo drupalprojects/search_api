@@ -53,14 +53,17 @@ class NodeStatusTest extends UnitTestCase {
 
     $this->processor = new NodeStatus(array(), 'node_status', array());
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
-
     $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
     $datasource->expects($this->any())
       ->method('getEntityTypeId')
       ->will($this->returnValue('node'));
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $index->expects($this->any())
+      ->method('getDatasources')
+      ->will($this->returnValue(array($datasource)));
+      /** @var \Drupal\search_api\Index\IndexInterface $index */
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $datasource);
     $unpublished_node = $this->getMockBuilder('Drupal\search_api\Tests\TestNodeInterface')
@@ -68,7 +71,7 @@ class NodeStatusTest extends UnitTestCase {
       ->getMock();
 
     $unpublished_node->expects($this->any())
-      ->method('Ispublished')
+      ->method('isPublished')
       ->will($this->returnValue(FALSE));
     /** @var \Drupal\node\NodeInterface $unpublished_node */
 
@@ -81,12 +84,33 @@ class NodeStatusTest extends UnitTestCase {
       ->getMock();
 
     $published_node->expects($this->any())
-      ->method('Ispublished')
+      ->method('isPublished')
       ->will($this->returnValue(TRUE));
     /** @var \Drupal\node\NodeInterface $published_node */
 
     $item->setOriginalObject($published_node);
     $this->items[$item->getId()] = $item;
+  }
+
+  /**
+   * Tests whether supportsIndex() returns TRUE for an index cotnaining nodes.
+   */
+  public function testSupportsIndexSupported() {
+    $support = NodeStatus::supportsIndex(reset($this->items)->getIndex());
+    $this->assertTrue($support, 'Index containing a node datasource is supported.');
+  }
+
+  /**
+   * Tests whether supportsIndex() returns TRUE for an index cotnaining nodes.
+   */
+  public function testSupportsIndexUnsupported() {
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $index->expects($this->any())
+      ->method('getDatasources')
+      ->will($this->returnValue(array()));
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $support = NodeStatus::supportsIndex($index);
+    $this->assertFalse($support, 'Index containing no node datasource is not supported.');
   }
 
   /**
@@ -96,6 +120,9 @@ class NodeStatusTest extends UnitTestCase {
     $this->assertCount(2, $this->items, '2 nodes in the index.');
     $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertCount(1, $this->items, 'Unpublished node is removed from items list.');
+    $this->assertCount(1, $this->items, 'An item was removed from the items list.');
+    $published_nid = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en';
+    $this->assertTrue(isset($this->items[$published_nid]), 'Correct item was removed.');
   }
+
 }
