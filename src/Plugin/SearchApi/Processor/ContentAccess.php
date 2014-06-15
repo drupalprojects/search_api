@@ -22,7 +22,7 @@ use Drupal\search_api\Query\QueryInterface;
 
 /**
  * @SearchApiProcessor(
- *   id = "search_api_content_access_processor",
+ *   id = "content_access",
  *   label = @Translation("Content access processor"),
  *   description = @Translation("Adds access information to node and comment indexes")
  * )
@@ -147,7 +147,7 @@ class ContentAccess extends ProcessorPluginBase {
   public function preprocessSearchQuery(QueryInterface $query) {
     $processors = $this->index->getOption('processors');
 
-    if (!empty($processors['search_api_content_access_processor']['status']) && !$query->getOption('search_api_bypass_access')) {
+    if (!empty($processors['content_access']['status']) && !$query->getOption('search_api_bypass_access')) {
       $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
       if (is_numeric($account)) {
         $account = entity_load('user', $account);
