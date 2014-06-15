@@ -319,7 +319,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getResultItems();
-    $excerpt = $output[$first_entity_key]->getExcerpt();;
+    $excerpt = $output[$first_entity_key]->getExcerpt();
     $correct_output = '...  ligula sit amet condimentum dapibus, lorem nunc <strong>congue</strong> velit, et dictum augue leo sodales augue.
 Maecenas eget ...';
     $this->assertEquals($correct_output, $excerpt, 'Highlight is not correctly applied');
@@ -373,7 +373,7 @@ Maecenas eget ...';
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getResultItems();
-    $excerpt = $output[$first_entity_key]->getExcerpt();;
+    $excerpt = $output[$first_entity_key]->getExcerpt();
     $correct_output = '...  nunc <strong>congue</strong> velit, ...';
     $this->assertEquals($correct_output, $excerpt, 'Highlight is not correctly applied');
   }
