@@ -222,6 +222,55 @@ class HighlightTest extends UnitTestCase {
     $this->assertEquals('Some <em>foo</em> value', $output[$first_entity_key][$body_field_id][0], 'Highlight is not correctly applied');
   }
 
+  /**
+   * Test to see if we can change the prefix
+   */
+  public function testpostprocessSearchResultsWithChangedHighlight() {
+    $this->createHighlightProcessor(array('highlight' => 'never'));
+
+    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('foo' => 'foo')));
+
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $field = Utility::createField($index, $body_field_id);
+    $field->setType('text');
+
+    $index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array($body_field_id => $field)));
+
+    $this->processor->setIndex($index);
+
+    /** @var \Drupal\node\Entity\Node $node */
+    $node = $this->getMockBuilder('Drupal\node\Entity\Node')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $body_value = array('Some foo value');
+    $fields = array(
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_value,
+      ),
+    );
+
+    $items = $this->createItems($index, 1, $fields, $node);
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getExtraData('highlighted_fields');
+    $this->assertEmpty($output, 'Highlight is\'t applied');
+  }
+
 
   /**
    * Create Highlight processor
