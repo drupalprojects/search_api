@@ -15,8 +15,8 @@ use Drupal\search_api\Utility\Utility;
 /**
  * @SearchApiProcessor(
  *   id = "stopwords",
- *   label = @Translation("Stop words processor"),
- *   description = @Translation("Words to be filtered out before indexing")
+ *   label = @Translation("Stopwords"),
+ *   description = @Translation("Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both 'Ignore case' and 'Tokenizer' have run.")
  * )
  */
 class Stopwords extends FieldsProcessorPluginBase {
@@ -70,22 +70,16 @@ class Stopwords extends FieldsProcessorPluginBase {
         "will",
         "with",
       ),
-      'file' => '',
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    // The configuration default, or previously saved,
-    // stopwords are usually passed in as a string.
-    if (isset($configuration['stopwords']) && is_string($configuration['stopwords'])) {
-      $configuration['stopwords'] = explode("\n", $configuration['stopwords']);
-    }
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function setConfiguration(array $configuration) {
+    parent::setConfiguration($configuration);
+    unset($this->stopwords);
   }
-
 
   /**
    * {@inheritdoc}
@@ -93,14 +87,10 @@ class Stopwords extends FieldsProcessorPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $form['help'] = array(
-      '#markup' => '<p>' . $this->t('Provide a stopwords file or enter the words in this form. If you do both, both will be used. Read about <a href="!stopwords">stopwords</a>.', array('!stopwords' => 'https://en.wikipedia.org/wiki/Stop_words')) . '</p>'
-    );
-
     $form['stopwords'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
-      '#description' => $this->t('Enter a space and/or linebreak separated list of stopwords that will be removed from content before it is indexed and from search terms before searching.'),
+      '#description' => $this->t('Enter a list of stopwords, each on a separate line, that will be removed from content before it is indexed and from search terms before searching. <a href="@url">More info about stopwords.</a>.', array('@url' => 'https://en.wikipedia.org/wiki/Stop_words')),
       '#default_value' => implode("\n", $this->configuration['stopwords']),
     );
 
@@ -110,38 +100,10 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitConfigurationForm(array &$form, array &$form_state) {
-    parent::submitConfigurationForm($form, $form_state);
     // Convert our text input to an array.
-    $this->configuration['stopwords'] = explode("\n", $form_state['values']['stopwords']);
-  }
-
-  /**
-   * Processes a single string value.
-   *
-   * Requires both ignorecase and tokenize processors to be run first.
-   *
-   * @param string $value
-   *   The string value to preprocess, as a reference. Can be manipulated
-   *   directly, nothing has to be returned. Since this can be called for all
-   *   value types, $value has to remain a string.
-   */
-  protected function process(&$value) {
-    $stopwords = $this->getStopWords();
-    if (empty($stopwords) || !is_string($value)) {
-      return;
-    }
-    $value = trim($value);
-    if (in_array($value, $stopwords)) {
-      $value = '';
-    }
+    $form_state['values']['stopwords'] = explode("\n", $form_state['values']['stopwords']);
+    $this->setConfiguration($form_state['values']);
   }
 
   /**
@@ -162,24 +124,38 @@ class Stopwords extends FieldsProcessorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function testType($type) {
+    return Utility::isTextType($type, array('text', 'tokenized_text'));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function process(&$value) {
+    $stopwords = $this->getStopWords();
+    if (empty($stopwords) || !is_string($value)) {
+      return;
+    }
+    $value = trim($value);
+    if (isset($stopwords[$value])) {
+      $this->ignored[$value] = $value;
+      $value = '';
+    }
+  }
+
+  /**
    * Gets all the stopwords.
    *
    * @return array
-   *   An array whose keys are the stopwords set in either the file or the text
-   *   field.
+   *   An array whose keys and values are the stopwords set for this processor.
    */
   protected function getStopWords() {
-    if (isset($this->stopwords)) {
-      return $this->stopwords;
+    if (!isset($this->stopwords)) {
+      $this->stopwords = array_combine($this->configuration['stopwords'], $this->configuration['stopwords']);
     }
-    $file_words = $form_words = array();
-    if (!empty($this->configuration['file']) && $stopwords_file = file_get_contents($this->configuration['file'])) {
-      $file_words = preg_split('/\s+/', $stopwords_file);
-    }
-    if (!empty($this->configuration['stopwords'])) {
-      $form_words = $this->configuration['stopwords'];
-    }
-    $this->stopwords = array_merge($file_words, $form_words);
     return $this->stopwords;
   }
+
 }

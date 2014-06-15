@@ -211,17 +211,15 @@ class IndexFiltersForm extends EntityForm {
       );
       $values['processors'][$name] += $default_settings;
 
-      if (!empty($form['#processors'][$name]['status'])) {
-        // We have to create our own form_state for the plugin form in order to
-        // get it to save correctly. This ensures we can use submitConfigurationForm
-        // in the correct manner, as described in
-        $processor_form_state = $this->getFilterFormState($name, $form_state);
-        /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-        $processor->submitConfigurationForm($processor_form, $processor_form_state);
+      // We have to create our own form_state for the plugin form in order to
+      // get it to save correctly. This ensures we can use
+      // submitConfigurationForm() in the correct manner, as described in
+      // \Drupal\Core\Plugin\PluginFormInterface::submitConfigurationForm().
+      $processor_form_state = $this->getFilterFormState($name, $form_state);
+      /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
+      $processor->submitConfigurationForm($processor_form, $processor_form_state);
 
-        /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-        $values['processors'][$name]['settings'] = $processor->getConfiguration();
-      }
+      $values['processors'][$name]['settings'] = $processor->getConfiguration();
     }
 
     if (!isset($options['processors']) || $options['processors'] !== $values['processors']) {

@@ -136,14 +136,14 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
    * {@inheritdoc}
    */
   public function getIgnoredSearchKeys() {
-    return $this->ignoredSearchKeys;
+    return array_values($this->ignoredSearchKeys);
   }
 
   /**
    * {@inheritdoc}
    */
   public function setIgnoredSearchKeys(array $ignored_search_keys) {
-    $this->ignoredSearchKeys = $ignored_search_keys;
+    $this->ignoredSearchKeys = array_combine($ignored_search_keys, $ignored_search_keys);
     return $this;
   }
 
@@ -151,7 +151,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
    * {@inheritdoc}
    */
   public function addIgnoredSearchKey($ignored_search_key) {
-    $this->ignoredSearchKeys[] = $ignored_search_key;
+    $this->ignoredSearchKeys[$ignored_search_key] = $ignored_search_key;
     return $this;
   }
 

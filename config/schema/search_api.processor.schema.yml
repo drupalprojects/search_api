@@ -2,6 +2,7 @@ search_api.processor.plugin.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
   mapping:
+    # @todo Verify "sequence" is right here once schemas are really used.
     view_mode:
       type: sequence
       label: 'The selected view modes'
@@ -27,12 +28,12 @@ search_api.processor.plugin.stopwords:
       sequence:
         - type: string
           label: 'Selected field'
-    file:
-      type: string
-      label: 'The file path'
     stopwords:
-      type: text
-      label: 'Defined stopwords'
+      type: sequence
+      label: 'Entered stopwords'
+      sequence:
+        - type: string
+          label: 'Stopword'
 search_api.processor.plugin.tokenizer:
   type: mapping
   label: 'Tokenizer processor configuration'

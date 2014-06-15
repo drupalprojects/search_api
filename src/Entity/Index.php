@@ -1127,6 +1127,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->disable();
     }
 
+    if (isset($this->options['processors']['language']))
     // Always enable the "Language control" processor and corresponding "Item
     // language" field.
     // @todo Replace this with a cleaner, more flexible approach. See
