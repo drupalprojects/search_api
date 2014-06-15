@@ -27,8 +27,8 @@ class IgnoreCharacterTest extends UnitTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'Ignore case Processor Plugin',
-      'description' => 'Unit test of processor ignores case of strings.',
+      'name' => 'Ignore characters processor',
+      'description' => 'Tests the functionality of the "Ignore characters" processor.',
       'group' => 'Search API',
     );
   }
@@ -39,24 +39,24 @@ class IgnoreCharacterTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->processor = new IgnoreCharacter(array('strip' => array('ignorable' => "['¿¡!?,.:;]")), 'string', array());
+    $this->processor = new IgnoreCharacter(array('ignorable' => ''), 'ignore_character', array());
   }
 
   /**
    * Test processFieldValue method with Punctuation Connector Ignores.
    *
-   * @dataProvider textCharacterSetsIgnoreCharacterDataProvider
+   * @dataProvider ignoreCharacterSetsDataProvider
    */
-  public function testCharacterSetsIgnoreCharacter($passedString, $expectedValue, $character_classes) {
+  public function testIgnoreCharacterSets($passedString, $expectedValue, $character_classes) {
     $this->processor->setConfiguration(array('strip' => array('character_sets' => $character_classes)));
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->invokeMethod('process', array(&$passedString, 'text'));
     $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
    * Data provider for testValueConfiguration().
    */
-  public function textCharacterSetsIgnoreCharacterDataProvider() {
+  public function ignoreCharacterSetsDataProvider() {
     return array(
       array('word_s', 'words', array('Pc' => 'Pc')),
       array('word⁔s', 'words', array('Pc' => 'Pc')),
@@ -111,6 +111,31 @@ class IgnoreCharacterTest extends UnitTestCase {
 
       array('woྰrds', 'words', array('Mn' => 'Mn', 'Pd' => 'Pd', 'Pe' => 'Pe')),
       array('worྵdྶs', 'words', array('Mn' => 'Mn', 'Pd' => 'Pd', 'Pe' => 'Pe')),
+    );
+  }
+
+  /**
+   * Tests the processor if the "Ignorable characters" setting is used.
+   *
+   * @dataProvider ignorableCharactersDataProvider
+   */
+  public function testIgnorableCharacters($passedValue, $expectedValue, $ignorable) {
+    $this->processor->setConfiguration(array('ignorable' => $ignorable, 'strip' => array()));
+    $this->invokeMethod('process', array(&$passedValue, 'text'));
+    $this->assertEquals($expectedValue, $passedValue);
+  }
+
+  /**
+   * Provides sets of test parameters for testIgnorableCharacters().
+   *
+   * @return array
+   *   Sets of arguments for testIgnorableCharacters().
+   */
+  public function ignorableCharactersDataProvider() {
+    return array(
+      array('abcde', 'ace', '[bd]'),
+      array("ab.c'de", "a.'de", '[b-c]'),
+      array('foo 13$%& (bar)[93]', 'foo $%& (bar)[]', '\d'),
     );
   }
 
