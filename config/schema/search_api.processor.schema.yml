@@ -133,3 +133,16 @@ search_api.processor.plugin.html_filter:
 search_api.processor.plugin.aggregated_field:
   type: mapping
   label: 'Add aggregation processor'
+  mapping:
+      fields:
+        type: sequence
+        label: 'The selected fields'
+        sequence:
+          - type: string
+            label: 'The field name'
+      label:
+        type: string
+        label: 'Label'
+      type:
+        type: string
+        label: 'Type'
