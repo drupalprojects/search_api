@@ -128,6 +128,19 @@ class Highlight extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    parent::validateConfigurationForm($form, $form_state);
+
+    $minimum_excerpt_length = 50;
+    if ($form_state['values']['excerpt_length'] < $minimum_excerpt_length) {
+      $error_message = t('The minimum excerpt length should be higher than !minimum_excerpt_length', array('!minimum_excerpt_length' => $minimum_excerpt_length));
+      \Drupal::formBuilder()->setError($form['excerpt_length'], $form_state, $error_message);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function postprocessSearchResults(ResultSetInterface $results) {
     if (!$results->getResultCount() || !($keys = $this->getKeywords($results->getQuery()))) {
       return;
