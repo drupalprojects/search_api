@@ -271,6 +271,114 @@ class HighlightTest extends UnitTestCase {
     $this->assertEmpty($output, 'Highlight is\'t applied');
   }
 
+  /**
+   * Test to see if highlight works on a longer text
+   */
+  public function testpostprocessSearchResultsExerpt() {
+    $this->createHighlightProcessor();
+
+    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('congue' => 'congue')));
+
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $field = Utility::createField($index, $body_field_id);
+    $field->setType('text');
+
+    $index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array($body_field_id => $field)));
+
+    $this->processor->setIndex($index);
+
+    /** @var \Drupal\node\Entity\Node $node */
+    $node = $this->getMockBuilder('Drupal\node\Entity\Node')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $body_value = array($this->getFieldBody());
+    $fields = array(
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_value,
+      ),
+    );
+
+    $items = $this->createItems($index, 1, $fields, $node);
+    $items_keys = array_keys($items);
+    $first_entity_key = $items_keys[0];
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getResultItems();
+    $excerpt = $output[$first_entity_key]->getExcerpt();;
+    $correct_output = '...  ligula sit amet condimentum dapibus, lorem nunc <strong>congue</strong> velit, et dictum augue leo sodales augue.
+Maecenas eget ...';
+    $this->assertEquals($correct_output, $excerpt, 'Highlight is not correctly applied');
+  }
+
+  /**
+   * Test to see if highlight works with a changed excerpt length
+   */
+  public function testpostprocessSearchResultsWithChangedExerptLength() {
+    $this->createHighlightProcessor(array('excerpt_length' => 64));
+
+    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('congue' => 'congue')));
+
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $field = Utility::createField($index, $body_field_id);
+    $field->setType('text');
+
+    $index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array($body_field_id => $field)));
+
+    $this->processor->setIndex($index);
+
+    /** @var \Drupal\node\Entity\Node $node */
+    $node = $this->getMockBuilder('Drupal\node\Entity\Node')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $body_value = array($this->getFieldBody());
+    $fields = array(
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_value,
+      ),
+    );
+
+    $items = $this->createItems($index, 1, $fields, $node);
+    $items_keys = array_keys($items);
+    $first_entity_key = $items_keys[0];
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getResultItems();
+    $excerpt = $output[$first_entity_key]->getExcerpt();;
+    $correct_output = '...  nunc <strong>congue</strong> velit, ...';
+    $this->assertEquals($correct_output, $excerpt, 'Highlight is not correctly applied');
+  }
+
+
 
   /**
    * Create Highlight processor
@@ -291,6 +399,39 @@ class HighlightTest extends UnitTestCase {
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
     $this->processor->setStringTranslation($translation);
+  }
+
+
+  /**
+   * Returns a longer string to work with
+   * @return string
+   */
+  private function getFieldBody() {
+    return "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dictum ultricies sapien id consequat.
+Fusce tristique erat at dui ultricies, eu rhoncus odio rutrum. Praesent viverra mollis mauris a cursus.
+Curabitur at condimentum orci. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+Praesent suscipit massa non pretium volutpat. Suspendisse id lacus facilisis, fringilla mauris vitae, tincidunt turpis.
+Proin a euismod libero. Nam aliquet neque nulla, nec placerat libero accumsan id. Quisque sit amet consequat lacus.
+Donec mauris erat, iaculis id nisl nec, dapibus posuere lectus. Sed ultrices libero id elit volutpat sagittis.
+Donec a tortor ullamcorper, tempus lectus at, ultrices felis. Nam nibh magna, dictum in massa ut, ornare venenatis enim.
+Phasellus enim massa, condimentum eu sem vel, consectetur fermentum erat. Cras porttitor ut dolor interdum vehicula.
+Vestibulum erat arcu, placerat quis gravida quis, venenatis vel magna. Pellentesque pellentesque lacus ut feugiat auctor.
+Mauris libero magna, dictum in fermentum nec, blandit non augue.
+Morbi sed viverra libero.Phasellus sem velit, sollicitudin in felis lacinia, suscipit auctor dolor.
+Praesent dignissim dolor sed lobortis mattis.
+Ut tristique, ligula sit amet condimentum dapibus, lorem nunc congue velit, et dictum augue leo sodales augue.
+Maecenas eget mi ac massa sagittis malesuada. Fusce ac purus vel ipsum imperdiet vulputate.
+Mauris vestibulum sapien sit amet elementum tincidunt. Aenean sollicitudin tortor pulvinar ante commodo sagittis.
+Integer in nisi consequat, elementum felis in, consequat purus. Maecenas blandit ipsum id tellus accumsan, sit amet venenatis orci vestibulum.
+Ut id erat venenatis, vehicula mi eget, gravida odio. Etiam dapibus purus in massa condimentum, vitae lobortis est aliquam.
+Morbi tristique velit et sem varius rhoncus. In tincidunt sagittis libero. Integer interdum sit amet sem sit amet sodales.
+Donec sit amet arcu sit amet leo tristique dignissim vel ut enim. Nulla faucibus lacus eu adipiscing semper. Sed ut sodales erat.
+Sed mauris purus, tempor non eleifend et, mollis ut lacus. Etiam interdum velit justo, nec imperdiet nunc pulvinar sit amet.
+Sed eu lacus eget augue laoreet vehicula id sed sem. Maecenas at condimentum massa, et pretium nulla. Aliquam sed nibh velit.
+Quisque turpis lacus, sodales nec malesuada nec, commodo non purus.
+Cras pellentesque, lectus ut imperdiet euismod, purus sem convallis tortor, ut fermentum elit nulla et quam.
+Mauris luctus mattis enim non accumsan. Sed consequat sapien lorem, in ultricies orci posuere nec.
+Fusce in mauris eu leo fermentum feugiat. Proin varius diam ante, non eleifend ipsum luctus sed.";
   }
 
 
