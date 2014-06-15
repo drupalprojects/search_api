@@ -40,11 +40,14 @@ trait ProcessorTestTrait {
    * @param string $method_name
    *   The method's name.
    * @param array $args
-   *   The arguments to pass in the method call.
+   *   (optional) The arguments to pass in the method call.
+   *
+   * @return mixed
+   *   Whatever the invoked method returned.
    */
-  public function invokeMethod($method_name, array $args) {
+  public function invokeMethod($method_name, array $args = array()) {
     $method = $this->getAccessibleMethod($method_name);
-    $method->invokeArgs($this->processor, $args);
+    return $method->invokeArgs($this->processor, $args);
   }
 
 }

@@ -9,22 +9,47 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pd;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pe;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pf;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pi;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Po;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Ps;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sk;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sm;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\So;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zl;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zp;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zs;
 
 /**
  * @SearchApiProcessor(
- *   id = "ignoreCharacter",
- *   label = @Translation("Ignore Character processor"),
- *   description = @Translation("Ignore/Remove characters from search strings.")
+ *   id = "ignore_character",
+ *   label = @Translation("Ignore characters"),
+ *   description = @Translation("Configure types of characters which should be ignored for searches.")
  * )
  */
 class IgnoreCharacter extends FieldsProcessorPluginBase {
 
+  /**
+   * @var string
+   */
+  protected $ignorable;
 
   /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
     return array(
+      'ignorable' => "['¿¡!?,.:;]",
       'strip' => array(
         'character_sets' => array(
           'Pc' => 'Pc',
@@ -34,7 +59,6 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
           'Pi' => 'Pi',
           'Po' => 'Po',
           'Ps' => 'Ps',
-          'Do' => 'Do',
         ),
       ),
     );
@@ -45,6 +69,13 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+
+    $form['ignorable'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Ignorable characters'),
+      '#description' => t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). It is placed in a regular expression function as such: preg_replace(\[\'¿¡!?,.:;]+/u)'),
+      '#default_value' => $this->configuration['ignorable'],
+    );
 
     $character_sets = $this->getCharacterSets();
     $form['strip'] = array(
@@ -65,6 +96,20 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     return $form;
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, array &$form_state) {
+    parent::validateConfigurationForm($form, $form_state);
+
+    $ignorable = str_replace('/', '\/', $form_state['values']['ignorable']);
+    if (@preg_match('/(' . $ignorable . ')+/u', '') === FALSE) {
+      $el = $form['ignorable'];
+      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+    }
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -76,6 +121,13 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function processFieldValue(&$value, &$type) {
+    $this->prepare();
+    // Remove the characters we do not want
+    if ($this->ignorable) {
+      $value = preg_replace('/(' . $this->ignorable . ')+/u', '', $value);
+    }
+
+    // Strip the character sets
     if (!empty($this->configuration['strip']['character_sets'])) {
       $value = $this->stripCharacterSets($value);
     }
@@ -92,15 +144,15 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     // Get our configuration
     $character_sets = $this->configuration['strip']['character_sets'];
 
-    $character_set_regex = '';
-    // Custom Extra Drupal Characters that we want to remove.
-    if (isset($character_sets['Do'])) {
-      $character_set_regex .= '!|\?|,|\.|:|;|';
+    // Loop over the character sets and strip the characters from the text
+    if (!empty($character_sets) && is_array($character_sets)) {
+      foreach ($character_sets as $character_set) {
+        $regex = $this->getFormatRegularExpression($character_set);
+        if (!empty($regex)) {
+          $text = preg_replace('/[' . $regex . ']+/u', '', $text);
+        }
+      }
     }
-
-    $character_set_regex .= '/\s(\p{' . implode('}|\p{', $character_sets) . '})/s';
-    $text = preg_replace($character_set_regex, '$1', $text);
-    $text = preg_replace('/(\p{Ps}|¿|¡)\s/s', '$1', $text);
     $text = trim($text);
     return $text;
   }
@@ -109,10 +161,76 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function process(&$value) {
+    $this->prepare();
     // We don't touch integers, NULL values or the like.
-    if (is_string($value)) {
-      $value = $this->stripCharacterSets($value);
+    if ($this->ignorable) {
+      $this->prepare();
+      $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
     }
+    if (is_string($value)) {
+      if (!empty($this->configuration['strip']['character_sets'])) {
+        $value = $this->stripCharacterSets($value);
+      }
+    }
+  }
+
+  /**
+   * Prepares the settings.
+   */
+  protected function prepare() {
+    if (!isset($this->ignorable)) {
+      $this->ignorable = str_replace('/', '\/', $this->configuration['ignorable']);
+    }
+  }
+
+  /**
+   * @param $character_set
+   * @return bool|string
+   */
+  private function getFormatRegularExpression($character_set) {
+    switch ($character_set) {
+      case 'Pc':
+        return Pc::getRegularExpression();
+      case 'Pd':
+        return Pd::getRegularExpression();
+      case 'Pe':
+        return Pe::getRegularExpression();
+      case 'Pf':
+        return Pf::getRegularExpression();
+      case 'Pi':
+        return Pi::getRegularExpression();
+      case 'Po':
+        return Po::getRegularExpression();
+      case 'Ps':
+        return Ps::getRegularExpression();
+      case 'Cc':
+        return Cc::getRegularExpression();
+      case 'Cf':
+        return Cf::getRegularExpression();
+      case 'Co':
+        return Co::getRegularExpression();
+      case 'Mc':
+        return Mc::getRegularExpression();
+      case 'Me':
+        return Me::getRegularExpression();
+      case 'Mn':
+        return Mn::getRegularExpression();
+      case 'Sc':
+        return Sc::getRegularExpression();
+      case 'Sk':
+        return Sk::getRegularExpression();
+      case 'Sm':
+        return Sm::getRegularExpression();
+      case 'So':
+        return So::getRegularExpression();
+      case 'Zl':
+        return Zl::getRegularExpression();
+      case 'Zp':
+        return Zp::getRegularExpression();
+      case 'Zs':
+        return Zs::getRegularExpression();
+    }
+    return FALSE;
   }
 
   /**
@@ -128,28 +246,13 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
       'Pi' => t("Punctuation, Initial quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pi/list.htm"))),
       'Po' => t("Punctuation, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Po/list.htm"))),
       'Ps' => t("Punctuation, Open Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ps/list.htm"))),
-
-      'Do' => t("Drupal, Other Normal Punctuation Characters (! ?, . : ; )"),
-
       'Cc' => t("Other, Control Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cc/list.htm"))),
       'Cf' => t("Other, Format Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cf/list.htm"))),
       'Co' => t("Other, Private Use Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Co/list.htm"))),
-      'Cs' => t("other, Surrogate Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cs/list.htm"))),
-
-      'LC' => t("Letter, Cased Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/LC/list.htm"))),
-      'Ll' => t("Letter, Lowercase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ll/list.htm"))),
-      'Lm' => t("Letter, Modifier Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ln/list.htm"))),
-      'Lo' => t("Letter, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lo/list.htm"))),
-      'Lt' => t("Letter, Titlecase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lt/list.htm"))),
-      'Lu' => t("Letter, Uppercase Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Lu/list.htm"))),
 
       'Mc' => t("Mark, Spacing Combining Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mc/list.htm"))),
       'Me' => t("Mark, Enclosing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Me/list.htm"))),
       'Mn' => t("Mark, Nonspacing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mn/list.htm"))),
-
-      'Nd' => t("Number, Decimal Digit Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Nd/list.htm"))),
-      'Nl' => t("Number, Letter Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Nl/list.htm"))),
-      'No' => t("Number, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/No/list.htm"))),
 
       'Sc' => t("Symbol, Currency Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sc/list.htm"))),
       'Sk' => t("Symbol, Modifier Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sk/list.htm"))),

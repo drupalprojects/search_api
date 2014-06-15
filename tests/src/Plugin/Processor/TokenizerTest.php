@@ -8,6 +8,8 @@
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer;
+use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -17,6 +19,8 @@ use Drupal\Tests\UnitTestCase;
  * @group search_api
  */
 class TokenizerTest extends UnitTestCase {
+
+  use ProcessorTestTrait;
 
   /**
    * {@inheritdoc}
@@ -34,60 +38,61 @@ class TokenizerTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->processor = new Tokenizer(array(), 'tokenizer', array());
   }
 
   /**
-   * Get an accessible method of TokenizerTest using reflection.
-   */
-  public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer');
-    $method = $class->getMethod($methodName);
-    $method->setAccessible(TRUE);
-    return $method;
-  }
-
-  /**
-   * Test processFieldValue method with title fetching enabled.
+   * Tests the processFieldValue() method.
    *
    * @dataProvider textDataProvider
    */
-  public function testStringTokenizing($passedString, $expectedValue) {
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer',
-      array('processFieldValue'),
-      array(array(), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    $processFieldValueMethod->invokeArgs($tokenizerMock, array(&$passedString, 'text'));
-    $this->assertEquals($passedString, $expectedValue);
+  public function testProcessFieldValue($passedString, $expectedValue, array $config = array()) {
+    if ($config) {
+      $this->processor->setConfiguration($config);
+    }
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
    * Data provider for testValueConfiguration().
    */
   public function textDataProvider() {
+    $word_token = Utility::createTextToken('word');
     return array(
-      array('word', array(0 => array('value' => 'word'))),
-      array('word word', array(0 => array('value' => 'word'), 1 => array('value' => 'word'))),
-      array('word\'s word', array(0 => array('value' => 'words'), 1 => array('value' => 'word'))),
+      // Simple cases.
+      array('word', array($word_token)),
+      array('word word', array($word_token, $word_token)),
+      // Default splits on special characters, too.
+      array('words!word', array(Utility::createTextToken('words'), $word_token)),
+      array('words$word', array(Utility::createTextToken('words'), $word_token)),
+      // Overriding the default works and is case-insensitive.
+      array('wordXwordxword', array($word_token, Utility::createTextToken('wordxword')), array('spaces' => 'X')),
+      array('word3word!word', array($word_token, Utility::createTextToken('word!word')), array('spaces' => '\d')),
+      array('wordXwordRword', array($word_token, $word_token, $word_token), array('spaces' => 'R-Z')),
+      array('wordXwordRword', array($word_token, $word_token, $word_token), array('spaces' => 'R-TW-Z')),
+      array('wordXword word', array($word_token, $word_token, $word_token), array('spaces' => 'R-Z')),
+      // Minimum word size works.
+      array('wordSwo', array($word_token), array('spaces' => 'R-Z')),
+      array('wordSwo', array($word_token, Utility::createTextToken('wo')), array('spaces' => 'R-Z', 'minimum_word_size' => 2)),
+      array('word w', array($word_token), array('minimum_word_size' => 2)),
+      array('word w', array($word_token, Utility::createTextToken('w')), array('minimum_word_size' => 1)),
+      array('word wordword', array(), array('minimum_word_size' => 10)),
     );
   }
 
 
   /**
-   * Verifies that strings of CJK characters are tokenized.
+   * Tests that the simplifyText() method handles CJK characters properly.
    *
-   * The search_simplify() function does special things with numbers, symbols,
-   * and punctuation. So we only test that CJK characters that are not in these
-   * character classes are tokenized properly. See PREG_CLASS_CKJ for more
+   * The simplifyText() method does special things with numbers, symbols and
+   * punctuation. So we only test that CJK characters that are not in these
+   * character classes are tokenized properly. See PREG_CLASS_CJK for more
    * information.
    */
-  public function testTokenizer() {
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer',
-      array('processFieldValue'),
-      array(array('minimum_word_size' => 1, 'overlap_cjk' => true), 'string', array()));
-
-    $simplifyTextMethod = $this->getAccessibleMethod('simplifyText');
-
+  public function testCjkSupport() {
+    $this->invokeMethod('prepare');
     // Create a string of CJK characters from various character ranges in
     // the Unicode tables.
 
@@ -141,25 +146,33 @@ class TokenizerTest extends UnitTestCase {
 
     // Generate characters consisting of starts, midpoints, and ends.
     $chars = array();
-    $char_codes = array();
     foreach ($starts as $key => $value) {
-      $char_codes[] = $starts[$key];
-      $chars[] = $this->code2utf($starts[$key]);
+      $chars[] = self::codepointToUtf8($starts[$key]);
       $mid = round(0.5 * ($starts[$key] + $ends[$key]));
-      $char_codes[] = $mid;
-      $chars[] = $this->code2utf($mid);
-      $char_codes[] = $ends[$key];
-      $chars[] = $this->code2utf($ends[$key]);
+      $chars[] = self::codepointToUtf8($mid);
+      $chars[] = self::codepointToUtf8($ends[$key]);
     }
 
     // Merge into a string and tokenize.
     $text = implode('', $chars);
 
-    $simplified_text = trim($simplifyTextMethod->invokeArgs($tokenizerMock, array($text)));
-    $expected = Unicode::strtolower(implode(' ', $chars));
+    $simplified_text = $this->invokeMethod('simplifyText', array($text));
+    $expected = '';
+    for ($i = 2; $i < count($chars); ++$i) {
+      $expected .= $chars[$i - 2];
+      $expected .= $chars[$i - 1];
+      $expected .= $chars[$i];
+      $expected .= ' ';
+    }
+    $expected = trim($expected);
 
     // Verify that the output matches what we expect.
-    $this->assertEquals($simplified_text, $expected, 'CJK tokenizer worked on all supplied CJK characters');
+    $this->assertEquals($expected, $simplified_text, 'CJK tokenizer worked on all supplied CJK characters');
+
+    $this->processor->setConfiguration(array('overlap_cjk' => FALSE));
+    $this->invokeMethod('prepare');
+    $simplified_text = $this->invokeMethod('simplifyText', array($text));
+    $this->assertEquals($text, $simplified_text, 'CJK tokenizing is successfully disabled');
   }
 
   /**
@@ -169,18 +182,14 @@ class TokenizerTest extends UnitTestCase {
    * not tokenized.
    */
   public function testNoTokenizer() {
-    // Set the minimum word size to 1 (to split all CJK characters) and make
-    // sure CJK tokenizing is turned on.
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer',
-      array('processFieldValue'),
-      array(array('minimum_word_size' => 1, 'overlap_cjk' => true), 'string', array()));
-
-    $simplifyTextMethod = $this->getAccessibleMethod('simplifyText');
+    // Set the minimum word size to 1 (to split all CJK characters).
+    $this->processor->setConfiguration(array('minimum_word_size' => 1));
+    $this->invokeMethod('prepare');
 
     $letters = 'abcdefghijklmnopqrstuvwxyz';
-    $out = trim($simplifyTextMethod->invokeArgs($tokenizerMock, array($letters)));
+    $out = $this->invokeMethod('simplifyText', array($letters));
 
-    $this->assertEquals($letters, $out, 'Letters are not CJK tokenized');
+    $this->assertEquals($letters, $out, 'Latin letters are not CJK tokenized');
   }
 
   /**
@@ -190,7 +199,7 @@ class TokenizerTest extends UnitTestCase {
    * converts a number to the corresponding unicode character. Adapted from
    * functions supplied in comments on several functions on php.net.
    */
-  protected function code2utf($num) {
+  public static function codepointToUtf8($num) {
     if ($num < 128) {
       return chr($num);
     }
@@ -213,23 +222,19 @@ class TokenizerTest extends UnitTestCase {
   /**
    * Tests that all Unicode characters simplify correctly.
    *
-   * This test uses a Drupal core search file that was constructed so that the even lines are
-   * boundary characters, and the odd lines are valid word characters. (It
-   * was generated as a sequence of all the Unicode characters, and then the
-   * boundary chararacters (punctuation, spaces, etc.) were split off into
-   * their own lines).  So the even-numbered lines should simplify to nothing,
-   * and the odd-numbered lines we need to split into shorter chunks and
-   * verify that simplification doesn't lose any characters.
+   * This test uses a Drupal core search file that was constructed so that the
+   * even lines are boundary characters, and the odd lines are valid word
+   * characters. (It was generated as a sequence of all the Unicode characters,
+   * and then the boundary chararacters (punctuation, spaces, etc.) were split
+   * off into their own lines).  So the even-numbered lines should simplify to
+   * nothing, and the odd-numbered lines we need to split into shorter chunks
+   * and verify that simplification doesn't lose any characters.
    *
    */
   public function testSearchSimplifyUnicode() {
-    // Set the minimum word size to 1 (to split all CJK characters) and make
-    // sure CJK tokenizing is turned on.
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer',
-      array('processFieldValue'),
-      array(array('minimum_word_size' => 1, 'overlap_cjk' => true), 'string', array()));
-
-    $simplifyTextMethod = $this->getAccessibleMethod('simplifyText');
+    // Set the minimum word size to 1 (to split all CJK characters).
+    $this->processor->setConfiguration(array('minimum_word_size' => 1));
+    $this->invokeMethod('prepare');
 
     $input = file_get_contents(DRUPAL_ROOT . '/core/modules/search/tests/UnicodeTest.txt');
     $basestrings = explode(chr(10), $input);
@@ -237,8 +242,8 @@ class TokenizerTest extends UnitTestCase {
     foreach ($basestrings as $key => $string) {
       if ($key %2) {
         // Even line - should simplify down to a space.
-        $simplified = $simplifyTextMethod->invokeArgs($tokenizerMock, array($string));
-        $this->assertEquals($simplified, ' ', "Line $key is excluded from the index");
+        $simplified = $this->invokeMethod('simplifyText', array($string));
+        $this->assertEquals('', $simplified, "Line $key is excluded from the index");
       }
       else {
         // Odd line, should be word characters.
@@ -259,7 +264,7 @@ class TokenizerTest extends UnitTestCase {
       }
     }
     foreach ($strings as $key => $string) {
-      $simplified = $simplifyTextMethod->invokeArgs($tokenizerMock, array($string));
+      $simplified = $this->invokeMethod('simplifyText', array($string));
       $this->assertTrue(Unicode::strlen($simplified) >= Unicode::strlen($string), "Nothing is removed from string $key.");
     }
 
@@ -269,33 +274,21 @@ class TokenizerTest extends UnitTestCase {
     for ($i = 0; $i < 32; $i++) {
       $string .= chr($i);
     }
-    $this->assertEquals(' ', $simplifyTextMethod->invokeArgs($tokenizerMock, array($string)), 'Search simplify works for ASCII control characters.');
+    $this->assertEquals('', $this->invokeMethod('simplifyText', array($string)), 'Search simplify works for ASCII control characters.');
   }
 
   /**
-   * Tests that search_simplify() does the right thing with punctuation.
-   */
-  /*public function testSearchSimplifyPunctuation() {
-
-
-
-  }*/
-
-  /**
-   * Test processFieldValue method with title fetching enabled.
+   * Tests whether punctuation is treated correctly.
    *
    * @dataProvider searchSimplifyPunctuationProvider
    */
   public function testSearchSimplifyPunctuation($passedString, $expectedValue, $message) {
-    // Set the minimum word size to 1 (to split all CJK characters) and make
-    // sure CJK tokenizing is turned on.
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer',
-      array('processFieldValue'),
-      array(array('minimum_word_size' => 1, 'overlap_cjk' => true), 'string', array()));
+    // Set the minimum word size to 1 (to split all CJK characters).
+    $this->processor->setConfiguration(array('minimum_word_size' => 1));
+    $this->invokeMethod('prepare');
 
-    $simplifyTextMethod = $this->getAccessibleMethod('simplifyText');
-    $out = trim($simplifyTextMethod->invokeArgs($tokenizerMock, array($passedString)));
-    $this->assertEquals($out, $expectedValue, $message);
+    $out = $this->invokeMethod('simplifyText', array($passedString));
+    $this->assertEquals($expectedValue, $out, $message);
   }
 
   /**

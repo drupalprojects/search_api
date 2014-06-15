@@ -144,7 +144,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     $values = $field->getValues();
     $type = $field->getType();
 
-    foreach ($values as &$value) {
+    foreach ($values as $i => &$value) {
       if ($type == 'tokenized_text') {
         foreach ($value as &$tokenized_value) {
           $this->processFieldValue($tokenized_value['value'], $type);
@@ -155,11 +155,14 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       }
 
       if ($type == 'tokenized_text') {
-          $value = $this->normalizeTokens($value);
+        $value = $this->normalizeTokens($value);
       }
       else {
         if (is_array($value)) {
           $value = $this->implodeTokens($value);
+        }
+        if (!$value && !is_numeric($value)) {
+          unset($values[$i]);
         }
       }
     }

@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Stopwords;
+use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -18,12 +19,7 @@ use Drupal\Tests\UnitTestCase;
  */
 class StopwordsTest extends UnitTestCase {
 
-  /**
-   * Stores the processor to be tested.
-   *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Stopwords
-   */
-  protected $processor;
+  use ProcessorTestTrait;
 
   /**
    * {@inheritdoc}
@@ -45,26 +41,13 @@ class StopwordsTest extends UnitTestCase {
   }
 
   /**
-   * Get an accessible method of the processor class using reflection.
-   */
-  public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\Stopwords');
-    $method = $class->getMethod($methodName);
-    $method->setAccessible(TRUE);
-    return $method;
-  }
-
-  /**
-   * Test stopwords process.
+   * Tests the process() method of the Stopwords processor.
    *
-   * @dataProvider stopwordsDataProvider
+   * @dataProvider processDataProvider
    */
-  public function testStopwords($passedString, $expectedString, $stopwordsConfig) {
-    $process = $this->getAccessibleMethod('process');
-
-    $configuration = array('file' => '', 'stopwords' => $stopwordsConfig);
-    $this->processor->setConfiguration($configuration);
-    $process->invokeArgs($this->processor, array(&$passedString));
+  public function testProcess($passedString, $expectedString, $stopwordsConfig) {
+    $this->processor->setConfiguration(array('stopwords' => $stopwordsConfig));
+    $this->invokeMethod('process', array(&$passedString));
     $this->assertEquals($passedString, $expectedString);
   }
 
@@ -73,60 +56,72 @@ class StopwordsTest extends UnitTestCase {
    *
    * Processor checks for exact case, and tokenized content.
    */
-  public function stopwordsDataProvider() {
+  public function processDataProvider() {
     return array(
       array(
-        "or",
-        "",
+        'or',
+        '',
         array('or'),
       ),
        array(
-        "orb",
-        "orb",
+        'orb',
+        'orb',
         array('or'),
       ),
       array(
-        "orbital",
-        "orbital",
+        'for',
+        'for',
         array('or'),
       ),
       array(
-        "ÄÖÜÀÁ<>»«û",
-        "ÄÖÜÀÁ<>»«û",
-        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ<>»«', )
+        'ordor',
+        'ordor',
+        array('or'),
       ),
       array(
-        "ÄÖÜÀÁ",
-        "",
-        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ', )
+        'ÄÖÜÀÁ<>»«û',
+        'ÄÖÜÀÁ<>»«û',
+        array('stopword1', 'ÄÖÜÀÁ<>»«', 'stopword3'),
       ),
       array(
-        " ÄÖÜÀÁ ",
-        "",
-        array('String', 'containing', 'both', 'spaces', 'and', 'Newlines', 'ÄÖÜÀÁ', )
+        'ÄÖÜÀÁ',
+        '',
+        array('stopword1', 'ÄÖÜÀÁ', 'stopword3'),
+      ),
+      array(
+        'ÄÖÜÀÁ stopword1',
+        'ÄÖÜÀÁ stopword1',
+        array('stopword1', 'ÄÖÜÀÁ', 'stopword3'),
       ),
     );
   }
 
   /**
-   * Test configuration getStopwords.
+   * Tests the processor's preprocessSearchQuery() method.
    */
-  public function testGetStopwords() {
-    $getStopwords = $this->getAccessibleMethod('getStopwords');
+  public function testPreprocessSearchQuery() {
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $index->expects($this->any())
+      ->method('status')
+      ->will($this->returnValue(TRUE));
+    $index->expects($this->any())
+      ->method('getFields')
+      ->will($this->returnValue(array()));
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
 
-    $configuration = array('file' => '', 'stopwords' => array("String", "containing", "both", "spaces", "and", "Newlines", "ÄÖÜÀÁ<>»«"));
-    $stopwords = array(
-      'String',
-      'containing',
-      'both',
-      'spaces',
-      'and',
-      'Newlines',
-      'ÄÖÜÀÁ<>»«',
-    );
-    $this->processor->setConfiguration($configuration);
-    $result = $getStopwords->invoke($this->processor);
-    $this->assertTrue(!array_diff($stopwords, $result), 'All stopwords returned');
+    $this->processor->setIndex($index);
+    $query = Utility::createQuery($index);
+    $keys = array('#conjunction' => 'AND', 'foo', 'bar', 'bar foo');
+    $query->keys($keys);
+
+    $this->processor->setConfiguration(array('stopwords' => array('foobar', 'bar', 'barfoo')));
+    $this->processor->preprocessSearchQuery($query);
+    unset($keys[1]);
+    $this->assertEquals($keys, $query->getKeys());
+
+    $results = Utility::createSearchResultSet($query);
+    $this->processor->postprocessSearchResults($results);
+    $this->assertEquals(array('bar'), $results->getIgnoredSearchKeys());
   }
 
 }

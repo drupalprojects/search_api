@@ -80,7 +80,7 @@ class RenderedItem extends ProcessorPluginBase {
       if (count($view_modes) > 1) {
         $form['view_mode'][$datasource_id] = array(
           '#type' => 'select',
-          '#title' => t('View mode for data source @datasource', array('@datasource' => $datasource->label())),
+          '#title' => $this->t('View mode for data source @datasource', array('@datasource' => $datasource->label())),
           '#options' => $view_modes,
         );
         if (isset($this->configuration['view_mode'][$datasource_id])) {
@@ -98,7 +98,7 @@ class RenderedItem extends ProcessorPluginBase {
     $form['roles'] = array(
       '#type' => 'select',
       '#title' => $this->t('User roles'),
-      '#description' => t('The data will be processed as seen by a user with the selected roles.'),
+      '#description' => $this->t('The data will be processed as seen by a user with the selected roles.'),
       '#options' => user_role_names(),
       '#multiple' => TRUE,
       '#default_value' => $this->configuration['roles'],
