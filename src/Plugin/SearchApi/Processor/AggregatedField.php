@@ -127,7 +127,7 @@ class AggregatedField extends ProcessorPluginBase {
         '#type' => 'select',
         '#title' => t('Aggregation type'),
         '#options' => $types,
-        '#default_value' => '',
+        '#default_value' => isset($field['type']) ? $field['type'] : 'union',
         '#required' => TRUE,
       );
 
@@ -256,12 +256,12 @@ class AggregatedField extends ProcessorPluginBase {
 
             // If we want a union, it means a multivalued so we do not need to do a reduce
             if ($this->reductionType != 'union') {
-              $values = array_reduce($values, array($this, 'reduce'), NULL);
+              $values = array(array_reduce($values, array($this, 'reduce'), NULL));
             }
 
             // Set a failed count to zero
             if ($this->reductionType == 'count' && empty($values)) {
-              $values = 0;
+              $values = array(0);
             }
 
             if($item->getField($aggregated_field_id) instanceof \Drupal\search_api\Item\FieldInterface ) {
