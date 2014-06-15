@@ -7,11 +7,12 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Utility\Utility;
-use Symfony\Component\Yaml\Exception\ParseException;
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
-use Symfony\Component\Yaml\Parser;
+use Drupal\search_api\Utility\Utility;
 use Symfony\Component\Yaml\Dumper;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Parser;
 
 /**
  * @SearchApiProcessor(
@@ -217,7 +218,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
    *   back to plain text.
    */
   protected function normalizeText($value) {
-    $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    $value = String::decodeEntities($value);
     $value = trim($value);
     $value = preg_replace('/\s+/', ' ', $value);
     return $value;

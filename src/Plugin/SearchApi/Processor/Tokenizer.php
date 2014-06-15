@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
@@ -31,10 +30,18 @@ class Tokenizer extends FieldsProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'spaces' => "",
+      'spaces' => '',
       'overlap_cjk' => TRUE,
       'minimum_word_size' => 3,
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    parent::setConfiguration($configuration);
+    unset($this->spaces);
   }
 
   /**
@@ -78,10 +85,9 @@ class Tokenizer extends FieldsProcessorPluginBase {
   public function validateConfigurationForm(array &$form, array &$form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $spaces = str_replace('/', '\/', $form_state['values']['spaces']);
-    if (@preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
-      $el = $form['spaces'];
-      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+    $spaces = str_replace('/', '\/', trim($form_state['values']['spaces']));
+    if ($spaces!== '' && @preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
+      \Drupal::formBuilder()->setError($form['spaces'], $form_state, $form['spaces']['#title'] . ': ' . t('The entered text is no valid regular expression.'));
     }
   }
 
@@ -162,32 +168,24 @@ class Tokenizer extends FieldsProcessorPluginBase {
    */
   protected function processFieldValue(&$value, &$type) {
     $this->prepare();
-    // Split it based on our configuration
     $value = $this->split($value);
   }
 
   /**
    * Simplifies a string according to indexing rules.
    *
-   * @param $text
-   *   Text to simplify.
-   * @param $langcode
-   *
-   * @see search.module
+   * @param string $text
+   *   The text to simplify.
    *
    * @return string
-   *   Simplified text.
+   *   The text with tokens split by single spaces.
+   *
+   * @see search_simplify()
    */
-  protected function simplifyText($text, $langcode = NULL) {
-    // Decode entities to UTF-8
-    $text = String::decodeEntities($text);
-
-    // Lowercase
-    $text = Unicode::strtolower($text);
-
+  protected function simplifyText($text) {
     // Simple CJK handling
     if ($this->configuration['overlap_cjk']) {
-      $text = preg_replace_callback('/[' . $this->getPregClassCJK() . ']+/u', array(&$this, 'expand_cjk'), $text);
+      $text = preg_replace_callback('/[' . $this->getPregClassCJK() . ']+/u', array(&$this, 'expandCjk'), $text);
     }
 
     // To improve searching for numerical data such as dates, IP addresses
@@ -208,10 +206,10 @@ class Tokenizer extends FieldsProcessorPluginBase {
     $text = preg_replace('/[._-]+/', '', $text);
 
     // With the exception of the rules above, we consider all punctuation,
-    // marks, spacers, etc, to be a word boundary.
-    $text = preg_replace('/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/u', ' ', $text);
-    // @todo implement   array_walk($words, '_search_index_truncate'); like Drupal Core Search
-    return $text;
+    // marks, spaces, etc, to be a word boundary.
+    $text = preg_replace('/[' . $this->spaces . ']+/u', ' ', $text);
+
+    return trim($text);
   }
 
   /**
@@ -227,14 +225,15 @@ class Tokenizer extends FieldsProcessorPluginBase {
    *
    * @param $matches
    *   This function is a callback for preg_replace_callback(), which is called
-   *   from search_simplify(). So, $matches is an array of regular expression
+   *   from simplifyText(). So, $matches is an array of regular expression
    *   matches, which means that $matches[0] contains the matched text -- a
    *   string of CJK characters to tokenize.
    *
    * @return string
-   *   Tokenized text, starting and ending with a space character.
+   *   Tokenized text, with tokens separated with space characters, and starting
+   *   and ending with a space character.
    */
-  protected function expand_cjk($matches) {
+  protected function expandCjk($matches) {
     $min = $this->configuration['minimum_word_size'];
     $str = $matches[0];
     $length = Unicode::strlen($str);
@@ -263,26 +262,18 @@ class Tokenizer extends FieldsProcessorPluginBase {
   /**
    * Simplifies and splits a string into tokens for indexing.
    */
-  protected function split($text, $lang_code = NULL) {
+  protected function split($text) {
+    $text = $this->simplifyText($text);
+
+    // Split on spaces. The configured (or default) delimiters have been
+    // replaced by those already in simplifyText().
+    $arr = explode(' ', $text);
+
     $value = array();
-    // Process words
-    $text = $this->simplifyText($text, $lang_code);
-
-    // Split on the configured delimiter. If not configured - use spaces
-    if ($this->spaces) {
-      $arr = preg_split('/(' . $this->spaces . ')+/u', $text);
-    }
-    else {
-      $arr = explode(' ', $text);
-    }
-
-    if (count($arr) > 1) {
-      foreach ($arr as $token) {
-        $value[] = array('value' => $token);
+    foreach ($arr as $token) {
+      if (is_numeric($token) || Unicode::strlen($token) >= $this->configuration['minimum_word_size']) {
+        $value[] = Utility::createTextToken($token);
       }
-    }
-    else {
-      $value[] = array('value' => $text);
     }
 
     return $value;
@@ -304,7 +295,12 @@ class Tokenizer extends FieldsProcessorPluginBase {
    */
   protected function prepare() {
     if (!isset($this->spaces)) {
-      $this->spaces = str_replace('/', '\/', $this->configuration['spaces']);
+      if ($this->configuration['spaces'] !== '') {
+        $this->spaces = str_replace('/', '\/', $this->configuration['spaces']);
+      }
+      else {
+        $this->spaces = Unicode::PREG_CLASS_WORD_BOUNDARY;
+      }
     }
   }
 
