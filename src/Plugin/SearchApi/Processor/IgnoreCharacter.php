@@ -19,7 +19,6 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Ps;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cs;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
@@ -33,9 +32,9 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zs;
 
 /**
  * @SearchApiProcessor(
- *   id = "ignoreCharacter",
- *   label = @Translation("Ignore Character processor"),
- *   description = @Translation("Ignore/Remove characters from search strings.")
+ *   id = "ignore_character",
+ *   label = @Translation("Ignore characters"),
+ *   description = @Translation("Configure types of characters which should be ignored for searches.")
  * )
  */
 class IgnoreCharacter extends FieldsProcessorPluginBase {
@@ -247,9 +246,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
       'Pi' => t("Punctuation, Initial quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pi/list.htm"))),
       'Po' => t("Punctuation, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Po/list.htm"))),
       'Ps' => t("Punctuation, Open Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ps/list.htm"))),
-
-      // @todo, find out why Other control characters are not found. Perhaps they are already stripped?
-      //'Cc' => t("Other, Control Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cc/list.htm"))),
+      'Cc' => t("Other, Control Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cc/list.htm"))),
       'Cf' => t("Other, Format Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cf/list.htm"))),
       'Co' => t("Other, Private Use Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Co/list.htm"))),
 

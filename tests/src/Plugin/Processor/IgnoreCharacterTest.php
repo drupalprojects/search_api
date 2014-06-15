@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\Component\Utility\String;
 use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter;
 use Drupal\Tests\UnitTestCase;
 
@@ -20,6 +19,8 @@ use Drupal\Tests\UnitTestCase;
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter
  */
 class IgnoreCharacterTest extends UnitTestCase {
+
+  use ProcessorTestTrait;
 
   /**
    * {@inheritdoc}
@@ -37,16 +38,8 @@ class IgnoreCharacterTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-  }
 
-  /**
-   * Get an accessible method of TokenizerTest using reflection.
-   */
-  public function getAccessibleMethod($methodName) {
-    $class = new \ReflectionClass('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter');
-    $method = $class->getMethod($methodName);
-    $method->setAccessible(TRUE);
-    return $method;
+    $this->processor = new IgnoreCharacter(array('strip' => array('ignorable' => "['¿¡!?,.:;]")), 'string', array());
   }
 
   /**
@@ -55,15 +48,9 @@ class IgnoreCharacterTest extends UnitTestCase {
    * @dataProvider textCharacterSetsIgnoreCharacterDataProvider
    */
   public function testCharacterSetsIgnoreCharacter($passedString, $expectedValue, $character_classes) {
-    $tokenizerMock = $this->getMock('Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter',
-      array('processFieldValue'),
-      array(array('strip' => array('ignorable' => "['¿¡!?,.:;]", 'character_sets' => $character_classes)), 'string', array()));
-
-    $processFieldValueMethod = $this->getAccessibleMethod('processFieldValue');
-    // Decode entities to UTF-8
-    $passedString = String::decodeEntities($passedString);
-    $processFieldValueMethod->invokeArgs($tokenizerMock, array(&$passedString, 'text'));
-    $this->assertEquals($passedString, $expectedValue);
+    $this->processor->setConfiguration(array('strip' => array('character_sets' => $character_classes)));
+    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $this->assertEquals($expectedValue, $passedString);
   }
 
   /**
@@ -104,8 +91,8 @@ class IgnoreCharacterTest extends UnitTestCase {
       array('wo᧧rds', 'words', array('So' => 'So')),
       array('w᧶ord᧲s', 'words', array('So' => 'So')),
 
-      //array('worœds', 'words', 'Cc'),
-      //array('woƒrds', 'words', 'Cc'),
+      array("wor\x0Ads", 'words', array('Cc' => 'Cc')),
+      array("wo\x0Crds", 'words', array('Cc' => 'Cc')),
 
       array('word۝s', 'words', array('Cf' => 'Cf')),
       array('wo᠎rd؁s', 'words', array('Cf' => 'Cf')),

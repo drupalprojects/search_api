@@ -147,10 +147,10 @@ class TokenizerTest extends UnitTestCase {
     // Generate characters consisting of starts, midpoints, and ends.
     $chars = array();
     foreach ($starts as $key => $value) {
-      $chars[] = $this->code2utf($starts[$key]);
+      $chars[] = self::codepointToUtf8($starts[$key]);
       $mid = round(0.5 * ($starts[$key] + $ends[$key]));
-      $chars[] = $this->code2utf($mid);
-      $chars[] = $this->code2utf($ends[$key]);
+      $chars[] = self::codepointToUtf8($mid);
+      $chars[] = self::codepointToUtf8($ends[$key]);
     }
 
     // Merge into a string and tokenize.
@@ -199,7 +199,7 @@ class TokenizerTest extends UnitTestCase {
    * converts a number to the corresponding unicode character. Adapted from
    * functions supplied in comments on several functions on php.net.
    */
-  protected function code2utf($num) {
+  public static function codepointToUtf8($num) {
     if ($num < 128) {
       return chr($num);
     }
