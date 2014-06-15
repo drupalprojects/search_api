@@ -362,10 +362,14 @@ class Highlight extends ProcessorPluginBase {
     $look_start = array();
     $remaining_keys = $keys;
 
-    while ($length < 256 && !empty($remaining_keys)) {
+    // Get the set excerpt length from the configuration
+    $excerpt_length = $this->configuration['excerpt_length'];
+    $context_length = (round($excerpt_length / 4) - 5);
+
+    while ($length < $excerpt_length && !empty($remaining_keys)) {
       $found_keys = array();
       foreach ($remaining_keys as $key) {
-        if ($length >= 256) {
+        if ($length >= $excerpt_length) {
           break;
         }
 
@@ -386,11 +390,10 @@ class Highlight extends ProcessorPluginBase {
           // pass through again to find more text.
           $found_keys[] = $key;
 
-          // Locate a space before and after this match, leaving about 60
-          // characters of context on each end.
-          $before = strpos(' ' . $text, ' ', max(0, $found_position - 61));
+          // Locate a space before and after this match, leaving context on each end.
+          $before = strpos(' ' . $text, ' ', max(0, $found_position - $context_length));
           if ($before !== FALSE && $before <= $found_position) {
-            $after = strpos($text . ' ', ' ', min($found_position + 61, strlen($text)));
+            $after = strpos($text . ' ', ' ', min($found_position + $context_length, strlen($text)));
             if ($after !== FALSE && $after > $found_position) {
               // Account for the spaces we added.
               $before = max($before - 1, 0);
