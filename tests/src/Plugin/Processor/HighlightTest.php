@@ -172,7 +172,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if we have the correct result when searching for "foo" on "Some foo text"
+   * Test to see if we can change the prefix
    */
   public function testpostprocessSearchResultsWithChangedPrefixSuffix() {
     $this->createHighlightProcessor(array('prefix' => '<em>', 'suffix' => '</em>'));
