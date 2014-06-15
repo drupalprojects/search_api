@@ -18,6 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\Component\Utility\String;
+use Drupal\Core\Render\Element;
 
 /**
  * Represents a datasource which exposes the content entities.
@@ -516,9 +517,16 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
         $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
       }
       // Lastly, bring the viewed items into the correct order again.
+      // The properties, particularly #pre_render, are required on each
+      // build item.
+      $properties = Element::properties($build);
+      foreach ($properties as $property) {
+        $meta[$property] = $build[$property];
+      }
+      // In the original non-language order, adding properties.
       $ret = array();
       foreach ($items as $i => $item) {
-        $ret[$i] = isset($build[$i]) ? $build[$i] : array();
+        $ret[$i] = isset($build[$i]) ? $meta + array($i => $build[$i]) : array();
       }
       return $ret;
     }
