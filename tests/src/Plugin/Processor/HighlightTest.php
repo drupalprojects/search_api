@@ -378,6 +378,58 @@ Maecenas eget ...';
     $this->assertEquals($correct_output, $excerpt, 'Highlight is not correctly applied');
   }
 
+  /**
+   * Test to see if highlight works with a changed excerpt length
+   */
+  public function testpostprocessSearchResultsWithExcerptFalse() {
+    $this->createHighlightProcessor(array('excerpt' => FALSE));
+
+    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('congue' => 'congue')));
+
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $field = Utility::createField($index, $body_field_id);
+    $field->setType('text');
+
+    $index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array($body_field_id => $field)));
+
+    $this->processor->setIndex($index);
+
+    /** @var \Drupal\node\Entity\Node $node */
+    $node = $this->getMockBuilder('Drupal\node\Entity\Node')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $body_value = array($this->getFieldBody());
+    $fields = array(
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_value,
+      ),
+    );
+
+    $items = $this->createItems($index, 1, $fields, $node);
+    $items_keys = array_keys($items);
+    $first_entity_key = $items_keys[0];
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getResultItems();
+    $excerpt = $output[$first_entity_key]->getExcerpt();
+
+    $this->assertEmpty($excerpt, 'Highlight is not correctly applied');
+  }
 
 
   /**
