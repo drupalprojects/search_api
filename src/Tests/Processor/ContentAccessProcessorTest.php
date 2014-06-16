@@ -48,7 +48,7 @@ class ContentAccessProcessorTest extends ProcessorTestBase {
    * Creates a new processor object for use in the tests.
    */
   public function setUp() {
-    parent::setUp('search_api_content_access_processor');
+    parent::setUp('content_access');
 
     $this->installSchema('comment', array('comment_entity_statistics'));
 

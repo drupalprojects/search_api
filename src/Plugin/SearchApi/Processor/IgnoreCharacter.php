@@ -118,22 +118,6 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function processFieldValue(&$value, &$type) {
-    $this->prepare();
-    // Remove the characters we do not want
-    if ($this->ignorable) {
-      $value = preg_replace('/(' . $this->ignorable . ')+/u', '', $value);
-    }
-
-    // Strip the character sets
-    if (!empty($this->configuration['strip']['character_sets'])) {
-      $value = $this->stripCharacterSets($value);
-    }
-  }
-
-  /**
    * Strips unwanted Characters from the value that is currently being
    * processed.
    *
@@ -164,13 +148,11 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     $this->prepare();
     // We don't touch integers, NULL values or the like.
     if ($this->ignorable) {
-      $this->prepare();
       $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
     }
-    if (is_string($value)) {
-      if (!empty($this->configuration['strip']['character_sets'])) {
-        $value = $this->stripCharacterSets($value);
-      }
+
+    if (!empty($this->configuration['strip']['character_sets'])) {
+      $value = $this->stripCharacterSets($value);
     }
   }
 
