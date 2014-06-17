@@ -179,7 +179,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function postUpdate() {
-    return !empty($this->server->original) && $this->server->getBackendPluginConfig() != $this->server->original->getBackendPluginConfig();
+    return !empty($this->server->original) && $this->server->getBackendConfig() != $this->server->original->getBackendConfig();
   }
 
   /**

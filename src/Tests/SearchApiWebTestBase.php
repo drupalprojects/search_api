@@ -93,7 +93,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
       }
     }
     else {
-      $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'backendPluginId' => $backend_id));
+      $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'backend' => $backend_id));
       $server->description = $name;
       $server->save();
     }

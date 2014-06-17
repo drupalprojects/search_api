@@ -84,7 +84,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
-      'backendPluginId' => 'search_api_test_backend',
+      'backend' => 'search_api_test_backend',
     ));
     $this->server->save();
 

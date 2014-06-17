@@ -119,8 +119,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = entity_load('search_api_server', $this->serverId);
 
-    $normalized_storage_table = $server->getBackendPluginConfig()['index_tables'][$this->indexId];
-    $field_tables = $server->getBackendPluginConfig()['field_tables'][$this->indexId];
+    $normalized_storage_table = $server->getBackendConfig()['index_tables'][$this->indexId];
+    $field_tables = $server->getBackendConfig()['field_tables'][$this->indexId];
 
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
     foreach ($field_tables as $field_table) {
@@ -153,7 +153,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = entity_load('search_api_server', $this->serverId, TRUE);
     $index_fields = array_keys($index->options['fields']);
-    $server_fields = array_keys($server->backendPluginConfig['field_tables'][$index->id()]);
+    $server_fields = array_keys($server->getBackendConfig()['field_tables'][$index->id()]);
     sort($index_fields);
     sort($server_fields);
     $this->assertEqual($index_fields, $server_fields);
@@ -324,7 +324,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   protected function editServer() {
     $server = entity_load('search_api_server', $this->serverId, TRUE);
-    $server->backendPluginConfig['min_chars'] = 4;
+    $server->getBackendConfig()['min_chars'] = 4;
     $success = (bool) $server->save();
     $this->assertTrue($success, 'The server was successfully edited.');
 
@@ -757,7 +757,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->save();
 
     $server = entity_load('search_api_server', $this->serverId, TRUE);
-    $this->assertEqual($server->backendPluginConfig['field_tables'], array(), 'The index was successfully removed from the server.');
+    $this->assertEqual($server->getBackendConfig()['field_tables'], array(), 'The index was successfully removed from the server.');
     $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');
     $server->delete();
 

@@ -9,7 +9,6 @@ namespace Drupal\search_api\Entity;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -51,7 +50,7 @@ use Drupal\search_api\Utility\Utility;
  *   }
  * )
  */
-class Server extends ConfigEntityBase implements ServerInterface, PluginFormInterface {
+class Server extends ConfigEntityBase implements ServerInterface {
 
   /**
    * The machine name of the server.
@@ -86,14 +85,14 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    *
    * @var string
    */
-  public $backendPluginId;
+  protected $backend;
 
   /**
    * The backend plugin configuration.
    *
    * @var array
    */
-  public $backendPluginConfig = array();
+  protected $backend_config = array();
 
   /**
    * The backend plugin instance.
@@ -138,7 +137,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
    * {@inheritdoc}
    */
   public function getBackendId() {
-    return $this->backendPluginId;
+    return $this->backend;
   }
 
   /**
@@ -151,7 +150,7 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
 
       // Try to create a backend plugin instance.
-      $config = $this->backendPluginConfig;
+      $config = $this->backend_config;
       $config['server'] = $this;
       if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
         $args['@backend'] = $this->getBackendId();
@@ -171,11 +170,11 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
     // Check if the backend is valid.
     if ($this->hasValidBackend()) {
       // Overwrite the backend plugin configuration with the active.
-      $properties['backendPluginConfig'] = $this->getBackend()->getConfiguration();
+      $properties['backend_config'] = $this->getBackend()->getConfiguration();
     }
     else {
       // Clear the backend plugin configuration.
-      $properties['backendPluginConfig'] = array();
+      $properties['backend_config'] = array();
     }
     return $properties;
   }
@@ -211,31 +210,6 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
       }
       // Delete all remaining tasks for the server.
       Utility::getServerTaskManager()->delete(NULL, $server);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildConfigurationForm(array $form, array &$form_state) {
-    return $this->hasValidBackend() ? $this->getBackend()->buildConfigurationForm($form, $form_state) : array();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
-    if ($this->hasValidBackend()) {
-      $this->getBackend()->validateConfigurationForm($form, $form_state);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    if ($this->hasValidBackend()) {
-      $this->getBackend()->submitConfigurationForm($form, $form_state);
     }
   }
 
@@ -468,15 +442,8 @@ class Server extends ConfigEntityBase implements ServerInterface, PluginFormInte
   /**
    * {@inheritdoc}
    */
-  public function setBackendPluginConfig($backendPluginConfig) {
-    $this->backendPluginConfig = $backendPluginConfig;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getBackendPluginConfig() {
-    return $this->backendPluginConfig;
+  public function getBackendConfig() {
+    return $this->backend_config;
   }
 
   /**

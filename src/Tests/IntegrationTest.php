@@ -86,18 +86,17 @@ class IntegrationTest extends SearchApiWebTestBase {
       'name' => '',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'backendPluginId' => '',
+      'backend' => 'search_api_test_backend',
     );
 
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Backend'))));
 
     $edit = array(
       'name' => 'Search API test server',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'backendPluginId' => 'search_api_test_backend',
+      'backend' => 'search_api_test_backend',
     );
     $this->drupalPostForm($settings_path, $edit, t('Save'));
     $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
@@ -107,7 +106,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'machine_name' => $server_id,
       'status' => 1,
       'description' => 'A server used for testing.',
-      'backendPluginId' => 'search_api_test_backend',
+      'backend' => 'search_api_test_backend',
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));

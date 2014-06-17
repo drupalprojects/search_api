@@ -176,8 +176,8 @@ class ServerForm extends EntityForm {
       '#default_value' => $server->getDescription(),
     );
     // Build the backend plugin selection element.
-    $form['backendPluginId'] = array(
-      '#type' => 'select',
+    $form['backend'] = array(
+      '#type' => 'radios',
       '#title' => $this->t('Backend'),
       '#description' => $this->t('Choose a backend to use for this server.'),
       '#options' => $this->getBackendPluginDefinitionOptions(),
@@ -207,7 +207,7 @@ class ServerForm extends EntityForm {
    */
   public function buildBackendConfigForm(array &$form, array &$form_state, ServerInterface $server) {
     // Build the backend plugin configuration container element.
-    $form['backendPluginConfig'] = array(
+    $form['backend_config'] = array(
       '#type' => 'container',
       '#attributes' => array(
         'id' => 'search-api-backend-config-form',
@@ -221,18 +221,18 @@ class ServerForm extends EntityForm {
       // Build the backend configuration form.
       if (($backend_plugin_config_form = $backend->buildConfigurationForm(array(), $form_state))) {
         // Check if the backend plugin changed.
-        if (!empty($form_state['values']['backendPluginId'])) {
+        if (!empty($form_state['values']['backend'])) {
           // Notify the user about the backend configuration change.
           drupal_set_message($this->t('Please configure the used backend.'), 'warning');
         }
 
         // Modify the backend plugin configuration container element.
-        $form['backendPluginConfig']['#type'] = 'details';
-        $form['backendPluginConfig']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend->label()));
-        $form['backendPluginConfig']['#description'] = String::checkPlain($backend->summary());
-        $form['backendPluginConfig']['#open'] = TRUE;
+        $form['backend_config']['#type'] = 'details';
+        $form['backend_config']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend->label()));
+        $form['backend_config']['#description'] = String::checkPlain($backend->summary());
+        $form['backend_config']['#open'] = TRUE;
         // Attach the build backend plugin configuration form.
-        $form['backendPluginConfig'] += $backend_plugin_config_form;
+        $form['backend_config'] += $backend_plugin_config_form;
       }
     }
     // Do not notify the user about a missing backend plugin if a new server
@@ -256,7 +256,7 @@ class ServerForm extends EntityForm {
    */
   public function buildAjaxBackendConfigForm(array $form, array &$form_state) {
     // Get the backend plugin configuration form.
-    return $form['backendPluginConfig'];
+    return $form['backend_config'];
   }
 
   /**
@@ -271,27 +271,27 @@ class ServerForm extends EntityForm {
     // Get the current backend plugin ID.
     $backend_plugin_id = $entity->getBackendId();
     // Check if the backend plugin changed.
-    if ($backend_plugin_id !== $form_state['values']['backendPluginId']) {
+    if ($backend_plugin_id !== $form_state['values']['backend']) {
       // Check if the backend plugin configuration form input values exist.
-      if (!empty($form_state['input']['backendPluginConfig'])) {
+      if (!empty($form_state['input']['backend_config'])) {
         // Overwrite the plugin configuration form input values with an empty
         // array. This will force the Drupal Form API to use the default values.
-        $form_state['input']['backendPluginConfig'] = array();
+        $form_state['input']['backend_config'] = array();
       }
       // Check if the backend plugin configuration form values exist.
-      if (!empty($form_state['values']['backendPluginConfig'])) {
+      if (!empty($form_state['values']['backend_config'])) {
         // Overwrite the plugin configuration form values with an empty array.
         // This has no effect on the Drupal Form API but is done to keep the
         // data consistent.
-        $form_state['values']['backendPluginConfig'] = array();
+        $form_state['values']['backend_config'] = array();
       }
     }
     // Check if the entity has a valid backend plugin.
     elseif ($entity->hasValidBackend()) {
       // Validate the backend plugin configuration form.
-      if (isset($form_state['values']['backendPluginConfig'])) {
-        $backend_form_state['values'] = $form_state['values']['backendPluginConfig'];
-        $entity->getBackend()->validateConfigurationForm($form['backendPluginConfig'], $backend_form_state);
+      if (isset($form_state['values']['backend_config'])) {
+        $backend_form_state['values'] = $form_state['values']['backend_config'];
+        $entity->getBackend()->validateConfigurationForm($form['backend_config'], $backend_form_state);
       }
     }
   }
@@ -300,15 +300,12 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submit(array $form, array &$form_state) {
-    // Perform default entity form submittion.
+    // Perform default entity form submission.
     $entity = parent::submit($form, $form_state);
-    // Check if the entity has a valid backend plugin.
-    if ($entity->hasValidBackend()) {
-      // Submit the backend plugin configuration form.
-      if (isset($form_state['values']['backendPluginConfig'])) {
-        $backend_form_state['values'] = $form_state['values']['backendPluginConfig'];
-        $entity->getBackend()->submitConfigurationForm($form['backendPluginConfig'], $backend_form_state);
-      }
+    // Submit the backend plugin configuration form.
+    if ($entity->hasValidBackend() && isset($form_state['values']['backend_config'])) {
+      $backend_form_state['values'] = &$form_state['values']['backend_config'];
+      $entity->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
     }
     return $entity;
   }

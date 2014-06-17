@@ -56,8 +56,8 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'machine_name' => strtolower($server_name),
       'name' => $server_name,
       'status' => TRUE,
-      'backendPluginId' => 'search_api_db',
-      'backendPluginConfig' => array(
+      'backend' => 'search_api_db',
+      'backend_config' => array(
         'min_chars' => 3,
         'database' => 'default:default',
       ),
