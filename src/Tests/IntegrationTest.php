@@ -138,8 +138,8 @@ class IntegrationTest extends SearchApiWebTestBase {
       'machine_name' => $this->indexId,
       'status' => 1,
       'description' => 'An index used for testing.',
-      'serverMachineName' => $this->serverId,
-      'datasourcePluginIds[]' => array('entity:node'),
+      'server' => $this->serverId,
+      'datasources[]' => array('entity:node'),
     );
 
     $this->drupalPostForm(NULL, $edit, t('Save'));
@@ -154,8 +154,8 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
     $this->assertTrue($index->status, t('Index status correctly inserted.'));
     $this->assertEqual($index->description, $edit['description'], t('Index machine name correctly inserted.'));
-    $this->assertEqual($index->serverMachineName, $edit['serverMachineName'], t('Index server machine name correctly inserted.'));
-    $this->assertEqual($index->datasourcePluginIds, $edit['datasourcePluginIds[]'], t('Index datasource id correctly inserted.'));
+    $this->assertEqual($index->server, $edit['server'], t('Index server machine name correctly inserted.'));
+    $this->assertEqual($index->datasources, $edit['datasources[]'], t('Index datasource id correctly inserted.'));
   }
 
   protected function addFieldsToIndex() {
@@ -235,9 +235,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -249,9 +249,9 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -264,9 +264,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -280,9 +280,9 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -297,9 +297,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -312,9 +312,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 1,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][default]' => 1,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -327,9 +327,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 1,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => FALSE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][default]' => 1,
+      'datasource_configs[entity:node][bundles][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -383,10 +383,10 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => TRUE,
-      'readOnly' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'read_only' => TRUE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
     // This should have 2 items in the index
@@ -397,19 +397,19 @@ class IntegrationTest extends SearchApiWebTestBase {
     $index_path = 'admin/config/search/search-api/index/' . $this->indexId;
     $this->drupalGet($index_path);
 
-    $this->assertNoText(t('Index now'), t("Making sure that the Index now button does not appear in the UI after setting the index to readOnly"));
+    $this->assertNoText(t('Index now'), t("Making sure that the Index now button does not appear in the UI after setting the index to read_only"));
 
     // Let's index using the API also to make sure we can't index
     $index->index();
 
     $remaining_after = $this->countRemainingItems();
-    $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to readOnly'));
+    $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to read_only'));
 
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
     $this->drupalGet($settings_path);
 
     $edit = array(
-      'readOnly' => FALSE,
+      'read_only' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -420,7 +420,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalPostForm(NULL, array(), t('Index now'));
 
     $remaining_after = $index->getTracker()->getRemainingItemsCount();
-    $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the readOnly flag'));
+    $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the read_only flag'));
 
   }
 
@@ -445,9 +445,9 @@ class IntegrationTest extends SearchApiWebTestBase {
     // Disable the index
     $edit = array(
       'status' => FALSE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -490,10 +490,10 @@ class IntegrationTest extends SearchApiWebTestBase {
     // enable indexing of users
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
-      'datasourcePluginIds[]' => array('entity:user', 'entity:node'),
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasources[]' => array('entity:user', 'entity:node'),
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -507,7 +507,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     // Disable indexing of users
     $edit = array(
-      'datasourcePluginIds[]' => array('entity:node'),
+      'datasources[]' => array('entity:node'),
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -537,10 +537,10 @@ class IntegrationTest extends SearchApiWebTestBase {
     // enable indexing of nodes
     $edit = array(
       'status' => TRUE,
-      'datasourcePluginConfigs[entity:node][default]' => 0,
-      'datasourcePluginConfigs[entity:node][bundles][article]' => TRUE,
-      'datasourcePluginConfigs[entity:node][bundles][page]' => TRUE,
-      'datasourcePluginIds[]' => array('entity:node'),
+      'datasource_configs[entity:node][default]' => 0,
+      'datasource_configs[entity:node][bundles][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasources[]' => array('entity:node'),
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -567,7 +567,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalGet($settings_path);
     // Change servers in the UI
     $edit = array(
-      'serverMachineName' => $serverId2,
+      'server' => $serverId2,
     );
     $this->drupalPostForm(NULL, $edit, t('Save'));
 

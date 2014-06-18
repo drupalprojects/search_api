@@ -49,7 +49,7 @@ function search_api_cron() {
   // Load all enabled, not read-only indexes.
   $conditions = array(
     'status' => TRUE,
-    'readOnly' => FALSE,
+    'read_only' => FALSE,
   );
   /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
   $indexes = entity_load_multiple_by_properties('search_api_index', $conditions);

@@ -14,7 +14,7 @@ search_api.index.*:
     description:
       type: text
       label: 'Description'
-    readOnly:
+    read_only:
       type: boolean
       label: 'Read-only'
     options:
@@ -46,20 +46,22 @@ search_api.index.*:
                 settings:
                   type: 'search_api.processor.plugin.[%parent.processorPluginId]'
 
-    datasourcePluginIds:
+    datasources:
       type: sequence
       label: 'Datasource plugin IDs'
       sequence:
         - type: string
-    # How to do this properly?
-    #datasourcePluginConfigs:
-    #  type: mapping
-    trackerPluginId:
+    datasource_configs:
+      type: sequence
+      label: 'Datasource plugin configurations'
+      sequence:
+        - type: search_api.tracker.plugin.[%parent.datasources.type]
+    tracker:
       type: string
       label: 'Tracker plugin ID'
-    trackerPluginConfig:
-      type: search_api.tracker.plugin.[%parent.trackerPluginId]
-    serverMachineName:
+    tracker_config:
+      type: search_api.tracker.plugin.[%parent.tracker]
+    server:
       type: string
       label: 'Server machine name'
     status:
@@ -68,3 +70,6 @@ search_api.index.*:
     langcode:
       type: string
       label: 'Language code'
+    dependencies:
+      type: config_dependencies
+      label: 'Dependencies'

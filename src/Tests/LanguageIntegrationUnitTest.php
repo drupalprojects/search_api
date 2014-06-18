@@ -77,9 +77,9 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
-      'datasourcePluginIds' => array('entity:' . $this->testEntityTypeId),
-      'trackerPluginId' => 'default_tracker',
-      'serverMachineName' => $this->server->id(),
+      'datasources' => array('entity:' . $this->testEntityTypeId),
+      'tracker' => 'default_tracker',
+      'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
     ));
     $this->index->save();

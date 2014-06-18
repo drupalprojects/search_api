@@ -69,9 +69,9 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'machine_name' => strtolower($index_name),
       'name' => $index_name,
       'status' => TRUE,
-      'datasourcePluginIds' => array('entity:comment', 'entity:node'),
-      'serverMachineName' => $server_name,
-      'trackerPluginId' => 'default_tracker',
+      'datasources' => array('entity:comment', 'entity:node'),
+      'server' => $server_name,
+      'tracker' => 'default_tracker',
     ));
     $this->index->setServer($this->server);
     $this->index->setOption('fields', array(

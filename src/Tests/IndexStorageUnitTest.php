@@ -70,7 +70,7 @@ class IndexStorageUnitTest extends KernelTestBase {
     $indexData = array(
       'machine_name' => $this->randomName(),
       'name' => $this->randomString(),
-      'trackerPluginId' => 'default_tracker',
+      'tracker' => 'default_tracker',
     );
 
     try {

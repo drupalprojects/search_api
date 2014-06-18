@@ -93,9 +93,9 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
-      'datasourcePluginIds' => array('entity:user'),
-      'trackerPluginId' => 'default_tracker',
-      'serverMachineName' => $this->server->id(),
+      'datasources' => array('entity:user'),
+      'tracker' => 'default_tracker',
+      'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
     ));
     $this->index->save();

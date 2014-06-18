@@ -67,13 +67,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public $name;
 
   /**
-   * The server UUID.
-   *
-   * @var string
-   */
-  public $uuid;
-
-  /**
    * The displayed description for a server.
    *
    * @var string
@@ -187,7 +180,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     parent::preDelete($storage, $entities);
     // Get the indexes associated with the servers.
     $index_ids = \Drupal::entityQuery('search_api_index')
-      ->condition('serverMachineName', array_keys($entities), 'IN')
+      ->condition('server', array_keys($entities), 'IN')
       ->execute();
     // Load the related indexes.
     $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
@@ -256,7 +249,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $storage = \Drupal::entityManager()->getStorage('search_api_index');
     // Retrieve the indexes attached to the server.
     return $storage->loadByProperties(array(
-      'serverMachineName' => $this->id(),
+      'server' => $this->id(),
     ) + $properties);
   }
 
@@ -399,7 +392,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function deleteAllItems() {
     $failed = array();
-    $properties['readOnly'] = FALSE;
+    $properties['read_only'] = FALSE;
     foreach ($this->getIndexes($properties) as $index) {
       try {
         $this->getBackend()->deleteAllIndexItems($index);

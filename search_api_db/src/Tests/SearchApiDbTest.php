@@ -755,7 +755,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
     // Remove first the index and then the server.
     $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $index->serverMachineName = NULL;
+    $index->server = NULL;
     $index->save();
 
     $server = entity_load('search_api_server', $this->serverId, TRUE);

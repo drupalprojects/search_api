@@ -677,7 +677,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       // If the index got deleted, create a dummy to simplify the code.
       $index = entity_create('search_api_index', array(
         'id' => $index,
-        'readOnly' => TRUE,
+        'read_only' => TRUE,
       ));
     }
     /** @var \Drupal\search_api\Index\IndexInterface $index */

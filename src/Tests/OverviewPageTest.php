@@ -70,7 +70,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $edit = array(
       'name' => $this->randomName(),
       'machine_name' => Unicode::strtolower($this->randomName()),
-      'datasourcePluginIds[]' => 'entity:user',
+      'datasources[]' => 'entity:user',
     );
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, t('Save'));
     $this->assertText(t('The index was successfully saved.'));
