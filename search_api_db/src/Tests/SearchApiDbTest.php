@@ -324,7 +324,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   protected function editServer() {
     $server = entity_load('search_api_server', $this->serverId, TRUE);
-    $server->getBackendConfig()['min_chars'] = 4;
+    $backend_config = $server->getBackendConfig();
+    $backend_config['min_chars'] = 4;
+    $server->set('backend_config', $backend_config);
     $success = (bool) $server->save();
     $this->assertTrue($success, 'The server was successfully edited.');
 
