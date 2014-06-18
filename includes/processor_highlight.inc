@@ -154,7 +154,8 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
             $text[] = $data;
           }
         }
-        $result['excerpt'] = $this->createExcerpt(implode("\n\n", $text), $keys);
+
+        $result['excerpt'] = $this->createExcerpt($this->flattenArrayValues($text), $keys);
       }
       if ($this->options['highlight'] != 'never') {
         $fields = $this->getFulltextFields($response['results'], $id, $fulltext_fields, $this->options['highlight'] == 'always');
@@ -425,6 +426,10 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
    *   The field's text with all occurrences of search keywords highlighted.
    */
   protected function highlightField($text, array $keys, $html = TRUE) {
+    if (is_array($text)) {
+      $text = $this->flattenArrayValues($text);
+    }
+
     if ($html) {
       $texts = preg_split('#((?:</?[[:alpha:]](?:[^>"\']*|"[^"]*"|\'[^\']\')*>)+)#i', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
       for ($i = 0; $i < count($texts); $i += 2) {
@@ -433,9 +438,35 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
       return implode('', $texts);
     }
     $replace = $this->options['prefix'] . '\0' . $this->options['suffix'];
+
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
     $text = preg_replace('/' . self::$boundary . '(' . $keys . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
     return substr($text, 1, -1);
+  }
+
+  /**
+   * Flattens a (possibly multidimensional) array into a string.
+   *
+   * @param array $array
+   *   The array to flatten.
+   * @param string $glue
+   *   The separator to insert between individual array items.
+   *
+   * @return string
+   *   The glued string.
+   */
+  protected function flattenArrayValues(array $array, $glue = "\n\n") {
+    $ret = array();
+    foreach ($array as $item) {
+      if (is_array($item)) {
+        $ret[] = $this->flattenArrayValues($item, $glue);
+      }
+      else {
+        $ret[] = $item;
+      }
+    }
+
+    return implode($glue, $ret);
   }
 
 }
