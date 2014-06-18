@@ -173,24 +173,24 @@ class SearchApiDbTest extends EntityUnitTestBase {
       'type' => 'text',
     );
 
-    $index->setOption('processors', array(
-      'html_filter' => array(
-        'status' => TRUE,
-        'weight' => 0,
-      ),
-    ));
+    $processors = $index->getOption('processors');
+    $processors['html_filter'] = array(
+      'status' => TRUE,
+      'weight' => 0,
+    );
+    $index->setOption('processors', $processors);
     $index->save();
   }
 
   protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId);
-    $index->setOption('processors', array(
-      'html_filter' => array(
-        'status' => FALSE,
-        'weight' => 0,
-      ),
-    ));
+    $processors = $index->getOption('processors');
+    $processors['html_filter'] = array(
+      'status' => FALSE,
+      'weight' => 0,
+    );
+    $index->setOption('processors', $processors);
     // Remove a field from the index and check if the change is matched in
     // the server configuration.
     unset($index->options['fields'][$this->getFieldId('body')]);
