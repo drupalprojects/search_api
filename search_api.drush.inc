@@ -206,12 +206,10 @@ function drush_search_api_enable_all() {
 /**
  * Disable index(es).
  *
- * @param string $index_machine_name
- *   Optional machine name for index to be disabled. If absent - disable all.
  */
-function drush_search_api_disable($index_name) {
+function drush_search_api_disable() {
   if (!search_api_drush_get_index_count()) {
-    drush_set_error(dt('There are no indexes defined. Please define an index before trying to enable it'));
+    drush_set_error(dt('There are no indexes defined. Please define an index before trying to disable it'));
     return;
   }
 
