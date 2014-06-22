@@ -222,7 +222,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
       $this->fail('Pending server tasks did not prevent indexing of items.');
     }
     catch (SearchApiException $e) {
-      $expected_message = $this->t('Could not index items because pending server tasks could not be executed.');
+      $expected_message = 'Could not index items because pending server tasks could not be executed.';
       $this->assertEqual($e->getMessage(), $expected_message, 'Pending server tasks prevented indexing of items.');
     }
     $this->assertEqual($this->getCalledServerMethods(), array(), 'indexItems was not executed.');

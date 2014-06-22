@@ -29,7 +29,7 @@ class RenderedItemProcessorTest extends ProcessorTestBase {
    *
    * @var array
    */
-  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference', 'system', 'routing');
+  public static $modules = array('user', 'node', 'menu_link', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference', 'system', 'routing');
 
   /**
    * {@inheritdoc}

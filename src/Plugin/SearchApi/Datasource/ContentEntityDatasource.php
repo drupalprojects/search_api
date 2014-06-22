@@ -635,7 +635,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
         if ($field_definition instanceof FieldInstanceConfigInterface) {
           if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
             $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;
-            $field_dependencies[$field_definition->getField()->getConfigDependencyName()] = TRUE;
+            $field_dependencies[$field_definition->getFieldStorageDefinition()->getConfigDependencyName()] = TRUE;
           }
 
           // Recurse for nested fields.
