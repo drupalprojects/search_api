@@ -133,7 +133,7 @@ class Highlight extends ProcessorPluginBase {
 
     $minimum_excerpt_length = 50;
     if ($form_state['values']['excerpt_length'] < $minimum_excerpt_length) {
-      $error_message = t('The minimum excerpt length should be higher than !minimum_excerpt_length', array('!minimum_excerpt_length' => $minimum_excerpt_length));
+      $error_message = $this->t('The minimum excerpt length should be higher than !minimum_excerpt_length', array('!minimum_excerpt_length' => $minimum_excerpt_length));
       \Drupal::formBuilder()->setError($form['excerpt_length'], $form_state, $error_message);
     }
   }

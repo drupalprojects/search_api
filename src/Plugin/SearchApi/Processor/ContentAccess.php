@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
+use Drupal\Component\Utility\String;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -51,8 +52,8 @@ class ContentAccess extends ProcessorPluginBase {
 
     if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
       $definition = array(
-        'label' => t('Node access information'),
-        'description' => t('Data needed to apply node access.'),
+        'label' => $this->t('Node access information'),
+        'description' => $this->t('Data needed to apply node access.'),
         'type' => 'string',
       );
       $properties['search_api_node_grants'] = new DataDefinition($definition);
@@ -215,7 +216,7 @@ class ContentAccess extends ProcessorPluginBase {
       if (empty($fields[$field])) {
         $vars['@field'] = $field;
         $vars['@index'] = $query->getIndex()->label();
-        throw new SearchApiException(t('Required field @field not indexed on index @index. Could not perform access checks.', $vars));
+        throw new SearchApiException(String::format('Required field @field not indexed on index @index. Could not perform access checks.', $vars));
       }
     }
 

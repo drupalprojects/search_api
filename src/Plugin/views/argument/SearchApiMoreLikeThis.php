@@ -46,8 +46,8 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
-        '#title' => t('Fields for Similarity'),
-        '#description' => t('Select the fields that will be used for finding similar content. If no fields are selected, all available fields will be used.'),
+        '#title' => $this->t('Fields for Similarity'),
+        '#description' => $this->t('Select the fields that will be used for finding similar content. If no fields are selected, all available fields will be used.'),
         '#options' => $fields,
         '#size' => min(8, count($fields)),
         '#multiple' => TRUE,

@@ -43,14 +43,14 @@ class SearchApiFilter extends FilterPluginBase {
    */
   public function operatorOptions() {
     return array(
-      '<' => t('Is less than'),
-      '<=' => t('Is less than or equal to'),
-      '=' => t('Is equal to'),
-      '<>' => t('Is not equal to'),
-      '>=' => t('Is greater than or equal to'),
-      '>' => t('Is greater than'),
-      'empty' => t('Is empty'),
-      'not empty' => t('Is not empty'),
+      '<' => $this->t('Is less than'),
+      '<=' => $this->t('Is less than or equal to'),
+      '=' => $this->t('Is equal to'),
+      '<>' => $this->t('Is not equal to'),
+      '>=' => $this->t('Is greater than or equal to'),
+      '>' => $this->t('Is greater than'),
+      'empty' => $this->t('Is empty'),
+      'not empty' => $this->t('Is not empty'),
     );
   }
 
@@ -63,7 +63,7 @@ class SearchApiFilter extends FilterPluginBase {
     }
     $form['value'] = array(
       '#type' => 'textfield',
-      '#title' => empty($form_state['exposed']) ? t('Value') : '',
+      '#title' => empty($form_state['exposed']) ? $this->t('Value') : '',
       '#size' => 30,
       '#default_value' => isset($this->value) ? $this->value : '',
     );
@@ -90,14 +90,14 @@ class SearchApiFilter extends FilterPluginBase {
    */
   function adminSummary() {
     if (!empty($this->options['exposed'])) {
-      return t('exposed');
+      return $this->t('exposed');
     }
 
     if ($this->operator === 'empty') {
-      return t('is empty');
+      return $this->t('is empty');
     }
     if ($this->operator === 'not empty') {
-      return t('is not empty');
+      return $this->t('is not empty');
     }
 
     return String::checkPlain((string) $this->operator) . ' ' . String::checkPlain((string) $this->value);

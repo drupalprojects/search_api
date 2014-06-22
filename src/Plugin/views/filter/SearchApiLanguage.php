@@ -23,8 +23,8 @@ class SearchApiLanguage extends SearchApiFilterOptions {
   protected function getValueOptions() {
     parent::getValueOptions();
     $this->value_options = array(
-      'current' => t("Current user's language"),
-      'default' => t('Default site language'),
+      'current' => $this->t("Current user's language"),
+      'default' => $this->t('Default site language'),
     ) + $this->value_options;
   }
 

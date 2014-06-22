@@ -100,7 +100,7 @@ class SearchApiRow extends RowPluginBase {
       $form['view_mode'][$datasource->getPluginId()] = array(
         '#type' => 'select',
         '#options' => $datasource->getViewModes(),
-        '#title' => t('View mode for data type @name', array('@name' => $datasource->getPluginDefinition()['label'])),
+        '#title' => $this->t('View mode for data type @name', array('@name' => $datasource->getPluginDefinition()['label'])),
         '#default_value' => isset($this->options['view_mode'][$datasource->getPluginId()]) ? $this->options['view_mode'][$datasource->getPluginId()] : 'default',
       );
     }
@@ -115,7 +115,7 @@ class SearchApiRow extends RowPluginBase {
       return String::checkPlain($options[$this->options['view_mode']]);
     }
     else {
-      return t('No view mode selected');
+      return $this->t('No view mode selected');
     }
   }
 

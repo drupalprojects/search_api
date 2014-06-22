@@ -58,16 +58,16 @@ class RoleFilter extends FieldsProcessorPluginBase {
 
     $form['default'] = array(
       '#type' => 'radios',
-      '#title' => t('Which users should be indexed?'),
+      '#title' => $this->t('Which users should be indexed?'),
       '#default_value' => $this->configuration['default'],
       '#options' => array(
-        1 => t('All but those from one of the selected roles'),
-        0 => t('Only those from the selected roles'),
+        1 => $this->t('All but those from one of the selected roles'),
+        0 => $this->t('Only those from the selected roles'),
       ),
     );
     $form['roles'] = array(
       '#type' => 'select',
-      '#title' => t('Roles'),
+      '#title' => $this->t('Roles'),
       '#default_value' => $this->configuration['roles'],
       '#options' => $options,
       '#size' => min(4, count($options)),

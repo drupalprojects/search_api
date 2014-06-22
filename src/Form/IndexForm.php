@@ -251,7 +251,7 @@ class IndexForm extends EntityForm {
     $form['datasourceConfigureButton'] = array(
       '#type' => 'submit',
       '#name' => 'datasourcepluginids_configure',
-      '#value' => t('Configure'),
+      '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('datasources')),
       '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxDatasourceConfigForm'),
       '#ajax' => array(
@@ -296,7 +296,7 @@ class IndexForm extends EntityForm {
     $form['trackerConfigureButton'] = array(
       '#type' => 'submit',
       '#name' => 'trackerpluginid_configure',
-      '#value' => t('Configure'),
+      '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('tracker')),
       '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxTrackerConfigForm'),
       '#ajax' => array(
@@ -344,7 +344,7 @@ class IndexForm extends EntityForm {
     $form['options'] = array(
       '#tree' => TRUE,
       '#type' => 'details',
-      '#title' => t('Index options'),
+      '#title' => $this->t('Index options'),
       '#collapsed' => TRUE,
       '#weight' => 12,
     );

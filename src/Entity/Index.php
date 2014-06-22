@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -542,7 +543,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($this->unmappedFields) {
         $vars['@fields'] = array();
         foreach ($this->unmappedFields as $type => $fields) {
-          $vars['@fields'][] = implode(', ', $fields) . ' (' . t('type !type', array('!type' => $type)) . ')';
+          $vars['@fields'][] = implode(', ', $fields) . ' (' . String::format('type !type', array('!type' => $type)) . ')';
         }
         $vars['@fields'] = implode('; ', $vars['@fields']);
         $vars['@index'] = $this->label();
@@ -902,7 +903,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
           $processor = $processorPluginManager->createInstance($name, $settings);
           if (!($processor instanceof ProcessorInterface)) {
-            watchdog('search_api', t('Processor @id is not an ProcessorInterface instance using @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
+            watchdog('search_api', String::format('Processor @id is not an ProcessorInterface instance using @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
             continue;
           }
           if ($processor->supportsIndex($this)) {
@@ -911,7 +912,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
       else {
-        watchdog('search_api', t('Processor @id specifies an non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
+        watchdog('search_api', String::format('Processor @id specifies an non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class'])), NULL, WATCHDOG_WARNING);
       }
     }
 

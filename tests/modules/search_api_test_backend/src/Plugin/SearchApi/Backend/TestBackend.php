@@ -38,7 +38,7 @@ class TestBackend extends BackendPluginBase {
   public function buildConfigurationForm(array $form, array &$form_state) {
     $form['test'] = array(
       '#type' => 'textfield',
-      '#title' => t('Test'),
+      '#title' => $this->t('Test'),
       '#default_value' => isset($this->configuration['test']) ? $this->configuration['test'] : '',
     );
     return $form;

@@ -207,7 +207,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   public function setField($field_id, FieldInterface $field = NULL) {
     if ($field) {
       if ($field->getFieldIdentifier() !== $field_id) {
-        throw new \InvalidArgumentException(t('The field identifier passed must be consistent with the identifier set on the field object.'));
+        throw new \InvalidArgumentException('The field identifier passed must be consistent with the identifier set on the field object.');
       }
       $this->fields[$field_id] = $field;
     }

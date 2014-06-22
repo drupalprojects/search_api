@@ -99,8 +99,8 @@ class IndexFiltersForm extends EntityForm {
     $form['#processors'] = $processors_settings;
     $form['processors'] = array(
       '#type' => 'details',
-      '#title' => t('Processors'),
-      '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order. ' .
+      '#title' => $this->t('Processors'),
+      '#description' => $this->t('Select processors which will pre- and post-process data at index and search time, and their order. ' .
         'Most processors will only influence fulltext fields, but refer to their individual descriptions for details regarding their effect.'),
       '#open' => TRUE,
     );
@@ -108,7 +108,7 @@ class IndexFiltersForm extends EntityForm {
     // Processor status.
     $form['processors']['status'] = array(
       '#type' => 'item',
-      '#title' => t('Enabled processors'),
+      '#title' => $this->t('Enabled processors'),
       '#prefix' => '<div class="search-api-status-wrapper">',
       '#suffix' => '</div>',
     );
@@ -126,7 +126,7 @@ class IndexFiltersForm extends EntityForm {
 
     $form['processors']['order'] = array(
       '#type' => 'table',
-      '#header' => array(t('Processor'), t('Weight')),
+      '#header' => array($this->t('Processor'), $this->t('Weight')),
       '#tabledrag' => array(
         array(
           'action' => 'order',
@@ -146,7 +146,7 @@ class IndexFiltersForm extends EntityForm {
       // TableDrag: Weight column element.
       $form['processors']['order'][$name]['weight'] = array(
         '#type' => 'weight',
-        '#title' => t('Weight for @title', array('@title' => $processor->label())),
+        '#title' => $this->t('Weight for @title', array('@title' => $processor->label())),
         '#title_display' => 'invisible',
         '#default_value' => $processors_settings[$name]['weight'],
         '#parents' => array('processors', $name, 'weight'),
@@ -156,7 +156,7 @@ class IndexFiltersForm extends EntityForm {
 
     // Processor settings.
     $form['processor_settings'] = array(
-      '#title' => t('Processor settings'),
+      '#title' => $this->t('Processor settings'),
       '#type' => 'vertical_tabs',
     );
 
@@ -233,10 +233,10 @@ class IndexFiltersForm extends EntityForm {
 
       $this->entity->save();
       $this->entity->reindex();
-      drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
+      drupal_set_message($this->t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
     }
     else {
-      drupal_set_message(t('No values were changed.'));
+      drupal_set_message($this->t('No values were changed.'));
     }
   }
 

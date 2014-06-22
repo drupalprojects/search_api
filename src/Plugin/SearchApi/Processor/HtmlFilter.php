@@ -50,15 +50,15 @@ class HtmlFilter extends FieldsProcessorPluginBase {
 
     $form['title'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Index title attribute'),
-      '#description' => t('If set, the contents of title attributes will be indexed.'),
+      '#title' => $this->t('Index title attribute'),
+      '#description' => $this->t('If set, the contents of title attributes will be indexed.'),
       '#default_value' => $this->configuration['title'],
     );
 
     $form['alt'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Index alt attribute'),
-      '#description' => t('If set, the alternative text of images will be indexed.'),
+      '#title' => $this->t('Index alt attribute'),
+      '#description' => $this->t('If set, the alternative text of images will be indexed.'),
       '#default_value' => $this->configuration['alt'],
     );
 
@@ -70,8 +70,8 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     $t_args['@url'] = url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8');
     $form['tags'] = array(
       '#type' => 'textarea',
-      '#title' => t('Tag boosts'),
-      '#description' => t('Specify special boost values for certain HTML elements, in <a href="@url">YAML file format</a>. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
+      '#title' => $this->t('Tag boosts'),
+      '#description' => $this->t('Specify special boost values for certain HTML elements, in <a href="@url">YAML file format</a>. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
       '#default_value' => $tags,
     );
 
@@ -102,19 +102,19 @@ class HtmlFilter extends FieldsProcessorPluginBase {
       $tags = $parser->parse($values['tags']);
     }
     catch (ParseException $exception) {
-      $errors[] = t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
+      $errors[] = $this->t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
       $tags = array();
     }
     foreach ($tags as $key => $value) {
       $key = "<$key>";
       if (is_array($value)) {
-        $errors[] = t("Boost value for tag @tag can't be an array.", array('@tag' => $key));
+        $errors[] = $this->t("Boost value for tag @tag can't be an array.", array('@tag' => $key));
       }
       elseif (!is_numeric($value)) {
-        $errors[] = t("Boost value for tag @tag must be numeric.", array('@tag' => $key));
+        $errors[] = $this->t("Boost value for tag @tag must be numeric.", array('@tag' => $key));
       }
       elseif ($value < 0) {
-        $errors[] = t('Boost value for tag @tag must be non-negative.', array('@tag' => $key));
+        $errors[] = $this->t('Boost value for tag @tag must be non-negative.', array('@tag' => $key));
       }
       elseif ($value == 1) {
         unset($tags[$key]);

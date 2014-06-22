@@ -89,8 +89,8 @@ class IntegrationTest extends SearchApiWebTestBase {
       'backend' => 'search_api_test_backend',
     );
 
-    $this->drupalPostForm($settings_path, $edit, t('Save'));
-    $this->assertText(t('!name field is required.', array('!name' => t('Server name'))));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Server name'))));
 
     $edit = array(
       'name' => 'Search API test server',
@@ -98,8 +98,8 @@ class IntegrationTest extends SearchApiWebTestBase {
       'description' => 'A server used for testing.',
       'backend' => 'search_api_test_backend',
     );
-    $this->drupalPostForm($settings_path, $edit, t('Save'));
-    $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
 
     $edit = array(
       'name' => 'Search API test server',
@@ -109,10 +109,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'backend' => 'search_api_test_backend',
     );
 
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
-    $this->assertText(t('The server was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/server/' . $server_id, array(), t('Correct redirect to server page.'));
+    $this->assertText($this->t('The server was successfully saved.'));
+    $this->assertUrl('admin/config/search/search-api/server/' . $server_id, array(), $this->t('Correct redirect to server page.'));
     return $server_id;
   }
 
@@ -126,10 +126,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'description' => 'An index used for testing.',
     );
 
-    $this->drupalPostForm(NULL, $edit, t('Save'));
-    $this->assertText(t('!name field is required.', array('!name' => t('Index name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Machine-readable name'))));
-    $this->assertText(t('!name field is required.', array('!name' => t('Data types'))));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Index name'))));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Data types'))));
 
     $this->indexId = 'test_index';
 
@@ -142,20 +142,20 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasources[]' => array('entity:node'),
     );
 
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
-    $this->assertText(t('The index was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/index/' . $this->indexId, array(), t('Correct redirect to index page.'));
+    $this->assertText($this->t('The index was successfully saved.'));
+    $this->assertUrl('admin/config/search/search-api/index/' . $this->indexId, array(), $this->t('Correct redirect to index page.'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
 
-    $this->assertEqual($index->name, $edit['name'], t('Name correctly inserted.'));
-    $this->assertEqual($index->machine_name, $edit['machine_name'], t('Index machine name correctly inserted.'));
-    $this->assertTrue($index->status, t('Index status correctly inserted.'));
-    $this->assertEqual($index->description, $edit['description'], t('Index machine name correctly inserted.'));
-    $this->assertEqual($index->server, $edit['server'], t('Index server machine name correctly inserted.'));
-    $this->assertEqual($index->datasources, $edit['datasources[]'], t('Index datasource id correctly inserted.'));
+    $this->assertEqual($index->name, $edit['name'], $this->t('Name correctly inserted.'));
+    $this->assertEqual($index->machine_name, $edit['machine_name'], $this->t('Index machine name correctly inserted.'));
+    $this->assertTrue($index->status, $this->t('Index status correctly inserted.'));
+    $this->assertEqual($index->description, $edit['description'], $this->t('Index machine name correctly inserted.'));
+    $this->assertEqual($index->server, $edit['server'], $this->t('Index server machine name correctly inserted.'));
+    $this->assertEqual($index->datasources, $edit['datasources[]'], $this->t('Index datasource id correctly inserted.'));
   }
 
   protected function addFieldsToIndex() {
@@ -172,17 +172,17 @@ class IntegrationTest extends SearchApiWebTestBase {
       'fields[entity:node|body][indexed]' => 1,
     );
 
-    $this->drupalPostForm($settings_path, $edit, t('Save changes'));
-    $this->assertText(t('The indexed fields were successfully changed.'));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save changes'));
+    $this->assertText($this->t('The indexed fields were successfully changed.'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields(FALSE);
 
-    $this->assertEqual($fields['entity:node|nid']->isIndexed(), $edit['fields[entity:node|nid][indexed]'], t('nid field is indexed.'));
-    $this->assertEqual($fields['entity:node|title']->isIndexed(), $edit['fields[entity:node|title][indexed]'], t('title field is indexed.'));
-    $this->assertEqual($fields['entity:node|title']->getType(), $edit['fields[entity:node|title][type]'], t('title field type is text.'));
-    $this->assertEqual($fields['entity:node|title']->getBoost(), $edit['fields[entity:node|title][boost]'], t('title field boost value is 21.'));
+    $this->assertEqual($fields['entity:node|nid']->isIndexed(), $edit['fields[entity:node|nid][indexed]'], $this->t('nid field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']->isIndexed(), $edit['fields[entity:node|title][indexed]'], $this->t('title field is indexed.'));
+    $this->assertEqual($fields['entity:node|title']->getType(), $edit['fields[entity:node|title][type]'], $this->t('title field type is text.'));
+    $this->assertEqual($fields['entity:node|title']->getBoost(), $edit['fields[entity:node|title][boost]'], $this->t('title field boost value is 21.'));
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.
@@ -205,7 +205,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'fields[entity:node|body][indexed]' => FALSE,
     );
-    $this->drupalPostForm($this->getIndexPath($this->indexId) . '/fields', $edit, t('Save changes'));
+    $this->drupalPostForm($this->getIndexPath($this->indexId) . '/fields', $edit, $this->t('Save changes'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
@@ -217,7 +217,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     // Initially there should be no tracked items, because there are no nodes
     $tracked_items = $this->countTrackedItems();
 
-    $this->assertEqual($tracked_items, 0, t('No items are tracked yet'));
+    $this->assertEqual($tracked_items, 0, $this->t('No items are tracked yet'));
 
     // Add two articles and a page
     $article1 = $this->drupalCreateNode(array('type' => 'article'));
@@ -226,7 +226,7 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     // Those 3 new nodes should be added to the index immediately
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+    $this->assertEqual($tracked_items, 3, $this->t('Three items are tracked'));
 
     // Create the edit index path
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
@@ -239,10 +239,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => FALSE,
       'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 0, t('No items are tracked'));
+    $this->assertEqual($tracked_items, 0, $this->t('No items are tracked'));
 
     // Test enabling the index
     $this->drupalGet($settings_path);
@@ -253,10 +253,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => TRUE,
       'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 3, t('Three items are tracked'));
+    $this->assertEqual($tracked_items, 3, $this->t('Three items are tracked'));
 
     // Test putting default to zero and no bundles checked.
     // This will ignore all bundles except the ones that are checked.
@@ -268,10 +268,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => FALSE,
       'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 0, t('No items are tracked'));
+    $this->assertEqual($tracked_items, 0, $this->t('No items are tracked'));
 
     // Test putting default to zero and the article bundle checked.
     // This will ignore all bundles except the ones that are checked.
@@ -284,12 +284,12 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => TRUE,
       'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $this->drupalGet($settings_path);
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
+    $this->assertEqual($tracked_items, 2, $this->t('Two items are tracked'));
 
     // Test putting default to zero and the page bundle checked.
     // This will ignore all bundles except the ones that are checked.
@@ -301,10 +301,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => FALSE,
       'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 1, t('One items is tracked'));
+    $this->assertEqual($tracked_items, 1, $this->t('One items is tracked'));
 
     // Test putting default to one and the article bundle checked.
     // This will add all bundles except the ones that are checked.
@@ -316,10 +316,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => TRUE,
       'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 1, t('One item is tracked'));
+    $this->assertEqual($tracked_items, 1, $this->t('One item is tracked'));
 
     // Test putting default to one and the page bundle checked.
     // This will ignore all bundles except the ones that are checked.
@@ -331,17 +331,17 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => FALSE,
       'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 2, t('Two items are tracked'));
+    $this->assertEqual($tracked_items, 2, $this->t('Two items are tracked'));
 
     // Now lets delete an article. That should remove one item from the item
     // table
     $article1->delete();
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 1, t('One item is tracked'));
+    $this->assertEqual($tracked_items, 1, $this->t('One item is tracked'));
   }
 
   /**
@@ -388,7 +388,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => TRUE,
       'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     // This should have 2 items in the index
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
@@ -397,13 +397,13 @@ class IntegrationTest extends SearchApiWebTestBase {
     $index_path = 'admin/config/search/search-api/index/' . $this->indexId;
     $this->drupalGet($index_path);
 
-    $this->assertNoText(t('Index now'), t("Making sure that the Index now button does not appear in the UI after setting the index to read_only"));
+    $this->assertNoText($this->t('Index now'), $this->t("Making sure that the Index now button does not appear in the UI after setting the index to read_only"));
 
     // Let's index using the API also to make sure we can't index
     $index->index();
 
     $remaining_after = $this->countRemainingItems();
-    $this->assertEqual($remaining_before, $remaining_after, t('No items were indexed after setting to read_only'));
+    $this->assertEqual($remaining_before, $remaining_after, $this->t('No items were indexed after setting to read_only'));
 
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
     $this->drupalGet($settings_path);
@@ -411,16 +411,16 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'read_only' => FALSE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $remaining_before = $index->getTracker()->getRemainingItemsCount();
 
     $this->drupalGet($index_path);
-    $this->drupalPostForm(NULL, array(), t('Index now'));
+    $this->drupalPostForm(NULL, array(), $this->t('Index now'));
 
     $remaining_after = $index->getTracker()->getRemainingItemsCount();
-    $this->assertNotEqual($remaining_before, $remaining_after, t('Items were indexed after removing the read_only flag'));
+    $this->assertNotEqual($remaining_before, $remaining_after, $this->t('Items were indexed after removing the read_only flag'));
 
   }
 
@@ -449,11 +449,11 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][article]' => TRUE,
       'datasource_configs[entity:node][bundles][page]' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 0, t('After disabling the index, no items should be tracked'));
+    $this->assertEqual($tracked_items, 0, $this->t('After disabling the index, no items should be tracked'));
 
     // Go to the index edit path
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
@@ -462,10 +462,10 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'status' => TRUE,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertNotNull($tracked_items, t('After enabling the index, at least 1 item should be tracked'));
+    $this->assertNotNull($tracked_items, $this->t('After enabling the index, at least 1 item should be tracked'));
   }
 
   /**
@@ -495,27 +495,27 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][page]' => TRUE,
       'datasources[]' => array('entity:user', 'entity:node'),
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
     $t_args = array(
       '!usercount' => $user_count,
       '!nodecount' => $node_count,
     );
-    $this->assertEqual($tracked_items, $user_count+$node_count, t('After enabling user and nodes with respectively !usercount users and !nodecount nodes we should have the sum of those to index', $t_args));
+    $this->assertEqual($tracked_items, $user_count+$node_count, $this->t('After enabling user and nodes with respectively !usercount users and !nodecount nodes we should have the sum of those to index', $t_args));
 
     $this->drupalGet($settings_path);
     // Disable indexing of users
     $edit = array(
       'datasources[]' => array('entity:node'),
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
     $t_args = array(
       '!nodecount' => $node_count,
     );
-    $this->assertEqual($tracked_items, $node_count, t('After disabling user indexing we should only have !nodecount nodes to index', $t_args));
+    $this->assertEqual($tracked_items, $node_count, $this->t('After disabling user indexing we should only have !nodecount nodes to index', $t_args));
   }
 
   /**
@@ -542,7 +542,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'datasource_configs[entity:node][bundles][page]' => TRUE,
       'datasources[]' => array('entity:node'),
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     // Reindex all so we start from scratch
     $index->reindex();
@@ -552,13 +552,13 @@ class IntegrationTest extends SearchApiWebTestBase {
     $t_args = array(
       '!nodecount' => $node_count,
     );
-    $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount nodes to index', $t_args));
+    $this->assertEqual($remaining_items, $node_count, $this->t('We should have !nodecount nodes to index', $t_args));
     // Index
     $index->index();
 
     $remaining_items = $this->countRemainingItems();
 
-    $this->assertEqual($remaining_items, 0, t('We should have nothing left to index', $t_args));
+    $this->assertEqual($remaining_items, 0, $this->t('We should have nothing left to index', $t_args));
 
     // Create a second server
     $serverId2 = $this->createServer();
@@ -569,14 +569,14 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'server' => $serverId2,
     );
-    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $remaining_items = $this->countRemainingItems();
     // After saving the new index, we should have called reindex.
     $t_args = array(
       '!nodecount' => $node_count,
     );
-    $this->assertEqual($remaining_items, $node_count, t('We should have !nodecount items left to index after changing servers', $t_args));
+    $this->assertEqual($remaining_items, $node_count, $this->t('We should have !nodecount items left to index after changing servers', $t_args));
   }
 
   /**
@@ -589,7 +589,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'processors[ignorecase][status]' => 1,
     );
-    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
     $this->assertTrue($processors['ignorecase']->getConfiguration(), 'Ignore case processor enabled');
@@ -606,7 +606,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
       'processors[ignorecase][settings][fields][entity:node|title]' => 'entity:node|title',
     );
-    $this->drupalPostForm($settings_path, $edit, t('Save'));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
     $configuration = $processors['ignorecase']->getConfiguration();

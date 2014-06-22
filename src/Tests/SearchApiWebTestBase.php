@@ -7,12 +7,15 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\simpletest\WebTestBase;
 
 /**
  * Provides the base class for web tests for Search API.
  */
 abstract class SearchApiWebTestBase extends WebTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * Modules to enable.

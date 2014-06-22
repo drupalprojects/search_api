@@ -31,26 +31,26 @@ class SearchApiFulltext extends SearchApiArgument {
   public function buildOptionsForm(&$form, &$form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['help']['#markup'] = t('Note: You can change how search keys are parsed under "Advanced" > "Query settings".');
+    $form['help']['#markup'] = $this->t('Note: You can change how search keys are parsed under "Advanced" > "Query settings".');
 
     $fields = $this->getFulltextFields();
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
-        '#title' => t('Searched fields'),
-        '#description' => t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
+        '#title' => $this->t('Searched fields'),
+        '#description' => $this->t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
         '#options' => $fields,
         '#size' => min(4, count($fields)),
         '#multiple' => TRUE,
         '#default_value' => $this->options['fields'],
       );
       $form['conjunction'] = array(
-        '#title' => t('Operator'),
-        '#description' => t('Determines how multiple keywords entered for the search will be combined.'),
+        '#title' => $this->t('Operator'),
+        '#description' => $this->t('Determines how multiple keywords entered for the search will be combined.'),
         '#type' => 'radios',
         '#options' => array(
-          'AND' => t('Contains all of these words'),
-          'OR' => t('Contains any of these words'),
+          'AND' => $this->t('Contains all of these words'),
+          'OR' => $this->t('Contains any of these words'),
         ),
         '#default_value' => $this->options['conjunction'],
       );

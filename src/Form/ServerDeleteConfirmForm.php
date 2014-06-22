@@ -55,7 +55,7 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
     // Delete the entity.
     $this->entity->delete();
     // Notify the user about the server removal.
-    drupal_set_message(t('The search server %name has been removed.', array('%name' => $this->entity->label())));
+    drupal_set_message($this->t('The search server %name has been removed.', array('%name' => $this->entity->label())));
     // Redirect to the overview page.
     $form_state['redirect_route'] = array(
       'route_name' => 'search_api.overview',

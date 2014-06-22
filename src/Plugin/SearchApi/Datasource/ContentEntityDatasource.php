@@ -467,7 +467,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   public function getViewModes() {
     $view_modes = $this->entityManager->getViewModeOptions($this->getEntityTypeId());
     if (empty($view_modes)) {
-      $view_modes = array('default' => t('Default'));
+      $view_modes = array('default' => $this->t('Default'));
     }
     return $view_modes;
   }

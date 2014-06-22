@@ -71,7 +71,8 @@ class IndexStatusForm extends FormBase {
       );
       // Here it gets complicated. We want to build a sentence from the form
       // input elements, but to translate that we have to make the two form
-      // elements (for limit and batch size) pseudo-variables in the t() call.
+      // elements (for limit and batch size) pseudo-variables in the $this->t()
+      // call.
       // Since we can't pass them directly, we split the translated sentence
       // (which still has the two tokens), figure out their order and then put
       // the pieces together again using the form elements' #prefix and #suffix

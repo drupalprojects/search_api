@@ -59,11 +59,11 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    */
   public function operatorOptions() {
     $operators = array(
-      '=' => $this->isMultiValued() ? t('Is one of') : t('Is'),
-      'all of' => t('Is all of'),
-      '<>' => $this->isMultiValued() ? t('Is not one of') : t('Is not'),
-      'empty' => t('Is empty'),
-      'not empty' => t('Is not empty'),
+      '=' => $this->isMultiValued() ? $this->t('Is one of') : $this->t('Is'),
+      'all of' => $this->t('Is all of'),
+      '<>' => $this->isMultiValued() ? $this->t('Is not one of') : $this->t('Is not'),
+      'empty' => $this->t('Is empty'),
+      'not empty' => $this->t('Is not empty'),
     );
     if (!$this->isMultiValued()) {
       unset($operators['all of']);

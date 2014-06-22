@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\search_api\Exception\SearchApiException;
@@ -404,7 +405,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if (!empty($e)) {
       $args['%server'] = $this->label();
       $args['@indexes'] = implode(', ', $failed);
-      $message = t('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
+      $message = String::format('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
       throw new SearchApiException($message, 0, $e);
     }
   }

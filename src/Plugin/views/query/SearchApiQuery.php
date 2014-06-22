@@ -198,24 +198,24 @@ class SearchApiQuery extends QueryPluginBase {
 
     $form['search_api_bypass_access'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Bypass access checks'),
-      '#description' => t('If the underlying search index has access checks enabled, this option allows to disable them for this view.'),
+      '#title' => $this->t('Bypass access checks'),
+      '#description' => $this->t('If the underlying search index has access checks enabled, this option allows to disable them for this view.'),
       '#default_value' => $this->options['search_api_bypass_access'],
     );
 
     if (\Drupal::entityManager()->getDefinition($this->index->item_type)) {
       $form['entity_access'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Additional access checks on result entities'),
-        '#description' => t("Execute an access check for all result entities. This prevents users from seeing inappropriate content when the index contains stale data, or doesn't provide access checks. However, result counts, paging and other things won't work correctly if results are eliminated in this way, so only use this as a last ressort (and in addition to other checks, if possible)."),
+        '#title' => $this->t('Additional access checks on result entities'),
+        '#description' => $this->t("Execute an access check for all result entities. This prevents users from seeing inappropriate content when the index contains stale data, or doesn't provide access checks. However, result counts, paging and other things won't work correctly if results are eliminated in this way, so only use this as a last ressort (and in addition to other checks, if possible)."),
         '#default_value' => $this->options['entity_access'],
       );
     }
 
     $form['parse_mode'] = array(
       '#type' => 'select',
-      '#title' => t('Parse mode'),
-      '#description' => t('Choose how the search keys will be parsed.'),
+      '#title' => $this->t('Parse mode'),
+      '#description' => $this->t('Choose how the search keys will be parsed.'),
       '#options' => array(),
       '#default_value' => $this->options['parse_mode'],
     );

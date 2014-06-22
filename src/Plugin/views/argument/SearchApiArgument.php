@@ -54,22 +54,22 @@ class SearchApiArgument extends ArgumentPluginBase {
   public function defaultActions($which = NULL) {
     $defaults = array(
       'ignore' => array(
-        'title' => t('Display all values'),
+        'title' => $this->t('Display all values'),
         'method' => 'defaultIgnore',
         'breadcrumb' => TRUE, // generate a breadcrumb to here
       ),
       'not found' => array(
-        'title' => t('Hide view / Page not found (404)'),
+        'title' => $this->t('Hide view / Page not found (404)'),
         'method' => 'defaultNotFound',
         'hard fail' => TRUE, // This is a hard fail condition
       ),
       'empty' => array(
-        'title' => t('Display empty text'),
+        'title' => $this->t('Display empty text'),
         'method' => 'defaultEmpty',
         'breadcrumb' => TRUE, // generate a breadcrumb to here
       ),
       'default' => array(
-        'title' => t('Provide default argument'),
+        'title' => $this->t('Provide default argument'),
         'method' => 'default_default',
         'form method' => 'defaultArgumentForm',
         'has default argument' => TRUE,
@@ -104,16 +104,16 @@ class SearchApiArgument extends ArgumentPluginBase {
     // Allow passing multiple values.
     $form['break_phrase'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow multiple values'),
-      '#description' => t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
+      '#title' => $this->t('Allow multiple values'),
+      '#description' => $this->t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
       '#default_value' => !empty($this->options['break_phrase']),
       '#fieldset' => 'more',
     );
 
     $form['not'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Exclude'),
-      '#description' => t('If selected, the numbers entered for the filter will be excluded rather than limiting the view.'),
+      '#title' => $this->t('Exclude'),
+      '#description' => $this->t('If selected, the numbers entered for the filter will be excluded rather than limiting the view.'),
       '#default_value' => !empty($this->options['not']),
       '#fieldset' => 'more',
     );

@@ -18,7 +18,7 @@ class SearchApiFilterText extends SearchApiFilter {
    * Provide a list of options for the operator form.
    */
   public function operatorOptions() {
-    return array('=' => t('contains'), '<>' => t("doesn't contain"));
+    return array('=' => $this->t('contains'), '<>' => $this->t("doesn't contain"));
   }
 
 }

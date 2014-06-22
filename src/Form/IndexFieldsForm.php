@@ -91,21 +91,21 @@ class IndexFieldsForm extends EntityForm {
     $form_state['index'] = $index;
     $form['description'] = array(
       '#type' => 'item',
-      '#title' => t('Select fields to index'),
-      '#description' => t('<p>The datatype of a field determines how it can be used for searching and filtering.' .
+      '#title' => $this->t('Select fields to index'),
+      '#description' => $this->t('<p>The datatype of a field determines how it can be used for searching and filtering.' .
         'The boost is used to give additional weight to certain fields, e.g. titles or tags.</p>' .
         '<p>Whether detailed field types are supported depends on the type of server this index resides on. ' .
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
     );
     if ($index->hasValidServer()) {
-      $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
+      $form['description']['#description'] .= '<p>' . $this->t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
           array('@server-url' => url($index->getServer()->getSystemPath('canonical')))) . '</p>';
     }
 
     if ($fields = $index->getFieldsByDatasource(NULL, FALSE)) {
       $form['_general'] = array(
         '#type' => 'details',
-        '#title' => t('General'),
+        '#title' => $this->t('General'),
         '#open' => TRUE,
         '#theme' => 'search_api_admin_fields_table',
       );
@@ -130,7 +130,7 @@ class IndexFieldsForm extends EntityForm {
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Save changes'),
+      '#value' => $this->t('Save changes'),
       '#button_type' => 'primary',
     );
 
@@ -209,8 +209,8 @@ class IndexFieldsForm extends EntityForm {
       // Build our options.
       $build['additional'] = array(
         '#type' => 'details',
-        '#title' => t('Related fields'),
-        '#description' => t(
+        '#title' => $this->t('Related fields'),
+        '#description' => $this->t(
             'There are entities related to entities of this type. ' .
             'You can add their fields to the list above so they can be indexed too.'
           ) . '<br />',
@@ -229,7 +229,7 @@ class IndexFieldsForm extends EntityForm {
       }
       $build['additional']['add'] = array(
         '#type' => 'submit',
-        '#value' => t('Update'),
+        '#value' => $this->t('Update'),
       );
     }
 
@@ -264,11 +264,11 @@ class IndexFieldsForm extends EntityForm {
     $index->save();
 
     // Show a different message based on the button.
-    if ($form_state['values']['op'] == t('Save changes')) {
-      drupal_set_message(t('The indexed fields were successfully changed.'));
+    if ($form_state['values']['op'] == $this->t('Save changes')) {
+      drupal_set_message($this->t('The indexed fields were successfully changed.'));
     }
     else {
-      drupal_set_message(t('The available fields were successfully changed.'));
+      drupal_set_message($this->t('The available fields were successfully changed.'));
     }
   }
 

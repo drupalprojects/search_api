@@ -21,7 +21,7 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   public function showOperatorForm(&$form, &$form_state) {
     $this->operatorForm($form, $form_state);
-    $form['operator']['#description'] = t('This operator is only useful when using \'Search keys\'.');
+    $form['operator']['#description'] = $this->t('This operator is only useful when using \'Search keys\'.');
   }
 
   /**
@@ -29,9 +29,9 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   public function operatorOptions() {
     return array(
-      'AND' => t('Contains all of these words'),
-      'OR' => t('Contains any of these words'),
-      'NOT' => t('Contains none of these words'),
+      'AND' => $this->t('Contains all of these words'),
+      'OR' => $this->t('Contains any of these words'),
+      'NOT' => $this->t('Contains none of these words'),
     );
   }
 
@@ -57,11 +57,11 @@ class SearchApiFulltext extends SearchApiFilterText {
     parent::buildOptionsForm($form, $form_state);
 
     $form['mode'] = array(
-      '#title' => t('Use as'),
+      '#title' => $this->t('Use as'),
       '#type' => 'radios',
       '#options' => array(
-        'keys' => t('Search keys – multiple words will be split and the filter will influence relevance. You can change how search keys are parsed under "Advanced" > "Query settings".'),
-        'filter' => t("Search filter – use as a single phrase that restricts the result set but doesn't influence relevance."),
+        'keys' => $this->t('Search keys – multiple words will be split and the filter will influence relevance. You can change how search keys are parsed under "Advanced" > "Query settings".'),
+        'filter' => $this->t("Search filter – use as a single phrase that restricts the result set but doesn't influence relevance."),
       ),
       '#default_value' => $this->options['mode'],
     );
@@ -71,8 +71,8 @@ class SearchApiFulltext extends SearchApiFilterText {
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
-        '#title' => t('Searched fields'),
-        '#description' => t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
+        '#title' => $this->t('Searched fields'),
+        '#description' => $this->t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
         '#options' => $fields,
         '#size' => min(4, count($fields)),
         '#multiple' => TRUE,
@@ -90,8 +90,8 @@ class SearchApiFulltext extends SearchApiFilterText {
     }
 
     $form['min_length'] = array(
-      '#title' => t('Minimum keyword length'),
-      '#description' => t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
+      '#title' => $this->t('Minimum keyword length'),
+      '#description' => $this->t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
       '#type' => 'number',
       '#min' => 1,
       '#default_value' => $this->options['min_length'],
@@ -133,7 +133,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     }
     if (!$words) {
       $vars['@count'] = $this->options['min_length'];
-      $msg = t('You must include at least one positive keyword with @count characters or more.', $vars);
+      $msg = $this->t('You must include at least one positive keyword with @count characters or more.', $vars);
       \Drupal::formBuilder()->setError($form[$identifier], $form_state, $msg);
     }
     $input = implode(' ', $words);

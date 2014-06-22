@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\Component\Utility\String;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Utility\Utility;
@@ -138,7 +139,7 @@ trait FieldTrait {
    */
   public function setIndex(IndexInterface $index) {
     if ($this->index->getOriginalId() != $index->getOriginalId()) {
-      throw new \InvalidArgumentException(t('Attempted to change the index of a field object.'));
+      throw new \InvalidArgumentException('Attempted to change the index of a field object.');
     }
     $this->index = $index;
     return $this;
@@ -352,7 +353,7 @@ trait FieldTrait {
       if (!isset($definitions[$this->fieldIdentifier])) {
         $args['@field'] = $this->fieldIdentifier;
         $args['%index'] = $this->index->label();
-        throw new SearchApiException(t('Could not retrieve data definition for field "@field" on index %index.', $args));
+        throw new SearchApiException(String::format('Could not retrieve data definition for field "@field" on index %index.', $args));
       }
       $this->dataDefinition = $definitions[$this->fieldIdentifier];
     }

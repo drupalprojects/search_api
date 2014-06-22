@@ -52,8 +52,8 @@ class Tokenizer extends FieldsProcessorPluginBase {
 
     $form['spaces'] = array(
       '#type' => 'textfield',
-      '#title' => t('Whitespace characters'),
-      '#description' => t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
+      '#title' => $this->t('Whitespace characters'),
+      '#description' => $this->t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. ' .
           'Specify the characters as a <a href="@link">PCRE character class</a>. ' .
           'Note: For non-English content, the default setting might not be suitable.',
           array('@link' => url('http://www.php.net/manual/en/regexp.reference.character-classes.php'))),
@@ -87,7 +87,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
 
     $spaces = str_replace('/', '\/', trim($form_state['values']['spaces']));
     if ($spaces!== '' && @preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
-      \Drupal::formBuilder()->setError($form['spaces'], $form_state, $form['spaces']['#title'] . ': ' . t('The entered text is no valid regular expression.'));
+      \Drupal::formBuilder()->setError($form['spaces'], $form_state, $form['spaces']['#title'] . ': ' . $this->t('The entered text is no valid regular expression.'));
     }
   }
 

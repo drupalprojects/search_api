@@ -30,7 +30,7 @@ class AggregatedField extends ProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['description'] = array(
-      '#markup' => t('This data alteration lets you define additional fields that will be added to this index. ' .
+      '#markup' => $this->t('This data alteration lets you define additional fields that will be added to this index. ' .
         'Each of these new fields will be an aggregation of one or more existing fields.</br>' .
         'To add a new aggregated field, click the "Add new field" button and then fill out the form.</br>' .
         'To remove a previously defined field, click the "Remove field" button. </br>' .
@@ -44,7 +44,7 @@ class AggregatedField extends ProcessorPluginBase {
       '#type' => 'actions',
       'add' => array(
         '#type' => 'submit',
-        '#value' => t('Add new Field'),
+        '#value' => $this->t('Add new Field'),
         '#submit' => array(array($this, 'submitAjaxFieldButton')),
         '#limit_validation_errors' => array(),
         '#name' => 'add_aggregation_field',
@@ -113,19 +113,19 @@ class AggregatedField extends ProcessorPluginBase {
     foreach ($aggregated_fields as $field_id => $field) {
       $form['fields'][$field_id] = array(
         '#type' => 'fieldset',
-        '#title' => isset($field['label']) ? $field['label'] : t('New field'),
+        '#title' => isset($field['label']) ? $field['label'] : $this->t('New field'),
         '#collapsible' => TRUE,
         '#collapsed' => isset($field['label']),
       );
       $form['fields'][$field_id]['label'] = array(
         '#type' => 'textfield',
-        '#title' => t('New field name'),
-        '#default_value' => isset($field['label']) ? $field['label'] : t('New field'),
+        '#title' => $this->t('New field name'),
+        '#default_value' => isset($field['label']) ? $field['label'] : $this->t('New field'),
         '#required' => TRUE,
       );
       $form['fields'][$field_id]['type'] = array(
         '#type' => 'select',
-        '#title' => t('Aggregation type'),
+        '#title' => $this->t('Aggregation type'),
         '#options' => $types,
         '#default_value' => isset($field['type']) ? $field['type'] : 'union',
         '#required' => TRUE,
@@ -138,7 +138,7 @@ class AggregatedField extends ProcessorPluginBase {
 
       $form['fields'][$field_id]['fields'] = array_merge($field_properties, array(
         '#type' => 'checkboxes',
-        '#title' => t('Contained fields'),
+        '#title' => $this->t('Contained fields'),
         '#options' => $field_options,
         '#default_value' => array_combine($field['fields'], $field['fields']),
         '#attributes' => array('class' => array('search-api-alter-add-aggregation-fields')),
@@ -149,7 +149,7 @@ class AggregatedField extends ProcessorPluginBase {
         '#type' => 'actions',
         'remove' => array(
           '#type' => 'submit',
-          '#value' => t('Remove field'),
+          '#value' => $this->t('Remove field'),
           '#submit' => array(array($this, 'submitAjaxFieldButton')),
           '#limit_validation_errors' => array(),
           '#name' => 'remove_aggregation_field_' . $field_id,
@@ -188,7 +188,7 @@ class AggregatedField extends ProcessorPluginBase {
       $fields = $form_state['values']['aggregated_fields'][$field_id]['aggregated_fields'] = array_values(array_filter($field['fields']));
       unset($form_state['values']['aggregated_fields'][$field_id]['actions']);
       if ($field['label'] && !$fields) {
-        $error_message = t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.');
+        $error_message = $this->t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.');
         \Drupal::formBuilder()->setError($form['aggregated_fields'][$field_id]['fields'], $form_state, $error_message);
       }
     }
@@ -348,7 +348,7 @@ class AggregatedField extends ProcessorPluginBase {
     }
     $type = $this->getTypes();
     $type = $type[$field['type']];
-    return t('A @type aggregation of the following fields: @fields.', array('@type' => $type, '@fields' => implode(', ', $fields)));
+    return $this->t('A @type aggregation of the following fields: @fields.', array('@type' => $type, '@fields' => implode(', ', $fields)));
   }
 
   /**
@@ -386,13 +386,13 @@ class AggregatedField extends ProcessorPluginBase {
     switch ($info) {
       case 'name':
         return array(
-          'union' => t('Union'),
-          'concat' => t('Concatenation'),
-          'sum' => t('Sum'),
-          'count' => t('Count'),
-          'max' => t('Maximum'),
-          'min' => t('Minimum'),
-          'first' => t('First'),
+          'union' => $this->t('Union'),
+          'concat' => $this->t('Concatenation'),
+          'sum' => $this->t('Sum'),
+          'count' => $this->t('Count'),
+          'max' => $this->t('Maximum'),
+          'min' => $this->t('Minimum'),
+          'first' => $this->t('First'),
         );
       case 'type':
         return array(
@@ -406,13 +406,13 @@ class AggregatedField extends ProcessorPluginBase {
         );
       case 'description':
         return array(
-          'union' => t('The Union aggregation does an union operation of all the values of the field. 2 items with 2 fields become 1 item with 4 fields.'),
-          'concat' => t('The Concatenation aggregation concatenates the text data of all contained fields.'),
-          'sum' => t('The Sum aggregation adds the values of all contained fields numerically.'),
-          'count' => t('The Count aggregation takes the total number of contained field values as the aggregated field value.'),
-          'max' => t('The Maximum aggregation computes the numerically largest contained field value.'),
-          'min' => t('The Minimum aggregation computes the numerically smallest contained field value.'),
-          'first' => t('The First aggregation will simply keep the first encountered field value. This is helpful foremost when you know that a list field will only have a single value.'),
+          'union' => $this->t('The Union aggregation does an union operation of all the values of the field. 2 items with 2 fields become 1 item with 4 fields.'),
+          'concat' => $this->t('The Concatenation aggregation concatenates the text data of all contained fields.'),
+          'sum' => $this->t('The Sum aggregation adds the values of all contained fields numerically.'),
+          'count' => $this->t('The Count aggregation takes the total number of contained field values as the aggregated field value.'),
+          'max' => $this->t('The Maximum aggregation computes the numerically largest contained field value.'),
+          'min' => $this->t('The Minimum aggregation computes the numerically smallest contained field value.'),
+          'first' => $this->t('The First aggregation will simply keep the first encountered field value. This is helpful foremost when you know that a list field will only have a single value.'),
         );
     }
     return array();

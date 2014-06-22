@@ -152,12 +152,12 @@ class Utility {
    */
   static function getDefaultDataTypes() {
     return array(
-      'text' => t('Fulltext'),
-      'string' => t('String'),
-      'integer' => t('Integer'),
-      'decimal' => t('Decimal'),
-      'date' => t('Date'),
-      'boolean' => t('Boolean'),
+      'text' => \Drupal::translation()->translate('Fulltext'),
+      'string' => \Drupal::translation()->translate('String'),
+      'integer' => \Drupal::translation()->translate('Integer'),
+      'decimal' => \Drupal::translation()->translate('Decimal'),
+      'date' => \Drupal::translation()->translate('Date'),
+      'boolean' => \Drupal::translation()->translate('Boolean'),
     );
   }
 
@@ -378,7 +378,7 @@ class Utility {
   public static function createItemFromObject(IndexInterface $index, ComplexDataInterface $original_object, $id = NULL, DatasourceInterface $datasource = NULL) {
     if (!isset($id)) {
       if (!isset($datasource)) {
-        throw new \InvalidArgumentException(t('Need either an item ID or the datasource to create a search item from an object.'));
+        throw new \InvalidArgumentException('Need either an item ID or the datasource to create a search item from an object.');
       }
       $id = self::createCombinedId($datasource->getPluginId(), $datasource->getItemId($original_object));
     }

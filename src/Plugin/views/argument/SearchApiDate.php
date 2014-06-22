@@ -128,7 +128,7 @@ class SearchApiDate extends SearchApiArgument {
    */
   protected function abort() {
     $variables['!field'] = $this->definition['group'] . ': ' . $this->definition['title'];
-    $this->query->abort(t('Illegal argument passed to !field contextual filter.', $variables));
+    $this->query->abort(String::format('Illegal argument passed to !field contextual filter.', $variables));
   }
 
   /**

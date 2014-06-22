@@ -42,14 +42,14 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   public function buildExtraOptionsForm(&$form, &$form_state) {
     $form['type'] = array(
       '#type' => 'radios',
-      '#title' => t('Selection type'),
-      '#options' => array('select' => t('Dropdown'), 'textfield' => t('Autocomplete')),
+      '#title' => $this->t('Selection type'),
+      '#options' => array('select' => $this->t('Dropdown'), 'textfield' => $this->t('Autocomplete')),
       '#default_value' => $this->options['type'],
     );
 
     $form['hierarchy'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Show hierarchy in dropdown'),
+      '#title' => $this->t('Show hierarchy in dropdown'),
       '#default_value' => !empty($this->options['hierarchy']),
     );
     $form['hierarchy']['#states']['visible'][':input[name="options[type]"]']['value'] = 'select';
@@ -63,11 +63,11 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
 
     if (!empty($this->definition['vocabulary'])) {
       $vocabulary = entity_load('taxonomy_vocabulary', $this->definition['vocabulary']);
-      $title = t('Select terms from vocabulary @voc', array('@voc' => $vocabulary->label()));
+      $title = $this->t('Select terms from vocabulary @voc', array('@voc' => $vocabulary->label()));
     }
     else {
       $vocabulary = FALSE;
-      $title = t('Select terms');
+      $title = $this->t('Select terms');
     }
     $form['value']['#title'] = $title;
 
@@ -278,8 +278,8 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     }
     $form['error_message'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Display error message'),
-      '#description' => t('Display an error message if one of the entered terms could not be found.'),
+      '#title' => $this->t('Display error message'),
+      '#description' => $this->t('Display an error message if one of the entered terms could not be found.'),
       '#default_value' => !empty($this->options['error_message']),
     );
   }

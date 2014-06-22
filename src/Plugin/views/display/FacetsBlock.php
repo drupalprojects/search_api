@@ -57,23 +57,23 @@ class FacetsBlock extends Block {
 
     switch ($form_state['section']) {
       case 'linked_path':
-        $form['#title'] .= t('Search page path');
+        $form['#title'] .= $this->t('Search page path');
         $form['linked_path'] = array(
           '#type' => 'textfield',
-          '#description' => t('The menu path to which search facets will link. Leave empty to use the current path.'),
+          '#description' => $this->t('The menu path to which search facets will link. Leave empty to use the current path.'),
           '#default_value' => $this->ggetOption('linked_path'),
         );
         break;
       case 'facet_field':
         $form['facet_field'] = array(
           '#type' => 'select',
-          '#title' => t('Facet field'),
+          '#title' => $this->t('Facet field'),
           '#options' => $this->getFieldOptions(),
           '#default_value' => $this->getOption('facet_field'),
         );
         break;
       case 'use_more':
-        $form['use_more']['#description'] = t('This will add a more link to the bottom of this view, which will link to the base path for the facet links.');
+        $form['use_more']['#description'] = $this->t('This will add a more link to the bottom of this view, which will link to the base path for the facet links.');
         $form['use_more_always'] = array(
           '#type' => 'value',
           '#value' => $this->getOption('use_more_always'),
@@ -82,8 +82,8 @@ class FacetsBlock extends Block {
       case 'hide_block':
         $form['hide_block'] = array(
           '#type' => 'checkbox',
-          '#title' => t('Hide block'),
-          '#description' => t('Hide this block, but still execute the search. ' .
+          '#title' => $this->t('Hide block'),
+          '#description' => $this->t('Hide this block, but still execute the search. ' .
               'Can be used to show native Facet API facet blocks linking to the search page specified above.'),
           '#default_value' => $this->getOption('hide_block'),
         );
@@ -96,7 +96,7 @@ class FacetsBlock extends Block {
    */
   public function validateOptionsForm(&$form, &$form_state) {
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {
-      form_set_error('', t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
+      form_set_error('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
     }
   }
 
@@ -127,19 +127,19 @@ class FacetsBlock extends Block {
 
     $options['linked_path'] = array(
       'category' => 'block',
-      'title' => t('Search page path'),
-      'value' => $this->getOption('linked_path') ? $this->getOption('linked_path') : t('Use current path'),
+      'title' => $this->t('Search page path'),
+      'value' => $this->getOption('linked_path') ? $this->getOption('linked_path') : $this->t('Use current path'),
     );
     $field_options = $this->getFieldOptions();
     $options['facet_field'] = array(
       'category' => 'block',
-      'title' => t('Facet field'),
-      'value' => $this->getOption('facet_field') ? $field_options[$this->getOption('facet_field')] : t('None'),
+      'title' => $this->t('Facet field'),
+      'value' => $this->getOption('facet_field') ? $field_options[$this->getOption('facet_field')] : $this->t('None'),
     );
     $options['hide_block'] = array(
       'category' => 'block',
-      'title' => t('Hide block'),
-      'value' => $this->getOption('hide_block') ? t('Yes') : t('No'),
+      'title' => $this->t('Hide block'),
+      'value' => $this->getOption('hide_block') ? $this->t('Yes') : $this->t('No'),
     );
   }
 
@@ -152,7 +152,7 @@ class FacetsBlock extends Block {
       if (!($index_id && ($index = entity_load('search_api_index', $index_id)))) {
         $table = Views::viewsData($this->view->base_table);
         $table = empty($table['table']['base']['title']) ? $this->view->base_table : $table['table']['base']['title'];
-        throw new SearchApiException(t('The "Facets block" display cannot be used with a view for @basetable. ' .
+        throw new SearchApiException(String::format('The "Facets block" display cannot be used with a view for @basetable. ' .
             'Please only use this display with base tables representing search indexes.',
             array('@basetable' => $table)));
       }
@@ -219,7 +219,7 @@ class FacetsBlock extends Block {
    */
   public function render() {
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {
-      form_set_error('', t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
+      form_set_error('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
       return NULL;
     }
     $facet_field = $this->getOption('facet_field');

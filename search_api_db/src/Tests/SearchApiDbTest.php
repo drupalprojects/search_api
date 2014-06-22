@@ -9,6 +9,7 @@ namespace Drupal\search_api_db\Tests;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
@@ -19,6 +20,7 @@ use Drupal\system\Tests\Entity\EntityUnitTestBase;
 class SearchApiDbTest extends EntityUnitTestBase {
 
   use ExampleContentTrait;
+  use StringTranslationTrait;
 
   /**
    * A Search API server ID.
@@ -360,7 +362,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertEqual($results->getResultCount(), 3, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3)), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
-    $this->assertWarnings($results, array(t('No valid search keys were present in the query.')), 'No warnings were displayed.');
+    $this->assertWarnings($results, array($this->t('No valid search keys were present in the query.')), 'No warnings were displayed.');
 
     $keys = array(
       '#conjunction' => 'AND',

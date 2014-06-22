@@ -42,7 +42,7 @@ class SearchApiFilterDate extends SearchApiFilter {
       $widget_options = array('default' => 'Default', 'date_popup' => 'Date popup');
       $form['widget_type'] = array(
         '#type' => 'radios',
-        '#title' => t('Date selection form element'),
+        '#title' => $this->t('Date selection form element'),
         '#default_value' => $this->options['widget_type'],
         '#options' => $widget_options,
       );
@@ -63,7 +63,7 @@ class SearchApiFilterDate extends SearchApiFilter {
       unset($form['value']['#description']);
     }
     elseif (empty($form_state['exposed'])) {
-      $form['value']['#description'] = t('A date in any format understood by <a href="@doc-link">PHP</a>. For example, "@date1" or "@date2".', array(
+      $form['value']['#description'] = $this->t('A date in any format understood by <a href="@doc-link">PHP</a>. For example, "@date1" or "@date2".', array(
         '@doc-link' => 'http://php.net/manual/en/function.strtotime.php',
         '@date1' => format_date(REQUEST_TIME, 'custom', 'Y-m-d H:i:s'),
         '@date2' => 'now + 1 day',

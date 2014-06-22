@@ -89,11 +89,11 @@ class SearchApiFilterOptions extends SearchApiFilter {
    */
   public function operatorOptions() {
     $options = array(
-      '=' => t('Is one of'),
-      'all of' => t('Is all of'),
-      '<>' => t('Is none of'),
-      'empty' => t('Is empty'),
-      'not empty' => t('Is not empty'),
+      '=' => $this->t('Is one of'),
+      'all of' => $this->t('Is all of'),
+      '<>' => $this->t('Is none of'),
+      'empty' => $this->t('Is empty'),
+      'not empty' => $this->t('Is not empty'),
     );
     // "Is all of" doesn't make sense for single-valued fields.
     if (empty($this->definition['multi-valued'])) {
@@ -117,8 +117,8 @@ class SearchApiFilterOptions extends SearchApiFilter {
     parent::buildExposedForm($form, $form_state);
     $form['expose']['reduce'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Limit list to selected items'),
-      '#description' => t('If checked, the only items presented to the user will be the ones selected here.'),
+      '#title' => $this->t('Limit list to selected items'),
+      '#description' => $this->t('If checked, the only items presented to the user will be the ones selected here.'),
       '#default_value' => !empty($this->options['expose']['reduce']),
     );
   }
@@ -174,7 +174,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
 
     $form['value'] = array(
       '#type' => $this->value_form_type,
-      '#title' => empty($form_state['exposed']) ? t('Value') : '',
+      '#title' => empty($form_state['exposed']) ? $this->t('Value') : '',
       '#options' => $options,
       '#multiple' => TRUE,
       '#size' => min(4, count($options)),
@@ -203,14 +203,14 @@ class SearchApiFilterOptions extends SearchApiFilter {
    */
   public function adminSummary() {
     if (!empty($this->options['exposed'])) {
-      return t('exposed');
+      return $this->t('exposed');
     }
 
     if ($this->operator === 'empty') {
-      return t('is empty');
+      return $this->t('is empty');
     }
     if ($this->operator === 'not empty') {
-      return t('is not empty');
+      return $this->t('is not empty');
     }
 
     if (!is_array($this->value)) {
@@ -230,7 +230,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
     }
     // Choose different kind of ouput for 0, a single and multiple values.
     if (count($this->value) == 0) {
-      return $this->operator != '<>' ? t('none') : t('any');
+      return $this->operator != '<>' ? $this->t('none') : $this->t('any');
     }
     elseif (count($this->value) == 1) {
       switch ($this->operator) {

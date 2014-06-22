@@ -90,8 +90,8 @@ class SearchApiDbBackend extends BackendPluginBase {
       if (count($options) > 1 || count(reset($options)) > 1) {
         $form['database'] = array(
           '#type' => 'select',
-          '#title' => t('Database'),
-          '#description' => t('Select the database key and target to use for storing indexing information in. ' .
+          '#title' => $this->t('Database'),
+          '#description' => $this->t('Select the database key and target to use for storing indexing information in. ' .
               'Cannot be changed after creation.'),
           '#options' => $options,
           '#default_value' => 'default:default',
@@ -109,12 +109,12 @@ class SearchApiDbBackend extends BackendPluginBase {
       $form = array(
         'database' => array(
           '#type' => 'value',
-          '#title' => t('Database'), // Slight hack for the "View server" page.
+          '#title' => $this->t('Database'), // Slight hack for the "View server" page.
           '#value' => $this->configuration['database'],
         ),
         'database_text' => array(
           '#type' => 'item',
-          '#title' => t('Database'),
+          '#title' => $this->t('Database'),
           '#markup' => String::checkPlain(str_replace(':', ' > ', $this->configuration['database'])),
         ),
       );
@@ -132,8 +132,8 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     $form['min_chars'] = array(
       '#type' => 'select',
-      '#title' => t('Minimum word length'),
-      '#description' => t('The minimum number of characters a word must consist of to be indexed.'),
+      '#title' => $this->t('Minimum word length'),
+      '#description' => $this->t('The minimum number of characters a word must consist of to be indexed.'),
       '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
       '#default_value' => $configuration['min_chars'],
     );
@@ -141,21 +141,21 @@ class SearchApiDbBackend extends BackendPluginBase {
     if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
       $form['autocomplete'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Autocomplete settings'),
-        '#description' => t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
+        '#title' => $this->t('Autocomplete settings'),
+        '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
       $form['autocomplete']['suggest_suffix'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Suggest word endings'),
-        '#description' => t('Suggest endings for the currently entered word.'),
+        '#title' => $this->t('Suggest word endings'),
+        '#description' => $this->t('Suggest endings for the currently entered word.'),
         '#default_value' => $configuration['autocomplete']['suggest_suffix'],
       );
       $form['autocomplete']['suggest_words'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Suggest additional words'),
-        '#description' => t('Suggest additional words the user might want to search for.'),
+        '#title' => $this->t('Suggest additional words'),
+        '#description' => $this->t('Suggest additional words the user might want to search for.'),
         '#default_value' => $configuration['autocomplete']['suggest_words'],
       );
     }
@@ -434,7 +434,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         return array('type' => 'int', 'size' => 'tiny');
 
       default:
-        throw new SearchApiException(t('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException(String::format('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
     }
   }
 
@@ -712,7 +712,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    */
   public function indexItems(IndexInterface $index, array $items) {
     if (empty($this->configuration['field_tables'][$index->id()])) {
-      throw new SearchApiException(t('No field settings for index with id @id.', array('@id' => $index->id())));
+      throw new SearchApiException(String::format('No field settings for index with id @id.', array('@id' => $index->id())));
     }
     $indexed = array();
     foreach ($items as $id => $item) {
@@ -1027,7 +1027,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         return strtotime($value);
 
       default:
-        throw new SearchApiException(t('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException(String::format('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
     }
   }
 
@@ -1080,7 +1080,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     $this->ignored = $this->warnings = array();
     $index = $query->getIndex();
     if (!isset($this->configuration['field_tables'][$index->id()])) {
-      throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
+      throw new SearchApiException(String::format('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
 
@@ -1110,7 +1110,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       if ($sort) {
         foreach ($sort as $field_name => $order) {
           if ($order != 'ASC' && $order != 'DESC') {
-            $msg = t('Unknown sort order @order. Assuming "ASC".', array('@order' => $order));
+            $msg = $this->t('Unknown sort order @order. Assuming "ASC".', array('@order' => $order));
             $this->warnings[$msg] = $msg;
             $order = 'ASC';
           }
@@ -1124,7 +1124,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           }
 
           if (!isset($fields[$field_name])) {
-            throw new SearchApiException(t('Trying to sort on unknown field @field.', array('@field' => $field_name)));
+            throw new SearchApiException(String::format('Trying to sort on unknown field @field.', array('@field' => $field_name)));
           }
           $alias = $this->getTableAlias(array('table' => $this->configuration['index_tables'][$index->id()]), $db_query);
           $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
@@ -1200,12 +1200,12 @@ class SearchApiDbBackend extends BackendPluginBase {
         $fulltext_fields = array();
         foreach ($_fulltext_fields as $name) {
           if (!isset($fields[$name])) {
-            throw new SearchApiException(t('Unknown field @field specified as search target.', array('@field' => $name)));
+            throw new SearchApiException(String::format('Unknown field @field specified as search target.', array('@field' => $name)));
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
             $types = Utility::getDataTypes();
             $type = $types[$fields[$name]['type']];
-            throw new SearchApiException(t('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
+            throw new SearchApiException(String::format('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }
           $fulltext_fields[$name] = $fields[$name];
         }
@@ -1217,13 +1217,13 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
       }
       else {
-        $msg = t('Search keys are given but no fulltext fields are defined.');
+        $msg = $this->t('Search keys are given but no fulltext fields are defined.');
         watchdog('search_api_db', $msg, array(), WATCHDOG_WARNING);
         $this->warnings[$msg] = 1;
       }
     }
     elseif ($keys_set) {
-      $msg = t('No valid search keys were present in the query.');
+      $msg = $this->t('No valid search keys were present in the query.');
       $this->warnings[$msg] = 1;
     }
 
@@ -1570,7 +1570,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       else {
         $empty = FALSE;
         if (!isset($fields[$f[0]])) {
-          throw new SearchApiException(t('Unknown field in filter clause: @field.', array('@field' => $f[0])));
+          throw new SearchApiException(String::format('Unknown field in filter clause: @field.', array('@field' => $f[0])));
         }
         $field = $fields[$f[0]];
         // Fields have their own table, so we have to check for NULL values in
@@ -1669,7 +1669,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     $ret = array();
     foreach ($query->getOption('search_api_facets') as $key => $facet) {
       if (empty($fields[$facet['field']])) {
-        $this->warnings[] = t('Unknown facet field @field.', array('@field' => $facet['field']));
+        $this->warnings[] = $this->t('Unknown facet field @field.', array('@field' => $facet['field']));
         continue;
       }
       $field = $fields[$facet['field']];
@@ -1807,7 +1807,7 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     $index = $query->getIndex();
     if (empty($this->configuration['field_tables'][$index->id()])) {
-      throw new SearchApiException(t('Unknown index @id.', array('@id' => $index->id())));
+      throw new SearchApiException(String::format('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
 
