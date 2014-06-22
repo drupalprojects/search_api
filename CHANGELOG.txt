@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2272983 by idflood, drunken monkey: Fixed Highlighting processor for queries
+  without returned results.
 - #2216345 by bacardi55, fabianderijk, drunken monkey: Fixed array to string
   conversion in Highlighting processor.
 

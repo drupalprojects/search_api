@@ -130,7 +130,7 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
    * {@inheritdoc}
    */
   public function postprocessSearchResults(array &$response, SearchApiQuery $query) {
-    if (!$response['result count'] || !($keys = $this->getKeywords($query))) {
+    if (empty($response['results']) || !($keys = $this->getKeywords($query))) {
       return;
     }
 
