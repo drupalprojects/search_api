@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Query;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
@@ -15,6 +16,8 @@ use Drupal\search_api\Index\IndexInterface;
  * Provides a standard implementation of the QueryInterface.
  */
 class Query implements QueryInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The index on which the query will be executed.
