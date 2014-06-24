@@ -1,78 +1,20 @@
-search_api.processor.plugin.rendered_item:
+search_api.processor.plugin.aggregated_field:
   type: mapping
-  label: 'Rendered item processor configuration'
-  mapping:
-    # @todo Verify "sequence" is right here once schemas are really used.
-    view_mode:
-      type: sequence
-      label: 'The selected view modes'
-      sequence:
-        - type: string
-          label: 'A view mode'
-    roles:
-      type: sequence
-      label: 'The selected roles'
-      sequence:
-        - type: string
-          label: 'A role'
-search_api.processor.plugin.node_status:
-  type: mapping
-  label: 'Node status processor configuration'
-search_api.processor.plugin.stopwords:
-  type: mapping
-  label: 'Stopwords processor configuration'
+  label: 'Add aggregation processor configuration'
   mapping:
     fields:
       type: sequence
       label: 'The selected fields'
       sequence:
         - type: string
-          label: 'Selected field'
-    stopwords:
-      type: sequence
-      label: 'Entered stopwords'
-      sequence:
-        - type: string
-          label: 'Stopword'
-search_api.processor.plugin.tokenizer:
-  type: mapping
-  label: 'Tokenizer processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-    spaces:
+          label: 'The field name'
+    label:
       type: string
-      label: 'Regular expression for spaces'
-    ignorable:
+      label: 'Label'
+    type:
       type: string
-      label: 'Regular expression for ignorables'
-search_api.processor.plugin.transliteration:
-  type: mapping
-  label: 'Transliteration processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-search_api.processor.plugin.ignorecase:
-  type: mapping
-  label: 'Ignore case processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-search_api.processor.plugin.content_access:
-  type: mapping
-  label: 'Content access processor configuration'
+      label: 'Type'
+
 search_api.processor.plugin.highlight:
   type: mapping
   label: 'Highlight processor configuration'
@@ -92,28 +34,10 @@ search_api.processor.plugin.highlight:
     highlight:
       type: string
       label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
-search_api.processor.plugin.role_filter:
-  type: mapping
-  label: 'Role filter processor'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'The field name'
-    default:
-      type: boolean
-      label: 'Default'
-    roles:
-      type: sequence
-      label: 'The selected roles'
-      sequence:
-        - type: string
-          label: 'The role name'
+
 search_api.processor.plugin.html_filter:
   type: mapping
-  label: 'HTML filter processor'
+  label: 'HTML filter processor configuration'
   mapping:
     fields:
       type: sequence
@@ -130,19 +54,97 @@ search_api.processor.plugin.html_filter:
     tags:
       type: text
       label: 'Tag boosts'
-search_api.processor.plugin.aggregated_field:
+
+search_api.processor.plugin.ignorecase:
   type: mapping
-  label: 'Add aggregation processor'
+  label: 'Ignore case processor configuration'
   mapping:
-      fields:
-        type: sequence
-        label: 'The selected fields'
-        sequence:
-          - type: string
-            label: 'The field name'
-      label:
-        type: string
-        label: 'Label'
-      type:
-        type: string
-        label: 'Type'
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.rendered_item:
+  type: mapping
+  label: 'Rendered item processor configuration'
+  mapping:
+    # @todo Verify "sequence" is right here once schemas are really used.
+    view_mode:
+      type: sequence
+      label: 'The selected view modes'
+      sequence:
+        - type: string
+          label: 'The view mode used to render the entity'
+    roles:
+      type: sequence
+      label: 'The selected roles'
+      sequence:
+        - type: string
+          label: 'The user roles which will be active when the entity is rendered'
+
+search_api.processor.plugin.role_filter:
+  type: mapping
+  label: 'Role filter processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'The field name'
+    default:
+      type: boolean
+      label: 'Default'
+    roles:
+      type: sequence
+      label: 'The selected roles'
+      sequence:
+        - type: string
+          label: 'The role name'
+
+search_api.processor.plugin.stopwords:
+  type: mapping
+  label: 'Stopwords processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    stopwords:
+      type: sequence
+      label: 'Entered stopwords'
+      sequence:
+        - type: string
+          label: 'Stopword'
+
+search_api.processor.plugin.tokenizer:
+  type: mapping
+  label: 'Tokenizer processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    spaces:
+      type: string
+      label: 'Regular expression for spaces'
+    ignorable:
+      type: string
+      label: 'Regular expression for ignorables'
+
+search_api.processor.plugin.transliteration:
+  type: mapping
+  label: 'Transliteration processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'

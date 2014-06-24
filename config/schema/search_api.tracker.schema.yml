@@ -1,3 +1,0 @@
-search_api.tracker.plugin.default_tracker:
-  type: mapping
-  label: 'Default tracker plugin configuration'

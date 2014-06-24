@@ -31,21 +31,20 @@ search_api.index.*:
           type: sequence
           label: 'The processors for this index'
           sequence:
-            - type: 'mapping'
+            - type: mapping
               label: 'A processor'
               mapping:
                 status:
-                  type: 'string'
+                  type: string
                   label: 'Status of the processor'
                 weight:
-                  type: 'integer'
+                  type: integer
                   label: 'The weight of the processor'
                 processorPluginId:
-                  type: 'string'
+                  type: string
                   label: 'The plugin ID of the processor'
                 settings:
-                  type: 'search_api.processor.plugin.[%parent.processorPluginId]'
-
+                  type: search_api.processor.plugin.[%parent.processorPluginId]
     datasources:
       type: sequence
       label: 'Datasource plugin IDs'
@@ -55,7 +54,8 @@ search_api.index.*:
       type: sequence
       label: 'Datasource plugin configurations'
       sequence:
-        - type: search_api.tracker.plugin.[%parent.datasources.type]
+        # @todo Update when https://www.drupal.org/node/2291073 is fixed.
+        - type: search_api.datasource.plugin.[%key]
     tracker:
       type: string
       label: 'Tracker plugin ID'

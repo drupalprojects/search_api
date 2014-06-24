@@ -7,7 +7,7 @@ search_api.server.*:
       label: 'Machine name'
     name:
       type: label
-      label: Name'
+      label: 'Name'
     uuid:
       type: string
       label: 'UUID'
