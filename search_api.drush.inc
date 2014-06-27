@@ -156,14 +156,23 @@ function drush_search_api_list() {
   );
   /** @var $index \Drupal\search_api\Entity\Index */
   foreach ($indexes as $index) {
-    $plugin_info = \Drupal::service('plugin.manager.search_api.datasource')->getDefinition($index->datasourcePluginId, FALSE);
+    foreach ($index->getDatasourceIds() as $datasource_id) {
+      // Check if a datasource is available.
+      if ($index->isValidDatasource($datasource_id)) {
+        // Use the label defined in the plugin definition.
+        $info = $index->getDatasource($datasource_id)->getPluginDefinition()['label'];
+      }
+      else {
+        $info = t('Invalid or missing datasource plugin: %datasource_id', array('%datasource_id' => $datasource_id));
+      }
+    }
     $row = array(
       $index->machine_name,
       $index->name,
       $index->getServerId() ?: '(' . t('none') . ')',
-      $plugin_info['label'],
+      (string) $info,
       $index->status() ? t('enabled') : t('disabled'),
-      $index->getOption('cron_limit'),
+      (int) $index->getOption('cron_limit'),
     );
     $rows[] = $row;
   }
