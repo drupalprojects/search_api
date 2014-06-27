@@ -193,6 +193,11 @@ function drush_search_api_enable() {
 
   $index_names = func_get_args();
 
+  if (!count($index_names)) {
+    drush_set_error(dt('You must specify at least one index to enable. The indexes I know about are:'));
+    drush_search_api_list();
+  }
+
   foreach ($index_names as $index_name) {
     $indexes = search_api_drush_get_indexes_or_display_list($index_name);
     if (empty($indexes)) {
@@ -223,6 +228,11 @@ function drush_search_api_disable() {
   }
 
   $index_names = func_get_args();
+
+  if (!count($index_names)) {
+    drush_set_error(dt('You must specify at least one index to disable. The indexes I know about are:'));
+    drush_search_api_list();
+  }
 
   foreach ($index_names as $index_name) {
     $indexes = search_api_drush_get_indexes_or_display_list($index_name);
