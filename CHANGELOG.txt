@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2146435 by alanmackenzie: Fixed Views paging with custom pager add-ons.
 - #2278791 by drunken monkey | tksmd: Fixed excerpt when searching single CJK
   word.
 - #2272983 by idflood, drunken monkey: Fixed Highlighting processor for queries
