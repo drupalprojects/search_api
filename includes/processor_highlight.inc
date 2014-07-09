@@ -22,8 +22,6 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
   /**
    * PREG regular expression for splitting words.
    *
-   * We highlight around non-indexable or CJK characters.
-   *
    * @var string
    */
   protected static $split;
@@ -40,7 +38,7 @@ class SearchApiHighlight extends SearchApiAbstractProcessor {
         '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
     self::$boundary = '(?:(?<=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . '])|(?=[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . ']))';
-    self::$split = '/[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . $cjk . ']+/iu';
+    self::$split = '/[' . PREG_CLASS_UNICODE_WORD_BOUNDARY . ']+/iu';
   }
 
   /**
