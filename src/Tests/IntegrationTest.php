@@ -150,12 +150,12 @@ class IntegrationTest extends SearchApiWebTestBase {
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
 
-    $this->assertEqual($index->name, $edit['name'], $this->t('Name correctly inserted.'));
-    $this->assertEqual($index->machine_name, $edit['machine_name'], $this->t('Index machine name correctly inserted.'));
-    $this->assertTrue($index->status, $this->t('Index status correctly inserted.'));
-    $this->assertEqual($index->description, $edit['description'], $this->t('Index machine name correctly inserted.'));
-    $this->assertEqual($index->server, $edit['server'], $this->t('Index server machine name correctly inserted.'));
-    $this->assertEqual($index->datasources, $edit['datasources[]'], $this->t('Index datasource id correctly inserted.'));
+    $this->assertEqual($index->label(), $edit['name'], $this->t('Name correctly inserted.'));
+    $this->assertEqual($index->id(), $edit['machine_name'], $this->t('Index machine name correctly inserted.'));
+    $this->assertTrue($index->status(), $this->t('Index status correctly inserted.'));
+    $this->assertEqual($index->getDescription(), $edit['description'], $this->t('Index machine name correctly inserted.'));
+    $this->assertEqual($index->getServerId(), $edit['server'], $this->t('Index server machine name correctly inserted.'));
+    $this->assertEqual($index->getDatasourceIds(), $edit['datasources[]'], $this->t('Index datasource id correctly inserted.'));
   }
 
   protected function addFieldsToIndex() {
