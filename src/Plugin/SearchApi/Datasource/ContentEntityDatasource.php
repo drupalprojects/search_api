@@ -27,7 +27,7 @@ use Drupal\Core\Render\Element;
  *   id = "entity",
  *   name = @Translation("Content entity datasource"),
  *   description = @Translation("Exposes the content entities as datasource."),
- *   derivative = "Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative"
+ *   deriver = "Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDeriver"
  * )
  */
 class ContentEntityDatasource extends DatasourcePluginBase implements ContainerFactoryPluginInterface {

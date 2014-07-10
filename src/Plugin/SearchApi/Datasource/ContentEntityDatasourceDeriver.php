@@ -2,20 +2,20 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDerivative.
+ * Contains \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDeriver.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
 use Drupal\Core\Entity\ContentEntityType;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Plugin\Discovery\ContainerDerivativeInterface;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a datasource plugin definition for every content entity type.
  */
-class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface {
+class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
 
   /**
    * List of derivative definitions.
@@ -32,7 +32,7 @@ class ContentEntityDatasourceDerivative implements ContainerDerivativeInterface 
   private $entityManager;
 
   /**
-   * Create a ContentEntityDatasourceDerivative object.
+   * Create a ContentEntityDatasourceDeriver object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.
