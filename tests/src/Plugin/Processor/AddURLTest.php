@@ -13,9 +13,8 @@ use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the AddURL processor plugin.
+ * Tests the "URL field" processor.
  *
- * @group Drupal
  * @group search_api
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
@@ -37,17 +36,6 @@ class AddUrlTest extends UnitTestCase {
    * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $index;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'AddURL Processor Plugin',
-      'description' => 'Unit tests of postprocessor excerpt add urls.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

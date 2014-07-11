@@ -13,10 +13,11 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Node Status processor plugin.
+ * Tests the "Node status" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @var \Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus
  */
 class NodeStatusTest extends UnitTestCase {
 
@@ -33,17 +34,6 @@ class NodeStatusTest extends UnitTestCase {
    * @var \Drupal\search_api\Item\ItemInterface[]
    */
   protected $items = array();
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'NodeStatus Processor Plugin',
-      'description' => 'Unit test of preprocessor for node status.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

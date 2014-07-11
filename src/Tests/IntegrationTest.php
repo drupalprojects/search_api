@@ -8,7 +8,9 @@
 namespace Drupal\search_api\Tests;
 
 /**
- * Provides integration tests for Search API.
+ * Tests the overall functionality of the Search API framework and UI.
+ *
+ * @group search_api
  */
 class IntegrationTest extends SearchApiWebTestBase {
 
@@ -25,17 +27,6 @@ class IntegrationTest extends SearchApiWebTestBase {
    * @var string
    */
   protected $indexId;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API integration test',
-      'description' => 'Test creation of Search API indexes and servers through the UI.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Tests various UI interactions between servers and indexes.

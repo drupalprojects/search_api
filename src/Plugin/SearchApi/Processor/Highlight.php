@@ -18,8 +18,8 @@ use Drupal\search_api\Utility\Utility;
 /**
  * @SearchApiProcessor(
  *   id = "highlight",
- *   label = @Translation("Highlight processor"),
- *   description = @Translation("Excerpt and field result highlighting")
+ *   label = @Translation("Highlight"),
+ *   description = @Translation("Adds a highlighted excerpt to results and highlights returned fields.")
  * )
  */
 class Highlight extends ProcessorPluginBase {

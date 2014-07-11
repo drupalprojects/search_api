@@ -11,9 +11,8 @@ use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the "Ignore case" processor plugin.
+ * Tests the "Ignore case" processor.
  *
- * @group Drupal
  * @group search_api
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase
@@ -21,17 +20,6 @@ use Drupal\Tests\UnitTestCase;
 class IgnoreCaseTest extends UnitTestCase {
 
   use ProcessorTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Ignore case Processor Plugin',
-      'description' => 'Unit test of processor ignores case of strings.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

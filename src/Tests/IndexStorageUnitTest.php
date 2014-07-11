@@ -11,7 +11,9 @@ use Drupal\simpletest\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 
 /**
- * Tests Search API Index entity storage
+ * Tests whether search indexes storage works correctly.
+ *
+ * @group search_api
  */
 class IndexStorageUnitTest extends KernelTestBase {
 
@@ -28,17 +30,6 @@ class IndexStorageUnitTest extends KernelTestBase {
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
   protected $controller;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Index storage unit tests',
-      'description' => 'Test CRUD operation of Search API Index entity',
-      'group' => 'Search API'
-    );
-  }
 
   /**
    * {@inheritdoc}

@@ -10,23 +10,11 @@ namespace Drupal\search_api\Tests\Menu;
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
 
 /**
- * Tests existence of Search API local tasks.
+ * Tests whether Search API's local tasks work correctly.
  *
- * @group Drupal
  * @group search_api
  */
 class LocalTasksTest extends LocalTaskIntegrationTest {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API local tasks test',
-      'description' => 'Test search API local tasks.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

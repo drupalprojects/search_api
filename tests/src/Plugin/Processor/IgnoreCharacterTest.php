@@ -11,9 +11,8 @@ use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the "Ignore Character" processor plugin.
+ * Tests the "Ignore characters" processor.
  *
- * @group Drupal
  * @group search_api
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter
@@ -21,17 +20,6 @@ use Drupal\Tests\UnitTestCase;
 class IgnoreCharacterTest extends UnitTestCase {
 
   use ProcessorTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Ignore characters processor',
-      'description' => 'Tests the functionality of the "Ignore characters" processor.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

@@ -11,7 +11,9 @@ use Drupal\simpletest\KernelTestBase;
 use Drupal\search_api\Entity\Server;
 
 /**
- * Tests Search API Server entity storage
+ * Tests whether search servers storage works correctly.
+ *
+ * @group search_api
  */
 class ServerStorageUnitTest extends KernelTestBase {
 
@@ -28,17 +30,6 @@ class ServerStorageUnitTest extends KernelTestBase {
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
   protected $controller;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Server storage unit tests',
-      'description' => 'Test CRUD operation of Search API Server entity',
-      'group' => 'Search API'
-    );
-  }
 
   /**
    * {@inheritdoc}

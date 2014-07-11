@@ -14,9 +14,8 @@ use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Language processor plugin.
+ * Tests the "Language" processor.
  *
- * @group Drupal
  * @group search_api
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language
@@ -38,17 +37,6 @@ class LanguageTest extends UnitTestCase {
    * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $index;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Highlight Processor Plugin',
-      'description' => 'Unit tests of postprocessor excerpt highlighting.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

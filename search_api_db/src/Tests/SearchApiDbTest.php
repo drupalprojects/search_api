@@ -16,11 +16,20 @@ use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
  * Tests index and search capabilities using the Database search backend.
+ *
+ * @group search_api
  */
 class SearchApiDbTest extends EntityUnitTestBase {
 
   use ExampleContentTrait;
   use StringTranslationTrait;
+
+  /**
+   * Modules to enable.
+   *
+   * @var array
+   */
+  public static $modules = array('field', 'menu_link', 'search_api', 'search_api_db', 'search_api_test_db');
 
   /**
    * A Search API server ID.
@@ -35,24 +44,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
    * @var string
    */
   protected $indexId = 'database_search_index';
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  public static $modules = array('field', 'menu_link' , 'search_api', 'search_api_db', 'search_api_test_db');
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Test "Database search" module',
-      'description' => 'Tests indexing and searching with the "Database search" module.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

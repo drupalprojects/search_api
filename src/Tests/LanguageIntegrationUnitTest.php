@@ -13,6 +13,8 @@ use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 
 /**
  * Tests translation handling of the content entity datasource.
+ *
+ * @group search_api
  */
 class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
 
@@ -43,17 +45,6 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
    * @var array
    */
   public static $modules = array('search_api', 'search_api_test_backend');
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API Item Translation',
-      'description' => 'Tests Search API item translation functionality.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

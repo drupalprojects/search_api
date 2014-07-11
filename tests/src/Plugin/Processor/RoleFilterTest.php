@@ -13,9 +13,8 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Role Filter processor plugin.
+ * Tests the "Role filter" processor.
  *
- * @group Drupal
  * @group search_api
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter
@@ -35,17 +34,6 @@ class RoleFilterTest extends UnitTestCase {
    * @var \Drupal\search_api\Item\ItemInterface[]
    */
   protected $items = array();
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'RoleFilter Processor Plugin',
-      'description' => 'Unit test of preprocessor for role filter.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

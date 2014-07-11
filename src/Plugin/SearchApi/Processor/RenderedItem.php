@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * @SearchApiProcessor(
  *   id = "rendered_item",
- *   label = @Translation("Rendered Item"),
+ *   label = @Translation("Rendered item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed.")
  * );
  */

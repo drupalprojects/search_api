@@ -14,7 +14,7 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 /**
  * @SearchApiProcessor(
  *   id = "node_status",
- *   label = @Translation("Node Status"),
+ *   label = @Translation("Node status"),
  *   description = @Translation("Exclude unpublished nodes from node indexes.")
  * )
  */

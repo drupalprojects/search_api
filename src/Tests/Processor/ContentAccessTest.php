@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\ContentAccessProcessorTest.
+ * Contains \Drupal\search_api\Tests\Processor\ContentAccessTest.
  */
 
 namespace Drupal\search_api\Tests\Processor;
@@ -12,9 +12,13 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\Query;
 
 /**
- * Tests the ContentAccess processor.
+ * Tests the "Content access" processor.
+ *
+ * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
  */
-class ContentAccessProcessorTest extends ProcessorTestBase {
+class ContentAccessTest extends ProcessorTestBase {
 
   /**
    * Stores the processor to be tested.
@@ -32,17 +36,6 @@ class ContentAccessProcessorTest extends ProcessorTestBase {
    * @var \Drupal\node\Entity\Node[]
    */
   protected $nodes;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => '"Content access" tests',
-      'description' => 'Tests if the "Content access" processor works correctly.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

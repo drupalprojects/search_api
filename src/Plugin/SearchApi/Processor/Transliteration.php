@@ -13,8 +13,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * @SearchApiProcessor(
  *   id = "transliteration",
- *   label = @Translation("Transliteration processor"),
- *   description = @Translation("Processor for making searches insensitive to accents and other non-ASCII characters.")
+ *   label = @Translation("Transliteration"),
+ *   description = @Translation("Makes searches insensitive to accents and other non-ASCII characters.")
  * )
  */
 class Transliteration extends FieldsProcessorPluginBase {

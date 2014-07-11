@@ -11,7 +11,9 @@ use Drupal\search_api\Exception\SearchApiException;
 use Drupal\simpletest\KernelTestBase;
 
 /**
- * Tests correct working of the server task system.
+ * Tests whether the server task system works correctly.
+ *
+ * @group search_api
  */
 class SearchApiServerTaskUnitTest extends KernelTestBase {
 
@@ -56,17 +58,6 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
    * @var \Drupal\search_api\Task\ServerTaskManagerInterface
    */
   protected $serverTaskManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API Server Tasks',
-      'description' => 'Tests the Search API server tasks system.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

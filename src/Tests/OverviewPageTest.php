@@ -12,6 +12,8 @@ use Drupal\search_api\Server\ServerInterface;
 
 /**
  * Tests the Search API overview page.
+ *
+ * @group search_api
  */
 class OverviewPageTest extends SearchApiWebTestBase {
 
@@ -21,17 +23,6 @@ class OverviewPageTest extends SearchApiWebTestBase {
    * @var string
    */
   protected $overviewPageUrl;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API overview page tests',
-      'description' => 'Test Search API overview page and what would be modified according to different server/index modifications.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

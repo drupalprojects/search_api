@@ -14,10 +14,11 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Highlight processor plugin.
+ * Tests the "Highlight" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
  */
 // @todo Rewrite this whole class:
 //   - Each method should only test a single thing.
@@ -50,17 +51,6 @@ class HighlightTest extends UnitTestCase {
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
    */
   protected $processor;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Highlight Processor Plugin',
-      'description' => 'Unit tests of postprocessor excerpt highlighting.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

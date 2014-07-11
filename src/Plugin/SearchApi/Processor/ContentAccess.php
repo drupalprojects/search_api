@@ -24,8 +24,8 @@ use Drupal\search_api\Query\QueryInterface;
 /**
  * @SearchApiProcessor(
  *   id = "content_access",
- *   label = @Translation("Content access processor"),
- *   description = @Translation("Adds access information to node and comment indexes")
+ *   label = @Translation("Content access"),
+ *   description = @Translation("Adds content access checks for nodes and comments.")
  * )
  */
 class ContentAccess extends ProcessorPluginBase {

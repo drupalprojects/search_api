@@ -12,25 +12,15 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the HtmlFilter processor plugin.
+ * Tests the "HTML filter" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter
  */
 class HtmlFilterTest extends UnitTestCase {
 
   use ProcessorTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'HTML filter processor test',
-      'description' => 'Test if HTML Filter processor works.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

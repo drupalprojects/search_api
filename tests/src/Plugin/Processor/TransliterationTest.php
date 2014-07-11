@@ -12,10 +12,11 @@ use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Transliteration processor plugin.
+ * Tests the "Transliteration" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Transliteration
  */
 class TransliterationTest extends UnitTestCase {
 
@@ -27,17 +28,6 @@ class TransliterationTest extends UnitTestCase {
    * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $index;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Transliteration processor',
-      'description' => 'Tests the "Transliteration" processor.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

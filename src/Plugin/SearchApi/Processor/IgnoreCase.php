@@ -13,8 +13,8 @@ use Drupal\Component\Utility\Unicode;
 /**
  * @SearchApiProcessor(
  *   id = "ignorecase",
- *   label = @Translation("Ignore case processor"),
- *   description = @Translation("Ignore case in strings")
+ *   label = @Translation("Ignore case"),
+ *   description = @Translation("Makes searches case-insensitive on selected fields.")
  * )
  */
 class IgnoreCase extends FieldsProcessorPluginBase {

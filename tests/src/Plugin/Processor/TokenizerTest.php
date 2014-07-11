@@ -13,25 +13,15 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Tokenizer processor plugin.
+ * Tests the "Tokenizer" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer
  */
 class TokenizerTest extends UnitTestCase {
 
   use ProcessorTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Tokenizer processor test',
-      'description' => 'Test if Tokenizer processor works.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * {@inheritdoc}

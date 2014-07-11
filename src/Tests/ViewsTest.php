@@ -9,6 +9,8 @@ namespace Drupal\search_api\Tests;
 
 /**
  * Provides views tests for Search API.
+ *
+ * @group search_api
  */
 class ViewsTest extends SearchApiWebTestBase {
 
@@ -31,14 +33,6 @@ class ViewsTest extends SearchApiWebTestBase {
   /**
    * {@inheritdoc}
    */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API Views test',
-      'description' => 'Test views integration',
-      'group' => 'Search API',
-    );
-  }
-
   public function setUp() {
     parent::setUp();
 

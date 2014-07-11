@@ -16,7 +16,7 @@ use Drupal\user\UserInterface;
 /**
   * @SearchApiProcessor(
   *   id = "role_filter",
-  *   label = @Translation("Role Filter"),
+  *   label = @Translation("Role filter"),
   *   description = @Translation("Data alteration that filters out users based on their role.")
   * )
   */

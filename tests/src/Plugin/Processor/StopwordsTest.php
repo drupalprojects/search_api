@@ -12,25 +12,15 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the Stopwords processor plugin.
+ * Tests the "Stopwords" processor.
  *
- * @group Drupal
  * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\Stopwords
  */
 class StopwordsTest extends UnitTestCase {
 
   use ProcessorTestTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Stopwords Processor Plugin',
-      'description' => 'Unit test of preprocessor for ignoring stopwords.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Creates a new processor object for use in the tests.

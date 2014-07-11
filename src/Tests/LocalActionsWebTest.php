@@ -11,6 +11,8 @@ use Drupal\system\Tests\Menu\LocalActionTest;
 
 /**
  * Tests that local actions are available.
+ *
+ * @group search_api
  */
 class LocalActionsWebTest extends LocalActionTest {
 
@@ -20,16 +22,10 @@ class LocalActionsWebTest extends LocalActionTest {
   public static $modules = array('search_api');
 
   /**
-   * {@inheritdoc}
+   * The administrator account to use for the tests.
+   *
+   * @var \Drupal\user\Entity\User
    */
-  public static function getInfo() {
-    return array(
-      'name' => 'Search API local actions web test',
-      'description' => 'Test search API local actions.',
-      'group' => 'Search API',
-    );
-  }
-
   protected $adminUser;
 
   public function setUp() {

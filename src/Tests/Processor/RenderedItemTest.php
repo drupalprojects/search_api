@@ -1,14 +1,21 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\RenderedItemProcessorTest.
+ * Contains \Drupal\search_api\Tests\Processor\RenderedItemTest.
  */
 
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
 
-class RenderedItemProcessorTest extends ProcessorTestBase {
+/**
+ * Tests the "Rendered item" processor.
+ *
+ * @group search_api
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Processor\RenderedItem
+ */
+class RenderedItemTest extends ProcessorTestBase {
 
   /**
    * Data for all nodes which are published.
@@ -30,17 +37,6 @@ class RenderedItemProcessorTest extends ProcessorTestBase {
    * @var array
    */
   public static $modules = array('user', 'node', 'menu_link', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference', 'system', 'routing');
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Tests RenderedItem Processor Plugin',
-      'description' => 'Tests if the processor adds correct rendered nodes as configured.',
-      'group' => 'Search API',
-    );
-  }
 
   /**
    * Setup a minimalistic environment including a an RenderedItem Processor.
