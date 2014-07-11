@@ -104,7 +104,7 @@ class RenderedItemTest extends ProcessorTestBase {
   }
 
   /**
-   * Tests the item preprocessor.
+   * Tests whether the rendered_item field is correctly filled by the processor.
    */
   public function testPreprocessIndexItems() {
     $items = array();
@@ -121,40 +121,37 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $key => $item) {
       $idx = substr($key, strrpos($key, '|') + 1);
-      if ($item->getDatasourceId() == 'entity:node') {
-        $field = $item->getField('rendered_item');
-        $this->assertEqual($field->getType(), 'string', 'Node item ' . $idx . ' rendered value is identified as a string.');
-        $values = $field->getvalues();
-        // These tests rely on the template not changing. However there is
-        // value for the specifics. For example the title text was present
-        // when broken, because the schema metadata was also adding it to
-        // the output.
-        $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $idx . ' rendered in view-mode "full".');
-        $this->assertTrue(substr_count($values[0], 'field-name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
-        $this->assertTrue(substr_count($values[0], '>' . $this->node_data['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
-        $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $idx . ' has rendered member information HTML-Tags.');
-        $this->assertTrue(substr_count($values[0], '>' . $this->node_data['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
-      }
-      else {
-        $this->assert(FALSE, 'The processed item ' . $idx . ' has an unknown type: ' . $item['#datasource']);
-      }
+      $field = $item->getField('rendered_item');
+      $this->assertEqual($field->getType(), 'string', 'Node item ' . $idx . ' rendered value is identified as a string.');
+      $values = $field->getValues();
+      // These tests rely on the template not changing. However, if we'd only
+      // check whether the field values themselves are included, there could
+      // easier be false positives. For example the title text was present even
+      // when the processor was broken, because the schema metadata was also
+      // adding it to the output.
+      $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $idx . ' rendered in view-mode "full".');
+      $this->assertTrue(substr_count($values[0], 'field-name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->node_data['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $idx . ' has rendered member information HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->node_data['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
     }
   }
 
   /**
-   * Tests alterPropertyDefinitions.
-   *
-   * Checks for the correct DataDefinition added to the properties.
+   * Tests whether the correct property is added by the processor.
    */
   public function testAlterPropertyDefinitions() {
+    // Check for modified properties when no datasource is given.
     $properties = array();
-
-    // Check for modified properties when no DataSource is given.
     $this->processor->alterPropertyDefinitions($properties, NULL);
     $this->assertTrue(array_key_exists('rendered_item', $properties), 'The Properties where modified with the "rendered_item".');
     $this->assertTrue(($properties['rendered_item'] instanceof DataDefinition), 'The "rendered_item" contains a valid DataDefinition instance.');
     $this->assertEqual('string', $properties['rendered_item']->getDataType(), 'Valid DataType set in the DataDefinition.');
-    $this->assertEqual('Rendered HTML output', $properties['rendered_item']->getLabel(), 'Valid Label set in the DataDefinition.');
-    $this->assertEqual('The complete HTML which would be created when viewing the item.', $properties['rendered_item']->getDescription(), 'Valid Description set in the DataDefinition.');
+
+    // Check if the properties stay untouched if a datasource is given.
+    $properties = array();
+    $this->processor->alterPropertyDefinitions($properties, $this->index->getDatasource('entity:node'));
+    $this->assertEqual($properties, array(), '"render_item" property not added when data source is given.');
   }
+
 }

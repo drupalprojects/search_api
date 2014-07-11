@@ -19,7 +19,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
   use DependencyTrait;
 
   /**
-   * Overrides PluginBase::__construct().
+   * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
     // Apply default configuration.
