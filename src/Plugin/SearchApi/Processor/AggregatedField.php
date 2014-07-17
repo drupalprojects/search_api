@@ -378,30 +378,6 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for reducing an array to a single value.
-   *
-   * @param $a
-   * @param $b
-   * @return mixed|string
-   */
-  public function reduce($a, $b) {
-    switch ($this->reductionType) {
-      case 'concat':
-        return isset($a) ? $a . "\n\n" . $b : $b;
-      case 'sum':
-        return $a + $b;
-      case 'count':
-        return $a + 1;
-      case 'max':
-        return isset($a) ? max($a, $b) : $b;
-      case 'min':
-        return isset($a) ? min($a, $b) : $b;
-      case 'first':
-        return isset($a) ? $a : $b;
-    }
-  }
-
-  /**
    * Helper method for flattening a multi-dimensional array.
    * @param array $data
    * @return array
