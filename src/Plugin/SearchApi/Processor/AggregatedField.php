@@ -341,11 +341,8 @@ class AggregatedField extends ProcessorPluginBase {
             $values = array();
             /** @var \Drupal\search_api\Item\FieldInterface[] $fields */
             foreach ($fields as $field) {
-              $values[] = $field->getValues();
+              $values = array_merge($values, $field->getValues());
             }
-
-            // Flatten the values array
-            $values = $this->flattenArray($values);
 
             switch ($aggregated_field['type']) {
               case 'concat':
@@ -375,27 +372,6 @@ class AggregatedField extends ProcessorPluginBase {
         }
       }
     }
-  }
-
-  /**
-   * Helper method for flattening a multi-dimensional array.
-   * @param array $data
-   * @return array
-   */
-  protected function flattenArray(array $data) {
-    $ret = array();
-    foreach ($data as $item) {
-      if (!isset($item)) {
-        continue;
-      }
-      if (is_scalar($item)) {
-        $ret[] = $item;
-      }
-      else {
-        $ret = array_merge($ret, $this->flattenArray($item));
-      }
-    }
-    return $ret;
   }
 
   /**
