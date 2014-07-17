@@ -72,19 +72,32 @@ trait TestItemsTrait {
    *   - values: (optional) The values to set for the field.
    * @param \Drupal\Core\TypedData\ComplexDataInterface|null $object
    *   The object to set on each item as the "original object".
+   * @param array|null $datasource_ids
+   *   An array of datasource IDs to use for the items, in that order (starting
+   *   again from the front if necessary). Defaults to only using "entity:node".
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing the requested test items.
    */
-  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL) {
+  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL, array $datasource_ids = NULL) {
+    if (!isset($datasource_ids)) {
+      $datasource_ids = array('entity:node');
+    }
+    $datasource_count = count($datasource_ids);
     $items = array();
-    for ($i = 1; $i <= $count; ++$i) {
-      $this->item_ids[$i - 1] = $item_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . "$i:en";
+    for ($i = 0; $i < $count; ++$i) {
+      $datasource_id = $datasource_ids[$i % $datasource_count];
+      $this->item_ids[$i] = $item_id = Utility::createCombinedId($datasource_id, ($i + 1) . ':en');
       $item = Utility::createItem($index, $item_id);
       if (isset($object)) {
         $item->setOriginalObject($object);
       }
       foreach ($fields as $field_id => $field_info) {
+        // Only add fields of the right datasource.
+        list($field_datasource_id) = Utility::splitCombinedId($field_id);
+        if (isset($field_datasource_id) && $field_datasource_id != $datasource_id) {
+          continue;
+        }
         $field = Utility::createField($index, $field_id)
           ->setType($field_info['type']);
         if (isset($field_info['values'])) {

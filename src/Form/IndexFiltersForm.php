@@ -204,7 +204,10 @@ class IndexFiltersForm extends EntityForm {
 
     // Store processor settings.
     foreach ($form_state['processors'] as $name => $processor) {
-      $processor_form = isset($form['processors']['settings'][$name]) ? $form['processors']['settings'][$name] : array();
+      $processor_form = array();
+      if (isset($form['processors']['settings'][$name])) {
+        $processor_form = &$form['processors']['settings'][$name];
+      }
       $default_settings = array(
         'settings' => array(),
         'processorPluginId' => $name,
@@ -224,7 +227,7 @@ class IndexFiltersForm extends EntityForm {
 
     if (!isset($options['processors']) || $options['processors'] !== $values['processors']) {
       // Save the already sorted arrays to avoid having to sort them at each use.
-      uasort($values['processors'], array($this, 'elementCompare'));
+      uasort($values['processors'], array('Drupal\Component\Utility\SortArray', 'sortByWeightElement'));
       $this->entity->setOption('processors', $values['processors']);
 
       // Reset the index's internal property cache to correctly incorporate the
@@ -253,37 +256,23 @@ class IndexFiltersForm extends EntityForm {
   }
 
   /**
-   * Sort callback sorting array elements by their "weight" key, if present.
-   *
-   * @see element_sort()
-   */
-  function elementCompare($a, $b) {
-    $a_weight = (is_array($a) && isset($a['weight'])) ? $a['weight'] : 0;
-    $b_weight = (is_array($b) && isset($b['weight'])) ? $b['weight'] : 0;
-    if ($a_weight == $b_weight) {
-      return 0;
-    }
-    return ($a_weight < $b_weight) ? -1 : 1;
-  }
-
-  /**
    * Gets the filters from the form_state.
    *
    * Returns the portion of the form_state array used in validate and submit
    * that corresponds to the filter being processed.
    *
-   * @param $filter_name
+   * @param string $filter_name
    *   Name of processor/filter
-   * @param $form_state
+   * @param array $form_state
    *   The form_state array passed into validate and submit methods
    *
    * @return array
-   *   The values of the filter being processed.
+   *   The form state of the filter being processed.
    */
-  protected function getFilterFormState($filter_name, $form_state) {
-    $filter_form_state = array('values' => array());
-    if(isset($form_state['values']['processors'][$filter_name]['settings'])) {
-        $filter_form_state['values'] = $form_state['values']['processors'][$filter_name]['settings'];
+  protected function getFilterFormState($filter_name, array &$form_state) {
+    $filter_form_state['values'] = array();
+    if (!empty($form_state['values']['processors'][$filter_name]['settings'])) {
+      $filter_form_state['values'] = &$form_state['values']['processors'][$filter_name]['settings'];
     }
     return $filter_form_state;
   }

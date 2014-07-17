@@ -4,16 +4,23 @@ search_api.processor.plugin.aggregated_field:
   mapping:
     fields:
       type: sequence
-      label: 'The selected fields'
+      label: 'The aggregated fields configured for this index'
       sequence:
-        - type: string
-          label: 'The field name'
-    label:
-      type: string
-      label: 'Label'
-    type:
-      type: string
-      label: 'Type'
+        - type: mapping
+          label: 'One field'
+          mapping:
+            fields:
+              type: sequence
+              label: 'The selected fields to be aggregated'
+              sequence:
+                - type: string
+                  label: 'One field that should be part of the aggregation'
+            label:
+              type: string
+              label: 'Label'
+            type:
+              type: string
+              label: 'Type'
 
 search_api.processor.plugin.highlight:
   type: mapping
@@ -33,7 +40,7 @@ search_api.processor.plugin.highlight:
       label: 'The requested length of the excerpt, in characters.'
     highlight:
       type: string
-      label: 'Select whether returned fields should be highlighted. (always/if returned/never).'
+      label: 'Select whether returned fields should be highlighted (always/if returned/never).'
 
 search_api.processor.plugin.html_filter:
   type: mapping

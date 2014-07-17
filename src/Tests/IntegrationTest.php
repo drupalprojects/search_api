@@ -601,7 +601,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
     $configuration = $processors['ignorecase']->getConfiguration();
-    $this->assertEqual($configuration['fields']['search_api_language'], 0, 'Language field disabled for ignore case filter.');
+    $this->assertTrue(empty($configuration['fields']['search_api_language']), 'Language field disabled for ignore case filter.');
   }
 
   /**
