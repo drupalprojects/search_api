@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Tests\Plugin\Processor;
 
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Highlight;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility\Utility;
@@ -325,6 +324,52 @@ class HighlightTest extends UnitTestCase {
     $output = $results->getResultItems();
     $excerpt = $output[$this->item_ids[0]]->getExcerpt();
     $correct_output = '… tristique, ligula sit amet condimentum dapibus, lorem nunc <strong>congue</strong> velit, et dictum augue leo sodales augue. Maecenas …';
+    $this->assertEquals($correct_output, $excerpt, 'Excerpt was added.');
+  }
+
+  /**
+   * Tests whether highlighting works on a longer text matching near the end.
+   */
+  public function testPostprocessSearchResultsExerptMatchNearEnd() {
+    $body_field_id = Utility::createCombinedId('entity:node', 'body');
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('#conjunction' => 'AND', 'diam')));
+    /** @var \Drupal\search_api\Query\QueryInterface $query */
+
+    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+
+    $field = Utility::createField($index, $body_field_id);
+    $field->setType('text');
+
+    $index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array($body_field_id => $field)));
+
+    $this->processor->setIndex($index);
+
+    $body_values = array($this->getFieldBody());
+    $fields = array(
+      $body_field_id => array(
+        'type' => 'text',
+        'values' => $body_values,
+      ),
+    );
+
+    $items = $this->createItems($index, 1, $fields);
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getResultItems();
+    $excerpt = $output[$this->item_ids[0]]->getExcerpt();
+    $correct_output = '… Fusce in mauris eu leo fermentum feugiat. Proin varius <strong>diam</strong> ante, non eleifend ipsum luctus sed. …';
     $this->assertEquals($correct_output, $excerpt, 'Excerpt was added.');
   }
 

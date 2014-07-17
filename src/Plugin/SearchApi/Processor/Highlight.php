@@ -369,6 +369,8 @@ class Highlight extends ProcessorPluginBase {
     $text = strip_tags(str_replace(array('<', '>'), array(' <', '> '), $text));
     $text = String::decodeEntities($text);
     $text = preg_replace('/\s+/', ' ', $text);
+    $text = trim($text, ' ');
+    $text_length = strlen($text);
 
     // Try to reach the requested excerpt length with about two fragments (each
     // with a keyword and some context).
@@ -380,9 +382,9 @@ class Highlight extends ProcessorPluginBase {
     // Get the set excerpt length from the configuration. If the length is too
     // small, only use one fragment.
     $excerpt_length = $this->configuration['excerpt_length'];
-    $context_length = round($excerpt_length / 4) - 4;
+    $context_length = round($excerpt_length / 4) - 3;
     if ($context_length < 32) {
-      $context_length = round($excerpt_length / 2) - 2;
+      $context_length = round($excerpt_length / 2) - 1;
     }
 
     while ($length < $excerpt_length && !empty($remaining_keys)) {
@@ -411,13 +413,23 @@ class Highlight extends ProcessorPluginBase {
 
           // Locate a space before and after this match, leaving some context on
           // each end.
-          $before = strpos(' ' . $text, ' ', max(0, $found_position - $context_length));
+          if ($found_position > $context_length) {
+            $before = strpos($text, ' ', $found_position - $context_length);
+            if ($before !== FALSE) {
+              ++$before;
+            }
+          }
+          else {
+            $before = 0;
+          }
           if ($before !== FALSE && $before <= $found_position) {
-            $after = strrpos(substr($text . ' ', 0, $found_position + $context_length), ' ', $found_position);
+            if ($text_length > $found_position + $context_length) {
+              $after = strrpos(substr($text, 0, $found_position + $context_length), ' ', $found_position);
+            }
+            else {
+              $after = $text_length;
+            }
             if ($after !== FALSE && $after > $found_position) {
-              // Account for the spaces we added.
-              $before = max($before, 0);
-              $after = min($after, strlen($text));
               if ($before < $after) {
                 // Save this range.
                 $ranges[$before] = $after;
