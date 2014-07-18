@@ -11,7 +11,6 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -90,12 +89,11 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * Calls processField() for all fields for which testField() returns TRUE.
    *
-   * @param array $items
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array of items to be preprocessed for indexing, formatted as specified
    *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
    */
   public function preprocessIndexItems(array &$items) {
-    /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
       foreach ($item->getFields() as $name => $field) {
         if ($this->testField($name, $field)) {
@@ -121,15 +119,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Processor\ProcessorPluginBase::postprocessSearchResults().
-   *
-   * Does nothing by default.
-   */
-  public function postprocessSearchResults(ResultSetInterface $results) {
-    return;
-  }
-
-  /**
    * Processes a single field's value.
    *
    * Calls process() either for the whole text, or each token, depending on the
@@ -144,6 +133,9 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     $type = $field->getType();
 
     foreach ($values as $i => &$value) {
+      // We restore the field's type for each run of the loop since we need the
+      // unchanged one as long as the current field value hasn't been updated.
+      $type = $field->getType();
       if ($type == 'tokenized_text') {
         foreach ($value as &$tokenized_value) {
           $this->processFieldValue($tokenized_value['value'], $type);
@@ -156,17 +148,12 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       if ($type == 'tokenized_text') {
         $value = $this->normalizeTokens($value);
       }
-      else {
-        if (is_array($value)) {
-          $value = $this->implodeTokens($value);
-        }
-        if (!$value && !is_numeric($value)) {
-          unset($values[$i]);
-        }
+      elseif ($value === '') {
+        unset($values[$i]);
       }
     }
 
-    // We're setting the type and values here as it could have changed.
+    // We're also setting the type here as it could have changed.
     $field->setType($type);
     $field->setValues($values);
   }
@@ -186,7 +173,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   protected function normalizeTokens(array $tokens, $score = 1) {
     $ret = array();
     foreach ($tokens as $token) {
-      if (empty($token['value']) && !is_numeric($token['value'])) {
+      if ($token['value'] === '') {
         // Filter out empty tokens.
         continue;
       }
@@ -209,32 +196,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Implodes an array of tokens into a single string.
-   *
-   * @param array $tokens
-   *   The tokens array to implode.
-   *
-   * @return string
-   *   The text data from the tokens concatenated into a single string.
-   */
-  protected function implodeTokens(array $tokens) {
-    $ret = array();
-    foreach ($tokens as $token) {
-      if (empty($token['value']) && !is_numeric($token['value'])) {
-        // Filter out empty tokens.
-        continue;
-      }
-      if (is_array($token['value'])) {
-        $ret[] = $this->implodeTokens($token['value']);
-      }
-      else {
-        $ret[] = $token['value'];
-      }
-    }
-    return implode(' ', $ret);
-  }
-
-  /**
    * Preprocesses the search keywords.
    *
    * Calls processKey() for individual strings.
@@ -247,7 +208,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
       foreach ($keys as $key => &$v) {
         if (Element::child($key)) {
           $this->processKeys($v);
-          if (!$v && !is_numeric($v)) {
+          if ($v === '') {
             unset($keys[$key]);
           }
         }
@@ -339,10 +300,11 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   - score: The relative importance of the token, as a float, with 1 being
    *     the default.
    * @param string $type
-   *   The field type as a reference. Can be manipulated
-   *   directly, nothing has to be returned. Can contain any of the supported
-   *   item types such as string, text. The processFieldValue is responsible
-   *   of changing the type. Common example is changing text to tokenized_text.
+   *   The field type as a reference. If the method changes the field's type,
+   *   this parameter has to be updated accordingly. A common example would be
+   *   changing text to tokenized_text. If an implementation updates the type,
+   *   however, it has to do so regardless of the $value passed – otherwise, the
+   *   behavior is undefined.
    */
   protected function processFieldValue(&$value, &$type) {
     $this->process($value);
@@ -371,7 +333,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $value
    *   The string value to preprocess, as a reference. Can be manipulated
-   *   directly, nothing has to be returned. Has to remain a string.
+   *   directly, nothing has to be returned. Has to remain a string. Set to an
+   *   empty string to remove the filter.
    */
   protected function processFilterValue(&$value) {
     $this->process($value);
