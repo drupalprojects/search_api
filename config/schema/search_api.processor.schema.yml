@@ -9,18 +9,43 @@ search_api.processor.plugin.aggregated_field:
         - type: mapping
           label: 'One field'
           mapping:
-            fields:
-              type: sequence
-              label: 'The selected fields to be aggregated'
-              sequence:
-                - type: string
-                  label: 'One field that should be part of the aggregation'
             label:
               type: string
-              label: 'Label'
+              label: 'Label of the field that needs to be aggregated'
             type:
               type: string
-              label: 'Type'
+              label: 'action that needs to be taken on the aggregated fields'
+            type_descriptions:
+              type: sequence
+              label: 'Descriptions of the action that can be taken on the different fields'
+              sequence:
+                - type: string
+                  label: 'Description of the action that can be taken on the different fields'
+            fields:
+              type: sequence
+              label: 'Selected fields'
+              sequence:
+                #@todo set it to something that is valid for checkboxes. As 0 is not recognized in the string validation
+                - type: ignore
+                  label: 'The fields that need to be aggregated'
+            actions:
+              type: sequence
+              label: 'The required action to take'
+              sequence:
+                - type: string
+                  label: 'Submit button'
+    label:
+      type: string
+      label: 'Label'
+    type:
+      type: string
+      label: 'Type'
+    actions:
+      type: sequence
+      label: 'The required action to take'
+      sequence:
+        - type: string
+          label: 'Submit button'
 
 search_api.processor.plugin.highlight:
   type: mapping
@@ -144,10 +169,84 @@ search_api.processor.plugin.tokenizer:
     ignorable:
       type: string
       label: 'Regular expression for ignorables'
+    overlap_cjk:
+      type: integer
+      label: 'Defines if the CJK should be configured to enable overlap.'
+    minimum_word_size:
+      type: string
+      label: 'Defines the minimum word size'
 
 search_api.processor.plugin.transliteration:
   type: mapping
   label: 'Transliteration processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.node_status:
+  type: mapping
+  label: 'node status processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.language:
+  type: mapping
+  label: 'Language field processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.content_access:
+  type: mapping
+  label: 'content access processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.ignore_character:
+  type: mapping
+  label: 'content access processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    ignorable:
+      type: string
+      label: 'Regular expression for characters it should ignore to stem'
+    strip:
+      type: mapping
+      label: 'Configurable characters to ignore'
+      mapping:
+        character_sets:
+          type: sequence
+          label: 'Configuration of the character sets'
+          sequence:
+            - type: ignore
+              label: 'Character set'
+
+search_api.processor.plugin.add_url:
+  type: mapping
+  label: 'content access processor configuration'
   mapping:
     fields:
       type: sequence

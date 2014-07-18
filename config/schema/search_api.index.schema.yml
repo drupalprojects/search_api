@@ -21,6 +21,19 @@ search_api.index.*:
       type: mapping
       label: 'Options'
       mapping:
+        fields:
+          type: sequence
+          label: 'Configured fields'
+          sequence:
+            - type: mapping
+              label: field
+              mapping:
+                type:
+                  type: string
+                  label: "Type of field"
+        additional fields:
+          type: sequence
+          label: 'Configured fields'
         cron_limit:
           type: integer
           label: 'Cron batch size'
@@ -56,10 +69,13 @@ search_api.index.*:
       sequence:
         # @todo Update when https://www.drupal.org/node/2291073 is fixed.
         - type: search_api.datasource.plugin.[%key]
+          label: 'Datasource plugin configuration'
     tracker:
       type: string
       label: 'Tracker plugin ID'
     tracker_config:
+      label: 'Tracker config plugin'
+      # @todo Update when https://www.drupal.org/node/2291073 is fixed.
       type: search_api.tracker.plugin.[%parent.tracker]
     server:
       type: string
