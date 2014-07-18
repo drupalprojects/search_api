@@ -163,7 +163,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function getField($field_id, $extract = FALSE) {
+  public function getField($field_id, $extract = TRUE) {
     if (isset($this->fields[$field_id])) {
       return $this->fields[$field_id];
     }
@@ -174,7 +174,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFields($extract = FALSE) {
+  public function getFields($extract = TRUE) {
     if ($extract && !$this->fieldsExtracted) {
       foreach (array(NULL, $this->getDatasourceId()) as $datasource_id) {
         $fields_by_property_path = array();
@@ -323,7 +323,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function getIterator() {
-    return new \ArrayIterator($this->getFields(TRUE));
+    return new \ArrayIterator($this->getFields());
   }
 
   /**

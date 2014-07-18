@@ -461,7 +461,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $items = array();
     foreach ($search_objects as $item_id => $object) {
       $items[$item_id] = Utility::createItemFromObject($this, $object, $item_id);
-      $items[$item_id]->getFields(TRUE);
+      $items[$item_id]->getFields();
     }
 
     // Remember the items that were initially passed.
