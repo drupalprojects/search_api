@@ -9,43 +9,18 @@ search_api.processor.plugin.aggregated_field:
         - type: mapping
           label: 'One field'
           mapping:
-            label:
-              type: string
-              label: 'Label of the field that needs to be aggregated'
-            type:
-              type: string
-              label: 'action that needs to be taken on the aggregated fields'
-            type_descriptions:
-              type: sequence
-              label: 'Descriptions of the action that can be taken on the different fields'
-              sequence:
-                - type: string
-                  label: 'Description of the action that can be taken on the different fields'
             fields:
               type: sequence
-              label: 'Selected fields'
-              sequence:
-                #@todo set it to something that is valid for checkboxes. As 0 is not recognized in the string validation
-                - type: ignore
-                  label: 'The fields that need to be aggregated'
-            actions:
-              type: sequence
-              label: 'The required action to take'
+              label: 'The selected fields to be aggregated'
               sequence:
                 - type: string
-                  label: 'Submit button'
-    label:
-      type: string
-      label: 'Label'
-    type:
-      type: string
-      label: 'Type'
-    actions:
-      type: sequence
-      label: 'The required action to take'
-      sequence:
-        - type: string
-          label: 'Submit button'
+                  label: 'One field that should be part of the aggregation'
+            label:
+              type: string
+              label: 'Label'
+            type:
+              type: string
+              label: 'Type'
 
 search_api.processor.plugin.highlight:
   type: mapping
