@@ -281,13 +281,6 @@ class AggregatedField extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
-    parent::submitConfigurationForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function preprocessIndexItems(array &$items) {
     if (!$items) {
       return;
