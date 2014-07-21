@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2281535 by areynolds, nicola85: Adapted to latest changes in Views cache
+  plugins.
 - #2145547 by aaronbauman: Fixed duplicated sorts (one exposed) in Views.
 - #2146435 by alanmackenzie: Fixed Views paging with custom pager add-ons.
 - #2278791 by drunken monkey | tksmd: Fixed excerpt when searching single CJK
