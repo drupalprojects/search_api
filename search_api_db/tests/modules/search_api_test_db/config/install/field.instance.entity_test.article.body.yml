@@ -14,5 +14,5 @@ settings:
   text_processing: true
 dependencies:
   entity:
-    - field.field.entity_test.body
+    - field.storage.entity_test.body
 field_type: text_with_summary
