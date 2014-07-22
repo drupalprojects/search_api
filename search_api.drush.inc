@@ -2,18 +2,10 @@
 
 /**
  * @file
- * Drush commands for SearchAPI.
- *
- * Original file by agentrickard for Palantir.net
+ * Drush commands for Search API.
  */
 
-/**
- * In the unlikely event that there is an index by this name
- * then drush commands operating on all indexes will be 
- * unpredicatable
- */
-define('ALL_INDEXES', '_SEARCH_API_ALL_INDEXES_1296_98222');
-
+use Drupal\search_api\Entity\Index;
 
 /**
  * Implements hook_drush_command().
@@ -24,110 +16,108 @@ function search_api_drush_command() {
   $items['search-api-list'] = array(
     'description' => 'List all search indexes.',
     'examples' => array(
-      'drush searchapi-list' => dt('List all search indexes.'),
+      'drush search-api-list' => dt('List all search indexes.'),
       'drush sapi-l' => dt('Alias to list all search indexes.'),
     ),
     'aliases' => array('sapi-l'),
   );
 
   $items['search-api-enable'] = array(
-    'description' => 'Enable one or more disabled search_api indexes.',
+    'description' => 'Enable one or more disabled search indexes.',
     'examples' => array(
-      'drush sapi-en' => dt('Alias to enable disabled indexes.'),
-      'drush sapi-en default_node_index' => dt('Enable index with the machine name !name.', array('!name' => 'default_node_index')),
+      'drush search-api-enable node_index' => dt('Enable the search index with the ID !name.', array('!name' => 'node_index')),
+      'drush sapi-en node_index' => dt('Alias to enable the search index with the ID !name.', array('!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index to enable.'),
+      'index_id' => dt('The ID of an index to enable.'),
     ),
     'aliases' => array('sapi-en'),
   );
 
   $items['search-api-enable-all'] = array(
-    'description' => 'Enable all disabled search_api indexes.',
+    'description' => 'Enable all disabled search indexes.',
     'examples' => array(
-      'drush searchapi-enable' => dt('Enable all disabled indexes.'),
-      'drush sapi-en' => dt('Alias to enable all disabled indexes.'),
+      'drush search-api-enable-all' => dt('Enable all disabled indexes.'),
+      'drush sapi-ena' => dt('Alias to enable all disabled indexes.'),
     ),
-    'arguments' => array(
-    ),
+    'arguments' => array(),
     'aliases' => array('sapi-ena'),
   );
 
   $items['search-api-disable'] = array(
-    'description' => 'Disable one or more enabled search_api indexes.',
+    'description' => 'Disable one or more enabled search indexes.',
     'examples' => array(
-      'drush sapi-dis' => dt('Alias to disable enabled indexes.'),
-      'drush sapi-dis 1' => dt('Disable index with the machine name !name.', array('!name' => 1)),
+      'drush search-api-disable node_index' => dt('Disable the search index with the ID !name.', array('!name' => 'node_index')),
+      'drush sapi-dis node_index' => dt('Alias to disable the search index with the ID !name.', array('!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index to disable.'),
+      'index_id' => dt('The ID of an index to disable.'),
     ),
     'aliases' => array('sapi-dis'),
   );
 
   $items['search-api-disable-all'] = array(
-    'description' => 'Disable all enabled search_api indexes.',
+    'description' => 'Disable all enabled search indexes.',
     'examples' => array(
-      'drush sapi-dis' => dt('Alias to disable all enabled indexes.'),
+      'drush search-api-disable-all' => dt('Disable all enabled indexes.'),
+      'drush sapi-disa' => dt('Alias to disable all enabled indexes.'),
     ),
-    'arguments' => array(
-    ),
+    'arguments' => array(),
     'aliases' => array('sapi-disa'),
   );
 
   $items['search-api-status'] = array(
     'description' => 'Show the status of one or all search indexes.',
     'examples' => array(
-      'drush searchapi-status' => dt('Show the status of all search indexes.'),
+      'drush search-api-status' => dt('Show the status of all search indexes.'),
       'drush sapi-s' => dt('Alias to show the status of all search indexes.'),
-      'drush sapi-s 1' => dt('Show the status of the search index with the name !name.', array('!name' => 1)),
-      'drush sapi-s default_node_index' => dt('Show the status of the search index with the machine name !name.', array('!name' => 'default_node_index')),
+      'drush sapi-s node_index' => dt('Show the status of the search index with the ID !name.', array('!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index to view status.'),
+      'index_id' => dt('The ID of an index to view.'),
     ),
     'aliases' => array('sapi-s'),
   );
 
   $items['search-api-index'] = array(
-    'description' => 'Index items for one or all enabled search_api indexes.',
+    'description' => 'Index items for one or all enabled search indexes.',
     'examples' => array(
-      'drush searchapi-index' => dt('Index items for all enabled indexes.'),
-      'drush sapi-i' => dt('Alias to index items for all enabled indexes.'),
-      'drush sapi-i default_node_index' => dt('Index items for the index with the machine name !name.', array('!name' => 'default_node_index')),
-      'drush sapi-i default_node_index 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) for the index with the machine name !name.", array('!limit' => 100, '!name' => 'default_node_index')),
-      'drush sapi-i default_node_index 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) for the index with the machine name !name.", array('!limit' => 100, '!batch_size' => 10, '!name' => 'default_node_index')),
+      'drush search-api-index' => dt('Index all items for all enabled indexes.'),
+      'drush sapi-i' => dt('Alias to index all items for all enabled indexes.'),
+      'drush sapi-i node_index' => dt('Index all items for the index with the ID !name.', array('!name' => 'node_index')),
+      'drush sapi-i node_index 100' => dt('Index a maximum number of !limit items for the index with the ID !name.', array('!limit' => 100, '!name' => 'node_index')),
+      'drush sapi-i node_index 100 10' => dt('Index a maximum number of !limit items (!batch_size items per batch run) for the index with the ID !name.', array('!limit' => 100, '!batch_size' => 10, '!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index.'),
-      'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
-      'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
+      'index_id' => dt('The ID of an index.'),
+      'limit' => dt('The number of items to index. Set to 0 to index all items. Defaults to 0 (index all).'),
+      'batch_size' => dt('The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the "!batch_size" setting of the index.', array('!batch_size' => dt('Cron batch size'))),
     ),
     'aliases' => array('sapi-i'),
   );
 
   $items['search-api-reindex'] = array(
-    'description' => 'Force reindexing of one or all search indexes, without clearing existing index data.',
+    'description' => 'Force reindexing of one or all search indexes, without deleting existing index data.',
     'examples' => array(
-      'drush searchapi-reindex' => dt('Schedule all search indexes for reindexing.'),
+      'drush search-api-reindex' => dt('Schedule all search indexes for reindexing.'),
       'drush sapi-r' => dt('Alias to schedule all search indexes for reindexing .'),
-      'drush sapi-r default_node_index' => dt('Schedule the search index with the machine name !name for re-indexing.', array('!name' => 'default_node_index')),
+      'drush sapi-r node_index' => dt('Schedule the search index with the ID !name for reindexing.', array('!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index.'),
+      'index_id' => dt('The ID of an index.'),
     ),
     'aliases' => array('sapi-r'),
   );
 
   $items['search-api-clear'] = array(
-    'description' => 'Clear one or all search indexes and mark them for re-indexing.',
+    'description' => 'Clear one or all search indexes and mark them for reindexing.',
     'examples' => array(
-      'drush searchapi-clear' => dt('Clear all search indexes.'),
+      'drush search-api-clear' => dt('Clear all search indexes.'),
       'drush sapi-c' => dt('Alias to clear all search indexes.'),
-      'drush sapi-c default_node_index' => dt('Clear the search index with the machine name !name.', array('!name' => 'default_node_index')),
+      'drush sapi-c node_index' => dt('Clear the search index with the ID !name.', array('!name' => 'node_index')),
     ),
     'arguments' => array(
-      'index_name' => dt('The machine name of an index.'),
+      'index_id' => dt('The ID of an index.'),
     ),
     'aliases' => array('sapi-c'),
   );
@@ -135,17 +125,15 @@ function search_api_drush_command() {
   return $items;
 }
 
-
-
 /**
- * List all search indexes.
+ * Prints a list of all search indexes.
  */
 function drush_search_api_list() {
-  $indexes = entity_load_multiple('search_api_index');
-  if (empty($indexes)) {
-    drush_print(dt('There are no indexes present.'));
+  $indexes = search_api_drush_get_indexes();
+  if (!$indexes) {
     return;
   }
+
   $rows[] = array(
     dt('Machine name'),
     dt('Name'),
@@ -154,172 +142,191 @@ function drush_search_api_list() {
     dt('Status'),
     dt('Limit'),
   );
-  /** @var $index \Drupal\search_api\Entity\Index */
+  $none = '(' . dt('none') . ')';
+  $enabled = dt('enabled');
+  $disabled = dt('disabled');
+
   foreach ($indexes as $index) {
-    foreach ($index->getDatasourceIds() as $datasource_id) {
-      // Check if a datasource is available.
-      if ($index->isValidDatasource($datasource_id)) {
-        // Use the label defined in the plugin definition.
-        $info = $index->getDatasource($datasource_id)->getPluginDefinition()['label'];
-      }
-      else {
-        $info = t('Invalid or missing datasource plugin: %datasource_id', array('%datasource_id' => $datasource_id));
-      }
+    $types = array();
+    foreach ($index->getDatasources() as $datasource) {
+      $types[] = $datasource->label();
     }
-    $row = array(
-      $index->machine_name,
-      $index->name,
-      $index->getServerId() ?: '(' . t('none') . ')',
-      (string) $info,
-      $index->status() ? t('enabled') : t('disabled'),
+    $rows[] = array(
+      $index->id(),
+      $index->label(),
+      $index->getServerId() ? $index->getServer()->label() : $none,
+      $types ? implode(', ', $types) : $none,
+      $index->status() ? $enabled : $disabled,
       (int) $index->getOption('cron_limit'),
     );
-    $rows[] = $row;
   }
+
   drush_print_table($rows);
 }
 
 /**
- * Enable index(es).
+ * Enables one or more search indexes.
  *
- * @param string $index_machine_name
- *   Machine name for index to be enabled.
+ * @param string|null …
+ *   The ID of a search index to be enabled. Or NULL (only used internally) to
+ *   enable all disabled indexes.
  */
 function drush_search_api_enable() {
   if (!search_api_drush_get_index_count()) {
-    drush_set_error(dt('There are no indexes defined. Please define an index before trying to enable it'));
+    drush_set_error(dt('There are no indexes defined. Please define an index before trying to enable it.'));
     return;
   }
 
-  $index_names = func_get_args();
+  $index_ids = func_get_args();
 
-  if (!count($index_names)) {
+  if (!$index_ids) {
     drush_set_error(dt('You must specify at least one index to enable. The indexes I know about are:'));
     drush_search_api_list();
   }
 
-  foreach ($index_names as $index_name) {
-    $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-    if (empty($indexes)) {
+  foreach ($index_ids as $index_id) {
+    $indexes = search_api_drush_get_indexes($index_id);
+    if (!$indexes) {
       continue;
     }
     foreach ($indexes as $index) {
-      _drush_search_api_set_index_state($index, TRUE);
+      if ($index_id || !$index->status()) {
+        search_api_drush_set_index_state($index);
+      }
     }
   }
 }
 
 /**
- * Enable all index(es).
- *
+ * Enables all search indexes.
  */
 function drush_search_api_enable_all() {
-  drush_search_api_enable(SEARCH_API_ALL_INDEXES);
+  drush_search_api_enable(NULL);
 }
 
 /**
- * Disable index(es).
+ * Disables one or more search indexes.
  *
+ * @param string|null …
+ *   The ID of a search index to be disabled. Or NULL (only used internally) to
+ *   disable all disabled indexes.
  */
 function drush_search_api_disable() {
   if (!search_api_drush_get_index_count()) {
-    drush_set_error(dt('There are no indexes defined. Please define an index before trying to disable it'));
+    drush_set_error(dt('There are no indexes defined. Please define an index before trying to disable it.'));
     return;
   }
 
-  $index_names = func_get_args();
+  $index_ids = func_get_args();
 
-  if (!count($index_names)) {
+  if (!$index_ids) {
     drush_set_error(dt('You must specify at least one index to disable. The indexes I know about are:'));
     drush_search_api_list();
   }
 
-  foreach ($index_names as $index_name) {
-    $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-    if (empty($indexes)) {
+  foreach ($index_ids as $index_id) {
+    $indexes = search_api_drush_get_indexes($index_id);
+    if (!$indexes) {
       continue;
     }
     foreach ($indexes as $index) {
-      _drush_search_api_set_index_state($index, FALSE);
+      if ($index_id || $index->status()) {
+        search_api_drush_set_index_state($index);
+      }
     }
   }
 }
 
 /**
- * Disable all index(es).
- *
+ * Disables all search indexes.
  */
 function drush_search_api_disable_all() {
-  drush_search_api_disable(SEARCH_API_ALL_INDEXES);
+  drush_search_api_disable(NULL);
 }
 
 /**
- * Display index status.
+ * Displays the status of one or all search indexes.
+ *
+ * @param string|null $index_id
+ *   (optional) The ID of the search index whose status should be displayed, or
+ *   NULL to display the status of all search indexes.
  */
-function drush_search_api_status($index_name = NULL) {
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+function drush_search_api_status($index_id = NULL) {
+  $indexes = search_api_drush_get_indexes($index_id);
+  if (!$indexes) {
     return;
   }
-  // See search_api_index_status()
-  $rows = array(array(
+
+  $rows[] = array(
     dt('Machine name'),
     dt('Name'),
     dt('% Complete'),
     dt('Indexed'),
     dt('Total'),
-  ));
+  );
+
   foreach ($indexes as $index) {
-    /* @var $index \Drupal\search_api\Entity\Index */
-    $complete = ($index->getTracker()->getTotalItemsCount() > 0) ?
-      100 * round($index->getTracker()->getIndexedItemsCount() / $index->getTracker()->getTotalItemsCount(), 3) . '%' : '-';
+    $indexed = $index->getTracker()->getIndexedItemsCount();
+    $total = $index->getTracker()->getTotalItemsCount();
+
+    $complete = '-';
+    if ($total > 0) {
+      $complete = (100 * round($indexed / $total, 3)) . '%';
+    }
+
     $row = array(
-      $index->machine_name,
-      $index->name,
+      $index->id(),
+      $index->label(),
       $complete,
-      $index->getTracker()->getIndexedItemsCount(),
-      $index->getTracker()->getTotalItemsCount(),
+      $indexed,
+      $total,
     );
     $rows[] = $row;
   }
+
   drush_print_table($rows);
 }
 
 /**
- * Index items.
- * @todo: need to make real invoke
+ * Indexes items.
  *
- * @param string $index_name
- *   The index machine name for which items should be indexed.
- * @param integer $limit
- *   Maximum number of items to index.
- * @param integer $batch_size
- *   Number of items to index per batch.
+ * @param string|null $index_id
+ *   (optional) The index ID for which items should be indexed, or NULL to index
+ *   items on all indexes.
+ * @param int|null $limit
+ *   (optional) Maximum number of items to index, or NULL to index all items.
+ * @param int|null $batch_size
+ *   (optional) Number of items to index per batch, or NULL to use the index's
+ *   "cron_limit" setting.
+ *
+ * @todo Currently, $batch_size is ignored and all items indexed at once.
  */
-function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size = NULL) {
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = NULL) {
+  $indexes = search_api_drush_get_indexes($index_id);
+  if (!$indexes) {
     return;
   }
+
   foreach ($indexes as $index) {
-    /* @var $index \Drupal\search_api\Entity\Index */
     $tracker = $index->getTracker();
     $remaining = $tracker->getTotalItemsCount() - $tracker->getIndexedItemsCount();
 
-    if ($remaining <= 0) {
-      drush_log(dt("The index !index is up to date.", array('!index' => $index->name)), 'ok');
+    if (!$remaining) {
+      drush_log(dt("The index !index is up to date.", array('!index' => $index->label())), 'ok');
       continue;
     }
     else {
-      $t_args = array(
+      $args = array(
         '!remaining' => $remaining,
-        '!limit' => ($limit) ? $limit : t('All'),
-        '!index' => $index->name,
+        '!limit' => $limit ? $limit : dt('all'),
+        '!index' => $index->label(),
       );
-      drush_log(dt("The index found !remaining items to index for !index. Indexing !limit items.", $t_args), 'ok');
+      drush_log(dt("Found !remaining items to index for !index. Indexing !limit items.", $args), 'ok');
     }
 
     $index->index($limit);
+    // @todo Report number of successfully indexed items, and check whether that
+    //   matched the expectations.
 
     // Get the number of items to index per batch run.
     /*if (!isset($batch_size)) {
@@ -353,116 +360,115 @@ function drush_search_api_index($index_name = NULL, $limit = NULL, $batch_size =
 }
 
 /**
- * Mark for re-indexing.
+ * Schedules a search index for reindexing.
  *
- * @param string $index_name
- *   The index machine name for which items should be reindexed.
+ * @param string|null $index_id
+ *   (optional) The index ID for which items should be reindexed, or NULL to
+ *   reindex all search indexes.
  */
-function drush_search_api_reindex($index_name = NULL) {
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+function drush_search_api_reindex($index_id = NULL) {
+  $indexes = search_api_drush_get_indexes($index_id);
+  if (!$indexes) {
     return;
   }
-  // See search_api_index_reindex()
   foreach ($indexes as $index) {
-    $index->reindex();
-    drush_log(dt('!index was successfully marked for re-indexing.', array('!index' => $index->machine_name)), 'ok');
+    if ($index->status()) {
+      $index->reindex();
+      drush_log(dt('!index was successfully marked for reindexing.', array('!index' => $index->label())), 'ok');
+    }
   }
 }
 
 /**
- * Clear an index.
+ * Clears a search index.
  *
- * @param string $index_name
- *   The index machine name for clearing.
+ * @param string|null $index_id
+ *   (optional) The ID of the search index which should be cleared, or NULL to
+ *   clear all search indexes.
  */
-function drush_search_api_clear($index_name = NULL) {
-  $indexes = search_api_drush_get_indexes_or_display_list($index_name);
-  if (empty($indexes)) {
+function drush_search_api_clear($index_id = NULL) {
+  $indexes = search_api_drush_get_indexes($index_id);
+  if (!$indexes) {
     return;
   }
-  // See search_api_index_reindex()
   foreach ($indexes as $index) {
-    $index->clear();
-    drush_log(dt('!index was successfully cleared.', array('!index' => $index->machine_name)), 'ok');
+    if ($index->status()) {
+      $index->clear();
+      drush_log(dt('!index was successfully cleared.', array('!index' => $index->label())), 'ok');
+    }
   }
 }
 
 /**
- * search_api_drush_get_index_count 
- * Helper function to return the number of indexes
- * 
- * @return integer
+ * Returns the total number of search indexes.
+ *
+ * @return int
+ *   The number of search indexes on this site.
  */
 function search_api_drush_get_index_count() {
-    return count(entity_load_multiple('search_api_index'));
+  return count(Index::loadMultiple());
 }
 
 /**
- * Helper function to return an index or all indexes as an array.
- * If the index is not defined or there are no indexes then a friendly message
+ * Returns either one or all indexes as an array.
+ *
+ * If the index is not defined or there are no indexes then an error message
  * is displayed
  *
- * @param $index_name
- *   The provided index id or the constant SEARCH_API_ALL_INDEXES to return all indexes
+ * @param string|null $index_id
+ *   (optional) Either the ID of the search index to load, or NULL to load all
+ *   indexes.
  *
- * @return
- *   An array of indexes.
+ * @return \Drupal\search_api\Index\IndexInterface[]
+ *   An array of search indexes.
  */
-function search_api_drush_get_indexes_or_display_list($index_name) {
-  if ($index_name == SEARCH_API_ALL_INDEXES) {
-    $indexes = entity_load_multiple('search_api_index');
+function search_api_drush_get_indexes($index_id = NULL) {
+  if (!isset($index_id)) {
+    $indexes = Index::loadMultiple();
   }
   else {
-    $indexes = entity_load_multiple_by_properties('search_api_index', array('machine_name' => $index_name));
+    $indexes = Index::load($index_id);
+    $indexes = $indexes ? array($index_id => $indexes) : array();
   }
 
-  //found no indexes, display a nice message
-  if (empty($indexes)) {
-    if ($index_name == SEARCH_API_ALL_INDEXES) {
+  // If we found no indexes, display an error message.
+  if (!$indexes) {
+    if (!isset($index_id)) {
       drush_set_error(dt('No indexes present.'));
     }
     else {
-      drush_set_error(dt('Invalid index machine name "!index_name" or no indexes present. The following indexes are defined:', array('!index_name' => $index_name)));
+      drush_set_error(dt('Invalid index ID "!index_id". The following indexes are defined:', array('!index_id' => $index_id)));
       drush_print();
       drush_search_api_list();
     }
   }
+
   return $indexes;
 }
 
-
-
 /**
- * Helper function to change the state of a single index.
- * Displays helpful messages if the state cannot be changed
+ * Changes the state of a single index.
  *
- * @param string $index_machine_name
- *   Machine name for index to be enabled.
+ * Displays helpful messages if the state cannot be changed.
  *
+ * @param \Drupal\search_api\Index\IndexInterface $index
+ *   The index to be enabled.
  * @param boolean $enable
- *   TRUE to enable, FALSE to disable the index
+ *   (optional) TRUE to enable, FALSE to disable the index.
  */
-function _drush_search_api_set_index_state($index, $enable = TRUE) {
+function search_api_drush_set_index_state($index, $enable = TRUE) {
+  $state_label = $enable ? dt('enabled') : dt('disabled');
+  $method = $enable ? 'enable' : 'disable';
 
-  $desired_state_name = $enable ? dt('enabled') : dt('disabled');
-  $desired_state_setter_method = $enable ? 'enable' : 'disable';
-
-  /* @var $index \Drupal\search_api\Entity\Index */
   if ($index->status() == $enable) {
-    drush_log(dt("The index !index is already !desired_state_name.", array('!index' => $index->machine_name, '!desired_state_name' => $desired_state_name)), 'ok');
+    drush_log(dt("The index !index is already !desired_state.", array('!index' => $index->label(), '!desired_state' => $state_label)), 'ok');
     return;
   }
   if (!$index->getServerId()) {
-    drush_log(dt("Cannot set index !index to !desired_state_name because it is not bound to any server.", array('!index' => $index->machine_name, '!desired_state_name' => $desired_state_name)), 'warning');
+    drush_log(dt("Index !index could not be !desired_state because it is not bound to any server.", array('!index' => $index->label(), '!desired_state' => $state_label)), 'warning');
     return;
   }
 
-  if ($index->$desired_state_setter_method()->save() == SAVED_UPDATED) {
-    drush_log(dt("The index !index was successfully !desired_state_name.", array('!index' => $index->machine_name, '!desired_state_name' => $desired_state_name)), 'ok');
-  }
-  else {
-    drush_log(dt("Error setting state of index !index to !desired_state_name ", array('!index' => $index->machine_name, '!desired_state_name' => $desired_state_name)), 'error');
-  }
-
+  $index->$method()->save();
+  drush_log(dt("The index !index was successfully !desired_state.", array('!index' => $index->label(), '!desired_state' => $state_label)), 'ok');
 }

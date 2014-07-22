@@ -1,6 +1,6 @@
 /**
  * @file
- * Attaches administration-specific behavior to the Search API formatters form.
+ * Attaches show/hide functionality to processor checkboxes in "Filters" tabs.
  */
 
 (function ($) {
@@ -11,13 +11,13 @@
     attach: function (context, settings) {
       $('.search-api-status-wrapper input.form-checkbox', context).once('search-api-status', function () {
         var $checkbox = $(this);
-        // Retrieve the tabledrag row belonging to this processor.
+        // Retrieve the table row belonging to this processor.
         var $row = $('#' + $checkbox.attr('id').replace(/-status$/, '-weight'), context).closest('tr');
         // Retrieve the vertical tab belonging to this processor.
         var $tab = $('#' + $checkbox.attr('id').replace(/-status$/, '-settings'), context).data('verticalTab');
 
-        // Bind click handler to this checkbox to conditionally show and hide the
-        // filter's tableDrag row and vertical tab pane.
+        // Bind a click handler to this checkbox to conditionally show and hide
+        // the filter's table row and vertical tab pane.
         $checkbox.bind('click.searchApiUpdate', function () {
           if ($checkbox.is(':checked')) {
             $('#edit-processors-order').show();
@@ -40,7 +40,7 @@
               $tab.tabHide().updateSummary();
             }
           }
-          // Restripe table after toggling visibility of table row.
+          // Re-stripe the table after toggling visibility of table row.
           Drupal.tableDrag['edit-processors-order'].restripeTable();
         });
 

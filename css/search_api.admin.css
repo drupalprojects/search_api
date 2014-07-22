@@ -51,7 +51,7 @@
 }
 
 /*
- * Styles for index summary page
+ * Index summary page
  */
 .search-api-index-status {
   margin-bottom: 6em;
@@ -65,7 +65,7 @@
 }
 
 /*
- * Styles for various uses
+ * Miscellaneous
  */
 .search-api-checkboxes-list div {
   max-height: 12em;

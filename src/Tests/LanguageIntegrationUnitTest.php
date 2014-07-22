@@ -9,6 +9,9 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Language\Language;
+use Drupal\entity_test\Entity\EntityTestMul;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 
 /**
@@ -40,9 +43,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
   protected $index;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = array('search_api', 'search_api_test_backend');
 
@@ -55,7 +56,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     // Create a test server.
-    $this->server = entity_create('search_api_server', array(
+    $this->server = Server::create(array(
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
@@ -64,7 +65,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->server->save();
 
     // Create a test index.
-    $this->index = entity_create('search_api_index', array(
+    $this->index = Index::create(array(
       'name' => $this->randomString(),
       'machine_name' => $this->randomName(),
       'status' => 1,
@@ -80,8 +81,10 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
    * Tests translation handling of the content entity datasource.
    */
   public function testItemTranslations() {
+    // Test retrieving language and translations when no translations are
+    // available.
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity_1 */
-    $entity_1 = entity_create($this->testEntityTypeId, array(
+    $entity_1 = EntityTestMul::create(array(
       'id' => 1,
       'name' => 'test 1',
       'user_id' => $this->container->get('current_user')->id(),
@@ -91,7 +94,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity_2 */
-    $entity_2 = entity_create($this->testEntityTypeId, array(
+    $entity_2 = EntityTestMul::create(array(
       'id' => 2,
       'name' => 'test 2',
       'user_id' => $this->container->get('current_user')->id(),
@@ -133,7 +136,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
 
     // Test that the index needs to be updated.
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated item needs to be re-indexed.');
+    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated item needs to be reindexed.');
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items in total.');
 
     // Set two translations for the first entity and test that the datasource
@@ -156,7 +159,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
 
     // Test that the index needs to be updated.
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be re-indexed.');
+    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be reindexed.');
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 4, 'There are four items in total.');
 
     // Delete one translation and test that the datasource returns only three
@@ -173,9 +176,9 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
 
-    // Test re-indexing.
+    // Test reindexing.
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 3, 'There are three items in total.');
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be re-indexed.');
+    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be reindexed.');
     $this->index->index();
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 3, 'Three items are indexed.');
   }

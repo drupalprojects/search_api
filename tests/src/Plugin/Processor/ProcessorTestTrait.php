@@ -19,22 +19,6 @@ trait ProcessorTestTrait {
   protected $processor;
 
   /**
-   * Get an accessible method of the processor class using reflection.
-   *
-   * @param string $method_name
-   *   The name of the method to return.
-   *
-   * @return \ReflectionMethod
-   *   The requested method, marked as accessible.
-   */
-  public function getAccessibleMethod($method_name) {
-    $class = new \ReflectionClass(get_class($this->processor));
-    $method = $class->getMethod($method_name);
-    $method->setAccessible(TRUE);
-    return $method;
-  }
-
-  /**
    * Invokes a method on the processor.
    *
    * @param string $method_name
@@ -45,8 +29,10 @@ trait ProcessorTestTrait {
    * @return mixed
    *   Whatever the invoked method returned.
    */
-  public function invokeMethod($method_name, array $args = array()) {
-    $method = $this->getAccessibleMethod($method_name);
+  protected function invokeMethod($method_name, array $args = array()) {
+    $class = new \ReflectionClass(get_class($this->processor));
+    $method = $class->getMethod($method_name);
+    $method->setAccessible(TRUE);
     return $method->invokeArgs($this->processor, $args);
   }
 

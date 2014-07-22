@@ -26,6 +26,7 @@ use Drupal\views\ViewExecutable;
  *   help = @Translation("Query will be generated and run using the Search API.")
  * )
  */
+// @todo Add "implements QueryInterface" (and necessary methods)?
 class SearchApiQuery extends QueryPluginBase {
 
   /**
@@ -302,8 +303,8 @@ class SearchApiQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function alter(ViewExecutable $view) {
-    parent::alter($view);
-    \Drupal::moduleHandler()->alter('search_api_views_query', $view, $this);
+    \Drupal::moduleHandler()->invokeAll('views_query_alter', array($view, $this));
+    \Drupal::moduleHandler()->alter('search_api_views_query', $view, $this->query);
   }
 
   /**

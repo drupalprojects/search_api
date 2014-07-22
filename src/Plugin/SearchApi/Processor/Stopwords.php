@@ -24,7 +24,7 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * Holds all words ignored for the last query.
    *
-   * @var array
+   * @var string[]
    */
   protected $ignored = array();
 
@@ -34,41 +34,10 @@ class Stopwords extends FieldsProcessorPluginBase {
   public function defaultConfiguration() {
     return array(
       'stopwords' => array(
-        "a",
-        "an",
-        "and",
-        "are",
-        "as",
-        "at",
-        "be",
-        "but",
-        "by",
-        "for",
-        "if",
-        "in",
-        "into",
-        "is",
-        "it",
-        "no",
-        "not",
-        "of",
-        "on",
-        "or",
-        "s",
-        "such",
-        "t",
-        "that",
-        "the",
-        "their",
-        "then",
-        "there",
-        "these",
-        "they",
-        "this",
-        "to",
-        "was",
-        "will",
-        "with",
+        'a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if',
+        'in', 'into', 'is', 'it', 'no', 'not', 'of', 'on', 'or', 's', 'such',
+        't', 'that', 'the', 'their', 'then', 'there', 'these', 'they', 'this',
+        'to', 'was', 'will', 'with',
       ),
     );
   }
@@ -102,7 +71,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, array &$form_state) {
     // Convert our text input to an array.
-    $form_state['values']['stopwords'] = explode("\n", $form_state['values']['stopwords']);
+    $form_state['values']['stopwords'] = array_map('trim', explode("\n", $form_state['values']['stopwords']));
     $this->setConfiguration($form_state['values']);
   }
 
@@ -148,7 +117,7 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * Gets all the stopwords.
    *
-   * @return array
+   * @return string[]
    *   An array whose keys and values are the stopwords set for this processor.
    */
   protected function getStopWords() {

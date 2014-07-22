@@ -34,12 +34,12 @@ function hook_search_api_backend_info_alter(array &$backend_info) {
  * Alter the available datasources.
  *
  * Modules may implement this hook to alter the information that defines
- * datasources and item types. All properties that are available in
+ * datasources. All properties that are available in
  * \Drupal\search_api\Annotation\SearchApiDatasource can be altered here, with
  * the addition of the "class" and "provider" keys.
  *
  * @param array $infos
- *   The datasource info array, keyed by type identifier.
+ *   The datasource info array, keyed by datasource IDs.
  *
  * @see \Drupal\search_api\Datasource\DatasourcePluginBase
  */
@@ -87,14 +87,13 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
  * Allows you to log or alter the items that are indexed.
  *
  * Please be aware that generally preventing the indexing of certain items is
- * deprecated. This is better done with data alterations, which can easily be
+ * deprecated. This is better done with processors, which can easily be
  * configured and only added to indexes where this behaviour is wanted.
  * If your module will use this hook to reject certain items from indexing,
  * please document this clearly to avoid confusion.
  *
  * @param \Drupal\search_api\Item\ItemInterface[] $items
- *   The items that will be indexed, in the format specified by
- *   \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
+ *   The items that will be indexed.
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index on which items will be indexed.
  */
@@ -109,7 +108,7 @@ function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Ind
 }
 
 /**
- * Allows modules to react after items were indexed.
+ * React after items were indexed.
  *
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The used index.
@@ -118,6 +117,9 @@ function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Ind
  */
 function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $index, array $item_ids) {
   if ($index->isValidDatasource('entity:node')) {
+    // Note that this is just an example, and would only work if there are only
+    // nodes indexed in that index (and even then the printed IDs would probably
+    // not be as expected).
     drupal_set_message(t('Nodes indexed: @ids.', implode(', ', $item_ids)));
   }
 }
@@ -125,21 +127,22 @@ function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $
 /**
  * Alter a search query before it gets executed.
  *
- * The hook is invoked after all (enabled) processors have preprocessed the
- * query.
+ * The hook is invoked after all enabled processors have preprocessed the query.
  *
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The query that will be executed.
  */
-function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $query) {
+function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface &$query) {
   // Exclude entities with ID 0. (Assume the ID field is always indexed.)
   $types = $query->getIndex()->getDatasourceIds();
   foreach ($types as $type) {
-    list(, $type) = explode(':', $type);
+    if (strpos($type, ':')) {
+      list(, $type) = explode(':', $type);
+    }
     $definition = \Drupal::entityManager()->getDefinition($type, FALSE);
     if ($definition) {
       $keys = $definition->getKeys();
-      $query->condition($keys['id'], 0, '!=');
+      $query->condition($keys['id'], 0, '<>');
     }
   }
 }
@@ -147,183 +150,21 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $qu
 /**
  * Alter a search query's result set.
  *
- * The hook is invoked after all (enabled) processors have postprocessed the
+ * The hook is invoked after all enabled processors have postprocessed the
  * results.
  *
  * @param \Drupal\search_api\Query\ResultSetInterface $results
  *   The search results to alter.
  */
-function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterface $results) {
+function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterface &$results) {
   $results->setExtraData('example_hook_invoked', microtime(TRUE));
 }
 
 /**
- * Act on search servers when they are loaded.
- *
- * @param \Drupal\search_api\Server\ServerInterface[] $servers
- *   An array of loaded server objects.
- */
-function hook_search_api_server_load(array $servers) {
-  foreach ($servers as $server) {
-    db_insert('example_search_server_access')
-      ->fields(array(
-        'server' => $server->id(),
-        'access_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
-}
-
-/**
- * Respond to the creation of a server.
- *
- * @param \Drupal\search_api\Server\ServerInterface $server
- *   The new server.
- */
-function hook_search_api_server_insert(\Drupal\search_api\Server\ServerInterface $server) {
-  db_insert('example_search_server')
-    ->fields(array(
-      'server' => $server->id(),
-      'insert_time' => REQUEST_TIME,
-    ))
-    ->execute();
-}
-
-/**
- * Act on a search server being inserted or updated.
- *
- * This hook is invoked from $server->save() before the server is saved to the
- * database.
- *
- * @param \Drupal\search_api\Server\ServerInterface $server
- *   The search server that is being inserted or updated.
- */
-function hook_search_api_server_presave(\Drupal\search_api\Server\ServerInterface $server) {
-  // We don't want people to be able to disable servers.
-  $server->setStatus(TRUE);
-}
-
-/**
- * Respond to updates to a server.
- *
- * @param \Drupal\search_api\Server\ServerInterface $server
- *   The edited server.
- */
-function hook_search_api_server_update(\Drupal\search_api\Server\ServerInterface $server) {
-  if ($server->label() != $server->original->label()) {
-    db_insert('example_search_server_name_update')
-      ->fields(array(
-        'server' => $server->id(),
-        'update_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
-}
-
-/**
- * Respond to the deletion of a server.
- *
- * @param \Drupal\search_api\Server\ServerInterface $server
- *   The deleted server.
- */
-function hook_search_api_server_delete(\Drupal\search_api\Server\ServerInterface $server) {
-  db_insert('example_search_server_update')
-    ->fields(array(
-      'server' => $server->id(),
-      'update_time' => REQUEST_TIME,
-    ))
-    ->execute();
-  db_delete('example_search_server')
-    ->condition('server', $server->id())
-    ->execute();
-}
-
-/**
- * Act on search indexes when they are loaded.
- *
- * @param \Drupal\search_api\Index\IndexInterface[] $indexes
- *   An array of loaded index objects.
- */
-function hook_search_api_index_load(array $indexes) {
-  foreach ($indexes as $index) {
-    db_insert('example_search_index_access')
-      ->fields(array(
-        'index' => $index->id(),
-        'access_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
-}
-
-/**
- * Respond to the creation of a index.
+ * React when a search index was scheduled for reindexing
  *
  * @param \Drupal\search_api\Index\IndexInterface $index
- *   The new index.
- */
-function hook_search_api_index_insert(\Drupal\search_api\Index\IndexInterface $index) {
-  db_insert('example_search_index')
-    ->fields(array(
-      'index' => $index->id(),
-      'insert_time' => REQUEST_TIME,
-    ))
-    ->execute();
-}
-
-/**
- * Act on a search index being inserted or updated.
- *
- * This hook is invoked from $index->save() before the index is saved to the
- * database.
- *
- * @param \Drupal\search_api\Index\IndexInterface $index
- *   The search index that is being inserted or updated.
- */
-function hook_search_api_index_presave(\Drupal\search_api\Index\IndexInterface $index) {
-  // We don't want people to be able to disable indexes.
-  $index->setStatus(TRUE);
-}
-
-/**
- * Respond to updates to a index.
- *
- * @param \Drupal\search_api\Index\IndexInterface $index
- *   The edited index.
- */
-function hook_search_api_index_update(\Drupal\search_api\Index\IndexInterface $index) {
-  if ($index->label() != $index->original->label()) {
-    db_insert('example_search_index_name_update')
-      ->fields(array(
-        'index' => $index->id(),
-        'update_time' => REQUEST_TIME,
-      ))
-      ->execute();
-  }
-}
-
-/**
- * Respond to the deletion of a index.
- *
- * @param \Drupal\search_api\Index\IndexInterface $index
- *   The deleted index.
- */
-function hook_search_api_index_delete(\Drupal\search_api\Index\IndexInterface $index) {
-  db_insert('example_search_index_update')
-    ->fields(array(
-      'index' => $index->id(),
-      'update_time' => REQUEST_TIME,
-    ))
-    ->execute();
-  db_delete('example_search_index')
-    ->condition('index', $index->id())
-    ->execute();
-}
-
-/**
- * A search index was scheduled for reindexing
- *
- * @param \Drupal\search_api\Index\IndexInterface $index
- *   The edited index.
+ *   The index scheduled for reindexing.
  * @param $clear
  *   Boolean indicating whether the index was also cleared.
  */
@@ -345,10 +186,17 @@ function hook_search_api_index_reindex(\Drupal\search_api\Index\IndexInterface $
  * @param \Drupal\search_api\Query\QueryInterface $query
  *   The Search API Views query to be altered.
  *
+ * @deprecated Use hook_views_query_alter() instead.
+ *
  * @see hook_views_query_alter()
+ *
+ * @todo Possibly remove this, since hook_views_query_alter() works just as well
+ *   (with instanceof check and $query->getSearchApiQuery()).
  */
 function hook_search_api_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\search_api\Query\QueryInterface &$query) {
-  // @todo Add proper example.
+  if ($view->getPath() === 'search') {
+    $query->setOption('custom_do_magic', TRUE);
+  }
 }
 
 /**

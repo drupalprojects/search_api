@@ -23,7 +23,7 @@ search_api.index.*:
       mapping:
         fields:
           type: sequence
-          label: 'Configured fields'
+          label: 'Indexed fields'
           sequence:
             - type: mapping
               label: field
@@ -33,7 +33,7 @@ search_api.index.*:
                   label: "Type of field"
         additional fields:
           type: sequence
-          label: 'Configured fields'
+          label: 'Included additional fields'
         cron_limit:
           type: integer
           label: 'Cron batch size'
@@ -42,7 +42,7 @@ search_api.index.*:
           label: 'Index items immediately'
         processors:
           type: sequence
-          label: 'The processors for this index'
+          label: 'Processor settings'
           sequence:
             - type: mapping
               label: 'A processor'

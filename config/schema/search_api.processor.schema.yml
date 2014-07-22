@@ -1,3 +1,14 @@
+search_api.processor.plugin.add_url:
+  type: mapping
+  label: 'content access processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
 search_api.processor.plugin.aggregated_field:
   type: mapping
   label: 'Add aggregation processor configuration'
@@ -73,6 +84,52 @@ search_api.processor.plugin.ignorecase:
         - type: string
           label: 'Selected field'
 
+search_api.processor.plugin.ignore_character:
+  type: mapping
+  label: 'content access processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+    ignorable:
+      type: string
+      label: 'Regular expression for characters it should ignore to stem'
+    strip:
+      type: mapping
+      label: 'Configurable characters to ignore'
+      mapping:
+        character_sets:
+          type: sequence
+          label: 'Configuration of the character sets'
+          sequence:
+            - type: ignore
+              label: 'Character set'
+
+search_api.processor.plugin.language:
+  type: mapping
+  label: 'Language field processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
+search_api.processor.plugin.node_status:
+  type: mapping
+  label: 'node status processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'The selected fields'
+      sequence:
+        - type: string
+          label: 'Selected field'
+
 search_api.processor.plugin.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
@@ -95,12 +152,6 @@ search_api.processor.plugin.role_filter:
   type: mapping
   label: 'Role filter processor configuration'
   mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'The field name'
     default:
       type: boolean
       label: 'Default'
@@ -154,74 +205,6 @@ search_api.processor.plugin.tokenizer:
 search_api.processor.plugin.transliteration:
   type: mapping
   label: 'Transliteration processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-
-search_api.processor.plugin.node_status:
-  type: mapping
-  label: 'node status processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-
-search_api.processor.plugin.language:
-  type: mapping
-  label: 'Language field processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-
-search_api.processor.plugin.content_access:
-  type: mapping
-  label: 'content access processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-
-search_api.processor.plugin.ignore_character:
-  type: mapping
-  label: 'content access processor configuration'
-  mapping:
-    fields:
-      type: sequence
-      label: 'The selected fields'
-      sequence:
-        - type: string
-          label: 'Selected field'
-    ignorable:
-      type: string
-      label: 'Regular expression for characters it should ignore to stem'
-    strip:
-      type: mapping
-      label: 'Configurable characters to ignore'
-      mapping:
-        character_sets:
-          type: sequence
-          label: 'Configuration of the character sets'
-          sequence:
-            - type: ignore
-              label: 'Character set'
-
-search_api.processor.plugin.add_url:
-  type: mapping
-  label: 'content access processor configuration'
   mapping:
     fields:
       type: sequence

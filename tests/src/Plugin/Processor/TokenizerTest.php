@@ -35,35 +35,51 @@ class TokenizerTest extends UnitTestCase {
   /**
    * Tests the processFieldValue() method.
    *
+   * @param string $passedString
+   *   The field value passed to the processor's processFieldValue() method.
+   * @param string $expectedValue
+   *   The expected preprocessed value.
+   * @param array $config
+   *   (optional) Configuration to override the processor's defaults.
+   *
    * @dataProvider textDataProvider
    */
   public function testProcessFieldValue($passedString, $expectedValue, array $config = array()) {
     if ($config) {
       $this->processor->setConfiguration($config);
     }
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
+    $type = 'text';
+    $this->invokeMethod('processFieldValue', array(&$passedString, &$type));
     $this->assertEquals($expectedValue, $passedString);
+    $this->assertEquals('tokenized_text', $type);
   }
 
   /**
-   * Data provider for testValueConfiguration().
+   * Provides test data for testValueConfiguration().
+   *
+   * @return array
+   *   Arrays of parameters for testProcessFieldValue(), each containing (in
+   *   this order):
+   *   - The field value passed to the processor's processFieldValue() method.
+   *   - The expected preprocessed value.
+   *   - (optional) Configuration to override the processor's defaults.
    */
   public function textDataProvider() {
     $word_token = Utility::createTextToken('word');
     return array(
-      // Simple cases.
+      // Test some simple cases.
       array('word', array($word_token)),
       array('word word', array($word_token, $word_token)),
-      // Default splits on special characters, too.
+      // Test whether the default splits on special characters, too.
       array('words!word', array(Utility::createTextToken('words'), $word_token)),
       array('words$word', array(Utility::createTextToken('words'), $word_token)),
-      // Overriding the default works and is case-insensitive.
+      // Test whether overriding the default works and is case-insensitive.
       array('wordXwordxword', array($word_token, Utility::createTextToken('wordxword')), array('spaces' => 'X')),
       array('word3word!word', array($word_token, Utility::createTextToken('word!word')), array('spaces' => '\d')),
       array('wordXwordRword', array($word_token, $word_token, $word_token), array('spaces' => 'R-Z')),
       array('wordXwordRword', array($word_token, $word_token, $word_token), array('spaces' => 'R-TW-Z')),
       array('wordXword word', array($word_token, $word_token, $word_token), array('spaces' => 'R-Z')),
-      // Minimum word size works.
+      // Test whether minimum word size works.
       array('wordSwo', array($word_token), array('spaces' => 'R-Z')),
       array('wordSwo', array($word_token, Utility::createTextToken('wo')), array('spaces' => 'R-Z', 'minimum_word_size' => 2)),
       array('word w', array($word_token), array('minimum_word_size' => 2)),
@@ -71,7 +87,6 @@ class TokenizerTest extends UnitTestCase {
       array('word wordword', array(), array('minimum_word_size' => 10)),
     );
   }
-
 
   /**
    * Tests that the simplifyText() method handles CJK characters properly.
@@ -83,10 +98,10 @@ class TokenizerTest extends UnitTestCase {
    */
   public function testCjkSupport() {
     $this->invokeMethod('prepare');
-    // Create a string of CJK characters from various character ranges in
-    // the Unicode tables.
 
-    // Beginnings of the character ranges.
+    // Create a string of CJK characters from various character ranges in
+    // the Unicode tables. $starts contains the starts of the character ranges,
+    // $ends the ends.
     $starts = array(
       'CJK unified' => 0x4e00,
       'CJK Ext A' => 0x3400,
@@ -109,8 +124,6 @@ class TokenizerTest extends UnitTestCase {
       'Lisu' => 0xa4d0,
       'Yi' => 0xa000,
     );
-
-    // Ends of the character ranges.
     $ends = array(
       'CJK unified' => 0x9fcf,
       'CJK Ext A' => 0x4dbf,
@@ -143,10 +156,12 @@ class TokenizerTest extends UnitTestCase {
       $chars[] = self::codepointToUtf8($ends[$key]);
     }
 
-    // Merge into a string and tokenize.
+    // Merge into a single string and tokenize.
     $text = implode('', $chars);
-
     $simplified_text = $this->invokeMethod('simplifyText', array($text));
+
+    // Prepare the expected return value, which consists of all the 3-grams in
+    // the original string, separated by spaces.
     $expected = '';
     for ($i = 2; $i < count($chars); ++$i) {
       $expected .= $chars[$i - 2];
@@ -159,6 +174,7 @@ class TokenizerTest extends UnitTestCase {
     // Verify that the output matches what we expect.
     $this->assertEquals($expected, $simplified_text, 'CJK tokenizer worked on all supplied CJK characters');
 
+    // Verify that disabling the "overlap_cjk" setting works as expected.
     $this->processor->setConfiguration(array('overlap_cjk' => FALSE));
     $this->invokeMethod('prepare');
     $simplified_text = $this->invokeMethod('simplifyText', array($text));
@@ -168,7 +184,7 @@ class TokenizerTest extends UnitTestCase {
   /**
    * Verifies that strings of non-CJK characters are not tokenized.
    *
-   * This is just a sanity check - it verifies that strings of letters are
+   * This is just a sanity check – it verifies that strings of letters are
    * not tokenized.
    */
   public function testNoTokenizer() {
@@ -183,13 +199,19 @@ class TokenizerTest extends UnitTestCase {
   }
 
   /**
-   * Like PHP chr() function, but for unicode characters.
+   * Converts a Unicode code point to a UTF-8 string.
    *
    * chr() only works for ASCII characters up to character 255. This function
    * converts a number to the corresponding unicode character. Adapted from
    * functions supplied in comments on several functions on php.net.
+   *
+   * @param int $num
+   *   A Unicode code point.
+   *
+   * @return string
+   *   A UTF-8 string containing the character corresponding to that code point.
    */
-  public static function codepointToUtf8($num) {
+  protected static function codepointToUtf8($num) {
     if ($num < 128) {
       return chr($num);
     }
@@ -215,11 +237,12 @@ class TokenizerTest extends UnitTestCase {
    * This test uses a Drupal core search file that was constructed so that the
    * even lines are boundary characters, and the odd lines are valid word
    * characters. (It was generated as a sequence of all the Unicode characters,
-   * and then the boundary chararacters (punctuation, spaces, etc.) were split
+   * and then the boundary characters (punctuation, spaces, etc.) were split
    * off into their own lines).  So the even-numbered lines should simplify to
    * nothing, and the odd-numbered lines we need to split into shorter chunks
    * and verify that simplification doesn't lose any characters.
    *
+   * @see \Drupal\search\Tests\SearchSimplifyTest::testSearchSimplifyUnicode()
    */
   public function testSearchSimplifyUnicode() {
     // Set the minimum word size to 1 (to split all CJK characters).
@@ -230,15 +253,15 @@ class TokenizerTest extends UnitTestCase {
     $basestrings = explode(chr(10), $input);
     $strings = array();
     foreach ($basestrings as $key => $string) {
-      if ($key %2) {
-        // Even line - should simplify down to a space.
+      if ($key % 2) {
+        // Even line, should be removed by simplifyText().
         $simplified = $this->invokeMethod('simplifyText', array($string));
         $this->assertEquals('', $simplified, "Line $key is excluded from the index");
       }
       else {
-        // Odd line, should be word characters.
-        // Split this into 30-character chunks, so we don't run into limits
-        // of truncation in search_simplify().
+        // Odd line, should be word characters (which might be expanded, but
+        // never removed). Split this into 30-character chunks, so we don't run
+        // into limits of truncation.
         $start = 0;
         while ($start < Unicode::strlen($string)) {
           $newstr = Unicode::substr($string, $start, 30);
@@ -255,7 +278,7 @@ class TokenizerTest extends UnitTestCase {
     }
     foreach ($strings as $key => $string) {
       $simplified = $this->invokeMethod('simplifyText', array($string));
-      $this->assertTrue(Unicode::strlen($simplified) >= Unicode::strlen($string), "Nothing is removed from string $key.");
+      $this->assertGreaterThanOrEqual(Unicode::strlen($string), Unicode::strlen($simplified), "Nothing is removed from string $key.");
     }
 
     // Test the low-numbered ASCII control characters separately. They are not
@@ -264,11 +287,18 @@ class TokenizerTest extends UnitTestCase {
     for ($i = 0; $i < 32; $i++) {
       $string .= chr($i);
     }
-    $this->assertEquals('', $this->invokeMethod('simplifyText', array($string)), 'Search simplify works for ASCII control characters.');
+    $this->assertEquals('', $this->invokeMethod('simplifyText', array($string)), 'Text simplification works for ASCII control characters.');
   }
 
   /**
    * Tests whether punctuation is treated correctly.
+   *
+   * @param string $passedString
+   *   The string passed to simplifyText().
+   * @param string $expectedValue
+   *   The expected return value.
+   * @param string $message
+   *   The message to display for the assertion.
    *
    * @dataProvider searchSimplifyPunctuationProvider
    */
@@ -282,7 +312,14 @@ class TokenizerTest extends UnitTestCase {
   }
 
   /**
-   * Data provider for testSearchSimplifyPunctuation().
+   * Provides test data for testSearchSimplifyPunctuation().
+   *
+   * @return array
+   *   Arrays of parameters for testSearchSimplifyPunctuation(), each containing
+   *   (in this order):
+   *   - The string passed to simplifyText().
+   *   - The expected return value.
+   *   - The message to display for the assertion.
    */
   public function searchSimplifyPunctuationProvider() {
     $cases = array(
@@ -290,6 +327,7 @@ class TokenizerTest extends UnitTestCase {
       array('great...drupal--module', 'great drupal module', 'Multiple dot and dashes are word boundaries'),
       array('very_great-drupal.module', 'verygreatdrupalmodule', 'Single dot, dash, underscore are removed'),
       array('regular,punctuation;word', 'regular punctuation word', 'Punctuation is a word boundary'),
+      array('Äußerung français repülőtér', 'Äußerung français repülőtér', 'Umlauts and accented characters are not treated as word boundaries'),
     );
     return $cases;
   }
