@@ -132,6 +132,7 @@ class AggregatedField extends ProcessorPluginBase {
       $form['fields'][$field_id] = array(
         '#type' => 'details',
         '#title' => $new ? $this->t('New field') : $field['label'],
+        '#open' => $new,
       );
       $form['fields'][$field_id]['label'] = array(
         '#type' => 'textfield',
