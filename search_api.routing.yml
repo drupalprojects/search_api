@@ -87,13 +87,6 @@ search_api.index_delete:
   requirements:
     _entity_access: 'search_api_index.delete'
 
-search_api.index_disable:
-  path: '/admin/config/search/search-api/index/{search_api_index}/disable'
-  defaults:
-    _entity_form: 'search_api_index.disable'
-  requirements:
-    _entity_access: 'search_api_index.disable'
-
 search_api.index_enable:
   path: '/admin/config/search/search-api/index/{search_api_index}/enable'
   defaults:
@@ -102,15 +95,15 @@ search_api.index_enable:
     _entity_access: 'search_api_index.enable'
     _csrf_token: 'TRUE'
 
+search_api.index_disable:
+  path: '/admin/config/search/search-api/index/{search_api_index}/disable'
+  defaults:
+    _entity_form: 'search_api_index.disable'
+  requirements:
+    _entity_access: 'search_api_index.disable'
+
 search_api.index_fields:
   path: '/admin/config/search/search-api/index/{search_api_index}/fields'
-  defaults:
-    _entity_form: 'search_api_index.fields'
-  requirements:
-    _entity_access: 'search_api_index.fields'
-
-search_api.index_fields_datasource:
-  path: '/admin/config/search/search-api/index/{search_api_index}/fields/{datasource_id}'
   defaults:
     _entity_form: 'search_api_index.fields'
   requirements:

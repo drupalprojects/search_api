@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines the schema of the search API module.
+ * Install, update and uninstall functions for the Search API module.
  */
 
 /**
@@ -31,21 +31,19 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'changed' => array(
-        'description' => 'Either a flag or a timestamp to indicate if or when the item was changed since it was last indexed.',
+        'description' => 'A timestamp indicating when the item was last changed.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'default' => 1,
       ),
       'status' => array(
-        'description' => 'Boolean indicating whether the entity should be in the index.',
+        'description' => 'Boolean indicating whether the item needs to be reindexed.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 1,
       ),
     ),
     'indexes' => array(
-      'indexing' => array('index_id', 'changed'),
+      'indexing' => array('index_id', 'status', 'changed', 'item_id'),
     ),
     'primary key' => array('index_id', 'item_id'),
   );
@@ -59,7 +57,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'server_id' => array(
-        'description' => 'The {search_api_server}.machine_name for which this task should be executed.',
+        'description' => 'The ID of the server for which this task should be executed.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
@@ -71,7 +69,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'index_id' => array(
-        'description' => 'The {search_api_index}.machine_name to which this task pertains, if applicable for this type.',
+        'description' => 'The ID of the index to which this task pertains, if applicable for this type.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => FALSE,
@@ -85,7 +83,7 @@ function search_api_schema() {
       ),
     ),
     'indexes' => array(
-      'server' => array('server_id'),
+      'execution' => array('type', 'server_id', 'id'),
     ),
     'primary key' => array('id'),
   );

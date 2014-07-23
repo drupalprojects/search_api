@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains the Search API hook implementations.
+ * Provides a rich framework for creating searches.
  */
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -16,7 +16,7 @@ use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
 function search_api_help($route_name) {
   switch ($route_name) {
     case 'search_api.overview':
-      return t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g. an Apache Solr or MongoDB server). An index is the definition of the actual indexed content that will be searched against (e.g. A core within Solr).');
+      return t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g., an Apache Solr server, the database, …). An index is defines the indexed content (e.g., all content and all comments on "Article" posts).');
   }
 }
 
@@ -37,7 +37,7 @@ function search_api_permission() {
  *
  * This will first execute any pending server tasks. After that, items will
  * be indexed on all enabled indexes with a non-zero cron limit. Indexing will
- * run for the time set in the cron_limit config setting(defaulting to 15
+ * run for the time set in the cron_limit config setting (defaulting to 15
  * seconds), but will at least index one batch of items on each index.
  */
 function search_api_cron() {
@@ -123,6 +123,7 @@ function search_api_entity_insert(EntityInterface $entity) {
       return;
     }
 
+    // Compute the item IDs for all languages of the entity.
     $item_ids = array();
     $entity_id = $entity->id();
     foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
@@ -138,8 +139,8 @@ function search_api_entity_insert(EntityInterface $entity) {
 /**
  * Implements hook_entity_update().
  *
- * Updates the entry to the tracking table for each index that tracks this
- * entity.
+ * Updates the corresponding tracking table entries for each index that tracks
+ * this entity.
  *
  * Also takes care of new or deleted translations.
  */
@@ -151,6 +152,8 @@ function search_api_entity_update(EntityInterface $entity) {
       return;
     }
 
+    // Compare old and new languages for the entity to identify inserted,
+    // updated and deleted translations (and, therefore, search items).
     $entity_id = $entity->id();
     $combine_id = function($langcode) use ($entity_id) {
       return $entity_id . ':' . $langcode;
@@ -203,6 +206,7 @@ function search_api_entity_delete(EntityInterface $entity) {
       return;
     }
 
+    // Remove the search items for all the entity's translations.
     $item_ids = array();
     $entity_id = $entity->id();
     foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
@@ -233,27 +237,4 @@ function search_api_theme() {
       'file' => 'search_api.theme.inc',
     ),
   );
-}
-
-/**
- * Implements hook_entity_type_build().
- */
-function search_api_entity_type_build(array &$entity_types) {
-  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
-  if (isset($entity_types['node'])) {
-    $entity_types['node']->set('search_api_default_fields', array(
-      'node:title' => array(
-        'type' => 'string',
-      ),
-      'node:path' => array(
-        'type' => 'string',
-      ),
-      'node:created' => array(
-        'type' => 'date',
-      ),
-      'node:changed' => array(
-        'type' => 'date',
-      )
-    ));
-  }
 }
