@@ -9,6 +9,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Implements hook_help().
@@ -42,9 +43,7 @@ function search_api_permission() {
  */
 function search_api_cron() {
   // Execute pending server tasks.
-  /** @var \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager */
-  $server_task_manager = \Drupal::service('search_api.server_task_manager');
-  $server_task_manager->execute();
+  Utility::getServerTaskManager()->execute();
 
   // Load all enabled, not read-only indexes.
   $conditions = array(
