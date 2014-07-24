@@ -108,15 +108,11 @@ function theme_search_api_server($variables) {
   // Check if the server is enabled.
   if ($server->status()) {
     $class = 'ok';
-    $info = t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), $server->url('disable'))));
+    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $server->urlInfo('disable')->toString()));
   }
   else {
     $class = 'warning';
-    // Build the enable url.
-    $enable_url = $server->url('enable');
-    $parsed_url = UrlHelper::parse($enable_url);
-    // Build the disabled message and use the enable link.
-    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $parsed_url['path'], array('query' => $parsed_url['query']))));
+    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $server->urlInfo('enable')->toString()));
   }
   // Append the row and reset variables.
   $label = t('Status');
@@ -241,16 +237,12 @@ function theme_search_api_index($variables) {
   // Check if the index is enabled.
   if ($index->status()) {
     $class = 'ok';
-    $info = t('enabled (!disable_link)', array('!disable_link' => l(t('disable'), $index->url('disable'))));
+    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $index->urlInfo('disable')->toString()));
   }
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $class = 'warning';
-    // Build the enable url.
-    $enable_url = $index->url('enable');
-    $parsed_url = UrlHelper::parse($enable_url);
-    // Build the disabled message and use the enable link.
-    $info = t('disabled (!enabled_link)', array('!enabled_link' => l(t('enable'), $parsed_url['path'], array('query' => $parsed_url['query']))));
+    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $index->urlInfo('enable')->toString()));
   }
   else {
     $class = 'warning';
@@ -296,7 +288,7 @@ function theme_search_api_index($variables) {
   // Check if a server is available.
   if ($server) {
     $label = t('Server');
-    $info = l($server->label(), $server->url('canonical'));
+    $info = l($server->label(), $server->getSystemPath());
     $rows[] = Utility::deepCopy($row);
   }
 
