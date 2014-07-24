@@ -98,7 +98,7 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
       }
 
       // Sort alphabetically
-      uasort($plugin_derivatives, array($this, 'sortDerivatives'));
+      uasort($plugin_derivatives, array($this, 'compareDerivatives'));
 
       // Add the plugin derivatives for the given base plugin.
       $this->derivatives[$base_plugin_id] = $plugin_derivatives;
@@ -109,8 +109,8 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
   /**
    * Helper function to sort the list of content entities
    */
-  function sortDerivatives($a, $b) {
-    return strcmp($a["label"], $b["label"]);
+  public function compareDerivatives($a, $b) {
+    return strcmp($a['label'], $b['label']);
   }
 
 }

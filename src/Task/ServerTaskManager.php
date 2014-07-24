@@ -40,7 +40,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */
-  function __construct(Connection $database, EntityManagerInterface $entity_manager) {
+  public function __construct(Connection $database, EntityManagerInterface $entity_manager) {
     $this->database = $database;
     $this->entity_manager = $entity_manager;
   }

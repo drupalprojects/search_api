@@ -88,7 +88,7 @@ class SearchApiFilter extends FilterPluginBase {
   /**
    * Display the filter on the administrative summary
    */
-  function adminSummary() {
+  public function adminSummary() {
     if (!empty($this->options['exposed'])) {
       return $this->t('exposed');
     }

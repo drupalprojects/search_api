@@ -386,7 +386,7 @@ class AggregatedFieldTest extends UnitTestCase {
   /**
    * Tests whether unindexed aggregated fields are correctly skipped.
    */
-  function testUnindexedAggregatedField() {
+  public function testUnindexedAggregatedField() {
     $configuration = array(
       'fields' => array(
         'search_api_aggregation_1' => array(
