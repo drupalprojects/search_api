@@ -2,23 +2,24 @@
 
 /**
  * @file
- * Defines the theme functions for the Search API module.
+ * Defines theme functions for the Search API module.
  */
 
 use Drupal\Component\Utility\String;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Utility\Utility;
 
 /**
- * Returns HTML for a field list form.
+ * Returns HTML for a fields form table.
  *
  * @param array $variables
  *   An associative array containing:
  *   - element: A render element representing the form.
  *
  * @return string
- *   The rendered HTML for a field list.
+ *   The rendered HTML for a fields form table.
+ *
+ * @ingroup themeable
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
@@ -70,29 +71,30 @@ function theme_search_api_admin_fields_table($variables) {
  *
  * @param array $variables
  *   An associative array containing:
- *     - server:  A ServerInterface instance.
+ *   - server: The server that should be displayed.
  *
  * @return string
  *   The rendered HTML for a Search API server.
+ *
+ * @ingroup themeable
  */
 function theme_search_api_server($variables) {
-  // Get the Search API server and index links.
+  // Get the Search API server.
   /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $variables['server'];
-  // Initialize the output variable to an empty string.
+
   $output = '';
 
-  // Check if a description is available.
   if (($description = $server->getDescription())) {
-    // Sanitiaze the description and append to the output.
+    // Sanitize the description and append to the output.
     $output .= '<p class="description">' . nl2br(String::checkPlain($description)) . '</p>';
   }
 
-  // Initialize the rows variable which will hold the different parts of server
+  // Initialize the $rows variable which will hold the different parts of server
   // information.
   $rows = array();
   // Create a row template with references so we don't have to deal with the
-  // complicated structure for each inidividual row.
+  // complicated structure for each individual row.
   $row = array(
     'data' => array(
       array('header' => TRUE),
@@ -119,19 +121,14 @@ function theme_search_api_server($variables) {
   $rows[] = Utility::deepCopy($row);
   $class = '';
 
-  // Check if the backend used by the server is valid.
+  // Check if the backend used by the server is valid and get its label.
   if ($server->hasValidBackend()) {
-    // Get the backend used by the server.
-    /** @var $backend \Drupal\search_api\Backend\BackendInterface */
-    $backend = $server->getBackend();
-    // Get the backend plugin definition.
-    $backend_plugin_definition = $backend->getPluginDefinition();
-    // Use the label defined in the plugin definition.
+    $backend_plugin_definition = $server->getBackend()->getPluginDefinition();
     $info = String::checkPlain($backend_plugin_definition['label']);
   }
   else {
     $class = 'error';
-    $info = t('Invalid or missing backend plugin');
+    $info = t('Invalid or missing backend plugin: %backend_id', array('%backend_id' => $server->getBackendId()));
   }
   // Append the row and reset variables.
   $label = t('Backend class');
@@ -144,35 +141,30 @@ function theme_search_api_server($variables) {
     '#attributes' => array('class' => array('inline')),
     '#links' => array(),
   );
-  // Iterate through the attached indexes.
+  // Add links for all indexes attached to this server.
   foreach ($server->getIndexes() as $index) {
-    // Build and append the link to the index.
     $indexes['#links'][] = array(
       'title' => $index->label(),
       'href' => $index->getSystemPath('canonical'),
     );
   }
-
   // Check if the indexes variable contains links.
-  if (!empty($indexes['#links'])) {
+  if ($indexes['#links']) {
     $label = t('Search indexes');
     $info = render($indexes);
     $rows[] = Utility::deepCopy($row);
   }
 
-  // Check if the server has extra information available.
-  if (($extra = $server->viewSettings())) {
-    // Iterate through the extra information.
-    foreach ($extra as $information) {
-      // Convert the extra information and append the information to the row.
-      $label = $information['label'];
-      $info = $information['info'];
-      $class = (empty($information['status']) ? '' : $information['status']);
-      $rows[] = Utility::deepCopy($row);
-    }
+  // Add backend-specific additional information.
+  foreach ($server->viewSettings() as $information) {
+    // Convert the extra information and append the information to the row.
+    $label = $information['label'];
+    $info = $information['info'];
+    $class = (empty($information['status']) ? '' : $information['status']);
+    $rows[] = Utility::deepCopy($row);
   }
 
-  // Build the server info table theme variables.
+  // Append the server info table to the output.
   $server_info_table = array(
     '#theme' => 'table',
     '#rows' => $rows,
@@ -182,7 +174,6 @@ function theme_search_api_server($variables) {
       ),
     ),
   );
-  // Render the server info table and append to the output.
   $output .= drupal_render($server_info_table);
 
   return $output;
@@ -193,35 +184,34 @@ function theme_search_api_server($variables) {
  *
  * @param array $variables
  *   An associative array containing:
- *     - index: An IndexInterface instance.
+ *     - index: The search index to display.
  *
  * @return string
  *   The rendered HTML for a Search API index.
+ *
+ * @ingroup themeable
  */
 // @todo This executes a search in the theme layer, amongst other thing.
 //   Definitely not cool.
 function theme_search_api_index($variables) {
-  // Get the Search API index
+  // Get the index.
   /** @var $index \Drupal\search_api\Index\IndexInterface */
   $index = $variables['index'];
-  /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $index->hasValidServer() ? $index->getServer() : NULL;
-  /** @var $tracker \Drupal\search_api\Tracker\TrackerInterface */
   $tracker = $index->hasValidTracker() ? $index->getTracker() : NULL;
 
-  // Initialize the output variable to an empty string.
   $output = '';
-  // Check if a description is available.
+
   if (($description = $index->getDescription())) {
-    // Sanitiaze the description and append to the output.
+    // Sanitize the description and append to the output.
     $output .= '<p class="description">' . nl2br(String::checkPlain($description)) . '</p>';
   }
 
-  // Initialize the rows variable which will hold the different parts of server
+  // Initialize the $rows variable which will hold the different parts of server
   // information.
   $rows = array();
   // Create a row template with references so we don't have to deal with the
-  // complicated structure for each inidividual row.
+  // complicated structure for each individual row.
   $row = array(
     'data' => array(
       array('header' => TRUE),
@@ -254,9 +244,8 @@ function theme_search_api_index($variables) {
   $class = '';
 
   foreach ($index->getDatasourceIds() as $datasource_id) {
-    // Check if a datasource is available.
+    // Check if the datasource is valid.
     if ($index->isValidDatasource($datasource_id)) {
-      // Use the label defined in the plugin definition.
       $info = $index->getDatasource($datasource_id)->getPluginDefinition()['label'];
     }
     else {
@@ -264,21 +253,18 @@ function theme_search_api_index($variables) {
       $info = t('Invalid or missing datasource plugin: %datasource_id', array('%datasource_id' => $datasource_id));
     }
     // Append the row and reset variables.
-    $label = t('Item type');
+    $label = t('Data sources');
     $rows[] = Utility::deepCopy($row);
     $class = '';
   }
 
-  // Check if a tracker is available.
+  // Check if the tracker is valid.
   if ($tracker) {
-    // Get the tracker plugin definition.
-    $tracker_plugin_definition = $tracker->getPluginDefinition();
-    // Use the label defined in the plugin definition.
-    $info = $tracker_plugin_definition['label'];
+    $info = $tracker->getPluginDefinition()['label'];
   }
   else {
     $class = 'error';
-    $info = t('Invalid or missing tracker plugin');
+    $info = t('Invalid or missing tracker plugin: %tracker_id', array('%tracker_id' => $index->getTrackerId()));
   }
   // Append the row and reset variables.
   $label = t('Tracker');
@@ -290,6 +276,13 @@ function theme_search_api_index($variables) {
     $label = t('Server');
     $info = l($server->label(), $server->getSystemPath());
     $rows[] = Utility::deepCopy($row);
+  }
+  elseif ($index->getServerId()) {
+    $class = 'error';
+    $label = t('Server');
+    $info = t('Unknown server set for index: %server_id', array('%server_id' => $index->getServerId()));
+    $rows[] = Utility::deepCopy($row);
+    $class = '';
   }
 
   // Check if the index is enabled.
@@ -312,13 +305,12 @@ function theme_search_api_index($variables) {
       $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
       $rows[] = Utility::deepCopy($row);
     }
-    // Get the configured options, merge in default options to prevent notice
-    // when an index is missing the required options.
-    $options = $index->getOptions() + array('cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
-    // Check if the cron limit is higher then zero.
-    if ($options['cron_limit'] > 0) {
+
+    $cron_limit = $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
+    // Check if the cron limit is higher than zero.
+    if ($cron_limit > 0) {
       $class = 'ok';
-      $info = \Drupal::translation()->formatPlural($options['cron_limit'], 'During cron runs, 1 item will be indexed per batch.', 'During cron runs, @count items will be indexed per batch.');
+      $info = \Drupal::translation()->formatPlural($cron_limit, 'During cron runs, 1 item will be indexed per batch.', 'During cron runs, @count items will be indexed per batch.');
     }
     else {
       $class = 'warning';
@@ -328,27 +320,24 @@ function theme_search_api_index($variables) {
     $label = t('Cron batch size');
     $rows[] = Utility::deepCopy($row);
     $class = '';
-    // Check if a valid tracker is available.
+
+    // Add the indexing progress bar.
     if ($tracker) {
-      // Get the indexed and total item count.
       $indexed_count = $tracker->getIndexedItemsCount();
       $total_count = $tracker->getTotalItemsCount();
-      // Calculate the index progress.
       $percent = ($total_count !== 0) ? (100 * $indexed_count / $total_count) : 0;
 
-      // Build the index progress bar.
       $index_progress = array(
         '#theme' => 'progress_bar',
         '#percent' => $percent,
         '#message' => t('@indexed/@total indexed', array('@indexed' => $indexed_count, '@total' => $total_count)),
       );
-      // Add the progress bar to the output.
       $output .= '<h3>' . t('Index status') . '</h3>';
       $output .= '<div class="search-api-index-status">' . drupal_render($index_progress) . '</div>';
     }
   }
 
-  // Build the index info table theme variables.
+  // Append the index info table to the output.
   $index_info_table = array(
     '#theme' => 'table',
     '#rows' => $rows,
@@ -358,7 +347,6 @@ function theme_search_api_index($variables) {
       ),
     ),
   );
-  // Render the server info table and append to the output.
   $output .= drupal_render($index_info_table);
 
   return $output;
