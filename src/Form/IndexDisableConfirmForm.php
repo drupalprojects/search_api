@@ -26,19 +26,14 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return ''; // @fixme: What description message should be shown here?
+    return $this->t('Searches on this index will stop working. Indexed data will be deleted from the server and will need to be reindexed when the index is enabled again.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return new Url(
-      'search_api.index_view',
-      array(
-        'search_api_index' => $this->entity->id(),
-      )
-    );
+  public function getCancelUrl() {
+    return new Url('search_api.index_view', array('search_api_index' => $this->entity->id()));
   }
 
   /**

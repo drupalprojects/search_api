@@ -26,13 +26,8 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return new Url(
-      'search_api.index_view',
-      array(
-        'search_api_index' => $this->entity->id(),
-      )
-    );
+  public function getCancelUrl() {
+    return new Url('search_api.index_view', array('search_api_index' => $this->entity->id()));
   }
 
   /**

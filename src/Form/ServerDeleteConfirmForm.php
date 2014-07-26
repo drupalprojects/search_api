@@ -32,13 +32,8 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelRoute() {
-    return new Url(
-      'search_api.server_view',
-      array(
-        'search_api_server' => $this->entity->id(),
-      )
-    );
+  public function getCancelUrl() {
+    return new Url('search_api.server_view', array('search_api_server' => $this->entity->id()));
   }
 
   /**
