@@ -11,6 +11,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\field\FieldInstanceConfigInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -35,53 +36,83 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManager|null
    */
   protected $entityManager;
 
   /**
-   * The entity storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
-
-  /**
    * The typed data manager.
    *
-   * @var \Drupal\Core\TypedData\TypedDataManager
+   * @var \Drupal\Core\TypedData\TypedDataManager|null
    */
   protected $typedDataManager;
-
-  /**
-   * Create a ContentEntityDatasource object.
-   *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
-   *   The entity manager.
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(EntityManager $entity_manager, array $configuration, $plugin_id, array $plugin_definition) {
-    // Initialize the parent chain of objects.
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    // Setup object members.
-    $this->entityManager = $entity_manager;
-    $this->storage = $entity_manager->getStorage($plugin_definition['entity_type']);
-    $this->typedDataManager = \Drupal::typedDataManager();
-  }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource $datasource */
+    $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
     /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
     $entity_manager = $container->get('entity.manager');
+    $datasource->setEntityManager($entity_manager);
 
-    return new static($entity_manager, $configuration, $plugin_id, $plugin_definition);
+    /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */
+    $typed_data_manager = $container->get('typed_data_manager');
+    $datasource->setTypedDataManager($typed_data_manager);
+
+    return $datasource;
+  }
+
+  /**
+   * Retrieves the entity manager.
+   *
+   * @return \Drupal\Core\Entity\EntityManager
+   *   The entity manager.
+   */
+  public function getEntityManager() {
+    return $this->entityManager ?: \Drupal::entityManager();
+  }
+
+  /**
+   * Retrieves the entity storage.
+   *
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   The entity storage.
+   */
+  public function getEntityStorage() {
+    return $this->getEntityManager()->getStorage($this->pluginDefinition['entity_type']);
+  }
+
+  /**
+   * Sets the entity manager.
+   *
+   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   *   The new entity manager.
+   */
+  public function setEntityManager(EntityManager $entity_manager) {
+    $this->entityManager = $entity_manager;
+  }
+
+  /**
+   * Retrieves the typed data manager.
+   *
+   * @return \Drupal\Core\TypedData\TypedDataManager
+   *   The typed data manager.
+   */
+  public function getTypedDataManager() {
+    return $this->typedDataManager ?: \Drupal::typedDataManager();
+  }
+
+  /**
+   * Sets the typed data manager.
+   *
+   * @param \Drupal\Core\TypedData\TypedDataManager $typed_data_manager
+   *   The new typed data manager.
+   */
+  public function setTypedDataManager(TypedDataManager $typed_data_manager) {
+    $this->typedDataManager = $typed_data_manager;
   }
 
   /**
@@ -89,10 +120,10 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function getPropertyDefinitions() {
     $type = $this->getEntityTypeId();
-    $properties = $this->entityManager->getBaseFieldDefinitions($type);
+    $properties = $this->getEntityManager()->getBaseFieldDefinitions($type);
     if ($bundles = $this->getIndexedBundles()) {
       foreach ($bundles as $bundle) {
-        $properties += $this->entityManager->getFieldDefinitions($type, $bundle);
+        $properties += $this->getEntityManager()->getFieldDefinitions($type, $bundle);
       }
     }
     return $properties;
@@ -118,7 +149,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     }
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
-    $entities = $this->storage->loadMultiple(array_keys($entity_ids));
+    $entities = $this->getEntityStorage()->loadMultiple(array_keys($entity_ids));
     $missing = array();
     $items = array();
     foreach ($entity_ids as $entity_id => $langcodes) {
@@ -364,7 +395,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *   Entity type definition.
    */
   public function getEntityType() {
-    return $this->entityManager->getDefinition($this->getEntityTypeId());
+    return $this->getEntityManager()->getDefinition($this->getEntityTypeId());
   }
 
   /**
@@ -382,7 +413,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function isEntityBundlable() {
     // Get the entity type definition
-    $entity_type_definition = $this->entityManager->getDefinition($this->getEntityTypeId());
+    $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityTypeId());
     // Determine whether the entity type supports bundles.
     return $entity_type_definition->hasKey('bundle');
   }
@@ -394,7 +425,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    *   An associative array of bundle info, keyed by the bundle name.
    */
   public function getEntityBundles() {
-    return $this->isEntityBundlable() ? $this->entityManager->getBundleInfo($this->getEntityTypeId()) : array();
+    return $this->isEntityBundlable() ? $this->getEntityManager()->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
@@ -465,7 +496,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    * {@inheritdoc}
    */
   public function getViewModes() {
-    $view_modes = $this->entityManager->getViewModeOptions($this->getEntityTypeId());
+    $view_modes = $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
     if (empty($view_modes)) {
       $view_modes = array('default' => $this->t('Default'));
     }
@@ -479,7 +510,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     try {
       if ($item instanceof EntityInterface) {
         $langcode = $langcode ? : $item->language()->id;
-        return $this->entityManager->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+        return $this->getEntityManager()->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
       }
     }
     catch (\Exception $e) {
@@ -496,7 +527,7 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
     try {
-      $view_builder = $this->entityManager->getViewBuilder($this->getEntityTypeId());
+      $view_builder = $this->getEntityManager()->getViewBuilder($this->getEntityTypeId());
       // Langcode passed, use that for viewing.
       if (isset($langcode)) {
         if (reset($items) instanceof EntityInterface) {
@@ -630,8 +661,8 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
     }
 
     // Extract the config dependency name for direct fields.
-    foreach (array_keys($this->entityManager->getBundleInfo($entity_type_id)) as $bundle) {
-      foreach ($this->entityManager->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+    foreach (array_keys($this->getEntityManager()->getBundleInfo($entity_type_id)) as $bundle) {
+      foreach ($this->getEntityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
         if ($field_definition instanceof FieldInstanceConfigInterface) {
           if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
             $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;

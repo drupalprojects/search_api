@@ -71,11 +71,19 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   public function deleteAllItems();
 
   /**
-   * Gets the backend config of the backend from this server.
+   * Gets the backend config of this server's backend.
    *
    * @return array
    *   An array with the backend config.
    */
   public function getBackendConfig();
+
+  /**
+   * Sets the backend config of this server's backend.
+   *
+   * @param array $backend_config
+   *   The new configuration for the backend.
+   */
+  public function setBackendConfig(array $backend_config);
 
 }

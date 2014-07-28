@@ -27,11 +27,14 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    *
    * @param string $type
    *   The data type of the field.
+   * @param bool $notify
+   *   (optional) Whether to notify the index of the change, i.e., set the field
+   *   type in the index accordingly.
    *
    * @return self
    *   The invoked object.
    */
-  public function setType($type);
+  public function setType($type, $notify = FALSE);
 
   /**
    * Retrieves the value of this field.

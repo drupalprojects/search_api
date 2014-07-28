@@ -68,8 +68,8 @@ class Field implements \IteratorAggregate, FieldInterface {
       $fields = $this->index->getOption('fields', array());
       if (isset($fields[$this->fieldIdentifier])) {
         $fields[$this->fieldIdentifier]['type'] = $type;
+        $this->index->setOption('fields', $fields);
       }
-      $this->index->setOption('fields', $fields);
     }
     return $this;
   }
@@ -179,8 +179,8 @@ class Field implements \IteratorAggregate, FieldInterface {
         else {
           unset($fields[$this->fieldIdentifier]['boost']);
         }
+        $this->index->setOption('fields', $fields);
       }
-      $this->index->setOption('fields', $fields);
     }
     return $this;
   }

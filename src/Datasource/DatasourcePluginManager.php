@@ -47,6 +47,7 @@ class DatasourcePluginManager extends DefaultPluginManager {
     $options = array();
     // Iterate through the datasource plugin definitions.
     foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
+      // @todo Use proper DI here.
       /** @var \Drupal\Core\Entity\FieldableEntityStorageInterface $storage */
       $storage = \Drupal::entityManager()->getStorage($plugin_definition['entity_type']);
 

@@ -9,8 +9,10 @@ namespace Drupal\search_api_db\Plugin\SearchApi\Backend;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -20,6 +22,7 @@ use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @SearchApiBackend(
@@ -41,6 +44,20 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @var \Drupal\Core\Database\Connection
    */
   protected $database;
+
+  /**
+   * The module handler to use.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|null
+   */
+  protected $moduleHandler;
+
+  /**
+   * The config factory to use.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|null
+   */
+  protected $configFactory;
 
   /**
    * The keywords ignored during the current search query.
@@ -71,8 +88,62 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     if (isset($configuration['database'])) {
       list($key, $target) = explode(':', $configuration['database'], 2);
+      // @todo Can we somehow get the connection in a dependency-injected way?
       $this->database = Database::getConnection($target, $key);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\search_api_db\Plugin\SearchApi\Backend\SearchApiDbBackend $backend */
+    $backend = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
+    $module_handler = $container->get('module_handler');
+    $backend->setModuleHandler($module_handler);
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $container->get('config.factory');
+    $backend->setConfigFactory($config_factory);
+    return $backend;
+  }
+
+  /**
+   * Returns the module handler to use for this plugin.
+   *
+   * @return \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  public function getModuleHandler() {
+    return $this->moduleHandler ?: \Drupal::moduleHandler();
+  }
+
+  /**
+   * Sets the module handler to use for this plugin.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler to use for this plugin.
+   */
+  public function setModuleHandler(ModuleHandlerInterface $module_handler) {
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * Returns the config factory to use for this plugin.
+   *
+   * @return \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  public function getConfigFactory() {
+    return $this->configFactory ?: \Drupal::configFactory();
+  }
+
+  /**
+   * Sets the config factory to use for this plugin.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory to use for this plugin.
+   */
+  public function setConfigFactory(ConfigFactoryInterface $config_factory) {
+    $this->configFactory = $config_factory;
   }
 
   /**
@@ -138,7 +209,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       '#default_value' => $configuration['min_chars'],
     );
 
-    if (\Drupal::moduleHandler()->moduleExists('search_api_autocomplete')) {
+    if ($this->getModuleHandler()->moduleExists('search_api_autocomplete')) {
       $form['autocomplete'] = array(
         '#type' => 'fieldset',
         '#title' => $this->t('Autocomplete settings'),
@@ -1860,7 +1931,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           ->fields('t', array('item_id'));
         $total = $this->database->query("SELECT COUNT(item_id) FROM {{$table}}")->fetchField();
       }
-      $max_occurrences = \Drupal::configFactory()->get('search_api_db.settings')->get('autocomplete_max_occurrences');
+      $max_occurrences = $this->getConfigFactory()->get('search_api_db.settings')->get('autocomplete_max_occurrences');
       $max_occurrences = max(1, floor($total * $max_occurrences));
 
       if (!$total) {

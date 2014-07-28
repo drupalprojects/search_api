@@ -443,6 +443,14 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
+  public function setBackendConfig(array $backend_config) {
+    $this->backend_config = $backend_config;
+    $this->getBackend()->setConfiguration($backend_config);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function calculateDependencies() {
     parent::calculateDependencies();
 

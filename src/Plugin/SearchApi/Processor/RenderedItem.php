@@ -8,9 +8,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\TypedData\DataDefinition;
-use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Session\SearchApiUserSession;
@@ -28,34 +26,42 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * The current_user service used by this plugin.
    *
-   * @var \Drupal\Core\Session\AccountProxyInterface
+   * @var \Drupal\Core\Session\AccountProxyInterface|null
    */
   protected $currentUser;
-
-  /**
-   * Constructs a new "Rendered item" processor.
-   *
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-   *   An object storing information about the current account.
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(AccountProxyInterface $current_user, array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->currentUser = $current_user;
-  }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\search_api\Plugin\SearchApi\Processor\RenderedItem $plugin */
+    $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
     /** @var \Drupal\Core\Session\AccountProxyInterface $current_user */
     $current_user = $container->get('current_user');
-    return new static($current_user, $configuration, $plugin_id, $plugin_definition);
+    $plugin->setCurrentUser($current_user);
+
+    return $plugin;
+  }
+
+  /**
+   * Retrieves the current user.
+   *
+   * @return \Drupal\Core\Session\AccountProxyInterface
+   *   The current user.
+   */
+  public function getCurrentUser() {
+    return $this->currentUser ?: \Drupal::currentUser();
+  }
+
+  /**
+   * Sets the current user.
+   *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   */
+  public function setCurrentUser(AccountProxyInterface $current_user) {
+    $this->currentUser = $current_user;
   }
 
   /**
