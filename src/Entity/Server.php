@@ -284,7 +284,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $server_task_manager = Utility::getServerTaskManager();
     try {
       if ($server_task_manager->execute($this)) {
-        return $this->getBackend()->updateIndex($index);
+        $this->getBackend()->updateIndex($index);
+        return;
       }
     }
     catch (SearchApiException $e) {
@@ -295,7 +296,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
     }
     $server_task_manager->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
-    return FALSE;
   }
 
   /**

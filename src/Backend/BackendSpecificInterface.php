@@ -87,9 +87,6 @@ interface BackendSpecificInterface {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The updated index.
    *
-   * @return bool
-   *   TRUE, if the server triggered a reindex.
-   *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while reacting to the change.
    */

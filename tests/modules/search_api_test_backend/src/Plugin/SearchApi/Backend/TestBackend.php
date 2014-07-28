@@ -89,7 +89,6 @@ class TestBackend extends BackendPluginBase {
   public function updateIndex(IndexInterface $index) {
     $this->checkError(__FUNCTION__);
     $index->reindex();
-    return TRUE;
   }
 
   /**
