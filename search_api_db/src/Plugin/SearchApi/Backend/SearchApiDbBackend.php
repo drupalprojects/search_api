@@ -13,14 +13,16 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Render\Element;
+use Drupal\search_api\Backend\BackendPluginBase;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -28,7 +30,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @SearchApiBackend(
  *   id = "search_api_db",
  *   label = @Translation("Database"),
- *   description = @Translation("Index items using multiple database tables, for simple searches.")
+ *   description = @Translation("Index items in the database, if no dedicated search software is available. Supports several advanced features, but should not be used for large sites.")
  * )
  */
 class SearchApiDbBackend extends BackendPluginBase {
@@ -60,6 +62,13 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected $configFactory;
 
   /**
+   * The logger to use for logging messages.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
+   */
+  protected $logger;
+
+  /**
    * The keywords ignored during the current search query.
    *
    * @var array
@@ -74,12 +83,12 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected $warnings = array();
 
   /**
-   * Constructs a new SearchApiDbBackend object.
+   * Constructs a new database search backend.
    *
    * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
+   *   A configuration array containing settings for this backend.
    * @param string $plugin_id
-   *   The plugin ID for the plugin instance.
+   *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    */
@@ -99,12 +108,19 @@ class SearchApiDbBackend extends BackendPluginBase {
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var \Drupal\search_api_db\Plugin\SearchApi\Backend\SearchApiDbBackend $backend */
     $backend = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
     $module_handler = $container->get('module_handler');
     $backend->setModuleHandler($module_handler);
+
     /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
     $config_factory = $container->get('config.factory');
     $backend->setConfigFactory($config_factory);
+
+    /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
+    $logger = $container->get('logger.factory')->get('search_api_db');
+    $backend->setLogger($logger);
+
     return $backend;
   }
 
@@ -114,7 +130,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
    */
   public function getModuleHandler() {
-    return $this->moduleHandler ?: \Drupal::moduleHandler();
+    return $this->moduleHandler ? : \Drupal::moduleHandler();
   }
 
   /**
@@ -133,7 +149,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @return \Drupal\Core\Config\ConfigFactoryInterface
    */
   public function getConfigFactory() {
-    return $this->configFactory ?: \Drupal::configFactory();
+    return $this->configFactory ? : \Drupal::configFactory();
   }
 
   /**
@@ -147,15 +163,51 @@ class SearchApiDbBackend extends BackendPluginBase {
   }
 
   /**
+   * Retrieves the logger to use.
+   *
+   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   *   The logger to use.
+   */
+  public function getLogger() {
+    return $this->logger ?: \Drupal::service('logger.factory')->get('search_api_db');
+  }
+
+  /**
+   * Sets the logger to use.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger to use.
+   */
+  public function setLogger(LoggerChannelInterface $logger) {
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return array(
+      'database' => NULL,
+      'min_chars' => 1,
+      'autocomplete' => array(
+        'suggest_suffix' => TRUE,
+        'suggest_words' => TRUE,
+      ),
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, array &$form_state) {
     // Discern between creation and editing of a server, since we don't allow
     // the database to be changed later on.
-    if (empty($this->configuration)) {
+    if (!$this->configuration['database']) {
+      $options = array();
+      $key = $target = '';
       foreach (Database::getAllConnectionInfo() as $key => $targets) {
         foreach ($targets as $target => $info) {
-          $options[$key]["$key:$target"] = "$key > $target";
+          $options[$key]["$key:$target"] = "$key » $target";
         }
       }
       if (count($options) > 1 || count(reset($options)) > 1) {
@@ -180,7 +232,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       $form = array(
         'database' => array(
           '#type' => 'value',
-          '#title' => $this->t('Database'), // Slight hack for the "View server" page.
+          '#title' => $this->t('Database'),
           '#value' => $this->configuration['database'],
         ),
         'database_text' => array(
@@ -191,47 +243,77 @@ class SearchApiDbBackend extends BackendPluginBase {
       );
     }
 
-    // Set default settings.
-    $configuration = $this->configuration + array(
-      'min_chars' => 1,
-      'autocomplete' => array(),
-    );
-    $configuration['autocomplete'] += array(
-      'suggest_suffix' => TRUE,
-      'suggest_words' => TRUE,
-    );
-
     $form['min_chars'] = array(
       '#type' => 'select',
       '#title' => $this->t('Minimum word length'),
       '#description' => $this->t('The minimum number of characters a word must consist of to be indexed.'),
       '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
-      '#default_value' => $configuration['min_chars'],
+      '#default_value' => $this->configuration['min_chars'],
     );
 
     if ($this->getModuleHandler()->moduleExists('search_api_autocomplete')) {
       $form['autocomplete'] = array(
-        '#type' => 'fieldset',
+        '#type' => 'details',
         '#title' => $this->t('Autocomplete settings'),
         '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
       );
       $form['autocomplete']['suggest_suffix'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest word endings'),
         '#description' => $this->t('Suggest endings for the currently entered word.'),
-        '#default_value' => $configuration['autocomplete']['suggest_suffix'],
+        '#default_value' => $this->configuration['autocomplete']['suggest_suffix'],
       );
       $form['autocomplete']['suggest_words'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest additional words'),
         '#description' => $this->t('Suggest additional words the user might want to search for.'),
-        '#default_value' => $configuration['autocomplete']['suggest_words'],
+        '#default_value' => $this->configuration['autocomplete']['suggest_words'],
       );
     }
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtraInformation() {
+    $info = array();
+
+    $info[] = array(
+      'label' => $this->t('Database'),
+      'info' => String::checkPlain(str_replace(':', ' > ', $this->configuration['database'])),
+    );
+    if ($this->configuration['min_chars'] > 1) {
+      $info[] = array(
+        'label' => $this->t('Minimum word length'),
+        'info' => $this->configuration['min_chars'],
+      );
+    }
+    $info[] = array(
+      'label' => $this->t('Search on parts of a word'),
+      'info' => $this->configuration['partial_matches'] ? $this->t('enabled') : $this->t('disabled'),
+    );
+    if (!empty($this->configuration['autocomplete'])) {
+      $this->configuration['autocomplete'] += array(
+        'suggest_suffix' => TRUE,
+        'suggest_words' => TRUE,
+      );
+      $autocomplete_modes = array();
+      if ($this->configuration['autocomplete']['suggest_suffix']) {
+        $autocomplete_modes[] = $this->t('Suggest word endings');
+      }
+      if ($this->configuration['autocomplete']['suggest_words']) {
+        $autocomplete_modes[] = $this->t('Suggest additional words');
+      }
+      $autocomplete_modes = $autocomplete_modes ? implode('; ', $autocomplete_modes) : $this->t('none');
+      $info[] = array(
+        'label' => $this->t('Autocomplete suggestions'),
+        'info' => $autocomplete_modes,
+      );
+    }
+
+    return $info;
   }
 
   /**
@@ -250,26 +332,33 @@ class SearchApiDbBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function postUpdate() {
-    return !empty($this->server->original) && $this->server->getBackendConfig() != $this->server->original->getBackendConfig();
+    if (empty($this->server->original)) {
+      // When in doubt, opt for the safer route and reindex.
+      return TRUE;
+    }
+    $original_config = $this->server->original->getBackendConfig();
+    $original_config += $this->defaultConfiguration();
+    return $this->configuration['min_chars'] != $original_config['min_chars'];
   }
 
   /**
    * {@inheritdoc}
    */
   public function preDelete() {
+    $schema = $this->database->schema();
     // Delete the regular field tables.
     foreach ($this->configuration['field_tables'] as $index) {
       foreach ($index as $field) {
-        if ($this->database->schema()->tableExists($field['table'])) {
-          $this->database->schema()->dropTable($field['table']);
+        if ($schema->tableExists($field['table'])) {
+          $schema->dropTable($field['table']);
         }
       }
     }
 
     // Delete the denormalized field tables.
     foreach ($this->configuration['index_tables'] as $table) {
-      if ($this->database->schema()->tableExists($table)) {
-        $this->database->schema()->dropTable($table);
+      if ($schema->tableExists($table)) {
+        $schema->dropTable($table);
       }
     }
   }
@@ -302,8 +391,8 @@ class SearchApiDbBackend extends BackendPluginBase {
       $this->configuration['field_tables'] += array($index->id() => array());
       $this->configuration['index_tables'] += array($index->id() => $index_table);
     }
-    // The database operations might throw PDO or other exceptions, so we catch
-    // them all and re-wrap them appropriately.
+      // The database operations might throw PDO or other exceptions, so we catch
+      // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -337,7 +426,8 @@ class SearchApiDbBackend extends BackendPluginBase {
    * bytes long.
    *
    * @param string $prefix
-   *   Prefix to start the table name.
+   *   Prefix for the table name. Must only consist of characters valid for SQL
+   *   identifiers.
    * @param string $name
    *   Name to base the table name on.
    *
@@ -348,8 +438,8 @@ class SearchApiDbBackend extends BackendPluginBase {
     // A DB prefix might further reduce the maximum length of the table name.
     $maxbytes = 62;
     if ($db_prefix = $this->database->tablePrefix()) {
-      // Use strlen instead of drupal_strlen since we want to measure bytes
-      // instead of characters.
+      // Use strlen() instead of Unicode::strlen() since we want to measure
+      // bytes, not characters.
       $maxbytes -= strlen($db_prefix);
     }
 
@@ -372,9 +462,9 @@ class SearchApiDbBackend extends BackendPluginBase {
    * most 62 bytes long.
    *
    * @param string $table
-   *   Name of the table.
+   *   The name of the table.
    * @param string $column
-   *   If adding a column to $name, the name to base the column name on.
+   *   The name to base the column name on.
    *
    * @return string
    *   A column name that isn't in use in the specified table yet.
@@ -408,6 +498,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   - column: (optional) The column to use in that table. Defaults to
    *     "value".
    */
+  // @todo Write a test to ensure a field named "value" doesn't break this.
   protected function createFieldTable(FieldInterface $field = NULL, $db) {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
@@ -431,7 +522,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           $this->database->query("ALTER TABLE {{$db['table']}} CONVERT TO CHARACTER SET 'utf8' COLLATE 'utf8_bin'");
           break;
 
-          // @todo Add fixes for other DBMSs.
+        // @todo Add fixes for other DBMSs.
         case 'oracle':
         case 'pgsql':
         case 'sqlite':
@@ -467,8 +558,8 @@ class SearchApiDbBackend extends BackendPluginBase {
       if ($db['column'] === 'value') {
         $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
       }
-      // This is a denormalized table with many columns, where we can't
-      // predict the best covering index.
+      // This is a denormalized table with many columns, where we can't predict
+      // the best covering index.
       else {
         $this->database->schema()->addPrimaryKey($db['table'], array('item_id'));
       }
@@ -480,12 +571,12 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * @param string $type
    *   An indexed field's search type. One of the keys from
-   *   search_api_default_field_types().
+   *   \Drupal\search_api\Utility\Utility::getDefaultDataTypes().
    *
    * @return array
    *   Column configurations to use for the field's database column.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\Exception\SearchApiException
    *   If $type is unknown.
    */
   protected function sqlType($type) {
@@ -513,13 +604,13 @@ class SearchApiDbBackend extends BackendPluginBase {
    * Updates the storage tables when the field configuration changes.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   A search index.
+   *   The search index whose fields (might) have changed.
    *
    * @return bool
    *   TRUE if the data needs to be reindexed, FALSE otherwise.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
-   *   All exceptions get re-thrown as SearchApiException.
+   *   In case any exceptions occur internally, e.g., in the database layer.
    */
   protected function fieldsUpdated(IndexInterface $index) {
     try {
@@ -676,8 +767,8 @@ class SearchApiDbBackend extends BackendPluginBase {
         $this->database->schema()->createTable($text_table, $table);
 
         // Some DBMSs will need a character encoding and collation set. Since
-        // this largely circumvents Drupal's database layer (but isn't integral
-        // enough to failing completely when it doesn't work, we wrap it in a
+        // this largely circumvents Drupal's database layer, but isn't integral
+        // enough to fail completely when it doesn't work, we wrap it in a
         // try/catch, to be on the safe side.
         try {
           switch ($this->database->databaseType()) {
@@ -707,20 +798,20 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       return $reindex;
     }
-    // The database operations might throw PDO or other exceptions, so we catch
-    // them all and re-wrap them appropriately.
+      // The database operations might throw PDO or other exceptions, so we catch
+      // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
   }
 
   /**
-   * Drops a field's table and denormalized column for storage.
+   * Drops a field's table and its column from the denormalized table.
    *
    * @param string $name
    *   The field name.
    * @param array $field
-   *   Server-internal information about the field.
+   *   Backend-internal information about the field.
    * @param string $index_table
    *   The table which stores the denormalized data for this field.
    */
@@ -736,7 +827,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       $this->database->schema()->dropTable($field['table']);
     }
 
-    /// Remove the field column from the denormalized table.
+    // Remove the field column from the denormalized table.
     $this->database->schema()->dropField($index_table, $field['column']);
   }
 
@@ -745,8 +836,10 @@ class SearchApiDbBackend extends BackendPluginBase {
    */
   public function removeIndex($index) {
     if (!is_object($index)) {
-      // If the index got deleted, create a dummy to simplify the code.
-      $index = entity_create('search_api_index', array(
+      // If the index got deleted, create a dummy to simplify the code. Since we
+      // can't know, we assume the index was read-only, just to be on the safe
+      // side.
+      $index = Index::create(array(
         'id' => $index,
         'read_only' => TRUE,
       ));
@@ -756,7 +849,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       if (!isset($this->configuration['field_tables'][$index->id()]) && !isset($this->configuration['index_tables'][$index->id()])) {
         return;
       }
-      // Don't delete the index data of read-only indexes!
+      // Don't delete the index data of read-only indexes.
       if (!$index->isReadOnly()) {
         foreach ($this->configuration['field_tables'][$index->id()] as $field) {
           if ($this->database->schema()->tableExists($field['table'])) {
@@ -771,8 +864,8 @@ class SearchApiDbBackend extends BackendPluginBase {
       unset($this->configuration['index_tables'][$index->id()]);
       $this->server->save();
     }
-    // The database operations might throw PDO or other exceptions, so we catch
-    // them all and re-wrap them appropriately.
+      // The database operations might throw PDO or other exceptions, so we catch
+      // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -793,7 +886,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       }
       catch (\Exception $e) {
         // We just log the error, hoping we can index the other items.
-        watchdog('search_api_db', String::checkPlain($e->getMessage()), array(), WATCHDOG_WARNING);
+        $this->getLogger()->warning(String::checkPlain($e->getMessage()));
       }
     }
     return $indexed;
@@ -818,6 +911,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected function indexItem(IndexInterface $index, $id, ItemInterface $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
+    $field_errors = array();
     $denormalized_table = $this->configuration['index_tables'][$index->id()];
     $txn = $this->database->startTransaction('search_api_indexing');
     $text_table = $denormalized_table . '_text';
@@ -836,9 +930,11 @@ class SearchApiDbBackend extends BackendPluginBase {
           $fields_updated = TRUE;
           $fields = $this->configuration['field_tables'][$index->id()];
         }
-        if (empty($fields[$name]['table'])) {
-          watchdog('search_api_db', "Unknown field !field: please check (and re-save) the index's fields settings.",
-              array('!field' => $name), WATCHDOG_WARNING);
+        if (empty($fields[$name]['table']) && empty($field_errors[$name])) {
+          // Log an error, but only once per field. Since a superfluous field is
+          // not too serious, we just index the rest of the item normally.
+          $field_errors[$name] = TRUE;
+          $this->getLogger()->warning("Unknown field !field: please check (and re-save) the index's fields settings.", array('!field' => $name));
           continue;
         }
         $table = $fields[$name]['table'];
@@ -873,6 +969,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
           } while (strlen($denormalized_value) < 30);
+          $denormalized_value = mb_strcut(trim($denormalized_value), 0, 30);
 
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
@@ -903,10 +1000,10 @@ class SearchApiDbBackend extends BackendPluginBase {
             $field_name = self::getTextFieldName($name);
             foreach ($words as $word) {
               $text_inserts[$text_table][] = array(
-                'item_id'    => $id,
+                'item_id' => $id,
                 'field_name' => $field_name,
-                'word'       => $word['value'],
-                'score'      => (int) round($word['score'] * $boost * self::SCORE_MULTIPLIER),
+                'word' => $word['value'],
+                'score' => (int) round($word['score'] * $boost * self::SCORE_MULTIPLIER),
               );
             }
           }
@@ -999,7 +1096,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @return mixed
    *   The converted value.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\Exception\SearchApiException
    *   If $type is unknown.
    */
   protected function convert($value, $type, $original_type, IndexInterface $index) {
@@ -1024,7 +1121,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
         // This used to fall through the tokenized case
         return $ret;
-        break;
+
       case 'tokenized_text':
         while (TRUE) {
           foreach ($value as $i => $v) {
@@ -1037,23 +1134,17 @@ class SearchApiDbBackend extends BackendPluginBase {
                 // Overlong token is due to bad tokenizing.
                 // Check for "Tokenizer" preprocessor on index.
                 if (empty($index->getOption('processors')['search_api_tokenizer']['status'])) {
-                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .
-                      'It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. ' .
-                      'Otherwise, the backend class has to use its own, fixed tokenizing.', array(), WATCHDOG_WARNING);
+                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. Otherwise, the backend class has to use its own, fixed tokenizing.');
                 }
                 else {
-                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. ' .
-                      'Please check your settings for the "Tokenizer" preprocessor to ensure that data is tokenized correctly.',
-                      array(), WATCHDOG_WARNING);
+                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. Please check your settings for the "Tokenizer" preprocessor to ensure that data is tokenized correctly.');
                 }
               }
 
               $tokens = array();
               foreach ($words as $word) {
                 if (strlen($word) > 50) {
-                  watchdog('search_api_db', 'An overlong word (more than 50 characters) was encountered while indexing: %word.<br />' .
-                      'Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.',
-                      array('%word' => $word), WATCHDOG_WARNING);
+                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.', array('%word' => $word));
                   $word = mb_strcut($word, 0, 50);
                 }
                 $tokens[] = array(
@@ -1062,6 +1153,7 @@ class SearchApiDbBackend extends BackendPluginBase {
                 );
               }
               array_splice($value, $i, 1, $tokens);
+              // Restart the loop looking through all the tokens.
               continue 2;
             }
           }
@@ -1077,9 +1169,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
         if (strlen($value) > 255) {
           $value = mb_strcut($value, 0, 255);
-          watchdog('search_api_db', 'An overlong value (more than 255 characters) was encountered while indexing: %value.<br />' .
-              'Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.',
-              array('%value' => $value), WATCHDOG_WARNING);
+          $this->getLogger()->warning('An overlong value (more than 255 characters) was encountered while indexing: %value.<br />Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.', array('%value' => $value));
         }
         return $value;
 
@@ -1120,8 +1210,8 @@ class SearchApiDbBackend extends BackendPluginBase {
         ->condition('item_id', $ids, 'IN')
         ->execute();
     }
-    // The database operations might throw PDO or other exceptions, so we catch
-    // them all and re-wrap them appropriately.
+      // The database operations might throw PDO or other exceptions, so we catch
+      // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -1200,7 +1290,7 @@ class SearchApiDbBackend extends BackendPluginBase {
           $alias = $this->getTableAlias(array('table' => $this->configuration['index_tables'][$index->id()]), $db_query);
           $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
           // PostgreSQL automatically adds a field to the SELECT list when
-          // sorting on it. Therefore, if we have aggregrations present we also
+          // sorting on it. Therefore, if we have aggregations present we also
           // have to add the field to the GROUP BY (since Drupal won't do it for
           // us). However, if no aggregations are present, a GROUP BY would lead
           // to another error. Therefore, we only add it if there is already a
@@ -1239,32 +1329,33 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The search query for which to create the database query.
-   *
    * @param array $fields
    *   The internal field information to use.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   A database query object which will return the appropriate results (except
-   *   for the range setting) for the given search query.
+   *   for the range and sorting) for the given search query.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\Exception\SearchApiException
    *   If some illegal query setting (unknown field, etc.) was encountered.
    */
   protected function createDbQuery(QueryInterface $query, array $fields) {
     $keys = &$query->getKeys();
     $keys_set = (boolean) $keys;
     $keys = $this->prepareKeys($keys);
-    // Special case: if the outermost $keys array has "#negation" set, we can't
-    // handle it like other negated subkeys. To avoid additional complexity
-    // later, we just wrap $keys so it becomes a subkey.
-    if (!empty($keys['#negation'])) {
-      $keys = array(
-        '#conjunction' => 'AND',
-        $keys,
-      );
-    }
+
     // Only filter by fulltext keys if there are any real keys present.
     if ($keys && (!is_array($keys) || count($keys) > 2 || (!isset($keys['#negation']) && count($keys) > 1))) {
+      // Special case: if the outermost $keys array has "#negation" set, we can't
+      // handle it like other negated subkeys. To avoid additional complexity
+      // later, we just wrap $keys so it becomes a subkey.
+      if (!empty($keys['#negation'])) {
+        $keys = array(
+          '#conjunction' => 'AND',
+          $keys,
+        );
+      }
+
       $fulltext_fields = $query->getFields();
       if ($fulltext_fields) {
         $_fulltext_fields = $fulltext_fields;
@@ -1282,14 +1373,10 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
 
         $db_query = $this->createKeysQuery($keys, $fulltext_fields, $fields, $query->getIndex());
-        if (is_array($keys) && !empty($keys['#negation'])) {
-          $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
-          $db_query->distinct();
-        }
       }
       else {
+        $this->getLogger()->warning('Search keys are given but no fulltext fields are defined.');
         $msg = $this->t('Search keys are given but no fulltext fields are defined.');
-        watchdog('search_api_db', $msg, array(), WATCHDOG_WARNING);
         $this->warnings[$msg] = 1;
       }
     }
@@ -1374,7 +1461,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * Used as a helper method in prepareKeys().
    *
-   * @param array|string|null $keys
+   * @param array|string $keys
    *   The keys to split.
    *
    * @return array|string|null
@@ -1413,7 +1500,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @param array $keys
    *   The keywords to parse.
    * @param array $words
-   *   (optional) A cache of all encountered words so far, used internally for
+   *   (optional) A cache of all encountered words so far. Used internally for
    *   recursive invocations.
    *
    * @return array
@@ -1619,13 +1706,13 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @return \Drupal\Core\Database\Query\Condition|null
    *   The condition to set on the query, or NULL if none is necessary.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an unknown field was used in the filter.
    */
   protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query, IndexInterface $index) {
     $cond = db_condition($filter->getConjunction());
     $empty = TRUE;
-    // Store whether a JOIN alrady occurred for a field, so we don't JOIN
+    // Store whether a JOIN already occurred for a field, so we don't JOIN
     // repeatedly for OR filters.
     $first_join = array();
     // Store the table aliases for the fields in this condition group.
@@ -1646,6 +1733,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         $field = $fields[$f[0]];
         // Fields have their own table, so we have to check for NULL values in
         // a special way (i.e., check for missing entries in that table).
+        // @todo This can probably always use the denormalized table.
         if ($f[1] === NULL) {
           $query = $this->database->select($field['table'], 't')
             ->fields('t', array('item_id'));
@@ -1697,7 +1785,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   name to which a join should be made.
    * @param \Drupal\Core\Database\Query\SelectInterface $db_query
    *   The database query used.
-   * @param bool $newjoin
+   * @param bool $new_join
    *   (optional) If TRUE, a join is done even if the table was already joined
    *   to in the query.
    * @param string $join
@@ -1707,8 +1795,8 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @return string
    *   The alias for the field's table.
    */
-  protected function getTableAlias(array $field, SelectInterface $db_query, $newjoin = FALSE, $join = 'leftJoin') {
-    if(!$newjoin) {
+  protected function getTableAlias(array $field, SelectInterface $db_query, $new_join = FALSE, $join = 'leftJoin') {
+    if (!$new_join) {
       foreach ($db_query->getTables() as $alias => $info) {
         $table = $info['table'];
         if (is_scalar($table) && $table == $field['table']) {
@@ -1799,10 +1887,10 @@ class SearchApiDbBackend extends BackendPluginBase {
         }
       }
 
-      // If 'Minimum facet count' is set to 0 in the display options for this facet,
-      // we need to retrieve all facets, even ones that aren't matched in our search
-      // result set above. Here we SELECT all DISTINCT facets, and add in those
-      // facets that weren't added above.
+      // If 'Minimum facet count' is set to 0 in the display options for this
+      // facet, we need to retrieve all facets, even ones that aren't matched in
+      // our search result set above. Here we SELECT all DISTINCT facets, and
+      // add in those facets that weren't added above.
       if ($facet['min_count'] < 1) {
         $select = $this->database->select($field['table'], 't');
         $select->addField('t', 'value', 'value');
@@ -1831,7 +1919,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   }
 
   /**
-   * Creates a temporary table from a \Drupal\Core\Database\Query\SelectInterface.
+   * Creates a temporary table from a select query.
    *
    * Will return the name of a table containing the item IDs of all results, or
    * FALSE on failure.
@@ -1847,8 +1935,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     $fields = &$db_query->getFields();
     unset($fields['score']);
     if (count($fields) != 1 || !isset($fields['item_id'])) {
-      watchdog('search_api_db', 'Error while adding facets: only "item_id" field should be used, used are: @fields.',
-          array('@fields' => implode(', ', array_keys($fields))), WATCHDOG_WARNING);
+      $this->getLogger()->warning('Error while adding facets: only "item_id" field should be used, used are: @fields.', array('@fields' => implode(', ', array_keys($fields))));
       return FALSE;
     }
     $expressions = &$db_query->getExpressions();
@@ -1884,14 +1971,14 @@ class SearchApiDbBackend extends BackendPluginBase {
 
     $suggestions = array();
     $passes = array();
+    $incomplete_like = NULL;
 
     // Decide which methods we want to use.
     if ($incomplete_key && $settings['suggest_suffix']) {
       $passes[] = 1;
       $incomplete_like = $this->database->escapeLike($incomplete_key) . '%';
     }
-    if ($settings['suggest_words']
-        && (!$incomplete_key || strlen($incomplete_key) >= $this->configuration['min_chars'])) {
+    if ($settings['suggest_words'] && (!$incomplete_key || strlen($incomplete_key) >= $this->configuration['min_chars'])) {
       $passes[] = 2;
     }
 
@@ -1941,12 +2028,14 @@ class SearchApiDbBackend extends BackendPluginBase {
         continue;
       }
 
+      /** @var \Drupal\Core\Database\Query\SelectInterface|null $word_query */
+      $word_query = NULL;
       foreach ($query->getFields() as $field) {
         if (!isset($fields[$field]) || !Utility::isTextType($fields[$field]['type'])) {
           continue;
         }
-        $field_query = $this->database->select($fields[$field]['table'], 't')
-          ->fields('t', array('word', 'item_id'))
+        $field_query = $this->database->select($fields[$field]['table'], 't');
+        $field_query->fields('t', array('word', 'item_id'))
           ->condition('item_id', $all_results, 'IN');
         if ($pass == 1) {
           $field_query->condition('word', $incomplete_like, 'LIKE')
@@ -1990,14 +2079,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *   is an associative array with information on the field.
    */
   protected function getFieldInfo(IndexInterface $index) {
-    $fields = $this->configuration['field_tables'][$index->id()];
-    foreach ($fields as $key => $field) {
-      // Legacy fields do not have column set.
-      if (!isset($field['column'])) {
-        $fields[$key]['column'] = 'value';
-      }
-    }
-    return $fields;
+    return $this->configuration['field_tables'][$index->id()];
   }
 
 }

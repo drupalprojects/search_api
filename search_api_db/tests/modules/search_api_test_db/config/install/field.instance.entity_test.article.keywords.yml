@@ -5,10 +5,10 @@ field_name: keywords
 entity_type: entity_test
 bundle: article
 label: Keywords
-description: \'\'
+description: ''
 required: false
 default_value: {  }
-default_value_function: \'\'
+default_value_function: ''
 settings: {  }
 dependencies:
   entity:
