@@ -7,12 +7,12 @@
 
 namespace Drupal\search_api\Form;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
-use Drupal\Component\Utility\String;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for the Server entity.

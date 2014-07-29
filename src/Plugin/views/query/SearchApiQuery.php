@@ -9,7 +9,6 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Utility\String;
 use Drupal\search_api\Exception;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;

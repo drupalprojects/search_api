@@ -17,7 +17,6 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;

@@ -7,8 +7,12 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
+use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pd;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pe;
@@ -16,12 +20,6 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pf;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pi;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Po;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Ps;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sk;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sm;
@@ -29,6 +27,8 @@ use Drupal\search_api\Plugin\SearchApi\Processor\Resources\So;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zl;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zp;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zs;
+use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(

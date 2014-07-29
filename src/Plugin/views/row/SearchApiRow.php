@@ -7,13 +7,10 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
-use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

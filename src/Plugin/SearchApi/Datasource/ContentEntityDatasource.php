@@ -7,19 +7,18 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\field\FieldInstanceConfigInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityManager;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
-use Drupal\Component\Utility\String;
-use Drupal\Core\Render\Element;
+use Drupal\search_api\Exception\SearchApiException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Represents a datasource which exposes the content entities.

@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\Language;
 use Drupal\search_api\Index\IndexInterface;
 

@@ -7,8 +7,8 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\simpletest\KernelTestBase;
 use Drupal\search_api\Entity\Index;
+use Drupal\simpletest\KernelTestBase;
 
 /**
  * Tests whether search indexes storage works correctly.

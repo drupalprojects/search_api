@@ -7,14 +7,14 @@
 
 namespace Drupal\search_api\Form;
 
-use Drupal\search_api\Exception\SearchApiException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Tracker\TrackerPluginManager;
-use Drupal\Component\Utility\String;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for the Index entity.

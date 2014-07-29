@@ -8,10 +8,10 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Utility\Utility;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
+use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Provides a default implementation for a search item.

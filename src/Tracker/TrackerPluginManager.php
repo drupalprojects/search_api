@@ -8,9 +8,9 @@
 namespace Drupal\search_api\Tracker;
 
 use Drupal\Component\Utility\String;
-use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
  * Search API tracker plugin manager.

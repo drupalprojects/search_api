@@ -7,11 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Tracker;
 
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Utility\Utility;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\search_api\Tracker\TrackerPluginBase;
+use Drupal\search_api\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default Search API tracker which implements a FIFO-like processing order.

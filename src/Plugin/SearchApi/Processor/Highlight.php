@@ -7,11 +7,11 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Render\Element;
-use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\Utility;
 

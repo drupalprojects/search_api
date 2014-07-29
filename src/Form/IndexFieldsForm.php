@@ -7,11 +7,11 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Utility\String;
 
 /**
  * Provides a fields form controller for the Index entity.

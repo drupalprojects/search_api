@@ -7,10 +7,10 @@
 
 namespace Drupal\search_api_test_backend\Plugin\SearchApi\Backend;
 
+use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Utility\Utility;
 
 /**

@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
-use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\Component\Utility\Unicode;
+use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
  * @SearchApiProcessor(
