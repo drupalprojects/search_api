@@ -499,32 +499,22 @@ class IndexForm extends EntityForm {
     // Store the array of datasource plugin IDs with integer keys.
     $form_state['values']['datasources'] = array_values($form_state['values']['datasources']);
 
-    // Check if the datasource plugin changed.
-    if ($entity->getDatasourceIds() !== $form_state['values']['datasources']) {
-      if (!$entity->isNew()) {
-        foreach ($form_state['values']['datasources'] as $datasource_id) {
-          // Overwrite the plugin configuration form input values with an empty
-          // array. This will force the Drupal Form API to use the default values.
-          if (!empty($form_state['input']['datasource_configs'][$datasource_id])) {
-            $form_state['input']['datasource_configs'][$datasource_id] = array();
-          }
-          // Overwrite the plugin configuration form values with an empty array.
-          // This has no effect on the Drupal Form API but is done to keep the
-          // data consistent.
-          if (!empty($form_state['values']['datasource_configs'][$datasource_id])) {
-            $form_state['values']['datasource_configs'][$datasource_id] = array();
-          }
-        }
+    // Call validateConfigurationForm() for each enabled datasource.
+    $form_state['datasourcePlugins'] = array();
+    foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
+      if ($entity->isValidDatasource($datasource_id)) {
+        $datasource = $entity->getDatasource($datasource_id);
       }
-    }
-    else {
-      foreach ($form_state['values']['datasources'] as $datasource_id) {
-        if (isset($form_state['values']['datasource_configs'][$datasource_id])) {
-          // Validate the datasource plugin configuration form.
-          $datasource_form_state['values'] = isset($form_state['values']['datasource_configs'][$datasource_id]) ? $form_state['values']['datasource_configs'][$datasource_id] : array();
-          $entity->getDatasource($datasource_id)->validateConfigurationForm($form['datasource_configs'][$datasource_id], $datasource_form_state);
-        }
+      else {
+        $config = array('index' => $entity);
+        $datasource = $this->datasourcePluginManager->createInstance($datasource_id, $config);
       }
+      $form_state['datasourcePlugins'][$datasource_id] = $datasource;
+      $datasource_form_state = array();
+      $datasource_form_state['values'] = &$form_state['values']['datasourcePluginConfigs'][$datasource_id];
+      $datasource_form = (isset($form['datasourcePluginConfigs'][$datasource_id])) ? $form['datasourcePluginConfigs'][$datasource_id] : array();
+      $datasource->validateConfigurationForm($datasource_form, $datasource_form_state);
+      unset($datasource_form_state);
     }
 
     // Get the current tracker plugin ID.
