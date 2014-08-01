@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -266,7 +267,7 @@ class IndexFiltersForm extends EntityForm {
    * Returns a form state reference for a specific processor.
    *
    * For calling a processor's validateConfigurationForm() and
-   * submitConfigurationForm(), a specially prepared form state array is
+   * submitConfigurationForm(), a specially prepared form state is
    * necessary, which only contains the processor's settings (if any) in
    * "values". "values" also needs to be a reference, so changes are correctly
    * reflected back to the original form state.
@@ -280,9 +281,9 @@ class IndexFiltersForm extends EntityForm {
    *   A sub-form state for the given processor.
    */
   protected function getProcessorFormState($processor_id, FormStateInterface $form_state) {
-    $filter_form_state['values'] = array();
+    $filter_form_state = new FormState(array('values' => array()));
     if (!empty($form_state['values']['processors'][$processor_id]['settings'])) {
-      $filter_form_state['values'] = &$form_state['values']['processors'][$processor_id]['settings'];
+      $filter_form_state['values'] = $form_state['values']['processors'][$processor_id]['settings'];
     }
     return $filter_form_state;
   }

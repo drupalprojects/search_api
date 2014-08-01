@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\Exception\SearchApiException;
@@ -502,7 +503,11 @@ class IndexForm extends EntityForm {
 
     // Call validateConfigurationForm() for each enabled datasource.
     $form_state['datasourcePlugins'] = array();
-    foreach ($form_state['values']['datasourcePluginIds'] as $datasource_id) {
+    foreach ($form_state['values']['datasources'] as $datasource_id) {
+      // Avoid notices if the datasource has no configuration form.
+      if (!isset($form_state['values']['datasource_configs'][$datasource_id])) {
+        continue;
+      }
       if ($entity->isValidDatasource($datasource_id)) {
         $datasource = $entity->getDatasource($datasource_id);
       }
@@ -511,9 +516,9 @@ class IndexForm extends EntityForm {
         $datasource = $this->datasourcePluginManager->createInstance($datasource_id, $config);
       }
       $form_state['datasourcePlugins'][$datasource_id] = $datasource;
-      $datasource_form_state = array();
-      $datasource_form_state['values'] = &$form_state['values']['datasourcePluginConfigs'][$datasource_id];
-      $datasource_form = (isset($form['datasourcePluginConfigs'][$datasource_id])) ? $form['datasourcePluginConfigs'][$datasource_id] : array();
+      $datasource_form_state = new FormState();
+      $datasource_form_state['values'] = $form_state['values']['datasource_configs'][$datasource_id];
+      $datasource_form = (isset($form['datasource_configs'][$datasource_id])) ? $form['datasource_configs'][$datasource_id] : array();
       $datasource->validateConfigurationForm($datasource_form, $datasource_form_state);
       unset($datasource_form_state);
     }
@@ -539,7 +544,7 @@ class IndexForm extends EntityForm {
     // Check if the entity has a valid tracker plugin.
     elseif ($entity->hasValidTracker()) {
       // Build the tracker plugin configuration form state.
-      $tracker_form_state = array();
+      $tracker_form_state = new FormState(array('values' => array()));
       if (!empty($form_state['values']['tracker_config'])) {
         $tracker_form_state['values'] = $form_state['values']['tracker_config'];
       }
@@ -563,9 +568,8 @@ class IndexForm extends EntityForm {
     foreach ($entity->getDatasourceIds() as $datasource_id) {
       // Build the datasource plugin configuration form state.
       if (isset($form_state['values']['datasource_configs'][$datasource_id])) {
-        $datasource_form_state = array(
-          'values' => $form_state['values']['datasource_configs'][$datasource_id],
-        );
+        $datasource_form_state = new FormState();
+        $datasource_form_state['values'] = $form_state['values']['datasource_configs'][$datasource_id];
         // Also add all additional values so that we can read them in the plugin.
         // Useful for the status
         $datasource_form_state['values']['index'] = $form_state['values'];
@@ -585,7 +589,7 @@ class IndexForm extends EntityForm {
     // Check if the entity has a valid tracker plugin.
     if ($entity->hasValidTracker()) {
       // Build the tracker plugin configuration form state.
-      $tracker_form_state = array();
+      $tracker_form_state = new FormState();
       if (!empty($form_state['values']['tracker_config'])) {
         $tracker_form_state['values'] = $form_state['values']['tracker_config'];
       }

@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
@@ -305,6 +306,7 @@ class ServerForm extends EntityForm {
     $entity = parent::submit($form, $form_state);
     // Submit the backend plugin configuration form.
     if ($entity->hasValidBackend() && isset($form_state['values']['backend_config'])) {
+      $backend_form_state = new FormState();
       $backend_form_state['values'] = &$form_state['values']['backend_config'];
       $entity->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
     }
