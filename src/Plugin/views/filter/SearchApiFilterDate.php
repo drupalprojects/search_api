@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Views filter handler base class for handling all "normal" cases.
  *
@@ -36,7 +38,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   /**
    * Add extra options if we allow the date popup widget.
    */
-  public function buildExraOptionsForm(&$form, &$form_state) {
+  public function buildExraOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildExtraOptionsForm($form, $form_state);
     if (\Drupal::moduleHandler()->moduleExists('date_popup')) {
       $widget_options = array('default' => 'Default', 'date_popup' => 'Date popup');
@@ -52,7 +54,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   /**
    * Provide a form for setting the filter value.
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     // If we are using the date popup widget, overwrite the settings of the form

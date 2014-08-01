@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
@@ -33,7 +34,7 @@ class AggregatedField extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/css/search_api.admin.css';
@@ -69,7 +70,7 @@ class AggregatedField extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildFieldsForm(array &$form, array &$form_state) {
+  public function buildFieldsForm(array &$form, FormStateInterface $form_state) {
     if (!isset($form_state['fields'])) {
       $form_state['fields'] = $this->configuration['fields'];
     }
@@ -250,21 +251,21 @@ class AggregatedField extends ProcessorPluginBase {
   /**
    * Button submit handler for this processor's form's AJAX buttons.
    */
-  public static function submitAjaxFieldButton(array $form, array &$form_state) {
+  public static function submitAjaxFieldButton(array $form, FormStateInterface $form_state) {
     $form_state['rebuild'] = TRUE;
   }
 
   /**
    * Callback handler for this processor's form's AJAX buttons.
    */
-  public static function buildAjaxAddFieldButton(array $form, array &$form_state) {
+  public static function buildAjaxAddFieldButton(array $form, FormStateInterface $form_state) {
     return $form['processors']['settings']['aggregated_field']['fields'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     unset($form_state['values']['actions']);
     if (empty($form_state['values']['fields'])) {
       return;

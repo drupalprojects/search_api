@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -150,7 +151,7 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, array &$form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
     // Check if the form is being rebuild.
     if (!empty($form_state['rebuild'])) {
       // Rebuild the entity with the form state values.
@@ -185,7 +186,7 @@ class IndexForm extends EntityForm {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    */
-  public function buildEntityForm(array &$form, array &$form_state, IndexInterface $index) {
+  public function buildEntityForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     $form['#tree'] = TRUE;
     $form['name'] = array(
       '#type' => 'textfield',
@@ -388,7 +389,7 @@ class IndexForm extends EntityForm {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    */
-  public function buildDatasourcesConfigForm(array &$form, array &$form_state, IndexInterface $index) {
+  public function buildDatasourcesConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
       if ($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state)) {
         // Modify the datasource plugin configuration container element.
@@ -412,7 +413,7 @@ class IndexForm extends EntityForm {
    * @param \Drupal\search_api\Index\IndexInterface $server
    *   An instance of IndexInterface.
    */
-  public function buildTrackerConfigForm(array &$form, array &$form_state, IndexInterface $index) {
+  public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     // Check if the index has a valid tracker configured.
     if ($index->hasValidTracker()) {
       // Get the tracker.
@@ -465,7 +466,7 @@ class IndexForm extends EntityForm {
    * @return array
    *   An associative array containing the structure of the form.
    */
-  public static function buildAjaxDatasourceConfigForm(array $form, array &$form_state) {
+  public static function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
     // Get the datasource plugin configuration form.
     return $form['datasource_configs'];
   }
@@ -481,7 +482,7 @@ class IndexForm extends EntityForm {
    * @return array
    *   An associative array containing the structure of the form.
    */
-  public static function buildAjaxTrackerConfigForm(array $form, array &$form_state) {
+  public static function buildAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
     // Get the tracker plugin configuration form.
     return $form['tracker_config'];
   }
@@ -489,7 +490,7 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validate(array $form, array &$form_state) {
+  public function validate(array $form, FormStateInterface $form_state) {
     // Perform default entity form validate.
     parent::validate($form, $form_state);
 
@@ -551,7 +552,7 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
 
@@ -605,7 +606,7 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, array &$form_state) {
+  public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
     if (empty($form_state['rebuild'])) {
       // Catch any exception that may get thrown during save operation.
@@ -638,7 +639,7 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function delete(array $form, array &$form_state) {
+  public function delete(array $form, FormStateInterface $form_state) {
     // Get the entity.
     $entity = $this->getEntity();
     // Redirect to the entity delete confirm page.

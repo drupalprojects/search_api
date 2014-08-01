@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -104,7 +105,7 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, array &$form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
     // Check if the form is being rebuild.
     if (!empty($form_state['rebuild'])) {
       // Rebuild the entity with the form state values.
@@ -141,7 +142,7 @@ class ServerForm extends EntityForm {
    * @param \Drupal\search_api\Server\ServerInterface $server
    *   An instance of ServerInterface.
    */
-  public function buildEntityForm(array &$form, array &$form_state, ServerInterface $server) {
+  public function buildEntityForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
     // Build the name element.
     $form['name'] = array(
       '#type' => 'textfield',
@@ -205,7 +206,7 @@ class ServerForm extends EntityForm {
    * @param \Drupal\search_api\Server\ServerInterface $server
    *   An instance of ServerInterface.
    */
-  public function buildBackendConfigForm(array &$form, array &$form_state, ServerInterface $server) {
+  public function buildBackendConfigForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
     // Build the backend plugin configuration container element.
     $form['backend_config'] = array(
       '#type' => 'container',
@@ -254,7 +255,7 @@ class ServerForm extends EntityForm {
    * @return array
    *   An associative array containing the structure of the form.
    */
-  public function buildAjaxBackendConfigForm(array $form, array &$form_state) {
+  public function buildAjaxBackendConfigForm(array $form, FormStateInterface $form_state) {
     // Get the backend plugin configuration form.
     return $form['backend_config'];
   }
@@ -262,7 +263,7 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validate(array $form, array &$form_state) {
+  public function validate(array $form, FormStateInterface $form_state) {
     // Perform default entity form validate.
     parent::validate($form, $form_state);
     /** @var \Drupal\search_api\Server\ServerInterface $entity */
@@ -299,7 +300,7 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     // Perform default entity form submission.
     $entity = parent::submit($form, $form_state);
     // Submit the backend plugin configuration form.
@@ -313,7 +314,7 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, array &$form_state) {
+  public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
     if (empty($form_state['rebuild'])) {
       // Catch any exception that may get thrown during save operation.
@@ -345,7 +346,7 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function delete(array $form, array &$form_state) {
+  public function delete(array $form, FormStateInterface $form_state) {
     // Get the entity.
     $entity = $this->getEntity();
     // Redirect to the entity delete confirm page.

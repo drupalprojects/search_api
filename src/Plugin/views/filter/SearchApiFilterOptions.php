@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Views filter handler for fields with a limited set of possible values.
@@ -113,7 +114,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
   /**
    * Add the "reduce" option to the exposed form.
    */
-  public function buildExposedForm(&$form, &$form_state) {
+  public function buildExposedForm(&$form, FormStateInterface $form_state) {
     parent::buildExposedForm($form, $form_state);
     $form['expose']['reduce'] = array(
       '#type' => 'checkbox',
@@ -147,7 +148,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
   /**
    * Save set checkboxes.
    */
-  public function valueSubmit($form, &$form_state) {
+  public function valueSubmit($form, FormStateInterface $form_state) {
     // Drupal's FAPI system automatically puts '0' in for any checkbox that
     // was not set, and the key to the checkbox if it is set.
     // Unfortunately, this means that if the key to that checkbox is 0,
@@ -163,7 +164,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
   /**
    * Provide a form for setting options.
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     $this->getValueOptions();
     if (!empty($this->options['expose']['reduce']) && !empty($form_state['exposed'])) {
       $options = $this->reduceValueOptions();

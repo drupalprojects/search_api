@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\views\display;
 use Drupal\block\Plugin\views\display\Block;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\views\Views;
 
@@ -48,7 +49,7 @@ class FacetsBlock extends Block {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, &$form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {

@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
 /**
@@ -57,7 +58,7 @@ class SearchApiFilter extends FilterPluginBase {
   /**
    * Provide a form for setting the filter value.
    */
-  public function ValueForm(&$form, &$form_state) {
+  public function ValueForm(&$form, FormStateInterface $form_state) {
     while (is_array($this->value) && count($this->value) < 2) {
       $this->value = $this->value ? reset($this->value) : NULL;
     }

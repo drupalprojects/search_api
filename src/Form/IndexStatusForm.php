@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Batch\IndexBatchHelper;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -27,7 +28,7 @@ class IndexStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state, IndexInterface $index = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, IndexInterface $index = NULL) {
     // Attach the search index to the form.
     $form['#index'] = $index;
 
@@ -128,7 +129,7 @@ class IndexStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, array &$form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state) {
     // Perform default form validation.
     parent::validateForm($form, $form_state);
     // Check if the user wants to perform "index now" action.
@@ -166,7 +167,7 @@ class IndexStatusForm extends FormBase {
   /**
    * {@inhertidoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     // Get the search index from the form.
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];

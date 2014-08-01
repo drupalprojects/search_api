@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\user\RoleInterface;
@@ -49,7 +50,7 @@ class RoleFilter extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $options = array_map(function (RoleInterface $role) {
@@ -79,7 +80,7 @@ class RoleFilter extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $form_state['values']['roles'] = array_values(array_filter($form_state['values']['roles']));
     $form_state['values']['default'] = (bool) $form_state['values']['default'];
 

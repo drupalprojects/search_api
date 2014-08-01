@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Tags;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Views filter handler class for entities.
@@ -85,7 +86,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     if (!is_array($this->value)) {
@@ -104,7 +105,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
   /**
    * {@inheritdoc}
    */
-  public function valueValidate($form, &$form_state) {
+  public function valueValidate($form, FormStateInterface $form_state) {
     if (!empty($form['value'])) {
       $value = &$form_state['values']['options']['value'];
       $values = $this->isMultiValued($form_state['values']['options']) ? Tags::explode($value) : array($value);
@@ -135,7 +136,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
   /**
    * {@inheritdoc}
    */
-  public function validateExposed(&$form, &$form_state) {
+  public function validateExposed(&$form, FormStateInterface $form_state) {
     if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
       return;
     }

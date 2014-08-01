@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Exception;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -193,7 +194,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * Adds an option for bypassing access checks.
    */
-  public function buildOptionsForm(&$form, &$form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
     $form['search_api_bypass_access'] = array(

@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
 use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
@@ -67,7 +68,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['ignorable'] = array(
@@ -100,7 +101,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
     $ignorable = str_replace('/', '\/', $form_state['values']['ignorable']);

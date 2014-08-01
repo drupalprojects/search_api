@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
@@ -31,7 +32,7 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
   /**
    * Extend the options form a bit.
    */
-  public function buildOptionsForm(&$form, &$form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     unset($form['break_phrase']);
     unset($form['not']);

@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Views argument handler class for handling fulltext fields.
  *
@@ -28,7 +30,7 @@ class SearchApiFulltext extends SearchApiArgument {
   /**
    * Extend the options form a bit.
    */
-  public function buildOptionsForm(&$form, &$form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
     $form['help']['#markup'] = $this->t('Note: You can change how search keys are parsed under "Advanced" > "Query settings".');

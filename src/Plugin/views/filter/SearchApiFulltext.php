@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Views filter handler class for handling fulltext fields.
@@ -19,7 +20,7 @@ class SearchApiFulltext extends SearchApiFilterText {
   /**
    * Displays the operator form, adding a description.
    */
-  public function showOperatorForm(&$form, &$form_state) {
+  public function showOperatorForm(&$form, FormStateInterface $form_state) {
     $this->operatorForm($form, $form_state);
     $form['operator']['#description'] = $this->t('This operator is only useful when using \'Search keys\'.');
   }
@@ -53,7 +54,7 @@ class SearchApiFulltext extends SearchApiFilterText {
   /**
    * Extend the options form a bit.
    */
-  public function buildOptionsForm(&$form, &$form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
     $form['mode'] = array(
@@ -101,7 +102,7 @@ class SearchApiFulltext extends SearchApiFilterText {
   /**
    * {@inheritdoc}
    */
-  public function validateExposed(&$form, &$form_state) {
+  public function validateExposed(&$form, FormStateInterface $form_state) {
     // Only validate exposed input.
     if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
       return;

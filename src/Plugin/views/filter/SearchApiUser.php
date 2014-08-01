@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Views filter handler class for handling user entities.
@@ -21,7 +22,7 @@ class SearchApiUserBase extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     // Set autocompletion.

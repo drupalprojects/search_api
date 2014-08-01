@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\Component\Utility\String;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -135,7 +136,7 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, array &$form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     // @todo - here we need to secure that the author and published fields are
     //   being indexed as we need them for the access filter.
 

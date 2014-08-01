@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_test_backend\Plugin\SearchApi\Backend;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -35,7 +36,7 @@ class TestBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form['test'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Test'),

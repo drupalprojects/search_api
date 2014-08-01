@@ -10,6 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -73,7 +74,7 @@ class IndexFiltersForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, array &$form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
     $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
     $processors_by_name = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(TRUE, 'name');
     $processors_settings = $this->entity->getOption('processors');
@@ -179,7 +180,7 @@ class IndexFiltersForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validate(array $form, array &$form_state) {
+  public function validate(array $form, FormStateInterface $form_state) {
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
     foreach ($form_state['processors'] as $name => $processor) {
       if (isset($form['#processors'][$name]) && !empty($form['#processors'][$name]['status']) && isset($form_state['values']['processors'][$name]['settings'])) {
@@ -192,7 +193,7 @@ class IndexFiltersForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     $values = $form_state['values'];
     // Due to the "#parents" settings, these are all empty arrays.
     unset($values['processors']['settings']);
@@ -238,7 +239,7 @@ class IndexFiltersForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  protected function actions(array $form, array &$form_state) {
+  protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
 
     // Remove the delete action
@@ -278,7 +279,7 @@ class IndexFiltersForm extends EntityForm {
    * @return array
    *   A sub-form state for the given processor.
    */
-  protected function getProcessorFormState($processor_id, array &$form_state) {
+  protected function getProcessorFormState($processor_id, FormStateInterface $form_state) {
     $filter_form_state['values'] = array();
     if (!empty($form_state['values']['processors'][$processor_id]['settings'])) {
       $filter_form_state['values'] = &$form_state['values']['processors'][$processor_id]['settings'];

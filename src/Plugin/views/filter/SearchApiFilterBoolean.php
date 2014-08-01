@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Views filter handler class for handling fulltext fields.
  *
@@ -24,7 +26,7 @@ class SearchApiFilterBoolean extends SearchApiFilter {
   /**
    * Provide a form for setting the filter value.
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     while (is_array($this->value)) {
       $this->value = $this->value ? array_shift($this->value) : NULL;
     }

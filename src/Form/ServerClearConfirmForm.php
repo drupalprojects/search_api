@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 
@@ -40,7 +41,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, array &$form_state) {
+  public function submit(array $form, FormStateInterface $form_state) {
     // Get the search server entity object.
     /** @var \Drupal\search_api\Server\ServerInterface $entity */
     $entity = $this->getEntity();

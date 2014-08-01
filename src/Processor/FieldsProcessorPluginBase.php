@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Processor;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
@@ -41,7 +42,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * Adds a "fields" checkboxes form element for selecting which fields the
    * processor should run on.
    */
-  public function buildConfigurationForm(array $form, array &$form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $fields = $this->index->getFields();
@@ -74,7 +75,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * Validates the "fields" form element, filtering out the unset checkboxes.
    */
-  public function validateConfigurationForm(array &$form, array &$form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
     $fields = array_filter($form_state['values']['fields']);

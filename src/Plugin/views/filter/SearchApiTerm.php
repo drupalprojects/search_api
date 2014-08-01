@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Views filter handler class for taxonomy term entities.
  *
@@ -39,7 +41,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function buildExtraOptionsForm(&$form, &$form_state) {
+  public function buildExtraOptionsForm(&$form, FormStateInterface $form_state) {
     $form['type'] = array(
       '#type' => 'radios',
       '#title' => $this->t('Selection type'),
@@ -58,7 +60,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, &$form_state) {
+  public function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     if (!empty($this->definition['vocabulary'])) {
@@ -165,7 +167,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function valueValidate($form, &$form_state) {
+  public function valueValidate($form, FormStateInterface $form_state) {
     // We only validate if they've chosen the text field style.
     if ($this->options['type'] != 'textfield') {
       return;
@@ -199,7 +201,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function validateExposed(&$form, &$form_state) {
+  public function validateExposed(&$form, FormStateInterface $form_state) {
     if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
       return;
     }
@@ -271,7 +273,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function buildExposeForm(&$form, &$form_state) {
+  public function buildExposeForm(&$form, FormStateInterface $form_state) {
     parent::buildExposeForm($form, $form_state);
     if ($this->options['type'] != 'select') {
       unset($form['expose']['reduce']);

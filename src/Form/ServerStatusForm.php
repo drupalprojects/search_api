@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -25,7 +26,7 @@ class ServerStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state, ServerInterface $server = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ServerInterface $server = NULL) {
     // Attach the server to the form.
     $form['#server'] = $server;
 
@@ -42,7 +43,7 @@ class ServerStatusForm extends FormBase {
   /**
    * {@inhertidoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     // Redirect to the server clear page.
     $form_state['redirect_route'] = array(
       'route_name' => 'search_api.server_clear',
