@@ -89,9 +89,9 @@ class Tokenizer extends FieldsProcessorPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $spaces = str_replace('/', '\/', trim($form_state['values']['spaces']));
+    $spaces = str_replace('/', '\/', trim($form_state->getValues()['spaces']));
     if ($spaces !== '' && @preg_match('/(' . $spaces . ')+/u', '') === FALSE) {
-      \Drupal::formBuilder()->setError($form['spaces'], $form_state, $form['spaces']['#title'] . ': ' . $this->t('The entered text is no valid regular expression.'));
+      $form_state->setError($form['spaces'], $form['spaces']['#title'] . ': ' . $this->t('The entered text is no valid regular expression.'));
     }
   }
 

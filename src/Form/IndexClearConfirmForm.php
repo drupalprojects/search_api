@@ -48,13 +48,8 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
       watchdog_exception('search_api', $e, '%type while trying to clear the index %name: !message in %function (line %line of %file)', array('%name' => $entity->label()));
     }
 
-    // Redirect to the index view page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.index_view',
-      'route_parameters' => array(
-        'search_api_index' => $entity->id(),
-      ),
-    );
+    // Redirect to the index's "View" page.
+    $form_state->setRedirect(new Url('search_api.index_view', array('search_api_index' => $entity->id())));
   }
 
 }

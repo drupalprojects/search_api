@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
-use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
@@ -47,9 +46,7 @@ class IndexDeleteConfirmForm extends EntityConfirmFormBase {
     // Notify the user about the index removal.
     drupal_set_message($this->t('The search index %name has been removed.', array('%name' => $this->entity->label())));
     // Redirect to the overview page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.overview',
-    );
+    $form_state->setRedirect(new Url('search_api.overview'));
   }
 
 }

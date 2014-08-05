@@ -95,27 +95,28 @@ class FacetsBlock extends Block {
   /**
    * {@inheritdoc}
    */
-  public function validateOptionsForm(&$form, &$form_state) {
+  public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {
-      form_set_error('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
+      $form_state->setErrorByName('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitOptionsForm(&$form, &$form_state) {
+  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
     parent::submitOptionsForm($form, $form_state);
 
+    $values = $form_state->getValues();
     switch ($form_state['section']) {
       case 'linked_path':
-        $this->setOption('linked_path', $form_state['values']['linked_path']);
+        $this->setOption('linked_path', $values['linked_path']);
         break;
       case 'facet_field':
-        $this->setOption('facet_field', $form_state['values']['facet_field']);
+        $this->setOption('facet_field', $values['facet_field']);
         break;
       case 'hide_block':
-        $this->setOption('hide_block', $form_state['values']['hide_block']);
+        $this->setOption('hide_block', $values['hide_block']);
         break;
     }
   }
@@ -190,6 +191,9 @@ class FacetsBlock extends Block {
   public function query(){
     parent::query();
 
+    /** @var \Drupal\search_api\Plugin\views\query\SearchApiQuery $query */
+    $query = $this->view->query;
+
     $facet_field = $this->getOption('facet_field');
     if (!$facet_field) {
       return NULL;
@@ -201,7 +205,7 @@ class FacetsBlock extends Block {
     }
 
     $limit = empty($this->view->query->pager->options['items_per_page']) ? 10 : $this->view->query->pager->options['items_per_page'];
-    $query_options = &$this->view->query->getOptions();
+    $query_options = &$query->getOptions();
     if (!$this->getOption('hide_block')) {
       // If we hide the block, we don't need this extra facet.
       $query_options['search_api_facets']['search_api_views_facets_block'] = array(
@@ -212,15 +216,18 @@ class FacetsBlock extends Block {
       );
     }
     $query_options['search_api_base_path'] = $base_path;
-    $this->view->query->range(0, 0);
+    $query->range(0, 0);
   }
 
   /**
    * {@inheritdoc}
    */
   public function render() {
+    /** @var \Drupal\search_api\Plugin\views\query\SearchApiQuery $query */
+    $query = $this->view->query;
+
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {
-      form_set_error('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
+      $query->abort($this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
       return NULL;
     }
     $facet_field = $this->getOption('facet_field');
@@ -234,7 +241,7 @@ class FacetsBlock extends Block {
       return NULL;
     }
 
-    $results = $this->view->query->getSearchApiResults();
+    $results = $query->getSearchApiResults();
 
     if (empty($results['search_api_facets']['search_api_views_facets_block'])) {
       return NULL;
@@ -258,7 +265,7 @@ class FacetsBlock extends Block {
       $filters[$term['filter']] = $filter;
     }
 
-    $index = $this->view->query->getIndex();
+    $index = $query->getIndex();
     $options['field'] = $index->options['fields'][$facet_field];
     $options['field']['key'] = $facet_field;
     $options['index id'] = $index->machine_name;
@@ -277,7 +284,7 @@ class FacetsBlock extends Block {
       // Initializes variables passed to theme hook.
       $variables = array(
         'text' => $name,
-        'path' => $this->view->query->getOption('search_api_base_path'),
+        'path' => $query->getOption('search_api_base_path'),
         'count' => $term['count'],
         'options' => array(
           'attributes' => array('class' => 'facetapi-inactive'),

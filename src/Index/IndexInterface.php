@@ -257,6 +257,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   All enabled processors for this index, as
    *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
    */
+  // @todo Remove $sortBy.
   public function getProcessors($all = FALSE, $sortBy = 'weight');
 
   /**

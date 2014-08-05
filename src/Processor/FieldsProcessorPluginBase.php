@@ -78,11 +78,11 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $fields = array_filter($form_state['values']['fields']);
+    $fields = array_filter($form_state->getValues()['fields']);
     if ($fields) {
       $fields = array_fill_keys($fields, TRUE);
     }
-    $form_state['values']['fields'] = $fields;
+    $form_state->addValue('fields', $fields);
   }
 
   /**

@@ -7,6 +7,9 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Exception\SearchApiException;
+
 /**
  * Tests the overall functionality of the Search API framework and UI.
  *
@@ -141,12 +144,17 @@ class IntegrationTest extends SearchApiWebTestBase {
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
 
-    $this->assertEqual($index->label(), $edit['name'], $this->t('Name correctly inserted.'));
-    $this->assertEqual($index->id(), $edit['machine_name'], $this->t('Index machine name correctly inserted.'));
-    $this->assertTrue($index->status(), $this->t('Index status correctly inserted.'));
-    $this->assertEqual($index->getDescription(), $edit['description'], $this->t('Index machine name correctly inserted.'));
-    $this->assertEqual($index->getServerId(), $edit['server'], $this->t('Index server machine name correctly inserted.'));
-    $this->assertEqual($index->getDatasourceIds(), $edit['datasources[]'], $this->t('Index datasource id correctly inserted.'));
+    if ($this->assertTrue($index, 'Index was correctly created.')) {
+      $this->assertEqual($index->label(), $edit['name'], $this->t('Name correctly inserted.'));
+      $this->assertEqual($index->id(), $edit['machine_name'], $this->t('Index machine name correctly inserted.'));
+      $this->assertTrue($index->status(), $this->t('Index status correctly inserted.'));
+      $this->assertEqual($index->getDescription(), $edit['description'], $this->t('Index machine name correctly inserted.'));
+      $this->assertEqual($index->getServerId(), $edit['server'], $this->t('Index server machine name correctly inserted.'));
+      $this->assertEqual($index->getDatasourceIds(), $edit['datasources[]'], $this->t('Index datasource id correctly inserted.'));
+    }
+    else {
+      throw new SearchApiException();
+    }
   }
 
   protected function addFieldsToIndex() {
@@ -581,9 +589,10 @@ class IntegrationTest extends SearchApiWebTestBase {
       'processors[ignorecase][status]' => 1,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
-    $this->assertTrue($processors['ignorecase']->getConfiguration(), 'Ignore case processor enabled');
+    $this->assertTrue(isset($processors['ignorecase']), 'Ignore case processor enabled');
   }
 
   /**
@@ -598,10 +607,16 @@ class IntegrationTest extends SearchApiWebTestBase {
       'processors[ignorecase][settings][fields][entity:node|title]' => 'entity:node|title',
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
-    $configuration = $processors['ignorecase']->getConfiguration();
-    $this->assertTrue(empty($configuration['fields']['search_api_language']), 'Language field disabled for ignore case filter.');
+    if (isset($processors['ignorecase'])) {
+      $configuration = $processors['ignorecase']->getConfiguration();
+      $this->assertTrue(empty($configuration['fields']['search_api_language']), 'Language field disabled for ignore case filter.');
+    }
+    else {
+      $this->fail('"Ignore case" processor not enabled.');
+    }
   }
 
   /**

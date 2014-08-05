@@ -77,7 +77,8 @@ class IndexFiltersForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
-    $processors_by_name = isset($form_state['processors']) ? $form_state['processors'] : $this->entity->getProcessors(TRUE, 'name');
+    $form_state->setIfNotExists('processors', $this->entity->getProcessors(TRUE, 'name'));
+    $processors_by_name = $form_state->get('processors');
     $processors_settings = $this->entity->getOption('processors');
 
     // Make sure that we have weights and status for all processors, even new
@@ -93,26 +94,19 @@ class IndexFiltersForm extends EntityForm {
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
+    $form['#prefix'] = '<p>' . $this->t('Configure processors which will pre- and post-process data at index and search time.') . '</p>';
 
-    $form_state['processors'] = $processors_by_name;
     $form['#processors'] = $processors_settings;
-    $form['processors'] = array(
-      '#type' => 'details',
-      '#title' => $this->t('Processors'),
-      '#description' => $this->t('Select processors which will pre- and post-process data at index and search time, and their order.'),
-      '#open' => TRUE,
-    );
 
     // Add the list of processors with checkboxes to enable/disable them.
-    $form['processors']['status'] = array(
-      '#type' => 'item',
+    $form['status'] = array(
+      '#type' => 'fieldset',
       '#title' => $this->t('Enabled processors'),
-      '#prefix' => '<div class="search-api-status-wrapper">',
-      '#suffix' => '</div>',
+      '#attributes' => array('class' => array('search-api-status-wrapper')),
     );
 
     foreach ($processors_by_name as $name => $processor) {
-      $form['processors']['status'][$name] = array(
+      $form['status'][$name] = array(
         '#type' => 'checkbox',
         '#title' => $processor->label(),
         '#default_value' => $processors_settings[$name]['status'],
@@ -124,7 +118,7 @@ class IndexFiltersForm extends EntityForm {
     // Add a tabledrag-enabled table to re-order the processors. Rows for
     // disabled processors are hidden with JS magic, but need to be included in
     // case the processor is enabled.
-    $form['processors']['order'] = array(
+    $form['order'] = array(
       '#type' => 'table',
       '#header' => array($this->t('Processor'), $this->t('Weight')),
       '#tabledrag' => array(
@@ -137,13 +131,13 @@ class IndexFiltersForm extends EntityForm {
     );
 
     foreach ($processors_by_weight as $name => $processor) {
-      $form['processors']['order'][$name]['#attributes']['class'][] = 'draggable';
-      $form['processors']['order'][$name]['label'] = array(
+      $form['order'][$name]['#attributes']['class'][] = 'draggable';
+      $form['order'][$name]['label'] = array(
         '#markup' => String::checkPlain($processor->label()),
       );
 
       // TableDrag: Weight column element.
-      $form['processors']['order'][$name]['weight'] = array(
+      $form['order'][$name]['weight'] = array(
         '#type' => 'weight',
         '#title' => $this->t('Weight for @title', array('@title' => $processor->label())),
         '#title_display' => 'invisible',
@@ -164,14 +158,14 @@ class IndexFiltersForm extends EntityForm {
     foreach ($processors_by_weight as $name => $processor) {
       $settings_form = $processor->buildConfigurationForm($form, $form_state);
       if (!empty($settings_form)) {
-        $form['processors']['settings'][$name] = array(
+        $form['settings'][$name] = array(
           '#type' => 'details',
           '#title' => $processor->label(),
           '#group' => 'processor_settings',
           '#weight' => $processors_settings[$name]['weight'],
           '#parents' => array('processors', $name, 'settings'),
         );
-        $form['processors']['settings'][$name] += $settings_form;
+        $form['settings'][$name] += $settings_form;
       }
     }
 
@@ -182,11 +176,12 @@ class IndexFiltersForm extends EntityForm {
    * {@inheritdoc}
    */
   public function validate(array $form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-    foreach ($form_state['processors'] as $name => $processor) {
-      if (isset($form['#processors'][$name]) && !empty($form['#processors'][$name]['status']) && isset($form_state['values']['processors'][$name]['settings'])) {
-        $processor_form_state = $this->getProcessorFormState($name, $form_state);
-        $processor->validateConfigurationForm($form['processors']['settings'][$name], $processor_form_state);
+    foreach ($form_state as $name => $processor) {
+      if (isset($form['#processors'][$name]) && !empty($form['#processors'][$name]['status']) && isset($values['processors'][$name]['settings'])) {
+        $processor_form_state = new SubFormState($form_state, array('processors', $name, 'settings'));
+        $processor->validateConfigurationForm($form['settings'][$name], $processor_form_state);
       }
     }
   }
@@ -195,11 +190,12 @@ class IndexFiltersForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    $values = $form_state['values'];
+    // @fixme "Aggregated fields" and HTML filter (validation/submission) not working.
+    $values = $form_state->getValues();
     // Due to the "#parents" settings, these are all empty arrays.
-    unset($values['processors']['settings']);
-    unset($values['processors']['status']);
-    unset($values['processors']['order']);
+    unset($values['settings']);
+    unset($values['status']);
+    unset($values['order']);
 
     $options = $this->entity->getOptions();
 
@@ -207,8 +203,8 @@ class IndexFiltersForm extends EntityForm {
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     foreach ($form_state['processors'] as $processor_id => $processor) {
       $processor_form = array();
-      if (isset($form['processors']['settings'][$processor_id])) {
-        $processor_form = &$form['processors']['settings'][$processor_id];
+      if (isset($form['settings'][$processor_id])) {
+        $processor_form = & $form['settings'][$processor_id];
       }
       $default_settings = array(
         'settings' => array(),
@@ -216,7 +212,7 @@ class IndexFiltersForm extends EntityForm {
       );
       $values['processors'][$processor_id] += $default_settings;
 
-      $processor_form_state = $this->getProcessorFormState($processor_id, $form_state);
+      $processor_form_state = new SubFormState($form_state, array('processors', $processor_id, 'settings'));
       $processor->submitConfigurationForm($processor_form, $processor_form_state);
 
       $values['processors'][$processor_id]['settings'] = $processor->getConfiguration();
@@ -247,45 +243,6 @@ class IndexFiltersForm extends EntityForm {
     unset($actions['delete']);
 
     return $actions;
-  }
-
-  /**
-   * Gets the filters from the form_state.
-   *
-   * Returns the portion of the form_state array used in validate and submit
-   * that corresponds to the filter being processed.
-   *
-   * @param string $filter_name
-   *   Name of processor/filter
-   * @param array $form_state
-   *   The form_state array passed into validate and submit methods
-   *
-   * @return array
-   *   The form state of the filter being processed.
-   */
-  /**
-   * Returns a form state reference for a specific processor.
-   *
-   * For calling a processor's validateConfigurationForm() and
-   * submitConfigurationForm(), a specially prepared form state is
-   * necessary, which only contains the processor's settings (if any) in
-   * "values". "values" also needs to be a reference, so changes are correctly
-   * reflected back to the original form state.
-   *
-   * @param $processor_id
-   *   The ID of the processor for which the form state should be created.
-   * @param array $form_state
-   *   The form state of the complete form, as a reference.
-   *
-   * @return array
-   *   A sub-form state for the given processor.
-   */
-  protected function getProcessorFormState($processor_id, FormStateInterface $form_state) {
-    $filter_form_state = new FormState(array('values' => array()));
-    if (!empty($form_state['values']['processors'][$processor_id]['settings'])) {
-      $filter_form_state['values'] = $form_state['values']['processors'][$processor_id]['settings'];
-    }
-    return $filter_form_state;
   }
 
 }

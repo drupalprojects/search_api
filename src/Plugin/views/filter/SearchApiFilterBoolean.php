@@ -26,7 +26,7 @@ class SearchApiFilterBoolean extends SearchApiFilter {
   /**
    * Provide a form for setting the filter value.
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     while (is_array($this->value)) {
       $this->value = $this->value ? array_shift($this->value) : NULL;
     }

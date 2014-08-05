@@ -58,7 +58,7 @@ class SearchApiFilter extends FilterPluginBase {
   /**
    * Provide a form for setting the filter value.
    */
-  public function ValueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     while (is_array($this->value) && count($this->value) < 2) {
       $this->value = $this->value ? reset($this->value) : NULL;
     }

@@ -51,12 +51,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
     }
 
     // Redirect to the index view page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.index_view',
-      'route_parameters' => array(
-        'search_api_index' => $entity->id(),
-      ),
-    );
+    $form_state->setRedirect(new Url('search_api.index_view', array('search_api_index' => $entity->id())));
   }
 
 }

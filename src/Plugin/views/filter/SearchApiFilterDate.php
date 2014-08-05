@@ -54,7 +54,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   /**
    * Provide a form for setting the filter value.
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     // If we are using the date popup widget, overwrite the settings of the form

@@ -37,11 +37,13 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    *   The form or form element for which any errors should be set.
    * @param array $values
    *   The entered user names to validate.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    *
    * @return array
    *   The entity IDs corresponding to all entities that could be found.
    */
-  abstract protected function validateEntityStrings(array &$form, array $values);
+  abstract protected function validateEntityStrings(array &$form, array $values, FormStateInterface $form_state);
 
   /**
    * Transforms an array of entity IDs into a comma-separated list of labels.
@@ -86,7 +88,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     if (!is_array($this->value)) {
@@ -107,12 +109,14 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    */
   public function valueValidate($form, FormStateInterface $form_state) {
     if (!empty($form['value'])) {
-      $value = &$form_state['values']['options']['value'];
-      $values = $this->isMultiValued($form_state['values']['options']) ? Tags::explode($value) : array($value);
-      $ids = $this->validateEntityStrings($form['value'], $values);
+      $form_values = $form_state->getValues();
+      $value = $form_values['options']['value'];
+      $values = $this->isMultiValued($form_values['options']) ? Tags::explode($value) : array($value);
+      $ids = $this->validateEntityStrings($form['value'], $values, $form_state);
 
       if ($ids) {
         $value = $ids;
+        $form_state->addValue('value', $value);
       }
     }
   }
@@ -142,7 +146,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
     }
 
     $identifier = $this->options['expose']['identifier'];
-    $input = $form_state['values'][$identifier];
+    $input = $form_state->getValues()[$identifier];
 
     if ($this->options['is_grouped'] && isset($this->options['group_info']['group_items'][$input])) {
       $this->operator = $this->options['group_info']['group_items'][$input]['operator'];
@@ -152,7 +156,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
     $values = $this->isMultiValued() ? Tags::explode($input) : array($input);
 
     if (!$this->options['is_grouped'] || ($this->options['is_grouped'] && ($input != 'All'))) {
-      $this->validated_exposed_input = $this->validateEntityStrings($form[$identifier], $values);
+      $this->validated_exposed_input = $this->validateEntityStrings($form[$identifier], $values, $form_state);
     }
     else {
       $this->validated_exposed_input = FALSE;

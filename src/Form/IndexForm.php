@@ -10,10 +10,9 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
-use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
-use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Tracker\TrackerPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -153,15 +152,16 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    // Check if the form is being rebuild.
-    if (!empty($form_state['rebuild'])) {
+    // Check if the form is being rebuilt.
+    if ($form_state->get('rebuild')) {
       // Rebuild the entity with the form state values.
       $this->entity = $this->buildEntity($form, $form_state);
     }
     // Build the default entity form.
     $form = parent::form($form, $form_state);
     // Get the entity and attach to the form state.
-    $entity = $form_state['entity'] = $this->getEntity();
+    $entity = $this->getEntity();
+    $form_state->set('entity', $entity);
     // Check if the entity is being created.
     if ($entity->isNew()) {
       // Change the page title to 'Add index'.
@@ -182,8 +182,8 @@ class IndexForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    */
@@ -210,13 +210,14 @@ class IndexForm extends EntityForm {
     );
 
     // Check if the datasource plugin changed.
-    if (!empty($form_state['values']['datasources'])) {
+    $values = $form_state->getValues();
+    if (!empty($values['datasources'])) {
       // Notify the user about the datasource configuration change.
       drupal_set_message($this->t('Please configure the used data type.'), 'warning');
     }
 
     // Check if the tracker plugin changed.
-    if (!empty($form_state['values']['tracker'])) {
+    if (!empty($values['tracker'])) {
       // Notify the user about the tracker configuration change.
       drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
     }
@@ -385,8 +386,8 @@ class IndexForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
    */
@@ -409,9 +410,9 @@ class IndexForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
-   * @param \Drupal\search_api\Index\IndexInterface $server
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   * @param \Drupal\search_api\Index\IndexInterface index
    *   An instance of IndexInterface.
    */
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
@@ -444,15 +445,15 @@ class IndexForm extends EntityForm {
   /**
    * Button submit handler for datasource configure button 'datasource_configure' button.
    */
-  public static function submitAjaxDatasourceConfigForm($form, &$form_state) {
-    $form_state['rebuild'] = TRUE;
+  public static function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
+    $form_state->setRebuild();
   }
 
   /**
    * Button submit handler for tracker configure button 'tracker_configure' button.
    */
-  public static function submitAjaxTrackerConfigForm($form, &$form_state) {
-    $form_state['rebuild'] = TRUE;
+  public static function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
+    $form_state->setRebuild();
   }
 
   /**
@@ -461,8 +462,8 @@ class IndexForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    *
    * @return array
    *   An associative array containing the structure of the form.
@@ -477,8 +478,8 @@ class IndexForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    *
    * @return array
    *   An associative array containing the structure of the form.
@@ -499,59 +500,45 @@ class IndexForm extends EntityForm {
     $entity = $this->getEntity();
 
     // Store the array of datasource plugin IDs with integer keys.
-    $form_state['values']['datasources'] = array_values($form_state['values']['datasources']);
+    $values = $form_state->getValues();
+    $datasource_ids = array_values($values['datasources']);
+    $form_state->addValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource.
-    $form_state['datasourcePlugins'] = array();
-    foreach ($form_state['values']['datasources'] as $datasource_id) {
-      // Avoid notices if the datasource has no configuration form.
-      if (!isset($form_state['values']['datasource_configs'][$datasource_id])) {
-        continue;
-      }
+    $datasource_plugins = array();
+    $datasource_forms = array();
+    $datasource_form_states = array();
+    foreach ($datasource_ids as $datasource_id) {
       if ($entity->isValidDatasource($datasource_id)) {
         $datasource = $entity->getDatasource($datasource_id);
       }
       else {
-        $config = array('index' => $entity);
-        $datasource = $this->datasourcePluginManager->createInstance($datasource_id, $config);
+        $datasource = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $entity));
       }
-      $form_state['datasourcePlugins'][$datasource_id] = $datasource;
-      $datasource_form_state = new FormState();
-      $datasource_form_state['values'] = $form_state['values']['datasource_configs'][$datasource_id];
-      $datasource_form = (isset($form['datasource_configs'][$datasource_id])) ? $form['datasource_configs'][$datasource_id] : array();
-      $datasource->validateConfigurationForm($datasource_form, $datasource_form_state);
-      unset($datasource_form_state);
+      $datasource_plugins[$datasource_id] = $datasource;
+      $datasource_forms[$datasource_id] = array();
+      if (!empty($form['datasource_configs'][$datasource_id])) {
+        $datasource_forms[$datasource_id] = & $form['datasource_configs'][$datasource_id];
+      }
+      $datasource_form_states[$datasource_id] = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+      $datasource->validateConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
     }
+    $form_state->set('datasource_plugins', $datasource_plugins);
+    $form_state->set('datasource_forms', $datasource_forms);
+    $form_state->set('datasource_form_states', $datasource_form_states);
 
-    // Get the current tracker plugin ID.
-    $tracker_plugin_id = $entity->hasValidTracker() ? $entity->getTracker()->getPluginId() : NULL;
-    // Check if the tracker plugin changed.
-    if ($tracker_plugin_id !== $form_state['values']['tracker']) {
-      // Check if the tracker plugin configuration form input values exist.
-      if (!empty($form_state['input']['tracker_config'])) {
-        // Overwrite the plugin configuration form input values with an empty
-        // array. This will force the Drupal Form API to use the default values.
-        $form_state['input']['tracker_config'] = array();
-      }
-      // Check if the tracker plugin configuration form values exist.
-      if (!empty($form_state['values']['tracker_config'])) {
-        // Overwrite the plugin configuration form values with an empty array.
-        // This has no effect on the Drupal Form API but is done to keep the
-        // data consistent.
-        $form_state['values']['tracker_config'] = array();
-      }
+    // Call validateConfigurationForm() for the (possibly new) tracker.
+    $tracker_id = $values['tracker'];
+    if ($entity->getTrackerId() == $tracker_id) {
+      $tracker = $entity->getTracker();
     }
-    // Check if the entity has a valid tracker plugin.
-    elseif ($entity->hasValidTracker()) {
-      // Build the tracker plugin configuration form state.
-      $tracker_form_state = new FormState(array('values' => array()));
-      if (!empty($form_state['values']['tracker_config'])) {
-        $tracker_form_state['values'] = $form_state['values']['tracker_config'];
-      }
-
-      // Validate the tracker plugin configuration form.
-      $entity->getTracker()->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
+    else {
+      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $entity));
     }
+    $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
+    $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
+    $form_state->set('tracker_plugin', $tracker);
+    $form_state->set('tracker_form_state', $tracker_form_state);
   }
 
   /**
@@ -561,48 +548,22 @@ class IndexForm extends EntityForm {
     /** @var $entity \Drupal\search_api\Index\IndexInterface */
     $entity = $this->getEntity();
 
-    // Perform default entity form submission.
-    // merge the fields stored as options from the field form so they do not get lost during save
-    $form_state['values']['options'] = array_merge($entity->getOptions(), $form_state['values']['options']);
+    // @todo Redirect to a confirm form if changing server, since that isn't
+    //   such a light operation (equaling a "clear", basically).
 
-    foreach ($entity->getDatasourceIds() as $datasource_id) {
-      // Build the datasource plugin configuration form state.
-      if (isset($form_state['values']['datasource_configs'][$datasource_id])) {
-        $datasource_form_state = new FormState();
-        $datasource_form_state['values'] = $form_state['values']['datasource_configs'][$datasource_id];
-        // Also add all additional values so that we can read them in the plugin.
-        // Useful for the status
-        $datasource_form_state['values']['index'] = $form_state['values'];
-        // Remove the datasource plugin configuration from the index form state
-        // as it is already provided.
-        unset($datasource_form_state['values']['index']['datasource_configs'][$datasource_id]);
-        // Submit the datasource plugin configuration form.
-        try {
-          $entity->getDatasource($datasource_id)->submitConfigurationForm($form['datasource_configs'][$datasource_id], $datasource_form_state);
-        }
-        catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
-        }
-      }
+    $form_state->addValue('options', array_merge($entity->getOptions(), $form_state->getValues()['options']));
+
+    $datasource_forms = $form_state->get('datasource_forms');
+    $datasource_form_states = $form_state->get('datasource_form_states');
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    foreach ($form_state->get('datasource_plugins') as $datasource_id => $datasource) {
+      $datasource->submitConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
     }
 
-    // Check if the entity has a valid tracker plugin.
-    if ($entity->hasValidTracker()) {
-      // Build the tracker plugin configuration form state.
-      $tracker_form_state = new FormState();
-      if (!empty($form_state['values']['tracker_config'])) {
-        $tracker_form_state['values'] = $form_state['values']['tracker_config'];
-      }
-
-      // Also add all additional values so that we can read them in the plugin.
-      // Useful for the status.
-      $tracker_form_state['values']['index'] = $form_state['values'];
-      // Remove the tracker plugin configuration from the index form state
-      // as it is already provided.
-      unset($tracker_form_state['values']['index']['tracker_config']);
-      // Submit the tracker plugin configuration form.
-      $entity->getTracker()->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
-    }
+    /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
+    $tracker = $form_state->get('tracker_plugin');
+    $tracker_form_state = $form_state->get('tracker_form_state');
+    $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
 
     return parent::submit($form, $form_state);
   }
@@ -612,7 +573,7 @@ class IndexForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
-    if (empty($form_state['rebuild'])) {
+    if (!$form_state['rebuild']) {
       // Catch any exception that may get thrown during save operation.
       try {
         // Save changes made to the entity.
@@ -620,18 +581,11 @@ class IndexForm extends EntityForm {
         // Notify the user that the server was created.
         drupal_set_message($this->t('The index was successfully saved.'));
         // Redirect to the index page.
-        // Build the route parameters.
-        // Redirect to the entity delete confirm page.
-        $form_state['redirect_route'] = array(
-          'route_name' => 'search_api.index_view',
-          'route_parameters' => array(
-            'search_api_index' => $this->getEntity()->id(),
-          ),
-        );
+        $form_state->setRedirect(new Url('search_api.index_view', array('search_api_index' => $this->getEntity()->id())));
       }
       catch (\Exception $ex) {
         // Rebuild the form.
-        $form_state['rebuild'] = TRUE;
+        $form_state->setRebuild();
         // Log the exception to the watchdog.
         watchdog_exception('Search API', $ex);
         // Notify the user that the save operation failed.
@@ -644,16 +598,8 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function delete(array $form, FormStateInterface $form_state) {
-    // Get the entity.
-    $entity = $this->getEntity();
     // Redirect to the entity delete confirm page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.index_delete',
-      'route_parameters' => array(
-        'search_api_index' => $entity->id(),
-      ),
-    );
-
+    $form_state->setRedirect(new Url('search_api.index_delete', array('search_api_index' => $this->getEntity()->id())));
   }
 
 }

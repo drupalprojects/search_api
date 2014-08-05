@@ -114,7 +114,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     }
 
     $identifier = $this->options['expose']['identifier'];
-    $input = &$form_state['values'][$identifier];
+    $input = &$form_state->getValues()[$identifier];
 
     if ($this->options['is_grouped'] && isset($this->options['group_info']['group_items'][$input])) {
       $this->operator = $this->options['group_info']['group_items'][$input]['operator'];
@@ -135,7 +135,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     if (!$words) {
       $vars['@count'] = $this->options['min_length'];
       $msg = $this->t('You must include at least one positive keyword with @count characters or more.', $vars);
-      \Drupal::formBuilder()->setError($form[$identifier], $form_state, $msg);
+      $form_state->setError($form[$identifier], $msg);
     }
     $input = implode(' ', $words);
   }

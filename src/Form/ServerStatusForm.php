@@ -9,6 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
@@ -41,16 +42,13 @@ class ServerStatusForm extends FormBase {
   }
 
   /**
-   * {@inhertidoc}
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = $form['#server'];
     // Redirect to the server clear page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.server_clear',
-      'route_parameters' => array(
-        'search_api_server' => $form['#server']->id(),
-      ),
-    );
+    $form_state->setRedirect(new Url('search_api.server_clear', array('search_api_server' => $server->id())));
   }
 
 }

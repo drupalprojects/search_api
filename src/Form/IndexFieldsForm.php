@@ -89,7 +89,7 @@ class IndexFieldsForm extends EntityForm {
     $form['#title'] = $this->t('Manage fields for search index @label', array('@label' => $index->label()));
 
     // Get all options
-    $form_state['index'] = $index;
+    $form_state->set('index', $index);
     $form['description'] = array(
       '#type' => 'item',
       '#title' => $this->t('Select fields to index'),
@@ -245,7 +245,8 @@ class IndexFieldsForm extends EntityForm {
     $index = $form_state['index'];
 
     // Store the fields configuration.
-    $fields = $form_state['values']['fields'];
+    $values = $form_state->getValues();
+    $fields = $values['fields'];
     foreach ($index->getFields(FALSE) as $field_id => $field) {
       if (isset($fields[$field_id])) {
         $field->setType($fields[$field_id]['type']);
@@ -255,8 +256,8 @@ class IndexFieldsForm extends EntityForm {
     }
 
     // Store the additional fields configuration.
-    if (isset($form_state['values']['additional']['field'])) {
-      $additional = $form_state['values']['additional']['field'];
+    if (isset($values['additional']['field'])) {
+      $additional = $values['additional']['field'];
       foreach ($index->getAdditionalFields() as $field_id => $additional_field) {
         $additional_field->setEnabled(!empty($additional[$field_id]), TRUE);
       }
@@ -265,7 +266,7 @@ class IndexFieldsForm extends EntityForm {
     $index->save();
 
     // Show a different message based on the button.
-    if ($form_state['values']['op'] == $this->t('Save changes')) {
+    if ($values['op'] == $this->t('Save changes')) {
       drupal_set_message($this->t('The indexed fields were successfully changed.'));
     }
     else {

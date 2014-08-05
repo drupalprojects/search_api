@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -107,15 +108,16 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    // Check if the form is being rebuild.
-    if (!empty($form_state['rebuild'])) {
+    // Check if the form is being rebuilt.
+    if ($form_state['rebuild']) {
       // Rebuild the entity with the form state values.
       $this->entity = $this->buildEntity($form, $form_state);
     }
     // Build the default entity form.
     $form = parent::form($form, $form_state);
     // Get the entity and attach to the form state.
-    $entity = $form_state['entity'] = $this->getEntity();
+    $entity = $this->getEntity();
+    $form_state->set('entity', $entity);
     // Check if the entity is being created.
     if ($entity->isNew()) {
       // Change the page title to 'Add server'.
@@ -138,8 +140,8 @@ class ServerForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\Server\ServerInterface $server
    *   An instance of ServerInterface.
    */
@@ -202,8 +204,8 @@ class ServerForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\Server\ServerInterface $server
    *   An instance of ServerInterface.
    */
@@ -223,7 +225,7 @@ class ServerForm extends EntityForm {
       // Build the backend configuration form.
       if (($backend_plugin_config_form = $backend->buildConfigurationForm(array(), $form_state))) {
         // Check if the backend plugin changed.
-        if (!empty($form_state['values']['backend'])) {
+        if (!empty($form_state->getValues()['backend'])) {
           // Notify the user about the backend configuration change.
           drupal_set_message($this->t('Please configure the used backend.'), 'warning');
         }
@@ -250,8 +252,8 @@ class ServerForm extends EntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param array $form_state
-   *   An associative array containing the current state of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    *
    * @return array
    *   An associative array containing the structure of the form.
@@ -265,36 +267,28 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function validate(array $form, FormStateInterface $form_state) {
-    // Perform default entity form validate.
     parent::validate($form, $form_state);
-    /** @var \Drupal\search_api\Server\ServerInterface $entity */
-    // Get the entity.
-    $entity = $this->getEntity();
-    // Get the current backend plugin ID.
-    $backend_plugin_id = $entity->getBackendId();
+
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = $this->getEntity();
+
     // Check if the backend plugin changed.
-    if ($backend_plugin_id !== $form_state['values']['backend']) {
-      // Check if the backend plugin configuration form input values exist.
-      if (!empty($form_state['input']['backend_config'])) {
-        // Overwrite the plugin configuration form input values with an empty
-        // array. This will force the Drupal Form API to use the default values.
-        $form_state['input']['backend_config'] = array();
-      }
-      // Check if the backend plugin configuration form values exist.
-      if (!empty($form_state['values']['backend_config'])) {
-        // Overwrite the plugin configuration form values with an empty array.
-        // This has no effect on the Drupal Form API but is done to keep the
-        // data consistent.
-        $form_state['values']['backend_config'] = array();
-      }
+    $backend_id = $server->getBackendId();
+    if ($backend_id !== $form_state->getValues()['backend']) {
+      // This can only happen during initial server creation, since we don't
+      // allow switching the backend afterwards. The user has selected a
+      // different backend, so any values entered for the other backend should
+      // be discarded.
+      // @todo Make sure this works both with and without AJAX.
+      $input = $form_state->get('input');
+      $input['backend_config'] = array();
+      $form_state->set('input', $input);
     }
-    // Check if the entity has a valid backend plugin.
-    elseif ($entity->hasValidBackend()) {
-      // Validate the backend plugin configuration form.
-      if (isset($form_state['values']['backend_config'])) {
-        $backend_form_state['values'] = $form_state['values']['backend_config'];
-        $entity->getBackend()->validateConfigurationForm($form['backend_config'], $backend_form_state);
-      }
+    // Check before loading the backend plugin so we don't throw an exception.
+    elseif ($server->hasValidBackend() && isset($form['backend_config'])) {
+      $backend_form_state = new SubFormState($form_state, array('backend_config'));
+      $server->getBackend()->validateConfigurationForm($form['backend_config'], $backend_form_state);
+      $form_state->set('backend_form_state', $backend_form_state);
     }
   }
 
@@ -302,15 +296,14 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // Perform default entity form submission.
-    $entity = parent::submit($form, $form_state);
-    // Submit the backend plugin configuration form.
-    if ($entity->hasValidBackend() && isset($form_state['values']['backend_config'])) {
-      $backend_form_state = new FormState();
-      $backend_form_state['values'] = &$form_state['values']['backend_config'];
-      $entity->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = parent::submit($form, $form_state);
+
+    if ($backend_form_state = $form_state->get('backend_form_state')) {
+      $server->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
     }
-    return $entity;
+
+    return $server;
   }
 
   /**
@@ -318,7 +311,7 @@ class ServerForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
-    if (empty($form_state['rebuild'])) {
+    if (!$form_state['rebuild']) {
       // Catch any exception that may get thrown during save operation.
       try {
         // Save changes made to the entity.
@@ -327,16 +320,11 @@ class ServerForm extends EntityForm {
         // Notify the user that the server was created.
         drupal_set_message($this->t('The server was successfully saved.'));
         // Redirect to the server page.
-        $form_state['redirect_route'] = array(
-          'route_name' => 'search_api.server_view',
-          'route_parameters' => array(
-            'search_api_server' => $entity->id(),
-          ),
-        );
+        $form_state->setRedirect(new Url('search_api.server_view', array('search_api_server' => $entity->id())));
       }
       catch (\Exception $ex) {
         // Rebuild the form.
-        $form_state['rebuild'] = TRUE;
+        $form_state->setRebuild();
         // Log the exception to the watchdog.
         watchdog_exception('Search API', $ex);
         // Notify the user that the save operation failed.
@@ -352,12 +340,7 @@ class ServerForm extends EntityForm {
     // Get the entity.
     $entity = $this->getEntity();
     // Redirect to the entity delete confirm page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.server_delete',
-      'route_parameters' => array(
-        'search_api_server' => $entity->id(),
-      ),
-    );
+    $form_state->setRedirect(new Url('search_api.server_delete', array('search_api_server' => $entity->id())));
   }
 
 }

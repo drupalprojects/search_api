@@ -60,7 +60,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     if (!empty($this->definition['vocabulary'])) {
@@ -146,8 +146,9 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       $form['value']['#size'] = min(9, count($options));
       $form['value']['#default_value'] = $default_value;
 
-      if (!empty($form_state['exposed']) && isset($identifier) && !isset($form_state['input'][$identifier])) {
-        $form_state['input'][$identifier] = $default_value;
+      $input = &$form_state['input'];
+      if ($form_state->get('exposed') && isset($identifier) && !isset($input[$identifier])) {
+        $input[$identifier] = $default_value;
       }
     }
   }
@@ -208,7 +209,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
 
     // We only validate if they've chosen the text field style.
     if ($this->options['type'] != 'textfield') {
-      $input = $form_state['values'][$this->options['expose']['identifier']];
+      $input = $form_state->getValues()[$this->options['expose']['identifier']];
       if ($this->options['is_grouped'] && isset($this->options['group_info']['group_items'][$input])) {
         $input = $this->options['group_info']['group_items'][$input]['value'];
       }
@@ -225,7 +226,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  protected function validateEntityStrings(array &$form, array $values) {
+  protected function validateEntityStrings(array &$form, array $values, FormStateInterface $form_state) {
     if (empty($values)) {
       return array();
     }
@@ -258,7 +259,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
 
     if ($missing) {
       if (!empty($this->options['error_message'])) {
-        form_error($form, format_plural(count($missing), 'Unable to find term: @terms', 'Unable to find terms: @terms', array('@terms' => implode(', ', array_keys($missing)))));
+        $form_state->setError($form, $this->formatPlural(count($missing), 'Unable to find term: @terms', 'Unable to find terms: @terms', array('@terms' => implode(', ', array_keys($missing)))));
       }
       else {
         // Add a bogus TID which will show an empty result for a positive filter

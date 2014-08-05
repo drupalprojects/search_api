@@ -92,15 +92,15 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $values = $form_state['values'];
-    $values['tags'] = trim($values['tags']);
-    if (!$values['tags']) {
+    $tags = trim($form_state->getValues()['tags']);
+    if (!$tags) {
+      $form_state->addValue('tags', array());
       return;
     }
     $errors = array();
     try {
       $parser = new Parser();
-      $tags = $parser->parse($values['tags']);
+      $tags = $parser->parse($tags);
     }
     catch (ParseException $exception) {
       $errors[] = $this->t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
@@ -124,9 +124,9 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         $tags[$key] = (float) $tags[$key];
       }
     }
-    $form_state['values']['tags'] = $tags;
+    $form_state->addValue('tags', $tags);
     if ($errors) {
-      \Drupal::formBuilder()->setError($form['tags'], $form_state, implode("<br />\n", $errors));
+      $form_state->setError($form['tags'], implode("<br />\n", $errors));
     }
   }
 

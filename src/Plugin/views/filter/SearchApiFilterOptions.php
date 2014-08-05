@@ -158,13 +158,13 @@ class SearchApiFilterOptions extends SearchApiFilter {
     // *only* a list of checkboxes that were set, and we can use that
     // instead.
 
-    $form_state['values']['options']['value'] = $form['value']['#value'];
+    $form_state->setValueForElement($form['value'], $form['value']['#value']);
   }
 
   /**
    * Provide a form for setting options.
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     $this->getValueOptions();
     if (!empty($this->options['expose']['reduce']) && !empty($form_state['exposed'])) {
       $options = $this->reduceValueOptions();

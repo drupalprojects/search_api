@@ -76,12 +76,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
       drupal_set_message($this->t('The indexed data from the search server %name was successfully cleared.', array('%name' => $entity->label())));
     }
     // Redirect to the server view page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.server_view',
-      'route_parameters' => array(
-        'search_api_server' => $entity->id(),
-      ),
-    );
+    $form_state->setRedirect(new Url('search_api.server_view', array('search_api_server' => $entity->id())));
   }
 
 }

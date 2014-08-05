@@ -104,10 +104,10 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $ignorable = str_replace('/', '\/', $form_state['values']['ignorable']);
+    $ignorable = str_replace('/', '\/', $form_state->getValues()['ignorable']);
     if (@preg_match('/(' . $ignorable . ')+/u', '') === FALSE) {
       $el = $form['ignorable'];
-      \Drupal::formBuilder()->setError($el, $form_state, $el['#title'] . ': ' . $this->t('The entered text is no valid regular expression.'));
+      $form_state->setError($el, $el['#title'] . ': ' . $this->t('The entered text is no valid regular expression.'));
     }
   }
 

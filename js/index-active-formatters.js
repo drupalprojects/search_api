@@ -20,7 +20,7 @@
         // the filter's table row and vertical tab pane.
         $checkbox.bind('click.searchApiUpdate', function () {
           if ($checkbox.is(':checked')) {
-            $('#edit-processors-order').show();
+            $('#edit-order').show();
             $('.tabledrag-toggle-weight-wrapper').show();
             $row.show();
             if ($tab) {
@@ -31,7 +31,7 @@
             var $enabled_processors = $('.search-api-status-wrapper input.form-checkbox:checked').length;
 
             if (!$enabled_processors) {
-              $('#edit-processors-order').hide();
+              $('#edit-order').hide();
               $('.tabledrag-toggle-weight-wrapper').hide();
             }
 
@@ -41,7 +41,7 @@
             }
           }
           // Re-stripe the table after toggling visibility of table row.
-          Drupal.tableDrag['edit-processors-order'].restripeTable();
+          Drupal.tableDrag['edit-order'].restripeTable();
         });
 
         // Attach summary for configurable items (only for screen-readers).

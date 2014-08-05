@@ -71,17 +71,19 @@ class AggregatedField extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildFieldsForm(array &$form, FormStateInterface $form_state) {
-    if (!isset($form_state['fields'])) {
-      $form_state['fields'] = $this->configuration['fields'];
+    if ($form_state->get('fields') === NULL) {
+      $form_state->set('fields', $this->configuration['fields']);
     }
+    $form_state_fields = $form_state->get('fields');
 
     // Check if we need to add a new field, or remove one.
-    if (isset($form_state['triggering_element']['#name'])) {
-      $button_name = $form_state['triggering_element']['#name'];
+    $triggering_element = $form_state['triggering_element'];
+    if (isset($triggering_element['#name'])) {
+      $button_name = $triggering_element['#name'];
       if ($button_name == 'add_aggregation_field') {
-        for ($i = 1; isset($form_state['fields']['search_api_aggregation_' . $i]); ++$i) {
+        for ($i = 1; isset($form_state_fields['search_api_aggregation_' . $i]); ++$i) {
         }
-        $form_state['fields']['search_api_aggregation_' . $i] = array(
+        $form_state_fields['search_api_aggregation_' . $i] = array(
           'label' => '',
           'type' => 'union',
           'fields' => array(),
@@ -90,7 +92,7 @@ class AggregatedField extends ProcessorPluginBase {
       else {
         // Get the field id from the button
         $field_id = substr($button_name, 25);
-        unset($form_state['fields'][$field_id]);
+        unset($form_state_fields[$field_id]);
       }
     }
 
@@ -128,7 +130,7 @@ class AggregatedField extends ProcessorPluginBase {
       drupal_set_message(t('Changes in this form will not be saved until the %button button at the form bottom is clicked.', array('%button' => t('Save'))), 'warning');
     }
 
-    foreach ($form_state['fields'] as $field_id => $field) {
+    foreach ($form_state_fields as $field_id => $field) {
       $new = !$field['label'];
       $form['fields'][$field_id] = array(
         '#type' => 'details',
@@ -252,7 +254,7 @@ class AggregatedField extends ProcessorPluginBase {
    * Button submit handler for this processor's form's AJAX buttons.
    */
   public static function submitAjaxFieldButton(array $form, FormStateInterface $form_state) {
-    $form_state['rebuild'] = TRUE;
+    $form_state->setRebuild();
   }
 
   /**
@@ -266,18 +268,20 @@ class AggregatedField extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    unset($form_state['values']['actions']);
-    if (empty($form_state['values']['fields'])) {
+    $values = $form_state->getValues();
+    unset($values['actions']);
+    if (empty($values['fields'])) {
       return;
     }
-    foreach ($form_state['values']['fields'] as $field_id => &$field) {
+    foreach ($values['fields'] as $field_id => &$field) {
       unset($field['type_descriptions'], $field['actions']);
       $field['fields'] = array_values(array_filter($field['fields']));
       if ($field['label'] && !$field['fields']) {
         $error_message = $this->t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.');
-        \Drupal::formBuilder()->setError($form['fields'][$field_id]['fields'], $form_state, $error_message);
+        $form_state->setError($form['fields'][$field_id]['fields'], $error_message);
       }
     }
+    $form_state->set('values', $values);
   }
 
   /**

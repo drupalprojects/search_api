@@ -72,8 +72,9 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     // Convert our text input to an array.
-    $form_state['values']['stopwords'] = array_map('trim', explode("\n", $form_state['values']['stopwords']));
-    $this->setConfiguration($form_state['values']);
+    $form_state->addValue('stopwords', array_map('trim', explode("\n", $form_state->getValues()['stopwords'])));
+
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**

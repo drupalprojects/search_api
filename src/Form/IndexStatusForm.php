@@ -9,6 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Batch\IndexBatchHelper;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -135,7 +136,7 @@ class IndexStatusForm extends FormBase {
     // Check if the user wants to perform "index now" action.
     if ($form_state['triggering_element']['#name'] === 'index_now') {
       // Get the form values.
-      $form_values = &$form_state['values'];
+      $form_values = $form_state->getValues();
       // Get the value for indexing all remaining items and convert to lower
       // case.
       $all_value = drupal_strtolower($form_values['all']);
@@ -143,7 +144,7 @@ class IndexStatusForm extends FormBase {
       foreach (array('limit', 'batch_size') as $field) {
         // Get the input value and trim any leading or trailing spaces. Convert
         // value to lower case to ensure all values have the same casing.
-        $value = drupal_strtolower(trim($form_state['values'][$field]));
+        $value = drupal_strtolower(trim($form_values[$field]));
         // Check if all remaining items should be index.
         if ($value === $all_value) {
           // Use the value '-1' instead.
@@ -152,20 +153,20 @@ class IndexStatusForm extends FormBase {
         // Check if the value is empty or not numeric.
         elseif (!$value || !is_numeric($value) || ((int) $value) != $value) {
           // Raise form error: Value must be numeric or equal to all.
-          $this->setFormError($field, $form_state, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', array('@all' => $all_value)));
+          $form_state->setErrorByName($field, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', array('@all' => $all_value)));
         }
         else {
           // Ensure the value contains an integer value.
           $value = (int) $value;
         }
         // Overwrite the form state value.
-        $form_values[$field] = $value;
+        $form_state->addValue($field, $value);
       }
     }
   }
 
   /**
-   * {@inhertidoc}
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Get the search index from the form.
@@ -175,7 +176,7 @@ class IndexStatusForm extends FormBase {
     switch ($form_state['triggering_element']['#name']) {
       case 'index_now':
         // Get the form state values.
-        $form_values = $form_state['values'];
+        $form_values = $form_state->getValues();
         // Try to create a batch job to index items.
         try {
           IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit']);
@@ -188,22 +189,12 @@ class IndexStatusForm extends FormBase {
 
       case 'reindex':
         // Redirect to the index reindex page.
-        $form_state['redirect_route'] = array(
-          'route_name' => 'search_api.index_reindex',
-          'route_parameters' => array(
-            'search_api_index' => $index->id(),
-          ),
-        );
+        $form_state->setRedirect(new Url('search_api.index_reindex', array('search_api_index' => $index->id())));
         break;
 
       case 'clear':
         // Redirect to the index clear page.
-        $form_state['redirect_route'] = array(
-          'route_name' => 'search_api.index_clear',
-          'route_parameters' => array(
-            'search_api_index' => $index->id(),
-          ),
-        );
+        $form_state->setRedirect(new Url('search_api.index_clear', array('search_api_index' => $index->id())));
         break;
     }
   }

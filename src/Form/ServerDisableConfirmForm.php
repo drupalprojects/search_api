@@ -54,9 +54,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
     // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been disabled.', array('%name' => $this->entity->label())));
     // Redirect to the overview page.
-    $form_state['redirect_route'] = array(
-      'route_name' => 'search_api.overview',
-    );
+    $form_state->setRedirect(new Url('search_api.overview'));
   }
 
 }

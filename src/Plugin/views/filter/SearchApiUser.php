@@ -22,7 +22,7 @@ class SearchApiUserBase extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  public function valueForm(&$form, FormStateInterface $form_state) {
+  protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
     // Set autocompletion.
@@ -52,7 +52,7 @@ class SearchApiUserBase extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  protected function validateEntityStrings(array &$form, array $values) {
+  protected function validateEntityStrings(array &$form, array $values, FormStateInterface $form_state) {
     $uids = array();
     $missing = array();
     foreach ($values as $value) {
@@ -75,7 +75,7 @@ class SearchApiUserBase extends SearchApiFilterEntityBase {
     }
 
     if ($missing) {
-      \Drupal::formBuilder()->setError($form, $form_state, \Drupal::translation()->formatPlural(count($missing), 'Unable to find user: @users', 'Unable to find users: @users', array('@users' => implode(', ', $missing))));
+      $form_state->setError($form, $this->formatPlural(count($missing), 'Unable to find user: @users', 'Unable to find users: @users', array('@users' => implode(', ', $missing))));
     }
 
     return $uids;
