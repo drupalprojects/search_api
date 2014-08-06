@@ -51,6 +51,24 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   public function getBackend();
 
   /**
+   * Gets the backend config of this server's backend.
+   *
+   * @return array
+   *   An array with the backend config.
+   */
+  public function getBackendConfig();
+
+  /**
+   * Sets the backend config of this server's backend.
+   *
+   * @param array $backend_config
+   *   The new configuration for the backend.
+   *
+   * @return $this
+   */
+  public function setBackendConfig(array $backend_config);
+
+  /**
    * Retrieves a list of indexes which use this server.
    *
    * @param array $properties
@@ -64,25 +82,11 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   /**
    * Deletes all items on this server, except those from read-only indexes.
    *
+   * @return $this
+   *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while trying to delete the items.
    */
   public function deleteAllItems();
-
-  /**
-   * Gets the backend config of this server's backend.
-   *
-   * @return array
-   *   An array with the backend config.
-   */
-  public function getBackendConfig();
-
-  /**
-   * Sets the backend config of this server's backend.
-   *
-   * @param array $backend_config
-   *   The new configuration for the backend.
-   */
-  public function setBackendConfig(array $backend_config);
 
 }

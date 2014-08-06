@@ -40,7 +40,6 @@ interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificI
    *   The server entity.
    *
    * @return $this
-   *   The invoked object.
    */
   public function setServer(ServerInterface $server);
 

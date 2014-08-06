@@ -224,11 +224,15 @@ class IndexForm extends EntityForm {
 
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
+    $datasource_options = array();
+    foreach ($this->getDatasourcePluginManager()->getDefinitions() as $datasource_id => $definition) {
+      $datasource_options[$datasource_id] = !empty($definition['label']) ? $definition['label'] : $datasource_id;
+    }
     $form['datasources'] = array(
       '#type' => 'select',
       '#title' => $this->t('Data types'),
-      '#description' => $this->t('Select one or more data type of items that will be stored in this index. E.g. should it be nodes content or files data.'),
-      '#options' => $this->getDatasourcePluginManager()->getDefinitionLabels(),
+      '#description' => $this->t('Select one or more data type of items that will be stored in this index.'),
+      '#options' => $datasource_options,
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,
       '#required' => TRUE,

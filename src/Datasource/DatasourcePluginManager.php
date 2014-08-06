@@ -7,18 +7,22 @@
 
 namespace Drupal\search_api\Datasource;
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Search API datasource plugin manager.
+ * Manages datasource plugins.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiDatasource
+ * @see \Drupal\search_api\Datasource\DatasourceInterface
+ * @see \Drupal\search_api\Datasource\DatasourcePluginBase
+ * @see plugin_api
  */
 class DatasourcePluginManager extends DefaultPluginManager {
 
   /**
-   * Create a DatasourcePluginManager object.
+   * Constructs a DatasourcePluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -29,34 +33,9 @@ class DatasourcePluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Datasource', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiDatasource');
-    // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, 'search_api_datasources');
     $this->alterInfo('search_api_datasource_info');
-  }
-
-  /**
-   * Get a list of plugin definition labels.
-   *
-   * @return array
-   *   An associative array containing the plugin label, keyed by the plugin ID.
-   */
-  public function getDefinitionLabels() {
-    // Initialize the options variable to an empty array.
-    $options = array();
-    // Iterate through the datasource plugin definitions.
-    foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
-      // @todo Use proper DI here.
-      /** @var \Drupal\Core\Entity\FieldableEntityStorageInterface $storage */
-      $storage = \Drupal::entityManager()->getStorage($plugin_definition['entity_type']);
-
-      if (!$storage instanceof \Drupal\Core\Entity\ContentEntityNullStorage) {
-        // Add the plugin to the list.
-        $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
-      }
-    }
-    return $options;
   }
 
 }

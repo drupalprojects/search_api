@@ -61,14 +61,14 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public $machine_name;
 
   /**
-   * The displayed name for a server.
+   * The displayed name of the server.
    *
    * @var string
    */
   public $name;
 
   /**
-   * The displayed description for a server.
+   * The displayed description of the server.
    *
    * @var string
    */
@@ -93,15 +93,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var \Drupal\search_api\Backend\BackendInterface
    */
-  private $backendPluginInstance = NULL;
-
-  /**
-   * Clone a Server object.
-   */
-  public function __clone() {
-    // Prevent the backend plugin instance from being cloned.
-    $this->backendPluginInstance = NULL;
-  }
+  protected $backendPluginInstance;
 
   /**
    * {@inheritdoc}
@@ -121,9 +113,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function hasValidBackend() {
-    // Get the backend plugin definition.
     $backend_plugin_definition = \Drupal::service('plugin.manager.search_api.backend')->getDefinition($this->getBackendId(), FALSE);
-    // Determine whether the backend is valid.
     return !empty($backend_plugin_definition);
   }
 
@@ -138,12 +128,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function getBackend() {
-    // Check if the backend plugin instance needs to be resolved.
     if (!$this->backendPluginInstance) {
-      // Get the backend plugin manager.
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
-
-      // Try to create a backend plugin instance.
       $config = $this->backend_config;
       $config['server'] = $this;
       if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
@@ -158,53 +144,25 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function toArray() {
-    // Get the exported properties.
-    $properties = parent::toArray();
-    // Check if the backend is valid.
-    if ($this->hasValidBackend()) {
-      // Overwrite the backend plugin configuration with the active.
-      $properties['backend_config'] = $this->getBackend()->getConfiguration();
-    }
-    else {
-      // Clear the backend plugin configuration.
-      $properties['backend_config'] = array();
-    }
-    return $properties;
+  public function getBackendConfig() {
+    return $this->backend_config;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function preDelete(EntityStorageInterface $storage, array $entities) {
-    // Perform default entity pre delete.
-    parent::preDelete($storage, $entities);
-    // Get the indexes associated with the servers.
-    $index_ids = \Drupal::entityQuery('search_api_index')
-      ->condition('server', array_keys($entities), 'IN')
-      ->execute();
-    // Load the related indexes.
-    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
-    // Iterate through the indexes.
-    foreach ($indexes as $index) {
-      /** @var \Drupal\search_api\Index\IndexInterface $index */
-      // Remove the index from the server.
-      $index->setServer(NULL);
-      $index->setStatus(FALSE);
-      // Save changes made to the index.
-      $index->save();
-    }
+  public function setBackendConfig(array $backend_config) {
+    $this->backend_config = $backend_config;
+    $this->getBackend()->setConfiguration($backend_config);
+    return $this;
+  }
 
-    // Iterate through the servers, executing the backend's preDelete() methods.
-    foreach ($entities as $server) {
-      /** @var \Drupal\search_api\Server\ServerInterface $server */
-      // Execute the backend's preDelete() hook method.
-      if ($server->hasValidBackend()) {
-        $server->getBackend()->preDelete();
-      }
-      // Delete all remaining tasks for the server.
-      Utility::getServerTaskManager()->delete(NULL, $server);
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexes(array $properties = array()) {
+    $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    return $storage->loadByProperties(array('server' => $this->id()) + $properties);
   }
 
   /**
@@ -231,36 +189,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    if ($this->hasValidBackend()) {
-      if ($update) {
-        $this->getBackend()->postUpdate();
-      }
-      else {
-        $this->getBackend()->postInsert();
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getIndexes(array $properties = array()) {
-    // Get the index storage.
-    $storage = \Drupal::entityManager()->getStorage('search_api_index');
-    // Retrieve the indexes attached to the server.
-    return $storage->loadByProperties(array(
-      'server' => $this->id(),
-    ) + $properties);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function addIndex(IndexInterface $index) {
     $server_task_manager = Utility::getServerTaskManager();
-    // When freshly adding an index to a server, it doesn't make any sense
-    // to execute possible other tasks for that server/index combination.
+    // When freshly adding an index to a server, it doesn't make any sense to
+    // execute possible other tasks for that server/index combination.
     // (removeIndex() is implicit when adding an index which was already added.)
     $server_task_manager->delete(NULL, $this, $index);
 
@@ -339,7 +271,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      watchdog('search_api', 'Trying to delete items of index %index which is marked as read-only.', $vars, WATCHDOG_WARNING);
+      \Drupal::logger('search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 
@@ -367,7 +299,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      watchdog('search_api', 'Trying to delete items of index %index which is marked as read-only.', $vars, WATCHDOG_WARNING);
+      \Drupal::logger('search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 
@@ -408,6 +340,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $message = String::format('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
       throw new SearchApiException($message, 0, $e);
     }
+    return $this;
   }
 
   /**
@@ -423,10 +356,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    // Check if the server is disabled.
-    if (!$this->status()) {
-      // Disable all the indexes that belong to this server
-      foreach ($this->getIndexes() as $index) {
+    // If the server is being disabled, also disable all its indexes.
+    if (!$this->status() && isset($this->original) && $this->original->status()) {
+      foreach ($this->getIndexes(array('status' => TRUE)) as $index) {
         /** @var $index \Drupal\search_api\Entity\Index */
         $index->setStatus(FALSE)->save();
       }
@@ -436,16 +368,52 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBackendConfig() {
-    return $this->backend_config;
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    if ($this->hasValidBackend()) {
+      if ($update) {
+        $this->getBackend()->postUpdate();
+      }
+      else {
+        $this->getBackend()->postInsert();
+      }
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setBackendConfig(array $backend_config) {
-    $this->backend_config = $backend_config;
-    $this->getBackend()->setConfiguration($backend_config);
+  public static function preDelete(EntityStorageInterface $storage, array $entities) {
+    parent::preDelete($storage, $entities);
+
+    // @todo Would it make more sense to swap the order of these operations?
+    //   Setting the indexes to server => NULL will trigger the backend's
+    //   removeIndex() method which might save the server – which is bad. We'd
+    //   probably need an isBeingDeleted() flag in that case. Otherwise we'd
+    //   have to make sure that the index's postSave() method is smart enough to
+    //   realize the server isn't there anymore and not log (or throw) any
+    //   errors.
+
+    // Remove all indexes on the deleted servers from them.
+    $index_ids = \Drupal::entityQuery('search_api_index')
+      ->condition('server', array_keys($entities), 'IN')
+      ->execute();
+    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
+    foreach ($indexes as $index) {
+      /** @var \Drupal\search_api\Index\IndexInterface $index */
+      $index->setServer(NULL);
+      $index->setStatus(FALSE);
+      $index->save();
+    }
+
+    // Iterate through the servers, executing the backends' preDelete() methods
+    // and removing all their pending server tasks.
+    foreach ($entities as $server) {
+      /** @var \Drupal\search_api\Server\ServerInterface $server */
+      if ($server->hasValidBackend()) {
+        $server->getBackend()->preDelete();
+      }
+      Utility::getServerTaskManager()->delete(NULL, $server);
+    }
   }
 
   /**
@@ -454,12 +422,21 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function calculateDependencies() {
     parent::calculateDependencies();
 
-    // Add a dependency on the module that provides the backend for this server.
+    // Add the backend's dependencies.
     if ($this->hasValidBackend() && ($backend = $this->getBackend())) {
-      $this->addDependency('module', $backend->getPluginDefinition()['provider']);
+      $this->addDependencies($backend->calculateDependencies());
     }
 
     return $this->dependencies;
+  }
+
+  /**
+   * Implements the magic __clone() method.
+   *
+   * Prevents the backend plugin instance from being cloned.
+   */
+  public function __clone() {
+    $this->backendPluginInstance = NULL;
   }
 
 }

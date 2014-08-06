@@ -11,7 +11,7 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 
 /**
- * Describes a type of search items that can be indexed.
+ * Describes a source for search items.
  *
  * A datasource is used to abstract the type of data that can be indexed and
  * searched with the Search API. Content entities are supported by default (with
@@ -27,6 +27,11 @@ use Drupal\search_api\Plugin\IndexPluginInterface;
  * Note that the two load methods in this interface do not receive the normal
  * combined item IDs (that also include the datasource ID), but only the raw,
  * datasource-specific IDs.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiDatasource
+ * @see \Drupal\search_api\Datasource\DatasourcePluginManager
+ * @see \Drupal\search_api\Datasource\DatasourcePluginBase
+ * @see plugin_api
  */
 interface DatasourceInterface extends IndexPluginInterface {
 
@@ -97,10 +102,10 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function getItemUrl(ComplexDataInterface $item);
 
   /**
-   * Returns view mode info for this item type.
+   * Returns the available view modes for this item type.
    *
-   * @return array
-   *   An associative array of view mode labels, keyed by the view mode name.
+   * @return string[]
+   *   An associative array of view mode labels, keyed by the view mode ID.
    */
   public function getViewModes();
 
@@ -116,10 +121,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   the language the item has been loaded in.
    *
    * @return array
-   *   A render array for the item.
-   *
-   * @throws \InvalidArgumentException
-   *   Can be thrown when the set of parameters is inconsistent.
+   *   A render array for displaying the item.
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL);
 
@@ -135,24 +137,21 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   the language each item has been loaded in.
    *
    * @return array
-   *   A render array for the items.
-   *
-   * @throws \InvalidArgumentException
-   *   Can be thrown when the set of parameters is inconsistent.
+   *   A render array for displaying the items.
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL);
 
   /**
-   * Gets the entity type ID.
+   * Retrieves the entity type ID of items from this datasource, if any.
    *
    * @return string|null
-   *   Entity type ID if the data source contains entities.
-   *
+   *   If items from this datasource are all entities of a single entity type,
+   *   that type's ID; NULL otherwise.
    */
   public function getEntityTypeId();
 
   /**
-   * Returns item IDs from this datasource.
+   * Returns a list of IDs of items from this datasource.
    *
    * Returns all items IDs by default. Allows for simple paging by passing
    * along a limit and a pointer from where it should start.
@@ -163,7 +162,8 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   The pointer as from where we want to start returning.
    *
    * @return array
-   *   An array with item identifiers
+   *   An array with datasource-specific (i.e., not prefixed with the datasource
+   *   ID) item IDs.
    *
    * @todo Change to single $page parameter.
    */

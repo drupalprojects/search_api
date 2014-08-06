@@ -542,24 +542,13 @@ class ContentEntityDatasource extends DatasourcePluginBase implements ContainerF
           $items_by_language[$item->language()->id][$i] = $item;
         }
       }
-      // Then build the items for each language.
-      $build = array();
+      // Then build the items for each language. We initialize $build beforehand
+      // and use array_replace() to add to it so the order stays the same.
+      $build = array_fill_keys(array_keys($items), array());
       foreach ($items_by_language as $langcode => $language_items) {
-        $build += $view_builder->viewMultiple($language_items, $view_mode, $langcode);
+        $build = array_replace($build, $view_builder->viewMultiple($language_items, $view_mode, $langcode));
       }
-      // Lastly, bring the viewed items into the correct order again.
-      // The properties, particularly #pre_render, are required on each
-      // build item.
-      $properties = Element::properties($build);
-      foreach ($properties as $property) {
-        $meta[$property] = $build[$property];
-      }
-      // In the original non-language order, adding properties.
-      $ret = array();
-      foreach ($items as $i => $item) {
-        $ret[$i] = isset($build[$i]) ? $meta + array($i => $build[$i]) : array();
-      }
-      return $ret;
+      return $build;
     }
     catch (\Exception $e) {
       // The most common reason for this would be a

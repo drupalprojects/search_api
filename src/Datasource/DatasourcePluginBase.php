@@ -30,18 +30,13 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  *   description = @Translation("Exposes my custom items as an item type."),
  * )
  * @endcode
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiDatasource
+ * @see \Drupal\search_api\Datasource\DatasourcePluginManager
+ * @see \Drupal\search_api\Datasource\DatasourceInterface
+ * @see plugin_api
  */
 abstract class DatasourcePluginBase extends IndexPluginBase implements DatasourceInterface {
-
-  /**
-   * Retrieves the index.
-   *
-   * @return \Drupal\search_api\Index\IndexInterface
-   *   An instance of IndexInterface.
-   */
-  public function getIndex() {
-    return $this->index;
-  }
 
   /**
    * {@inheritdoc}
@@ -54,24 +49,18 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    * {@inheritdoc}
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
-    $buildList = $this->viewMultipleItems(array($item), $view_mode, $langcode);
-    return $buildList[0];
+    return array();
   }
 
   /**
    * {@inheritdoc}
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
-    return array_fill_keys(array_keys($items), array());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDependencies() {
-    return array(
-      'module' => array($this->getPluginDefinition()['provider']),
-    );
+    $build = array();
+    foreach ($items as $key => $item) {
+      $build[$key] = $this->viewItem($item, $view_mode, $langcode);
+    }
+    return $build;
   }
 
 }
