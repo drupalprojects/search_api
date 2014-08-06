@@ -70,7 +70,7 @@ class IntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createServer() {
-    $server_id = drupal_strtolower($this->randomName());
+    $server_id = drupal_strtolower($this->randomMachineName());
     $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);

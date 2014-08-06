@@ -59,7 +59,7 @@ class IndexStorageUnitTest extends KernelTestBase {
    */
   public function indexCreate() {
     $indexData = array(
-      'machine_name' => $this->randomName(),
+      'machine_name' => $this->randomMachineName(),
       'name' => $this->randomString(),
       'tracker' => 'default_tracker',
     );

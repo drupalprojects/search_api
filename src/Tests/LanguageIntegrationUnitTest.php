@@ -58,7 +58,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     // Create a test server.
     $this->server = Server::create(array(
       'name' => $this->randomString(),
-      'machine_name' => $this->randomName(),
+      'machine_name' => $this->randomMachineName(),
       'status' => 1,
       'backend' => 'search_api_test_backend',
     ));
@@ -67,7 +67,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     // Create a test index.
     $this->index = Index::create(array(
       'name' => $this->randomString(),
-      'machine_name' => $this->randomName(),
+      'machine_name' => $this->randomMachineName(),
       'status' => 1,
       'datasources' => array('entity:' . $this->testEntityTypeId),
       'tracker' => 'default_tracker',

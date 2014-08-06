@@ -71,8 +71,8 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->node_data = array(
       'status' => NODE_PUBLISHED,
       'type' => 'page',
-      'title' => $this->randomName(8),
-      'body' => array('value' => $this->randomName(32), 'summary' => $this->randomName(16), 'format' => 'plain_text'),
+      'title' => $this->randomMachineName(8),
+      'body' => array('value' => $this->randomMachineName(32), 'summary' => $this->randomMachineName(16), 'format' => 'plain_text'),
       'uid' => $anonymous_user->id(),
     );
 
@@ -113,7 +113,7 @@ class RenderedItemTest extends ProcessorTestBase {
         'datasource' => 'entity:node',
         'item' => $node,
         'item_id' => $node->id(),
-        'text' => $this->randomName(),
+        'text' => $this->randomMachineName(),
       );
     }
     $items = $this->generateItems($items);

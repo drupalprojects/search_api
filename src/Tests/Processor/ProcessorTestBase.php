@@ -51,7 +51,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     $this->installEntitySchema('comment');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
-    $server_name = $this->randomName();
+    $server_name = $this->randomMachineName();
     $this->server = entity_create('search_api_server', array(
       'machine_name' => strtolower($server_name),
       'name' => $server_name,
@@ -64,7 +64,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     ));
     $this->server->save();
 
-    $index_name = $this->randomName();
+    $index_name = $this->randomMachineName();
     $this->index = entity_create('search_api_index', array(
       'machine_name' => strtolower($index_name),
       'name' => $index_name,

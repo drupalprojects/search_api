@@ -59,8 +59,8 @@ class OverviewPageTest extends SearchApiWebTestBase {
 
     // Test that an entity without bundles can be used as data source.
     $edit = array(
-      'name' => $this->randomName(),
-      'machine_name' => Unicode::strtolower($this->randomName()),
+      'name' => $this->randomMachineName(),
+      'machine_name' => Unicode::strtolower($this->randomMachineName()),
       'datasources[]' => 'entity:user',
     );
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));

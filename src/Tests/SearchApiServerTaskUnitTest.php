@@ -73,7 +73,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
     // Create a test server.
     $this->server = entity_create('search_api_server', array(
       'name' => $this->randomString(),
-      'machine_name' => $this->randomName(),
+      'machine_name' => $this->randomMachineName(),
       'status' => 1,
       'backend' => 'search_api_test_backend',
     ));
@@ -82,7 +82,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
     // Create a test index.
     $this->index = entity_create('search_api_index', array(
       'name' => $this->randomString(),
-      'machine_name' => $this->randomName(),
+      'machine_name' => $this->randomMachineName(),
       'status' => 1,
       'datasources' => array('entity:user'),
       'tracker' => 'default_tracker',
