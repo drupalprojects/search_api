@@ -107,21 +107,21 @@ class HtmlFilter extends FieldsProcessorPluginBase {
       $tags = array();
     }
     foreach ($tags as $key => $value) {
-      $key = "<$key>";
+      $tag = "<$key>";
       if (is_array($value)) {
-        $errors[] = $this->t("Boost value for tag @tag can't be an array.", array('@tag' => $key));
+        $errors[] = $this->t("Boost value for tag @tag can't be an array.", array('@tag' => $tag));
       }
       elseif (!is_numeric($value)) {
-        $errors[] = $this->t("Boost value for tag @tag must be numeric.", array('@tag' => $key));
+        $errors[] = $this->t("Boost value for tag @tag must be numeric.", array('@tag' => $tag));
       }
       elseif ($value < 0) {
-        $errors[] = $this->t('Boost value for tag @tag must be non-negative.', array('@tag' => $key));
+        $errors[] = $this->t('Boost value for tag @tag must be non-negative.', array('@tag' => $tag));
       }
       elseif ($value == 1) {
         unset($tags[$key]);
       }
       else {
-        $tags[$key] = (float) $tags[$key];
+        $tags[$key] = (float) $value;
       }
     }
     $form_state->addValue('tags', $tags);

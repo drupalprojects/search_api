@@ -70,10 +70,9 @@ class AggregatedField extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  // @todo Make sure this works both with and without Javascript.
   public function buildFieldsForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->get('fields') === NULL) {
-      $form_state->set('fields', $this->configuration['fields']);
-    }
+    $form_state->setIfNotExists('fields', $this->configuration['fields']);
     $form_state_fields = $form_state->get('fields');
 
     // Check if we need to add a new field, or remove one.
@@ -94,6 +93,7 @@ class AggregatedField extends ProcessorPluginBase {
         $field_id = substr($button_name, 25);
         unset($form_state_fields[$field_id]);
       }
+      $form_state->set('fields', $form_state_fields);
     }
 
     // Get index type descriptions.
@@ -106,6 +106,7 @@ class AggregatedField extends ProcessorPluginBase {
     $field_properties = array();
 
     // Annotate them so we can show them cleanly in the UI.
+    // @todo Use option groups to group fields by datasource?
     /** @var \Drupal\search_api\Item\FieldInterface[] $fields */
     foreach ($fields as $field_id => $field) {
       $field_options[$field_id] = $field->getPrefixedLabel();
@@ -126,6 +127,7 @@ class AggregatedField extends ProcessorPluginBase {
       '#tree' => TRUE,
     );
 
+    // $button_name is only present if this is already a rebuilt form.
     if (isset($button_name)) {
       drupal_set_message(t('Changes in this form will not be saved until the %button button at the form bottom is clicked.', array('%button' => t('Save'))), 'warning');
     }
@@ -157,6 +159,7 @@ class AggregatedField extends ProcessorPluginBase {
         $form['fields'][$field_id]['type_descriptions'][$type]['#states']['visible'][':input[name="processors[aggregated_field][settings][fields][' . $field_id . '][type]"]']['value'] = $type;
       }
 
+      // @todo Order checked fields first in list?
       $form['fields'][$field_id]['fields'] = array_merge($field_properties, array(
         '#type' => 'checkboxes',
         '#title' => $this->t('Contained fields'),
@@ -261,7 +264,7 @@ class AggregatedField extends ProcessorPluginBase {
    * Callback handler for this processor's form's AJAX buttons.
    */
   public static function buildAjaxAddFieldButton(array $form, FormStateInterface $form_state) {
-    return $form['processors']['settings']['aggregated_field']['fields'];
+    return $form['settings']['aggregated_field']['fields'];
   }
 
   /**

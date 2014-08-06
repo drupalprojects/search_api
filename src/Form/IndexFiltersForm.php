@@ -10,7 +10,6 @@ namespace Drupal\search_api\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -96,8 +95,6 @@ class IndexFiltersForm extends EntityForm {
     $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
     $form['#prefix'] = '<p>' . $this->t('Configure processors which will pre- and post-process data at index and search time.') . '</p>';
 
-    $form['#processors'] = $processors_settings;
-
     // Add the list of processors with checkboxes to enable/disable them.
     $form['status'] = array(
       '#type' => 'fieldset',
@@ -178,8 +175,8 @@ class IndexFiltersForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-    foreach ($form_state as $name => $processor) {
-      if (isset($form['#processors'][$name]) && !empty($form['#processors'][$name]['status']) && isset($values['processors'][$name]['settings'])) {
+    foreach ($form_state['processors'] as $name => $processor) {
+      if (!empty($values['processors'][$name]['status']) && isset($values['processors'][$name]['settings'])) {
         $processor_form_state = new SubFormState($form_state, array('processors', $name, 'settings'));
         $processor->validateConfigurationForm($form['settings'][$name], $processor_form_state);
       }
@@ -190,7 +187,6 @@ class IndexFiltersForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // @fixme "Aggregated fields" and HTML filter (validation/submission) not working.
     $values = $form_state->getValues();
     // Due to the "#parents" settings, these are all empty arrays.
     unset($values['settings']);
@@ -200,6 +196,8 @@ class IndexFiltersForm extends EntityForm {
     $options = $this->entity->getOptions();
 
     // Store processor settings.
+    // @todo Go through all available processors, enable/disable with method on
+    //   processor plugin to allow reaction.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     foreach ($form_state['processors'] as $processor_id => $processor) {
       $processor_form = array();
