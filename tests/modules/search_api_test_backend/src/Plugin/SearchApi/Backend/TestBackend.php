@@ -102,7 +102,7 @@ class TestBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {
+  public function deleteItems(IndexInterface $index, array $item_ids) {
     $this->checkError(__FUNCTION__);
   }
 

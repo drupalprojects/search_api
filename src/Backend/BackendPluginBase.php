@@ -10,10 +10,12 @@ namespace Drupal\search_api\Backend;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
+use string;
 
 /**
- * Defines a base class from which other backend classes may extend.
+ * Defines a base class for backend plugins.
  *
  * Plugins extending this class need to define a plugin definition array through
  * annotation. These definition arrays may be altered through
@@ -33,10 +35,14 @@ use Drupal\search_api\Server\ServerInterface;
  *   description = @Translation("Searches with SuperSearch™.")
  * )
  * @endcode
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiBackend
+ * @see \Drupal\search_api\Backend\BackendPluginManager
+ * @see \Drupal\search_api\Backend\BackendInterface
+ * @see plugin_api
  */
 abstract class BackendPluginBase extends ConfigurablePluginBase implements BackendInterface {
 
-  // @todo: Provide defaults for more methods.
   /**
    * The server this backend is configured for.
    *
@@ -56,17 +62,17 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   }
 
   /**
-   * @param \Drupal\search_api\Server\ServerInterface $server
-   */
-  public function setServer($server) {
-    $this->server = $server;
-  }
-
-  /**
-   * @return \Drupal\search_api\Server\ServerInterface
+   * {@inheritdoc}
    */
   public function getServer() {
     return $this->server;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setServer(ServerInterface $server) {
+    $this->server = $server;
   }
 
   /**
@@ -137,4 +143,5 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function removeIndex($index) {}
+
 }

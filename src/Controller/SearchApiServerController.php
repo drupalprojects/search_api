@@ -19,18 +19,18 @@ class SearchApiServerController extends ControllerBase {
   /**
    * Displays information about a search server.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
+   * @param \Drupal\search_api\Server\ServerInterface $search_api_server
    *   The server to display.
    *
    * @return array
    *   An array suitable for drupal_render().
    */
-  public function page(ServerInterface $server) {
+  public function page(ServerInterface $search_api_server) {
     // Build the search server information.
     $render = array(
       'view' => array(
         '#theme' => 'search_api_server',
-        '#server' => $server,
+        '#server' => $search_api_server,
       ),
       '#attached' => array(
         'css' => array(
@@ -39,18 +39,18 @@ class SearchApiServerController extends ControllerBase {
       ),
     );
     // Check if the server is enabled.
-    if ($server->status()) {
+    if ($search_api_server->status()) {
       // Attach the server status form.
-      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\ServerStatusForm', $server);
+      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\ServerStatusForm', $search_api_server);
     }
     return $render;
   }
 
   /**
-   * The _title_callback for the search_api.server_view route.
+   * Page title callback for a server's "View" tab.
    *
    * @param \Drupal\search_api\Server\ServerInterface $search_api_server
-   *   An instance of ServerInterface.
+   *   The server that is displayed.
    *
    * @return string
    *   The page title.
@@ -63,10 +63,10 @@ class SearchApiServerController extends ControllerBase {
    * Enables a search server without a confirmation form.
    *
    * @param \Drupal\search_api\Server\ServerInterface $search_api_server
-   *   An instance of ServerInterface.
+   *   The server to be enabled.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   A redirect response.
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response to send to the browser.
    */
   public function serverBypassEnable(ServerInterface $search_api_server) {
     $search_api_server->setStatus(TRUE)->save();
@@ -74,7 +74,7 @@ class SearchApiServerController extends ControllerBase {
     // Notify the user about the status change.
     drupal_set_message($this->t('The search server %name has been enabled.', array('%name' => $search_api_server->label())));
 
-    // Redirect to the server edit page.
+    // Redirect to the server's "View" page.
     $url = $search_api_server->urlInfo();
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }

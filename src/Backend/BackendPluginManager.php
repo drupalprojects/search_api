@@ -12,25 +12,28 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Search API backend plugin manager.
+ * Manages search backend plugins.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiBackend
+ * @see \Drupal\search_api\Backend\BackendInterface
+ * @see \Drupal\search_api\Backend\BackendPluginBase
+ * @see plugin_api
  */
 class BackendPluginManager extends DefaultPluginManager {
 
   /**
-   * Create a BackendPluginManager object.
+   * Constructs a new search backend plugin manager.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
    *   keyed by the corresponding namespace to look for plugin implementations.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   Cache backend instance to use.
+   *   The cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Backend', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiBackend');
-    // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, 'search_api_backends');
     $this->alterInfo('search_api_backend_info');
   }

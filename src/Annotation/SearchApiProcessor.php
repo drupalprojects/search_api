@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Annotation\Processor.
+ * Contains \Drupal\search_api\Annotation\SearchApiProcessor.
  */
 
 namespace Drupal\search_api\Annotation;

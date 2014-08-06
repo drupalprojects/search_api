@@ -11,7 +11,11 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 
 /**
- * Interface defining the methods search backends have to implement.
+ * Defines methods common to search servers and backend plugins.
+ *
+ * This is separate from \Drupal\search_api\Backend\BackendInterface since the
+ * CRUD reaction methods in the server entity differ from those for the backend
+ * plugin.
  */
 interface BackendSpecificInterface {
 
@@ -19,8 +23,8 @@ interface BackendSpecificInterface {
    * Returns additional, backend-specific information about this server.
    *
    * This information will be then added to the server's "View" tab in some way.
-   * In the default theme implementation this data will be output in a table
-   * with two columns along with other, generic information about the server.
+   * In the default theme implementation the data is output in a table with two
+   * columns along with other, generic information about the server.
    *
    * @return array
    *   An array of additional server information, with each piece of information
@@ -48,8 +52,8 @@ interface BackendSpecificInterface {
    *   The name of the optional feature.
    *
    * @return bool
-   *   TRUE if the backend knows and supports the specified feature, otherwise
-   *   FALSE.
+   *   TRUE if the backend knows and supports the specified feature, FALSE
+   *   otherwise.
    */
   public function supportsFeature($feature);
 
@@ -60,7 +64,7 @@ interface BackendSpecificInterface {
    *   The identifier of the add-on data type.
    *
    * @return bool
-   *   TRUE if the backend supports the data type.
+   *   TRUE if the backend supports that data type.
    */
   public function supportsDatatype($type);
 
@@ -97,9 +101,10 @@ interface BackendSpecificInterface {
    *
    * This might mean that the index has been deleted, or reassigned to a
    * different server. If you need to distinguish between these cases, inspect
-   * $index->server.
+   * $index->getServerId().
    *
-   * If the index wasn't added to the server, the method call should be ignored.
+   * If the index wasn't added to the server previously, the method call should
+   * be ignored.
    *
    * Implementations of this method should also check whether
    * $index->isReadOnly() and don't delete any indexed data if it is.
@@ -120,9 +125,8 @@ interface BackendSpecificInterface {
    *   The search index for which items should be indexed.
    * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array of items to be indexed, keyed by their item IDs.
-   *
-   *   The value of fields with the "tokens" type is an array of tokens. Each
-   *   token is an array containing the following keys:
+   *   The value of fields with the "tokenized_text" type is an array of tokens.
+   *   Each token is an array containing the following keys:
    *   - value: The word that the token represents.
    *   - score: A score for the importance of that word.
    *
@@ -131,8 +135,6 @@ interface BackendSpecificInterface {
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If indexing was prevented by a fundamental configuration error.
-   *
-   * @see \Drupal\Core\Render\Element::child()
    */
   public function indexItems(IndexInterface $index, array $items);
 
@@ -140,14 +142,14 @@ interface BackendSpecificInterface {
    * Deletes the specified items from the index.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   The index for which items should be deleted.
-   * @param string[] $ids
-   *   An array of item IDs.
+   *   The index from which items should be deleted.
+   * @param string[] $item_ids
+   *   The IDs of the deleted items.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error occurred while trying to delete the items.
    */
-  public function deleteItems(IndexInterface $index, array $ids);
+  public function deleteItems(IndexInterface $index, array $item_ids);
 
   /**
    * Deletes all the items from the index.
@@ -167,7 +169,7 @@ interface BackendSpecificInterface {
    *   The query to execute.
    *
    * @return \Drupal\search_api\Query\ResultSetInterface
-   *   An associative array containing the search results.
+   *   The search results.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If an error prevented the search from completing.

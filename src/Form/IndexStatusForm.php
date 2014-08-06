@@ -179,6 +179,7 @@ class IndexStatusForm extends FormBase {
         $form_values = $form_state->getValues();
         // Try to create a batch job to index items.
         try {
+          IndexBatchHelper::setStringTranslation($this->getStringTranslation());
           IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit']);
         }
         catch (SearchApiException $e) {

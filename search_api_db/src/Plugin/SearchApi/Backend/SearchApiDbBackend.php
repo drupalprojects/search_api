@@ -1196,19 +1196,19 @@ class SearchApiDbBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {
+  public function deleteItems(IndexInterface $index, array $item_ids) {
     try {
       if (empty($this->configuration['field_tables'][$index->id()])) {
         return;
       }
       foreach ($this->configuration['field_tables'][$index->id()] as $field) {
         $this->database->delete($field['table'])
-          ->condition('item_id', $ids, 'IN')
+          ->condition('item_id', $item_ids, 'IN')
           ->execute();
       }
       // Delete the denormalized field data.
       $this->database->delete($this->configuration['index_tables'][$index->id()])
-        ->condition('item_id', $ids, 'IN')
+        ->condition('item_id', $item_ids, 'IN')
         ->execute();
     }
       // The database operations might throw PDO or other exceptions, so we catch

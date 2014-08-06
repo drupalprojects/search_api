@@ -8,16 +8,41 @@
 namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
+use Drupal\search_api\Server\ServerInterface;
 
 /**
- * Interface defining the methods search backends have to implement.
+ * Defines an interface for search backend plugins.
  *
  * Consists of general plugin methods and the backend-specific methods defined
  * in \Drupal\search_api\Backend\BackendSpecificInterface, as well as special
  * CRUD "hook" methods that cannot be present on the server entity (which also
  * implements \Drupal\search_api\Backend\BackendSpecificInterface.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiBackend
+ * @see \Drupal\search_api\Backend\BackendPluginManager
+ * @see \Drupal\search_api\Backend\BackendPluginBase
+ * @see plugin_api
  */
 interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificInterface {
+
+  /**
+   * Retrieves the server entity for this backend.
+   *
+   * @return \Drupal\search_api\Server\ServerInterface
+   *   The server entity.
+   */
+  public function getServer();
+
+  /**
+   * Sets the server entity for this backend.
+   *
+   * @param \Drupal\search_api\Server\ServerInterface $server
+   *   The server entity.
+   *
+   * @return $this
+   *   The invoked object.
+   */
+  public function setServer(ServerInterface $server);
 
   /**
    * Reacts to the server's creation.
@@ -28,18 +53,18 @@ interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificI
   public function postInsert();
 
   /**
-   * Notifies this server that its fields are about to be updated.
+   * Notifies the backend that its configuration is about to be updated.
    *
-   * The server's $original property can be used to inspect the old property
-   * values.
+   * The server's $original property can be used to inspect the old
+   * configuration values.
    */
   public function preUpdate();
 
   /**
-   * Notifies this server that its fields were updated.
+   * Notifies the backend that its configuration was updated.
    *
-   * The server's $original property can be used to inspect the old property
-   * values.
+   * The server's $original property can be used to inspect the old
+   * configuration values.
    *
    * @return bool
    *   TRUE, if the update requires reindexing of all content on the server.
@@ -47,7 +72,7 @@ interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificI
   public function postUpdate();
 
   /**
-   * Notifies this server that it is about to be deleted from the database.
+   * Notifies the backend that the server is about to be deleted.
    *
    * This should execute any necessary cleanup operations.
    *

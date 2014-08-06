@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Annotation\Backend.
+ * Contains \Drupal\search_api\Annotation\SearchApiBackend.
  */
 
 namespace Drupal\search_api\Annotation;
@@ -11,6 +11,11 @@ use Drupal\Component\Annotation\Plugin;
 
 /**
  * Defines a Search API backend annotation object.
+ *
+ * @see \Drupal\search_api\Backend\BackendPluginManager
+ * @see \Drupal\search_api\Backend\BackendInterface
+ * @see \Drupal\search_api\Backend\BackendPluginBase
+ * @see plugin_api
  *
  * @Annotation
  */

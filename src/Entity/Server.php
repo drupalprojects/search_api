@@ -334,7 +334,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteItems(IndexInterface $index, array $ids) {
+  public function deleteItems(IndexInterface $index, array $item_ids) {
     if ($index->isReadOnly()) {
       $vars = array(
         '%index' => $index->label(),
@@ -346,7 +346,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $server_task_manager = Utility::getServerTaskManager();
     try {
       if ($server_task_manager->execute($this)) {
-        $this->getBackend()->deleteItems($index, $ids);
+        $this->getBackend()->deleteItems($index, $item_ids);
         return;
       }
     }
@@ -356,7 +356,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
     }
-    $server_task_manager->add($this, __FUNCTION__, $index, $ids);
+    $server_task_manager->add($this, __FUNCTION__, $index, $item_ids);
   }
 
   /**

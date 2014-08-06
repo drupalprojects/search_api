@@ -20,7 +20,7 @@ class SearchApiIndexController extends ControllerBase {
    * Displays information about a search index.
    *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
-   *   An instance of IndexInterface.
+   *   The index to display.
    *
    * @return array
    *   An array suitable for drupal_render().
@@ -42,10 +42,10 @@ class SearchApiIndexController extends ControllerBase {
   }
 
   /**
-   * The _title_callback for the search_api.index_view route.
+   * Page title callback for an index's "View" tab.
    *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
-   *   An instance of IndexInterface.
+   *   The index that is displayed.
    *
    * @return string
    *   The page title.
@@ -58,10 +58,10 @@ class SearchApiIndexController extends ControllerBase {
    * Enables a search index without a confirmation form.
    *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
-   *   An instance of IndexInterface.
+   *   The index to be enabled.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   A redirect response.
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response to send to the browser.
    */
   public function indexBypassEnable(IndexInterface $search_api_index) {
     // Enable the index.
@@ -78,7 +78,7 @@ class SearchApiIndexController extends ControllerBase {
       drupal_set_message($this->t('The search index %name could not be enabled. Check if its server is set and enabled.', array('%name' => $search_api_index->label())));
     }
 
-    // Redirect to the index edit page.
+    // Redirect to the index's "View" page.
     $url = $search_api_index->urlInfo();
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }

@@ -7,11 +7,12 @@
 
 namespace Drupal\search_api\Batch;
 
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Helper class for indexing items using the batch API.
+ * Provides helper methods for indexing items using Drupal's Batch API.
  */
 class IndexBatchHelper {
 
@@ -28,7 +29,7 @@ class IndexBatchHelper {
    * @return \Drupal\Core\StringTranslation\TranslationInterface
    *   The translation manager.
    */
-  protected static function translationManager() {
+  protected static function getStringTranslation() {
     if (!static::$translationManager) {
       static::$translationManager = \Drupal::service('string_translation');
     }
@@ -36,77 +37,96 @@ class IndexBatchHelper {
   }
 
   /**
+   * Sets the translation manager.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
+   *   The new translation manager.
+   */
+  public static function setStringTranslation(TranslationInterface $translation_manager) {
+    static::$translationManager = $translation_manager;
+  }
+
+  /**
    * Translates a string to the current language or to a given language.
    *
-   * See the t() documentation for details.
+   * @see \Drupal\Core\StringTranslation\TranslationInterface::translate()
    */
   protected static function t($string, array $args = array(), array $options = array()) {
-    return static::translationManager()->translate($string, $args, $options);
+    return static::getStringTranslation()->translate($string, $args, $options);
   }
 
   /**
    * Formats a string containing a count of items.
    *
-   * See the format_plural() documentation for details.
+   * @see \Drupal\Core\StringTranslation\TranslationInterface::formatPlural()
    */
   protected static function formatPlural($count, $singular, $plural, array $args = array(), array $options = array()) {
-    return static::translationManager()->formatPlural($count, $singular, $plural, $args, $options);
+    return static::getStringTranslation()->formatPlural($count, $singular, $plural, $args, $options);
   }
 
-
   /**
-   * Creates a batch for a given search index.
+   * Creates an indexing batch for a given search index.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   An instance of IndexInterface.
-   * @param int $size
-   *   Optional. Number of items to index per batch. Defaults to the cron limit
-   *   set by the index.
+   * @param int|null $batch_size
+   *   (optional) Number of items to index per batch. Defaults to the cron limit
+   *   set for the index.
    * @param int $limit
-   *   Optional. Maximum number of items to index. Defaults to indexing all
+   *   (optional) Maximum number of items to index. Defaults to indexing all
    *   remaining items.
    *
-   * @return bool
-   *   TRUE if the batch is created successfully, FALSE otherwise.
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the batch could not be created.
    */
-  public static function create(IndexInterface $index, $size = NULL, $limit = -1) {
+  public static function create(IndexInterface $index, $batch_size = NULL, $limit = -1) {
     // Check if the size should be determined by the index cron limit option.
-    if ($size === NULL) {
+    if ($batch_size === NULL) {
       // Use the size set by the index.
-      $size = $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
+      $batch_size = $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
     }
     // Check if indexing items is allowed.
-    if ($index->status() && !$index->isReadOnly() && $size !== 0 && $limit !== 0) {
+    if ($index->status() && !$index->isReadOnly() && $batch_size !== 0 && $limit !== 0) {
       // Define the search index batch definition.
       $batch_definition = array(
         'operations' => array(
-          array(array(__CLASS__, 'process'), array($index, $size, $limit)),
+          array(array(__CLASS__, 'process'), array($index, $batch_size, $limit)),
         ),
         'finished' => array(__CLASS__, 'finish'),
-        'progress_message' => static::t('Completed about @percentage% of the indexing operation.'),
+        'progress_message' => static::t('Completed about @percentage% of the indexing operation (@current of @total).'),
       );
       // Schedule the batch.
       batch_set($batch_definition);
     }
     else {
       $args = array(
-        '%size' => $size,
+        '%size' => $batch_size,
         '%limit' => $limit,
         '%name' => $index->label(),
       );
-      throw new SearchApiException(static::t('Failed to create a batch of size %size and a limit of %limit items for index %name', $args));
+      throw new SearchApiException(static::t('Failed to create a batch with batch size %size and limit %limit for index %name', $args));
     }
   }
 
   /**
    * Processes an index batch operation.
+   *
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index on which items should be indexed.
+   * @param int $batch_size
+   *   The maximum number of items to index per batch pass.
+   * @param int $limit
+   *   The maximum number of items to index in total, or -1 to index all items.
+   * @param array $context
+   *   The current batch context, as defined in the
+   *   @link batch Batch operations @endlink documentation.
    */
-  public static function process(IndexInterface $index, $size, $limit, array &$context) {
+  public static function process(IndexInterface $index, $batch_size, $limit, array &$context) {
     // Check if the sandbox should be initialized.
     if (!isset($context['sandbox']['limit'])) {
       // Initialize the sandbox with data which is shared among the batch runs.
       $context['sandbox']['limit'] = $limit;
-      $context['sandbox']['batch_size'] = $size;
+      $context['sandbox']['batch_size'] = $batch_size;
       $context['sandbox']['progress'] = 0;
     }
     // Check if the results should be initialized.
