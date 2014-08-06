@@ -10,7 +10,7 @@ namespace Drupal\search_api\Item;
 use Drupal\Core\TypedData\ComplexDataInterface;
 
 /**
- * Represents a Search API indexing or result item.
+ * Represents a search indexing or result item.
  *
  * Traversing the object should retrieve all its fields.
  */

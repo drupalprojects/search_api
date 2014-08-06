@@ -12,21 +12,21 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Provides route responses for Search API indexes.
+ * Provides route responses for search indexes.
  */
 class SearchApiIndexController extends ControllerBase {
 
   /**
-   * Displays information about a Search API index.
-   * 
+   * Displays information about a search index.
+   *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
    *   An instance of IndexInterface.
-   * 
+   *
    * @return array
    *   An array suitable for drupal_render().
    */
   public function page(IndexInterface $search_api_index) {
-    // Build the Search API index information.
+    // Build the search index information.
     $render = array(
       'view' => array(
         '#theme' => 'search_api_index',
@@ -55,7 +55,7 @@ class SearchApiIndexController extends ControllerBase {
   }
 
   /**
-   * Enables a Search API index without a confirmation form.
+   * Enables a search index without a confirmation form.
    *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
    *   An instance of IndexInterface.

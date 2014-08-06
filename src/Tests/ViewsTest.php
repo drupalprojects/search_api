@@ -17,7 +17,7 @@ class ViewsTest extends SearchApiWebTestBase {
   use ExampleContentTrait;
 
   /**
-   * A Search API index ID.
+   * A search index ID.
    *
    * @var string
    */

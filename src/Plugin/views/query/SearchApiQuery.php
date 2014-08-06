@@ -18,7 +18,7 @@ use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 
 /**
- * Views query class using a Search API index as the data source.
+ * Views query class using a search index as the data source.
  *
  * @ViewsQuery(
  *   id = "search_api_query",

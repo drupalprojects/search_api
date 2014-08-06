@@ -18,14 +18,14 @@ use Drupal\search_api\Exception\SearchApiException;
 class IntegrationTest extends SearchApiWebTestBase {
 
   /**
-   * A Search API server ID.
+   * A search server ID.
    *
    * @var string
    */
   protected $serverId;
 
   /**
-   * A Search API index ID.
+   * A search index ID.
    *
    * @var string
    */

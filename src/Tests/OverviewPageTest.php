@@ -111,10 +111,10 @@ class OverviewPageTest extends SearchApiWebTestBase {
   }
 
   /**
-   * Asserts enable/disable operations for a Search API server or index.
+   * Asserts enable/disable operations for a search server or index.
    *
    * @param \Drupal\search_api\Server\ServerInterface|\Drupal\search_api\Index\IndexInterface $entity
-   *   A Search API server or index.
+   *   A search server or index.
    */
   protected function assertEntityStatusChange($entity) {
     $this->drupalGet($this->overviewPageUrl);

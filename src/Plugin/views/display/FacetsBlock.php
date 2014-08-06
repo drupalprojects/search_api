@@ -97,7 +97,7 @@ class FacetsBlock extends Block {
    */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
     if (substr($this->view->base_table, 0, 17) != 'search_api_index_') {
-      $form_state->setErrorByName('', $this->t('The "Facets block" display can only be used with base tables based on Search API indexes.'));
+      $form_state->setErrorByName('', $this->t('The "Facets block" display can only be used with base tables based on search indexes.'));
     }
   }
 
@@ -155,7 +155,7 @@ class FacetsBlock extends Block {
         $table = Views::viewsData($this->view->base_table);
         $table = empty($table['table']['base']['title']) ? $this->view->base_table : $table['table']['base']['title'];
         throw new SearchApiException(String::format('The "Facets block" display cannot be used with a view for @basetable. ' .
-            'Please only use this display with base tables representing search indexes.',
+            'Please only use this display with base tables representing Search API indexes.',
             array('@basetable' => $table)));
       }
       $this->field_options = array();

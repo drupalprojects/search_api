@@ -17,7 +17,7 @@ use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Builds a listing of Search API index entities.
+ * Builds a listing of search index entities.
  */
 class IndexListBuilder extends ConfigEntityListBuilder {
 

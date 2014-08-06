@@ -34,14 +34,14 @@ class SearchApiDbTest extends EntityUnitTestBase {
   public static $modules = array('field', 'menu_link', 'search_api', 'search_api_db', 'search_api_test_db');
 
   /**
-   * A Search API server ID.
+   * A search server ID.
    *
    * @var string
    */
   protected $serverId = 'database_search_server';
 
   /**
-   * A Search API index ID.
+   * A search index ID.
    *
    * @var string
    */

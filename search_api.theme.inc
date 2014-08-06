@@ -67,19 +67,19 @@ function theme_search_api_admin_fields_table($variables) {
 }
 
 /**
- * Returns HTML for a Search API server.
+ * Returns HTML for a search server.
  *
  * @param array $variables
  *   An associative array containing:
  *   - server: The server that should be displayed.
  *
  * @return string
- *   The rendered HTML for a Search API server.
+ *   The rendered HTML for a search server.
  *
  * @ingroup themeable
  */
 function theme_search_api_server($variables) {
-  // Get the Search API server.
+  // Get the search server.
   /** @var $server \Drupal\search_api\Server\ServerInterface */
   $server = $variables['server'];
 
@@ -180,14 +180,14 @@ function theme_search_api_server($variables) {
 }
 
 /**
- * Returns HTML for a Search API index.
+ * Returns HTML for a search index.
  *
  * @param array $variables
  *   An associative array containing:
  *     - index: The search index to display.
  *
  * @return string
- *   The rendered HTML for a Search API index.
+ *   The rendered HTML for a search index.
  *
  * @ingroup themeable
  */

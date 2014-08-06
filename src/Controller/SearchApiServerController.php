@@ -2,9 +2,7 @@
 
 /**
 * @file
-* Contains \Drupal\search_api\Controller\SearchApiIndexController.
-*
-* Small controller to handle Index enabling without confirmation task
+* Contains \Drupal\search_api\Controller\SearchApiServerController.
 */
 
 namespace Drupal\search_api\Controller;
@@ -13,23 +11,26 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\Server\ServerInterface;
 
+/**
+ * Provides block routines for search server-specific routes.
+ */
 class SearchApiServerController extends ControllerBase {
 
   /**
-   * Displays information about a Search API server.
-   * 
+   * Displays information about a search server.
+   *
    * @param \Drupal\search_api\Server\ServerInterface $server
-   *   An instance of ServerInterface.
-   * 
+   *   The server to display.
+   *
    * @return array
    *   An array suitable for drupal_render().
    */
-  public function page(ServerInterface $search_api_server) {
-    // Build the Search API server information.
+  public function page(ServerInterface $server) {
+    // Build the search server information.
     $render = array(
       'view' => array(
         '#theme' => 'search_api_server',
-        '#server' => $search_api_server,
+        '#server' => $server,
       ),
       '#attached' => array(
         'css' => array(
@@ -38,9 +39,9 @@ class SearchApiServerController extends ControllerBase {
       ),
     );
     // Check if the server is enabled.
-    if ($search_api_server->status()) {
+    if ($server->status()) {
       // Attach the server status form.
-      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\ServerStatusForm', $search_api_server);
+      $render['form'] = $this->formBuilder()->getForm('Drupal\search_api\Form\ServerStatusForm', $server);
     }
     return $render;
   }
@@ -59,7 +60,7 @@ class SearchApiServerController extends ControllerBase {
   }
 
   /**
-   * Enables a Search API server without a confirmation form.
+   * Enables a search server without a confirmation form.
    *
    * @param \Drupal\search_api\Server\ServerInterface $search_api_server
    *   An instance of ServerInterface.

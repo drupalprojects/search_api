@@ -84,7 +84,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    * Creates or deletes a server.
    *
    * @return \Drupal\search_api\Server\ServerInterface
-   *   A Search API server.
+   *   A search server.
    */
   public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $backend_id = 'search_api_test_backend', $options = array(), $reset = FALSE) {
     /** @var $server \Drupal\search_api\Server\ServerInterface */
@@ -108,7 +108,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    * Creates or deletes an index.
    *
    * @return \Drupal\search_api\Index\IndexInterface
-   *   A Search API server.
+   *   A search server.
    */
   public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_plugin_id = 'entity:node', $reset = FALSE) {
     /** @var $index \Drupal\search_api\Index\IndexInterface */
