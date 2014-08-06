@@ -85,7 +85,7 @@ class Query implements QueryInterface {
   protected $pre_execute = FALSE;
 
   /**
-   * Constructs a new search query.
+   * Constructs a Query object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index the query should be executed on.

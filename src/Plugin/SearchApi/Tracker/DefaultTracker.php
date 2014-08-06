@@ -38,7 +38,7 @@ class DefaultTracker extends TrackerPluginBase {
   protected $connection;
 
   /**
-   * Create DefaultTracker object.
+   * Constructs a DefaultTracker object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   An instance of Connection which represents the connection to the

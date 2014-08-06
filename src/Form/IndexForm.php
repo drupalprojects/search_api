@@ -53,7 +53,7 @@ class IndexForm extends EntityForm {
   protected $trackerPluginManager;
 
   /**
-   * Create an IndexForm object.
+   * Constructs an IndexForm object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.

@@ -93,9 +93,9 @@ trait FieldTrait {
   protected $labelPrefix;
 
   /**
-   * Creates a new field object.
+   * Constructs a FieldTrait object.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The field's index.
    * @param string $field_identifier
    *   The field's combined identifier, with datasource prefix if applicable.

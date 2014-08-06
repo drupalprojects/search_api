@@ -33,7 +33,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   protected $entity_manager;
 
   /**
-   * Creates a new server task manager.
+   * Constructs a ServerTaskManager object.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.

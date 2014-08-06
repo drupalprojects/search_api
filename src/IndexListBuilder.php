@@ -40,7 +40,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
-   * Constructs a new ViewListBuilder object.
+   * Constructs an IndexListBuilder object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type definition.

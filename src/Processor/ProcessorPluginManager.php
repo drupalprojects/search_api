@@ -17,7 +17,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class ProcessorPluginManager extends DefaultPluginManager {
 
   /**
-   * Create a ProcessorPluginManager object.
+   * Constructs a ProcessorPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths

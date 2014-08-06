@@ -32,7 +32,7 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
   private $entityManager;
 
   /**
-   * Create a ContentEntityDatasourceDeriver object.
+   * Constructs a ContentEntityDatasourceDeriver object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.

@@ -84,7 +84,7 @@ class SearchApiDbBackend extends BackendPluginBase {
   protected $warnings = array();
 
   /**
-   * Constructs a new database search backend.
+   * Constructs a SearchApiDbBackend object.
    *
    * @param array $configuration
    *   A configuration array containing settings for this backend.

@@ -89,7 +89,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   protected $extraData = array();
 
   /**
-   * Constructs a new search item.
+   * Constructs an Item object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The item's search index.

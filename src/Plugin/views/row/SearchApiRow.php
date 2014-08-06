@@ -48,8 +48,14 @@ class SearchApiRow extends RowPluginBase {
   public $entityManager;
 
   /**
-   * {@inheritdoc}
+   * Constructs a SearchApiRow object.
    *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    */

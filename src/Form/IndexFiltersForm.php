@@ -41,7 +41,7 @@ class IndexFiltersForm extends EntityForm {
   protected $processorPluginManager;
 
   /**
-   * Constructs a IndexFiltersForm object.
+   * Constructs an IndexFiltersForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.

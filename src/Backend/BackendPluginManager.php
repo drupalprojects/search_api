@@ -22,7 +22,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class BackendPluginManager extends DefaultPluginManager {
 
   /**
-   * Constructs a new search backend plugin manager.
+   * Constructs a BackendPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths

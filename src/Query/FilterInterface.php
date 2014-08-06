@@ -16,16 +16,6 @@ namespace Drupal\search_api\Query;
 interface FilterInterface {
 
   /**
-   * @param string $conjunction
-   *   (optional) The conjunction to use for this filter - either 'AND' or 'OR'.
-   * @param array $tags
-   *   (optional) An arbitrary set of tags. Can be used to identify this filter
-   *   down the line if necessary. This is primarily used by the facet system
-   *   to support OR facet queries.
-   */
-  public function __construct($conjunction = 'AND', array $tags = array());
-
-  /**
    * Sets this filter's conjunction.
    *
    * @param string $conjunction

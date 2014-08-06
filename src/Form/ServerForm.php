@@ -43,7 +43,7 @@ class ServerForm extends EntityForm {
   protected $backendPluginManager;
 
   /**
-   * Create a ServerFormController object.
+   * Constructs a ServerForm object.
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The entity manager.

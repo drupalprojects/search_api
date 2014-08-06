@@ -60,7 +60,7 @@ class IndexFieldsForm extends EntityForm {
   }
 
   /**
-   * Constructs a IndexFieldsForm object.
+   * Constructs an IndexFieldsForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.

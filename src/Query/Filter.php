@@ -20,7 +20,7 @@ class Filter implements FilterInterface {
    *
    * @var array
    */
-  protected $filters;
+  protected $filters = array();
 
   /**
    * String specifying this filter's conjunction ('AND' or 'OR').
@@ -37,11 +37,17 @@ class Filter implements FilterInterface {
   protected $tags;
 
   /**
-   * {@inheritdoc}
+   * Constructs a Filter object.
+   *
+   * @param string $conjunction
+   *   (optional) The conjunction to use for this filter - either 'AND' or 'OR'.
+   * @param array $tags
+   *   (optional) An arbitrary set of tags. Can be used to identify this filter
+   *   down the line if necessary. This is primarily used by the facet system
+   *   to support OR facet queries.
    */
   public function __construct($conjunction = 'AND', array $tags = array()) {
     $this->setConjunction($conjunction);
-    $this->filters = array();
     $this->tags = array_combine($tags, $tags);
   }
 

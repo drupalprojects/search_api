@@ -82,7 +82,7 @@ class SubFormState implements FormStateInterface {
   protected $input;
 
   /**
-   * Constructs a new sub-form state object.
+   * Constructs a SubFormState object.
    *
    * @param \Drupal\Core\Form\FormStateInterface $main_form_state
    *   The state of the main form.

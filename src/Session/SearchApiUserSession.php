@@ -15,7 +15,7 @@ use Drupal\Core\Session\AnonymousUserSession;
 class SearchApiUserSession extends AnonymousUserSession {
 
   /**
-   * Constructs a new Search API user session.
+   * Constructs a SearchApiUserSession object.
    *
    * Intentionally allow only a roles parameter to be passed in, as opposed to
    * AnonymousUserSession which doesn't allow any parameter.

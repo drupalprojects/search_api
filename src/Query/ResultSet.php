@@ -55,7 +55,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   protected $extraData = array();
 
   /**
-   * Creates a new search result.
+   * Constructs a ResultSet object.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The executed query.

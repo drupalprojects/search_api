@@ -18,7 +18,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 class TrackerPluginManager extends DefaultPluginManager {
 
   /**
-   * Creates a TrackerPluginManager object.
+   * Constructs a TrackerPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
