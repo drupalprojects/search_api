@@ -134,7 +134,7 @@ class IndexStatusForm extends FormBase {
     // Perform default form validation.
     parent::validateForm($form, $form_state);
     // Check if the user wants to perform "index now" action.
-    if ($form_state['triggering_element']['#name'] === 'index_now') {
+    if ($form_state->get('triggering_element')['#name'] === 'index_now') {
       // Get the form values.
       $form_values = $form_state->getValues();
       // Get the value for indexing all remaining items and convert to lower
@@ -173,7 +173,7 @@ class IndexStatusForm extends FormBase {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
     // Evaluate the triggering element name.
-    switch ($form_state['triggering_element']['#name']) {
+    switch ($form_state->get('triggering_element')['#name']) {
       case 'index_now':
         // Get the form state values.
         $form_values = $form_state->getValues();

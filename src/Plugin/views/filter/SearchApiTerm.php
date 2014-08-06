@@ -110,7 +110,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
 
       $default_value = (array) $this->value;
 
-      if (!empty($form_state['exposed'])) {
+      if ($form_state->get('exposed')) {
         $identifier = $this->options['expose']['identifier'];
 
         if (!empty($this->options['expose']['reduce'])) {
@@ -146,7 +146,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       $form['value']['#size'] = min(9, count($options));
       $form['value']['#default_value'] = $default_value;
 
-      $input = &$form_state['input'];
+      $input = &$form_state->get('input');
       if ($form_state->get('exposed') && isset($identifier) && !isset($input[$identifier])) {
         $input[$identifier] = $default_value;
       }

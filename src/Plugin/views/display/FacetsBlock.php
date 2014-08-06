@@ -56,7 +56,7 @@ class FacetsBlock extends Block {
       return;
     }
 
-    switch ($form_state['section']) {
+    switch ($form_state->get('section')) {
       case 'linked_path':
         $form['#title'] .= $this->t('Search page path');
         $form['linked_path'] = array(
@@ -108,7 +108,7 @@ class FacetsBlock extends Block {
     parent::submitOptionsForm($form, $form_state);
 
     $values = $form_state->getValues();
-    switch ($form_state['section']) {
+    switch ($form_state->get('section')) {
       case 'linked_path':
         $this->setOption('linked_path', $values['linked_path']);
         break;

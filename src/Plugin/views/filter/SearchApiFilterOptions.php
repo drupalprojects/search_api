@@ -166,7 +166,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
    */
   protected function valueForm(&$form, FormStateInterface $form_state) {
     $this->getValueOptions();
-    if (!empty($this->options['expose']['reduce']) && !empty($form_state['exposed'])) {
+    if (!empty($this->options['expose']['reduce']) && $form_state->get('exposed')) {
       $options = $this->reduceValueOptions();
     }
     else {
@@ -175,7 +175,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
 
     $form['value'] = array(
       '#type' => $this->value_form_type,
-      '#title' => empty($form_state['exposed']) ? $this->t('Value') : '',
+      '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
       '#options' => $options,
       '#multiple' => TRUE,
       '#size' => min(4, count($options)),
@@ -184,7 +184,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
 
     // Hide the value box if the operator is 'empty' or 'not empty'.
     // Radios share the same selector so we have to add some dummy selector.
-    if (empty($form_state['exposed'])) {
+    if (!$form_state->get('exposed')) {
       $form['value']['#states']['visible'] = array(
         ':input[name="options[operator]"],dummy-empty' => array('!value' => 'empty'),
         ':input[name="options[operator]"],dummy-not-empty' => array('!value' => 'not empty'),

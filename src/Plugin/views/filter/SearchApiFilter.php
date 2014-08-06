@@ -64,14 +64,14 @@ class SearchApiFilter extends FilterPluginBase {
     }
     $form['value'] = array(
       '#type' => 'textfield',
-      '#title' => empty($form_state['exposed']) ? $this->t('Value') : '',
+      '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
       '#size' => 30,
       '#default_value' => isset($this->value) ? $this->value : '',
     );
 
     // Hide the value box if the operator is 'empty' or 'not empty'.
     // Radios share the same selector so we have to add some dummy selector.
-    if (empty($form_state['exposed'])) {
+    if (!$form_state->get('exposed')) {
       $form['value']['#states']['visible'] = array(
         ':input[name="options[operator]"],dummy-empty' => array('!value' => 'empty'),
         ':input[name="options[operator]"],dummy-not-empty' => array('!value' => 'not empty'),

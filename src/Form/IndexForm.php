@@ -573,7 +573,7 @@ class IndexForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
-    if (!$form_state['rebuild']) {
+    if (!$form_state->get('rebuild')) {
       // Catch any exception that may get thrown during save operation.
       try {
         // Save changes made to the entity.

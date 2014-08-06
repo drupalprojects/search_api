@@ -175,7 +175,7 @@ class IndexFiltersForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-    foreach ($form_state['processors'] as $name => $processor) {
+    foreach ($form_state->get('processors') as $name => $processor) {
       if (!empty($values['processors'][$name]['status']) && isset($values['processors'][$name]['settings'])) {
         $processor_form_state = new SubFormState($form_state, array('processors', $name, 'settings'));
         $processor->validateConfigurationForm($form['settings'][$name], $processor_form_state);
@@ -199,7 +199,7 @@ class IndexFiltersForm extends EntityForm {
     // @todo Go through all available processors, enable/disable with method on
     //   processor plugin to allow reaction.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-    foreach ($form_state['processors'] as $processor_id => $processor) {
+    foreach ($form_state->get('processors') as $processor_id => $processor) {
       $processor_form = array();
       if (isset($form['settings'][$processor_id])) {
         $processor_form = & $form['settings'][$processor_id];

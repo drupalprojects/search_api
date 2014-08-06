@@ -76,7 +76,7 @@ class AggregatedField extends ProcessorPluginBase {
     $form_state_fields = $form_state->get('fields');
 
     // Check if we need to add a new field, or remove one.
-    $triggering_element = $form_state['triggering_element'];
+    $triggering_element = $form_state->get('triggering_element');
     if (isset($triggering_element['#name'])) {
       $button_name = $triggering_element['#name'];
       if ($button_name == 'add_aggregation_field') {

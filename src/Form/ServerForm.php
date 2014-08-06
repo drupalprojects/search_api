@@ -109,7 +109,7 @@ class ServerForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     // Check if the form is being rebuilt.
-    if ($form_state['rebuild']) {
+    if ($form_state->get('rebuild')) {
       // Rebuild the entity with the form state values.
       $this->entity = $this->buildEntity($form, $form_state);
     }
@@ -311,7 +311,7 @@ class ServerForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Check if the form does not need to be rebuild.
-    if (!$form_state['rebuild']) {
+    if (!$form_state->get('rebuild')) {
       // Catch any exception that may get thrown during save operation.
       try {
         // Save changes made to the entity.

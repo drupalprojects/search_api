@@ -64,7 +64,7 @@ class SearchApiFilterDate extends SearchApiFilter {
       $form['value']['#date_format'] = 'm/d/Y';
       unset($form['value']['#description']);
     }
-    elseif (empty($form_state['exposed'])) {
+    elseif (!$form_state->get('exposed')) {
       $form['value']['#description'] = $this->t('A date in any format understood by <a href="@doc-link">PHP</a>. For example, "@date1" or "@date2".', array(
         '@doc-link' => 'http://php.net/manual/en/function.strtotime.php',
         '@date1' => format_date(REQUEST_TIME, 'custom', 'Y-m-d H:i:s'),

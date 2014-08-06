@@ -242,7 +242,7 @@ class IndexFieldsForm extends EntityForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = $form_state['index'];
+    $index = $form_state->get('index');
 
     // Store the fields configuration.
     $values = $form_state->getValues();

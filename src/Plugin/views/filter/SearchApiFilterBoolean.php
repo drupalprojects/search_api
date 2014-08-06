@@ -32,7 +32,7 @@ class SearchApiFilterBoolean extends SearchApiFilter {
     }
     $form['value'] = array(
       '#type' => 'select',
-      '#title' => empty($form_state['exposed']) ? $this->t('Value') : '',
+      '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
       '#options' => array(1 => $this->t('True'), 0 => $this->t('False')),
       '#default_value' => isset($this->value) ? $this->value : '',
     );
