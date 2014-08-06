@@ -176,8 +176,16 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
-  public function setRedirect(Url $url) {
-    $this->mainFormState->setRedirect($url);
+  public function setRedirect($route_name, array $route_parameters = array(), array $options = array()) {
+    $this->mainFormState->setRedirect($route_name, $route_parameters, $options);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRedirectUrl(Url $url) {
+    $this->mainFormState->setRedirectUrl($url);
     return $this;
   }
 

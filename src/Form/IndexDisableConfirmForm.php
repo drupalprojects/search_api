@@ -55,7 +55,7 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
     drupal_set_message($this->t('The search index %name has been disabled.', array('%name' => $this->entity->label())));
 
     // Redirect to the overview page.
-    $form_state->setRedirect(new Url('search_api.overview'));
+    $form_state->setRedirect('search_api.overview');
   }
 
 }

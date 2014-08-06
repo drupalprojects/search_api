@@ -320,7 +320,7 @@ class ServerForm extends EntityForm {
         // Notify the user that the server was created.
         drupal_set_message($this->t('The server was successfully saved.'));
         // Redirect to the server page.
-        $form_state->setRedirect(new Url('search_api.server_view', array('search_api_server' => $entity->id())));
+        $form_state->setRedirect('search_api.server_view', array('search_api_server' => $entity->id()));
       }
       catch (\Exception $ex) {
         // Rebuild the form.
@@ -340,7 +340,7 @@ class ServerForm extends EntityForm {
     // Get the entity.
     $entity = $this->getEntity();
     // Redirect to the entity delete confirm page.
-    $form_state->setRedirect(new Url('search_api.server_delete', array('search_api_server' => $entity->id())));
+    $form_state->setRedirect('search_api.server_delete', array('search_api_server' => $entity->id()));
   }
 
 }

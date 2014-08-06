@@ -48,7 +48,7 @@ class ServerStatusForm extends FormBase {
     /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = $form['#server'];
     // Redirect to the server clear page.
-    $form_state->setRedirect(new Url('search_api.server_clear', array('search_api_server' => $server->id())));
+    $form_state->setRedirect('search_api.server_clear', array('search_api_server' => $server->id()));
   }
 
 }

@@ -581,7 +581,7 @@ class IndexForm extends EntityForm {
         // Notify the user that the server was created.
         drupal_set_message($this->t('The index was successfully saved.'));
         // Redirect to the index page.
-        $form_state->setRedirect(new Url('search_api.index_view', array('search_api_index' => $this->getEntity()->id())));
+        $form_state->setRedirect('search_api.index_view', array('search_api_index' => $this->getEntity()->id()));
       }
       catch (\Exception $ex) {
         // Rebuild the form.
@@ -599,7 +599,7 @@ class IndexForm extends EntityForm {
    */
   public function delete(array $form, FormStateInterface $form_state) {
     // Redirect to the entity delete confirm page.
-    $form_state->setRedirect(new Url('search_api.index_delete', array('search_api_index' => $this->getEntity()->id())));
+    $form_state->setRedirect('search_api.index_delete', array('search_api_index' => $this->getEntity()->id()));
   }
 
 }

@@ -190,12 +190,12 @@ class IndexStatusForm extends FormBase {
 
       case 'reindex':
         // Redirect to the index reindex page.
-        $form_state->setRedirect(new Url('search_api.index_reindex', array('search_api_index' => $index->id())));
+        $form_state->setRedirect('search_api.index_reindex', array('search_api_index' => $index->id()));
         break;
 
       case 'clear':
         // Redirect to the index clear page.
-        $form_state->setRedirect(new Url('search_api.index_clear', array('search_api_index' => $index->id())));
+        $form_state->setRedirect('search_api.index_clear', array('search_api_index' => $index->id()));
         break;
     }
   }
