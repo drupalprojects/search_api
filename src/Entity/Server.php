@@ -61,14 +61,14 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public $machine_name;
 
   /**
-   * The displayed name of the server.
+   * The displayed name for a server.
    *
    * @var string
    */
   public $name;
 
   /**
-   * The displayed description of the server.
+   * The displayed description for a server.
    *
    * @var string
    */
@@ -93,7 +93,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var \Drupal\search_api\Backend\BackendInterface
    */
-  protected $backendPluginInstance;
+  private $backendPluginInstance = NULL;
 
   /**
    * {@inheritdoc}
@@ -154,7 +154,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function setBackendConfig(array $backend_config) {
     $this->backend_config = $backend_config;
     $this->getBackend()->setConfiguration($backend_config);
-    return $this;
   }
 
   /**
@@ -419,12 +418,30 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
+  public function toArray() {
+    // @todo It's a bug that we have to do this. Backend configuration should
+    //   always be set via the server's setBackendConfiguration() method,
+    //   otherwise the two can diverge causing this and other problems. The
+    //   alternative would be to call $server->setBackendConfiguration() in the
+    //   backend's setConfiguration() method and use a second $propagate
+    //   parameter to avoid an infinite loop. Similar things go for the index's
+    //   various plugins. Maybe using PluginBagsInterface is the solution here?
+    $properties = parent::toArray();
+    if ($this->hasValidBackend()) {
+      $properties['backend_config'] = $this->getBackend()->getConfiguration();
+    }
+    return $properties;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function calculateDependencies() {
     parent::calculateDependencies();
 
     // Add the backend's dependencies.
     if ($this->hasValidBackend() && ($backend = $this->getBackend())) {
-      $this->addDependencies($backend->calculateDependencies());
+      $this->calculatePluginDependencies($backend);
     }
 
     return $this->dependencies;
