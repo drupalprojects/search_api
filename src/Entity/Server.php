@@ -61,14 +61,14 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public $machine_name;
 
   /**
-   * The displayed name for a server.
+   * The displayed name of the server.
    *
    * @var string
    */
   public $name;
 
   /**
-   * The displayed description for a server.
+   * The displayed description of the server.
    *
    * @var string
    */
@@ -93,7 +93,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var \Drupal\search_api\Backend\BackendInterface
    */
-  private $backendPluginInstance = NULL;
+  protected $backendPluginInstance;
 
   /**
    * {@inheritdoc}
@@ -154,6 +154,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function setBackendConfig(array $backend_config) {
     $this->backend_config = $backend_config;
     $this->getBackend()->setConfiguration($backend_config);
+    return $this;
   }
 
   /**
@@ -441,7 +442,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     // Add the backend's dependencies.
     if ($this->hasValidBackend() && ($backend = $this->getBackend())) {
-      $this->calculatePluginDependencies($backend);
+      $this->addDependencies($backend->calculateDependencies());
     }
 
     return $this->dependencies;
