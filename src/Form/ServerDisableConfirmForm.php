@@ -12,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Defines a disable confirm form for the Server entity.
+ * Defines a confirm form for disabling a server.
  */
 class ServerDisableConfirmForm extends EntityConfirmFormBase {
 
@@ -27,7 +27,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('Disabling a server will also disable all attached indexes. It will also clear the tracking tables and if views is enabled it will disable the following views: insert list of views here');
+    return $this->t('Disabling a server will also disable all attached indexes, clearing their tracking tables and indexed data. When re-enabling the server and its indexes, all data will have to be re-indexed. This action cannot be undone.');
   }
 
   /**
@@ -48,12 +48,11 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // Toggle the entity status.
-    $this->entity->setStatus(FALSE)->save();
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = $this->entity;
+    $server->setStatus(FALSE)->save();
 
-    // Notify the user about the server removal.
     drupal_set_message($this->t('The search server %name has been disabled.', array('%name' => $this->entity->label())));
-    // Redirect to the overview page.
     $form_state->setRedirect('search_api.overview');
   }
 

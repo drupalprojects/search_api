@@ -7,13 +7,14 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
- * Defines a clear confirm form for the Server entity.
+ * Defines a confirm form for clearing a server.
  */
 class ServerClearConfirmForm extends EntityConfirmFormBase {
 
@@ -42,41 +43,43 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // Get the search server entity object.
-    /** @var \Drupal\search_api\Server\ServerInterface $entity */
-    $entity = $this->getEntity();
-    // Initialize the ignored indexes as an empty array. This variable will
-    // contain all the index labels that failed to reindex.
-    $ignored_indexes = array();
-    // Iterate through the attached indexes.
-    foreach ($entity->getIndexes() as $index) {
-      // Check whether clearing the index was successful.
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = $this->getEntity();
+
+    try {
+      $server->deleteAllItems();
+      drupal_set_message($this->t('All indexed data was successfully deleted from the server.'));
+    }
+    catch (SearchApiException $e) {
+      drupal_set_message($this->t('Indexed data could not be cleared for some indexes. Check the logs for details.'), 'error');
+    }
+
+    $failed_reindexing = array();
+    $properties = array(
+      'status' => TRUE,
+      'read_only' => FALSE,
+    );
+    foreach ($server->getIndexes($properties) as $index) {
       try {
-        $index->clear();
+        $index->reindex();
       }
       catch (SearchApiException $e) {
-        // Add the index label to the list of ignored or failed indexes.
-        $ignored_indexes[] = l($index->label(), $index->getSystemPath('canonical'));
+        $args = array(
+          '%index' => $index->label(),
+        );
+        watchdog_exception('search_api', $e, '%type while clearing index %index: !message in %function (line %line of %file).', $args);
+        $failed_reindexing[] = $index->label();
       }
     }
-    // Check if any index was skipped.
-    if ($ignored_indexes) {
-      // Build the ignored indexes message argument.
-      $message_args = array(
-        '%name' => $entity->label(),
-        '!indexes' => implode(', ', $ignored_indexes),
+
+    if ($failed_reindexing) {
+      $args = array(
+        '@indexes' => implode(', ', $failed_reindexing),
       );
-      // Build the ignored indexes message.
-      $message = $this->translationManager()->formatPlural(count($ignored_indexes), 'The indexed data from search index !indexes was ignored during indexed data clear for search server %name.', 'The indexed data from search indexes !indexes were ignored during indexed data clear for search server %name.', $message_args);
-      // Notify user about some indexes that were ignored from clear operation.
-      drupal_set_message($message, 'warning');
+      drupal_set_message($this->t('Failed to mark the following indexes for reindexing: @indexes. Check the logs for details.', $args), 'warning');
     }
-    else {
-      // Notify user about all indexed data was cleared.
-      drupal_set_message($this->t('The indexed data from the search server %name was successfully cleared.', array('%name' => $entity->label())));
-    }
-    // Redirect to the server view page.
-    $form_state->setRedirect('search_api.server_view', array('search_api_server' => $entity->id()));
+
+    $form_state->setRedirect('search_api.server_view', array('search_api_server' => $server->id()));
   }
 
 }

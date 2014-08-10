@@ -86,7 +86,7 @@ class RenderedItem extends ProcessorPluginBase {
       if (count($view_modes) > 1) {
         $form['view_mode'][$datasource_id] = array(
           '#type' => 'select',
-          '#title' => $this->t('View mode for data source @datasource', array('@datasource' => $datasource->label())),
+          '#title' => $this->t('View mode for data source %datasource', array('%datasource' => $datasource->label())),
           '#options' => $view_modes,
         );
         if (isset($this->configuration['view_mode'][$datasource_id])) {

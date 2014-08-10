@@ -4,7 +4,7 @@ search_api.settings:
   mapping:
     cron_limit:
       type: integer
-      label: 'Cron batch size'
+      label: 'Default cron batch size'
     cron_worker_runtime:
       type: integer
       label: 'Maximum runtime for the cron worker'

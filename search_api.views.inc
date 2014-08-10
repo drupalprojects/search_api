@@ -71,7 +71,7 @@ function search_api_views_data() {
     return $data;
   }
   catch (Exception $e) {
-    watchdog_exception('search_api_views', $e);
+    watchdog_exception('search_api', $e);
   }
 }
 

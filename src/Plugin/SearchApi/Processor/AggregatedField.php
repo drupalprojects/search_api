@@ -123,7 +123,6 @@ class AggregatedField extends ProcessorPluginBase {
       '#attributes' => array(
         'id' => 'search-api-alter-add-aggregation-field-settings',
       ),
-      '#weight' => 7,
       '#tree' => TRUE,
     );
 

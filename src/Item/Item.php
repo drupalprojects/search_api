@@ -209,6 +209,9 @@ class Item implements \IteratorAggregate, ItemInterface {
       if ($field->getFieldIdentifier() !== $field_id) {
         throw new \InvalidArgumentException('The field identifier passed must be consistent with the identifier set on the field object.');
       }
+      // Make sure that the field has the same index object set as we. This
+      // might otherwise cause impossibly hard-to-detect bugs.
+      $field->setIndex($this->index);
       $this->fields[$field_id] = $field;
     }
     else {
@@ -221,6 +224,12 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function setFields(array $fields) {
+    // Make sure that all fields have the same index object set as we. This
+    // might otherwise cause impossibly hard-to-detect bugs.
+    /** @var \Drupal\search_api\Item\FieldInterface $field */
+    foreach ($fields as $field) {
+      $field->setIndex($this->index);
+    }
     $this->fields = $fields;
     return $this;
   }

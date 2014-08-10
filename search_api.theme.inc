@@ -145,7 +145,7 @@ function theme_search_api_server($variables) {
   foreach ($server->getIndexes() as $index) {
     $indexes['#links'][] = array(
       'title' => $index->label(),
-      'href' => $index->getSystemPath('canonical'),
+      'href' => $index->getSystemPath(),
     );
   }
   // Check if the indexes variable contains links.
@@ -191,7 +191,7 @@ function theme_search_api_server($variables) {
  *
  * @ingroup themeable
  */
-// @todo This executes a search in the theme layer, amongst other thing.
+// @todo This executes a search in the theme layer, amongst other things.
 //   Definitely not cool.
 function theme_search_api_index($variables) {
   // Get the index.

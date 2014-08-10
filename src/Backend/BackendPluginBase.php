@@ -10,9 +10,7 @@ namespace Drupal\search_api\Backend;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
-use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Server\ServerInterface;
-use string;
 
 /**
  * Defines a base class for backend plugins.

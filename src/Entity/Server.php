@@ -325,18 +325,25 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function deleteAllItems() {
     $failed = array();
+    $properties['status'] = TRUE;
     $properties['read_only'] = FALSE;
     foreach ($this->getIndexes($properties) as $index) {
       try {
         $this->getBackend()->deleteAllIndexItems($index);
       }
       catch (SearchApiException $e) {
+        $args = array(
+          '%index' => $index->label(),
+        );
+        watchdog_exception('search_api', $e, '%type while deleting all items from index %index: !message in %function (line %line of %file).', $args);
         $failed[] = $index->label();
       }
     }
     if (!empty($e)) {
-      $args['%server'] = $this->label();
-      $args['@indexes'] = implode(', ', $failed);
+      $args = array(
+        '%server' => $this->label(),
+        '@indexes' => implode(', ', $failed),
+      );
       $message = String::format('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
       throw new SearchApiException($message, 0, $e);
     }

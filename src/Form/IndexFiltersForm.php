@@ -92,7 +92,7 @@ class IndexFiltersForm extends EntityForm {
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
-    $form['#title'] = $this->t('Manage filters for search index @label', array('@label' => $this->entity->label()));
+    $form['#title'] = $this->t('Manage filters for search index %label', array('%label' => $this->entity->label()));
     $form['#prefix'] = '<p>' . $this->t('Configure processors which will pre- and post-process data at index and search time.') . '</p>';
 
     // Add the list of processors with checkboxes to enable/disable them.
@@ -133,10 +133,11 @@ class IndexFiltersForm extends EntityForm {
         '#markup' => String::checkPlain($processor->label()),
       );
 
-      // TableDrag: Weight column element.
+      // This column is needed for tabledrag and will normally be hidden with
+      // Javascript (as long as tabledrag is working in the browser).
       $form['order'][$name]['weight'] = array(
         '#type' => 'weight',
-        '#title' => $this->t('Weight for @title', array('@title' => $processor->label())),
+        '#title' => $this->t('Weight for processor %title', array('%title' => $processor->label())),
         '#title_display' => 'invisible',
         '#default_value' => $processors_settings[$name]['weight'],
         '#parents' => array('processors', $name, 'weight'),
@@ -237,7 +238,7 @@ class IndexFiltersForm extends EntityForm {
   protected function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
 
-    // Remove the delete action
+    // We don't have a "delete" action here.
     unset($actions['delete']);
 
     return $actions;

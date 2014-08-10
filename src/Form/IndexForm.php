@@ -9,9 +9,8 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Tracker\TrackerPluginManager;
@@ -25,28 +24,19 @@ class IndexForm extends EntityForm {
   /**
    * The entity manager.
    *
-   * This object members must be set to anything other than private in order for
-   * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
-   *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
   /**
-   * The search datasource plugin manager.
-   *
-   * This object members must be set to anything other than private in order for
-   * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
+   * The datasource plugin manager.
    *
    * @var \Drupal\search_api\Datasource\DatasourcePluginManager
    */
   protected $datasourcePluginManager;
 
   /**
-   * The Search API tracker plugin manager.
-   *
-   * This object members must be set to anything other than private in order
-   * for \Drupal\Core\DependencyInjection\DependencySerialization to detect.
+   * The tracker plugin manager.
    *
    * @var \Drupal\search_api\Tracker\TrackerPluginManager
    */
@@ -55,84 +45,94 @@ class IndexForm extends EntityForm {
   /**
    * Constructs an IndexForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager
    *   The search datasource plugin manager.
    * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
    *   The Search API tracker plugin manager.
    */
-  public function __construct(EntityManager $entity_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
-    // Setup object members.
+  public function __construct(EntityManagerInterface $entity_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
     $this->entityManager = $entity_manager;
     $this->datasourcePluginManager = $datasource_plugin_manager;
     $this->trackerPluginManager = $tracker_plugin_manager;
   }
 
   /**
-   * Get the entity manager.
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
+    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager */
+    $datasource_plugin_manager = $container->get('plugin.manager.search_api.datasource');
+    /** @var \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager */
+    $tracker_plugin_manager = $container->get('plugin.manager.search_api.tracker');
+    return new static($entity_manager, $datasource_plugin_manager, $tracker_plugin_manager);
+  }
+
+  /**
+   * Returns the entity manager.
    *
-   * @return \Drupal\Core\Entity\EntityManager
-   *   An instance of EntityManager.
+   * @return \Drupal\Core\Entity\EntityManagerInterface
+   *   The entity manager.
    */
   protected function getEntityManager() {
-    return $this->entityManager;
+    return $this->entityManager ?: \Drupal::service('entity.manager');
   }
 
   /**
-   * Get the search datasource plugin manager.
+   * Returns the datasource plugin manager.
    *
    * @return \Drupal\search_api\Datasource\DatasourcePluginManager
-   *   An instance of DatasourcePluginManager.
+   *   The datasource plugin manager.
    */
   protected function getDatasourcePluginManager() {
-    return $this->datasourcePluginManager;
+    return $this->datasourcePluginManager ?: \Drupal::service('plugin.manager.search_api.datasource');
   }
 
   /**
-   * Get the Search API tracker plugin manager.
+   * Returns the tracker plugin manager.
    *
    * @return \Drupal\search_api\Tracker\TrackerPluginManager
-   *   An instance of TrackerPluginManager.
+   *   The tracker plugin manager.
    */
   protected function getTrackerPluginManager() {
-    return $this->trackerPluginManager;
+    return $this->trackerPluginManager ?: \Drupal::service('plugin.manager.search_api.tracker');
   }
 
   /**
-   * Get the index storage controller.
+   * Returns the index storage controller.
    *
    * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   An instance of EntityStorageInterface.
+   *   The index storage controller.
    */
   protected function getIndexStorage() {
     return $this->getEntityManager()->getStorage('search_api_index');
   }
 
   /**
-   * Get the server storage controller.
+   * Returns the server storage controller.
    *
    * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   An instance of EntityStorageInterface.
+   *   The server storage controller.
    */
   protected function getServerStorage() {
     return $this->getEntityManager()->getStorage('search_api_server');
   }
 
   /**
-   * Get a list of servers for use with a select element.
+   * Retrieves all available servers as an options list.
    *
-   * @return array
-   *   An associative array containing the server names, keyed by the server
-   *   machine name.
+   * @return string[]
+   *   An associative array mapping server IDs to their labels.
    */
   protected function getServerOptions() {
-    // Initialize the options variable to an empty array.
     $options = array();
-    // Iterate through the servers.
-    foreach ($this->getServerStorage()->loadMultiple() as $server_machine_name => $server) {
-      // Add the plugin to the list.
-      $options[$server_machine_name] = String::checkPlain($server->label());
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    foreach ($this->getServerStorage()->loadMultiple() as $server_id => $server) {
+      // @todo Special formatting for disabled servers.
+      $options[$server_id] = String::checkPlain($server->label());
     }
     return $options;
   }
@@ -140,52 +140,34 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity.manager'),
-      $container->get('plugin.manager.search_api.datasource'),
-      $container->get('plugin.manager.search_api.tracker')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function form(array $form, FormStateInterface $form_state) {
-    // Check if the form is being rebuilt.
+    // If the form is being rebuilt, rebuild the entity with the current form
+    // values.
     if ($form_state->get('rebuild')) {
-      // Rebuild the entity with the form state values.
       $this->entity = $this->buildEntity($form, $form_state);
     }
-    // Build the default entity form.
+
     $form = parent::form($form, $form_state);
-    // Get the entity and attach to the form state.
-    $entity = $this->getEntity();
-    $form_state->set('entity', $entity);
-    // Check if the entity is being created.
-    if ($entity->isNew()) {
-      // Change the page title to 'Add index'.
+
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = $this->getEntity();
+    if ($index->isNew()) {
       $form['#title'] = $this->t('Add search index');
     }
     else {
-      // Change the page title to 'Edit search index @label'.
-      $form['#title'] = $this->t('Edit search index @label', array('@label' => $entity->label()));
+      $form['#title'] = $this->t('Edit search index %label', array('%label' => $index->label()));
     }
-    // Build the entity form.
-    $this->buildEntityForm($form, $form_state, $entity);
-    // Return the build form.
+
+    $this->buildEntityForm($form, $form_state, $index);
+
     return $form;
   }
 
   /**
-   * Build the entity form.
+   * Builds the form for the basic index properties.
    *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The index that is being created or edited.
    */
   public function buildEntityForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     $form['#tree'] = TRUE;
@@ -195,7 +177,6 @@ class IndexForm extends EntityForm {
       '#description' => $this->t('Enter the displayed name for the index.'),
       '#default_value' => $index->label(),
       '#required' => TRUE,
-      '#weight' => 1,
     );
     $form['machine_name'] = array(
       '#type' => 'machine_name',
@@ -206,19 +187,18 @@ class IndexForm extends EntityForm {
         'exists' => array($this->getIndexStorage(), 'load'),
         'source' => array('name'),
       ),
-      '#weight' => 2,
     );
 
-    // Check if the datasource plugin changed.
+    // If the user changed the datasources or the tracker, notify them that they
+    // need to be configured.
+    // @todo Only do that if the datasources/tracker have configuration forms.
+    //   (Same in ServerForm.)
     $values = $form_state->getValues();
     if (!empty($values['datasources'])) {
-      // Notify the user about the datasource configuration change.
-      drupal_set_message($this->t('Please configure the used data type.'), 'warning');
+      drupal_set_message($this->t('Please configure the used datasources.'), 'warning');
     }
 
-    // Check if the tracker plugin changed.
     if (!empty($values['tracker'])) {
-      // Notify the user about the tracker configuration change.
       drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
     }
 
@@ -238,12 +218,11 @@ class IndexForm extends EntityForm {
       '#required' => TRUE,
       '#ajax' => array(
         'trigger_as' => array('name' => 'datasourcepluginids_configure'),
-        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
+        'callback' => array(get_class($this), 'buildAjaxDatasourceConfigForm'),
         'wrapper' => 'search-api-datasources-config-form',
         'method' => 'replace',
         'effect' => 'fade',
       ),
-      '#weight' => 3,
     );
 
     $form['datasource_configs'] = array(
@@ -251,21 +230,19 @@ class IndexForm extends EntityForm {
       '#attributes' => array(
         'id' => 'search-api-datasources-config-form',
       ),
-      '#weight' => 4,
       '#tree' => TRUE,
     );
 
-    $form['datasourceConfigureButton'] = array(
+    $form['datasource_configure_button'] = array(
       '#type' => 'submit',
       '#name' => 'datasourcepluginids_configure',
       '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('datasources')),
-      '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxDatasourceConfigForm'),
+      '#submit' => array(array(get_class($this), 'submitAjaxDatasourceConfigForm')),
       '#ajax' => array(
-        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxDatasourceConfigForm',
+        'callback' => array(get_class($this), 'buildAjaxDatasourceConfigForm'),
         'wrapper' => 'search-api-datasources-config-form',
       ),
-      '#weight' => 5,
       '#attributes' => array('class' => array('js-hide')),
     );
 
@@ -282,12 +259,11 @@ class IndexForm extends EntityForm {
       '#disabled' => !$index->isNew(),
       '#ajax' => array(
         'trigger_as' => array('name' => 'trackerpluginid_configure'),
-        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxTrackerConfigForm',
+        'callback' => array(get_class($this), 'buildAjaxTrackerConfigForm'),
         'wrapper' => 'search-api-tracker-config-form',
         'method' => 'replace',
         'effect' => 'fade',
       ),
-      '#weight' => 6,
       '#access' => count($tracker_options) > 1,
     );
 
@@ -296,21 +272,19 @@ class IndexForm extends EntityForm {
       '#attributes' => array(
         'id' => 'search-api-tracker-config-form',
       ),
-      '#weight' => 7,
       '#tree' => TRUE,
     );
 
-    $form['trackerConfigureButton'] = array(
+    $form['tracker_configure_button'] = array(
       '#type' => 'submit',
       '#name' => 'trackerpluginid_configure',
       '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('tracker')),
-      '#submit' => array('\Drupal\search_api\Form\IndexForm::submitAjaxTrackerConfigForm'),
+      '#submit' => array(array(get_class($this), 'submitAjaxTrackerConfigForm')),
       '#ajax' => array(
-        'callback' => '\Drupal\search_api\Form\IndexForm::buildAjaxTrackerConfigForm',
+        'callback' => array(get_class($this), 'buildAjaxTrackerConfigForm'),
         'wrapper' => 'search-api-tracker-config-form',
       ),
-      '#weight' => 8,
       '#attributes' => array('class' => array('js-hide')),
     );
 
@@ -319,25 +293,26 @@ class IndexForm extends EntityForm {
     $form['server'] = array(
       '#type' => 'radios',
       '#title' => $this->t('Server'),
-      '#description' => $this->t('Select the server this index should reside on. Index can not be enabled without connection to valid server.'),
-      '#options' => array('' => $this->t('- No server -')) + $this->getServerOptions(),
+      '#description' => $this->t('Select the server this index should use. Indexes cannot be enabled without a connection to a valid, enabled server.'),
+      '#options' => array(NULL => '<em>' . $this->t('- No server -') . '</em>') + $this->getServerOptions(),
       '#default_value' => $index->hasValidServer() ? $index->getServerId() : NULL,
-      '#weight' => 9,
     );
 
     $form['status'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
-      '#description' => $this->t('Select if the index will be enabled. This will only take effect if the selected server is also enabled.'),
+      '#description' => $this->t('Only enabled indexes can be used for indexing and searching. This setting will only take effect if the selected server is also enabled.'),
       '#default_value' => $index->status(),
       // Can't enable an index lying on a disabled server or no server at all.
       '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
+      // @todo This doesn't seem to work and should also hide for disabled
+      //   servers. If that works, we can probably remove the last sentence of
+      //   the description.
       '#states' => array(
         'invisible' => array(
-          '[name="server"]' => array('value' => '')
+          ':input[name="server"]' => array('value' => '')
         ),
       ),
-      '#weight' => 10,
     );
 
     $form['description'] = array(
@@ -345,7 +320,6 @@ class IndexForm extends EntityForm {
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the index.'),
       '#default_value' => $index->getDescription(),
-      '#weight' => 11,
     );
 
     $form['options'] = array(
@@ -353,10 +327,9 @@ class IndexForm extends EntityForm {
       '#type' => 'details',
       '#title' => $this->t('Index options'),
       '#collapsed' => TRUE,
-      '#weight' => 12,
     );
 
-    // We display the "read-only" flag along with the other option, even though
+    // We display the "read-only" flag along with the other options, even though
     // it is a property directly on the index object. We use "#parents" to move
     // it to the correct place in the form values.
     $form['options']['read_only'] = array(
@@ -365,14 +338,12 @@ class IndexForm extends EntityForm {
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
       '#parents' => array('read_only'),
-      '#weight' => 13,
     );
     $form['options']['index_directly'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Index items immediately'),
       '#description' => $this->t('Immediately index new or updated items instead of waiting for the next cron run. This might have serious performance drawbacks and is generally not advised for larger sites.'),
       '#default_value' => $index->getOption('index_directly'),
-      '#weight' => 14,
     );
     $form['options']['cron_limit'] = array(
       '#type' => 'textfield',
@@ -380,116 +351,84 @@ class IndexForm extends EntityForm {
       '#description' => $this->t('Set how many items will be indexed at once when indexing items during a cron run. "0" means that no items will be indexed by cron for this index, "-1" means that cron should index all items at once.'),
       '#default_value' => $index->getOption('cron_limit'),
       '#size' => 4,
-      '#weight' => 15,
     );
   }
 
 
   /**
-   * Builds the datasource configuration form.
+   * Builds the configuration forms for all selected datasources.
    *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The index begin created or edited.
    */
   public function buildDatasourcesConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
       if ($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state)) {
-        // Modify the datasource plugin configuration container element.
         $form['datasource_configs'][$datasource_id]['#type'] = 'details';
-        $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure data type: @datasource_label', array('@datasource_label' => $datasource->getPluginDefinition()['label']));
-        $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew() ? TRUE : $index->isNew();
+        $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure the %datasource datasource', array('%datasource' => $datasource->getPluginDefinition()['label']));
+        $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew();
 
-        // Attach the build datasource plugin configuration form.
         $form['datasource_configs'][$datasource_id] += $datasource_plugin_config_form;
       }
     }
   }
 
   /**
-   * Build the tracker configuration form.
+   * Builds the tracker configuration form.
    *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
    * @param \Drupal\search_api\Index\IndexInterface index
-   *   An instance of IndexInterface.
+   *   The index begin created or edited.
    */
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
-    // Check if the index has a valid tracker configured.
     if ($index->hasValidTracker()) {
-      // Get the tracker.
       $tracker = $index->getTracker();
-      // Get the tracker plugin definition.
       $tracker_plugin_definition = $tracker->getPluginDefinition();
-      // Build the tracker configuration form.
-      if (($tracker_plugin_config_form = $tracker->buildConfigurationForm(array(), $form_state))) {
-        // Modify the tracker plugin configuration container element.
-        $form['tracker_config']['#type'] = 'details';
-        $form['tracker_config']['#title'] = $this->t('Configure @plugin', array('@plugin' => $tracker_plugin_definition['label']));
-        $form['tracker_config']['#description'] = String::checkPlain($tracker_plugin_definition['description']);
-        $form['tracker_config']['#open'] = $index->isNew() ? TRUE : $index->isNew();
 
-        // Attach the build tracker plugin configuration form.
+      if ($tracker_plugin_config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
+        $form['tracker_config']['#type'] = 'details';
+        $form['tracker_config']['#title'] = $this->t('Configure %plugin', array('%plugin' => $tracker_plugin_definition['label']));
+        $form['tracker_config']['#description'] = String::checkPlain($tracker_plugin_definition['description']);
+        $form['tracker_config']['#open'] = $index->isNew();
+
         $form['tracker_config'] += $tracker_plugin_config_form;
       }
     }
-    // Do not notify the user about a missing tracker plugin if a new index
-    // is being configured.
+    // Only notify the user of a missing tracker plugin if we're editing an
+    // existing index.
     elseif (!$index->isNew()) {
-      // Notify the user about the missing tracker plugin.
       drupal_set_message($this->t('The tracker plugin is missing or invalid.'), 'error');
     }
   }
 
   /**
-   * Button submit handler for datasource configure button 'datasource_configure' button.
+   * Form submission handler for buildEntityForm().
+   *
+   * Takes care of changes in the selected datasources.
    */
   public static function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
   /**
-   * Button submit handler for tracker configure button 'tracker_configure' button.
+   * Handles changes to the selected datasources.
+   */
+  public static function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
+    return $form['datasource_configs'];
+  }
+
+  /**
+   * Form submission handler for buildEntityForm().
+   *
+   * Takes care of changes in the selected tracker plugin.
    */
   public static function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
   /**
-   * Build the datasource plugin configuration form in context of an Ajax
-   * request.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return array
-   *   An associative array containing the structure of the form.
-   */
-  public static function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
-    // Get the datasource plugin configuration form.
-    return $form['datasource_configs'];
-  }
-
-  /**
-   * Build the tracker plugin configuration form in context of an Ajax request.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return array
-   *   An associative array containing the structure of the form.
+   * Handles switching the selected tracker plugin.
    */
   public static function buildAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
-    // Get the tracker plugin configuration form.
     return $form['tracker_config'];
   }
 
@@ -497,11 +436,10 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function validate(array $form, FormStateInterface $form_state) {
-    // Perform default entity form validate.
     parent::validate($form, $form_state);
 
-    /** @var $entity \Drupal\search_api\Index\IndexInterface */
-    $entity = $this->getEntity();
+    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    $index = $this->getEntity();
 
     // Store the array of datasource plugin IDs with integer keys.
     $values = $form_state->getValues();
@@ -509,35 +447,43 @@ class IndexForm extends EntityForm {
     $form_state->setValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource.
+    // @todo Do we want to also call validate and submit callbacks for plugins
+    //   without configuration forms? We currently don't for backend plugins,
+    //   but do it here. We should be consistent.
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface[] $datasource_plugins */
     $datasource_plugins = array();
     $datasource_forms = array();
     $datasource_form_states = array();
     foreach ($datasource_ids as $datasource_id) {
-      if ($entity->isValidDatasource($datasource_id)) {
-        $datasource = $entity->getDatasource($datasource_id);
+      if ($index->isValidDatasource($datasource_id)) {
+        $datasource_plugins[$datasource_id] = $index->getDatasource($datasource_id);
       }
       else {
-        $datasource = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $entity));
+        $datasource_plugins[$datasource_id] = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $index));
       }
-      $datasource_plugins[$datasource_id] = $datasource;
       $datasource_forms[$datasource_id] = array();
       if (!empty($form['datasource_configs'][$datasource_id])) {
-        $datasource_forms[$datasource_id] = & $form['datasource_configs'][$datasource_id];
+        $datasource_forms[$datasource_id] = &$form['datasource_configs'][$datasource_id];
       }
       $datasource_form_states[$datasource_id] = new SubFormState($form_state, array('datasource_configs', $datasource_id));
-      $datasource->validateConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
+      $datasource_plugins[$datasource_id]->validateConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
     }
     $form_state->set('datasource_plugins', $datasource_plugins);
     $form_state->set('datasource_forms', $datasource_forms);
     $form_state->set('datasource_form_states', $datasource_form_states);
 
     // Call validateConfigurationForm() for the (possibly new) tracker.
+    // @todo It seems if we change the tracker, we would validate/submit the old
+    //   tracker's form using the new tracker. Shouldn't be done, of course.
+    //   Similar above for datasources, though there of course the values will
+    //   just always be empty (because datasource have their plugin ID in the
+    //   form structure).
     $tracker_id = $values['tracker'];
-    if ($entity->getTrackerId() == $tracker_id) {
-      $tracker = $entity->getTracker();
+    if ($index->getTrackerId() == $tracker_id) {
+      $tracker = $index->getTracker();
     }
     else {
-      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $entity));
+      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $index));
     }
     $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
     $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
@@ -549,13 +495,13 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    /** @var $entity \Drupal\search_api\Index\IndexInterface */
-    $entity = $this->getEntity();
+    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    $index = $this->getEntity();
 
-    // @todo Redirect to a confirm form if changing server, since that isn't
-    //   such a light operation (equaling a "clear", basically).
+    // @todo Redirect to a confirm form if changing server or tracker, since
+    //   that isn't such a light operation (equaling a "clear", basically).
 
-    $form_state->setValue('options', array_merge($entity->getOptions(), $form_state->getValues()['options']));
+    $form_state->setValue('options', array_merge($index->getOptions(), $form_state->getValues()['options']));
 
     $datasource_forms = $form_state->get('datasource_forms');
     $datasource_form_states = $form_state->get('datasource_form_states');
@@ -576,23 +522,16 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    // Check if the form does not need to be rebuild.
+    // Only save the index if the form doesn't need to be rebuilt.
     if (!$form_state->get('rebuild')) {
-      // Catch any exception that may get thrown during save operation.
       try {
-        // Save changes made to the entity.
         $this->getEntity()->save();
-        // Notify the user that the server was created.
         drupal_set_message($this->t('The index was successfully saved.'));
-        // Redirect to the index page.
         $form_state->setRedirect('search_api.index_view', array('search_api_index' => $this->getEntity()->id()));
       }
       catch (\Exception $ex) {
-        // Rebuild the form.
         $form_state->setRebuild();
-        // Log the exception to the watchdog.
-        watchdog_exception('Search API', $ex);
-        // Notify the user that the save operation failed.
+        watchdog_exception('search_api', $ex);
         drupal_set_message($this->t('The index could not be saved.'), 'error');
       }
     }
@@ -602,7 +541,6 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function delete(array $form, FormStateInterface $form_state) {
-    // Redirect to the entity delete confirm page.
     $form_state->setRedirect('search_api.index_delete', array('search_api_index' => $this->getEntity()->id()));
   }
 

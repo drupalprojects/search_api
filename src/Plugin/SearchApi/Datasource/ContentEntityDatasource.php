@@ -26,12 +26,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @SearchApiDatasource(
  *   id = "entity",
- *   name = @Translation("Content entity datasource"),
- *   description = @Translation("Exposes the content entities as datasource."),
  *   deriver = "Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDeriver"
  * )
  */
-class ContentEntityDatasource extends DatasourcePluginBase implements ContainerFactoryPluginInterface {
+class ContentEntityDatasource extends DatasourcePluginBase {
 
   /**
    * The entity manager.

@@ -13,7 +13,7 @@ use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
- * Defines a reindex confirm form for the Index entity.
+ * Defines a confirm form for reindexing an index.
  */
 class IndexReindexConfirmForm extends EntityConfirmFormBase {
 
@@ -27,6 +27,13 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
+  public function getDescription() {
+    return $this->t('Indexed data will remain on the search server until all items have been reindexed. Searches on this index will continue to yield results. This action cannot be undone.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCancelUrl() {
     return new Url('search_api.index_view', array('search_api_index' => $this->entity->id()));
   }
@@ -35,22 +42,18 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // Get the search index entity object.
+    /** @var \Drupal\search_api\Index\IndexInterface $entity */
     $entity = $this->getEntity();
-    // Reindex the search index.
+
     try {
-      /** @var \Drupal\search_api\Index\IndexInterface $entity */
       $entity->reindex();
-      // Notify the user about the reindex being successful.
       drupal_set_message($this->t('The search index %name was successfully reindexed.', array('%name' => $entity->label())));
     }
     catch (SearchApiException $e) {
-      // Notify the user about the reindex failure.
       drupal_set_message($this->t('Failed to reindex items for the search index %name.', array('%name' => $entity->label())), 'error');
       watchdog_exception('search_api', $e, '%type while trying to reindex items on index %name: !message in %function (line %line of %file)', array('%name' => $entity->label()));
     }
 
-    // Redirect to the index view page.
     $form_state->setRedirect('search_api.index_view', array('search_api_index' => $entity->id()));
   }
 

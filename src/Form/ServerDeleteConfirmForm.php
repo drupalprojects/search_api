@@ -12,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- * Defines a delete confirm form for the Server entity.
+ * Defines a confirm form for deleting a server.
  */
 class ServerDeleteConfirmForm extends EntityConfirmFormBase {
 
@@ -48,11 +48,8 @@ class ServerDeleteConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submit(array $form, FormStateInterface $form_state) {
-    // Delete the entity.
     $this->entity->delete();
-    // Notify the user about the server removal.
-    drupal_set_message($this->t('The search server %name has been removed.', array('%name' => $this->entity->label())));
-    // Redirect to the overview page.
+    drupal_set_message($this->t('The search server %name has been deleted.', array('%name' => $this->entity->label())));
     $form_state->setRedirect('search_api.overview');
   }
 

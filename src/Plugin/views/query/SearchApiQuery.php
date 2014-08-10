@@ -492,11 +492,11 @@ class SearchApiQuery extends QueryPluginBase {
           $return[$i] = $entity;
         }
         else {
-          watchdog('search_api_views', 'The search index returned a reference to an entity with ID @id, which does not exist in the database. Your index may be out of sync and should be rebuilt.', array('@id' => $id), WATCHDOG_ERROR);
+          watchdog('search_api', 'The search index returned a reference to an entity with ID @id, which does not exist in the database. Your index may be out of sync and should be rebuilt.', array('@id' => $id), WATCHDOG_ERROR);
         }
       }
       catch (EntityMetadataWrapperException $e) {
-        watchdog_exception('search_api_views', $e, "%type while trying to load search result entity with ID @id: !message in %function (line %line of %file).", array('@id' => $id), WATCHDOG_ERROR);
+        watchdog_exception('search_api', $e, "%type while trying to load search result entity with ID @id: !message in %function (line %line of %file).", array('@id' => $id), WATCHDOG_ERROR);
       }
     }
     return array($type, $return);

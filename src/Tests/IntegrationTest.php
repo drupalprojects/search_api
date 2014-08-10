@@ -172,7 +172,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     );
 
     $this->drupalPostForm($settings_path, $edit, $this->t('Save changes'));
-    $this->assertText($this->t('The indexed fields were successfully changed.'));
+    $this->assertText($this->t('The changes were successfully saved.'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);

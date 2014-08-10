@@ -31,7 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @SearchApiBackend(
  *   id = "search_api_db",
  *   label = @Translation("Database"),
- *   description = @Translation("Index items in the database, if no dedicated search software is available. Supports several advanced features, but should not be used for large sites.")
+ *   description = @Translation("Indexes items in the database. Supports several advanced features, but should not be used for large sites.")
  * )
  */
 class SearchApiDbBackend extends BackendPluginBase {

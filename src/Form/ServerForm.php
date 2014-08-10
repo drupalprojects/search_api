@@ -9,24 +9,19 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManager;
-use Drupal\Core\Form\FormState;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\Server\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a form for the Server entity.
+ * Provides a form for creating and editing search servers.
  */
 class ServerForm extends EntityForm {
 
   /**
    * The server storage controller.
-   *
-   * This object members must be set to anything other than private in order for
-   * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
@@ -35,9 +30,6 @@ class ServerForm extends EntityForm {
   /**
    * The backend plugin manager.
    *
-   * This object members must be set to anything other than private in order for
-   * \Drupal\Core\DependencyInjection\DependencySerialization to detected.
-   *
    * @var \Drupal\search_api\Backend\BackendPluginManager
    */
   protected $backendPluginManager;
@@ -45,108 +37,86 @@ class ServerForm extends EntityForm {
   /**
    * Constructs a ServerForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager
    *   The backend plugin manager.
    */
-  public function __construct(EntityManager $entity_manager, BackendPluginManager $backend_plugin_manager) {
-    // Setup object members.
+  public function __construct(EntityManagerInterface $entity_manager, BackendPluginManager $backend_plugin_manager) {
     $this->storage = $entity_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
-  }
-
-  /**
-   * Get the server storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   An instance of EntityStorageInterface.
-   */
-  protected function getStorage() {
-    return $this->storage;
-  }
-
-  /**
-   * Get the backend plugin manager.
-   *
-   * @return \Drupal\search_api\Backend\BackendPluginManager
-   *   An instance of BackendPluginManager.
-   */
-  protected function getBackendPluginManager() {
-    return $this->backendPluginManager;
-  }
-
-  /**
-   * Get a list of backend plugin definitions for use with a select element.
-   *
-   * @return array
-   *   An associative array of backend plugin names, keyed by the backend plugin
-   *   ID.
-   */
-  protected function getBackendPluginDefinitionOptions() {
-    // Initialize the options variable to an empty array.
-    $options = array();
-    // Iterate through the backend plugin definitions.
-    foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
-      // Add the plugin to the list.
-      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
-    }
-    return $options;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity.manager'),
-      $container->get('plugin.manager.search_api.backend')
-    );
+    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
+    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager */
+    $backend_plugin_manager = $container->get('plugin.manager.search_api.backend');
+    return new static($entity_manager, $backend_plugin_manager);
+  }
+
+  /**
+   * Retrieves the server storage controller.
+   *
+   * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   An instance of EntityStorageInterface.
+   */
+  protected function getStorage() {
+    return $this->storage ?: \Drupal::service('entity.manager')->getStorage('search_api_server');
+  }
+
+  /**
+   * Retrieves the backend plugin manager.
+   *
+   * @return \Drupal\search_api\Backend\BackendPluginManager
+   *   An instance of BackendPluginManager.
+   */
+  protected function getBackendPluginManager() {
+    return $this->backendPluginManager ?: \Drupal::service('plugin.manager.search_api.backend');
   }
 
   /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
-    // Check if the form is being rebuilt.
+    // If the form is being rebuilt, rebuild the entity with the current form
+    // values.
     if ($form_state->get('rebuild')) {
-      // Rebuild the entity with the form state values.
       $this->entity = $this->buildEntity($form, $form_state);
     }
-    // Build the default entity form.
+
     $form = parent::form($form, $form_state);
-    // Get the entity and attach to the form state.
-    $entity = $this->getEntity();
-    $form_state->set('entity', $entity);
-    // Check if the entity is being created.
-    if ($entity->isNew()) {
-      // Change the page title to 'Add server'.
+
+    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    $server = $this->getEntity();
+
+    // Set the page title according to whether we are creating or editing the
+    // server.
+    if ($server->isNew()) {
       $form['#title'] = $this->t('Add search server');
     }
     else {
-      // Change the page title to 'Edit @label'.
-      $form['#title'] = $this->t('Edit search server @label', array('@label' => $entity->label()));
+      $form['#title'] = $this->t('Edit search server %label', array('%label' => $server->label()));
     }
-    // Build the entity form.
-    $this->buildEntityForm($form, $form_state, $entity);
-    // Build the backend configuration form.
-    $this->buildBackendConfigForm($form, $form_state, $entity);
-    // Return the build form.
+
+    $this->buildEntityForm($form, $form_state, $server);
+    $this->buildBackendConfigForm($form, $form_state, $server);
+
     return $form;
   }
 
   /**
-   * Build the entity form.
+   * Builds the form for the basic server properties.
    *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
    * @param \Drupal\search_api\Server\ServerInterface $server
-   *   An instance of ServerInterface.
+   *   The server that is being created or edited.
    */
   public function buildEntityForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
-    // Build the name element.
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     $form['name'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Server name'),
@@ -154,7 +124,6 @@ class ServerForm extends EntityForm {
       '#default_value' => $server->label(),
       '#required' => TRUE,
     );
-    // Build the machine name element.
     $form['machine_name'] = array(
       '#type' => 'machine_name',
       '#default_value' => $server->id(),
@@ -165,52 +134,66 @@ class ServerForm extends EntityForm {
         'source' => array('name'),
       ),
     );
-    // Build the status element.
     $form['status'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
-      '#description' => $this->t('Select if the server will be enabled.'),
+      '#description' => $this->t('Only enabled servers can index items or execute searches.'),
       '#default_value' => $server->status(),
     );
-    // Build the description element.
     $form['description'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the server.'),
       '#default_value' => $server->getDescription(),
     );
-    // Build the backend plugin selection element.
-    $form['backend'] = array(
-      '#type' => 'radios',
-      '#title' => $this->t('Backend'),
-      '#description' => $this->t('Choose a backend to use for this server.'),
-      '#options' => $this->getBackendPluginDefinitionOptions(),
-      '#default_value' => $server->getBackendId(),
-      '#required' => TRUE,
-      '#ajax' => array(
-        'callback' => array($this, 'buildAjaxBackendConfigForm'),
-        'wrapper' => 'search-api-backend-config-form',
-        'method' => 'replace',
-        'effect' => 'fade',
-      ),
-    );
-
-    // Attach the admin css.
-    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+    $backend_options = $this->getBackendPluginDefinitionOptions();
+    if ($backend_options) {
+      if (count($backend_options) == 1) {
+        $server->set('backend', key($backend_options));
+      }
+      $form['backend'] = array(
+        '#type' => 'radios',
+        '#title' => $this->t('Backend'),
+        '#description' => $this->t('Choose a backend to use for this server.'),
+        '#options' => $backend_options,
+        '#default_value' => $server->getBackendId(),
+        '#required' => TRUE,
+        '#ajax' => array(
+          'callback' => array(get_class($this), 'buildAjaxBackendConfigForm'),
+          'wrapper' => 'search-api-backend-config-form',
+          'method' => 'replace',
+          'effect' => 'fade',
+        ),
+      );
+    }
+    else {
+      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a module that provides a backend plugin to proceed.'), 'error');
+      $form = array();
+    }
   }
 
   /**
-   * Build the backend configuration form.
+   * Returns all available backend plugins, as an options list.
    *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
+   * @return string[]
+   *   An associative array mapping backend plugin IDs to their (HTML-escaped)
+   *   labels.
+   */
+  protected function getBackendPluginDefinitionOptions() {
+    $options = array();
+    foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
+      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
+    }
+    return $options;
+  }
+
+  /**
+   * Builds the backend-specific configuration form.
+   *
    * @param \Drupal\search_api\Server\ServerInterface $server
-   *   An instance of ServerInterface.
+   *   The server that is being created or edited.
    */
   public function buildBackendConfigForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
-    // Build the backend plugin configuration container element.
     $form['backend_config'] = array(
       '#type' => 'container',
       '#attributes' => array(
@@ -218,48 +201,39 @@ class ServerForm extends EntityForm {
       ),
       '#tree' => TRUE,
     );
-    // Check if the server has a valid backend configured.
+
     if ($server->hasValidBackend()) {
-      // Get the backend.
       $backend = $server->getBackend();
-      // Build the backend configuration form.
-      if (($backend_plugin_config_form = $backend->buildConfigurationForm(array(), $form_state))) {
-        // Check if the backend plugin changed.
+      if (($backend_form = $backend->buildConfigurationForm(array(), $form_state))) {
+        // If the backend plugin changed, notify the user.
         if (!empty($form_state->getValues()['backend'])) {
-          // Notify the user about the backend configuration change.
           drupal_set_message($this->t('Please configure the used backend.'), 'warning');
         }
 
         // Modify the backend plugin configuration container element.
         $form['backend_config']['#type'] = 'details';
-        $form['backend_config']['#title'] = $this->t('Configure @plugin', array('@plugin' => $backend->label()));
+        $form['backend_config']['#title'] = $this->t('Configure %plugin backend', array('%plugin' => $backend->label()));
         $form['backend_config']['#description'] = String::checkPlain($backend->summary());
         $form['backend_config']['#open'] = TRUE;
-        // Attach the build backend plugin configuration form.
-        $form['backend_config'] += $backend_plugin_config_form;
+        // Attach the backend plugin configuration form.
+        $form['backend_config'] += $backend_form;
       }
     }
-    // Do not notify the user about a missing backend plugin if a new server
-    // is being configured.
+    // Only notify the user of a missing backend plugin if we're editing an
+    // existing server.
     elseif (!$server->isNew()) {
-      // Notify the user about the missing backend plugin.
       drupal_set_message($this->t('The backend plugin is missing or invalid.'), 'error');
     }
   }
 
   /**
-   * Build the backend plugin configuration form in context of an Ajax request.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current form state.
-   *
-   * @return array
-   *   An associative array containing the structure of the form.
+   * Handles switching the selected backend plugin.
    */
-  public function buildAjaxBackendConfigForm(array $form, FormStateInterface $form_state) {
-    // Get the backend plugin configuration form.
+  public static function buildAjaxBackendConfigForm(array $form, FormStateInterface $form_state) {
+    // The work is already done in form(), where we rebuild the entity according
+    // to the current form values and then create the backend configuration form
+    // based on that. So we just need to return the relevant part of the form
+    // here.
     return $form['backend_config'];
   }
 
@@ -285,7 +259,7 @@ class ServerForm extends EntityForm {
       $form_state->set('input', $input);
     }
     // Check before loading the backend plugin so we don't throw an exception.
-    elseif ($server->hasValidBackend() && isset($form['backend_config'])) {
+    elseif ($form['backend_config']['#type'] == 'details' && $server->hasValidBackend()) {
       $backend_form_state = new SubFormState($form_state, array('backend_config'));
       $server->getBackend()->validateConfigurationForm($form['backend_config'], $backend_form_state);
       $form_state->set('backend_form_state', $backend_form_state);
@@ -310,24 +284,17 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    // Check if the form does not need to be rebuild.
+    // Only save the server if the form doesn't need to be rebuilt.
     if (!$form_state->get('rebuild')) {
-      // Catch any exception that may get thrown during save operation.
       try {
-        // Save changes made to the entity.
-        $entity = $this->getEntity();
-        $entity->save();
-        // Notify the user that the server was created.
+        $server = $this->getEntity();
+        $server->save();
         drupal_set_message($this->t('The server was successfully saved.'));
-        // Redirect to the server page.
-        $form_state->setRedirect('search_api.server_view', array('search_api_server' => $entity->id()));
+        $form_state->setRedirect('search_api.server_view', array('search_api_server' => $server->id()));
       }
-      catch (\Exception $ex) {
-        // Rebuild the form.
+      catch (\Exception $e) {
         $form_state->setRebuild();
-        // Log the exception to the watchdog.
-        watchdog_exception('Search API', $ex);
-        // Notify the user that the save operation failed.
+        watchdog_exception('search_api', $e);
         drupal_set_message($this->t('The server could not be saved.'), 'error');
       }
     }
@@ -337,10 +304,7 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function delete(array $form, FormStateInterface $form_state) {
-    // Get the entity.
-    $entity = $this->getEntity();
-    // Redirect to the entity delete confirm page.
-    $form_state->setRedirect('search_api.server_delete', array('search_api_server' => $entity->id()));
+    $form_state->setRedirect('search_api.server_delete', array('search_api_server' => $this->getEntity()->id()));
   }
 
 }

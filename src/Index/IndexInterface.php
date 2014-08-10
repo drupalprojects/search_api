@@ -104,17 +104,6 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getOptions();
 
   /**
-   * Sets the index's options.
-   *
-   * @param array $options
-   *   The new index options.
-   *
-   * @return self
-   *   The invoked object.
-   */
-  public function setOptions(array $options);
-
-  /**
    * Sets an option.
    *
    * @param string $name
@@ -126,6 +115,17 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The invoked object.
    */
   public function setOption($name, $option);
+
+  /**
+   * Sets the index's options.
+   *
+   * @param array $options
+   *   The new index options.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setOptions(array $options);
 
   /**
    * Retrieves the IDs of all datasources enabled for this index.
@@ -402,6 +402,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   datasource IDs to arrays of items (keyed by internal item ID) loaded for
    *   that datasource.
    */
+  // @todo Drop second parameter?
   public function loadItemsMultiple(array $item_ids, $group_by_datasource = FALSE);
 
   /**
@@ -425,8 +426,9 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Indexes some objects on this index.
    *
-   * Will return the IDs of items that should be marked as indexed – i.e., items
-   * that were either rejected from indexing or were successfully indexed.
+   * Will return the IDs of items that were marked as indexed – i.e., items that
+   * were either rejected from indexing (by a processor or alter hook) or were
+   * successfully indexed.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $search_objects
    *   An array of search objects to be indexed, keyed by their item IDs.
@@ -438,6 +440,16 @@ interface IndexInterface extends ConfigEntityInterface {
    *   If any error occurred during indexing.
    */
   public function indexItems(array $search_objects);
+
+  /**
+   * Starts tracking for this index.
+   */
+  public function startTracking();
+
+  /**
+   * Stops tracking for this index.
+   */
+  public function stopTracking();
 
   /**
    * Adds items from a specific datasource to the index.
@@ -506,8 +518,12 @@ interface IndexInterface extends ConfigEntityInterface {
 
   /**
    * Resets the static and stored caches associated with this index.
+   *
+   * @param bool $include_stored
+   *   (optional) If set to FALSE, only the static caches will be cleared, the
+   *   stored cache will remain untouched.
    */
-  public function resetCaches();
+  public function resetCaches($include_stored = TRUE);
 
   /**
    * Creates a query object for this index.
@@ -524,15 +540,5 @@ interface IndexInterface extends ConfigEntityInterface {
    * @see \Drupal\search_api\Query\QueryInterface::create()
    */
   public function query(array $options = array());
-
-  /**
-   * Starts tracking for this index.
-   */
-  public function startTracking();
-
-  /**
-   * Stops tracking for this index.
-   */
-  public function stopTracking();
 
 }

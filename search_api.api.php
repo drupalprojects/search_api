@@ -92,12 +92,12 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
  * If your module will use this hook to reject certain items from indexing,
  * please document this clearly to avoid confusion.
  *
- * @param \Drupal\search_api\Item\ItemInterface[] $items
- *   The items that will be indexed.
  * @param \Drupal\search_api\Index\IndexInterface $index
  *   The search index on which items will be indexed.
+ * @param \Drupal\search_api\Item\ItemInterface[] $items
+ *   The items that will be indexed.
  */
-function hook_search_api_index_items_alter(array &$items, \Drupal\search_api\Index\IndexInterface $index) {
+function hook_search_api_index_items_alter(\Drupal\search_api\Index\IndexInterface $index, array &$items) {
   foreach ($items as $item_id => $item) {
     list(, $raw_id) = \Drupal\search_api\Utility\Utility::splitCombinedId($item->getId());
     if ($raw_id % 5 == 0) {

@@ -9,13 +9,12 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 use Drupal\search_api\Batch\IndexBatchHelper;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Form which allows basic operation on an index, e.g. clear indexed data.
+ * Provides a form for indexing, clearing, etc., an index.
  */
 class IndexStatusForm extends FormBase {
 
@@ -30,15 +29,12 @@ class IndexStatusForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, IndexInterface $index = NULL) {
-    // Attach the search index to the form.
     $form['#index'] = $index;
 
-    // Attach the admin css.
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
-    // Check if the index has a valid tracker available.
     if ($index->hasValidTracker()) {
-      // Build the index now option.
+      // Add the "Index now" form.
       $form['index'] = array(
         '#type' => 'details',
         '#title' => $this->t('Index now'),
@@ -47,11 +43,8 @@ class IndexStatusForm extends FormBase {
           'class' => array('container-inline'),
         ),
       );
-      // Determine whether the index has remaining items to index.
       $has_remaining_items = ($index->getTracker()->getRemainingItemsCount() > 0);
-      // Get the value which represent indexing all remaining items.
       $all_value = $this->t('all', array(), array('context' => 'items to index'));
-      // Build the number of batches to execute.
       $limit = array(
         '#type' => 'textfield',
         '#default_value' => $all_value,
@@ -61,7 +54,6 @@ class IndexStatusForm extends FormBase {
         ),
         '#disabled' => !$has_remaining_items,
       );
-      // Build the batch size.
       $batch_size = array(
         '#type' => 'textfield',
         '#default_value' => $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit')),
@@ -102,14 +94,14 @@ class IndexStatusForm extends FormBase {
         '#type' => 'value',
         '#value' => $all_value,
       );
-      // Build the index now action.
       $form['index']['index_now'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Index now'),
         '#disabled' => !$has_remaining_items,
         '#name' => 'index_now',
       );
-      // Build the index manipulation actions.
+
+      // Add actions for reindexing and for clearing the index.
       $form['actions']['#type'] = 'actions';
       $form['actions']['reindex'] = array(
         '#type' => 'submit',
@@ -131,35 +123,29 @@ class IndexStatusForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Perform default form validation.
     parent::validateForm($form, $form_state);
-    // Check if the user wants to perform "index now" action.
+
+    // Only the "Index now" action needs any validation.
     if ($form_state->get('triggering_element')['#name'] === 'index_now') {
-      // Get the form values.
-      $form_values = $form_state->getValues();
-      // Get the value for indexing all remaining items and convert to lower
-      // case.
-      $all_value = drupal_strtolower($form_values['all']);
-      // Iterate through the user input fields.
+      $values = $form_state->getValues();
+      // Get the translated "all" value and lowercase it for comparison.
+      $all_value = drupal_strtolower($values['all']);
+
       foreach (array('limit', 'batch_size') as $field) {
-        // Get the input value and trim any leading or trailing spaces. Convert
-        // value to lower case to ensure all values have the same casing.
-        $value = drupal_strtolower(trim($form_values[$field]));
-        // Check if all remaining items should be index.
+        // Trim and lowercase the value so we correctly identify "all" values,
+        // even if not matching exactly.
+        $value = drupal_strtolower(trim($values[$field]));
+
         if ($value === $all_value) {
-          // Use the value '-1' instead.
           $value = -1;
         }
-        // Check if the value is empty or not numeric.
         elseif (!$value || !is_numeric($value) || ((int) $value) != $value) {
-          // Raise form error: Value must be numeric or equal to all.
-          $form_state->setErrorByName($field, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', array('@all' => $all_value)));
+          $form_state->setErrorByName($field, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', array('@all' => $values['all'])));
         }
         else {
-          // Ensure the value contains an integer value.
           $value = (int) $value;
         }
-        // Overwrite the form state value.
+
         $form_state->setValue($field, $value);
       }
     }
@@ -169,32 +155,26 @@ class IndexStatusForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Get the search index from the form.
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
-    // Evaluate the triggering element name.
+
     switch ($form_state->get('triggering_element')['#name']) {
       case 'index_now':
-        // Get the form state values.
-        $form_values = $form_state->getValues();
-        // Try to create a batch job to index items.
+        $values = $form_state->getValues();
         try {
           IndexBatchHelper::setStringTranslation($this->getStringTranslation());
-          IndexBatchHelper::create($index, $form_values['batch_size'], $form_values['limit']);
+          IndexBatchHelper::create($index, $values['batch_size'], $values['limit']);
         }
         catch (SearchApiException $e) {
-          // Notify user about failure to scheduling the batch job.
           drupal_set_message($this->t('Failed to create a batch, please check the batch size and limit.'), 'warning');
         }
         break;
 
       case 'reindex':
-        // Redirect to the index reindex page.
         $form_state->setRedirect('search_api.index_reindex', array('search_api_index' => $index->id()));
         break;
 
       case 'clear':
-        // Redirect to the index clear page.
         $form_state->setRedirect('search_api.index_clear', array('search_api_index' => $index->id()));
         break;
     }
