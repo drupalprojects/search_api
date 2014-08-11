@@ -94,7 +94,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
 
     $tags = trim($form_state->getValues()['tags']);
     if (!$tags) {
-      $form_state->addValue('tags', array());
+      $form_state->setValue('tags', array());
       return;
     }
     $errors = array();
@@ -124,7 +124,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         $tags[$key] = (float) $value;
       }
     }
-    $form_state->addValue('tags', $tags);
+    $form_state->setValue('tags', $tags);
     if ($errors) {
       $form_state->setError($form['tags'], implode("<br />\n", $errors));
     }

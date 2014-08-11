@@ -249,16 +249,54 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
-  public function getValues() {
+  public function &getValues() {
     return $this->values;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addValue($property, $value) {
-    $this->values[$property] = $value;
+  public function &getValue($key, $default = NULL) {
+    if ($this->hasValue($key)) {
+      return $this->values[$key];
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setValue($key, $value) {
+    $this->values[$key] = $value;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function unsetValue($key) {
+    unset($this->values[$key]);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasValue($key) {
+    if (isset($this->values[$key])) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValueEmpty($key) {
+    if (empty($this->values[$key])) {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**

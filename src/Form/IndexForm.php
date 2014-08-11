@@ -506,7 +506,7 @@ class IndexForm extends EntityForm {
     // Store the array of datasource plugin IDs with integer keys.
     $values = $form_state->getValues();
     $datasource_ids = array_values($values['datasources']);
-    $form_state->addValue('datasources', $datasource_ids);
+    $form_state->setValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource.
     $datasource_plugins = array();
@@ -555,7 +555,7 @@ class IndexForm extends EntityForm {
     // @todo Redirect to a confirm form if changing server, since that isn't
     //   such a light operation (equaling a "clear", basically).
 
-    $form_state->addValue('options', array_merge($entity->getOptions(), $form_state->getValues()['options']));
+    $form_state->setValue('options', array_merge($entity->getOptions(), $form_state->getValues()['options']));
 
     $datasource_forms = $form_state->get('datasource_forms');
     $datasource_form_states = $form_state->get('datasource_form_states');

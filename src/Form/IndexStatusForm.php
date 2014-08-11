@@ -160,7 +160,7 @@ class IndexStatusForm extends FormBase {
           $value = (int) $value;
         }
         // Overwrite the form state value.
-        $form_state->addValue($field, $value);
+        $form_state->setValue($field, $value);
       }
     }
   }

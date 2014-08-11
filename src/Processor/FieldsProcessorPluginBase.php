@@ -82,7 +82,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     if ($fields) {
       $fields = array_fill_keys($fields, TRUE);
     }
-    $form_state->addValue('fields', $fields);
+    $form_state->setValue('fields', $fields);
   }
 
   /**

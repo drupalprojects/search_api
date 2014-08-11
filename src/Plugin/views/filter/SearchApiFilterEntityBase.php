@@ -116,7 +116,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
 
       if ($ids) {
         $value = $ids;
-        $form_state->addValue('value', $value);
+        $form_state->setValue('value', $value);
       }
     }
   }
