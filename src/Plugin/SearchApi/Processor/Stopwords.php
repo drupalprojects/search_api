@@ -56,8 +56,6 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-    debug($this->getConfiguration()['stopwords']);
-
     $form['stopwords'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
@@ -73,7 +71,6 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     // Convert our text input to an array.
-    debug($form_state->getValues()['stopwords']);
     $form_state->setValue('stopwords', array_map('trim', explode("\n", $form_state->getValues()['stopwords'])));
 
     parent::submitConfigurationForm($form, $form_state);
