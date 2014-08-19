@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 
 /**
  * Views filter handler class for handling fulltext fields.
@@ -164,8 +165,9 @@ class SearchApiFulltext extends SearchApiFilterText {
 
     if ($filter) {
       $filter = $this->query->createFilter('OR');
+      $op = $this->operator === 'NOT' ? '<>' : '=';
       foreach ($fields as $field) {
-        $filter->condition($field, $this->value, $this->operator);
+        $filter->condition($field, $this->value, $op);
       }
       $this->query->filter($filter);
       return;
@@ -174,11 +176,12 @@ class SearchApiFulltext extends SearchApiFilterText {
     // If the operator was set to OR or NOT, set OR as the conjunction. (It is
     // also set for NOT since otherwise it would be "not all of these words".)
     if ($this->operator != 'AND') {
-      $this->query->setOption('conjunction', $this->operator);
+      $this->query->setOption('conjunction', 'OR');
     }
 
     $this->query->fields($fields);
-    $old = $this->query->getOriginalKeys();
+    $old = $this->query->getKeys();
+    $old_original = $this->query->getOriginalKeys();
     $this->query->keys($this->value);
     if ($this->operator == 'NOT') {
       $keys = &$this->query->getKeys();
@@ -189,16 +192,44 @@ class SearchApiFulltext extends SearchApiFilterText {
         // We can't know how negation is expressed in the server's syntax.
       }
     }
+
+    // If there were fulltext keys set, we take care to combine them in a
+    // meaningful way (especially with negated keys).
     if ($old) {
       $keys = &$this->query->getKeys();
+      // Array-valued keys are combined.
       if (is_array($keys)) {
-        $keys[] = $old;
+        // If the old keys weren't parsed into an array, we instead have to
+        // combine the original keys.
+        if (is_scalar($old)) {
+          $keys = "($old) ({$this->value})";
+        }
+        else {
+          // If the conjunction or negation settings aren't the same, we have to
+          // nest both old and new keys array.
+          if (!empty($keys['#negation']) != !empty($old['#negation']) || $keys['#conjunction'] != $old['#conjunction']) {
+            $keys = array(
+              '#conjunction' => 'AND',
+              $old,
+              $keys,
+            );
+          }
+          // Otherwise, just add all individual words from the old keys to the
+          // new ones.
+          else {
+            foreach (Element::children($old) as $i) {
+              $keys[] = $old[$i];
+            }
+          }
+        }
       }
-      elseif (is_array($old)) {
-        // We don't support such nonsense.
-      }
-      else {
-        $keys = "($old) ($keys)";
+      // If the parse mode was "direct" for both old and new keys, we
+      // concatenate them and set them both via method and reference (to also
+      // update the originalKeys property.
+      elseif (is_scalar($old_original)) {
+        $combined_keys = "($old_original) ($keys)";
+        $this->query->keys($combined_keys);
+        $keys = $combined_keys;
       }
     }
   }
