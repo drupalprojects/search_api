@@ -146,7 +146,7 @@ class ServerForm extends EntityForm {
       '#description' => $this->t('Enter a description for the server.'),
       '#default_value' => $server->getDescription(),
     );
-    $backend_options = $this->getBackendPluginDefinitionOptions();
+    $backend_options = $this->getBackendOptions();
     if ($backend_options) {
       if (count($backend_options) == 1) {
         $server->set('backend', key($backend_options));
@@ -167,7 +167,7 @@ class ServerForm extends EntityForm {
       );
     }
     else {
-      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a module that provides a backend plugin to proceed.'), 'error');
+      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href="@url">module that provides a backend plugin</a> to proceed.', array('@url' => url('https://www.drupal.org/node/1254698'))), 'error');
       $form = array();
     }
   }
@@ -179,7 +179,7 @@ class ServerForm extends EntityForm {
    *   An associative array mapping backend plugin IDs to their (HTML-escaped)
    *   labels.
    */
-  protected function getBackendPluginDefinitionOptions() {
+  protected function getBackendOptions() {
     $options = array();
     foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
       $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
