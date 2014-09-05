@@ -22,18 +22,6 @@ function search_api_help($route_name) {
 }
 
 /**
- * Implements hook_permission().
- */
-function search_api_permission() {
-  return array(
-    'administer search_api' => array(
-      'title' => t('Administer Search API'),
-      'description' => t('Create and configure Search API servers and indexes.'),
-    ),
-  );
-}
-
-/**
  * Implements hook_cron().
  *
  * This will first execute any pending server tasks. After that, items will
