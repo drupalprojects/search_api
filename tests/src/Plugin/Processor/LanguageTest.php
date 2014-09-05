@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\LanguageTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\LanguageTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Language\Language as CoreLanguage;
 use Drupal\Core\TypedData\DataDefinitionInterface;
@@ -93,22 +93,22 @@ class LanguageTest extends UnitTestCase {
     );
     $items = $this->createItems($this->index, 3, $fields);
 
-    $object1 = $this->getMock('Drupal\search_api\Tests\TestContentEntityInterface');
+    $object1 = $this->getMock('Drupal\Tests\search_api\TestContentEntityInterface');
     $object1->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'en'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object1 */
     $items[$this->item_ids[0]]->setOriginalObject($object1);
 
-    $object2 = $this->getMock('Drupal\search_api\Tests\TestContentEntityInterface');
+    $object2 = $this->getMock('Drupal\Tests\search_api\TestContentEntityInterface');
     $object2->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'es'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object2 */
     $items[$this->item_ids[1]]->setOriginalObject($object2);
 
-    $object3 = $this->getMock('Drupal\search_api\Tests\TestComplexDataInterface');
-    /** @var \Drupal\search_api\Tests\TestComplexDataInterface $object3 */
+    $object3 = $this->getMock('Drupal\Tests\search_api\TestComplexDataInterface');
+    /** @var \Drupal\Tests\search_api\TestComplexDataInterface $object3 */
     $items[$this->item_ids[2]]->setOriginalObject($object3);
 
     $this->processor->preprocessIndexItems($items);

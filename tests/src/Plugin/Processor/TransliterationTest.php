@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\TransliterationTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\TransliterationTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Transliteration;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;

@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\StopwordsTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\StopwordsTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Stopwords;
 use Drupal\search_api\Utility\Utility;

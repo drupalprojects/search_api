@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Tests\TestContentEntityInterface.
+ * Contains Drupal\Tests\search_api\TestContentEntityInterface.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 

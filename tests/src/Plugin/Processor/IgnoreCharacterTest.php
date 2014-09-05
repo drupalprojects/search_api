@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\IgnoreCaseTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\IgnoreCaseTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter;
 use Drupal\Tests\UnitTestCase;

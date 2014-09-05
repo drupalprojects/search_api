@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Tests\TestNodeInterface.
+ * Contains Drupal\Tests\search_api\TestNodeInterface.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api;
 
 use Drupal\node\NodeInterface;
 

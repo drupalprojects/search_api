@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\RoleFilterTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\RoleFilterTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter;
@@ -58,7 +58,7 @@ class RoleFilterTest extends UnitTestCase {
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $node_datasource);
-    $node = $this->getMockBuilder('Drupal\search_api\Tests\TestNodeInterface')
+    $node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
     /** @var \Drupal\node\NodeInterface $node */
@@ -66,7 +66,7 @@ class RoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $user_datasource);
-    $account1 = $this->getMockBuilder('Drupal\search_api\Tests\TestUserInterface')
+    $account1 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
     $account1->expects($this->any())
@@ -77,7 +77,7 @@ class RoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $user_datasource);
-    $account2 = $this->getMockBuilder('Drupal\search_api\Tests\TestUserInterface')
+    $account2 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
     $account2->expects($this->any())

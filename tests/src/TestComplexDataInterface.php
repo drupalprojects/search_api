@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Tests\TestComplexDataInterface.
+ * Contains Drupal\Tests\search_api\TestComplexDataInterface.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
 

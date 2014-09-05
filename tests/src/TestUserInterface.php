@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Tests\TestUserInterface.
+ * Contains Drupal\Tests\search_api\TestUserInterface.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api;
 
 use Drupal\user\UserInterface;
 

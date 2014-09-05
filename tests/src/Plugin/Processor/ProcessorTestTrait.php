@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\ProcessorTestTrait.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\ProcessorTestTrait.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 /**
  * Provides common methods for processor testing unit tests.

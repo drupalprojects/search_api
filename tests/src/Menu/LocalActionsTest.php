@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Menu\LocalActionsTest.
+ * Contains \Drupal\Tests\search_api\Menu\LocalActionsTest.
  */
 
-namespace Drupal\search_api\Tests\Menu;
+namespace Drupal\Tests\search_api\Menu;
 
 use Drupal\Tests\UnitTestCase;
 

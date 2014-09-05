@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\AddUrlTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\AddUrlTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Index\IndexInterface;

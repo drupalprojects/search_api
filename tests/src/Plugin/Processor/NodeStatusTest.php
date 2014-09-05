@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\NodeStatusTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\NodeStatusTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus;
@@ -56,7 +56,7 @@ class NodeStatusTest extends UnitTestCase {
       /** @var \Drupal\search_api\Index\IndexInterface $index */
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $datasource);
-    $unpublished_node = $this->getMockBuilder('Drupal\search_api\Tests\TestNodeInterface')
+    $unpublished_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
 
@@ -69,7 +69,7 @@ class NodeStatusTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $datasource);
-    $published_node = $this->getMockBuilder('Drupal\search_api\Tests\TestNodeInterface')
+    $published_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
 

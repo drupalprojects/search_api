@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\FieldsProcessorPluginBaseTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\FieldsProcessorPluginBaseTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility\Utility;
@@ -32,7 +32,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   /**
    * The class under test.
    *
-   * @var \Drupal\search_api\Tests\Plugin\Processor\TestFieldsProcessorPlugin
+   * @var \Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin
    */
   protected $processor;
 

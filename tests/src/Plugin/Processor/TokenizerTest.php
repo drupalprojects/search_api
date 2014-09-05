@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\TokenizerTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\TokenizerTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer;

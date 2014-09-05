@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\HighlightTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\HighlightTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Plugin\SearchApi\Processor\Highlight;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;

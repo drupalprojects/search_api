@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Tests\Plugin\Processor\TestFieldsProcessorPlugin.
+ * Contains Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;

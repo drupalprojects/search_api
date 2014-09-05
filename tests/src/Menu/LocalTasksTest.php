@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Menu\LocalTasksTest.
+ * Contains \Drupal\Tests\search_api\Menu\LocalTasksTest.
  */
 
-namespace Drupal\search_api\Tests\Menu;
+namespace Drupal\Tests\search_api\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
 

@@ -1,10 +1,10 @@
 <?php
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\AggregatedFieldTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\AggregatedFieldTest.
  */
 
-namespace Drupal\search_api\Tests\Plugin\Processor;
+namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField;
