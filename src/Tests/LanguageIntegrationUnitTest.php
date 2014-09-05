@@ -90,7 +90,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_1->save();
-    $this->assertEqual($entity_1->language()->getId(), Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_1->language()->getId(), 'en', String::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity_2 */
@@ -100,7 +100,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_2->save();
-    $this->assertEqual($entity_2->language()->getId(), Language::LANGCODE_NOT_SPECIFIED, String::format('%entity_type: Entity language not specified.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_2->language()->getId(), 'en', String::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_2->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
@@ -108,8 +108,8 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);
     $expected = array(
-      '1:' . Language::LANGCODE_NOT_SPECIFIED,
-      '2:' . Language::LANGCODE_NOT_SPECIFIED,
+      '1:en',
+      '2:en',
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
 
@@ -131,7 +131,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     sort($datasource_item_ids);
     $expected = array(
       '1:' . $this->langcodes[0],
-      '2:' . Language::LANGCODE_NOT_SPECIFIED,
+      '2:en',
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
 
@@ -154,7 +154,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       '1:' . $this->langcodes[0],
       '1:' . $this->langcodes[1],
       '1:' . $this->langcodes[2],
-      '2:' . Language::LANGCODE_NOT_SPECIFIED,
+      '2:en',
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
 
@@ -172,7 +172,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $expected = array(
       '1:' . $this->langcodes[0],
       '1:' . $this->langcodes[1],
-      '2:' . Language::LANGCODE_NOT_SPECIFIED,
+      '2:en',
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
 

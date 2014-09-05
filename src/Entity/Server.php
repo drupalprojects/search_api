@@ -22,9 +22,8 @@ use Drupal\search_api\Utility\Utility;
  * @ConfigEntityType(
  *   id = "search_api_server",
  *   label = @Translation("Search server"),
- *   controllers = {
+ *   handlers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
- *     "list_builder" = "Drupal\search_api\OverviewListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\ServerForm",
  *       "edit" = "Drupal\search_api\Form\ServerForm",

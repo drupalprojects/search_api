@@ -9,6 +9,7 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Language\Language;
 use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Contains helpers to create data that can be used by tests.
@@ -101,9 +102,10 @@ trait ExampleContentTrait {
    *   An array of item IDs.
    */
   protected function getItemIds(array $entity_ids) {
-    return array_map(function ($entity_id) {
-        return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $entity_id . ':' . Language::LANGCODE_NOT_SPECIFIED;
-      }, $entity_ids);
+    $translate_ids = function ($entity_id) {
+      return Utility::createCombinedId('entity:entity_test', $entity_id . ':en');
+    };
+    return array_map($translate_ids, $entity_ids);
   }
 
 }

@@ -96,11 +96,10 @@ class Highlight extends ProcessorPluginBase {
       '#default_value' => $this->configuration['excerpt'],
     );
     $form['excerpt_length'] = array(
-      '#type' => 'textfield',
+      '#type' => 'number',
       '#title' => $this->t('Excerpt length'),
       '#description' => $this->t('The requested length of the excerpt, in characters.'),
       '#default_value' => $this->configuration['excerpt_length'],
-      '#element_validate' => array('form_validate_number'),
       '#min' => 1,
       '#states' => array(
         'visible' => array(

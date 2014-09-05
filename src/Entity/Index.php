@@ -30,7 +30,7 @@ use Drupal\search_api\Utility\Utility;
  * @ConfigEntityType(
  *   id = "search_api_index",
  *   label = @Translation("Search index"),
- *   controllers = {
+ *   handlers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
  *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {

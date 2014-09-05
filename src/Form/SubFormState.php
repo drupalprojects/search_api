@@ -141,6 +141,13 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
+  public function loadInclude($module, $type, $name = NULL) {
+    return $this->mainFormState->loadInclude($module, $type, $name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCacheableArray() {
     return array();
   }
@@ -243,6 +250,23 @@ class SubFormState implements FormStateInterface {
    */
   public function addBuildInfo($property, $value) {
     $this->mainFormState->addBuildInfo($property, $value);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function &getUserInput() {
+    $user_input = &$this->mainFormState->getUserInput();
+    return $this->applySubKeys($user_input);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUserInput(array $user_input) {
+    $old = &$this->getUserInput();
+    $old = $user_input;
     return $this;
   }
 
@@ -357,6 +381,20 @@ class SubFormState implements FormStateInterface {
   public function setRebuild($rebuild = TRUE) {
     $this->mainFormState->setRebuild($rebuild);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareCallback($callback) {
+    return $this->mainFormState->prepareCallback($callback);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormObject() {
+    return $this->mainFormState->getFormObject();
   }
 
 }
