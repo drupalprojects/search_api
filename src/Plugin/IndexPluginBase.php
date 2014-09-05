@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\IndexPluginBase.
+ * Contains \Drupal\search_api\Plugin\IndexPluginBase.
  */
 
 namespace Drupal\search_api\Plugin;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Base class for plugins that are associated with a certain index.
+ * Provides a base class for plugins linked to a search index.
  */
 abstract class IndexPluginBase extends ConfigurablePluginBase implements IndexPluginInterface {
 

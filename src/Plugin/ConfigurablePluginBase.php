@@ -13,7 +13,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Base class for all configurable plugins.
+ * Provides a base class for all configurable Search API plugins.
  */
 abstract class ConfigurablePluginBase extends PluginBase implements ConfigurablePluginInterface {
 
@@ -23,9 +23,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    // Apply default configuration.
     $configuration += $this->defaultConfiguration();
-    // Initialize the parent chain of objects.
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
@@ -47,9 +45,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public function label() {
-    // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
-    // Get the plugin definition label.
     return $plugin_definition['label'];
   }
 
@@ -57,10 +53,8 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public function summary() {
-    // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
-    // Get the plugin definition label.
-    return $plugin_definition['description'];
+    return isset($plugin_definition['description']) ? $plugin_definition['description'] : '';
   }
 
   /**

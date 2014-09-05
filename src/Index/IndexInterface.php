@@ -175,7 +175,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getDatasources();
 
   /**
-   * Determine whether the tracker is valid.
+   * Determines whether the tracker is valid.
    *
    * @return bool
    *   TRUE if the tracker is valid, otherwise FALSE.
@@ -194,7 +194,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Retrieves the tracker plugin.
    *
    * @return \Drupal\search_api\Tracker\TrackerInterface
-   *   An instance of TrackerInterface.
+   *   The index's tracker plugin.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the tracker couldn't be instantiated.
@@ -230,7 +230,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Retrieves the server the index is attached to.
    *
    * @return \Drupal\search_api\Server\ServerInterface|null
-   *   An instance of ServerInterface, or NULL if the index doesn't have a
+   *   The server this index is linked to, or NULL if the index doesn't have a
    *   server.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
@@ -254,8 +254,8 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param string $sortBy
    *
    * @return \Drupal\search_api\Processor\ProcessorInterface[]
-   *   All enabled processors for this index, as
-   *   \Drupal\search_api\Plugin\search_api\ProcessorInterface objects.
+   *   An array of all enabled (or available, if $all is TRUE) processors for
+   *   this index.
    */
   // @todo Remove $sortBy.
   public function getProcessors($all = FALSE, $sortBy = 'weight');
@@ -276,12 +276,12 @@ interface IndexInterface extends ConfigEntityInterface {
    * Lets all enabled processors for this index preprocess the search query.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The object representing the query to be executed.
+   *   The search query to be executed.
    */
   public function preprocessSearchQuery(QueryInterface $query);
 
   /**
-   * Postprocesses search results before display.
+   * Postprocesses search results before they are displayed.
    *
    * If a class is used for both pre- and post-processing a search query, the
    * same object will be used for both calls (so preserving some data or state
@@ -296,7 +296,8 @@ interface IndexInterface extends ConfigEntityInterface {
    * Returns a list of all known fields of this index.
    *
    * @param bool $only_indexed
-   *   (optional) Return only indexed fields, not all known fields.
+   *   (optional) If set to FALSE, all available fields will be returned.
+   *   Otherwise, this method will only return the indexed fields.
    *
    * @return \Drupal\search_api\Item\FieldInterface[]
    *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
@@ -311,7 +312,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The ID of the datasource whose fields should be retrieved, or NULL to
    *   retrieve all datasource-independent fields.
    * @param bool $only_indexed
-   *   (optional) Return only indexed fields, not all known fields.
+   *   (optional) If set to FALSE, all available fields will be returned.
+   *   Otherwise, this method will only return the indexed fields.
    *
    * @return \Drupal\search_api\Item\FieldInterface[]
    *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
@@ -344,21 +346,21 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getAdditionalFieldsByDatasource($datasource_id);
 
   /**
-   * Convenience method for getting all of this index's fulltext fields.
+   * Retrieves all of this index's fulltext fields.
    *
    * @param bool $only_indexed
-   *   (optional) If set to TRUE, only the indexed fulltext fields will be
-   *   returned. Otherwise, this method will return all available fulltext
+   *   (optional) If set to FALSE, all available fulltext fields will be
+   *   returned. Otherwise, this method will only return the indexed fulltext
    *   fields.
    *
    * @return string[]
-   *   An array containing the IDs of all (or all indexed) fulltext fields
-   *   defined for this index.
+   *   An array containing the field identifiers of all (or all indexed)
+   *   fulltext fields available for this index.
    */
   public function getFulltextFields($only_indexed = TRUE);
 
   /**
-   * Retrieves the properties available for this index.
+   * Retrieves the properties of one of this index's datasources.
    *
    * @param string $datasource_id
    *   The ID of the datasource for which the properties should be retrieved.
@@ -408,15 +410,16 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Indexes a set amount of items.
    *
-   * Will fetch the items to be indexed from the datasource and send them to
+   * Will fetch the items to be indexed from the datasources and send them to
    * indexItems(). It will then mark all successfully indexed items as such in
    * the datasource.
    *
    * @param int $limit
-   *   (optional) The maximum number of items to index.
+   *   (optional) The maximum number of items to index, or -1 to index all
+   *   items.
    * @param string|null $datasource_id
    *   (optional) If specified, only items of the datasource with that ID are
-   *   indexed.
+   *   indexed. Otherwise, items from any datasource are indexed.
    *
    * @return int
    *   The number of items successfully indexed.
@@ -443,11 +446,17 @@ interface IndexInterface extends ConfigEntityInterface {
 
   /**
    * Starts tracking for this index.
+   *
+   * This is normally done when the index is first created (if it is enabled) or
+   * when it is enabled.
    */
   public function startTracking();
 
   /**
    * Stops tracking for this index.
+   *
+   * This is done when the index is disabled, or when an enabled index is
+   * deleted.
    */
   public function stopTracking();
 
@@ -461,9 +470,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of datasource-specific item IDs.
-   *
-   * @return bool
-   *   TRUE if the operation was successful, otherwise FALSE.
    */
   public function trackItemsInserted($datasource_id, array $ids);
 
@@ -477,9 +483,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of datasource-specific item IDs.
-   *
-   * @return bool
-   *   TRUE if the operation was successful, otherwise FALSE.
    */
   public function trackItemsUpdated($datasource_id, array $ids);
 
@@ -493,9 +496,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The ID of the datasource to which the items belong.
    * @param array $ids
    *   An array of datasource-specific items IDs.
-   *
-   * @return bool
-   *   TRUE if the operation was successful, otherwise FALSE.
    */
   public function trackItemsDeleted($datasource_id, array $ids);
 
@@ -509,7 +509,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function reindex();
 
   /**
-   * Clears all items in this index and marks them for reindexing.
+   * Clears all indexed data from this index and marks it for reindexing.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the server couldn't be loaded, for example.

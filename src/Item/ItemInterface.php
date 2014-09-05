@@ -10,14 +10,14 @@ namespace Drupal\search_api\Item;
 use Drupal\Core\TypedData\ComplexDataInterface;
 
 /**
- * Represents a search indexing or result item.
+ * Represents a search item being indexed or returned as a search result.
  *
- * Traversing the object should retrieve all its fields.
+ * Traversing the object retrieves all its fields.
  */
 interface ItemInterface extends \Traversable {
 
   /**
-   * Returns the item ID.
+   * Returns the item's ID.
    *
    * @return string
    *   The ID of this item.

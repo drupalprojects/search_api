@@ -10,7 +10,7 @@ namespace Drupal\search_api\Item;
 /**
  * Represents a field on a search item that can be indexed.
  *
- * Traversing the object should retrieve all its values.
+ * Traversing the object retrieves all its values.
  */
 interface FieldInterface extends GenericFieldInterface, \Traversable {
 

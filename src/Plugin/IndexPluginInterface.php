@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Plugin\SearchApi\IndexPluginInterface.
+ * Contains \Drupal\search_api\Plugin\IndexPluginInterface.
  */
 
 namespace Drupal\search_api\Plugin;

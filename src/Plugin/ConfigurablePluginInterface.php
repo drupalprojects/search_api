@@ -14,12 +14,12 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 
 /**
- * Interface which describes a plugin for Search API.
+ * Describes a configurable Search API plugin.
  */
 interface ConfigurablePluginInterface extends PluginInspectionInterface, DerivativeInspectionInterface, DrupalConfigurablePluginInterface, PluginFormInterface, ContainerFactoryPluginInterface {
 
   /**
-   * Get the label for use on the administration pages.
+   * Returns the label for use on the administration pages.
    *
    * @return string
    *   The administration label.
@@ -27,7 +27,7 @@ interface ConfigurablePluginInterface extends PluginInspectionInterface, Derivat
   public function label();
 
   /**
-   * Get the summary of the plugin configuration.
+   * Returns the summary of the plugin configuration.
    *
    * @return string
    *   The configuration summary.
