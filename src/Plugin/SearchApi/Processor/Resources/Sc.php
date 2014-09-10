@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Sc implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Sc" ("Symbol, Currency").
+ */
+class Sc implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -22,4 +25,5 @@ class Sc implements UnicodeListInterface {
       '\x{20B5}\x{20B6}\x{20B7}\x{20B8}\x{20B9}\x{20BA}\x{A838}' .
       '\x{FDFC}\x{FE69}\x{FF04}\x{FFE0}\x{FFE1}\x{FFE5}\x{FFE6}';
   }
+
 }

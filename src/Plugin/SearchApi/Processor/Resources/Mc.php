@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Mc implements UnicodeListInterface {
+/**
+ * Represents characters of the category "Mc" ("Mark, Spacing Combining").
+ */
+class Mc implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -66,4 +69,5 @@ class Mc implements UnicodeListInterface {
       '\x{16F7E}\x{1D165}\x{1D166}\x{1D16D}\x{1D16E}\x{1D16F}\x{1D170}' .
       '\x{1D171}\x{1D172}';
   }
+
 }

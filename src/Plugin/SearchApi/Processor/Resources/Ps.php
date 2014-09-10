@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Ps implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Ps" ("Punctuation, Open").
+ */
+class Ps implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -26,4 +29,5 @@ class Ps implements UnicodeListInterface {
       '\x{FE41}\x{FE43}\x{FE47}\x{FE59}\x{FE5B}\x{FE5D}\x{FF08}' .
       '\x{FF3B}\x{FF5B}\x{FF5F}\x{FF62}';
   }
+
 }

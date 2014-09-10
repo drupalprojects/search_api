@@ -32,6 +32,7 @@ interface ConfigurablePluginInterface extends PluginInspectionInterface, Derivat
    * @return string
    *   The configuration summary.
    */
+  // @todo Clarify whether this needs to be sanitized. And rename.
   public function summary();
 
 }

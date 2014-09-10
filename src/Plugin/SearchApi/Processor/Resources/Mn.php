@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Mn implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Mn" ("Mark, Nonspacing").
+ */
+class Mn implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -198,4 +201,5 @@ class Mn implements UnicodeListInterface {
       '\x{E01E2}\x{E01E3}\x{E01E4}\x{E01E5}\x{E01E6}\x{E01E7}\x{E01E8}' .
       '\x{E01E9}\x{E01EA}\x{E01EB}\x{E01EC}\x{E01ED}\x{E01EE}\x{E01EF}';
   }
+
 }

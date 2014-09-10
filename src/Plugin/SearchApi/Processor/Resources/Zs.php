@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Zs implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Zs" ("Separator, Space").
+ */
+class Zs implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -18,4 +21,5 @@ class Zs implements UnicodeListInterface {
       '\x{2004}\x{2005}\x{2006}\x{2007}\x{2008}\x{2009}\x{200A}' .
       '\x{202F}\x{205F}\x{3000}';
   }
+
 }

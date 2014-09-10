@@ -64,8 +64,7 @@ class Transliteration extends FieldsProcessorPluginBase {
    * @param \Drupal\Component\Transliteration\TransliterationInterface $transliterator
    *   The new transliterator.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setTransliterator($transliterator) {
     $this->transliterator = $transliterator;

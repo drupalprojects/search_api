@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Sm implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Sm" ("Symbol, Math").
+ */
+class Sm implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -151,4 +154,5 @@ class Sm implements UnicodeListInterface {
       '\x{1D6FB}\x{1D715}\x{1D735}\x{1D74F}\x{1D76F}\x{1D789}\x{1D7A9}' .
       '\x{1D7C3}\x{1EEF0}\x{1EEF1}';
   }
+
 }

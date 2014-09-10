@@ -303,7 +303,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 1, $this->t('One items is tracked'));
+    $this->assertEqual($tracked_items, 1, $this->t('One item is tracked'));
 
     // Test putting default to one and the article bundle checked.
     // This will add all bundles except the ones that are checked.

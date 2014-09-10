@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Pe implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Pe" ("Punctuation, Close").
+ */
+class Pe implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -26,4 +29,5 @@ class Pe implements UnicodeListInterface {
       '\x{FE44}\x{FE48}\x{FE5A}\x{FE5C}\x{FE5E}\x{FF09}\x{FF3D}' .
       '\x{FF5D}\x{FF60}\x{FF63}';
   }
+
 }

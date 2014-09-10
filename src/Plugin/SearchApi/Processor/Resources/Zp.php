@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Zp implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Zp" ("Separator, Paragraph").
+ */
+class Zp implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -16,4 +19,5 @@ class Zp implements UnicodeListInterface {
     return
       '\x{2029}';
   }
+
 }

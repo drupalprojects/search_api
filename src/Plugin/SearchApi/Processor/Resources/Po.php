@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Po implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Po" ("Punctuation, Other").
+ */
+class Po implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -77,4 +80,5 @@ class Po implements UnicodeListInterface {
       '\x{110C0}\x{110C1}\x{11140}\x{11141}\x{11142}\x{11143}\x{111C5}' .
       '\x{111C6}\x{111C7}\x{111C8}\x{12470}\x{12471}\x{12472}\x{12473}';
   }
+
 }

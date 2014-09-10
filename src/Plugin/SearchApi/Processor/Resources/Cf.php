@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Cf implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Cf" ("Other, Format").
+ */
+class Cf implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -37,4 +40,5 @@ class Cf implements UnicodeListInterface {
       '\x{E007B}\x{E007C}\x{E007D}\x{E007E}\x{E007F}';
 
   }
+
 }

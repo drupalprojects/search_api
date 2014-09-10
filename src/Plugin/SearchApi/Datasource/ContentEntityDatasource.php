@@ -12,13 +12,13 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManager;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\field\FieldInstanceConfigInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -44,6 +44,22 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * @var \Drupal\Core\TypedData\TypedDataManager|null
    */
   protected $typedDataManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    // Since defaultConfiguration() depends on the plugin definition, we need to
+    // override the constructor and set the definition property before calling
+    // that method.
+    $this->pluginDefinition = $plugin_definition;
+    $this->pluginId = $plugin_id;
+    $this->configuration = $configuration + $this->defaultConfiguration();
+
+    if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
+      $this->setIndex($configuration['index']);
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -79,8 +95,18 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * @return \Drupal\Core\Entity\EntityStorageInterface
    *   The entity storage.
    */
-  public function getEntityStorage() {
+  protected function getEntityStorage() {
     return $this->getEntityManager()->getStorage($this->pluginDefinition['entity_type']);
+  }
+
+  /**
+   * Returns the definition of this datasource's entity type.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface
+   *   The entity type definition.
+   */
+  protected function getEntityType() {
+    return $this->getEntityManager()->getDefinition($this->getEntityTypeId());
   }
 
   /**
@@ -88,9 +114,12 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    *
    * @param \Drupal\Core\Entity\EntityManager $entity_manager
    *   The new entity manager.
+   *
+   * @return $this
    */
   public function setEntityManager(EntityManager $entity_manager) {
     $this->entityManager = $entity_manager;
+    return $this;
   }
 
   /**
@@ -108,9 +137,12 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    *
    * @param \Drupal\Core\TypedData\TypedDataManager $typed_data_manager
    *   The new typed data manager.
+   *
+   * @return $this
    */
   public function setTypedDataManager(TypedDataManager $typed_data_manager) {
     $this->typedDataManager = $typed_data_manager;
+    return $this;
   }
 
   /**
@@ -131,9 +163,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function load($id) {
-    // Load the item by ID.
     $items = $this->loadMultiple(array($id));
-    return ($items) ? reset($items) : NULL;
+    return $items ? reset($items) : NULL;
   }
 
   /**
@@ -161,6 +192,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       }
     }
     // If we were unable to load some of the items, mark them as deleted.
+    // @todo The index should be responsible for this, not individual
+    //   datasources.
     if ($missing) {
       $this->getIndex()->trackItemsDeleted($this->getPluginId(), array_keys($missing));
     }
@@ -170,60 +203,25 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    // Check if the entity type supports bundles.
-    if ($this->isEntityBundlable()) {
-      // Get the entity type bundles.
-      $bundles = $this->getEntityBundleOptions();
-      // Build the default operation element.
-      $form['default'] = array(
-        '#type' => 'radios',
-        '#title' => $this->t('What should be indexed?'),
-        '#options' => array(
-          1 => $this->t('All except those selected'),
-          0 => $this->t('None except those selected'),
-        ),
-        '#default_value' => $this->configuration['default'],
-      );
-      // Build the bundle selection element.
-      $form['bundles'] = array(
-        '#type' => 'checkboxes',
-        '#title' => $this->t('Bundles'),
-        '#options' => $bundles,
-        '#default_value' => $this->configuration['bundles'],
-        '#size' => min(4, count($bundles)),
-        '#multiple' => TRUE,
-      );
+  public function setConfiguration(array $new_config) {
+    $old_config = $this->getConfiguration();
+    $new_config += $this->defaultConfiguration();
+    $this->configuration = $new_config;
+
+    // We'd now check the items of which bundles need to be added to or removed
+    // from tracking for this index. However, if the index is not tracking at
+    // all (i.e., is disabled) currently, we can skip all that.
+    if (!$this->index->status() || !$this->index->hasValidTracker()) {
+      return;
     }
 
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function defaultConfiguration() {
-    return array(
-      'default' => 1,
-      'bundles' => array(),
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConfiguration(array $new_config) {
-    // Get the current configuration.
-    $old_config = $this->getConfiguration();
-    parent::setConfiguration($new_config);
-
-    if (isset($new_config['default']) && isset($old_config['default'])) {
-      // Apply the configuration changes.
-      $bundles_start = array();
-      $bundles_stop = array();
-      // Check if the datasource configuration changed.
+    if ($this->isEntityBundlable()) {
+      // First, check if the "default" setting changed and invert the set
+      // bundles for the old config, so the following comparison makes sense.
+      // @todo If the available bundles changed in between, this will still
+      //   produce wrong results. And we should definitely only store a numeric
+      //   array of the selected bundles, not the "checkboxes" raw format.
       if ($old_config['default'] != $new_config['default']) {
-        // Invert the bundles so that the diff also resolves
         foreach ($old_config['bundles'] as $bundle_key => $bundle) {
           if ($bundle_key == $bundle) {
             $old_config['bundles'][$bundle_key] = 0;
@@ -234,12 +232,12 @@ class ContentEntityDatasource extends DatasourcePluginBase {
         }
       }
 
-      if ((array_diff_assoc($new_config['bundles'], $old_config['bundles']))) {
-         // StopTracking figures out which bundles to remove
-        $diff = array_diff_assoc($new_config['bundles'], $old_config['bundles']);
-        // A bundle is selected when the key equals its value
+      // Now, go through all the bundles and start/stop tracking for them
+      // accordingly.
+      $bundles_start = array();
+      $bundles_stop = array();
+      if ($diff = array_diff_assoc($new_config['bundles'], $old_config['bundles'])) {
         foreach ($diff as $bundle_key => $bundle) {
-          // Default is 0 for "Only those from the selected bundles"
           if ($new_config['default'] == 0) {
             if ($bundle_key === $bundle) {
               $bundles_start[$bundle_key] = $bundle;
@@ -248,7 +246,6 @@ class ContentEntityDatasource extends DatasourcePluginBase {
               $bundles_stop[$bundle_key] = $bundle;
             }
           }
-          // Default is 1 for "All but those from one of the selected bundles"
           else {
             if ($bundle_key === $bundle) {
               $bundles_stop[$bundle_key] = $bundle;
@@ -265,6 +262,93 @@ class ContentEntityDatasource extends DatasourcePluginBase {
           $this->stopTrackingBundles(array_keys($bundles_stop));
         }
       }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    if ($this->isEntityBundlable()) {
+      return array(
+        'default' => 1,
+        'bundles' => array(),
+      );
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    if ($this->isEntityBundlable()) {
+      $bundles = $this->getEntityBundleOptions();
+      $form['default'] = array(
+        '#type' => 'radios',
+        '#title' => $this->t('What should be indexed?'),
+        '#options' => array(
+          1 => $this->t('All except those selected'),
+          0 => $this->t('None except those selected'),
+        ),
+        '#default_value' => $this->configuration['default'],
+      );
+      $form['bundles'] = array(
+        '#type' => 'checkboxes',
+        '#title' => $this->t('Bundles'),
+        '#options' => $bundles,
+        '#default_value' => $this->configuration['bundles'],
+        '#size' => min(4, count($bundles)),
+        '#multiple' => TRUE,
+      );
+    }
+
+    return $form;
+  }
+
+  /**
+   * Retrieves the available bundles of this entity type as an options list.
+   *
+   * @return array
+   *   An associative array of bundle labels, keyed by the bundle name.
+   */
+  protected function getEntityBundleOptions() {
+    $options = array();
+    if (($bundles = $this->getEntityBundles())) {
+      unset($bundles[$this->getEntityTypeId()]);
+      foreach ($bundles as $bundle => $bundle_info) {
+        $options[$bundle] = String::checkPlain($bundle_info['label']);
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Starts tracking for the given bundles.
+   *
+   * Will insert all entities of those bundles as "new" into the index's
+   * tracker.
+   *
+   * @param array $bundles
+   *   The bundles to start tracking.
+   */
+  protected function startTrackingBundles(array $bundles) {
+    if ($entity_ids = $this->getBundleItemIds($bundles)) {
+      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
+    }
+  }
+
+  /**
+   * Stops tracking for the given bundles.
+   *
+   * Will remove all entities of those bundles as from the index's tracker.
+   *
+   * @param array $bundles
+   *   The bundles to stop tracking.
+   */
+  protected function stopTrackingBundles(array $bundles) {
+    if ($entity_ids = $this->getBundleItemIds($bundles)) {
+      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
     }
   }
 
@@ -309,42 +393,14 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function startTrackingBundles(array $bundles) {
-    // Check whether there are entities which need to be inserted.
-    if (($entity_ids = $this->getBundleItemIds($bundles))) {
-      // Register entities with the tracker.
-      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function stopTrackingBundles(array $bundles) {
-    // Check whether there are entities which need to be removed.
-    if (($entity_ids = $this->getBundleItemIds($bundles))) {
-      // Remove the items from the tracker.
-      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function summary() {
-    // Initialize the summary variable to an empty string.
     $summary = '';
-    // Check if the entity supports bundles.
     if ($this->isEntityBundlable()) {
-      // Get the configured bundles.
       $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), $this->configuration['bundles']));
-      // Check in what operation the datasource is performing.
       if ($this->configuration['default'] == TRUE) {
-        // Build the summary.
         $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
       else {
-        // Build the summary.
         $summary = $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
     }
@@ -352,98 +408,52 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   }
 
   /**
-   * Get the entity bundles which can be used in a select element.
-   *
-   * @return array
-   *   An associative array of bundle labels, keyed by the bundle name.
-   */
-  protected function getEntityBundleOptions() {
-    // Initialize the options variable to NULL.
-    $options = array();
-    // Try to retrieve the exposed entity type bundles.
-    if (($bundles = $this->getEntityBundles())) {
-      // Remove the default entity type bundle.
-      unset($bundles[$this->getEntityTypeId()]);
-      // Iterate through the bundles.
-      foreach ($bundles as $bundle => $bundle_info) {
-        // Add the bundle to the options list.
-        $options[$bundle] = String::checkPlain($bundle_info['label']);
-      }
-    }
-    return $options;
-  }
-
-  /**
-   * Returns the entity type id.
-   *
-   * @return string
-   *   The entity type id.
+   * {@inheritdoc}
    */
   public function getEntityTypeId() {
-    // Get the plugin definition.
     $plugin_definition = $this->getPluginDefinition();
-    // Get the entity type.
     return $plugin_definition['entity_type'];
   }
 
   /**
-   * Returns the entity type definition.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeInterface
-   *   Entity type definition.
-   */
-  public function getEntityType() {
-    return $this->getEntityManager()->getDefinition($this->getEntityTypeId());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getDatasourceType() {
-    return $this->getEntityType()->id();
-  }
-
-  /**
-   * Determine whether the entity type supports bundles.
+   * Determines whether the entity type supports bundles.
    *
    * @return bool
-   *   TRUE if the entity type supports bundles, otherwise FALSE.
+   *   TRUE if the entity type supports bundles, FALSE otherwise.
    */
-  public function isEntityBundlable() {
-    // Get the entity type definition
-    $entity_type_definition = $this->getEntityManager()->getDefinition($this->getEntityTypeId());
-    // Determine whether the entity type supports bundles.
-    return $entity_type_definition->hasKey('bundle');
+  protected function isEntityBundlable() {
+    return $this->getEntityType()->hasKey('bundle');
   }
 
   /**
-   * Get the entity bundles.
+   * Retrieves all bundles of this datasource's entity type.
    *
    * @return array
-   *   An associative array of bundle info, keyed by the bundle name.
+   *   An associative array of bundle infos, keyed by the bundle names.
    */
-  public function getEntityBundles() {
+  protected function getEntityBundles() {
     return $this->isEntityBundlable() ? $this->getEntityManager()->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
-   * Retrieves all item IDs of entities of specific bundles.
+   * Retrieves all item IDs of entities of the specified bundles.
    *
    * @param array $bundles
-   *   (optional) The bundles for which all item IDs should be returned.
-   *   Defaults to all enabled bundles.
+   *   (optional) The bundles for which all item IDs should be returned; or NULL
+   *   to retrieve IDs from all enabled bundles in this datasource.
    *
    * @return array
    *   An array of all item IDs of these bundles.
    */
-  public function getBundleItemIds(array $bundles = NULL) {
-    $select = \Drupal::entityQuery($this->getEntityTypeId());
-
-    // Get our bundles from the datasource if it was not passed.
+  protected function getBundleItemIds(array $bundles = NULL) {
+    // If NULL was passed, use all enabled bundles.
     if (!isset($bundles)) {
       $bundles = $this->getIndexedBundles();
     }
-    // If we have bundles to filter on
+
+    $select = \Drupal::entityQuery($this->getEntityTypeId());
+    // If there are bundles to filter on, and they don't include all available
+    // bundles, add the appropriate condition.
     if ($bundles) {
       if (count($bundles) != count($this->getEntityBundles())) {
         $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');
@@ -451,6 +461,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
     }
     $entity_ids = $select->execute();
 
+    // For all the loaded entities, compute all their item IDs (one for each
+    // translation).
     $item_ids = array();
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     foreach (entity_load_multiple($this->getEntityTypeId(), $entity_ids) as $entity_id => $entity) {
@@ -462,25 +474,31 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   }
 
   /**
-   * Gets the indexed bundles
+   * Retrieves the bundles which will be indexed for this datasource.
+   *
+   * @return string[]
+   *   The machine names of all indexed bundles for this datasource.
    */
-  public function getIndexedBundles() {
-    $configuration = $this->getConfiguration();
-    $bundles = $configuration['bundles'];
+  protected function getIndexedBundles() {
+    if (!$this->isEntityBundlable()) {
+      return array();
+    }
 
-    // When the default is set to 1, all bundles are selected except those
-    // chosen
+    $configuration = $this->getConfiguration();
+
+    // If "default" is TRUE (i.e., "All except those selected"), remove all the
+    // selected bundles from the available ones to compute the indexed bundles.
     if ($configuration['default']) {
       $bundles = $this->getEntityBundles();
-      foreach ($configuration['bundles'] as $config_bundle_name => $config_bundle) {
+      foreach ($configuration['bundles'] as $config_bundle) {
         if (isset($bundles[$config_bundle])) {
           unset($bundles[$config_bundle]);
         }
       }
     }
-    // When the default is set to 0, all bundles that are selected are chosen
+    // Otherwise, just return all selected bundles.
     else {
-      // Remove all unselected bundles
+      $bundles = $configuration['bundles'];
       foreach ($bundles as $bundle_key => $bundle_value) {
         if ($bundle_value === 0) {
           unset($bundles[$bundle_key]);
@@ -507,7 +525,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
     try {
       if ($item instanceof EntityInterface) {
-        $langcode = $langcode ? : $item->language()->id;
+        $langcode = $langcode ?: $item->language()->getId();
         return $this->getEntityManager()->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
       }
     }
@@ -537,7 +555,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       $items_by_language = array();
       foreach ($items as $i => $item) {
         if ($item instanceof EntityInterface) {
-          $items_by_language[$item->language()->id][$i] = $item;
+          $items_by_language[$item->language()->getId()][$i] = $item;
         }
       }
       // Then build the items for each language. We initialize $build beforehand
@@ -558,47 +576,6 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   }
 
   /**
-   * Retrieves all indexes that are configured to index the given entity.
-   *
-   * @param ContentEntityInterface $entity
-   *   The entity for which to check.
-   *
-   * @return \Drupal\search_api\Index\IndexInterface[]
-   *   All indexes of this class that are configured to index the given entity.
-   */
-  public static function getIndexesForEntity(ContentEntityInterface $entity) {
-    $datasource_id = 'entity:' . $entity->getEntityTypeId();
-    $entity_bundle = $entity->bundle();
-
-    $index_names = \Drupal::entityQuery('search_api_index')
-      ->condition('datasources.*', $datasource_id)
-      ->execute();
-
-    if (!$index_names) {
-      return array();
-    }
-
-    // Checks whether the indexes include the given entity's bundle.
-    /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
-    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
-    foreach ($indexes as $index_id => $index) {
-      try {
-        $config = $index->getDatasource($datasource_id)->getConfiguration();
-        $default = !empty($config['default']);
-        $bundle_set = !empty($config['bundles'][$entity_bundle]);
-        if ($default == $bundle_set) {
-          unset($indexes[$index_id]);
-        }
-      }
-      catch (SearchApiException $e) {
-        unset($indexes[$index_id]);
-      }
-    }
-
-    return $indexes;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function calculateDependencies() {
@@ -606,6 +583,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
 
     $this->addDependency('module', $this->getEntityType()->getProvider());
 
+    // @todo This should definitely be the responsibility of the index class,
+    //   this is nothing specific to the datasource.
     $fields = array();
     foreach ($this->getIndex()->getFields() as $field) {
       if ($field->getDatasourceId() === $this->pluginId) {
@@ -653,7 +632,6 @@ class ContentEntityDatasource extends DatasourcePluginBase {
         if ($field_definition instanceof FieldInstanceConfigInterface) {
           if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
             $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;
-            $field_dependencies[$field_definition->getFieldStorageDefinition()->getConfigDependencyName()] = TRUE;
           }
 
           // Recurse for nested fields.
@@ -666,6 +644,54 @@ class ContentEntityDatasource extends DatasourcePluginBase {
     }
 
     return array_keys($field_dependencies);
+  }
+
+  /**
+   * Retrieves all indexes that are configured to index the given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity for which to check.
+   *
+   * @return \Drupal\search_api\Index\IndexInterface[]
+   *   All indexes that are configured to index the given entity (using this
+   *   datasource class).
+   */
+  public static function getIndexesForEntity(ContentEntityInterface $entity) {
+    $entity_type = $entity->getEntityTypeId();
+    $datasource_id = 'entity:' . $entity_type;
+    $entity_bundle = $entity->bundle();
+
+    $index_names = \Drupal::entityQuery('search_api_index')
+      ->condition('datasources.*', $datasource_id)
+      ->execute();
+
+    if (!$index_names) {
+      return array();
+    }
+
+    /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
+    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
+
+    // If the datasource's entity type supports bundles, we have to filter the
+    // indexes for whether they also include the specific bundle of the given
+    // entity. Otherwise, we are done.
+    if ($entity_type !== $entity_bundle) {
+      foreach ($indexes as $index_id => $index) {
+        try {
+          $config = $index->getDatasource($datasource_id)->getConfiguration();
+          $default = !empty($config['default']);
+          $bundle_set = !empty($config['bundles'][$entity_bundle]);
+          if ($default == $bundle_set) {
+            unset($indexes[$index_id]);
+          }
+        }
+        catch (SearchApiException $e) {
+          unset($indexes[$index_id]);
+        }
+      }
+    }
+
+    return $indexes;
   }
 
 }

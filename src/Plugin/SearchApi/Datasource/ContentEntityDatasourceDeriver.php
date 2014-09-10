@@ -15,7 +15,9 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a datasource plugin definition for every content entity type.
+ * Derives a datasource plugin definition for every content entity type.
+ *
+ * @see \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource
  */
 class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
 
@@ -80,9 +82,7 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public function getDerivativeDefinition($derivative_id, $base_plugin_definition) {
-    // Get the derivatives for the given base plugin definition.
     $derivatives = $this->getDerivativeDefinitions($base_plugin_definition);
-    // Get the derivative plugin defintion.
     return isset($derivatives[$derivative_id]) ? $derivatives[$derivative_id] : NULL;
   }
 
@@ -90,17 +90,14 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    // Get the base plugin ID.
     $base_plugin_id = $base_plugin_definition['id'];
-    // Check if the derivatives need to be resolved.
+
     if (!isset($this->derivatives[$base_plugin_id])) {
-      // Initialize the plugin derivatives variable to an empty array.
       $plugin_derivatives = array();
-      // Iterate through the entity types.
       foreach ($this->getEntityManager()->getDefinitions() as $entity_type => $entity_type_definition) {
-        // Check if the entity type is not a configuration entity.
+        // We only support content entity types at the moment, since config
+        // entities don't implement \Drupal\Core\TypedData\ComplexDataInterface.
         if ($entity_type_definition instanceof ContentEntityType) {
-          // Build the derivative plugin definition.
           $plugin_derivatives[$entity_type] = array(
             'id' => $base_plugin_id . PluginBase::DERIVATIVE_SEPARATOR . $entity_type,
             'entity_type' => $entity_type,
@@ -110,20 +107,28 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
         }
       }
 
-      // Sort alphabetically
       uasort($plugin_derivatives, array($this, 'compareDerivatives'));
 
-      // Add the plugin derivatives for the given base plugin.
       $this->derivatives[$base_plugin_id] = $plugin_derivatives;
     }
     return $this->derivatives[$base_plugin_id];
   }
 
   /**
-   * Helper function to sort the list of content entities
+   * Compares two plugin definitions according to their labels.
+   *
+   * @param array $a
+   *   A plugin definition, with at least a "label" key.
+   * @param array $b
+   *   Another plugin definition.
+   *
+   * @return int
+   *   An integer less than, equal to, or greater than zero if the first
+   *   argument is considered to be respectively less than, equal to, or greater
+   *   than the second.
    */
-  public function compareDerivatives($a, $b) {
-    return strcmp($a['label'], $b['label']);
+  public function compareDerivatives(array $a, array $b) {
+    return strnatcasecmp($a['label'], $b['label']);
   }
 
 }

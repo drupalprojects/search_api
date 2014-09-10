@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Cc implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Cc" ("Other, Control").
+ */
+class Cc implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -25,4 +28,5 @@ class Cc implements UnicodeListInterface {
       '\x{0097}\x{0098}\x{0099}\x{009A}\x{009B}\x{009C}\x{009D}' .
       '\x{009E}\x{009F}';
   }
+
 }

@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Sk implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Sk" ("Symbol, Modifier").
+ */
+class Sk implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -32,4 +35,5 @@ class Sk implements UnicodeListInterface {
       '\x{FBBB}\x{FBBC}\x{FBBD}\x{FBBE}\x{FBBF}\x{FBC0}\x{FBC1}' .
       '\x{FF3E}\x{FF40}\x{FFE3}';
   }
+
 }

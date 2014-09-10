@@ -7,13 +7,16 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class So implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "So" ("Symbol, Other").
+ */
+class So implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
    */
   public static function getRegularExpression() {
-    return    
+    return
       '\x{00A6}\x{00A9}\x{00AE}\x{00B0}\x{0482}\x{060E}\x{060F}' .
       '\x{06DE}\x{06E9}\x{06FD}\x{06FE}\x{07F6}\x{09FA}\x{0B70}' .
       '\x{0BF3}\x{0BF4}\x{0BF5}\x{0BF6}\x{0BF7}\x{0BF8}\x{0BFA}' .
@@ -645,4 +648,5 @@ class So implements UnicodeListInterface {
       '\x{1F76C}\x{1F76D}\x{1F76E}\x{1F76F}\x{1F770}\x{1F771}\x{1F772}' .
       '\x{1F773}';
   }
+
 }

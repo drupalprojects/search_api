@@ -7,7 +7,10 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
-class Zl implements UnicodeListInterface {
+/**
+ * Represents characters of the Unicode category "Zl" ("Separator, Line").
+ */
+class Zl implements UnicodeCharacterCategoryInterface {
 
   /**
    * {@inheritdoc}
@@ -16,4 +19,5 @@ class Zl implements UnicodeListInterface {
     return
       '\x{2028}';
   }
+
 }
