@@ -58,6 +58,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
 
     if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
       $this->setIndex($configuration['index']);
+      unset($configuration['index']);
     }
   }
 
@@ -256,10 +257,14 @@ class ContentEntityDatasource extends DatasourcePluginBase {
           }
         }
         if (!empty($bundles_start)) {
-          $this->startTrackingBundles(array_keys($bundles_start));
+          if ($entity_ids = $this->getBundleItemIds(array_keys($bundles_start))) {
+            $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
+          }
         }
         if (!empty($bundles_stop)) {
-          $this->stopTrackingBundles(array_keys($bundles_stop));
+          if ($entity_ids = $this->getBundleItemIds(array_keys($bundles_stop))) {
+            $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
+          }
         }
       }
     }
@@ -321,35 +326,6 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       }
     }
     return $options;
-  }
-
-  /**
-   * Starts tracking for the given bundles.
-   *
-   * Will insert all entities of those bundles as "new" into the index's
-   * tracker.
-   *
-   * @param array $bundles
-   *   The bundles to start tracking.
-   */
-  protected function startTrackingBundles(array $bundles) {
-    if ($entity_ids = $this->getBundleItemIds($bundles)) {
-      $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
-    }
-  }
-
-  /**
-   * Stops tracking for the given bundles.
-   *
-   * Will remove all entities of those bundles as from the index's tracker.
-   *
-   * @param array $bundles
-   *   The bundles to stop tracking.
-   */
-  protected function stopTrackingBundles(array $bundles) {
-    if ($entity_ids = $this->getBundleItemIds($bundles)) {
-      $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
-    }
   }
 
   /**

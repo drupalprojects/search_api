@@ -47,7 +47,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = $this->entity;
     $server->setStatus(FALSE)->save();

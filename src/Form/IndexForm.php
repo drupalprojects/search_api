@@ -494,7 +494,9 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = $this->getEntity();
 
@@ -513,9 +515,7 @@ class IndexForm extends EntityForm {
     /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
     $tracker = $form_state->get('tracker_plugin');
     $tracker_form_state = $form_state->get('tracker_form_state');
-    $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
-
-    return parent::submit($form, $form_state);
+    $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
   }
 
   /**

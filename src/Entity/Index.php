@@ -480,7 +480,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     if ($sortBy == 'weight') {
       // Sort by weight.
-      uasort($processors_settings, array('\Drupal\search_api\Utility\Utility', 'sortByWeight'));
+      uasort($processors_settings, array('Drupal\Component\Utility\SortArray', 'sortByWeightElement'));
     }
     else {
       // Sort by processor ID.

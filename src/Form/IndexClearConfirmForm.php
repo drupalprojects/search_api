@@ -41,7 +41,7 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\search_api\Index\IndexInterface $entity */
     $entity = $this->getEntity();
 

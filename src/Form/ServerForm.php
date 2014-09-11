@@ -269,9 +269,11 @@ class ServerForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function submit(array $form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
     /** @var \Drupal\search_api\Server\ServerInterface $server */
-    $server = parent::submit($form, $form_state);
+    $server = $this->getEntity();
 
     if ($backend_form_state = $form_state->get('backend_form_state')) {
       $server->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
