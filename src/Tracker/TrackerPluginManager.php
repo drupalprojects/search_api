@@ -30,7 +30,7 @@ class TrackerPluginManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     // Initialize the parent chain of objects.
-    parent::__construct('Plugin/SearchApi/Tracker', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiTracker');
+    parent::__construct('Plugin/SearchApi/Tracker', $namespaces, $module_handler, 'Drupal\search_api\Tracker\TrackerInterface', 'Drupal\search_api\Annotation\SearchApiTracker');
     // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, 'search_api_trackers');
     $this->alterInfo('search_api_tracker_info');

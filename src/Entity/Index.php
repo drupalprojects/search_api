@@ -445,7 +445,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
     $processorPluginManager = \Drupal::service('plugin.manager.search_api.processor');
     $processor_definitions = $processorPluginManager->getDefinitions();
-    $processors_settings = $this->getOption('processors');
+    $processors_settings = $this->getOption('processors', array());
 
     // Only do this if we do not already have our processors
     foreach ($processor_definitions as $name => $processor_definition) {
@@ -464,10 +464,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
           /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
           $processor = $processorPluginManager->createInstance($name, $settings);
-          if (!($processor instanceof ProcessorInterface)) {
-            \Drupal::logger('search_api')->warning('Processor @id is not an ProcessorInterface instance using @class.', array('@id' => $name, '@class' => $processor_definition['class']));
-            continue;
-          }
           if ($processor->supportsIndex($this)) {
             $this->processors[$name] = $processor;
           }

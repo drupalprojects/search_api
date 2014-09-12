@@ -33,7 +33,7 @@ class BackendPluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/SearchApi/Backend', $namespaces, $module_handler, 'Drupal\search_api\Annotation\SearchApiBackend');
+    parent::__construct('Plugin/SearchApi/Backend', $namespaces, $module_handler, 'Drupal\search_api\Backend\BackendInterface', 'Drupal\search_api\Annotation\SearchApiBackend');
     $this->setCacheBackend($cache_backend, 'search_api_backends');
     $this->alterInfo('search_api_backend_info');
   }

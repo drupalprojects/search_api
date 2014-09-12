@@ -24,12 +24,14 @@ class Transliteration extends FieldsProcessorPluginBase {
    *
    * @var \Drupal\Component\Transliteration\TransliterationInterface
    */
-  protected $transliterator = NULL;
+  protected $transliterator;
 
   /**
-  * @var string
-  */
-  protected $langcode = NULL;
+   * The language to use for transliterating.
+   *
+   * @var string
+   */
+  protected $langcode;
 
   /**
    * {@inheritdoc}
