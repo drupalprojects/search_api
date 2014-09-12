@@ -99,7 +99,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
     // value is present). The value is used if the form is either not exposed,
     // or the exposed form wasn't submitted yet. (There doesn't seem to be an
     // easier way to check for that.)
-    if ($this->value && (!$form_state->get('input') || !empty($form_state->get('input')['live_preview']))) {
+    if ($this->value && (!$form_state->getUserInput() || !empty($form_state->getUserInput()['live_preview']))) {
       $form['value']['#default_value'] = $this->idsToStrings($this->value);
     }
   }

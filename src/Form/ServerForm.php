@@ -84,7 +84,7 @@ class ServerForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     // If the form is being rebuilt, rebuild the entity with the current form
     // values.
-    if ($form_state->get('rebuild')) {
+    if ($form_state->isRebuilding()) {
       $this->entity = $this->buildEntity($form, $form_state);
     }
 
@@ -254,7 +254,7 @@ class ServerForm extends EntityForm {
       // different backend, so any values entered for the other backend should
       // be discarded.
       // @todo Make sure this works both with and without AJAX.
-      $input = $form_state->get('input');
+      $input = $form_state->getUserInput();
       $input['backend_config'] = array();
       $form_state->set('input', $input);
     }
@@ -287,7 +287,7 @@ class ServerForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Only save the server if the form doesn't need to be rebuilt.
-    if (!$form_state->get('rebuild')) {
+    if (!$form_state->isRebuilding()) {
       try {
         $server = $this->getEntity();
         $server->save();

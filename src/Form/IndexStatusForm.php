@@ -126,7 +126,7 @@ class IndexStatusForm extends FormBase {
     parent::validateForm($form, $form_state);
 
     // Only the "Index now" action needs any validation.
-    if ($form_state->get('triggering_element')['#name'] === 'index_now') {
+    if ($form_state->getTriggeringElement()['#name'] === 'index_now') {
       $values = $form_state->getValues();
       // Get the translated "all" value and lowercase it for comparison.
       $all_value = drupal_strtolower($values['all']);
@@ -158,7 +158,7 @@ class IndexStatusForm extends FormBase {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $form['#index'];
 
-    switch ($form_state->get('triggering_element')['#name']) {
+    switch ($form_state->getTriggeringElement()['#name']) {
       case 'index_now':
         $values = $form_state->getValues();
         try {

@@ -146,7 +146,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       $form['value']['#size'] = min(9, count($options));
       $form['value']['#default_value'] = $default_value;
 
-      $input = &$form_state->get('input');
+      $input = &$form_state->getUserInput();
       if ($form_state->get('exposed') && isset($identifier) && !isset($input[$identifier])) {
         $input[$identifier] = $default_value;
       }

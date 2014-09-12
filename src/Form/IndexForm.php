@@ -143,7 +143,7 @@ class IndexForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     // If the form is being rebuilt, rebuild the entity with the current form
     // values.
-    if ($form_state->get('rebuild')) {
+    if ($form_state->isRebuilding()) {
       $this->entity = $this->buildEntity($form, $form_state);
     }
 
@@ -523,7 +523,7 @@ class IndexForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     // Only save the index if the form doesn't need to be rebuilt.
-    if (!$form_state->get('rebuild')) {
+    if (!$form_state->isRebuilding()) {
       try {
         $this->getEntity()->save();
         drupal_set_message($this->t('The index was successfully saved.'));

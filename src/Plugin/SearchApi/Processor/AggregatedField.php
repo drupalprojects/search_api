@@ -72,11 +72,13 @@ class AggregatedField extends ProcessorPluginBase {
    */
   // @todo Make sure this works both with and without Javascript.
   public function buildFieldsForm(array &$form, FormStateInterface $form_state) {
-    $form_state->setIfNotExists('fields', $this->configuration['fields']);
+    if (!$form_state->has('fields')) {
+      $form_state->set('fields', $this->configuration['fields']);
+    }
     $form_state_fields = $form_state->get('fields');
 
     // Check if we need to add a new field, or remove one.
-    $triggering_element = $form_state->get('triggering_element');
+    $triggering_element = $form_state->getTriggeringElement();
     if (isset($triggering_element['#name'])) {
       $button_name = $triggering_element['#name'];
       if ($button_name == 'add_aggregation_field') {

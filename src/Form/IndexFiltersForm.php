@@ -76,7 +76,9 @@ class IndexFiltersForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
-    $form_state->setIfNotExists('processors', $this->entity->getProcessors(TRUE, 'name'));
+    if (!$form_state->has('processors')) {
+      $form_state->set('processors', $this->entity->getProcessors(TRUE, 'name'));
+    }
     $processors_by_name = $form_state->get('processors');
     $processors_settings = $this->entity->getOption('processors');
 
