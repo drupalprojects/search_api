@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2334727 by Alex Bukach, drunken monkey: Fixed Views caching does not take
+  items_per_page into account.
 - #1372092 by drunken monkey: Added an error message when no service class is
   available when creating a server.
 - #2305627 by drunken monkey, cpliakas: Fixed date facets not displayed when
