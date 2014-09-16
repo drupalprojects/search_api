@@ -764,4 +764,11 @@ class SubFormState implements FormStateInterface {
     return $this->mainFormState->isValidationComplete();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function cleanValues() {
+    $this->mainFormState->cleanValues();
+    return $this;
+  }
 }
