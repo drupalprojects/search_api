@@ -10,13 +10,14 @@ namespace Drupal\search_api_db\Tests;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\field\Entity\FieldInstanceConfig;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
+use SebastianBergmann\Exporter\Exception;
 
 /**
  * Tests index and search capabilities using the Database search backend.
@@ -89,7 +90,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
     $this->searchNoResults();
     $this->regressionTests2();
-    $this->uninstallModule();
+    $this->checkModuleUninstall();
   }
 
   /**
@@ -139,6 +140,10 @@ class SearchApiDbTest extends EntityUnitTestBase {
     // Remove a field from the index and check if the change is matched in the
     // server configuration.
     $field_id = $this->getFieldId('keywords');
+    if (empty($index->getFields()[$field_id])) {
+      debug(array_keys($index->getFields()));
+      throw new Exception();
+    }
     $index->getFields()[$field_id]->setIndexed(FALSE, TRUE);
     $index->save();
 
@@ -733,7 +738,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
       'type' => 'decimal',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ))->save();
-    FieldInstanceConfig::create(array(
+    FieldConfig::create(array(
       'field_name' => 'prices',
       'entity_type' => 'entity_test',
       'bundle' => 'item',
@@ -777,7 +782,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   /**
    * Tests whether removing the configuration again works as it should.
    */
-  protected function uninstallModule() {
+  protected function checkModuleUninstall() {
     // See whether clearing the server works.
     // Regression test for #2156151.
     /** @var \Drupal\search_api\Server\ServerInterface $server */

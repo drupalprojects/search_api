@@ -89,7 +89,7 @@ trait ExampleContentTrait {
    *   The internal field ID.
    */
   protected function getFieldId($field_name) {
-    return 'entity:entity_test' . IndexInterface::DATASOURCE_ID_SEPARATOR . $field_name;
+    return Utility::createCombinedId('entity:entity_test', $field_name);
   }
 
   /**
