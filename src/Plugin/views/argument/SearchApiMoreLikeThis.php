@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
@@ -37,13 +38,15 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
     unset($form['break_phrase']);
     unset($form['not']);
 
-    $index = entity_load('search_api_index', substr($this->table, 17));
+    /** @var \Drupal\search_api\Entity\Index $index */
+    $index = Index::load(substr($this->table, 17));
     if (!empty($index->options['fields'])) {
       $fields = array();
       foreach ($index->getFields() as $key => $field) {
-        $fields[$key] = $field['name'];
+        $fields[$key] = $field->getLabel();
       }
     }
+
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
