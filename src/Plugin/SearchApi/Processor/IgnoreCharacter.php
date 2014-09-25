@@ -8,28 +8,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Cf;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Co;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Me;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Mn;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pd;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pe;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pf;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Pi;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Po;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Ps;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sc;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sk;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Sm;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\So;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zl;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zp;
-use Drupal\search_api\Plugin\SearchApi\Processor\Resources\Zs;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * @SearchApiProcessor(
@@ -41,6 +20,8 @@ use Drupal\search_api\Utility\Utility;
 class IgnoreCharacter extends FieldsProcessorPluginBase {
 
   /**
+   * The escaped regular expression for ignorable characters.
+   *
    * @var string
    */
   protected $ignorable;
@@ -49,6 +30,9 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
+    // @todo As elsewhere, the "character_sets" setting should only contain the
+    //   enabled classes, in a numeric array.
+    // @todo Also, nesting this setting makes no sense.
     return array(
       'ignorable' => "['¿¡!?,.:;]",
       'strip' => array(
@@ -73,22 +57,21 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
 
     $form['ignorable'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Ignorable characters'),
-      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings (e.g., "-"). It is placed in a regular expression function as such: preg_replace(\[\'¿¡!?,.:;]+/u)'),
+      '#title' => $this->t('Strip by regular expression'),
+      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href="@url">PCRE regular expression</a>.', array('@url' => url('http://php.net/manual/en/reference.pcre.pattern.syntax.php'))),
       '#default_value' => $this->configuration['ignorable'],
     );
 
     $character_sets = $this->getCharacterSets();
     $form['strip'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Character Sets to remove from text'),
-      '#description' => $this->t('These character set remove any punctuation characters or any other that you configure. This allows you to send only useful characters to your search index.'),
+      '#title' => $this->t('Strip by character property'),
+      '#description' => $this->t('Specify <a href="@url">Unicode character properties</a> of characters to be ignored.', array('@url' => url('http://www.fileformat.info/info/unicode/category/index.htm'))),
       '#open' => FALSE,
     );
-    // Build the bundle selection element.
     $form['strip']['character_sets'] = array(
       '#type' => 'checkboxes',
-      '#title' => $this->t('Strip Character Sets'),
+      '#title' => $this->t('Ignored character properties'),
       '#options' => $character_sets,
       '#default_value' => $this->configuration['strip']['character_sets'],
       '#multiple' => TRUE,
@@ -114,138 +97,68 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
-  }
-
-  /**
-   * Strips unwanted Characters from the value that is currently being
-   * processed.
-   *
-   * @param $text
-   * @return string
-   */
-  protected function stripCharacterSets($text) {
-    // Get our configuration
-    $character_sets = $this->configuration['strip']['character_sets'];
-
-    // Loop over the character sets and strip the characters from the text
-    if (!empty($character_sets) && is_array($character_sets)) {
-      foreach ($character_sets as $character_set) {
-        $regex = $this->getFormatRegularExpression($character_set);
-        if (!empty($regex)) {
-          $text = preg_replace('/[' . $regex . ']+/u', '', $text);
-        }
-      }
-    }
-    $text = trim($text);
-    return $text;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function process(&$value) {
-    $this->prepare();
-    // We don't touch integers, NULL values or the like.
-    if ($this->ignorable) {
+    if ($this->configuration['ignorable']) {
+      if (!isset($this->ignorable)) {
+        $this->ignorable = str_replace('/', '\/', $this->configuration['ignorable']);
+      }
       $value = preg_replace('/' . $this->ignorable . '+/u', '', $value);
     }
 
-    if (!empty($this->configuration['strip']['character_sets'])) {
-      $value = $this->stripCharacterSets($value);
+    // Loop over the character sets and strip the characters from the text.
+    foreach ($this->configuration['strip']['character_sets'] as $character_set) {
+      $regex = $this->getFormatRegularExpression($character_set);
+      if (!empty($regex)) {
+        $value = preg_replace('/[' . $regex . ']+/u', '', $value);
+      }
     }
   }
 
   /**
-   * Prepares the settings.
+   * Retrieves an options list for available Unicode character properties.
+   *
+   * @return string[]
+   *   An options list with all available Unicode character properties.
    */
-  protected function prepare() {
-    if (!isset($this->ignorable)) {
-      $this->ignorable = str_replace('/', '\/', $this->configuration['ignorable']);
-    }
+  protected function getCharacterSets() {
+    return array(
+      'Pc' => $this->t('Punctuation, Connector Characters'),
+      'Pd' => $this->t('Punctuation, Dash Characters'),
+      'Pe' => $this->t('Punctuation, Close Characters'),
+      'Pf' => $this->t('Punctuation, Final quote Characters'),
+      'Pi' => $this->t('Punctuation, Initial quote Characters'),
+      'Po' => $this->t('Punctuation, Other Characters'),
+      'Ps' => $this->t('Punctuation, Open Characters'),
+
+      'Cc' => $this->t('Other, Control Characters'),
+      'Cf' => $this->t('Other, Format Characters'),
+      'Co' => $this->t('Other, Private Use Characters'),
+
+      'Mc' => $this->t('Mark, Spacing Combining Characters'),
+      'Me' => $this->t('Mark, Enclosing Characters'),
+      'Mn' => $this->t('Mark, Nonspacing Characters'),
+
+      'Sc' => $this->t('Symbol, Currency Characters'),
+      'Sk' => $this->t('Symbol, Modifier Characters'),
+      'Sm' => $this->t('Symbol, Math Characters'),
+      'So' => $this->t('Symbol, Other Characters'),
+
+      'Zl' => $this->t('Separator, Line Characters'),
+      'Zp' => $this->t('Separator, Paragraph Characters'),
+      'Zs' => $this->t('Separator, Space Characters'),
+    );
   }
 
   /**
    * @param $character_set
    * @return bool|string
    */
-  private function getFormatRegularExpression($character_set) {
-    switch ($character_set) {
-      case 'Pc':
-        return Pc::getRegularExpression();
-      case 'Pd':
-        return Pd::getRegularExpression();
-      case 'Pe':
-        return Pe::getRegularExpression();
-      case 'Pf':
-        return Pf::getRegularExpression();
-      case 'Pi':
-        return Pi::getRegularExpression();
-      case 'Po':
-        return Po::getRegularExpression();
-      case 'Ps':
-        return Ps::getRegularExpression();
-      case 'Cc':
-        return Cc::getRegularExpression();
-      case 'Cf':
-        return Cf::getRegularExpression();
-      case 'Co':
-        return Co::getRegularExpression();
-      case 'Mc':
-        return Mc::getRegularExpression();
-      case 'Me':
-        return Me::getRegularExpression();
-      case 'Mn':
-        return Mn::getRegularExpression();
-      case 'Sc':
-        return Sc::getRegularExpression();
-      case 'Sk':
-        return Sk::getRegularExpression();
-      case 'Sm':
-        return Sm::getRegularExpression();
-      case 'So':
-        return So::getRegularExpression();
-      case 'Zl':
-        return Zl::getRegularExpression();
-      case 'Zp':
-        return Zp::getRegularExpression();
-      case 'Zs':
-        return Zs::getRegularExpression();
+  protected function getFormatRegularExpression($character_set) {
+    $class = 'Drupal\search_api\Plugin\SearchApi\Processor\Resources\\' . $character_set;
+    if (class_exists($class) && in_array('Drupal\search_api\Plugin\SearchApi\Processor\Resources\UnicodeCharacterPropertyInterface', class_implements($class))) {
+      return $class::getRegularExpression();
     }
     return FALSE;
-  }
-
-  /**
-   * Lists the different UTF8 character sets
-   *
-   */
-  protected function getCharacterSets() {
-    return array(
-      'Pc' => $this->t("Punctuation, Connector Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pc/list.htm"))),
-      'Pd' => $this->t("Punctuation, Dash Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pd/list.htm"))),
-      'Pe' => $this->t("Punctuation, Close Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pe/list.htm"))),
-      'Pf' => $this->t("Punctuation, Final quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pf/list.htm"))),
-      'Pi' => $this->t("Punctuation, Initial quote Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Pi/list.htm"))),
-      'Po' => $this->t("Punctuation, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Po/list.htm"))),
-      'Ps' => $this->t("Punctuation, Open Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Ps/list.htm"))),
-      'Cc' => $this->t("Other, Control Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cc/list.htm"))),
-      'Cf' => $this->t("Other, Format Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Cf/list.htm"))),
-      'Co' => $this->t("Other, Private Use Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Co/list.htm"))),
-
-      'Mc' => $this->t("Mark, Spacing Combining Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mc/list.htm"))),
-      'Me' => $this->t("Mark, Enclosing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Me/list.htm"))),
-      'Mn' => $this->t("Mark, Nonspacing Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Mn/list.htm"))),
-
-      'Sc' => $this->t("Symbol, Currency Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sc/list.htm"))),
-      'Sk' => $this->t("Symbol, Modifier Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sk/list.htm"))),
-      'Sm' => $this->t("Symbol, Math Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Sm/list.htm"))),
-      'So' => $this->t("Symbol, Other Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/So/list.htm"))),
-
-      'Zl' => $this->t("Separator, Line Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zl/list.htm"))),
-      'Zp' => $this->t("Separator, Paragraph Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zp/list.htm"))),
-      'Zs' => $this->t("Separator, Space Characters (!link)", array("!link" => l("View","http://www.fileformat.info/info/unicode/category/Zs/list.htm"))),
-    );
   }
 
 }

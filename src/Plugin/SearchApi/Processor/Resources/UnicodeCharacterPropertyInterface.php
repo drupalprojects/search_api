@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchApi\Processor\Resources\UnicodeCharacterCategoryInterface.
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\Resources\UnicodeCharacterPropertyInterface.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 
 /**
- * Defines an interface for classes representing a Unicode character category.
+ * Defines an interface for classes representing a Unicode character property.
  */
-interface UnicodeCharacterCategoryInterface {
+interface UnicodeCharacterPropertyInterface {
 
   /**
    * Returns a regular expression matching this character class.

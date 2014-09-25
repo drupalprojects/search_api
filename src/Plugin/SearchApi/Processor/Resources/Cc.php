@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Cc" ("Other, Control").
  */
-class Cc implements UnicodeCharacterCategoryInterface {
+class Cc implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

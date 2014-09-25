@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the category "Pi" ("Punctuation, Initial quote").
  */
-class Pi implements UnicodeCharacterCategoryInterface {
+class Pi implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

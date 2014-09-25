@@ -49,17 +49,17 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
+    if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
+      $this->setIndex($configuration['index']);
+      unset($configuration['index']);
+    }
+
     // Since defaultConfiguration() depends on the plugin definition, we need to
     // override the constructor and set the definition property before calling
     // that method.
     $this->pluginDefinition = $plugin_definition;
     $this->pluginId = $plugin_id;
     $this->configuration = $configuration + $this->defaultConfiguration();
-
-    if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
-      $this->setIndex($configuration['index']);
-      unset($configuration['index']);
-    }
   }
 
   /**
@@ -216,7 +216,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       return;
     }
 
-    if ($this->isEntityBundlable()) {
+    if ($this->hasBundles()) {
       // First, check if the "default" setting changed and invert the set
       // bundles for the old config, so the following comparison makes sense.
       // @todo If the available bundles changed in between, this will still
@@ -274,7 +274,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    if ($this->isEntityBundlable()) {
+    if ($this->hasBundles()) {
       return array(
         'default' => 1,
         'bundles' => array(),
@@ -287,7 +287,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    if ($this->isEntityBundlable()) {
+    if ($this->hasBundles()) {
       $bundles = $this->getEntityBundleOptions();
       $form['default'] = array(
         '#type' => 'radios',
@@ -371,8 +371,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    */
   public function summary() {
     $summary = '';
-    if ($this->isEntityBundlable()) {
-      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), $this->configuration['bundles']));
+    if ($this->hasBundles()) {
+      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_filter($this->configuration['bundles'])));
       if ($this->configuration['default'] == TRUE) {
         $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
@@ -397,7 +397,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * @return bool
    *   TRUE if the entity type supports bundles, FALSE otherwise.
    */
-  protected function isEntityBundlable() {
+  protected function hasBundles() {
     return $this->getEntityType()->hasKey('bundle');
   }
 
@@ -408,7 +408,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    *   An associative array of bundle infos, keyed by the bundle names.
    */
   protected function getEntityBundles() {
-    return $this->isEntityBundlable() ? $this->getEntityManager()->getBundleInfo($this->getEntityTypeId()) : array();
+    return $this->hasBundles() ? $this->getEntityManager()->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
@@ -456,7 +456,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    *   The machine names of all indexed bundles for this datasource.
    */
   protected function getIndexedBundles() {
-    if (!$this->isEntityBundlable()) {
+    if (!$this->hasBundles()) {
       return array();
     }
 

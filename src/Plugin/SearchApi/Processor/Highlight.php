@@ -26,7 +26,7 @@ use Drupal\search_api\Utility\Utility;
 class Highlight extends ProcessorPluginBase {
 
   /**
-   * PREG regular expression for a word boundary.
+   * PCRE regular expression for a word boundary.
    *
    * We highlight around non-indexable or CJK characters.
    *
@@ -49,13 +49,15 @@ class Highlight extends ProcessorPluginBase {
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
+    if (!isset(self::$boundary)) {
+      $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
         '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
         '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
         '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
-    self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
-    self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']+/iu';
+      self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
+      self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']+/iu';
+    }
   }
 
   /**
@@ -77,17 +79,16 @@ class Highlight extends ProcessorPluginBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 
-    $form['prefix'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Highlighting prefix'),
-      '#description' => $this->t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'),
-      '#default_value' => $this->configuration['prefix'],
-    );
-    $form['suffix'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Highlighting suffix'),
-      '#description' => $this->t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'),
-      '#default_value' => $this->configuration['suffix'],
+    $form['highlight'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Highlight returned field data'),
+      '#description' => $this->t('Select whether returned fields should be highlighted.'),
+      '#options' => array(
+        'always' => $this->t('Always'),
+        'server' => $this->t('If the server returns fields'),
+        'never' => $this->t('Never'),
+      ),
+      '#default_value' => $this->configuration['highlight'],
     );
     $form['excerpt'] = array(
       '#type' => 'checkbox',
@@ -100,42 +101,31 @@ class Highlight extends ProcessorPluginBase {
       '#title' => $this->t('Excerpt length'),
       '#description' => $this->t('The requested length of the excerpt, in characters.'),
       '#default_value' => $this->configuration['excerpt_length'],
-      '#min' => 1,
+      '#min' => 50,
       '#states' => array(
         'visible' => array(
           // @todo This shouldn't be dependent on the form array structure.
+          //   Use the '#process' trick instead.
           '#edit-processors-search-api-highlighting-settings-excerpt' => array(
             'checked' => TRUE,
           ),
         ),
       ),
     );
-    $form['highlight'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Highlight returned field data'),
-      '#description' => $this->t('Select whether returned fields should be highlighted.'),
-      '#options' => array(
-        'always' => $this->t('Always'),
-        'server' => $this->t('If the server returns fields'),
-        'never' => $this->t('Never'),
-      ),
-      '#default_value' => $this->configuration['highlight'],
+    $form['prefix'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Highlighting prefix'),
+      '#description' => $this->t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'),
+      '#default_value' => $this->configuration['prefix'],
+    );
+    $form['suffix'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Highlighting suffix'),
+      '#description' => $this->t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'),
+      '#default_value' => $this->configuration['suffix'],
     );
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    parent::validateConfigurationForm($form, $form_state);
-
-    $minimum_excerpt_length = 50;
-    if ($form_state->getValues()['excerpt_length'] < $minimum_excerpt_length) {
-      $error_message = $this->t('The excerpt length must be greater than !minimum_excerpt_length.', array('!minimum_excerpt_length' => $minimum_excerpt_length));
-      $form_state->setError($form['excerpt_length'], $error_message);
-    }
   }
 
   /**
@@ -148,10 +138,10 @@ class Highlight extends ProcessorPluginBase {
 
     $result_items = $results->getResultItems();
     if ($this->configuration['excerpt']) {
-      $this->postprocessExcerptResults($result_items, $keys);
+      $this->addExcerpts($result_items, $keys);
     }
     if ($this->configuration['highlight'] != 'never') {
-      $higlighted_fields = $this->postprocessFieldResults($result_items, $keys);
+      $higlighted_fields = $this->highlightFields($result_items, $keys);
       if ($higlighted_fields) {
         // Maybe the backend or some other processor has already set highlighted
         // field values.
@@ -165,14 +155,14 @@ class Highlight extends ProcessorPluginBase {
   }
 
   /**
-   * For a single result retrieve fields and create a highlighted excerpt.
+   * Adds excerpts to all results, if possible.
    *
    * @param \Drupal\search_api\Item\ItemInterface[] $results
-   *   All results returned by the search.
+   *   The result items to which excerpts should be added.
    * @param array $keys
    *   The search keys to use for highlighting.
    */
-  protected function postprocessExcerptResults(array $results, array $keys) {
+  protected function addExcerpts(array $results, array $keys) {
     $items = $this->getFulltextFields($results);
     foreach ($items as $item_id => $item) {
       $text = array();
@@ -189,22 +179,21 @@ class Highlight extends ProcessorPluginBase {
   }
 
   /**
-   * Retrieves highlighted field values for result items.
+   * Retrieves highlighted field values for the given result items.
    *
    * @param \Drupal\search_api\Item\ItemInterface[] $results
-   *   All result items returned by the search.
+   *   The result items whose fields should be highlighted.
    * @param array $keys
    *   The search keys to use for highlighting.
    *
    * @return string[][][]
-   *   An array with either zero or one entries. The possible entry has a key of
-   *   $id and maps field IDs to the highlighted versions of the values for that
-   *   field.
+   *   An array keyed by item IDs, containing arrays that map field IDs to the
+   *   highlighted versions of the values for that field.
    */
-  protected function postprocessFieldResults(array $results, array $keys) {
-    $items = $this->getFulltextFields($results, $this->configuration['highlight'] == 'always');
+  protected function highlightFields(array $results, array $keys) {
+    $item_fields = $this->getFulltextFields($results, $this->configuration['highlight'] == 'always');
     $highlighted_fields = array();
-    foreach ($items as $item_id => $fields) {
+    foreach ($item_fields as $item_id => $fields) {
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($fields as $field_id => $field) {
         $values = $field->getValues();
@@ -224,18 +213,22 @@ class Highlight extends ProcessorPluginBase {
   }
 
   /**
-   * Retrieves the fulltext data of a result.
+   * Retrieves the fulltext fields of the given result items.
    *
    * @param \Drupal\search_api\Item\ItemInterface[] $result_items
-   *   All results returned by the search, keyed by item ID.
+   *   The results for which fulltext data should be extracted, keyed by item
+   *   ID.
    * @param bool $load
-   *   TRUE if the item should be loaded if necessary, FALSE if only fields
-   *   already returned in the results should be used.
+   *   (optional) If FALSE, only field values already present will be returned.
+   *   Otherwise, fields will be loaded if necessary.
    *
    * @return \Drupal\search_api\Item\FieldInterface[][]
-   *   Fields of the item for which data should be extracted.
+   *   An two-dimensional array of fulltext fields, keyed first by item ID and
+   *   then field ID.
    */
   protected function getFulltextFields(array $result_items, $load = TRUE) {
+    // @todo Add some caching, since this will sometimes be called twice for the
+    //   same result set.
     $items = array();
 
     // All the index's fulltext fields, grouped by datasource.
@@ -295,7 +288,7 @@ class Highlight extends ProcessorPluginBase {
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query from which to extract the keywords.
    *
-   * @return array
+   * @return string[]
    *   An array of all unique positive keywords used in the query.
    */
   protected function getKeywords(QueryInterface $query) {
@@ -324,10 +317,11 @@ class Highlight extends ProcessorPluginBase {
    * Extracts the positive keywords from a keys array.
    *
    * @param array $keys
-   *   A search keys array, as specified by SearchApiQueryInterface::getKeys().
+   *   A search keys array, as specified by
+   *   \Drupal\search_api\Query\QueryInterface::getKeys().
    *
-   * @return array
-   *   An array of all unique positive keywords contained in the keys.
+   * @return string[]
+   *   An array of all unique positive keywords contained in the keys array.
    */
   protected function flattenKeysArray(array $keys) {
     if (!empty($keys['#negation'])) {
@@ -358,7 +352,7 @@ class Highlight extends ProcessorPluginBase {
    * @param string $text
    *   The text to extract fragments from.
    * @param array $keys
-   *   Search keywords entered by the user.
+   *   The search keywords entered by the user.
    *
    * @return string|null
    *   A string containing HTML for the excerpt. Or NULL if no excerpt could be
@@ -500,7 +494,7 @@ class Highlight extends ProcessorPluginBase {
    * @param string $text
    *   The text of the field.
    * @param array $keys
-   *   Search keywords entered by the user.
+   *   The search keywords entered by the user.
    *
    * @return string
    *   The field's text with all occurrences of search keywords highlighted.

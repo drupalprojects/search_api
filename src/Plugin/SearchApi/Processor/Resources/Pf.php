@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the category "Pf" ("Punctuation, Final quote").
  */
-class Pf implements UnicodeCharacterCategoryInterface {
+class Pf implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

@@ -108,7 +108,7 @@ class IgnoreCharacterTest extends UnitTestCase {
    * @dataProvider ignorableCharactersDataProvider
    */
   public function testIgnorableCharacters($passedValue, $expectedValue, $ignorable) {
-    $this->processor->setConfiguration(array('ignorable' => $ignorable, 'strip' => array()));
+    $this->processor->setConfiguration(array('ignorable' => $ignorable, 'strip' => array('character_sets' => array())));
     $this->invokeMethod('process', array(&$passedValue, 'text'));
     $this->assertEquals($expectedValue, $passedValue);
   }

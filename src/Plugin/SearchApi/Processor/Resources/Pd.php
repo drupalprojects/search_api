@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Pd" ("Punctuation, Dash").
  */
-class Pd implements UnicodeCharacterCategoryInterface {
+class Pd implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

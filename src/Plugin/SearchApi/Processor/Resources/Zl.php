@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Zl" ("Separator, Line").
  */
-class Zl implements UnicodeCharacterCategoryInterface {
+class Zl implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

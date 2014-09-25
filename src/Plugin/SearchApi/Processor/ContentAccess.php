@@ -11,6 +11,7 @@ use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -21,6 +22,8 @@ use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Utility\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @SearchApiProcessor(
@@ -32,6 +35,47 @@ use Drupal\search_api\Query\QueryInterface;
 class ContentAccess extends ProcessorPluginBase {
 
   /**
+   * The logger to use for logging messages.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
+   */
+  protected $logger;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess $processor */
+    $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
+    $logger = $container->get('logger.factory')->get('search_api_db');
+    $processor->setLogger($logger);
+
+    return $processor;
+  }
+
+  /**
+   * Retrieves the logger to use.
+   *
+   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   *   The logger to use.
+   */
+  public function getLogger() {
+    return $this->logger ?: \Drupal::service('logger.factory')->get('search_api');
+  }
+
+  /**
+   * Sets the logger to use.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger to use.
+   */
+  public function setLogger(LoggerChannelInterface $logger) {
+    $this->logger = $logger;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function supportsIndex(IndexInterface $index) {
@@ -41,6 +85,16 @@ class ContentAccess extends ProcessorPluginBase {
       }
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    // @todo - here we need to secure that the author and published fields are
+    //   being indexed as we need them for the access filter.
+
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**
@@ -65,11 +119,11 @@ class ContentAccess extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    static $account;
+    static $anonymous_user;
 
-    if (!isset($account)) {
+    if (!isset($anonymous_user)) {
       // Load the anonymous user.
-      $account = new AnonymousUserSession();
+      $anonymous_user = new AnonymousUserSession();
     }
 
     // Annoyingly, this doc comment is needed for PHPStorm. See
@@ -82,7 +136,7 @@ class ContentAccess extends ProcessorPluginBase {
       }
 
       // Bail if the field is not indexed.
-      $field_id = $item->getDatasourceId() . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
+      $field_id = Utility::createCombinedId($item->getDatasourceId(), 'search_api_node_grants');
       if (!($field = $item->getField($field_id))) {
         continue;
       }
@@ -95,7 +149,7 @@ class ContentAccess extends ProcessorPluginBase {
       }
 
       // Collect grant information for the node.
-      if (!$node->access('view', $account)) {
+      if (!$node->access('view', $anonymous_user)) {
         // If anonymous user has no permission we collect all grants with their
         // realms in the item.
         $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
@@ -136,34 +190,29 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // @todo - here we need to secure that the author and published fields are
-    //   being indexed as we need them for the access filter.
-
-    parent::submitConfigurationForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function preprocessSearchQuery(QueryInterface $query) {
-    $processors = $this->index->getOption('processors');
-
-    if (!empty($processors['content_access']['status']) && !$query->getOption('search_api_bypass_access')) {
+    if (!$query->getOption('search_api_bypass_access')) {
       $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
       if (is_numeric($account)) {
         $account = entity_load('user', $account);
       }
       if (is_object($account)) {
         try {
-          $this->queryAddNodeAccess($account, $query);
+          $this->addNodeAccess($query, $account);
         }
         catch (SearchApiException $e) {
           watchdog_exception('search_api', $e);
         }
       }
       else {
-        watchdog('search_api', 'An illegal user UID was given for node access: @uid.', array('@uid' => $query->getOption('search_api_access_account', \Drupal::currentUser())), WATCHDOG_WARNING);
+        $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
+        if ($account instanceof AccountInterface) {
+          $account = $account->id();
+        }
+        if (!is_scalar($account)) {
+          $account = var_export($account, TRUE);
+        }
+        $this->getLogger()->warning('An illegal user UID was given for node access: @uid.', array('@uid' => $account));
       }
     }
   }
@@ -171,23 +220,32 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * Adds a node access filter to a search query, if applicable.
    *
-   * @param \Drupal\core\Session\AccountInterface $account
-   *   The user object, who searches.
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query to which a node access filter should be added, if applicable.
+   * @param \Drupal\core\Session\AccountInterface $account
+   *   The user for whom the search is executed.
    *
-   * @throws SearchApiException
+   * @throws \Drupal\search_api\Exception\SearchApiException
    *   If not all necessary fields are indexed on the index.
    */
-  protected function queryAddNodeAccess(AccountInterface $account, QueryInterface $query) {
+  protected function addNodeAccess(QueryInterface $query, AccountInterface $account) {
     // Don't do anything if the user can access all content.
     if ($account->hasPermission('bypass node access')) {
       return;
     }
 
+    // @todo This is completely wrong. We shouldn't hardcode any datasource IDs,
+    //   but collect them according to contained entity type, then add filters
+    //   for each of those and its fields combined with an "or some other
+    //   datasource" condition. Or maybe the field should just be datasource-
+    //   independent? Probably makes more sense, since the conditions are the
+    //   same anyways.
+    // @todo Also definitely needs tests that this is working correctly with
+    //   items of different datasources mixed together.
+
     // Get the fields that are being indexed.
     $fields = $query->getIndex()->getOption('fields');
-    // Define required fields that needs to be part of the index.
+    // Define required fields that need to be part of the index.
     $required = array('entity:node|search_api_node_grants', 'entity:node|status');
 
     $datasources_filter = $query->createFilter('OR');
@@ -229,9 +287,7 @@ class ContentAccess extends ProcessorPluginBase {
       return;
     }
 
-    // Filter by node access grants.
-    // Check items for the grants of account previously collected.
-    // They are only present for items with limited access.
+    // Filter by the user's node access grants.
     $node_filter = $query->createFilter('OR');
     $grants = node_access_grants('view', $account);
     foreach ($grants as $realm => $gids) {
@@ -239,8 +295,8 @@ class ContentAccess extends ProcessorPluginBase {
         $node_filter->condition('entity:node|search_api_node_grants', "node_access_$realm:$gid");
       }
     }
-    // Also add items that are accessible for anonymous user by checking the
-    // pseudo view grant.
+    // Also add items that are accessible for everyone by checking the "access
+    // all" pseudo grant.
     $node_filter->condition('entity:node|search_api_node_grants', 'node_access__all');
     $query->filter($node_filter);
   }

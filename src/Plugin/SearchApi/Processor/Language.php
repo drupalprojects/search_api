@@ -23,7 +23,7 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 class Language extends ProcessorPluginBase {
 
   // @todo Config form for setting the field containing the langcode if
-  // language() is not available.
+  //   language() is not available?
 
   /**
    * {@inheritdoc}

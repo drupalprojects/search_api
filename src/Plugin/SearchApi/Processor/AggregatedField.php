@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchApi\Processor\AddAggregation.
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
@@ -39,11 +39,7 @@ class AggregatedField extends ProcessorPluginBase {
 
     $form['#attached']['css'][] = drupal_get_path('module', 'search_api') . '/css/search_api.admin.css';
     $form['description'] = array(
-      '#markup' => $this->t('This data alteration lets you define additional fields that will be added to this index. ' .
-        'Each of these new fields will be an aggregation of one or more existing fields.</br>' .
-        'To add a new aggregated field, click the "Add new field" button and then fill out the form.</br>' .
-        'To remove a previously defined field, click the "Remove field" button. </br>' .
-        'You can also change the names or contained fields of existing aggregated fields.'),
+      '#markup' => $this->t('This data alteration lets you define additional fields that will be added to this index. Each of these new fields will be an aggregation of one or more existing fields.<br />To add a new aggregated field, click the "Add new field" button and then fill out the form.<br />To remove a previously defined field, click the "Remove field" button.<br />You can also change the names or contained fields of existing aggregated fields.'),
     );
 
     $this->buildFieldsForm($form, $form_state);
@@ -80,6 +76,7 @@ class AggregatedField extends ProcessorPluginBase {
     // Check if we need to add a new field, or remove one.
     $triggering_element = $form_state->getTriggeringElement();
     if (isset($triggering_element['#name'])) {
+      drupal_set_message(t('Changes in this form will not be saved until the %button button at the form bottom is clicked.', array('%button' => t('Save'))), 'warning');
       $button_name = $triggering_element['#name'];
       if ($button_name == 'add_aggregation_field') {
         for ($i = 1; isset($form_state_fields['search_api_aggregation_' . $i]); ++$i) {
@@ -91,7 +88,7 @@ class AggregatedField extends ProcessorPluginBase {
         );
       }
       else {
-        // Get the field id from the button
+        // Get the field ID from the button name.
         $field_id = substr($button_name, 25);
         unset($form_state_fields[$field_id]);
       }
@@ -119,7 +116,6 @@ class AggregatedField extends ProcessorPluginBase {
     }
     ksort($field_options);
 
-    // Container for the aggregated field configurations
     $form['fields'] = array(
       '#type' => 'container',
       '#attributes' => array(
@@ -127,11 +123,6 @@ class AggregatedField extends ProcessorPluginBase {
       ),
       '#tree' => TRUE,
     );
-
-    // $button_name is only present if this is already a rebuilt form.
-    if (isset($button_name)) {
-      drupal_set_message(t('Changes in this form will not be saved until the %button button at the form bottom is clicked.', array('%button' => t('Save'))), 'warning');
-    }
 
     foreach ($form_state_fields as $field_id => $field) {
       $new = !$field['label'];
@@ -188,10 +179,10 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for getting the aggregated types description.
+   * Retrieves the descriptions of all aggregation types.
    *
    * @return array
-   *   An array of the aggregated types with the description.
+   *   An array mapping aggregation types to their descriptions.
    */
   protected function getTypeDescriptions() {
     $types = $this->getTypes();
@@ -208,19 +199,19 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for getting information about available aggregation types.
+   * Retrieves information about available aggregation types.
    *
    * @param string $info
-   *   (optional) One of "name", "type" or "description", to indicate what
+   *   (optional) One of "label", "type" or "description", to indicate what
    *   values should be returned for the types.
    *
    * @return array
    *   An array of the identifiers of the available types mapped to, depending
-   *   on $info, their names, their data types or their descriptions.
+   *   on $info, their labels, their data types or their descriptions.
    */
-  protected function getTypes($info = 'name') {
+  protected function getTypes($info = 'label') {
     switch ($info) {
-      case 'name':
+      case 'label':
         return array(
           'union' => $this->t('Union'),
           'concat' => $this->t('Concatenation'),
@@ -281,7 +272,7 @@ class AggregatedField extends ProcessorPluginBase {
       unset($field['type_descriptions'], $field['actions']);
       $field['fields'] = array_values(array_filter($field['fields']));
       if ($field['label'] && !$field['fields']) {
-        $error_message = $this->t('You have to select at least one field to aggregate. If you want to remove an aggregated field, please delete its name.');
+        $error_message = $this->t('You have to select at least one field to aggregate.');
         $form_state->setError($form['fields'][$field_id]['fields'], $error_message);
       }
     }
@@ -303,22 +294,23 @@ class AggregatedField extends ProcessorPluginBase {
             if (!$item->getField($aggregated_field_id, FALSE)) {
               continue;
             }
-            // Extract the selected fields to aggregate from the settings
+            // Extract the selected fields to aggregate from the settings.
             $required_fields = array();
             // @todo Don't do this once for every item, compute fields per
             //   datasource right away.
             foreach ($aggregated_field['fields'] as $field_id_to_aggregate) {
-              // Only include valid and selected fields to aggregate
+              // Only include valid and selected fields to aggregate.
               if (!isset($required_fields[$field_id_to_aggregate]) && !empty($field_id_to_aggregate)) {
-                // Make sure we only get fields from our current datasource type of the given item.
+                // Make sure we only get fields from the datasource of the
+                // current item.
                 list($datasource_id) = Utility::splitCombinedId($field_id_to_aggregate);
-                if ($datasource_id == $item->getDatasourceId()) {
+                if (!$datasource_id || $datasource_id == $item->getDatasourceId()) {
                   $required_fields[$field_id_to_aggregate] = $field_id_to_aggregate;
                 }
               }
             }
 
-            // Get all the available fields
+            // Get all the available field values.
             $given_fields = array();
             foreach ($required_fields as $required_field_id) {
               $field = $item->getField($required_field_id);
@@ -329,7 +321,7 @@ class AggregatedField extends ProcessorPluginBase {
             }
 
             $missing_fields = array();
-            // Get all the missing fields
+            // Get all the missing field values.
             foreach ($required_fields as $required_field_id) {
               $field = Utility::createField($this->index, $required_field_id);
               $missing_fields[$field->getPropertyPath()] = $field;
@@ -386,7 +378,7 @@ class AggregatedField extends ProcessorPluginBase {
     }
     $types = $this->getTypes('type');
     if (isset($this->configuration['fields'])) {
-      $index_fields = $this->index->getFields();
+      $index_fields = $this->index->getFields(FALSE);
       foreach ($this->configuration['fields'] as $field_id => $field) {
         $definition = array(
           'label' => $field['label'],
@@ -399,7 +391,7 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Helper method for creating a description for an aggregated field.
+   * Creates a description for an aggregated field.
    *
    * @param array $field
    *   The settings of the aggregated field.
@@ -407,6 +399,7 @@ class AggregatedField extends ProcessorPluginBase {
    *   The index's fields.
    *
    * @return string
+   *   A description for the given aggregated field.
    */
   protected function fieldDescription(array $field, array $index_fields) {
     $fields = array();

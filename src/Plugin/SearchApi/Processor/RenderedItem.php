@@ -70,8 +70,8 @@ class RenderedItem extends ProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'view_mode' => array(),
       'roles' => array(DRUPAL_ANONYMOUS_RID),
+      'view_mode' => array(),
     );
   }
 
@@ -80,6 +80,16 @@ class RenderedItem extends ProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+
+    $form['roles'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('User roles'),
+      '#description' => $this->t('The data will be processed as seen by a user with the selected roles.'),
+      '#options' => user_role_names(),
+      '#multiple' => TRUE,
+      '#default_value' => $this->configuration['roles'],
+      '#required' => TRUE,
+    );
 
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
       $view_modes = $datasource->getViewModes();
@@ -101,16 +111,6 @@ class RenderedItem extends ProcessorPluginBase {
       }
     }
 
-    $form['roles'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('User roles'),
-      '#description' => $this->t('The data will be processed as seen by a user with the selected roles.'),
-      '#options' => user_role_names(),
-      '#multiple' => TRUE,
-      '#default_value' => $this->configuration['roles'],
-      '#required' => TRUE,
-    );
-
     return $form;
   }
 
@@ -124,7 +124,7 @@ class RenderedItem extends ProcessorPluginBase {
     $definition = array(
       'type' => 'string',
       'label' => $this->t('Rendered HTML output'),
-      'description' => $this->t('The complete HTML which would be created when viewing the item.'),
+      'description' => $this->t('The complete HTML which would be displayed when viewing the item.'),
     );
     $properties['rendered_item'] = new DataDefinition($definition);
   }
@@ -133,8 +133,8 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    // Change the current user to our custom AccountInterface implementation so
-    // we don't accidentally expose non-public information in this field.
+    // Change the current user to our dummy implementation to ensure we are
+    // using the configured roles.
     $original_user = $this->currentUser->getAccount();
     $this->currentUser->setAccount(new SearchApiUserSession($this->configuration['roles']));
 

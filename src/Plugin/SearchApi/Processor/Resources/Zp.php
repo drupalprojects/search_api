@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Zp" ("Separator, Paragraph").
  */
-class Zp implements UnicodeCharacterCategoryInterface {
+class Zp implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

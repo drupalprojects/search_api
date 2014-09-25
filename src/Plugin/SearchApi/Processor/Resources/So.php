@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "So" ("Symbol, Other").
  */
-class So implements UnicodeCharacterCategoryInterface {
+class So implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

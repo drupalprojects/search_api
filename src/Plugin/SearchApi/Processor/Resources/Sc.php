@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Sc" ("Symbol, Currency").
  */
-class Sc implements UnicodeCharacterCategoryInterface {
+class Sc implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

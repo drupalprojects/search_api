@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Mn" ("Mark, Nonspacing").
  */
-class Mn implements UnicodeCharacterCategoryInterface {
+class Mn implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

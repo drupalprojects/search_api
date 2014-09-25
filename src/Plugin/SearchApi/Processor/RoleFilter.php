@@ -82,8 +82,8 @@ class RoleFilter extends ProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $values['roles'] = array_values(array_filter($values['roles']));
     $values['default'] = (bool) $values['default'];
+    $values['roles'] = array_values(array_filter($values['roles']));
     $form_state->set('values', $values);
 
     parent::submitConfigurationForm($form, $form_state);

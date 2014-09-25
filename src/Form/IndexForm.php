@@ -286,6 +286,7 @@ class IndexForm extends EntityForm {
         'wrapper' => 'search-api-tracker-config-form',
       ),
       '#attributes' => array('class' => array('js-hide')),
+      '#access' => count($tracker_options) > 1,
     );
 
     $this->buildTrackerConfigForm($form, $form_state, $index);
@@ -476,7 +477,7 @@ class IndexForm extends EntityForm {
     // @todo It seems if we change the tracker, we would validate/submit the old
     //   tracker's form using the new tracker. Shouldn't be done, of course.
     //   Similar above for datasources, though there of course the values will
-    //   just always be empty (because datasource have their plugin ID in the
+    //   just always be empty (because datasources have their plugin ID in the
     //   form structure).
     $tracker_id = $values['tracker'];
     if ($index->getTrackerId() == $tracker_id) {
@@ -500,9 +501,6 @@ class IndexForm extends EntityForm {
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = $this->getEntity();
 
-    // @todo Redirect to a confirm form if changing server or tracker, since
-    //   that isn't such a light operation (equaling a "clear", basically).
-
     $form_state->setValue('options', array_merge($index->getOptions(), $form_state->getValues()['options']));
 
     $datasource_forms = $form_state->get('datasource_forms');
@@ -522,6 +520,9 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
+    // @todo Redirect to a confirm form if changing server or tracker, since
+    //   that isn't such a light operation (equaling a "clear", basically).
+
     // Only save the index if the form doesn't need to be rebuilt.
     if (!$form_state->isRebuilding()) {
       try {

@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Sm" ("Symbol, Math").
  */
-class Sm implements UnicodeCharacterCategoryInterface {
+class Sm implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

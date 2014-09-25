@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Co" ("Other, Private Use").
  */
-class Co implements UnicodeCharacterCategoryInterface {
+class Co implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

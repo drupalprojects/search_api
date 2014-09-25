@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the category "Pc" ("Punctuation, Connector").
  */
-class Pc implements UnicodeCharacterCategoryInterface {
+class Pc implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

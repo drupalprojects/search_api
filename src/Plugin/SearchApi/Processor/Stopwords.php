@@ -30,6 +30,13 @@ class Stopwords extends FieldsProcessorPluginBase {
   protected $ignored = array();
 
   /**
+   * An array whose keys and values are the stopwords set for this processor.
+   *
+   * @var string[]
+   */
+  protected $stopwords;
+
+  /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
@@ -56,6 +63,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+
     $form['stopwords'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
@@ -71,7 +79,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     // Convert our text input to an array.
-    $form_state->setValue('stopwords', array_map('trim', explode("\n", $form_state->getValues()['stopwords'])));
+    $form_state->setValue('stopwords', array_filter(array_map('trim', explode("\n", $form_state->getValues()['stopwords'])), 'strlen'));
 
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -116,7 +124,7 @@ class Stopwords extends FieldsProcessorPluginBase {
   }
 
   /**
-   * Gets all the stopwords.
+   * Gets the stopwords for this processor.
    *
    * @return string[]
    *   An array whose keys and values are the stopwords set for this processor.

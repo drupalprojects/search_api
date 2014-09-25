@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the category "Mc" ("Mark, Spacing Combining").
  */
-class Mc implements UnicodeCharacterCategoryInterface {
+class Mc implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Sk" ("Symbol, Modifier").
  */
-class Sk implements UnicodeCharacterCategoryInterface {
+class Sk implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

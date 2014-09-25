@@ -82,13 +82,6 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokenized_text', 'string'));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
@@ -103,7 +96,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
       $tags = $parser->parse($tags);
     }
     catch (ParseException $exception) {
-      $errors[] = $this->t("Tags is not valid YAML. See @link for information on how to write correctly formed YAML.", array('@link' => 'http://yaml.org'));
+      $errors[] = $this->t('Tags is not valid YAML. See @link for information on how to write correctly formed YAML.', array('@link' => 'http://yaml.org'));
       $tags = array();
     }
     foreach ($tags as $key => $value) {
@@ -159,10 +152,14 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   }
 
   /**
-   * Parses an HTML string to group the text by containing tags.
+   * Tokenizes an HTML string according to the HTML elements.
+   *
+   * Assigns boost values to the elements' contents accordingly.
    *
    * @param string $text
-   *   The HTML string to parse.
+   *   The HTML string to parse, passed by reference. After the method call, the
+   *   variable will contain the portion of the string after the current
+   *   element, or an empty string (if there is no current element).
    * @param string|null $active_tag
    *   (optional) The currently active tag, for which a closing tag has to be
    *   found. Internal use only.

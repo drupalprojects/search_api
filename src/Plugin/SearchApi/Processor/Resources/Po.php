@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Po" ("Punctuation, Other").
  */
-class Po implements UnicodeCharacterCategoryInterface {
+class Po implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

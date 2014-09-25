@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Pe" ("Punctuation, Close").
  */
-class Pe implements UnicodeCharacterCategoryInterface {
+class Pe implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}

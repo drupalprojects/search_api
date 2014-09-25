@@ -18,7 +18,6 @@ use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
-use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Server\ServerInterface;
@@ -1146,7 +1145,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $this->reactToDatasourceSwitch($original);
         $this->reactToTrackerSwitch($original);
       }
-      else if (!$this->status() && $original->status()) {
+      elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
           $this->stopTracking();
         }
@@ -1154,7 +1153,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $original->getServer()->removeIndex($this);
         }
       }
-      else if ($this->status() && !$original->status()) {
+      elseif ($this->status() && !$original->status()) {
         $this->getServer()->addIndex($this);
         if ($this->hasValidTracker()) {
           $this->startTracking();

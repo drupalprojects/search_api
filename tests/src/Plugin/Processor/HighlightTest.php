@@ -645,7 +645,7 @@ class HighlightTest extends UnitTestCase {
    * Returns a longer string to work with
    * @return string
    */
-  private function getFieldBody() {
+  protected function getFieldBody() {
     return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dictum ultricies sapien id consequat.
 Fusce tristique erat at dui ultricies, eu rhoncus odio rutrum. Praesent viverra mollis mauris a cursus.
 Curabitur at condimentum orci. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.

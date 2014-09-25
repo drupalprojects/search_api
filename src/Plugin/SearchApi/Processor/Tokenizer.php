@@ -107,7 +107,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    *
    * @return string
    */
-  private function getPregClassNumbers() {
+  protected function getPregClassNumbers() {
     return '\x{30}-\x{39}\x{b2}\x{b3}\x{b9}\x{bc}-\x{be}\x{660}-\x{669}\x{6f0}-\x{6f9}' .
         '\x{966}-\x{96f}\x{9e6}-\x{9ef}\x{9f4}-\x{9f9}\x{a66}-\x{a6f}\x{ae6}-\x{aef}' .
         '\x{b66}-\x{b6f}\x{be7}-\x{bf2}\x{c66}-\x{c6f}\x{ce6}-\x{cef}\x{d66}-\x{d6f}' .
@@ -124,7 +124,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    *
    * @return string
    */
-  private function getPregClassPunctuation() {
+  protected function getPregClassPunctuation() {
     return '\x{21}-\x{23}\x{25}-\x{2a}\x{2c}-\x{2f}\x{3a}\x{3b}\x{3f}\x{40}\x{5b}-\x{5d}' .
         '\x{5f}\x{7b}\x{7d}\x{a1}\x{ab}\x{b7}\x{bb}\x{bf}\x{37e}\x{387}\x{55a}-\x{55f}' .
         '\x{589}\x{58a}\x{5be}\x{5c0}\x{5c3}\x{5f3}\x{5f4}\x{60c}\x{60d}\x{61b}\x{61f}' .
@@ -159,7 +159,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    *
    * @return string
    */
-  private function getPregClassCJK() {
+  protected function getPregClassCJK() {
     return '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
         '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
         '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .

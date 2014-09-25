@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor\Resources;
 /**
  * Represents characters of the Unicode category "Ps" ("Punctuation, Open").
  */
-class Ps implements UnicodeCharacterCategoryInterface {
+class Ps implements UnicodeCharacterPropertyInterface {
 
   /**
    * {@inheritdoc}
