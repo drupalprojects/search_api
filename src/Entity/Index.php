@@ -282,7 +282,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getCacheId($type = 'fields') {
-    return 'search_api:index-' . $this->machine_name . '--' . $type;
+    return 'search_api_index:' . $this->id() . ':' . $type;
   }
 
   /**
@@ -583,8 +583,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $vars['%index'] = $this->label();
         \Drupal::logger('search_api')->warning('Warning while retrieving available fields for index %index: could not find a type mapping for the following fields: @fields.', $vars);
       }
-      $tags['search_api_index'] = $this->id();
-      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $tags);
+      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $this->getCacheTag());
     }
   }
 
@@ -1092,7 +1091,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->fulltextFields = NULL;
     $this->processors = NULL;
     if ($include_stored) {
-      Cache::invalidateTags(array('search_api_index' => array($this->id())));
+      Cache::invalidateTags($this->getCacheTag());
     }
   }
 
