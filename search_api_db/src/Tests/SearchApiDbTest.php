@@ -748,7 +748,10 @@ class SearchApiDbTest extends EntityUnitTestBase {
     // Regression test for #1916474.
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load($this->indexId);
-    $index->getFields(FALSE)[$this->getFieldId('prices')]->setType('decimal')->setIndexed(TRUE, TRUE);
+    $index->resetCaches();
+    $fields = $index->getFields(FALSE);
+    $price_field = $fields[$this->getFieldId('prices')];
+    $price_field->setType('decimal')->setIndexed(TRUE, TRUE);
     $success = $index->save();
     $this->assertTrue($success, 'The index field settings were successfully changed.');
 
