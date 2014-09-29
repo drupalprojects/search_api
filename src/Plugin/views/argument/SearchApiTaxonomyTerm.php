@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   Contains the SearchApiViewsHandlerArgumentTaxonomyTerm class.
+ * Contains \Drupal\search_api\Plugin\views\argument\SearchApiTaxonomyTerm.
  */
 
 namespace Drupal\search_api\Plugin\views\argument;
@@ -12,28 +12,27 @@ use Drupal\Component\Utility\String;
 /**
  * Defines a contextual filter searching through all indexed taxonomy fields.
  *
+ * @ingroup views_argument_handlers
+ *
  * @ViewsArgument("search_api_taxonomy_term")
  */
+// @todo This seems to be only partially ported to D8.
 class SearchApiTaxonomyTerm extends SearchApiArgument {
 
   /**
-   * Set up the query for this argument.
-   *
-   * The argument sent may be found at $this->argument.
+   * {@inheritdoc}
    */
   public function query($group_by = FALSE) {
-    if (empty($this->value)) {
-      $this->fillValue();
-    }
+    $this->fillValue();
 
     $outer_conjunction = strtoupper($this->operator);
 
     if (empty($this->options['not'])) {
-      $operator = '=';
+      $condition_operator = '=';
       $inner_conjunction = 'OR';
     }
     else {
-      $operator = '<>';
+      $condition_operator = '<>';
       $inner_conjunction = 'AND';
     }
 
@@ -52,13 +51,13 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
           // Set filters for all term reference fields which don't specify a
           // vocabulary, as well as for all fields specifying the term's
           // vocabulary.
-          if (!empty($this->definition['vocabulary_fields'][$term->vocabulary_machine_name])) {
-            foreach ($this->definition['vocabulary_fields'][$term->vocabulary_machine_name] as $field) {
-              $inner_filter->condition($field, $term->tid, $operator);
+          if (!empty($vocabulary_fields[$term->vocabulary_machine_name])) {
+            foreach ($vocabulary_fields[$term->vocabulary_machine_name] as $field) {
+              $inner_filter->condition($field, $term->tid, $condition_operator);
             }
           }
           foreach ($vocabulary_fields[''] as $field) {
-            $inner_filter->condition($field, $term->tid, $operator);
+            $inner_filter->condition($field, $term->tid, $condition_operator);
           }
           if ($outer_conjunction != $inner_conjunction) {
             $filter->filter($inner_filter);
@@ -71,13 +70,11 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
   }
 
   /**
-   * Get the title this argument will assign the view, given the argument.
+   * {@inheritdoc}
    */
   public function title() {
     if (!empty($this->argument)) {
-      if (empty($this->value)) {
-        $this->fillValue();
-      }
+      $this->fillValue();
       $terms = array();
       foreach ($this->value as $tid) {
         $taxonomy_term = taxonomy_term_load($tid);
@@ -90,20 +87,6 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
     }
     else {
       return String::checkPlain($this->argument);
-    }
-  }
-
-  /**
-   * Fill $this->value with data from the argument.
-   *
-   * Uses views_break_phrase(), if appropriate.
-   */
-  protected function fillValue() {
-    if (!empty($this->options['break_phrase'])) {
-      $this->breakPhrase($this->argument, $this);
-    }
-    else {
-      $this->value = array($this->argument);
     }
   }
 

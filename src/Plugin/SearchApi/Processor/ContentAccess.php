@@ -49,7 +49,7 @@ class ContentAccess extends ProcessorPluginBase {
     $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
-    $logger = $container->get('logger.factory')->get('search_api_db');
+    $logger = $container->get('logger.factory')->get('search_api');
     $processor->setLogger($logger);
 
     return $processor;

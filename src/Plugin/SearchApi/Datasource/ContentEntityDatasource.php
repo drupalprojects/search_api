@@ -489,11 +489,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getViewModes() {
-    $view_modes = $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
-    if (empty($view_modes)) {
-      $view_modes = array('default' => $this->t('Default'));
-    }
-    return $view_modes;
+    return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
   }
 
   /**

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains the SearchApiViewsHandlerFilterOptions class.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterOptions.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -12,7 +12,9 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views filter handler for fields with a limited set of possible values.
+ * Defines a filter for filtering on fields with a fixed set of possible values.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_options")
  */
@@ -21,72 +23,37 @@ class SearchApiFilterOptions extends SearchApiFilter {
   /**
    * Stores the values which are available on the form.
    *
-   * @var array
+   * @var array|null
    */
-  protected $value_options = NULL;
+  protected $valueOptions;
 
   /**
    * The type of form element used to display the options.
    *
    * @var string
    */
-  protected $value_form_type = 'checkboxes';
+  protected $valueFormType = 'checkboxes';
 
   /**
-   * Retrieves a wrapper for this filter's field.
-   *
-   * @return EntityMetadataWrapper|null
-   *   A wrapper for the field which this filter uses.
-   */
-  protected function get_wrapper() {
-    if ($this->query) {
-      $index = $this->query->getIndex();
-    }
-    elseif (substr($this->view->base_table, 0, 17) == 'search_api_index_') {
-      $index = entity_load('search_api_index', substr($this->view->base_table, 17));
-    }
-    else {
-      return NULL;
-    }
-    $wrapper = $index->entityWrapper(NULL, TRUE);
-    $parts = explode(':', $this->real_field);
-    foreach ($parts as $i => $part) {
-      if (!isset($wrapper->$part)) {
-        return NULL;
-      }
-      $wrapper = $wrapper->$part;
-      $info = $wrapper->info();
-      if ($i < count($parts) - 1) {
-        // Unwrap lists.
-        $level = search_api_list_nesting_level($info['type']);
-        for ($j = 0; $j < $level; ++$j) {
-          $wrapper = $wrapper[0];
-        }
-      }
-    }
-
-    return $wrapper;
-  }
-
-  /**
-   * Fills the value_options property with all possible options.
+   * Fills SearchApiFilterOptions::$valueOptions with all possible options.
    */
   protected function getValueOptions() {
-    if (isset($this->value_options)) {
+    if (isset($this->valueOptions)) {
       return;
     }
 
+    // @todo This obviously needs a different solution.
     $wrapper = $this->get_wrapper();
     if ($wrapper) {
-      $this->value_options = $wrapper->optionsList('view');
+      $this->valueOptions = $wrapper->optionsList('view');
     }
     else {
-      $this->value_options = array();
+      $this->valueOptions = array();
     }
   }
 
   /**
-   * Provide a list of options for the operator form.
+   * {@inheritdoc}
    */
   public function operatorOptions() {
     $options = array(
@@ -104,15 +71,24 @@ class SearchApiFilterOptions extends SearchApiFilter {
   }
 
   /**
-   * Set "reduce" option to FALSE by default.
+   * {@inheritdoc}
    */
-  public function defaultExposedOptions() {
+  public function defineOptions() {
+    $options = parent::defineOptions();
+    $options['expose']['contains']['reduce'] = array('default' => FALSE);
+    return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultExposeOptions() {
     parent::defaultExposeOptions();
     $this->options['expose']['reduce'] = FALSE;
   }
 
   /**
-   * Add the "reduce" option to the exposed form.
+   * {@inheritdoc}
    */
   public function buildExposedForm(&$form, FormStateInterface $form_state) {
     parent::buildExposedForm($form, $form_state);
@@ -125,44 +101,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
   }
 
   /**
-   * Define "reduce" option.
-   */
-  public function defineOptions() {
-    $options = parent::defineOptions();
-    $options['expose']['contains']['reduce'] = array('default' => FALSE);
-    return $options;
-  }
-
-  /**
-   * Reduce the options according to the selection.
-   */
-  protected function reduceValueOptions() {
-    foreach ($this->value_options as $id => $option) {
-      if (!isset($this->options['value'][$id])) {
-        unset($this->value_options[$id]);
-      }
-    }
-    return $this->value_options;
-  }
-
-  /**
-   * Save set checkboxes.
-   */
-  public function valueSubmit($form, FormStateInterface $form_state) {
-    // Drupal's FAPI system automatically puts '0' in for any checkbox that
-    // was not set, and the key to the checkbox if it is set.
-    // Unfortunately, this means that if the key to that checkbox is 0,
-    // we are unable to tell if that checkbox was set or not.
-
-    // Luckily, the '#value' on the checkboxes form actually contains
-    // *only* a list of checkboxes that were set, and we can use that
-    // instead.
-
-    $form_state->setValueForElement($form['value'], $form['value']['#value']);
-  }
-
-  /**
-   * Provide a form for setting options.
+   * {@inheritdoc}
    */
   protected function valueForm(&$form, FormStateInterface $form_state) {
     $this->getValueOptions();
@@ -170,11 +109,11 @@ class SearchApiFilterOptions extends SearchApiFilter {
       $options = $this->reduceValueOptions();
     }
     else {
-      $options = $this->value_options;
+      $options = $this->valueOptions;
     }
 
     $form['value'] = array(
-      '#type' => $this->value_form_type,
+      '#type' => $this->valueFormType,
       '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
       '#options' => $options,
       '#multiple' => TRUE,
@@ -200,7 +139,40 @@ class SearchApiFilterOptions extends SearchApiFilter {
   }
 
   /**
-   * Provides a summary of this filter's value for the admin UI.
+   * Retrieves the reduced options list to use for the exposed filter.
+   *
+   * @return string[]
+   *   An options list for the values list, with only the ones selected in the
+   *   admin UI included.
+   */
+  protected function reduceValueOptions() {
+    foreach ($this->valueOptions as $id => $option) {
+      if (!isset($this->options['value'][$id])) {
+        unset($this->valueOptions[$id]);
+      }
+    }
+    return $this->valueOptions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  // @todo Is this still needed in D8?
+  public function valueSubmit($form, FormStateInterface $form_state) {
+    // Drupal's FAPI system automatically puts '0' in for any checkbox that
+    // was not set, and the key to the checkbox if it is set.
+    // Unfortunately, this means that if the key to that checkbox is 0,
+    // we are unable to tell if that checkbox was set or not.
+
+    // Luckily, the '#value' on the checkboxes form actually contains
+    // *only* a list of checkboxes that were set, and we can use that
+    // instead.
+
+    $form_state->setValueForElement($form['value'], $form['value']['#value']);
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function adminSummary() {
     if (!empty($this->options['exposed'])) {
@@ -215,7 +187,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
     }
 
     if (!is_array($this->value)) {
-      return;
+      return '';
     }
 
     $operator_options = $this->operatorOptions();
@@ -223,9 +195,10 @@ class SearchApiFilterOptions extends SearchApiFilter {
     $values = '';
 
     // Remove every element which is not known.
+    // @todo Why? Doesn't FAPI already prevent this?
     $this->getValueOptions();
     foreach ($this->value as $i => $value) {
-      if (!isset($this->value_options[$value])) {
+      if (!isset($this->valueOptions[$value])) {
         unset($this->value[$i]);
       }
     }
@@ -246,7 +219,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
       }
       // If there is only a single value, use just the plain operator, = or <>.
       $operator = String::checkPlain($operator);
-      $values = String::checkPlain($this->value_options[reset($this->value)]);
+      $values = String::checkPlain($this->valueOptions[reset($this->value)]);
     }
     else {
       foreach ($this->value as $value) {
@@ -257,7 +230,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
           $values .= '…';
           break;
         }
-        $values .= String::checkPlain($this->value_options[$value]);
+        $values .= String::checkPlain($this->valueOptions[$value]);
       }
     }
 
@@ -265,7 +238,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
   }
 
   /**
-   * Add this filter to the query.
+   * {@inheritdoc}
    */
   public function query() {
     if ($this->operator === 'empty') {

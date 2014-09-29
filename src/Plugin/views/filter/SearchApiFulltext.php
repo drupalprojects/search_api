@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterFulltext.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFulltext.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -10,24 +10,27 @@ namespace Drupal\search_api\Plugin\views\filter;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\search_api\Entity\Index;
 
 /**
- * Views filter handler class for handling fulltext fields.
+ * Defines a filter for adding a fulltext search to the view.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_fulltext")
  */
 class SearchApiFulltext extends SearchApiFilterText {
 
   /**
-   * Displays the operator form, adding a description.
+   * {@inheritdoc}
    */
   public function showOperatorForm(&$form, FormStateInterface $form_state) {
     $this->operatorForm($form, $form_state);
-    $form['operator']['#description'] = $this->t('This operator is only useful when using \'Search keys\'.');
+    $form['operator']['#description'] = $this->t('This operator only applies when using "Search keys" as the "Use as" setting.');
   }
 
   /**
-   * Provide a list of options for the operator form.
+   * {@inheritdoc}
    */
   public function operatorOptions() {
     return array(
@@ -38,22 +41,22 @@ class SearchApiFulltext extends SearchApiFilterText {
   }
 
   /**
-   * Specify the options this filter uses.
+   * {@inheritdoc}
    */
   public function defineOptions() {
     $options = parent::defineOptions();
 
     $options['operator']['default'] = 'AND';
 
-    $options['mode'] = array('default' => 'keys');
-    $options['min_length'] = array('default' => '');
-    $options['fields'] = array('default' => array());
+    $options['mode']['default'] = 'keys';
+    $options['min_length']['default'] = '';
+    $options['fields']['default'] = array();
 
     return $options;
   }
 
   /**
-   * Extend the options form a bit.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
@@ -63,13 +66,12 @@ class SearchApiFulltext extends SearchApiFilterText {
       '#type' => 'radios',
       '#options' => array(
         'keys' => $this->t('Search keys – multiple words will be split and the filter will influence relevance. You can change how search keys are parsed under "Advanced" > "Query settings".'),
-        'filter' => $this->t("Search filter – use as a single phrase that restricts the result set but doesn't influence relevance."),
+        'filter' => $this->t("Search filter – use as a fulltext filter that restricts the result set but doesn't influence relevance."),
       ),
       '#default_value' => $this->options['mode'],
     );
 
     $fields = $this->getFulltextFields();
-//    $fields = array();
     if (!empty($fields)) {
       $form['fields'] = array(
         '#type' => 'select',
@@ -142,13 +144,15 @@ class SearchApiFulltext extends SearchApiFilterText {
   }
 
   /**
-   * Add this filter to the query.
+   * {@inheritdoc}
    */
   public function query() {
     while (is_array($this->value)) {
       $this->value = $this->value ? reset($this->value) : '';
     }
     // Catch empty strings entered by the user, but not "0".
+    // @todo Is this needed? It seems Views doesn't call filters with empty
+    //   values by default anyways.
     if ($this->value === '') {
       return;
     }
@@ -235,11 +239,16 @@ class SearchApiFulltext extends SearchApiFilterText {
   }
 
   /**
-   * Helper method to get an option list of all available fulltext fields.
+   * Retrieves a list of all available fulltext fields.
+   *
+   * @return string[]
+   *   An options list of fulltext field identifiers mapped to their prefixed
+   *   labels.
    */
   protected function getFulltextFields() {
     $fields = array();
-    $index = entity_load('search_api_index', substr($this->table, 17));
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    $index = Index::load(substr($this->table, 17));
 
     $fields_info = $index->getFields();
     foreach ($index->getFulltextFields() as $field_id) {

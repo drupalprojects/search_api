@@ -2,16 +2,17 @@
 
 /**
  * @file
- *   Contains the SearchApiViewsHandlerFilterLanguage class.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiLanguage.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Core\Language\LanguageInterface;
+
 /**
- * Views filter handler class for handling the special "Item language" field.
+ * Defines a filter for filtering on the language of items.
  *
- * Definition items:
- * - options: An array of possible values for this field.
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_language")
  */
@@ -22,27 +23,29 @@ class SearchApiLanguage extends SearchApiFilterOptions {
    */
   protected function getValueOptions() {
     parent::getValueOptions();
-    $this->value_options = array(
-      'current' => $this->t("Current user's language"),
+    $this->valueOptions = array(
+      'content' => $this->t('Current content language'),
+      'interface' => $this->t('Current interface language'),
       'default' => $this->t('Default site language'),
-    ) + $this->value_options;
+    ) + $this->valueOptions;
   }
 
   /**
-   * Add this filter to the query.
+   * {@inheritdoc}
    */
   public function query() {
-    global $language_content;
-
     if (!is_array($this->value)) {
       $this->value = $this->value ? array($this->value) : array();
     }
     foreach ($this->value as $i => $v) {
-      if ($v == 'current') {
-        $this->value[$i] = $language_content->language;
+      if ($v == 'content') {
+        $this->value[$i] = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+      }
+      elseif ($v == 'interface') {
+        $this->value[$i] = \Drupal::languageManager()->getCurrentLanguage()->getId();
       }
       elseif ($v == 'default') {
-        $this->value[$i] = \Drupal::languageManager()->getDefaultLanguage('language');
+        $this->value[$i] = \Drupal::languageManager()->getDefaultLanguage()->getId();
       }
     }
     parent::query();

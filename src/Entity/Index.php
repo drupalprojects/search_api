@@ -1262,6 +1262,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
   }
 
+  // @todo Override static load() etc. methods? Measure performance difference.
+
   /**
    * {@inheritdoc}
    */

@@ -8,14 +8,18 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\taxonomy\Entity\Vocabulary;
 
 /**
- * Views filter handler class for taxonomy term entities.
+ * Defines a filter for filtering on taxonomy term references.
  *
- * Based on views_handler_filter_term_node_tid.
+ * Based on \Drupal\taxonomy\Plugin\views\filter\TaxonomyIndexTid.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_term")
  */
+// @todo Needs updating, especially the DB queries that merge on vocabulary.
 class SearchApiTerm extends SearchApiFilterEntityBase {
 
   /**
@@ -64,7 +68,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     parent::valueForm($form, $form_state);
 
     if (!empty($this->definition['vocabulary'])) {
-      $vocabulary = entity_load('taxonomy_vocabulary', $this->definition['vocabulary']);
+      $vocabulary = Vocabulary::load($this->definition['vocabulary']);
       $title = $this->t('Select terms from vocabulary @voc', array('@voc' => $vocabulary->label()));
     }
     else {
@@ -78,7 +82,9 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     }
     else {
       if ($vocabulary && !empty($this->options['hierarchy'])) {
-        $tree = taxonomy_get_tree($vocabulary->id());
+        /** @var \Drupal\taxonomy\TermStorage $term_storage */
+        $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
+        $tree = $term_storage->loadTree($vocabulary->id());
         $options = array();
 
         if ($tree) {
@@ -155,6 +161,12 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
 
   /**
    * Reduces the available exposed options according to the selection.
+   *
+   * @param array $options
+   *   The original options list.
+   *
+   * @return array
+   *   A reduced version of the options list.
    */
   protected function reduceValueOptions(array $options) {
     foreach ($options as $id => $option) {
@@ -188,11 +200,11 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     // If view is an attachment and is inheriting exposed filters, then assume
     // exposed input has already been validated.
     if (!empty($this->view->is_attachment) && $this->view->display_handler->usesExposed()) {
-      $this->validated_exposed_input = (array) $this->view->exposed_raw_input[$this->options['expose']['identifier']];
+      $this->validatedExposedInput = (array) $this->view->exposed_raw_input[$this->options['expose']['identifier']];
     }
 
     // If it's non-required and there's no value don't bother filtering.
-    if (!$this->options['expose']['required'] && empty($this->validated_exposed_input)) {
+    if (!$this->options['expose']['required'] && empty($this->validatedExposedInput)) {
       return FALSE;
     }
 
@@ -215,7 +227,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       }
 
       if ($input != 'All')  {
-        $this->validated_exposed_input = (array) $input;
+        $this->validatedExposedInput = (array) $input;
       }
       return;
     }
@@ -240,7 +252,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     }
 
     if (!$names) {
-      return FALSE;
+      return array();
     }
 
     $query = db_select('taxonomy_term_data', 'td');
@@ -290,7 +302,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  protected function idsToStrings(array $ids) {
+  protected function idsToString(array $ids) {
     return implode(', ', db_select('taxonomy_term_data', 'td')
       ->fields('td', array('name'))
       ->condition('td.tid', array_filter($ids))

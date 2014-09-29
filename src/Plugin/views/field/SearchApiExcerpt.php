@@ -1,6 +1,8 @@
 <?php
+
 /**
- * @file Excerpt.php
+ * @file
+ * Contains \Drupal\search_api\Plugin\views\field\SearchApiExcerpt.
  */
 
 namespace Drupal\search_api\Plugin\views\field;
@@ -9,7 +11,7 @@ use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 
 /**
- * A handler to provide a field that contains a search result
+ * Defines a field displaying a search result's excerpt, if available.
  *
  * @ingroup views_field_handlers
  *
@@ -22,7 +24,7 @@ class SearchApiExcerpt extends FieldPluginBase {
    */
   public function render(ResultRow $values) {
     $value = $this->getValue($values);
-    return $value;
+    return $this->sanitizeValue($value, 'xss');
   }
 
 }

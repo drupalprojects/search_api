@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterBoolean.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterBoolean.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -10,21 +10,23 @@ namespace Drupal\search_api\Plugin\views\filter;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views filter handler class for handling fulltext fields.
+ * Defines a filter for filtering on boolean values.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_boolean")
  */
 class SearchApiFilterBoolean extends SearchApiFilter {
 
   /**
-   * Provide a list of options for the operator form.
+   * {@inheritdoc}
    */
   public function operatorOptions() {
     return array();
   }
 
   /**
-   * Provide a form for setting the filter value.
+   * {@inheritdoc}
    */
   protected function valueForm(&$form, FormStateInterface $form_state) {
     while (is_array($this->value)) {

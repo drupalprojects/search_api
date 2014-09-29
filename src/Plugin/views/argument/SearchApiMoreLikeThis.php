@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerArgumentMoreLikeThis.
+ * Contains \Drupal\search_api\Plugin\views\argument\SearchApiMoreLikeThis.
  */
 
 namespace Drupal\search_api\Plugin\views\argument;
@@ -12,15 +12,16 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
- * Views argument handler providing a list of related items for search servers
- * supporting the "search_api_mlt" feature.
+ * Defines a contextual filter for displaying a "More Like This" list.
+ *
+ * @ingroup views_argument_handlers
  *
  * @ViewsArgument("search_api_more_like_this")
  */
 class SearchApiMoreLikeThis extends SearchApiArgument {
 
   /**
-   * Specify the options this filter uses.
+   * {@inheritdoc}
    */
   public function defineOptions() {
     $options = parent::defineOptions();
@@ -31,26 +32,24 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
   }
 
   /**
-   * Extend the options form a bit.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     unset($form['break_phrase']);
     unset($form['not']);
 
-    /** @var \Drupal\search_api\Entity\Index $index */
+    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load(substr($this->table, 17));
-    if (!empty($index->options['fields'])) {
-      $fields = array();
-      foreach ($index->getFields() as $key => $field) {
-        $fields[$key] = $field->getLabel();
-      }
+    $fields = array();
+    foreach ($index->getFields() as $key => $field) {
+      $fields[$key] = $field->getLabel();
     }
 
-    if (!empty($fields)) {
+    if ($fields) {
       $form['fields'] = array(
         '#type' => 'select',
-        '#title' => $this->t('Fields for Similarity'),
+        '#title' => $this->t('Fields for similarity'),
         '#description' => $this->t('Select the fields that will be used for finding similar content. If no fields are selected, all available fields will be used.'),
         '#options' => $fields,
         '#size' => min(8, count($fields)),
@@ -67,23 +66,21 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
   }
 
   /**
-   * Set up the query for this argument.
-   *
-   * The argument sent may be found at $this->argument.
+   * {@inheritdoc}
    */
   public function query($group_by = FALSE) {
     try {
       $server = $this->query->getIndex()->getServer();
       if (!$server->supportsFeature('search_api_mlt')) {
-        $class = $server->getService()->getPluginDefinition()['class'];
-        watchdog('search_api', 'The search service "@class" does not offer "More like this" functionality.',
-          array('@class' => $class), WATCHDOG_ERROR);
+        $backend_id = $server->getBackendId();
+        \Drupal::logger('search_api')->error('The search backend "@backend_id" does not offer "More like this" functionality.',
+          array('@backend_id' => $backend_id));
         $this->query->abort();
         return;
       }
-      $fields = $this->options['fields'] ? $this->options['fields'] : array();
-      if (empty($fields)) {
-        foreach ($this->query->getIndex()->options['fields'] as $key => $field) {
+      $fields = isset($this->options['fields']) ? $this->options['fields'] : array();
+      if (!$fields) {
+        foreach ($this->query->getIndex()->getOption('fields', array()) as $key => $field) {
           $fields[] = $key;
         }
       }

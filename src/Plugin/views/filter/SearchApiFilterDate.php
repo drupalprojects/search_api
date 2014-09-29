@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterDate.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterDate.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -10,14 +10,16 @@ namespace Drupal\search_api\Plugin\views\filter;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views filter handler base class for handling all "normal" cases.
+ * Defines a filter for filtering on dates.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_date")
  */
 class SearchApiFilterDate extends SearchApiFilter {
 
   /**
-   * Add a "widget type" option.
+   * {@inheritdoc}
    */
   public function defineOptions() {
     return parent::defineOptions() + array(
@@ -26,7 +28,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   }
 
   /**
-   * If the date popup module is enabled, provide the extra option setting.
+   * {@inheritdoc}
    */
   public function hasExtraOptions() {
     if (\Drupal::moduleHandler()->moduleExists('date_popup')) {
@@ -36,12 +38,15 @@ class SearchApiFilterDate extends SearchApiFilter {
   }
 
   /**
-   * Add extra options if we allow the date popup widget.
+   * {@inheritdoc}
    */
-  public function buildExraOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildExtraOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildExtraOptionsForm($form, $form_state);
     if (\Drupal::moduleHandler()->moduleExists('date_popup')) {
-      $widget_options = array('default' => 'Default', 'date_popup' => 'Date popup');
+      $widget_options = array(
+        'default' => $this->t('Default'),
+        'date_popup' => $this->t('Date popup'),
+      );
       $form['widget_type'] = array(
         '#type' => 'radios',
         '#title' => $this->t('Date selection form element'),
@@ -52,7 +57,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   }
 
   /**
-   * Provide a form for setting the filter value.
+   * {@inheritdoc}
    */
   protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
@@ -74,7 +79,7 @@ class SearchApiFilterDate extends SearchApiFilter {
   }
 
   /**
-   * Add this filter to the query.
+   * {@inheritdoc}
    */
   public function query() {
     if ($this->operator === 'empty') {

@@ -2,18 +2,19 @@
 
 /**
  * @file
- * Contains the SearchApiViewsCache class.
+ * Contains \Drupal\search_api\Plugin\views\cache\SearchApiCache.
  */
 
 namespace Drupal\search_api\Plugin\views\cache;
 
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\cache\Time;
 
 /**
- * Plugin class for caching Search API views.
+ * Defines a cache plugin for use with Search API views.
  *
- * @todo Limit to Search API base tables.
+ * @ingroup views_cache_plugins
  *
  * @ViewsCache(
  *   id = "search_api",
@@ -21,26 +22,18 @@ use Drupal\views\Plugin\views\cache\Time;
  *   help = @Translation("Cache Search API views. (Other methods probably won't work with search views.)")
  * )
  */
+// @todo Limit to Search API base tables.
 class SearchApiCache extends Time {
 
   /**
-   * Static cache for get_results_key().
+   * Static cache for SearchApiCache::getResultsKey().
    *
-   * @var string
+   * @var string|null
    */
-  protected $_results_key = NULL;
-
-  /**
-   * Static cache for getSearchApiQuery().
-   *
-   * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
-   */
-  protected $search_api_query = NULL;
+  protected $resultsKey;
 
   /**
    * {@inheritdoc}
-   *
-   * Also stores Search API's internal search results.
    */
   public function cacheSet($type) {
     if ($type != 'results') {
@@ -48,21 +41,17 @@ class SearchApiCache extends Time {
       return;
     }
 
-    $cid = $this->get_results_key();
     $data = array(
       'result' => $this->view->result,
       'total_rows' => isset($this->view->total_rows) ? $this->view->total_rows : 0,
-      'current_page' => $this->view->get_current_page(),
-      'search_api results' => $this->view->query->getSearchApiResults(),
+      'current_page' => $this->view->getCurrentPage(),
+      'search_api results' => $this->getQuery()->getSearchApiResults(),
     );
-    \Drupal::cache($this->outputBin)->set($cid, $data, $this->cacheSetExpire($type));
+    \Drupal::cache($this->resultsBin)->set($this->generateResultsKey(), $data, $this->cacheSetExpire($type), $this->getCacheTags());
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Additionally stores successfully retrieved results with
-   * search_api_current_search().
    */
   public function cacheGet($type) {
     if ($type != 'results') {
@@ -71,7 +60,7 @@ class SearchApiCache extends Time {
 
     // Values to set: $view->result, $view->total_rows, $view->execute_time,
     // $view->current_page.
-    if ($cache = \Drupal::cache($this->outputBin)->get($this->get_results_key())) {
+    if ($cache = \Drupal::cache($this->resultsBin)->get($this->generateResultsKey())) {
       $cutoff = $this->cacheExpire($type);
       if (!$cutoff || $cache->created > $cutoff) {
         $this->view->result = $cache->data['result'];
@@ -81,7 +70,8 @@ class SearchApiCache extends Time {
 
         // Trick Search API into believing a search happened, to make facetting
         // et al. work.
-        $query = $this->getSearchApiQuery();
+        $query = $this->getQuery()->getSearchApiQuery();
+        // @todo Find a replacement for that. Also set it on the Views Query?
         search_api_current_search($query->getOption('search id'), $query, $cache->data['search_api results']);
 
         return TRUE;
@@ -92,51 +82,45 @@ class SearchApiCache extends Time {
 
   /**
    * {@inheritdoc}
-   *
-   * Use the Search API query as the main source for the key.
    */
-  public function getResultsKey() {
-    global $user;
-
-    if (!isset($this->_results_key)) {
-      $query = $this->getSearchApiQuery();
+  public function generateResultsKey() {
+    if (!isset($this->resultsKey)) {
+      $query = $this->getQuery()->getSearchApiQuery();
       $query->preExecute();
+      $user = \Drupal::currentUser();
       $key_data = array(
         'query' => $query,
-        'roles' => array_keys($user->getRoles()),
+        'roles' => $user->getRoles(),
         'super-user' => $user->id() == 1, // special caching for super user.
-        'language' => $GLOBALS['language']->language,
+        'langcode' => \Drupal::languageManager()->getCurrentLanguage()->id,
         'base_url' => $GLOBALS['base_url'],
       );
-      // Not sure what gets passed in exposed_info, so better include it. All
-      // other parameters used in the parent method are already reflected in the
-      // Search API query object we use.
-      if (isset($_GET['exposed_info'])) {
-        $key_data['exposed_info'] = $_GET['exposed_info'];
+      foreach (array('exposed_info', 'page', 'sort', 'order', 'items_per_page', 'offset') as $key) {
+        if ($this->view->getRequest()->query->has($key)) {
+          $key_data[$key] = $this->view->getRequest()->query->get($key);
+        }
       }
 
-      $this->_results_key = $this->view->storage->id() . ':' . $this->view->getDisplay()->getPluginId() . ':results:' . md5(serialize($key_data));
+      $this->resultsKey = $this->view->storage->id() . ':' . $this->displayHandler->display['id'] . ':results:' . hash('sha256', serialize($key_data));
     }
 
-    return $this->_results_key;
+    return $this->resultsKey;
   }
 
   /**
-   * Get the Search API query object associated with the current view.
+   * Retrieves the Search API Views query for the current view.
    *
    * @return \Drupal\search_api\Plugin\views\query\SearchApiQuery|null
-   *   The Search API query object associated with the current view; or NULL if
-   *   there is none.
+   *   The Search API Views query associated with the current view.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If there is no current Views query, or it is no Search API query.
    */
-  protected function getSearchApiQuery() {
-    if (!isset($this->search_api_query)) {
-      $this->search_api_query = FALSE;
-      if (isset($this->view->query) && $this->view->query instanceof SearchApiQuery) {
-        $this->search_api_query = $this->view->query->getSearchApiQuery();
-      }
+  protected function getQuery() {
+    if (isset($this->view->query) && $this->view->query instanceof SearchApiQuery) {
+      return $this->view->query;
     }
-
-    return $this->search_api_query ? $this->search_api_query : NULL;
+    throw new SearchApiException('No matching Search API Views query found in view.');
   }
 
 }

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerSort.
+ * Contains \Drupal\search_api\Plugin\views\sort\SearchApiSort.
  */
 
 namespace Drupal\search_api\Plugin\views\sort;
@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\views\sort;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
 
 /**
- * Class for sorting results according to a specified field.
+ * Provides a sort plugin for Search API views.
  *
  * @ViewsSort("search_api_sort")
  */
@@ -24,12 +24,13 @@ class SearchApiSort extends SortPluginBase {
   public $query;
 
   /**
-   * Called to add the sort to a query.
+   * {@inheritdoc}
    */
   public function query() {
     // When there are exposed sorts, the "exposed form" plugin will set
     // $query->orderby to an empty array. Therefore, if that property is set,
     // we here remove all previous sorts.
+    // @todo Is this still true in D8?
     if (isset($this->query->orderby)) {
       unset($this->query->orderby);
       $sort = &$this->query->getSort();

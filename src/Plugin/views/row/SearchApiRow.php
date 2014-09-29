@@ -16,7 +16,7 @@ use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Generic entity row plugin to provide a common base for all entity types.
+ * Provides a row plugin for displaying a result as a rendered item.
  *
  * @ViewsRow(
  *   id = "search_api",
@@ -24,6 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   help = @Translation("Displays entity of the matching search API item"),
  * )
  */
+// @todo Hide for other, non-Search API base tables.
 class SearchApiRow extends RowPluginBase {
 
   /**
@@ -31,45 +32,89 @@ class SearchApiRow extends RowPluginBase {
    *
    * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
    */
-  public $query;
+  protected $query;
 
   /**
    * The search index.
    *
    * @var \Drupal\search_api\Index\IndexInterface
    */
-  public $index;
+  protected $index;
 
   /**
    * The entity manager.
    *
    * @var \Drupal\Core\Entity\EntityManagerInterface
    */
-  public $entityManager;
+  protected $entityManager;
 
   /**
-   * Constructs a SearchApiRow object.
+   * The logger to use for logging messages.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityManagerInterface $entity_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->entityManager = $entity_manager;
-  }
+  // @todo Make this into a trait, with an additional logException() method.
+  protected $logger;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('entity.manager'));
+    /** @var \Drupal\search_api\Plugin\views\row\SearchApiRow $row */
+    $row = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
+    $entity_manager = $container->get('entity.manager');
+    $row->setEntityManager($entity_manager);
+
+    /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
+    $logger = $container->get('logger.factory')->get('search_api');
+    $row->setLogger($logger);
+
+    return $row;
+  }
+
+  /**
+   * Retrieves the entity manager.
+   *
+   * @return \Drupal\Core\Entity\EntityManagerInterface
+   *   The entity manager.
+   */
+  public function getEntityManager() {
+    return $this->entityManager ?: \Drupal::entityManager();
+  }
+
+  /**
+   * Sets the entity manager.
+   *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entityManager
+   *   The new entity manager.
+   *
+   * @return $this
+   */
+  public function setEntityManager(EntityManagerInterface $entityManager) {
+    $this->entityManager = $entityManager;
+    return $this;
+  }
+
+  /**
+   * Retrieves the logger to use.
+   *
+   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   *   The logger to use.
+   */
+  public function getLogger() {
+    return $this->logger ? : \Drupal::service('logger.factory')->get('search_api');
+  }
+
+  /**
+   * Sets the logger to use.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   The logger to use.
+   */
+  public function setLogger(LoggerChannelInterface $logger) {
+    $this->logger = $logger;
   }
 
   /**
@@ -78,10 +123,12 @@ class SearchApiRow extends RowPluginBase {
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     parent::init($view, $display, $options);
 
-    $index = $view->storage->get('base_table');
-    $id = substr($index, strlen('search_api_index_'));
-    $this->index = $this->entityManager->getStorage('search_api_index')->load($id);
-
+    $base_table = $view->storage->get('base_table');
+    if (substr($base_table, 0, 17) !== 'search_api_index_') {
+      throw new \InvalidArgumentException(String::format('View %view is not based on Search API but tries to use its row plugin.', array('%view' => $view->storage->label())));
+    }
+    $index_id = substr($base_table, 17);
+    $this->index = $this->getEntityManager()->getStorage('search_api_index')->load($index_id);
   }
 
   /**
@@ -89,8 +136,9 @@ class SearchApiRow extends RowPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    // @todo How to get a default?
-    // $options['view_mode'][$datasource->getPluginId()] = array('default' => 'default');
+
+    $options['view_modes'] = array('default' => array());
+
     return $options;
   }
 
@@ -100,36 +148,77 @@ class SearchApiRow extends RowPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    foreach ($this->index->getDatasources() as $datasource) {
-      $form['view_mode'][$datasource->getPluginId()] = array(
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $view_modes = $datasource->getViewModes();
+      if (!$view_modes) {
+        $form['view_modes'][$datasource_id] = array(
+          '#type' => 'item',
+          '#title' => $this->t('View mode for datasource %name', array('%name' => $datasource->label())),
+          '#description' => $this->t("This datasource doesn't have any view modes available. It is therefore not possible to display results of this datasource using this row plugin."),
+        );
+        continue;
+      }
+      $form['view_modes'][$datasource_id] = array(
         '#type' => 'select',
-        '#options' => $datasource->getViewModes(),
-        '#title' => $this->t('View mode for data type %name', array('%name' => $datasource->getPluginDefinition()['label'])),
-        '#default_value' => isset($this->options['view_mode'][$datasource->getPluginId()]) ? $this->options['view_mode'][$datasource->getPluginId()] : 'default',
+        '#options' => $view_modes,
+        '#title' => $this->t('View mode for datasource %name', array('%name' => $datasource->label())),
+        '#default_value' => key($view_modes),
       );
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-  public function summaryTitle() {
-    $options = \Drupal::entityManager()->getViewModeOptions($this->entityTypeId);
-    if (isset($options[$this->options['view_mode']])) {
-      return String::checkPlain($options[$this->options['view_mode']]);
-    }
-    else {
-      return $this->t('No view mode selected');
+      if (isset($this->options['view_modes'][$datasource_id])) {
+        $form['view_modes'][$datasource_id]['#default_value'] = $this->options['view_modes'][$datasource_id];
+      }
     }
   }
 
   /**
    * {@inheritdoc}
    */
+  public function summaryTitle() {
+    $view_modes = array();
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $view_modes[$datasource_id] = $datasource->getViewModes();
+    }
+    $summary = array();
+    foreach ($this->options['view_modes'] as $datasource_id => $view_mode) {
+      if (isset($view_modes[$datasource_id][$view_mode])) {
+        $view_mode = $view_modes[$datasource_id][$view_mode];
+      }
+      $args = array(
+        '@datasource' => $this->index->getDatasource($datasource_id)->label(),
+        '@view_mode' => $view_mode,
+      );
+      $summary[] = $this->t('@datasource: @view_mode', $args);
+    }
+    return $summary ? implode('; ', $summary) : '<em>' . $this->t('No settings') . '</em>';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function render($row) {
+    $datasource_id = $row->search_api_datasource;
     try {
-      $view_mode = isset($this->options['view_mode'][$row->search_api_datasource]) ? $this->options['view_mode'][$row->search_api_datasource] : 'default';
-      return $this->index->getDataSource($row->search_api_datasource)->viewItem($row->_item, $view_mode);
+      $datasource = $this->index->getDatasource($datasource_id);
+    }
+    catch (SearchApiException $e) {
+      $context = array(
+        '%datasource' => $datasource_id,
+        '%view' => $this->view->storage->label(),
+      );
+      $this->getLogger()->warning('Item of unknown datasource %datasource returned in view %view.', $context);
+      return '';
+    }
+    if (!isset($this->options['view_modes'][$datasource_id])) {
+      $context = array(
+        '%datasource' => $datasource->label(),
+        '%view' => $this->view->storage->label(),
+      );
+      $this->getLogger()->warning('No view mode set for datasource %datasource in view %view.', $context);
+      return '';
+    }
+    try {
+      $view_mode = $this->options['view_modes'][$datasource_id];
+      return $this->index->getDataSource($datasource_id)->viewItem($row->_item, $view_mode);
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
@@ -140,6 +229,7 @@ class SearchApiRow extends RowPluginBase {
   public function query() {
     parent::query();
     // @todo Find a better way to ensure that the item is loaded.
-    $this->view->query->addField(NULL, '_magic');
+    $this->view->query->addField('_magic');
   }
+
 }

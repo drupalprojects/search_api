@@ -2,31 +2,33 @@
 
 /**
  * @file
- * Contains SearchApiViewsQuery.
+ * Contains \Drupal\search_api\Plugin\views\query\SearchApiQuery.
  */
 
 namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception;
 use Drupal\search_api\Query\FilterInterface;
-use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 
 /**
- * Views query class using a search index as the data source.
+ * Defines a Views query class for searching on Search API indexes.
  *
  * @ViewsQuery(
  *   id = "search_api_query",
  *   title = @Translation("Search API Query"),
- *   help = @Translation("Query will be generated and run using the Search API.")
+ *   help = @Translation("The query will be generated and run using the Search API.")
  * )
  */
-// @todo Add "implements QueryInterface" (and necessary methods)?
+// @todo Would be great to have a common interface with
+//   \Drupal\search_api\Query\QueryInterface here, but probably not really
+//   possible due to conflicts.
 class SearchApiQuery extends QueryPluginBase {
 
   /**
@@ -53,16 +55,16 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * The query that will be executed.
    *
-   * @var QueryInterface
+   * @var \Drupal\search_api\Query\QueryInterface
    */
   protected $query;
 
   /**
    * The results returned by the query, after it was executed.
    *
-   * @var array
+   * @var \Drupal\search_api\Query\ResultSetInterface
    */
-  protected $search_api_results = array();
+  protected $searchApiResults;
 
   /**
    * Array of all encountered errors.
@@ -72,7 +74,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @var array
    */
-  protected $errors;
+  protected $errors = array();
 
   /**
    * Whether to abort the search instead of executing it.
@@ -83,8 +85,6 @@ class SearchApiQuery extends QueryPluginBase {
 
   /**
    * The names of all fields whose value is required by a handler.
-   *
-   * The format follows the same as Search API field identifiers (parent:child).
    *
    * @var array
    */
@@ -105,75 +105,43 @@ class SearchApiQuery extends QueryPluginBase {
   public $group_operator = 'AND';
 
   /**
-   * Create the basic query object and fill with default values.
+   * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     try {
-      $this->errors = array();
       parent::init($view, $display, $options);
       $this->fields = array();
       if (substr($view->storage->get('base_table'), 0, 17) == 'search_api_index_') {
         $id = substr($view->storage->get('base_table'), 17);
-        $this->index = entity_load('search_api_index', $id);
+        $this->index = Index::load($id);
         $this->query = $this->index->query(array(
           'parse mode' => $this->options['parse_mode'],
         ));
       }
+      else {
+        $this->abort(String::format('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
+      }
     }
     catch (\Exception $e) {
-      $this->errors[] = $e->getMessage();
+      $this->abort($e->getMessage());
     }
   }
 
-  public function ensureTable() {
-
-  }
-
   /**
-   * Add a field to the query table, possibly with an alias. This will
-   * automatically call ensureTable to make sure the required table
-   * exists, *unless* $table is unset.
+   * Adds a field to be retrieved.
    *
-   * @param $table
-   *   The table this field is attached to. If NULL, it is assumed this will
-   *   be a formula; otherwise, ensureTable is used to make sure the
-   *   table exists.
-   * @param $field
-   *   The name of the field to add. This may be a real field or a formula.
-   * @param $alias
-   *   The alias to create. If not specified, the alias will be $table_$field
-   *   unless $table is NULL. When adding formulae, it is recommended that an
-   *   alias be used.
-   * @param $params
-   *   An array of parameters additional to the field that will control items
-   *   such as aggregation functions and DISTINCT.
+   * @param string $field
+   *   The identifier of the field to add.
    *
-   * @return $name
-   *   The name that this field can be referred to as. Usually this is the alias.
+   * @return $this
    */
-  public function addField($table, $field, $alias = '', $params = array()) {
+  public function addField($field) {
     $this->fields[$field] = TRUE;
-    return $field;
+    return $this;
   }
 
   /**
-   * Add a sort to the query.
-   *
-   * @param $selector
-   *   The field to sort on. All indexed fields of the index are valid values.
-   *   In addition, the special fields 'search_api_relevance' (sort by
-   *   relevance) and 'search_api_id' (sort by item id) may be used.
-   * @param $order
-   *   The order to sort items in - either 'ASC' or 'DESC'. Defaults to 'ASC'.
-   */
-  public function addSelectorOrderBy($selector, $order = 'ASC') {
-    $this->query->sort($selector, $order);
-  }
-
-  /**
-   * Defines the options used by this query plugin.
-   *
-   * Adds some access options.
+   * {@inheritdoc}
    */
   public function defineOptions() {
     return parent::defineOptions() + array(
@@ -190,9 +158,7 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Add settings for the UI.
-   *
-   * Adds an option for bypassing access checks.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
@@ -200,11 +166,11 @@ class SearchApiQuery extends QueryPluginBase {
     $form['search_api_bypass_access'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Bypass access checks'),
-      '#description' => $this->t('If the underlying search index has access checks enabled, this option allows to disable them for this view.'),
+      '#description' => $this->t('If the underlying search index has access checks enabled, this option allows you to disable them for this view.'),
       '#default_value' => $this->options['search_api_bypass_access'],
     );
 
-    if (\Drupal::entityManager()->getDefinition($this->index->item_type)) {
+    if ($this->getEntityTypes(TRUE)) {
       $form['entity_access'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Additional access checks on result entities'),
@@ -213,6 +179,8 @@ class SearchApiQuery extends QueryPluginBase {
       );
     }
 
+    // @todo Move this setting to the argument and filter plugins where it makes
+    //   more sense for users.
     $form['parse_mode'] = array(
       '#type' => 'select',
       '#title' => $this->t('Parse mode'),
@@ -235,13 +203,39 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Builds the necessary info to execute the query.
+   * Checks for entity types contained in the current view's index.
+   *
+   * @param bool $return_bool
+   *   (optional) If TRUE, returns a boolean instead of a list of datasources.
+   *
+   * @return string[]|bool
+   *   If $return_bool is FALSE, an associative array mapping all datasources
+   *   containing entities to their entity types. Otherwise, TRUE if there is at
+   *   least one such datasource.
+   */
+  // @todo Might be useful enough to be moved to the Index class? Or maybe
+  //   Utility, to finally stop the growth of the Index class.
+  public function getEntityTypes($return_bool = FALSE) {
+    $types = array();
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      if ($type = $datasource->getEntityTypeId()) {
+        if ($return_bool) {
+          return TRUE;
+        }
+        $types[$datasource_id] = $type;
+      }
+    }
+    return $return_bool ? FALSE : $types;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function build(ViewExecutable $view) {
     $this->view = $view;
 
     // Setup the nested filter structure for this query.
-    if (!empty($this->where)) {
+    if (!empty($this->filters)) {
       // If the different groups are combined with the OR operator, we have to
       // add a new OR filter to the query to which the filters for the groups
       // will be added.
@@ -253,7 +247,7 @@ class SearchApiQuery extends QueryPluginBase {
         $base = $this->query;
       }
       // Add a nested filter for each filter group, with its set conjunction.
-      foreach ($this->where as $group_id => $group) {
+      foreach ($this->filters as $group_id => $group) {
         if (!empty($group['conditions']) || !empty($group['filters'])) {
           $group += array('type' => 'AND');
           // For filters without a group, we want to always add them directly to
@@ -294,8 +288,8 @@ class SearchApiQuery extends QueryPluginBase {
 
     // If the View and the Panel conspire to provide an overridden path then
     // pass that through as the base path.
-    if (!empty($this->view->override_path) && strpos(current_path(), $this->view->override_path) !== 0) {
-      $this->query->setOption('search_api_base_path', $this->view->override_path);
+    if (($path = $this->view->getPath()) && strpos(current_path(), $this->view->override_path) !== 0) {
+      $this->query->setOption('search_api_base_path', $path);
     }
   }
 
@@ -311,7 +305,7 @@ class SearchApiQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function execute(ViewExecutable $view) {
-    if ($this->errors || $this->abort) {
+    if ($this->shouldAbort()) {
       if (error_displayable()) {
         foreach ($this->errors as $msg) {
           drupal_set_message(String::checkPlain($msg), 'error');
@@ -349,7 +343,7 @@ class SearchApiQuery extends QueryPluginBase {
 
       // Execute the search.
       $results = $this->query->execute();
-      $this->search_api_results = $results;
+      $this->searchApiResults = $results;
 
       // Store the results.
       if (!$skip_result_count) {
@@ -369,7 +363,7 @@ class SearchApiQuery extends QueryPluginBase {
       $view->pager->postExecute($view->result);
     }
     catch (\Exception $e) {
-      $this->errors[] = $e->getMessage();
+      $this->abort($e->getMessage());
       // Recursion to get the same error behaviour as above.
       $this->execute($view);
     }
@@ -389,6 +383,18 @@ class SearchApiQuery extends QueryPluginBase {
       $this->errors[] = $msg;
     }
     $this->abort = TRUE;
+  }
+
+  /**
+   * Checks whether this query should be aborted.
+   *
+   * @return bool
+   *   TRUE if the query should/will be aborted, FALSE otherwise.
+   *
+   * @see SearchApiQuery::abort()
+   */
+  public function shouldAbort() {
+    return $this->abort;
   }
 
   /**
@@ -416,6 +422,7 @@ class SearchApiQuery extends QueryPluginBase {
         }
       }*/
 
+      // @todo Find a more elegant way of passing metadata here.
       $values['search_api_id'] = $item_id;
       $values['search_api_datasource'] = $datasource_id;
 
@@ -446,6 +453,8 @@ class SearchApiQuery extends QueryPluginBase {
       }
 
       // Save the row values for adding them to the Views result afterwards.
+      // @todo Use a custom sub-class here to also pass the result item object,
+      //   or other information?
       $rows[$item_id] = new ResultRow($values);
     }
 
@@ -459,6 +468,8 @@ class SearchApiQuery extends QueryPluginBase {
 
     foreach ($missing as $item_id => $missing_fields) {
       foreach ($missing_fields as $field_id) {
+        // @todo This will only extract the indexed fields, but all of them. We
+        //   should instead use Utility::extractFields() directly.
         $field = $results[$item_id]->getField($field_id);
         if ($field) {
           $rows[$item_id]->$field_id = $field->getValues();
@@ -471,228 +482,394 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Returns the according entity objects for the given query results.
+   * Returns the Search API query object used by this Views query.
    *
-   * This is necessary to support generic entity handlers and plugins with this
-   * query backend.
-   *
-   * If the current query isn't based on an entity type, the method will return
-   * an empty array.
-   */
-  public function getResultEntities($results, $relationship = NULL, $field = NULL) {
-    list($type, $wrappers) = $this->get_result_wrappers($results, $relationship, $field);
-    $return = array();
-    foreach ($wrappers as $i => $wrapper) {
-      try {
-        // Get the entity ID beforehand for possible watchdog messages.
-        $id = $wrapper->value(array('identifier' => TRUE));
-
-        // Only add results that exist.
-        if ($entity = $wrapper->value()) {
-          $return[$i] = $entity;
-        }
-        else {
-          watchdog('search_api', 'The search index returned a reference to an entity with ID @id, which does not exist in the database. Your index may be out of sync and should be rebuilt.', array('@id' => $id), WATCHDOG_ERROR);
-        }
-      }
-      catch (EntityMetadataWrapperException $e) {
-        watchdog_exception('search_api', $e, "%type while trying to load search result entity with ID @id: !message in %function (line %line of %file).", array('@id' => $id), WATCHDOG_ERROR);
-      }
-    }
-    return array($type, $return);
-  }
-
-  /**
-   * Returns the according metadata wrappers for the given query results.
-   *
-   * This is necessary to support generic entity handlers and plugins with this
-   * query backend.
-   */
-  public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
-    $entity_type = $this->index->getEntityType();
-    $wrappers = array();
-    $load_entities = array();
-    foreach ($results as $row_index => $row) {
-      if ($entity_type && isset($row->entity)) {
-        // If this entity isn't load, register it for pre-loading.
-        if (!is_object($row->entity)) {
-          $load_entities[$row->entity] = $row_index;
-        }
-
-        $wrappers[$row_index] = $this->index->entityWrapper($row->entity);
-      }
-    }
-
-    // If the results are entities, we pre-load them to make use of a multiple
-    // load. (Otherwise, each result would be loaded individually.)
-    if (!empty($load_entities)) {
-      $entities = entity_load($entity_type, array_keys($load_entities));
-      foreach ($entities as $entity_id => $entity) {
-        $wrappers[$load_entities[$entity_id]] = $this->index->entityWrapper($entity);
-      }
-    }
-
-    // Apply the relationship, if necessary.
-    $type = $entity_type ? $entity_type : $this->index->item_type;
-    $selector_suffix = '';
-    if ($field && ($pos = strrpos($field, ':'))) {
-      $selector_suffix = substr($field, 0, $pos);
-    }
-    if ($selector_suffix || ($relationship && !empty($this->view->relationship[$relationship]))) {
-      // Use EntityFieldHandlerHelper to compute the correct data selector for
-      // the relationship.
-      $handler = (object) array(
-        'view' => $this->view,
-        'relationship' => $relationship,
-        'real_field' => '',
-      );
-      $selector = EntityFieldHandlerHelper::construct_property_selector($handler);
-      $selector .= ($selector ? ':' : '') . $selector_suffix;
-      list($type, $wrappers) = EntityFieldHandlerHelper::extract_property_multiple($wrappers, $selector);
-    }
-
-    return array($type, $wrappers);
-  }
-
-  /**
-   * API function for accessing the raw Search API query object.
-   *
-   * @return SearchApiQueryInterface
-   *   The search query object used internally by this handler.
+   * @return \Drupal\search_api\Query\QueryInterface|null
+   *   The search query object used internally by this plugin, if any has been
+   *   successfully created. NULL otherwise.
    */
   public function getSearchApiQuery() {
     return $this->query;
   }
 
   /**
-   * API function for accessing the raw Search API results.
+   * Retrieves the Search API result set returned for this query.
    *
-   * @return array
-   *   An associative array containing the search results, as specified by
-   *   SearchApiQueryInterface::execute().
+   * @return \Drupal\search_api\Query\ResultSetInterface|null
+   *   The result set of this query, if it has been retrieved already. NULL
+   *   otherwise.
    */
   public function getSearchApiResults() {
-    return $this->search_api_results;
+    return $this->searchApiResults;
   }
 
   //
   // Query interface methods (proxy to $this->query)
   //
 
-  public function createFilter($conjunction = 'AND', $tags = array()) {
-    if (!$this->errors) {
+  /**
+   * Creates a new filter to use with this query object.
+   *
+   * @param string $conjunction
+   *   The conjunction to use for the filter - either 'AND' or 'OR'.
+   * @param string[] $tags
+   *   (optional) Tags to set on the filter.
+   *
+   * @return \Drupal\search_api\Query\FilterInterface
+   *   A filter object that is set to use the specified conjunction.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::createFilter()
+   */
+  public function createFilter($conjunction = 'AND', array $tags = array()) {
+    if (!$this->shouldAbort()) {
       return $this->query->createFilter($conjunction, $tags);
     }
+    return NULL;
   }
 
+  /**
+   * Sets the keys to search for.
+   *
+   * If this method is not called on the query before execution, this will be a
+   * filter-only query.
+   *
+   * @param string|array|null $keys
+   *   A string with the search keys, in one of the formats specified by
+   *   getKeys(). A passed string will be parsed according to the set parse
+   *   mode. Use NULL to not use any search keys.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::keys()
+   */
   public function keys($keys = NULL) {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       $this->query->keys($keys);
     }
     return $this;
   }
 
+  /**
+   * Sets the fields that will be searched for the search keys.
+   *
+   * If this is not called, all fulltext fields will be searched.
+   *
+   * @param array $fields
+   *   An array containing fulltext fields that should be searched.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If one of the fields isn't of type "text".
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::fields()
+   */
+  // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
   public function fields(array $fields) {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       $this->query->fields($fields);
     }
     return $this;
   }
 
   /**
-   * Adds a nested filter to the search query object.
+   * Adds a subfilter to this query's filter.
    *
    * If $group is given, the filter is added to the relevant filter group
    * instead.
+   *
+   * @param \Drupal\search_api\Query\FilterInterface $filter
+   *   A DefaultFilter object that should be added as a subfilter.
+   * @param string|null $group
+   *   (optional) The Views query filter group to add this filter to.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::filter()
    */
   public function filter(FilterInterface $filter, $group = NULL) {
-    if (!$this->errors) {
-      $this->where[$group]['filters'][] = $filter;
+    if (!$this->shouldAbort()) {
+      $this->filters[$group]['filters'][] = $filter;
     }
     return $this;
   }
 
   /**
-   * Set a condition on the search query object.
+   * Adds a new ($field $operator $value) condition filter.
    *
-   * If $group is given, the condition is added to the relevant filter group
-   * instead.
+   * @param string $field
+   *   The field to filter on, e.g. 'title'. The special field
+   *   "search_api_datasource" can be used to filter by datasource ID.
+   * @param mixed $value
+   *   The value the field should have (or be related to by the operator).
+   * @param string $operator
+   *   The operator to use for checking the constraint. The following operators
+   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
+   *   have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
+   * @param string|null $group
+   *   (optional) The Views query filter group to add this filter to.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::condition()
    */
   public function condition($field, $value, $operator = '=', $group = NULL) {
-    if (!$this->errors) {
-      $this->where[$group]['conditions'][] = array($field, $value, $operator);
+    if (!$this->shouldAbort()) {
+      $this->filters[$group]['conditions'][] = array($field, $value, $operator);
     }
     return $this;
   }
 
+  /**
+   * Adds a sort directive to this search query.
+   *
+   * If no sort is manually set, the results will be sorted descending by
+   * relevance.
+   *
+   * @param string $field
+   *   The field to sort by. The special fields 'search_api_relevance' (sort by
+   *   relevance) and 'search_api_id' (sort by item id) may be used.
+   * @param string $order
+   *   The order to sort items in - either 'ASC' or 'DESC'.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If the field is multi-valued or of a fulltext type.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::sort()
+   */
   public function sort($field, $order = 'ASC') {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       $this->query->sort($field, $order);
     }
     return $this;
   }
 
+  /**
+   * Adds a range of results to return.
+   *
+   * This will be saved in the query's options. If called without parameters,
+   * this will remove all range restrictions previously set.
+   *
+   * @param int|null $offset
+   *   The zero-based offset of the first result returned.
+   * @param int|null $limit
+   *   The number of results to return.
+   *
+   * @return \Drupal\search_api\Query\QueryInterface
+   *   The called object.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::range()
+   */
   public function range($offset = NULL, $limit = NULL) {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       $this->query->range($offset, $limit);
     }
     return $this;
   }
 
+  /**
+   * Retrieves the index associated with this search.
+   *
+   * @return \Drupal\search_api\Index\IndexInterface
+   *   The search index this query should be executed on.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getIndex()
+   */
   public function getIndex() {
     return $this->index;
   }
 
+  /**
+   * Retrieves the search keys for this query.
+   *
+   * @return array|string|null
+   *   This object's search keys - either a string or an array specifying a
+   *   complex search expression.
+   *   An array will contain a '#conjunction' key specifying the conjunction
+   *   type, and search strings or nested expression arrays at numeric keys.
+   *   Additionally, a '#negation' key might be present, which means – unless it
+   *   maps to a FALSE value – that the search keys contained in that array
+   *   should be negated, i.e. not be present in returned results. The negation
+   *   works on the whole array, not on each contained term individually – i.e.,
+   *   with the "AND" conjunction and negation, only results that contain all
+   *   the terms in the array should be excluded; with the "OR" conjunction and
+   *   negation, all results containing one or more of the terms in the array
+   *   should be excluded.
+   *
+   * @see keys()
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getKeys()
+   */
   public function &getKeys() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getKeys();
     }
     $ret = NULL;
     return $ret;
   }
 
+  /**
+   * Retrieves the unparsed search keys for this query as originally entered.
+   *
+   * @return array|string|null
+   *   The unprocessed search keys, exactly as passed to this object. Has the
+   *   same format as the return value of getKeys().
+   *
+   * @see keys()
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getOriginalKeys()
+   */
   public function getOriginalKeys() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getOriginalKeys();
     }
+    return NULL;
   }
 
+  /**
+   * Retrieves the fulltext fields that will be searched for the search keys.
+   *
+   * @return array
+   *   An array containing the fields that should be searched for the search
+   *   keys.
+   *
+   * @see fields()
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getFields()
+   */
   public function &getFields() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getFields();
     }
     $ret = NULL;
     return $ret;
   }
 
+  /**
+   * Retrieves the filter object associated with this search query.
+   *
+   * @return \Drupal\search_api\Query\FilterInterface
+   *   This object's associated filter object.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getFilter()
+   */
   public function getFilter() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getFilter();
     }
+    return NULL;
   }
 
+  /**
+   * Retrieves the sorts set for this query.
+   *
+   * @return array
+   *   An array specifying the sort order for this query. Array keys are the
+   *   field names in order of importance, the values are the respective order
+   *   in which to sort the results according to the field.
+   *
+   * @see sort()
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getSort()
+   */
   public function &getSort() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getSort();
     }
     $ret = NULL;
     return $ret;
   }
 
-  public function getOption($name) {
-    if (!$this->errors) {
-      return $this->query->getOption($name);
+  /**
+   * Retrieves an option set on this search query.
+   *
+   * @param string $name
+   *   The name of an option.
+   * @param mixed $default
+   *   The value to return if the specified option is not set.
+   *
+   * @return mixed
+   *   The value of the option with the specified name, if set. NULL otherwise.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getOption()
+   */
+  public function getOption($name, $default = NULL) {
+    if (!$this->shouldAbort()) {
+      return $this->query->getOption($name, $default);
     }
+    return $default;
   }
 
+  /**
+   * Sets an option for this search query.
+   *
+   * @param string $name
+   *   The name of an option. The following options are recognized by default:
+   *   - conjunction: The type of conjunction to use for this query - either
+   *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
+   *     filters will always use AND by default.
+   *   - 'parse mode': The mode with which to parse the $keys variable, if it
+   *     is set and not already an array. See DefaultQuery::parseModes() for
+   *     recognized parse modes.
+   *   - offset: The position of the first returned search results relative to
+   *     the whole result in the index.
+   *   - limit: The maximum number of search results to return. -1 means no
+   *     limit.
+   *   - 'filter class': Can be used to change the FilterInterface
+   *     implementation to use.
+   *   - 'search id': A string that will be used as the identifier when storing
+   *     this search in the Search API's static cache.
+   *   - 'skip result count': If present and set to TRUE, the search's result
+   *     count will not be needed. Service classes can check for this option to
+   *     possibly avoid executing expensive operations to compute the result
+   *     count in cases where it is not needed.
+   *   - search_api_access_account: The account which will be used for entity
+   *     access checks, if available and enabled for the index.
+   *   - search_api_bypass_access: If set to TRUE, entity access checks will be
+   *     skipped, even if enabled for the index.
+   *   However, contrib modules might introduce arbitrary other keys with their
+   *   own, special meaning. (Usually they should be prefixed with the module
+   *   name, though.)
+   * @param mixed $value
+   *   The new value of the option.
+   *
+   * @return mixed
+   *   The option's previous value, or NULL if none was set.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::setOption()
+   */
   public function setOption($name, $value) {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->setOption($name, $value);
     }
+    return NULL;
   }
 
+  /**
+   * Retrieves all options set for this search query.
+   *
+   * The return value is a reference to the options so they can also be altered
+   * this way.
+   *
+   * @return array
+   *   An associative array of query options.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getOptions()
+   */
   public function &getOptions() {
-    if (!$this->errors) {
+    if (!$this->shouldAbort()) {
       return $this->query->getOptions();
     }
     $ret = NULL;

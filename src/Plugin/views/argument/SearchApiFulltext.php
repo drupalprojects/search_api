@@ -2,38 +2,42 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerArgumentFulltext.
+ * Contains \Drupal\search_api\Plugin\views\argument\SearchApiFulltext.
  */
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views argument handler class for handling fulltext fields.
+ * Defines a contextual filter for doing fulltext searches.
+ *
+ * @ingroup views_argument_handlers
  *
  * @ViewsArgument("search_api_fulltext")
  */
-
 class SearchApiFulltext extends SearchApiArgument {
 
   /**
-   * Specify the options this filter uses.
+   * {@inheritdoc}
    */
   public function defineOptions() {
     $options = parent::defineOptions();
+
     $options['fields'] = array('default' => array());
     $options['conjunction'] = array('default' => 'AND');
+
     return $options;
   }
 
   /**
-   * Extend the options form a bit.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['help']['#markup'] = $this->t('Note: You can change how search keys are parsed under "Advanced" > "Query settings".');
+    $form['help']['#markup'] = String::checkPlain($this->t('Note: You can change how search keys are parsed under "Advanced" > "Query settings".'));
 
     $fields = $this->getFulltextFields();
     if (!empty($fields)) {
@@ -56,7 +60,6 @@ class SearchApiFulltext extends SearchApiArgument {
         ),
         '#default_value' => $this->options['conjunction'],
       );
-
     }
     else {
       $form['fields'] = array(
@@ -67,9 +70,7 @@ class SearchApiFulltext extends SearchApiArgument {
   }
 
   /**
-   * Set up the query for this argument.
-   *
-   * The argument sent may be found at $this->argument.
+   * {@inheritdoc}
    */
   public function query($group_by = FALSE) {
     if ($this->options['fields']) {
@@ -96,7 +97,11 @@ class SearchApiFulltext extends SearchApiArgument {
   }
 
   /**
-   * Helper method to get an option list of all available fulltext fields.
+   * Retrieves an options list of available fulltext fields.
+   *
+   * @return string[]
+   *   An associative array mapping the identifiers of the index's fulltext
+   *   fields to their prefixed labels.
    */
   protected function getFulltextFields() {
     $fields = array();

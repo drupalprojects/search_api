@@ -206,6 +206,7 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
+  // @todo Re-add tags from D7.
   public function createFilter($conjunction = 'AND') {
     $filter_class = $this->options['filter class'];
     return new $filter_class($conjunction);

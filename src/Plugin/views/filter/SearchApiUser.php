@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterUser.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiUserBase.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -11,9 +11,11 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views filter handler class for handling user entities.
+ * Defines a filter for filtering on user references.
  *
- * Based on views_handler_filter_user_name.
+ * Based on \Drupal\user\Plugin\views\filter\Name.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_user")
  */
@@ -33,7 +35,7 @@ class SearchApiUserBase extends SearchApiFilterEntityBase {
   /**
    * {@inheritdoc}
    */
-  protected function idsToStrings(array $ids) {
+  protected function idsToString(array $ids) {
     $names = array();
     $args[':uids'] = array_filter($ids);
     $result = db_query("SELECT uid, name FROM {users} u WHERE uid IN (:uids)", $args);

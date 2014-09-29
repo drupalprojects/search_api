@@ -2,23 +2,28 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterText.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterText.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
 
 /**
- * Views filter handler class for handling fulltext fields.
+ * Defines a filter for filtering on fulltext fields.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_text")
  */
 class SearchApiFilterText extends SearchApiFilter {
 
   /**
-   * Provide a list of options for the operator form.
+   * {@inheritdoc}
    */
   public function operatorOptions() {
-    return array('=' => $this->t('contains'), '<>' => $this->t("doesn't contain"));
+    return array(
+      '=' => $this->t('contains'),
+      '<>' => $this->t("doesn't contain"),
+    );
   }
 
 }

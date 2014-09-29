@@ -23,122 +23,123 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DefaultTracker extends TrackerPluginBase {
 
-  /*
-   * Constants that we use to show the status of an item in the tracking table.
-   * We're using status 0 for all ok and counting up for other statuses.
+  /**
+   * Status value that represents items which are indexed in their latest form.
    */
   const STATUS_INDEXED = 0;
+
+  /**
+   * Status value that represents items which still need to be indexed.
+   */
   const STATUS_NOT_INDEXED = 1;
 
   /**
-   * A connection to the Drupal database.
+   * The database connection used by this plugin.
    *
    * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
 
   /**
-   * Constructs a DefaultTracker object.
-   *
-   * @param \Drupal\Core\Database\Connection $connection
-   *   An instance of Connection which represents the connection to the
-   *   database.
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(Connection $connection, array $configuration, $plugin_id, array $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->connection = $connection;
-  }
-
-  /**
-   * Get the database connection.
-   *
-   * @return \Drupal\Core\Database\Connection
-   *   An instance of Connection.
-   */
-  public function getDatabaseConnection() {
-    return $this->connection;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var \Drupal\search_api\Plugin\SearchApi\Tracker\DefaultTracker $tracker */
+    $tracker = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
     /** @var \Drupal\Core\Database\Connection $connection */
     $connection = $container->get('database');
-    // Create the plugin instance.
-    return new static($connection, $configuration, $plugin_id, $plugin_definition);
+    $tracker->setDatabaseConnection($connection);
+
+    return $tracker;
   }
 
   /**
-   * Creates a select statement.
+   * Retrieves the database connection.
+   *
+   * @return \Drupal\Core\Database\Connection
+   *   The database connection used by this plugin.
+   */
+  public function getDatabaseConnection() {
+    return $this->connection ?: \Drupal::database();
+  }
+
+  /**
+   * Sets the database connection.
+   *
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection to use.
+   *
+   * @return $this
+   */
+  public function setDatabaseConnection(Connection $connection) {
+    $this->connection = $connection;
+    return $this;
+  }
+
+  /**
+   * Creates a SELECT statement for this tracker.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
-   *   An instance of SelectInterface.
+   *   A SELECT statement.
    */
   protected function createSelectStatement() {
     return $this->getDatabaseConnection()->select('search_api_item', 'sai')
-            ->condition('index_id', $this->getIndex()->id());
+      ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
-   * Creates an insert statement.
+   * Creates an INSERT statement for this tracker.
    *
    * @return \Drupal\Core\Database\Query\Insert
-   *   An instance of Insert.
+   *   An INSERT statement.
    */
   protected function createInsertStatement() {
     return $this->getDatabaseConnection()->insert('search_api_item')
-            ->fields(array('index_id', 'datasource', 'item_id', 'changed', 'status'));
+      ->fields(array('index_id', 'datasource', 'item_id', 'changed', 'status'));
   }
 
   /**
-   * Creates an update statement.
+   * Creates an UPDATE statement for this tracker.
    *
    * @return \Drupal\Core\Database\Query\Update
-   *   An instance of Update.
+   *   An UPDATE statement.
    */
   protected function createUpdateStatement() {
     return $this->getDatabaseConnection()->update('search_api_item')
-            ->condition('index_id', $this->getIndex()->id());
+      ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
-   * Creates a delete statement.
+   * Creates a DELETE statement for this tracker.
    *
    * @return \Drupal\Core\Database\Query\Delete
-   *   An instance of ConditionInterface.
+   *   A DELETE Statement.
    */
   protected function createDeleteStatement() {
     return $this->getDatabaseConnection()->delete('search_api_item')
-            ->condition('index_id', $this->getIndex()->id());
+      ->condition('index_id', $this->getIndex()->id());
   }
 
   /**
-   * Creates a statement which filters on the remaining items.
+   * Creates a SELECT statement which filters on the not indexed items.
    *
-   * @param string|null $datasource
+   * @param string|null $datasource_id
    *   (optional) If specified, only items of the datasource with that ID are
    *   retrieved.
    *
    * @return \Drupal\Core\Database\Query\Select
-   *   An instance of Select.
+   *   A SELECT statement.
    */
-  protected function createRemainingItemsStatement($datasource = NULL) {
+  protected function createRemainingItemsStatement($datasource_id = NULL) {
     $select = $this->createSelectStatement();
     $select->fields('sai', array('item_id'));
-    if ($datasource) {
-      $select->condition('datasource', $datasource);
+    if ($datasource_id) {
+      $select->condition('datasource', $datasource_id);
     }
     $select->condition('sai.status', $this::STATUS_NOT_INDEXED, '=');
     $select->orderBy('sai.changed', 'ASC');
-    // Add extra orderBy so that we can predict the next set if the changed
-    // timestamp is the same for a large set of items
+    // Add a secondary sort on item ID to make the order completely predictable.
     $select->orderBy('sai.item_id', 'ASC');
 
     return $select;

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterEntity.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterEntityBase.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -11,12 +11,7 @@ use Drupal\Component\Utility\Tags;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Views filter handler class for entities.
- *
- * Should be extended for specific entity types, such as
- * SearchApiViewsHandlerFilterUser and SearchApiViewsHandlerFilterTaxonomyTerm.
- *
- * Based on \Drupal\taxonomy\Plugin\views\argument\IndexTid.
+ * Provides a base class for filters on entity-typed fields.
  */
 abstract class SearchApiFilterEntityBase extends SearchApiFilter {
 
@@ -25,7 +20,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    *
    * @var array
    */
-  protected $validated_exposed_input;
+  protected $validatedExposedInput;
 
   /**
    * Validates entered entity labels and converts them to entity IDs.
@@ -55,7 +50,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    *   A string containing the labels corresponding to the IDs, separated by
    *   commas.
    */
-  abstract protected function idsToStrings(array $ids);
+  abstract protected function idsToString(array $ids);
 
   /**
    * {@inheritdoc}
@@ -100,7 +95,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
     // or the exposed form wasn't submitted yet. (There doesn't seem to be an
     // easier way to check for that.)
     if ($this->value && (!$form_state->getUserInput() || !empty($form_state->getUserInput()['live_preview']))) {
-      $form['value']['#default_value'] = $this->idsToStrings($this->value);
+      $form['value']['#default_value'] = $this->idsToString($this->value);
     }
   }
 
@@ -129,8 +124,8 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
 
     if ($rc) {
       // If we have previously validated input, override.
-      if ($this->validated_exposed_input) {
-        $this->value = $this->validated_exposed_input;
+      if ($this->validatedExposedInput) {
+        $this->value = $this->validatedExposedInput;
       }
     }
 
@@ -156,15 +151,15 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
     $values = $this->isMultiValued() ? Tags::explode($input) : array($input);
 
     if (!$this->options['is_grouped'] || ($this->options['is_grouped'] && ($input != 'All'))) {
-      $this->validated_exposed_input = $this->validateEntityStrings($form[$identifier], $values, $form_state);
+      $this->validatedExposedInput = $this->validateEntityStrings($form[$identifier], $values, $form_state);
     }
     else {
-      $this->validated_exposed_input = FALSE;
+      $this->validatedExposedInput = FALSE;
     }
   }
 
   /**
-   * Determines whether multiple user names can be entered into this filter.
+   * Determines whether multiple values can be entered into this filter.
    *
    * This is either the case if the form isn't exposed, or if the " Allow
    * multiple selections" option is enabled.
@@ -177,7 +172,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    *   TRUE if multiple values can be entered for this filter, FALSE otherwise.
    */
   protected function isMultiValued(array $options = array()) {
-    $options = $options ? $options : $this->options;
+    $options = $options ?: $this->options;
     return empty($options['exposed']) || !empty($options['expose']['multiple']);
   }
 
@@ -189,7 +184,7 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
       $this->value = $this->value ? array($this->value) : array();
     }
     $value = $this->value;
-    $this->value = empty($value) ? '' : $this->idsToStrings($value);
+    $this->value = empty($value) ? '' : $this->idsToString($value);
     $ret = parent::adminSummary();
     $this->value = $value;
     return $ret;

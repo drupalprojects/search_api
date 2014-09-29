@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilter.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilter.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -12,35 +12,23 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
 /**
- * Views filter handler base class for handling all "normal" cases.
+ * Defines a filter for adding general Search API conditions to the query.
+ *
+ * @ingroup views_filter_handlers
  *
  * @ViewsFilter("search_api_filter")
  */
 class SearchApiFilter extends FilterPluginBase {
 
   /**
-   * The value to filter for.
-   *
-   * @var mixed
-   */
-  public $value;
-
-  /**
-   * The operator used for filtering.
-   *
-   * @var string
-   */
-  public $operator;
-
-  /**
-   * The associated views query object.
+   * The associated Views query object.
    *
    * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
    */
   public $query;
 
   /**
-   * Provide a list of options for the operator form.
+   * {@inheritdoc}
    */
   public function operatorOptions() {
     return array(
@@ -56,9 +44,10 @@ class SearchApiFilter extends FilterPluginBase {
   }
 
   /**
-   * Provide a form for setting the filter value.
+   * {@inheritdoc}
    */
   protected function valueForm(&$form, FormStateInterface $form_state) {
+    // @todo Hopefully we can now be more sure of what we get in $this->value.
     while (is_array($this->value) && count($this->value) < 2) {
       $this->value = $this->value ? reset($this->value) : NULL;
     }
@@ -87,7 +76,7 @@ class SearchApiFilter extends FilterPluginBase {
   }
 
   /**
-   * Display the filter on the administrative summary
+   * {@inheritdoc}
    */
   public function adminSummary() {
     if (!empty($this->options['exposed'])) {
@@ -105,7 +94,7 @@ class SearchApiFilter extends FilterPluginBase {
   }
 
   /**
-   * Add this filter to the query.
+   * {@inheritdoc}
    */
   public function query() {
     if ($this->operator === 'empty') {
