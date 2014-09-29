@@ -141,7 +141,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
     // server configuration.
     $field_id = $this->getFieldId('keywords');
     if (empty($index->getFields()[$field_id])) {
-      debug(array_keys($index->getFields()));
       throw new Exception();
     }
     $index->getFields()[$field_id]->setIndexed(FALSE, TRUE);

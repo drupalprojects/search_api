@@ -107,7 +107,7 @@ class ContentAccessTest extends ProcessorTestBase {
    */
   public function testQueryAccessAll() {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
-    debug($this->index->index());
+    $this->index->index();
     $query = Query::create($this->index);
     $result = $query->execute();
 
@@ -131,7 +131,7 @@ class ContentAccessTest extends ProcessorTestBase {
       ))
       ->execute();
 
-    debug($this->index->index());
+    $this->index->index();
     $query = Query::create($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
