@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus;
 use Drupal\search_api\Utility\Utility;
@@ -65,7 +66,7 @@ class NodeStatusTest extends UnitTestCase {
       ->will($this->returnValue(FALSE));
     /** @var \Drupal\node\NodeInterface $unpublished_node */
 
-    $item->setOriginalObject($unpublished_node);
+    $item->setOriginalObject(EntityAdapter::createFromEntity($unpublished_node));
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $datasource);
@@ -78,7 +79,7 @@ class NodeStatusTest extends UnitTestCase {
       ->will($this->returnValue(TRUE));
     /** @var \Drupal\node\NodeInterface $published_node */
 
-    $item->setOriginalObject($published_node);
+    $item->setOriginalObject(EntityAdapter::createFromEntity($published_node));
     $this->items[$item->getId()] = $item;
   }
 

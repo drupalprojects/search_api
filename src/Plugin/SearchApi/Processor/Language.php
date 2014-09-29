@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Language\Language as CoreLanguage;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\TranslatableInterface;
@@ -52,6 +53,10 @@ class Language extends ProcessorPluginBase {
         continue;
       }
       $object = $item->getOriginalObject();
+      // Workaround for recognizing entities.
+      if ($object instanceof EntityAdapter) {
+        $object = $object->getValue();
+      }
       if ($object instanceof TranslatableInterface) {
         $field->addValue($object->language()->getId());
       }

@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Utility;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
@@ -232,6 +233,9 @@ class Utility {
         $item_nested = $item->get($direct);
         if ($item_nested instanceof DataReferenceInterface) {
           $item_nested = $item_nested->getTarget();
+        }
+        if ($item_nested instanceof EntityInterface) {
+          $item_nested = $item_nested->getTypedData();
         }
         if ($item_nested instanceof ComplexDataInterface && !$item_nested->isEmpty()) {
           self::extractFields($item_nested, $fields_nested);

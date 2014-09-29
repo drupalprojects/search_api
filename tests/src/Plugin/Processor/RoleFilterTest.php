@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter;
 use Drupal\search_api\Utility\Utility;
@@ -62,7 +63,7 @@ class RoleFilterTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     /** @var \Drupal\node\NodeInterface $node */
-    $item->setOriginalObject($node);
+    $item->setOriginalObject(EntityAdapter::createFromEntity($node));
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $user_datasource);
@@ -73,7 +74,7 @@ class RoleFilterTest extends UnitTestCase {
       ->method('getRoles')
       ->will($this->returnValue(array('authenticated' => 'authenticated', 'editor' => 'editor')));
     /** @var \Drupal\user\UserInterface $account1 */
-    $item->setOriginalObject($account1);
+    $item->setOriginalObject(EntityAdapter::createFromEntity($account1));
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $user_datasource);
@@ -84,7 +85,7 @@ class RoleFilterTest extends UnitTestCase {
       ->method('getRoles')
       ->will($this->returnValue(array('authenticated' => 'authenticated')));
     /** @var \Drupal\user\UserInterface $account2 */
-    $item->setOriginalObject($account2);
+    $item->setOriginalObject(EntityAdapter::createFromEntity($account2));
     $this->items[$item->getId()] = $item;
   }
 

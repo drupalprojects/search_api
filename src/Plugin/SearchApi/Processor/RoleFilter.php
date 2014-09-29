@@ -100,7 +100,7 @@ class RoleFilter extends ProcessorPluginBase {
     // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item_id => $item) {
-      $account = $item->getOriginalObject();
+      $account = $item->getOriginalObject()->getValue();
       if (!($account instanceof UserInterface)) {
         continue;
       }

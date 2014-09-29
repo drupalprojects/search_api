@@ -658,11 +658,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
         // Don't add the additional 'entity' property for entity reference
         // fields which don't target a content entity type.
-        // @todo Try to see if there's a better way of doing this check when
-        //   https://drupal.org/node/2228721 gets fixed.
         if ($property instanceof FieldItemDataDefinition && $property->getDataType() == 'field_item:entity_reference') {
           $entity_type = $this->entityManager()->getDefinition($property->getSetting('target_type'));
-          if (!$entity_type->isSubclassOf('\Drupal\Core\TypedData\TypedDataInterface')) {
+          if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
             unset($nested_properties['entity']);
           }
         }

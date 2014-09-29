@@ -111,7 +111,7 @@ class RenderedItemTest extends ProcessorTestBase {
     foreach ($this->nodes as $node) {
       $items[] = array(
         'datasource' => 'entity:node',
-        'item' => $node,
+        'item' => $node->getTypedData(),
         'item_id' => $node->id(),
         'text' => $this->randomMachineName(),
       );

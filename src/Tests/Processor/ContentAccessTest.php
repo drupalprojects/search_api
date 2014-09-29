@@ -107,11 +107,11 @@ class ContentAccessTest extends ProcessorTestBase {
    */
   public function testQueryAccessAll() {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
-    $this->index->index();
+    debug($this->index->index());
     $query = Query::create($this->index);
     $result = $query->execute();
 
-    $this->assertEqual($result->getResultCount(), 2, 'The result contains all items.');
+    $this->assertEqual($result->getResultCount(), 2);
   }
 
   /**
@@ -131,12 +131,12 @@ class ContentAccessTest extends ProcessorTestBase {
       ))
       ->execute();
 
-    $this->index->index();
+    debug($this->index->index());
     $query = Query::create($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertEqual($result->getResultCount(), 1, 'The result should contain only one item to which the user has granted access');
+    $this->assertEqual($result->getResultCount(), 1);
   }
 
   /**
@@ -148,7 +148,7 @@ class ContentAccessTest extends ProcessorTestBase {
     foreach ($this->comments as $comment) {
       $items[] = array(
         'datasource' => 'entity:comment',
-        'item' => $comment,
+        'item' => $comment->getTypedData(),
         'item_id' => $comment->id(),
         'text' => $this->randomMachineName(),
       );
@@ -171,7 +171,7 @@ class ContentAccessTest extends ProcessorTestBase {
     foreach ($this->comments as $comment) {
       $items[] = array(
         'datasource' => 'entity:comment',
-        'item' => $comment,
+        'item' => $comment->getTypedData(),
         'item_id' => $comment->id(),
         'field_text' => $this->randomMachineName(),
       );

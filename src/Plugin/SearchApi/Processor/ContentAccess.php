@@ -177,6 +177,7 @@ class ContentAccess extends ProcessorPluginBase {
    *   The node related to that search object.
    */
   protected function getNode(ComplexDataInterface $item) {
+    $item = $item->getValue();
     if ($item instanceof CommentInterface) {
       $item = $item->getCommentedEntity();
     }

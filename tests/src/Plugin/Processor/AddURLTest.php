@@ -6,6 +6,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\AddURL;
@@ -97,7 +98,7 @@ class AddUrlTest extends UnitTestCase {
         'values' => $body_value,
       ),
     );
-    $items = $this->createItems($this->index, 2, $fields, $node);
+    $items = $this->createItems($this->index, 2, $fields, EntityAdapter::createFromEntity($node));
 
     // Process the items.
     $this->processor->preprocessIndexItems($items);

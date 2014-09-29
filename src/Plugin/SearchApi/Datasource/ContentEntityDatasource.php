@@ -11,11 +11,12 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
-use Drupal\field\FieldInstanceConfigInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -185,7 +186,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
     foreach ($entity_ids as $entity_id => $langcodes) {
       foreach ($langcodes as $item_id => $langcode) {
         if (!empty($entities[$entity_id]) && $entities[$entity_id]->hasTranslation($langcode)) {
-          $items[$item_id] = $entities[$entity_id]->getTranslation($langcode);
+          $items[$item_id] = $entities[$entity_id]->getTranslation($langcode)->getTypedData();
         }
         else {
           $missing[] = $item_id;
@@ -332,8 +333,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
-    if ($item instanceof EntityInterface) {
-      return $item->id() . ':' . $item->language();
+    if ($item instanceof EntityAdapter) {
+      return $item->getValue()->id() . ':' . $item->language();
     }
     return NULL;
   }
@@ -342,8 +343,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemLabel(ComplexDataInterface $item) {
-    if ($item instanceof EntityInterface) {
-      return $item->label();
+    if ($item instanceof EntityAdapter) {
+      return $item->getValue()->label();
     }
     return NULL;
   }
@@ -352,8 +353,8 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemUrl(ComplexDataInterface $item) {
-    if ($item instanceof EntityInterface) {
-      return $item->urlInfo();
+    if ($item instanceof EntityAdapter) {
+      return $item->getValue()->urlInfo();
     }
     return NULL;
   }
@@ -500,9 +501,10 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
     try {
-      if ($item instanceof EntityInterface) {
-        $langcode = $langcode ?: $item->language()->getId();
-        return $this->getEntityManager()->getViewBuilder($this->getEntityTypeId())->view($item, $view_mode, $langcode);
+      if ($item instanceof EntityAdapter) {
+        $entity = $item->getValue();
+        $langcode = $langcode ?: $entity->language()->getId();
+        return $this->getEntityManager()->getViewBuilder($this->getEntityTypeId())->view($entity, $view_mode, $langcode);
       }
     }
     catch (\Exception $e) {
@@ -522,8 +524,14 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       $view_builder = $this->getEntityManager()->getViewBuilder($this->getEntityTypeId());
       // Langcode passed, use that for viewing.
       if (isset($langcode)) {
-        if (reset($items) instanceof EntityInterface) {
-          return $view_builder->viewMultiple($items, $view_mode, $langcode);
+        $entities = array();
+        foreach ($items as $i => $item) {
+          if ($item instanceof EntityAdapter) {
+            $entities[$i] = $item->getValue();
+          }
+        }
+        if ($entities) {
+          return $view_builder->viewMultiple($entities, $view_mode, $langcode);
         }
         return array();
       }
@@ -605,7 +613,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
     // Extract the config dependency name for direct fields.
     foreach (array_keys($this->getEntityManager()->getBundleInfo($entity_type_id)) as $bundle) {
       foreach ($this->getEntityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-        if ($field_definition instanceof FieldInstanceConfigInterface) {
+        if ($field_definition instanceof FieldConfigInterface) {
           if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
             $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;
           }

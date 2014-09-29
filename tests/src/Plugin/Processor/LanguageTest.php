@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Language\Language as CoreLanguage;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\Language;
@@ -98,14 +99,14 @@ class LanguageTest extends UnitTestCase {
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'en'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object1 */
-    $items[$this->item_ids[0]]->setOriginalObject($object1);
+    $items[$this->item_ids[0]]->setOriginalObject(EntityAdapter::createFromEntity($object1));
 
     $object2 = $this->getMock('Drupal\Tests\search_api\TestContentEntityInterface');
     $object2->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'es'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object2 */
-    $items[$this->item_ids[1]]->setOriginalObject($object2);
+    $items[$this->item_ids[1]]->setOriginalObject(EntityAdapter::createFromEntity($object2));
 
     $object3 = $this->getMock('Drupal\Tests\search_api\TestComplexDataInterface');
     /** @var \Drupal\Tests\search_api\TestComplexDataInterface $object3 */

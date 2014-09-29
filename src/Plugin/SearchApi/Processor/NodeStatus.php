@@ -40,7 +40,7 @@ class NodeStatus extends ProcessorPluginBase {
     // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item_id => $item) {
-      $object = $item->getOriginalObject();
+      $object = $item->getOriginalObject()->getValue();
       if ($object instanceof NodeInterface && !$object->isPublished()) {
         unset($items[$item_id]);
       }
