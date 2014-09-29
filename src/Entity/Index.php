@@ -52,12 +52,12 @@ use Drupal\search_api\Utility\Utility;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "search_api.index_view",
- *     "add-form" = "search_api.index_add",
- *     "edit-form" = "search_api.index_edit",
- *     "delete-form" = "search_api.index_delete",
- *     "disable" = "search_api.index_disable",
- *     "enable" = "search_api.index_enable",
+ *     "canonical" = "entity.search_api_index.canonical",
+ *     "add-form" = "entity.search_api_index.add_form",
+ *     "edit-form" = "entity.search_api_index.edit_form",
+ *     "delete-form" = "entity.search_api_index.delete_form",
+ *     "disable" = "entity.search_api_index.disable",
+ *     "enable" = "entity.search_api_index.enable",
  *   }
  * )
  */

@@ -171,11 +171,11 @@ class IndexStatusForm extends FormBase {
         break;
 
       case 'reindex':
-        $form_state->setRedirect('search_api.index_reindex', array('search_api_index' => $index->id()));
+        $form_state->setRedirect('entity.search_api_index.reindex', array('search_api_index' => $index->id()));
         break;
 
       case 'clear':
-        $form_state->setRedirect('search_api.index_clear', array('search_api_index' => $index->id()));
+        $form_state->setRedirect('entity.search_api_index.clear', array('search_api_index' => $index->id()));
         break;
     }
   }

@@ -34,7 +34,7 @@ class ServerDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('search_api.server_view', array('search_api_server' => $this->entity->id()));
+    return new Url('entity.search_api_server.canonical', array('search_api_server' => $this->entity->id()));
   }
 
   /**

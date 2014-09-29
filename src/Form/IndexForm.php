@@ -528,7 +528,7 @@ class IndexForm extends EntityForm {
       try {
         $this->getEntity()->save();
         drupal_set_message($this->t('The index was successfully saved.'));
-        $form_state->setRedirect('search_api.index_view', array('search_api_index' => $this->getEntity()->id()));
+        $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $this->getEntity()->id()));
       }
       catch (\Exception $ex) {
         $form_state->setRebuild();
@@ -542,7 +542,7 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public function delete(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirect('search_api.index_delete', array('search_api_index' => $this->getEntity()->id()));
+    $form_state->setRedirect('entity.search_api_index.delete', array('search_api_index' => $this->getEntity()->id()));
   }
 
 }

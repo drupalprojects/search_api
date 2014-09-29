@@ -71,7 +71,7 @@ class IntegrationTest extends SearchApiWebTestBase {
 
   protected function createServer() {
     $server_id = drupal_strtolower($this->randomMachineName());
-    $settings_path = $this->urlGenerator->generateFromRoute('search_api.server_add', array(), array('absolute' => TRUE));
+    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_server.add_form', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200, 'Server add page exists');
@@ -111,7 +111,7 @@ class IntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createIndex() {
-    $settings_path = $this->urlGenerator->generateFromRoute('search_api.index_add', array(), array('absolute' => TRUE));
+    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_index.add_form', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);

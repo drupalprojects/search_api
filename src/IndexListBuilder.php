@@ -158,7 +158,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
       $operations['fields'] = array(
         'title' => $this->t('Fields'),
         'weight' => 20,
-        'route_name' => 'search_api.index_fields',
+        'route_name' => 'entity.search_api_index.fields',
         'route_parameters' => array(
           'search_api_index' => $entity->id(),
         ),
@@ -166,7 +166,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
       $operations['filters'] = array(
         'title' => $this->t('Filters'),
         'weight' => 30,
-        'route_name' => 'search_api.index_filters',
+        'route_name' => 'entity.search_api_index.filters',
         'route_parameters' => array(
           'search_api_index' => $entity->id(),
         ),

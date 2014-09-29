@@ -1,28 +1,27 @@
-search_api.server_view:
-  route_name: search_api.server_view
-  base_route: search_api.server_view
+entity.search_api_server.canonical:
+  route_name: entity.search_api_server.canonical
+  base_route: entity.search_api_server.canonical
   title: 'View'
-search_api.server_edit:
-  route_name: search_api.server_edit
-  base_route: search_api.server_view
+entity.search_api_server.edit_form:
+  route_name: entity.search_api_server.edit_form
+  base_route: entity.search_api_server.canonical
   title: 'Edit'
-
-search_api.index_view:
-  route_name: search_api.index_view
-  base_route: search_api.index_view
+entity.search_api_index.canonical:
+  route_name: entity.search_api_index.canonical
+  base_route: entity.search_api_index.canonical
   title: 'View'
-search_api.index_edit:
-  route_name: search_api.index_edit
-  base_route: search_api.index_view
+entity.search_api_index.edit_form:
+  route_name: entity.search_api_index.edit_form
+  base_route: entity.search_api_index.canonical
   title: 'Edit'
   weight: 5
-search_api.index_fields:
+entity.search_api_index.fields:
   title: 'Fields'
-  route_name: search_api.index_fields
-  base_route: search_api.index_view
+  route_name: entity.search_api_index.fields
+  base_route: entity.search_api_index.canonical
   weight: 10
-search_api.index_filters:
-  route_name: search_api.index_filters
-  base_route: search_api.index_view
+entity.search_api_index.filters:
+  route_name: entity.search_api_index.filters
+  base_route: entity.search_api_index.canonical
   title: 'Filters'
   weight: 20

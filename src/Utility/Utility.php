@@ -289,7 +289,7 @@ class Utility {
    *   The server task manager to use.
    */
   public static function getServerTaskManager() {
-    return \Drupal::service('search_api.server_task_manager');
+    return \Drupal::service('entity.search_api_server.task_manager');
   }
 
   /**

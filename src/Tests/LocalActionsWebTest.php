@@ -46,8 +46,8 @@ class LocalActionsWebTest extends LocalActionTest {
     foreach ($this->getSearchAPIPageRoutes() as $routes) {
       foreach ($routes as $route) {
         $actions = array(
-          '/admin/config/search/search-api/add-server' => 'Add server', // search_api.server_add
-          '/admin/config/search/search-api/add-index' => 'Add index', // search_api.index_add
+          '/admin/config/search/search-api/add-server' => 'Add server', // entity.search_api_server.add_form
+          '/admin/config/search/search-api/add-index' => 'Add index', // entity.search_api_index.add_form
         );
         $this->drupalGet($route);
         $this->assertLocalAction($actions);

@@ -30,7 +30,7 @@ class LocalTasksTest extends LocalTaskIntegrationTest {
    */
   public function testLocalTasksServer($route) {
     $tasks = array(
-      0 => array('search_api.server_view', 'search_api.server_edit'),
+      0 => array('entity.search_api_server.canonical', 'entity.search_api_server.edit_form'),
     );
     $this->assertLocalTasks($route, $tasks);
   }
@@ -42,7 +42,7 @@ class LocalTasksTest extends LocalTaskIntegrationTest {
    */
   public function testLocalTasksIndex($route) {
     $tasks = array(
-      0 => array('search_api.index_view', 'search_api.index_edit', 'search_api.index_fields', 'search_api.index_filters'),
+      0 => array('entity.search_api_index.canonical', 'entity.search_api_index.edit_form', 'entity.search_api_index.fields', 'entity.search_api_index.filters'),
     );
     $this->assertLocalTasks($route, $tasks);
   }
@@ -52,8 +52,8 @@ class LocalTasksTest extends LocalTaskIntegrationTest {
    */
   public function getPageRoutesServer() {
     return array(
-      array('search_api.server_view'),
-      array('search_api.server_edit'),
+      array('entity.search_api_server.canonical'),
+      array('entity.search_api_server.edit_form'),
     );
   }
 
@@ -62,9 +62,9 @@ class LocalTasksTest extends LocalTaskIntegrationTest {
    */
   public function getPageRoutesIndex() {
     return array(
-      array('search_api.index_view'),
-      array('search_api.index_edit'),
-      array('search_api.index_filters'),
+      array('entity.search_api_index.canonical'),
+      array('entity.search_api_index.edit_form'),
+      array('entity.search_api_index.filters'),
     );
   }
 

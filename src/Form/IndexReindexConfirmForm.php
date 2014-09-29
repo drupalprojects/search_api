@@ -35,7 +35,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('search_api.index_view', array('search_api_index' => $this->entity->id()));
+    return new Url('entity.search_api_index.canonical', array('search_api_index' => $this->entity->id()));
   }
 
   /**
@@ -54,7 +54,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
       watchdog_exception('search_api', $e, '%type while trying to reindex items on index %name: !message in %function (line %line of %file)', array('%name' => $entity->label()));
     }
 
-    $form_state->setRedirect('search_api.index_view', array('search_api_index' => $entity->id()));
+    $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $entity->id()));
   }
 
 }

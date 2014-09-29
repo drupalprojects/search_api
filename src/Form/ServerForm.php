@@ -292,7 +292,7 @@ class ServerForm extends EntityForm {
         $server = $this->getEntity();
         $server->save();
         drupal_set_message($this->t('The server was successfully saved.'));
-        $form_state->setRedirect('search_api.server_view', array('search_api_server' => $server->id()));
+        $form_state->setRedirect('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
       }
       catch (\Exception $e) {
         $form_state->setRebuild();

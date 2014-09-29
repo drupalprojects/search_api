@@ -91,7 +91,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
     ));
     $this->index->save();
 
-    $this->serverTaskManager = $this->container->get('search_api.server_task_manager');
+    $this->serverTaskManager = $this->container->get('entity.search_api_server.task_manager');
   }
 
   /**

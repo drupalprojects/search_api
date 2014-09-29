@@ -34,7 +34,7 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('search_api.index_view', array('search_api_index' => $this->entity->id()));
+    return new Url('entity.search_api_index.canonical', array('search_api_index' => $this->entity->id()));
   }
 
   /**
