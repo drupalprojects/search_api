@@ -733,7 +733,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   protected function regressionTests2() {
     // Create a "keywords" field on the test entity type.
     FieldStorageConfig::create(array(
-      'name' => 'prices',
+      'field_name' => 'prices',
       'entity_type' => 'entity_test',
       'type' => 'decimal',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,

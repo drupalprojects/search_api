@@ -1,7 +1,7 @@
 id: entity_test.keywords
 status: true
 langcode: en
-name: keywords
+field_name: keywords
 entity_type: entity_test
 type: string
 settings:
