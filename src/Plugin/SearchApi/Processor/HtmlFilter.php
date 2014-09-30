@@ -68,7 +68,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     $tags = str_replace('\r\n', "\n", $tags);
     $tags = str_replace('"', '', $tags);
 
-    $t_args['@url'] = url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8');
+    $t_args['@url'] = _url('https://api.drupal.org/api/drupal/core!vendor!symfony!yaml!Symfony!Component!Yaml!Yaml.php/function/Yaml::parse/8');
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Tag boosts'),

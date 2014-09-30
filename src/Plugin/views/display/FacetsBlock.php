@@ -175,7 +175,7 @@ class FacetsBlock extends Block {
     if ($this->usesMore()) {
       $path = $this->getOption('linked_path');
       $theme = views_theme_functions('views_more', $this->view, $this->display);
-      $path = check_url(url($path, array()));
+      $path = check_url(_url($path, array()));
 
       return array(
         '#theme' => $theme,

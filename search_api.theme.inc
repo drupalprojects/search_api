@@ -274,7 +274,7 @@ function theme_search_api_index($variables) {
   // Check if a server is available.
   if ($server) {
     $label = t('Server');
-    $info = l($server->label(), $server->getSystemPath());
+    $info = \Drupal::linkGenerator()->generate($server->label(), $server->urlInfo('canonical'));
     $rows[] = Utility::deepCopy($row);
   }
   elseif ($index->getServerId()) {
@@ -299,7 +299,7 @@ function theme_search_api_index($variables) {
       $response = $server->search($query);
 
       // Build the server index status translation variables.
-      $vars = array('@url' => url('https://drupal.org/node/2009804#server-index-status'));
+      $vars = array('@url' => _url('https://drupal.org/node/2009804#server-index-status'));
       // Build the server index status info.
       $label = t('Server index status');
       $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
