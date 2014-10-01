@@ -1088,6 +1088,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->datasourceFields = NULL;
     $this->fulltextFields = NULL;
     $this->processors = NULL;
+    $this->properties = NULL;
+    $this->datasourceAdditionalFields = NULL;
     if ($include_stored) {
       Cache::invalidateTags($this->getCacheTag());
     }
@@ -1129,7 +1131,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    $this->resetCaches(FALSE);
+    $this->resetCaches();
 
     try {
       // Fake an original for inserts to make code cleaner.
