@@ -57,21 +57,21 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var string
    */
-  public $machine_name;
+  protected $machine_name;
 
   /**
    * The displayed name of the server.
    *
    * @var string
    */
-  public $name;
+  protected $name;
 
   /**
    * The displayed description of the server.
    *
    * @var string
    */
-  public $description = '';
+  protected $description = '';
 
   /**
    * The ID of the backend plugin.

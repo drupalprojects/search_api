@@ -68,28 +68,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string
    */
-  public $machine_name;
+  protected $machine_name;
 
   /**
    * A name to be displayed for the index.
    *
    * @var string
    */
-  public $name;
+  protected $name;
 
   /**
    * A string describing the index.
    *
    * @var string
    */
-  public $description;
+  protected $description;
 
   /**
    * A flag indicating whether to write to this index.
    *
    * @var bool
    */
-  public $read_only = FALSE;
+  protected $read_only = FALSE;
 
   /**
    * An array of options configuring this index.
@@ -98,21 +98,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @see getOptions()
    */
-  public $options = array();
+  protected $options = array();
 
   /**
    * The IDs of the datasources selected for this index.
    *
    * @var string[]
    */
-  public $datasources = array();
+  protected $datasources = array();
 
   /**
    * The configuration for the selected datasources.
    *
    * @var array
    */
-  public $datasource_configs = array();
+  protected $datasource_configs = array();
 
   /**
    * The instantiated datasource plugins.
@@ -128,14 +128,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string
    */
-  public $tracker;
+  protected $tracker;
 
   /**
    * The tracker plugin configuration.
    *
    * @var array
    */
-  public $tracker_config = array();
+  protected $tracker_config = array();
 
   /**
    * The tracker plugin instance.
@@ -151,7 +151,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string
    */
-  public $server;
+  protected $server;
 
   /**
    * The server entity belonging to this index.
