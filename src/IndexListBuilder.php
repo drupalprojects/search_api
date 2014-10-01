@@ -99,7 +99,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
 
     $status_icon = array(
       '#theme' => 'image',
-      '#uri' => $entity->status() ? 'core/misc/icons/73b355/check.png' : 'core/misc/icons/ea2800/error.png',
+      '#uri' => $entity->status() ? 'core/misc/icons/73b355/check.svg' : 'core/misc/icons/ea2800/error.svg',
       '#width' => 18,
       '#height' => 18,
       '#alt' => $entity->status() ? $this->t('Enabled') : $this->t('Disabled'),
