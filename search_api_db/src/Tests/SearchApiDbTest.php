@@ -779,6 +779,15 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(6)), 'Filter on decimal field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+
+    // Regression test for #2284199.
+    entity_create('entity_test', array(
+      'id' => 7,
+      'type' => 'item',
+    ))->save();
+
+    $count = $this->indexItems($this->indexId);
+    $this->assertEqual($count, 1, 'Indexing an item with an empty value for a non string field worked.');
   }
 
   /**

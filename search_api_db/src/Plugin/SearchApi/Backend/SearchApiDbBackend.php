@@ -922,6 +922,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       $text_inserts = array();
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($item as $name => $field) {
+        $denormalized_value = NULL;
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables
         // here before indexing.
