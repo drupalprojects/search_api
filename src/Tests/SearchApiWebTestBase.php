@@ -97,7 +97,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     }
     else {
       $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'backend' => $backend_id));
-      $server->description = $name;
+      $server->set('description', $name);
       $server->save();
     }
 
@@ -121,7 +121,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
     }
     else {
       $index = entity_create('search_api_index', array('name' => $name, 'machine_name' => $machine_name, 'datasourcePluginId' => $datasource_plugin_id, 'server' => $server_id));
-      $index->description = $name;
+      $index->set('description', $name);
       $index->save();
     }
 
