@@ -7,8 +7,10 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
@@ -26,13 +28,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 // @todo Hide for other, non-Search API base tables.
 class SearchApiRow extends RowPluginBase {
-
-  /**
-   * The associated views query object.
-   *
-   * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
-   */
-  protected $query;
 
   /**
    * The search index.
@@ -226,6 +221,9 @@ class SearchApiRow extends RowPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     parent::query();
     // @todo Find a better way to ensure that the item is loaded.
