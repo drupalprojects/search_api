@@ -1269,7 +1269,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         $db_query->range($offset, $limit);
       }
 
-      $sort = $query->getSort();
+      $sort = $query->getSorts();
       if ($sort) {
         foreach ($sort as $field_name => $order) {
           if ($order != 'ASC' && $order != 'DESC') {
@@ -1705,7 +1705,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index we're searching on.
    *
-   * @return \Drupal\Core\Database\Query\Condition|null
+   * @return \Drupal\Core\Database\Query\ConditionInterface|null
    *   The condition to set on the query, or NULL if none is necessary.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException

@@ -23,6 +23,8 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
 
   /**
    * The total result count.
+   *
+   * @var int
    */
   protected $resultCount;
 
@@ -119,16 +121,16 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  public function setWarnings(array $warnings) {
-    $this->warnings = $warnings;
+  public function addWarning($warning) {
+    $this->warnings[] = $warning;
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addWarning($warning) {
-    $this->warnings[] = $warning;
+  public function setWarnings(array $warnings) {
+    $this->warnings = $warnings;
     return $this;
   }
 
@@ -142,16 +144,16 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  public function setIgnoredSearchKeys(array $ignored_search_keys) {
-    $this->ignoredSearchKeys = array_combine($ignored_search_keys, $ignored_search_keys);
+  public function addIgnoredSearchKey($ignored_search_key) {
+    $this->ignoredSearchKeys[$ignored_search_key] = $ignored_search_key;
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addIgnoredSearchKey($ignored_search_key) {
-    $this->ignoredSearchKeys[$ignored_search_key] = $ignored_search_key;
+  public function setIgnoredSearchKeys(array $ignored_search_keys) {
+    $this->ignoredSearchKeys = array_combine($ignored_search_keys, $ignored_search_keys);
     return $this;
   }
 
@@ -172,7 +174,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAllExtraData() {
+  public function &getAllExtraData() {
     return $this->extraData;
   }
 

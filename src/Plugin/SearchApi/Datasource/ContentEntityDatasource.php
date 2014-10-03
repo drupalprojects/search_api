@@ -10,7 +10,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Datasource;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManager;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -35,7 +35,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager|null
+   * @var \Drupal\Core\Entity\EntityManagerInterface|null
    */
   protected $entityManager;
 
@@ -70,7 +70,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
     /** @var \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var $entity_manager \Drupal\Core\Entity\EntityManager */
+    /** @var $entity_manager \Drupal\Core\Entity\EntityManagerInterface */
     $entity_manager = $container->get('entity.manager');
     $datasource->setEntityManager($entity_manager);
 
@@ -84,7 +84,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * Retrieves the entity manager.
    *
-   * @return \Drupal\Core\Entity\EntityManager
+   * @return \Drupal\Core\Entity\EntityManagerInterface
    *   The entity manager.
    */
   public function getEntityManager() {
@@ -114,12 +114,12 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * Sets the entity manager.
    *
-   * @param \Drupal\Core\Entity\EntityManager $entity_manager
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The new entity manager.
    *
    * @return $this
    */
-  public function setEntityManager(EntityManager $entity_manager) {
+  public function setEntityManager(EntityManagerInterface $entity_manager) {
     $this->entityManager = $entity_manager;
     return $this;
   }

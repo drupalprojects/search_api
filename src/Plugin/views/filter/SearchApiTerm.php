@@ -82,7 +82,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     }
     else {
       if ($vocabulary && !empty($this->options['hierarchy'])) {
-        /** @var \Drupal\taxonomy\TermStorage $term_storage */
+        /** @var \Drupal\taxonomy\TermStorageInterface $term_storage */
         $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
         $tree = $term_storage->loadTree($vocabulary->id());
         $options = array();

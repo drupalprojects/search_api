@@ -782,11 +782,11 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @see sort()
    *
-   * @see \Drupal\search_api\Query\QueryInterface::getSort()
+   * @see \Drupal\search_api\Query\QueryInterface::getSorts()
    */
   public function &getSort() {
     if (!$this->shouldAbort()) {
-      return $this->query->getSort();
+      return $this->query->getSorts();
     }
     $ret = NULL;
     return $ret;

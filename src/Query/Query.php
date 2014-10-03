@@ -13,7 +13,7 @@ use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 
 /**
- * Provides a standard implementation of the QueryInterface.
+ * Provides a standard implementation for a Search API query.
  */
 class Query implements QueryInterface {
 
@@ -36,7 +36,9 @@ class Query implements QueryInterface {
   protected $index_id;
 
   /**
-   * The search keys. If NULL, this will be a filter-only search.
+   * The search keys.
+   *
+   * If NULL, this will be a filter-only search.
    *
    * @var mixed
    */
@@ -50,7 +52,7 @@ class Query implements QueryInterface {
   protected $orig_keys;
 
   /**
-   * The fields that will be searched for the keys.
+   * The fulltext fields that will be searched for the keys.
    *
    * @var array
    */
@@ -64,14 +66,14 @@ class Query implements QueryInterface {
   protected $filter;
 
   /**
-   * The sort associated with this query.
+   * The sorts associated with this query.
    *
    * @var array
    */
-  protected $sort;
+  protected $sorts = array();
 
   /**
-   * Search options configuring this query.
+   * Options configuring this query.
    *
    * @var array
    */
@@ -82,7 +84,7 @@ class Query implements QueryInterface {
    *
    * @var bool
    */
-  protected $pre_execute = FALSE;
+  protected $preExecuteRan = FALSE;
 
   /**
    * Constructs a Query object.
@@ -99,7 +101,7 @@ class Query implements QueryInterface {
    */
   public function __construct(IndexInterface $index, array $options = array()) {
     if (!$index->status()) {
-      throw new SearchApiException("Can't search on a disabled index.");
+      throw new SearchApiException(String::format("Can't search on index %index which is disabled.", array('%index' => $index->label())));
     }
     if (isset($options['parse mode'])) {
       $modes = $this->parseModes();
@@ -115,7 +117,6 @@ class Query implements QueryInterface {
       'search id' => __CLASS__,
     );
     $this->filter = $this->createFilter('AND');
-    $this->sort = array();
   }
 
   /**
@@ -230,8 +231,8 @@ class Query implements QueryInterface {
    */
   public function fields(array $fields) {
     $fulltext_fields = $this->index->getFulltextFields();
-    foreach (array_diff($fields, $fulltext_fields) as $field) {
-      throw new SearchApiException(String::format('Trying to search on field @field which is no indexed fulltext field.', array('@field' => $field)));
+    foreach (array_diff($fields, $fulltext_fields) as $field_id) {
+      throw new SearchApiException(String::format('Trying to search on field @field which is no indexed fulltext field.', array('@field' => $field_id)));
     }
     $this->fields = $fields;
     return $this;
@@ -266,7 +267,7 @@ class Query implements QueryInterface {
       throw new SearchApiException(String::format('Trying to sort on unknown field @field.', array('@field' => $field)));
     }
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
-    $this->sort[$field] = $order;
+    $this->sorts[$field] = $order;
     return $this;
   }
 
@@ -305,8 +306,8 @@ class Query implements QueryInterface {
    */
   public function preExecute() {
     // Make sure to only execute this once per query.
-    if (!$this->pre_execute) {
-      $this->pre_execute = TRUE;
+    if (!$this->preExecuteRan) {
+      $this->preExecuteRan = TRUE;
 
       // Add fulltext fields, unless set
       if ($this->fields === NULL) {
@@ -370,8 +371,8 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function &getSort() {
-    return $this->sort;
+  public function &getSorts() {
+    return $this->sorts;
   }
 
   /**
@@ -431,12 +432,12 @@ class Query implements QueryInterface {
       $filter = str_replace("\n", "\n  ", $filter);
       $ret .= "Filters:\n  $filter\n";
     }
-    if ($this->sort) {
-      $sort = array();
-      foreach ($this->sort as $field => $order) {
-        $sort[] = "$field $order";
+    if ($this->sorts) {
+      $sorts = array();
+      foreach ($this->sorts as $field => $order) {
+        $sorts[] = "$field $order";
       }
-      $ret .= 'Sorting: ' . implode(', ', $sort) . "\n";
+      $ret .= 'Sorting: ' . implode(', ', $sorts) . "\n";
     }
     $ret .= 'Options: ' . str_replace("\n", "\n  ", var_export($this->options, TRUE)) . "\n";
     return $ret;

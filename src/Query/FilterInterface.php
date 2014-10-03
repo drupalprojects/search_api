@@ -16,24 +16,12 @@ namespace Drupal\search_api\Query;
 interface FilterInterface {
 
   /**
-   * Sets this filter's conjunction.
-   *
-   * @param string $conjunction
-   *   The conjunction to use for this filter - either 'AND' or 'OR'.
-   *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   The called object.
-   */
-  public function setConjunction($conjunction);
-
-  /**
    * Adds a subfilter.
    *
    * @param \Drupal\search_api\Query\FilterInterface $filter
    *   A filter object that should be added as a subfilter.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   The called object.
+   * @return $this
    */
   public function filter(FilterInterface $filter);
 
@@ -41,7 +29,7 @@ interface FilterInterface {
    * Adds a new ($field $operator $value) condition.
    *
    * @param string $field
-   *   The field to filter on, e.g. 'title'.
+   *   The ID of the field to filter on, e.g. "entity:node|title".
    * @param mixed $value
    *   The value the field should have (or be related to by the operator).
    * @param string $operator
@@ -54,8 +42,7 @@ interface FilterInterface {
    *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
    *   field must have no or some value, respectively.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   The called object.
+   * @return $this
    */
   public function condition($field, $value, $operator = '=');
 
@@ -63,14 +50,14 @@ interface FilterInterface {
    * Retrieves the conjunction used by this filter.
    *
    * @return string
-   *   The conjunction used by this filter - either 'AND' or 'OR'.
+   *   The conjunction used by this filter – either 'AND' or 'OR'.
    */
   public function getConjunction();
 
   /**
-   * Return all conditions and nested filters contained in this filter.
+   * Retrieves all conditions and nested filters contained in this filter.
    *
-   * @return \Drupal\search_api\Query\FilterInterface[]|array[]
+   * @return array
    *   An array containing this filter's sub-filters. Each of these is either an
    *   array (field, value, operator), or another filter object.
    */
@@ -90,7 +77,7 @@ interface FilterInterface {
   /**
    * Retrieves the tags set on this filter.
    *
-   * @return array
+   * @return string[]
    *   The tags associated with this filter, as both the array keys and values.
    */
   public function &getTags();

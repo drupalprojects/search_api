@@ -87,18 +87,6 @@ interface ResultSetInterface extends \Traversable {
   public function getWarnings();
 
   /**
-   * Sets the warnings triggered by the search query.
-   *
-   * @param string[] $warnings
-   *   An array of translated, sanitized warning messages that may be displayed
-   *   to the user.
-   *
-   * @return self
-   *   The invoked object.
-   */
-  public function setWarnings(array $warnings);
-
-  /**
    * Adds a warning message that was triggered by the search query.
    *
    * @param string $warning
@@ -111,6 +99,18 @@ interface ResultSetInterface extends \Traversable {
   public function addWarning($warning);
 
   /**
+   * Sets the warnings triggered by the search query.
+   *
+   * @param string[] $warnings
+   *   An array of translated, sanitized warning messages that may be displayed
+   *   to the user.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function setWarnings(array $warnings);
+
+  /**
    * Returns the ignored search keys, if any.
    *
    * @return string[]
@@ -118,6 +118,17 @@ interface ResultSetInterface extends \Traversable {
    *   (e.g., because of being too short or stop words).
    */
   public function getIgnoredSearchKeys();
+
+  /**
+   * Adds an ignored search key for the search query.
+   *
+   * @param string $ignored_search_key
+   *   A single search key (word) that was ignored in the search.
+   *
+   * @return self
+   *   The invoked object.
+   */
+  public function addIgnoredSearchKey($ignored_search_key);
 
   /**
    * Sets the ignored search keys of the search query.
@@ -130,17 +141,6 @@ interface ResultSetInterface extends \Traversable {
    *   The invoked object.
    */
   public function setIgnoredSearchKeys(array $ignored_search_keys);
-
-  /**
-   * Adds an ignored search key for the search query.
-   *
-   * @param string $ignored_search_key
-   *   A single search key (word) that was ignored in the search.
-   *
-   * @return self
-   *   The invoked object.
-   */
-  public function addIgnoredSearchKey($ignored_search_key);
 
   /**
    * Determines whether extra data with a specific key is set on this result.
@@ -173,10 +173,12 @@ interface ResultSetInterface extends \Traversable {
   /**
    * Retrieves all extra data set for this search result.
    *
+   * The data is returned as a reference so that it can be altered this way.
+   *
    * @return array
    *   An array mapping extra data keys to their data.
    */
-  public function getAllExtraData();
+  public function &getAllExtraData();
 
   /**
    * Sets some extra data for this search result.
@@ -190,6 +192,8 @@ interface ResultSetInterface extends \Traversable {
    * @return self
    *   The invoked object.
    */
+  // @todo Add unsetExtraData() instead of special NULL handling? And/or
+  //   just have to use &getAllExtraData()?
   public function setExtraData($key, $data = NULL);
 
 }

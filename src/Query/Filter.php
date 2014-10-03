@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Query;
 
 /**
- * Provides a standard implementation of FilterInterface.
+ * Provides a standard implementation for a Search API query filter.
  */
 class Filter implements FilterInterface {
 
@@ -16,7 +16,7 @@ class Filter implements FilterInterface {
    * Array containing subfilters.
    *
    * Each of these is either an array (field, value, operator), or another
-   * SearchApiFilter object.
+   * \Drupal\search_api\Query\FilterInterface object.
    *
    * @var array
    */
@@ -32,7 +32,7 @@ class Filter implements FilterInterface {
   /**
    * An array of tags set on this filter.
    *
-   * @var array
+   * @var string[]
    */
   protected $tags;
 
@@ -41,22 +41,21 @@ class Filter implements FilterInterface {
    *
    * @param string $conjunction
    *   (optional) The conjunction to use for this filter - either 'AND' or 'OR'.
-   * @param array $tags
+   * @param string[] $tags
    *   (optional) An arbitrary set of tags. Can be used to identify this filter
-   *   down the line if necessary. This is primarily used by the facet system
-   *   to support OR facet queries.
+   *   after it's been added to the query. This is primarily used by the facet
+   *   system to support OR facet queries.
    */
   public function __construct($conjunction = 'AND', array $tags = array()) {
-    $this->setConjunction($conjunction);
+    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
     $this->tags = array_combine($tags, $tags);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setConjunction($conjunction) {
-    $this->conjunction = strtoupper(trim($conjunction)) == 'OR' ? 'OR' : 'AND';
-    return $this;
+  public function getConjunction() {
+    return $this->conjunction;
   }
 
   /**
@@ -73,13 +72,6 @@ class Filter implements FilterInterface {
   public function condition($field, $value, $operator = '=') {
     $this->filters[] = array($field, $value, $operator);
     return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getConjunction() {
-    return $this->conjunction;
   }
 
   /**

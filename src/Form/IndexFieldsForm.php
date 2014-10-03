@@ -29,7 +29,7 @@ class IndexFieldsForm extends EntityForm {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManager
+   * @var \Drupal\Core\Entity\EntityManagerInterface
    */
   protected $entityManager;
 
@@ -69,8 +69,8 @@ class IndexFieldsForm extends EntityForm {
   /**
    * Retrieves the entity manager.
    *
-   * @return \Drupal\Core\Entity\EntityManager
-   *   An instance of EntityManager.
+   * @return \Drupal\Core\Entity\EntityManagerInterface
+   *   The entity manager.
    */
   protected function getEntityManager() {
     return $this->entityManager;

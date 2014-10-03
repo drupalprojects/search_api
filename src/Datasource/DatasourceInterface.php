@@ -102,7 +102,7 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function getItemUrl(ComplexDataInterface $item);
 
   /**
-   * Returns the available view modes for this item type.
+   * Returns the available view modes for this datasource.
    *
    * @return string[]
    *   An associative array of view mode labels, keyed by the view mode ID. Or

@@ -128,7 +128,7 @@ class DefaultTracker extends TrackerPluginBase {
    *   (optional) If specified, only items of the datasource with that ID are
    *   retrieved.
    *
-   * @return \Drupal\Core\Database\Query\Select
+   * @return \Drupal\Core\Database\Query\SelectInterface
    *   A SELECT statement.
    */
   protected function createRemainingItemsStatement($datasource_id = NULL) {

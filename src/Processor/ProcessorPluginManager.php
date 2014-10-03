@@ -12,7 +12,12 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Search API processor plugin manager.
+ * Manages processor plugins.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiProcessor
+ * @see \Drupal\search_api\Processor\ProcessorInterface
+ * @see \Drupal\search_api\Processor\ProcessorPluginBase
+ * @see plugin_api
  */
 class ProcessorPluginManager extends DefaultPluginManager {
 
@@ -28,9 +33,7 @@ class ProcessorPluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Processor', $namespaces, $module_handler, 'Drupal\search_api\Processor\ProcessorInterface', 'Drupal\search_api\Annotation\SearchApiProcessor');
-    // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, 'search_api_processors');
     $this->alterInfo('search_api_processor_info');
   }

@@ -365,7 +365,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // If the server is being disabled, also disable all its indexes.
     if (!$this->status() && isset($this->original) && $this->original->status()) {
       foreach ($this->getIndexes(array('status' => TRUE)) as $index) {
-        /** @var $index \Drupal\search_api\Entity\Index */
+        /** @var \Drupal\search_api\Index\IndexInterface $index */
         $index->setStatus(FALSE)->save();
       }
     }

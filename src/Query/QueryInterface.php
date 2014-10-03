@@ -20,7 +20,7 @@ interface QueryInterface {
   /**
    * Instantiates a new instance of this query class.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index for which the query should be created.
    * @param array $options
    *   (optional) The options to set for the query.
@@ -33,9 +33,9 @@ interface QueryInterface {
   /**
    * Retrieves the parse modes supported by this query class.
    *
-   * @return array
+   * @return string[][]
    *   An associative array of parse modes recognized by objects of this class.
-   *   The keys are the parse modes' ids, values are associative arrays
+   *   The keys are the parse modes' IDs, values are associative arrays
    *   containing the following entries:
    *   - name: The translated name of the parse mode.
    *   - description: (optional) A translated text describing the parse mode.
@@ -46,7 +46,7 @@ interface QueryInterface {
    * Creates a new filter to use with this query object.
    *
    * @param string $conjunction
-   *   The conjunction to use for the filter - either 'AND' or 'OR'.
+   *   The conjunction to use for the filter – either 'AND' or 'OR'.
    *
    * @return \Drupal\search_api\Query\FilterInterface
    *   A filter object that is set to use the specified conjunction.
@@ -64,8 +64,7 @@ interface QueryInterface {
    *   getKeys(). A passed string will be parsed according to the set parse
    *   mode. Use NULL to not use any search keys.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    */
   public function keys($keys = NULL);
 
@@ -77,11 +76,10 @@ interface QueryInterface {
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
-   *   If one of the fields isn't of type "text".
+   *   If one of the fields isn't a fulltext field.
    */
   // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
   public function fields(array $fields);
@@ -90,10 +88,9 @@ interface QueryInterface {
    * Adds a subfilter to this query's filter.
    *
    * @param \Drupal\search_api\Query\FilterInterface $filter
-   *   A DefaultFilter object that should be added as a subfilter.
+   *   A filter that should be added as a subfilter.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    */
   public function filter(FilterInterface $filter);
 
@@ -115,8 +112,7 @@ interface QueryInterface {
    *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
    *   field must have no or some value, respectively.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    */
   public function condition($field, $value, $operator = '=');
 
@@ -130,10 +126,9 @@ interface QueryInterface {
    *   The field to sort by. The special fields 'search_api_relevance' (sort by
    *   relevance) and 'search_api_id' (sort by item id) may be used.
    * @param string $order
-   *   The order to sort items in - either 'ASC' or 'DESC'.
+   *   The order to sort items in – either 'ASC' or 'DESC'.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the field is multi-valued or of a fulltext type.
@@ -151,8 +146,7 @@ interface QueryInterface {
    * @param int|null $limit
    *   The number of results to return.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    */
   public function range($offset = NULL, $limit = NULL);
 
@@ -202,7 +196,7 @@ interface QueryInterface {
    * Retrieves the search keys for this query.
    *
    * @return array|string|null
-   *   This object's search keys - either a string or an array specifying a
+   *   This object's search keys – either a string or an array specifying a
    *   complex search expression.
    *   An array will contain a '#conjunction' key specifying the conjunction
    *   type, and search strings or nested expression arrays at numeric keys.
@@ -224,7 +218,7 @@ interface QueryInterface {
    *
    * @return array|string|null
    *   The unprocessed search keys, exactly as passed to this object. Has the
-   *   same format as the return value of getKeys().
+   *   same format as the return value of QueryInterface::getKeys().
    *
    * @see keys()
    */
@@ -233,7 +227,7 @@ interface QueryInterface {
   /**
    * Retrieves the fulltext fields that will be searched for the search keys.
    *
-   * @return array
+   * @return string[]
    *   An array containing the fields that should be searched for the search
    *   keys.
    *
@@ -252,25 +246,26 @@ interface QueryInterface {
   /**
    * Retrieves the sorts set for this query.
    *
-   * @return array
+   * @return string[]
    *   An array specifying the sort order for this query. Array keys are the
-   *   field names in order of importance, the values are the respective order
-   *   in which to sort the results according to the field.
+   *   field IDs in order of importance, the values are the respective order in
+   *   which to sort the results according to the field.
    *
    * @see sort()
    */
-  public function &getSort();
+  public function &getSorts();
 
   /**
    * Retrieves an option set on this search query.
    *
    * @param string $name
-   *   The name of an option.
+   *   The name of the option.
    * @param mixed $default
-   *   The value to return if the specified option is not set.
+   *   (optional) The value to return if the specified option is not set.
    *
    * @return mixed
-   *   The value of the option with the specified name, if set. NULL otherwise.
+   *   The value of the option with the specified name, if set. $default
+   *   otherwise.
    */
   public function getOption($name, $default = NULL);
 
@@ -279,7 +274,7 @@ interface QueryInterface {
    *
    * @param string $name
    *   The name of an option. The following options are recognized by default:
-   *   - conjunction: The type of conjunction to use for this query - either
+   *   - conjunction: The type of conjunction to use for this query – either
    *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
    *     filters will always use AND by default.
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
@@ -303,7 +298,7 @@ interface QueryInterface {
    *     skipped, even if enabled for the index.
    *   However, contrib modules might introduce arbitrary other keys with their
    *   own, special meaning. (Usually they should be prefixed with the module
-   *   name, though.)
+   *   name, though, to avoid conflicts.)
    * @param mixed $value
    *   The new value of the option.
    *

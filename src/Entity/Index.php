@@ -542,6 +542,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   protected function computeFields() {
     // First, try the static cache and the persistent cache bin.
+    // @todo Since labels and descriptions are translated, we probably need to
+    //   cache per language?
     $cid = $this->getCacheId();
     if (empty($this->fields)) {
       if ($cached = \Drupal::cache()->get($cid)) {

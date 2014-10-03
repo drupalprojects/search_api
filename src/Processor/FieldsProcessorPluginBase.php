@@ -15,7 +15,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
- * Base class for processors that work on individual fields.
+ * Provides a base class for processors that work on individual fields.
  *
  * A form element to select the fields to run on is provided, as well as easily
  * overridable methods to provide the actual functionality. Subclasses can
@@ -36,11 +36,11 @@ use Drupal\search_api\Utility\Utility;
  */
 abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
 
+  // @todo Add defaultConfiguration() implementation and find a cleaner solution
+  //   for all the isset($this->configuration['fields']) checks.
+
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::buildConfigurationForm().
-   *
-   * Adds a "fields" checkboxes form element for selecting which fields the
-   * processor should run on.
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
@@ -71,9 +71,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::validateConfigurationForm().
-   *
-   * Validates the "fields" form element, filtering out the unset checkboxes.
+   * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
@@ -86,15 +84,12 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::preprocessIndexItems().
-   *
-   * Calls processField() for all fields for which testField() returns TRUE.
-   *
-   * @param \Drupal\search_api\Item\ItemInterface[] $items
-   *   An array of items to be preprocessed for indexing, formatted as specified
-   *   by \Drupal\search_api\Backend\BackendSpecificInterface::indexItems().
+   * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
+    // Annoyingly, this doc comment is needed for PHPStorm. See
+    // http://youtrack.jetbrains.com/issue/WI-23586
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
       foreach ($item->getFields() as $name => $field) {
         if ($this->testField($name, $field)) {
@@ -105,9 +100,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Overrides \Drupal\search_api\Plugin\ConfigurablePluginBase::preprocessSearchQuery().
-   *
-   * Calls processKeys() for the keys and processFilters() for the filters.
+   * {@inheritdoc}
    */
   public function preprocessSearchQuery(QueryInterface $query) {
     $keys = &$query->getKeys();
@@ -122,7 +115,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   /**
    * Processes a single field's value.
    *
-   * Calls process() either for the whole text, or each token, depending on the
+   * Calls process() either for each value, or each token, depending on the
    * type. Also takes care of extracting list values and of fusing returned
    * tokens back into a one-dimensional array.
    *
@@ -165,8 +158,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * @param array $tokens
    *   An array of tokens, possibly nested.
    * @param int $score
-   *   The score to use as a multiplier for all of the tokens contained in this
-   *   array of tokens.
+   *   (optional) The score to use as a multiplier for all of the tokens
+   *   contained in this array of tokens. Used internally.
    *
    * @return array
    *   A normalized tokens array, without any nested tokens arrays.
@@ -246,7 +239,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
         }
       }
       elseif ($f instanceof FilterInterface) {
-        $child_filters = & $f->getFilters();
+        $child_filters = &$f->getFilters();
         $this->processFilters($child_filters);
       }
     }
@@ -273,7 +266,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   /**
    * Determines whether a field of a certain type should be preprocessed.
    *
-   * The default implementation returns TRUE for "text", "tokens" and "string".
+   * The default implementation returns TRUE for "text", "tokenized_text" and
+   * "string".
    *
    * @param string $type
    *   The type of the field (either when preprocessing the field at index time,
