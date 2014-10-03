@@ -79,7 +79,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
       drupal_set_message($this->t('Failed to mark the following indexes for reindexing: @indexes. Check the logs for details.', $args), 'warning');
     }
 
-    $form_state->setRedirect('search_api.server_view', array('search_api_server' => $server->id()));
+    $form_state->setRedirect('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
   }
 
 }
