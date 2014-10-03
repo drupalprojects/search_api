@@ -229,9 +229,9 @@ function drush_search_api_disable() {
     if (!$indexes) {
       continue;
     }
-    foreach ($indexes as $index) {
-      if ($index_id || $index->status()) {
-        search_api_drush_set_index_state($index);
+    foreach ($indexes as $index_name => $index) {
+      if ($index->status()) {
+        search_api_drush_set_index_state($index, FALSE);
       }
     }
   }
