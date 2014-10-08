@@ -306,7 +306,7 @@ function theme_search_api_index($variables) {
       $rows[] = Utility::deepCopy($row);
     }
 
-    $cron_limit = $index->getOption('cron_limit', \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'));
+    $cron_limit = $index->getOption('cron_limit', \Drupal::config('search_api.settings')->get('default_cron_limit'));
     // Check if the cron limit is higher than zero.
     if ($cron_limit > 0) {
       $class = 'ok';

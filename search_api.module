@@ -26,8 +26,8 @@ function search_api_help($route_name) {
  *
  * This will first execute any pending server tasks. After that, items will
  * be indexed on all enabled indexes with a non-zero cron limit. Indexing will
- * run for the time set in the cron_limit config setting (defaulting to 15
- * seconds), but will at least index one batch of items on each index.
+ * run for the time set in the cron_worker_runtime config setting (defaulting to
+ * 15 seconds), but will at least index one batch of items on each index.
  */
 function search_api_cron() {
   // Execute pending server tasks.
@@ -50,7 +50,7 @@ function search_api_cron() {
   // Continue indexing, one batch from each index, until the time is up, but at
   // least index one batch per index.
   $settings = \Drupal::config('search_api.settings');
-  $default_cron_limit = $settings->get('cron_limit');
+  $default_cron_limit = $settings->get('default_cron_limit');
   $end = time() + $settings->get('cron_worker_runtime');
   $first_pass = TRUE;
   while (TRUE) {

@@ -250,9 +250,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Merge in default options.
     // @todo Use a dedicated method, like defaultConfiguration() for plugins?
-    //   And/or, better still, do this in postCreate() and not on every load.
+    //   And/or, better still, do this in postCreate() (and preSave()?) and not
+    //   on every load.
     $this->options += array(
-      'cron_limit' => \Drupal::configFactory()->get('search_api.settings')->get('cron_limit'),
+      'cron_limit' => \Drupal::config('search_api.settings')->get('default_cron_limit'),
       'index_directly' => TRUE,
     );
   }

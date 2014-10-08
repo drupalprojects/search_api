@@ -2,7 +2,7 @@ search_api.settings:
   type: mapping
   label: 'Search API settings'
   mapping:
-    cron_limit:
+    default_cron_limit:
       type: integer
       label: 'Default cron batch size'
     cron_worker_runtime:
