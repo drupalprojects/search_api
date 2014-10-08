@@ -139,6 +139,7 @@ class IndexBatchHelper {
     // the value will be set to zero which will cause the batch process to
     // stop.
     $remaining_item_count = ($index->hasValidTracker() ? $index->getTracker()->getRemainingItemsCount() : 0);
+
     // Check if an explicit limit needs to be used.
     if ($context['sandbox']['limit'] > -1) {
       // Calculate the remaining amount of items that can be indexed. Note that
@@ -151,6 +152,12 @@ class IndexBatchHelper {
       // Use the remaining item count as actual limit.
       $actual_limit = $remaining_item_count;
     }
+
+    // Store original count of items to be indexed to show progress properly.
+    if (empty($context['sandbox']['original_item_count'])) {
+      $context['sandbox']['original_item_count'] = min($remaining_item_count, $actual_limit);
+    }
+
     // Determine the number of items to index for this run.
     $to_index = min($actual_limit, $context['sandbox']['batch_size']);
     // Catch any exception that may occur during indexing.
@@ -166,11 +173,11 @@ class IndexBatchHelper {
         $context['message'] = static::formatPlural($context['results']['indexed'], 'Successfully indexed 1 item.', 'Successfully indexed @count items.');
       }
       // Everything has been indexed?
-      if ($indexed === 0 || $context['sandbox']['progress'] >= $context['sandbox']['limit']) {
+      if ($indexed === 0 || $context['sandbox']['progress'] >= $context['sandbox']['original_item_count']) {
         $context['finished'] = 1;
       }
       else {
-        $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['limit']);
+        $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['original_item_count']);
       }
     }
     catch (\Exception $ex) {
