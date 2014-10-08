@@ -226,10 +226,7 @@ function drush_search_api_disable() {
 
   foreach ($index_ids as $index_id) {
     $indexes = search_api_drush_get_indexes($index_id);
-    if (!$indexes) {
-      continue;
-    }
-    foreach ($indexes as $index_name => $index) {
+    foreach ($indexes as $index) {
       if ($index->status()) {
         search_api_drush_set_index_state($index, FALSE);
       }
