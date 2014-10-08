@@ -213,14 +213,17 @@ function search_api_theme() {
   return array(
     'search_api_admin_fields_table' => array(
       'render element' => 'element',
+      'function' => 'theme_search_api_admin_fields_table',
       'file' => 'search_api.theme.inc',
     ),
     'search_api_server' => array(
       'variables' => array('server' => NULL),
+      'function' => 'theme_search_api_server',
       'file' => 'search_api.theme.inc',
     ),
     'search_api_index' => array(
       'variables' => array('index' => NULL),
+      'function' => 'theme_search_api_index',
       'file' => 'search_api.theme.inc',
     ),
   );
