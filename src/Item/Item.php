@@ -148,6 +148,9 @@ class Item implements \IteratorAggregate, ItemInterface {
   public function getOriginalObject($load = TRUE) {
     if (!isset($this->originalObject) && $load) {
       $this->originalObject = $this->index->loadItem($this->id);
+      if (!$this->originalObject) {
+        throw new SearchApiException('Failed to load original object ' . $this->id);
+      }
     }
     return $this->originalObject;
   }

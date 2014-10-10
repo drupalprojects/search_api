@@ -11,6 +11,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -271,11 +272,17 @@ class Highlight extends ProcessorPluginBase {
     $needs_extraction = array_diff_key($needs_extraction, $needs_load);
 
     foreach ($needs_extraction as $item_id => $fields) {
-      Utility::extractFields($result_items[$item_id]->getOriginalObject(), $fields);
-      foreach ($fields as $field) {
-        $field_id = $field->getFieldIdentifier();
-        $result_items[$item_id]->setField($field_id, $field);
-        $items[$item_id][$field_id] = $field;
+      try {
+        Utility::extractFields($result_items[$item_id]->getOriginalObject(), $fields);
+        foreach ($fields as $field) {
+          $field_id = $field->getFieldIdentifier();
+          $result_items[$item_id]->setField($field_id, $field);
+          $items[$item_id][$field_id] = $field;
+        }
+      }
+      catch (SearchApiException $e) {
+        // Missing highlighting will be the least problem in this case – just
+        // ignore it.
       }
     }
 

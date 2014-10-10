@@ -33,7 +33,10 @@ interface ItemInterface extends \Traversable {
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface|null
    *   The wrapped object if it was previously set or could be loaded. NULL
-   *   otherwise.
+   *   if it wasn't set previously and $load is FALSE.
+   *
+   * @throws \Drupal\search_api\Exception\SearchApiException
+   *   If $load is TRUE but the object could not be loaded.
    */
   public function getOriginalObject($load = TRUE);
 

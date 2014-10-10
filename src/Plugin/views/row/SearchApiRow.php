@@ -11,6 +11,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
@@ -192,6 +193,16 @@ class SearchApiRow extends RowPluginBase {
    */
   public function render($row) {
     $datasource_id = $row->search_api_datasource;
+
+    if (!($row->_item instanceof ComplexDataInterface)) {
+      $context = array(
+        '%item_id' => $row->search_api_id,
+        '%view' => $this->view->storage->label(),
+      );
+      $this->getLogger()->warning('Failed to load item %item_id in view %view.', $context);
+      return '';
+    }
+
     try {
       $datasource = $this->index->getDatasource($datasource_id);
     }
