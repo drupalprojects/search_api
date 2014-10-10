@@ -122,6 +122,19 @@ function search_api_drush_command() {
     'aliases' => array('sapi-c'),
   );
 
+  $items['search-api-search'] = array(
+    'description' => 'Search for a keyword or phrase in a given index.',
+    'examples' => array(
+      'drush search-api-search node_index title' => dt('Search for "title" inside the "node_index" index.'),
+      'drush sapi-search node_index title' => dt('Alias to search for "title" inside the "node_index" index.'),
+    ),
+    'arguments' => array(
+      'index_id' => dt('The ID of an index.'),
+      'keyword' => dt('The keyword to look for.'),
+    ),
+    'aliases' => array('sapi-search'),
+  );
+
   return $items;
 }
 
@@ -468,4 +481,36 @@ function search_api_drush_set_index_state($index, $enable = TRUE) {
 
   $index->$method()->save();
   drush_log(dt("The index !index was successfully !desired_state.", array('!index' => $index->label(), '!desired_state' => $state_label)), 'ok');
+}
+
+/**
+ * Executes a simple keyword search and displays the results in a table.
+ *
+ * @param string $index_id
+ *   The ID of the index being searched.
+ * @param string $keyword
+ *   The search keyword.
+ */
+function drush_search_api_search($index_id, $keyword) {
+  $indexes = search_api_drush_get_indexes($index_id);
+  if (empty($indexes[$index_id])) {
+    return;
+  }
+  $query = $indexes[$index_id]->query();
+  if ($keyword) {
+    $query->keys($keyword);
+  }
+
+  // @todo Add paging?
+  $query->range(0, 10);
+
+  $results = $query->execute();
+
+  $rows = array();
+  // @todo Extend set of shown data.
+  foreach ($results->getResultItems() as $key => $item) {
+    $rows[$key]['id'] = $item->getId();
+  }
+
+  drush_print_table($rows);
 }
