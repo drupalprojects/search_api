@@ -124,7 +124,7 @@ class ContentAccessTest extends ProcessorTestBase {
     db_insert('node_access')
       ->fields(array(
         'nid' => $this->nodes[0]->id(),
-        'langcode' => $this->nodes[0]->language()->id,
+        'langcode' => $this->nodes[0]->language()->getId(),
         'gid' => $authenticated_user->id(),
         'realm' => 'search_api_test',
         'grant_view' => 1,

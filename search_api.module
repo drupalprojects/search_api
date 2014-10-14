@@ -75,7 +75,7 @@ function search_api_cron() {
               '@num' => $num,
               '%name' => $index->label(),
             );
-            watchdog('search_api', 'Indexed @num items for index %name.', $variables, WATCHDOG_INFO);
+            \Drupal::logger('search_api')->info('Indexed @num items for index %name.', $variables);
           }
         }
         catch (SearchApiException $e) {

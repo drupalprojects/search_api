@@ -92,7 +92,7 @@ class SearchApiCache extends Time {
         'query' => $query,
         'roles' => $user->getRoles(),
         'super-user' => $user->id() == 1, // special caching for super user.
-        'langcode' => \Drupal::languageManager()->getCurrentLanguage()->id,
+        'langcode' => \Drupal::languageManager()->getCurrentLanguage()->getId(),
         'base_url' => $GLOBALS['base_url'],
       );
       foreach (array('exposed_info', 'page', 'sort', 'order', 'items_per_page', 'offset') as $key) {
