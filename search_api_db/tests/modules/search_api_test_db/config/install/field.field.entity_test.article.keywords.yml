@@ -8,9 +8,9 @@ label: Keywords
 description: ''
 required: false
 default_value: {  }
-default_value_function: ''
+default_value_callback: ''
 settings: {  }
 dependencies:
-  entity:
+  config:
     - field.storage.entity_test.keywords
 field_type: string

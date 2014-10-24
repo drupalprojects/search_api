@@ -31,7 +31,7 @@ server: database_search_server
 status: 1
 langcode: en
 dependencies:
-  entity:
+  config:
     - field.instance.entity_test.article.body
     - field.instance.entity_test.article.keywords
     - field.instance.entity_test.item.body

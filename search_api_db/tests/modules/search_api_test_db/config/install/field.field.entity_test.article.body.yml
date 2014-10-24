@@ -8,10 +8,10 @@ label: Body
 description: ''
 required: false
 default_value: {  }
-default_value_function: ''
+default_value_callback: ''
 settings:
   display_summary: true
 dependencies:
-  entity:
+  config:
     - field.storage.entity_test.body
 field_type: text_with_summary
