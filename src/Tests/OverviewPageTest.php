@@ -39,7 +39,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
    * Tests the creation of a server and an index.
    */
   public function testServerAndIndexCreation() {
-    // Test the creation of a server.
+    // Test whether a newly created server appears on the overview page.
     $server = $this->getTestServer();
 
     $this->drupalGet($this->overviewPageUrl);
@@ -48,7 +48,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $this->assertRaw($server->get('description'), 'Description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Server is in proper table');
 
-    // Test the creation of an index.
+    // Test whether a newly created index appears on the overview page.
     $index = $this->getTestIndex();
 
     $this->drupalGet($this->overviewPageUrl);
@@ -58,6 +58,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
 
     // Test that an entity without bundles can be used as data source.
+    // @todo Why is this here? This hasn't got anything to do with the overview.
     $edit = array(
       'name' => $this->randomMachineName(),
       'machine_name' => Unicode::strtolower($this->randomMachineName()),
@@ -78,7 +79,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $index = $this->getTestIndex();
     $this->assertEntityStatusChange($index);
 
-    // Disable the server and test that both itself and the index has been
+    // Disable the server and test that both itself and the index have been
     // disabled.
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
@@ -86,6 +87,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index has been disabled.');
 
     // Test that an index can't be enabled if its server is disabled.
+    // @todo A non-working "Enable" link should not be displayed at all.
     $this->clickLink('Enable', 1);
     $this->drupalGet($this->overviewPageUrl);
     $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index could not be enabled.');
@@ -103,7 +105,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     // Create a new index without a server assigned and test that it can't be
     // enabled. The overview UI is not very consistent at the moment, so test
     // using API functions for now.
-    $index2 = $this->getTestIndex('WebTest Index 2', 'webtest_index_2', NULL);
+    $index2 = $this->getTestIndex('WebTest Index 2', 'test_index_2', NULL);
     $this->assertFalse($index2->status(), 'The newly created index without a server is disabled by default.');
 
     $index2->setStatus(TRUE)->save();
@@ -120,23 +122,16 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $this->drupalGet($this->overviewPageUrl);
     $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The newly created entity is enabled by default.');
 
-    // The first 'disable' link on the page belongs to our newly created server
-    // and the second 'disable' link belongs to our newly created index.
-    if ($entity instanceof ServerInterface) {
-      $this->clickLink('Disable');
-    }
-    else {
-      $this->clickLink('Disable', 1);
-    }
+    // The first "Disable" link on the page belongs to our server, the second
+    // one to our index.
+    $this->clickLink('Disable', $entity instanceof ServerInterface ? 0 : 1);
 
-    // Submit the confirmation form and test that entity has been disabled.
+    // Submit the confirmation form and test that the entity has been disabled.
     $this->drupalPostForm(NULL, array(), 'Disable');
     $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The entity has been disabled.');
 
-    // Now enable the entity.
+    // Now enable the entity and verify that the operation succeeded.
     $this->clickLink('Enable');
-
-    // And test that the enable operation succeeded.
     $this->drupalGet($this->overviewPageUrl);
     $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The entity has benn enabled.');
   }
@@ -158,7 +153,8 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
-    // As CsrfTokenGenerator uses current session Id we can not generate valid token
+    // Since CsrfTokenGenerator uses the current session ID we cannot generate a
+    // valid token.
     $this->assertRaw('<a href="' . $basic_url .'/enable?token=', 'Enable operation present');
     $this->assertNoRaw('<a href="' . $basic_url .'/disable">Disable</a>', 'Disable operation  is not present');
   }

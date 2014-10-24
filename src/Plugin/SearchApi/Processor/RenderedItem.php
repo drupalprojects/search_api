@@ -136,6 +136,7 @@ class RenderedItem extends ProcessorPluginBase {
     // Change the current user to our dummy implementation to ensure we are
     // using the configured roles.
     $original_user = $this->currentUser->getAccount();
+    // @todo Why not just use \Drupal\Core\Session\UserSession directly here?
     $this->currentUser->setAccount(new SearchApiUserSession($this->configuration['roles']));
 
     // Annoyingly, this doc comment is needed for PHPStorm. See

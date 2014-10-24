@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Tests\IndexStorageUnitTest.
@@ -7,29 +8,29 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Index\IndexInterface;
 use Drupal\simpletest\KernelTestBase;
 
 /**
- * Tests whether search indexes storage works correctly.
+ * Tests whether the storage of search indexes works correctly.
  *
  * @group search_api
  */
 class IndexStorageUnitTest extends KernelTestBase {
 
   /**
-   * Modules to enabled.
+   * Modules to enable for this test.
    *
-   * @var array
+   * @var string[]
    */
   public static $modules = array('search_api');
 
   /**
-   * Search API Index storage.
+   * The search index storage.
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
-  protected $controller;
+  protected $storage;
 
   /**
    * {@inheritdoc}
@@ -37,25 +38,25 @@ class IndexStorageUnitTest extends KernelTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->controller = $this->container->get('entity.manager')->getStorage('search_api_index');
+    $this->storage = $this->container->get('entity.manager')->getStorage('search_api_index');
   }
 
   /**
-   * Test all CRUD operations here as a queue of operations.
+   * Tests all CRUD operations as a queue of operations.
    */
   public function testIndexCRUD() {
-    $this->assertTrue($this->controller instanceof ConfigEntityStorage, 'The Search API Index storage controller is loaded.');
+    $this->assertTrue($this->storage instanceof ConfigEntityStorage, 'The Search API Index storage controller is loaded.');
 
     $index = $this->indexCreate();
-
     $this->indexLoad($index);
     $this->indexDelete($index);
   }
 
   /**
-   * Tests Index creation.
+   * Tests whether creating an index works correctly.
    *
-   * @return Index newly created instance of Index.
+   * @return \Drupal\search_api\Index\IndexInterface
+   *  The newly created search index.
    */
   public function indexCreate() {
     $indexData = array(
@@ -64,49 +65,34 @@ class IndexStorageUnitTest extends KernelTestBase {
       'tracker' => 'default_tracker',
     );
 
-    try {
-      $entity = $this->controller->create($indexData);
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
+    $index = $this->storage->create($indexData);
+    $this->assertTrue($index instanceof IndexInterface, 'The newly created entity is a search index.');
+    $index->save();
 
-    $this->assertTrue($entity instanceof Index, 'The newly created entity is Search API Index.');
-
-    $entity->save();
-
-    return $entity;
+    return $index;
   }
 
   /**
-   * Test Index loading.
+   * Tests whether loading an index works correctly.
    *
-   * @param $index Index
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index used for the test.
    */
-  public function indexLoad($index) {
-    try {
-      $entity = $this->controller->load($index->id());
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
-
-    $this->assertIdentical($index->get('name'), $entity->get('name'));
+  public function indexLoad(IndexInterface $index) {
+    $loaded_index = $this->storage->load($index->id());
+    $this->assertIdentical($index->label(), $loaded_index->label());
   }
 
   /**
-   * Test of deletion of given index.
+   * Tests whether deleting an index works correctly.
    *
-   * @param $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index used for the test.
    */
-  public function indexDelete($index) {
-    try {
-      $this->controller->delete(array($index));
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
-    $entity = $this->controller->load($index->id());
-    $this->assertFalse($entity);
+  public function indexDelete(IndexInterface $index) {
+    $this->storage->delete(array($index));
+    $loaded_index = $this->storage->load($index->id());
+    $this->assertNull($loaded_index);
   }
+
 }

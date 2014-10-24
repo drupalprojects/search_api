@@ -18,9 +18,9 @@ abstract class SearchApiWebTestBase extends WebTestBase {
   use StringTranslationTrait;
 
   /**
-   * Modules to enable.
+   * Modules to enable for this test.
    *
-   * @var array
+   * @var string[]
    */
   public static $modules = array('node', 'search_api', 'search_api_test_backend');
 

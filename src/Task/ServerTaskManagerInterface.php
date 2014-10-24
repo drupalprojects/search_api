@@ -11,7 +11,7 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Server\ServerInterface;
 
 /**
- * Defines the interface for the state system.
+ * Defines the interface for the server task manager.
  */
 interface ServerTaskManagerInterface {
 
