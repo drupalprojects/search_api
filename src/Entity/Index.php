@@ -586,7 +586,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $vars['%index'] = $this->label();
         \Drupal::logger('search_api')->warning('Warning while retrieving available fields for index %index: could not find a type mapping for the following fields: @fields.', $vars);
       }
-      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $this->getCacheTag());
+      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $this->getCacheTags());
     }
   }
 
@@ -1094,7 +1094,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->properties = NULL;
     $this->datasourceAdditionalFields = NULL;
     if ($include_stored) {
-      Cache::invalidateTags($this->getCacheTag());
+      Cache::invalidateTags($this->getCacheTags());
     }
   }
 
