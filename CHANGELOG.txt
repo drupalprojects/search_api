@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1184610 by drunken monkey: Added option to limit indexes to specific entity
+  bundles.
 - #2174163 by drunken monkey: Fixed detection of field type changes by data
   alterations.
 - #2305755 by drunken monkey, pfrenssen: Fixed invalidation of the stored index
