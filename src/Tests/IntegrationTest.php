@@ -60,7 +60,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->addAdditionalFieldsToIndex();
     $this->removeFieldsFromIndex();
 
-    $this->addFilter();
+    $this->addFilter('ignorecase');
     $this->configureFilterFields();
 
     $this->setReadOnly();
@@ -582,18 +582,18 @@ class IntegrationTest extends SearchApiWebTestBase {
   /**
    * Test that a filter can be added.
    */
-  protected function addFilter() {
+  protected function addFilter($filterName) {
     // Go to the index filter path
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
 
     $edit = array(
-      'processors[ignorecase][status]' => 1,
+      'processors['.$filterName.'][status]' => 1,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
-    $this->assertTrue(isset($processors['ignorecase']), 'Ignore case processor enabled');
+    $this->assertTrue(isset($processors[$filterName]), ucfirst($filterName) . ' processor enabled');
   }
 
   /**
