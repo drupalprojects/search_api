@@ -441,7 +441,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     if ($db_prefix = $this->database->tablePrefix()) {
       // Use strlen() instead of Unicode::strlen() since we want to measure
       // bytes, not characters.
-      $maxbytes -= strlen($db_prefix);
+      $maxbytes -= Unicode::strlen($db_prefix);
     }
 
     $base = $table = mb_strcut($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, $maxbytes);
@@ -1475,7 +1475,7 @@ class SearchApiDbBackend extends BackendPluginBase {
       if (is_numeric($proc)) {
         return ltrim($proc, '-0');
       }
-      elseif (drupal_strlen($proc) < $this->configuration['min_chars']) {
+      elseif (Unicode::strlen($proc) < $this->configuration['min_chars']) {
         $this->ignored[$keys] = 1;
         return NULL;
       }
