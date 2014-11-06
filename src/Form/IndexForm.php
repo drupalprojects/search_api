@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\String;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -514,6 +515,11 @@ class IndexForm extends EntityForm {
     $tracker = $form_state->get('tracker_plugin');
     $tracker_form_state = $form_state->get('tracker_form_state');
     $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
+
+    // Invalidate caches, so this gets picked up by the views wizard.
+    Cache::invalidateTags(array('views_data'));
+    // Remove this line when https://www.drupal.org/node/2370365 gets fixed.
+    Cache::invalidateTags(array('extension:views'));
   }
 
   /**
