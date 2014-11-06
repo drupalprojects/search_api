@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 
@@ -70,7 +71,7 @@ class IntegrationTest extends SearchApiWebTestBase {
   }
 
   protected function createServer() {
-    $server_id = drupal_strtolower($this->randomMachineName());
+    $server_id = Unicode::strtolower($this->randomMachineName());
     $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_server.add_form', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);

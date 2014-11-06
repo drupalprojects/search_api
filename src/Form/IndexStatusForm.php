@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Batch\IndexBatchHelper;
@@ -129,12 +130,12 @@ class IndexStatusForm extends FormBase {
     if ($form_state->getTriggeringElement()['#name'] === 'index_now') {
       $values = $form_state->getValues();
       // Get the translated "all" value and lowercase it for comparison.
-      $all_value = drupal_strtolower($values['all']);
+      $all_value = Unicode::strtolower($values['all']);
 
       foreach (array('limit', 'batch_size') as $field) {
         // Trim and lowercase the value so we correctly identify "all" values,
         // even if not matching exactly.
-        $value = drupal_strtolower(trim($values[$field]));
+        $value = Unicode::strtolower(trim($values[$field]));
 
         if ($value === $all_value) {
           $value = -1;
