@@ -11,7 +11,10 @@ namespace Drupal\search_api\Tests;
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Exception\SearchApiException;
 
-class IntegrationTestBase extends SearchApiWebTestBase {
+/**
+ * Base class for integration tests
+ */
+abstract class IntegrationTestBase extends SearchApiWebTestBase {
 
   /**
    * A search server ID.
