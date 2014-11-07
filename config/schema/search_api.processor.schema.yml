@@ -70,8 +70,11 @@ search_api.processor.plugin.html_filter:
       type: boolean
       label: 'Alt'
     tags:
-      type: text
+      type: sequence
       label: 'Tag boosts'
+      sequence:
+        - type: string
+          label: 'Selected tag'
 
 search_api.processor.plugin.ignorecase:
   type: mapping
