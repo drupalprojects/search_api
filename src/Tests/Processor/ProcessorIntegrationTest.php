@@ -2,22 +2,9 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
-use Drupal\search_api\Tests\IntegrationTest;
+use Drupal\search_api\Tests\IntegrationTestBase;
 
-class ProcessorIntegrationTest extends IntegrationTest {
-
-  /**
-   * Creates a search api server and index, and tracks content
-   */
-  public function setUp() {
-    parent::setUp();
-
-    $this->drupalLogin($this->adminUser);
-
-    $this->serverId = $this->createServer();
-    $this->createIndex();
-    $this->trackContent();
-  }
+class ProcessorIntegrationTest extends IntegrationTestBase {
 
   public function testNodeStatusIntegration() {
     $this->addFilter('node_status');
