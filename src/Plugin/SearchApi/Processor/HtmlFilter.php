@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\Yaml\Dumper;
@@ -68,7 +69,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     $tags = str_replace('\r\n', "\n", $tags);
     $tags = str_replace('"', '', $tags);
 
-    $t_args['@url'] = _url('https://en.wikipedia.org/wiki/YAML');
+    $t_args['@url'] = Url::fromUri('https://en.wikipedia.org/wiki/YAML');
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Tag boosts'),
