@@ -273,6 +273,7 @@ abstract class IntegrationTestBase extends SearchApiWebTestBase {
     return $index->getTracker()->getTotalItemsCount();
   }
 
+
   /**
    * Counts the number of remaining items from an index.
    *
