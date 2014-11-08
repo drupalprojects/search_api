@@ -7,8 +7,6 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\Core\Language\Language;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -16,17 +14,24 @@ use Drupal\search_api\Utility\Utility;
  */
 trait ExampleContentTrait {
 
+  /**
+   * The generated test entities, keyed by ID.
+   *
+   * @var \Drupal\entity_test\Entity\EntityTest[]
+   */
   protected $entities = array();
 
   /**
-   * Sets up the necessary bundles.
+   * Sets up the necessary bundles on the test entity type.
    */
   protected function setUpExampleStructure() {
-    // Create the required bundles.
     entity_test_create_bundle('item');
     entity_test_create_bundle('article');
   }
 
+  /**
+   * Creates several test entities.
+   */
   protected function insertExampleContent() {
     $count = \Drupal::entityQuery('entity_test')->count()->execute();
 
@@ -73,6 +78,15 @@ trait ExampleContentTrait {
     $this->assertEqual($count, 5, "$count items inserted.");
   }
 
+  /**
+   * Indexes all (unindexed) items on the specified index.
+   *
+   * @param string $index_id
+   *   The ID of the index on which items should be indexed.
+   *
+   * @return int
+   *   The number of successfully indexed items.
+   */
   protected function indexItems($index_id) {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = entity_load('search_api_index', $index_id);
@@ -93,12 +107,12 @@ trait ExampleContentTrait {
   }
 
   /**
-   * Returns the idem IDs for the given entity IDs.
+   * Returns the item IDs for the given entity IDs.
    *
    * @param array $entity_ids
    *   An array of entity IDs.
    *
-   * @return array
+   * @return string[]
    *   An array of item IDs.
    */
   protected function getItemIds(array $entity_ids) {

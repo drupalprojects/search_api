@@ -24,9 +24,9 @@ class ViewsTest extends SearchApiWebTestBase {
   protected $indexId = 'database_search_index';
 
   /**
-   * Modules to enable.
+   * Modules to enable for this test.
    *
-   * @var array
+   * @var string[]
    */
   public static $modules = array('search_api_test_views');
 

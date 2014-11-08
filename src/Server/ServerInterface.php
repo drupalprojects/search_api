@@ -27,7 +27,7 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
    * Determines whether the backend is valid.
    *
    * @return bool
-   *   TRUE if the backend is valid, otherwise FALSE.
+   *   TRUE if the backend is valid, FALSE otherwise.
    */
   public function hasValidBackend();
 
@@ -51,15 +51,15 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
   public function getBackend();
 
   /**
-   * Gets the backend config of this server's backend.
+   * Retrieves the configuration of this server's backend plugin.
    *
    * @return array
-   *   An array with the backend config.
+   *   An associative array with the backend configuration.
    */
   public function getBackendConfig();
 
   /**
-   * Sets the backend config of this server's backend.
+   * Sets the configuration of this server's backend plugin.
    *
    * @param array $backend_config
    *   The new configuration for the backend.
@@ -75,7 +75,7 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
    *   (optional) Additional properties that the indexes should have.
    *
    * @return \Drupal\search_api\Index\IndexInterface[]
-   *   An array of IndexInterface instances.
+   *   An array of all matching search indexes.
    */
   public function getIndexes(array $properties = array());
 

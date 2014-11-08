@@ -30,7 +30,9 @@ class SearchApiDbTest extends EntityUnitTestBase {
   use StringTranslationTrait;
 
   /**
-   * {@inheritdoc}
+   * Modules to enable for this test.
+   *
+   * @var string[]
    */
   public static $modules = array('field', 'menu_link', 'search_api', 'search_api_db', 'search_api_test_db');
 

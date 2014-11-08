@@ -39,9 +39,9 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
   protected $datasource;
 
   /**
-   * Modules to enable.
+   * Modules to enable for this test.
    *
-   * @var array
+   * @var string[]
    */
   public static $modules = array('entity', 'user', 'search_api', 'search_api_test_backend');
 

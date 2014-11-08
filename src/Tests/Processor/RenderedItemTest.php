@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Tests\Processor\RenderedItemTest.
@@ -18,13 +19,6 @@ use Drupal\Core\TypedData\DataDefinition;
 class RenderedItemTest extends ProcessorTestBase {
 
   /**
-   * Data for all nodes which are published.
-   *
-   * @var array
-   */
-  protected $node_data;
-
-  /**
    * List of nodes which are published.
    *
    * @var \Drupal\node\Entity\Node[]
@@ -32,35 +26,46 @@ class RenderedItemTest extends ProcessorTestBase {
   protected $nodes;
 
   /**
-   * Modules to enable for this test.
+   * Data for all nodes which are published.
    *
    * @var array
+   */
+  protected $node_data;
+
+  /**
+   * Modules to enable for this test.
+   *
+   * @var string[]
    */
   public static $modules = array('user', 'node', 'menu_link', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference', 'system', 'routing');
 
   /**
-   * Setup a minimalistic environment including a an RenderedItem Processor.
+   * Performs setup tasks before each individual test method is run.
    */
   public function setUp() {
     parent::setUp('rendered_item');
 
-    // Load configuration and needed schemas.
+    // Load configuration and needed schemas. (The necessary schemas for using
+    // nodes are already installed by the parent method.)
     $this->installConfig(array('system', 'filter', 'node', 'comment'));
     $this->installSchema('system', array('router'));
     \Drupal::service('router.builder')->rebuild();
 
     // Create a node type for testing.
-    $type = entity_create('node_type', array('type' => 'page', 'name' => 'page'));
+    $type = entity_create('node_type', array(
+      'type' => 'page',
+      'name' => 'page',
+    ));
     $type->save();
 
-    // Create anonymous user name.
+    // Create anonymous user role.
     $role = entity_create('user_role', array(
       'id' => 'anonymous',
       'label' => 'anonymous',
     ));
     $role->save();
 
-    // Insert anonymous user into the database.
+    // Insert the anonymous user into the database.
     $anonymous_user = entity_create('user', array(
       'uid' => 0,
       'name' => '',
@@ -82,7 +87,7 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->nodes[1] = entity_create('node', $this->node_data);
     $this->nodes[1]->save();
 
-    // Configuration.
+    // Set proper configuration for the tested processor.
     $config = $this->processor->getConfiguration();
     $config['view_mode'] = array(
       'entity:node' => 'full',
@@ -92,7 +97,7 @@ class RenderedItemTest extends ProcessorTestBase {
     $config['roles'] = array($role->id());
     $this->processor->setConfiguration($config);
 
-    // Enable the processor field on the index.
+    // Enable the processor's field on the index.
     $fields = $this->index->getOption('fields');
     $fields['rendered_item'] = array(
       'type' => 'string',
@@ -138,10 +143,11 @@ class RenderedItemTest extends ProcessorTestBase {
   }
 
   /**
-   * Tests whether the correct property is added by the processor.
+   * Tests whether the property is correctly added by the processor.
    */
   public function testAlterPropertyDefinitions() {
     // Check for modified properties when no datasource is given.
+    /** @var \Drupal\Core\TypedData\DataDefinitionInterface[] $properties */
     $properties = array();
     $this->processor->alterPropertyDefinitions($properties, NULL);
     $this->assertTrue(array_key_exists('rendered_item', $properties), 'The Properties where modified with the "rendered_item".');

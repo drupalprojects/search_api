@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\search_api\Tests\ServerStorageUnitTest.
@@ -8,24 +9,25 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Server\ServerInterface;
 use Drupal\simpletest\KernelTestBase;
 
 /**
- * Tests whether search servers storage works correctly.
+ * Tests whether the storage of search indexes works correctly.
  *
  * @group search_api
  */
 class ServerStorageUnitTest extends KernelTestBase {
 
   /**
-   * Modules to enabled.
+   * Modules to enable for this test.
    *
-   * @var array
+   * @var string[]
    */
   public static $modules = array('search_api', 'search_api_test_backend');
 
   /**
-   * Search API Server storage controller.
+   * The search server storage.
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
@@ -42,21 +44,21 @@ class ServerStorageUnitTest extends KernelTestBase {
   }
 
   /**
-   * Test all CRUD operations here as a queue of operations.
+   * Tests all CRUD operations as a queue of operations.
    */
   public function testIndexCRUD() {
     $this->assertTrue($this->controller instanceof ConfigEntityStorage, 'The Search API Server storage controller is loaded.');
 
-    $index = $this->serverCreate();
-
-    $this->serverLoad($index);
-    $this->serverDelete($index);
+    $server = $this->serverCreate();
+    $this->serverLoad($server);
+    $this->serverDelete($server);
   }
 
   /**
-   * Tests Server creation.
+   * Tests whether creating a server works correctly.
    *
-   * @return Server newly created instance of Index.
+   * @return \Drupal\search_api\Server\ServerInterface
+   *   The newly created search server.
    */
   public function serverCreate() {
     $serverData = array(
@@ -65,51 +67,36 @@ class ServerStorageUnitTest extends KernelTestBase {
       'backend' => 'search_api_test_backend',
     );
 
-    try {
-      $entity = $this->controller->create($serverData);
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
+    $server = $this->controller->create($serverData);
 
-    $this->assertTrue($entity instanceof Server, 'The newly created entity is Search API Server.');
+    $this->assertTrue($server instanceof ServerInterface, 'The newly created entity is Search API Server.');
 
-    $entity->save();
+    $server->save();
 
-    return $entity;
+    return $server;
   }
 
   /**
-   * Test Index loading.
+   * Tests whether loading a server works correctly.
    *
-   * @param $index Server
+   * @param \Drupal\search_api\Server\ServerInterface $server
+   *   The server used for this test.
    */
-  public function serverLoad($server) {
-    try {
-      $entity = $this->controller->load($server->id());
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
-
-    $this->assertIdentical($server->get('label'), $entity->get('label'));
+  public function serverLoad(ServerInterface $server) {
+    $loaded_server = $this->controller->load($server->id());
+    $this->assertIdentical($server->get('label'), $loaded_server->get('label'));
   }
 
   /**
-   * Test of deletion of given index.
+   * Tests whether deleting a server works correctly.
    *
-   * @param $server
+   * @param \Drupal\search_api\Server\ServerInterface $server
+   *   The server used for this test.
    */
-  public function serverDelete($server) {
-    try {
-      $this->controller->delete(array($server));
-    }
-    catch (\Exception $e) {
-      $this->fail($e->getMessage() . ' exception was thrown.');
-    }
-
-    $entity = $this->controller->load($server->id());
-
-    $this->assertFalse($entity);
+  public function serverDelete(ServerInterface $server) {
+    $this->controller->delete(array($server));
+    $loaded_server = $this->controller->load($server->id());
+    $this->assertNull($loaded_server);
   }
+
 }

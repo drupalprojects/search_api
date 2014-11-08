@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\String;
-use Drupal\Core\Language\Language;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -29,21 +28,23 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
   protected $testEntityTypeId = 'entity_test_mul';
 
   /**
-   * The test server.
+   * The search server used for testing.
    *
    * @var \Drupal\search_api\Server\ServerInterface
    */
   protected $server;
 
   /**
-   * The test index.
+   * The search index used for testing.
    *
    * @var \Drupal\search_api\Index\IndexInterface
    */
   protected $index;
 
   /**
-   * {@inheritdoc}
+   * Modules to enable for this test.
+   *
+   * @var string[]
    */
   public static $modules = array('search_api', 'search_api_test_backend');
 
@@ -140,7 +141,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items in total.');
 
     // Set two translations for the first entity and test that the datasource
-    // returns three separate item IDs for each translation.
+    // returns three separate item IDs, one for each translation.
     /** @var \Drupal\Core\Entity\ContentEntityInterface $translation */
     $translation = $entity_1->getTranslation($this->langcodes[1]);
     $translation->save();
