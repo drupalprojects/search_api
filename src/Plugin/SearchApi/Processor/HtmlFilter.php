@@ -69,7 +69,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     $tags = str_replace('\r\n', "\n", $tags);
     $tags = str_replace('"', '', $tags);
 
-    $t_args['@url'] = Url::fromUri('https://en.wikipedia.org/wiki/YAML');
+    $t_args['@url'] = Url::fromUri('https://en.wikipedia.org/wiki/YAML')->toString();
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Tag boosts'),
