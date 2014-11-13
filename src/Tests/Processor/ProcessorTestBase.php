@@ -56,7 +56,6 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
   public function setUp($processor = NULL) {
     parent::setUp();
 
-    $this->installEntitySchema('node');
     $this->installSchema('node', array('node_access'));
     $this->installEntitySchema('comment');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
