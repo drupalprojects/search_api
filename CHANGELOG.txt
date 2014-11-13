@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2364247 by drunken monkey: Fixed documentation for
+  SearchApiQueryFilterInterface::getFilters().
 - #2364875 by Xano: Fixed Views argument handler for fulltext fields.
 - #1184610 by drunken monkey: Added option to limit indexes to specific entity
   bundles.
