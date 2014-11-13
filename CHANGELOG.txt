@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2359201 by drunken monkey: Added a "List" option to "Aggregated fields".
 - #2364247 by drunken monkey: Fixed documentation for
   SearchApiQueryFilterInterface::getFilters().
 - #2364875 by Xano: Fixed Views argument handler for fulltext fields.
