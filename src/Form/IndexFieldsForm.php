@@ -210,7 +210,8 @@ class IndexFieldsForm extends EntityForm {
           '#disabled' => $additional_field->isLocked(),
         );
       }
-      $build['additional']['add'] = array(
+      $build['additional']['actions']['#type'] = 'actions';
+      $build['additional']['actions']['add'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Update'),
       );
