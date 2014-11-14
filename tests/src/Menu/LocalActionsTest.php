@@ -20,7 +20,7 @@ class LocalActionsTest extends UnitTestCase {
    * Tests local actions existence.
    */
   public function testLocalActions() {
-    // @todo implement it once there is an integration test for local actions
+    // @todo Implement once there is an integration test for local actions.
   }
 
 }

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Processor\FieldsProcessorPluginBase.
+ * Contains \Drupal\search_api\Processor\FieldsProcessorPluginBase.
  */
 
 namespace Drupal\search_api\Processor;

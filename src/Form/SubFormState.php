@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\search_api\Form\SubFormState.
+ * Contains \Drupal\search_api\Form\SubFormState.
  */
 
 namespace Drupal\search_api\Form;

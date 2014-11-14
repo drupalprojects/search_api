@@ -1,4 +1,4 @@
-name: 'Search API Test Backend'
+name: 'Search API Backend Test'
 type: module
 description: 'Support module for Search API Backend Tests.'
 package: Search

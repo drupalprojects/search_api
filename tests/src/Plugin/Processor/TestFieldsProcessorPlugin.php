@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin.
  */
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
@@ -11,7 +11,12 @@ use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
- * Test class for processors that work on individual fields.
+ * Mimics a processor working on individual fields of items.
+ *
+ * Used by
+ * \Drupal\Tests\search_api\Plugin\Processor\FieldsProcessorPluginBaseTest to
+ * test the functionality provided by
+ * \Drupal\search_api\Processor\FieldsProcessorPluginBase.
  */
 class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
 

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Offers an implementation of the Search API that provides a fake server for indexing content.
+ * Provides a fake search server and other help for testing purposes.
  */
 
 use Drupal\Core\Session\AccountInterface;

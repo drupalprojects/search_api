@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\Tests\search_api\TestUserInterface.
+ * Contains \Drupal\Tests\search_api\TestUserInterface.
  */
 
 namespace Drupal\Tests\search_api;
