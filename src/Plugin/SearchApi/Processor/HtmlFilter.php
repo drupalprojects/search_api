@@ -95,6 +95,10 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     try {
       $parser = new Parser();
       $tags = $parser->parse($tags);
+      if (!is_array($tags)) {
+        $errors[] = $this->t('Tags is not a valid YAML map. See @link for information on how to write correctly formed YAML.', array('@link' => 'http://yaml.org'));
+        $tags = array();
+      }
     }
     catch (ParseException $exception) {
       $errors[] = $this->t('Tags is not valid YAML. See @link for information on how to write correctly formed YAML.', array('@link' => 'http://yaml.org'));

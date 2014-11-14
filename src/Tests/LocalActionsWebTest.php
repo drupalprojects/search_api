@@ -30,6 +30,9 @@ class LocalActionsWebTest extends LocalActionTest {
    */
   protected $adminUser;
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp();
     // Create users.
@@ -37,12 +40,10 @@ class LocalActionsWebTest extends LocalActionTest {
     $this->drupalLogin($this->adminUser);
   }
 
-  public function testLocalAction() {}
-
   /**
-   * Tests whether all expected local actions exist.
+   * {@inheritdoc}
    */
-  public function testLocalActions() {
+  public function testLocalAction() {
     // @todo Merge into OverviewPageTest or IntegrationTest? Or get rid of the
     //   triple loop, or do something useful with it.
     foreach ($this->getSearchAPIPageRoutes() as $routes) {
@@ -68,4 +69,5 @@ class LocalActionsWebTest extends LocalActionTest {
       array('/admin/config/search/search-api'),
     );
   }
+
 }

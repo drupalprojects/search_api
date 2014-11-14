@@ -114,7 +114,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     );
     $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
 
-    // Test indexing the new entity
+    // Test indexing the new entity.
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 0, 'The index is empty.');
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items to be indexed.');
     $this->index->index();

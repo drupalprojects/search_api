@@ -8,6 +8,8 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -25,25 +27,23 @@ abstract class SearchApiWebTestBase extends WebTestBase {
   public static $modules = array('node', 'search_api', 'search_api_test_backend');
 
   /**
-   * Account object representing a user with Search API administration
-   * privileges.
+   * An admin user used for this test.
    *
-   * @var \Drupal\Core\Session\AccountInterface $account
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
 
   /**
-   * Account object representing a user without Search API administration
-   * privileges.
+   * A user without Search API admin permission.
    *
-   * @var \Drupal\Core\Session\AccountInterface $account
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $unauthorizedUser;
 
   /**
-   * Account object representing a anonymous user
+   * The anonymous user used for this test.
    *
-   * @var \Drupal\Core\Session\AccountInterface $account
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $anonymousUser;
 
@@ -60,11 +60,12 @@ abstract class SearchApiWebTestBase extends WebTestBase {
   public function setUp() {
     parent::setUp();
 
-    // Create users.
+    // Create the users used for the tests.
     $this->adminUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
     $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
     $this->anonymousUser = $this->drupalCreateUser();
 
+    // Get the URL generator.
     $this->urlGenerator = $this->container->get('url_generator');
 
     // Create a node article type.
@@ -83,21 +84,36 @@ abstract class SearchApiWebTestBase extends WebTestBase {
   /**
    * Creates or deletes a server.
    *
+   * @param string $name
+   *   (optional) The name of the server.
+   * @param string $machine_name
+   *   (optional) The ID of the server.
+   * @param string $backend_id
+   *   (optional) The ID of the backend to set for the server.
+   * @param array $backend_config
+   *   (optional) The backend configuration to set for the server.
+   * @param bool $reset
+   *   (optional) If TRUE, delete the server instead of creating it. (Only the
+   *   server's ID is required in that case.)
+   *
    * @return \Drupal\search_api\Server\ServerInterface
    *   A search server.
    */
-  public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $backend_id = 'search_api_test_backend', $options = array(), $reset = FALSE) {
-    /** @var $server \Drupal\search_api\Server\ServerInterface */
-    $server = entity_load('search_api_server', $machine_name);
-
-    if ($server) {
-      if ($reset) {
+  public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $backend_id = 'search_api_test_backend', $backend_config = array(), $reset = FALSE) {
+    if ($reset) {
+      $server = Server::load($machine_name);
+      if ($server) {
         $server->delete();
       }
     }
     else {
-      $server = entity_create('search_api_server', array('name' => $name, 'machine_name' => $machine_name, 'backend' => $backend_id));
-      $server->set('description', $name);
+      $server = Server::create(array(
+        'machine_name' => $machine_name,
+        'name' => $name,
+        'description' => $name,
+        'backend' => $backend_id,
+        'backend_config' => $backend_config,
+      ));
       $server->save();
     }
 
@@ -107,21 +123,36 @@ abstract class SearchApiWebTestBase extends WebTestBase {
   /**
    * Creates or deletes an index.
    *
+   * @param string $name
+   *   (optional) The name of the index.
+   * @param string $machine_name
+   *   (optional) The ID of the index.
+   * @param string $server_id
+   *   (optional) The server to which the index should be attached.
+   * @param string $datasource_id
+   *   (optional) The ID of a datasource to set for this index.
+   * @param bool $reset
+   *   (optional) If TRUE, delete the index instead of creating it. (Only the
+   *   index's ID is required in that case.)
+   *
    * @return \Drupal\search_api\Index\IndexInterface
-   *   A search server.
+   *   A search index.
    */
-  public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_plugin_id = 'entity:node', $reset = FALSE) {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
-    $index = entity_load('search_api_index', $machine_name);
-
-    if ($index) {
-      if ($reset) {
+  public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_id = 'entity:node', $reset = FALSE) {
+    if ($reset) {
+      $index = Index::load($machine_name);
+      if ($index) {
         $index->delete();
       }
     }
     else {
-      $index = entity_create('search_api_index', array('name' => $name, 'machine_name' => $machine_name, 'datasourcePluginId' => $datasource_plugin_id, 'server' => $server_id));
-      $index->set('description', $name);
+      $index = Index::create(array(
+        'machine_name' => $machine_name,
+        'name' => $name,
+        'description' => $name,
+        'server' => $server_id,
+        'datasources' => array($datasource_id),
+      ));
       $index->save();
     }
 

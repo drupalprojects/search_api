@@ -178,7 +178,17 @@ display:
           provider: search_api
       sorts: {  }
       title: 'Fulltext test index'
-      header: {  }
+      header:
+        result:
+          id: result
+          table: views
+          field: result
+          relationship: none
+          group_type: group
+          admin_label: ''
+          empty: false
+          content: 'Displaying @total search results'
+          plugin_id: result
       footer: {  }
       empty: {  }
       relationships: {  }

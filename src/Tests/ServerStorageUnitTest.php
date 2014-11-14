@@ -8,12 +8,11 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Server\ServerInterface;
 use Drupal\simpletest\KernelTestBase;
 
 /**
- * Tests whether the storage of search indexes works correctly.
+ * Tests whether the storage of search servers works correctly.
  *
  * @group search_api
  */
@@ -31,7 +30,7 @@ class ServerStorageUnitTest extends KernelTestBase {
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
    */
-  protected $controller;
+  protected $storage;
 
   /**
    * {@inheritdoc}
@@ -40,14 +39,14 @@ class ServerStorageUnitTest extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('search_api', array('search_api_task'));
-    $this->controller = $this->container->get('entity.manager')->getStorage('search_api_server');
+    $this->storage = $this->container->get('entity.manager')->getStorage('search_api_server');
   }
 
   /**
    * Tests all CRUD operations as a queue of operations.
    */
   public function testIndexCRUD() {
-    $this->assertTrue($this->controller instanceof ConfigEntityStorage, 'The Search API Server storage controller is loaded.');
+    $this->assertTrue($this->storage instanceof ConfigEntityStorage, 'The Search API Server storage controller is loaded.');
 
     $server = $this->serverCreate();
     $this->serverLoad($server);
@@ -66,11 +65,9 @@ class ServerStorageUnitTest extends KernelTestBase {
       'name' => $this->randomString(),
       'backend' => 'search_api_test_backend',
     );
+    $server = $this->storage->create($serverData);
 
-    $server = $this->controller->create($serverData);
-
-    $this->assertTrue($server instanceof ServerInterface, 'The newly created entity is Search API Server.');
-
+    $this->assertTrue($server instanceof ServerInterface, 'The newly created entity is a Search API Server.');
     $server->save();
 
     return $server;
@@ -83,8 +80,8 @@ class ServerStorageUnitTest extends KernelTestBase {
    *   The server used for this test.
    */
   public function serverLoad(ServerInterface $server) {
-    $loaded_server = $this->controller->load($server->id());
-    $this->assertIdentical($server->get('label'), $loaded_server->get('label'));
+    $loaded_server = $this->storage->load($server->id());
+    $this->assertIdentical($server->label(), $loaded_server->label());
   }
 
   /**
@@ -94,8 +91,8 @@ class ServerStorageUnitTest extends KernelTestBase {
    *   The server used for this test.
    */
   public function serverDelete(ServerInterface $server) {
-    $this->controller->delete(array($server));
-    $loaded_server = $this->controller->load($server->id());
+    $this->storage->delete(array($server));
+    $loaded_server = $this->storage->load($server->id());
     $this->assertNull($loaded_server);
   }
 

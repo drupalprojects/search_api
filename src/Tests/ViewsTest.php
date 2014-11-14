@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Tests;
 
 /**
- * Provides views tests for Search API.
+ * Tests the Views integration of the Search API.
  *
  * @group search_api
  */
@@ -17,18 +17,18 @@ class ViewsTest extends SearchApiWebTestBase {
   use ExampleContentTrait;
 
   /**
-   * A search index ID.
-   *
-   * @var string
-   */
-  protected $indexId = 'database_search_index';
-
-  /**
    * Modules to enable for this test.
    *
    * @var string[]
    */
   public static $modules = array('search_api_test_views');
+
+  /**
+   * A search index ID.
+   *
+   * @var string
+   */
+  protected $indexId = 'database_search_index';
 
   /**
    * {@inheritdoc}
@@ -47,21 +47,23 @@ class ViewsTest extends SearchApiWebTestBase {
     $this->assertEqual($this->indexItems($this->indexId), 5, '5 items were indexed.');
 
     $this->drupalGet('search-api-test-fulltext');
-    // By default, it should show all entities.
-    foreach ($this->entities as $entity) {
-      $this->assertText($entity->label());
+    // By default, the view should show all entities.
+    $this->assertText('Displaying 5 search results', 'The search view displays the correct number of results.');
+    foreach ($this->entities as $id => $entity) {
+      $this->assertText($entity->label(), "Entity #$id found in the results.");
     }
 
     // Search for something.
     $this->drupalGet('search-api-test-fulltext', array('query' => array('search_api_fulltext' => 'foobar')));
 
-    // Now it should only find two entities.
+    // Now it should only find one entity.
+    $this->assertText('Displaying 1 search results', 'The search view displays the correct number of results.');
     foreach ($this->entities as $id => $entity) {
       if ($id == 3) {
-        $this->assertText($entity->label());
+        $this->assertText($entity->label(), "Entity #$id found in the results.");
       }
       else {
-        $this->assertNoText($entity->label());
+        $this->assertNoText($entity->label(), "Entity #$id not found in the results.");
       }
     }
   }

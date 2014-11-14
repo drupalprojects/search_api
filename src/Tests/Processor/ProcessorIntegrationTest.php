@@ -1,26 +1,26 @@
 <?php
 
+/**
+ * @file
+ * Contains \Drupal\search_api\Tests\Processor\ProcessorIntegrationTest.
+ */
+
 namespace Drupal\search_api\Tests\Processor;
 
-use Drupal\Component\Utility\Unicode;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Tests\SearchApiWebTestBase;
 
 /**
- * Tests the processors functionality of the Search API backend.
+ * Tests the admin UI for processors.
  *
  * @group search_api
  */
+// @todo Move this whole class into a single IntegrationTest check*() method?
+// @todo Add tests for the "Aggregated fields" and "Role filter" processors.
 class ProcessorIntegrationTest extends SearchApiWebTestBase {
 
   /**
-   * A search server ID.
-   *
-   * @var string
-   */
-  protected $serverId;
-
-  /**
-   * A search index ID.
+   * The ID of the search index used by this test.
    *
    * @var string
    */
@@ -33,100 +33,48 @@ class ProcessorIntegrationTest extends SearchApiWebTestBase {
     parent::setUp();
     $this->drupalLogin($this->adminUser);
 
-    $this->createServer();
-    $this->createIndex();
-    $this->trackContent();
+    $this->indexId = 'test_index';
+    Index::create(array(
+      'name' => 'Test index',
+      'machine_name' => $this->indexId,
+      'status' => 1,
+      'datasources' => array('entity:node'),
+    ))->save();
   }
 
-  public function testNodeStatusIntegration() {
-    $this->addFilter('node_status');
+  /**
+   * Tests the admin UI for processors.
+   *
+   * Calls the other test methods in this class, named check*Integration(), to
+   * avoid the overhead of having one test per processor.
+   */
+  public function testProcessorIntegration() {
+    $this->checkContentAccessIntegration();
+    $this->checkHighlightIntegration();
+    $this->checkHtmlFilterIntegration();
+    $this->checkIgnoreCaseIntegration();
+    $this->checkIgnoreCharactersIntegration();
+    $this->checkLanguageIntegration();
+    $this->checkNodeStatusIntegration();
+    $this->checkRenderedItemIntegration();
+    $this->checkStopWordsIntegration();
+    $this->checkTokenizerIntegration();
+    $this->checkTransliterationIntegration();
+    $this->checkUrlFieldIntegration();
   }
 
-  public function testIgnoreCaseIntegration() {
-    $this->addFilter('ignorecase');
-
-    $edit = array(
-      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
-    );
-    $this->editSettingsForm($edit, 'ignorecase');
+  /**
+   * Tests the UI for the "Content access" processor.
+   */
+  public function checkContentAccessIntegration() {
+    $this->enableProcessor('content_access');
   }
 
-  public function testUrlFieldIntegration() {
-    $this->addFilter('add_url');
-  }
-
-  public function testContentAccessIntegration() {
-    $this->addFilter('content_access');
-  }
-
-  public function testLanguageIntegration() {
-    $this->addFilter('language');
-  }
-
-  public function testTransliterationIntegration() {
-    $this->addFilter('transliteration');
-
-    $edit = array(
-      'processors[transliteration][settings][fields][search_api_language]' => FALSE,
-    );
-    $this->editSettingsForm($edit, 'transliteration');
-  }
-
-  public function testTokenizerIntegration() {
-    $this->addFilter('tokenizer');
-
-    $edit = array(
-      'processors[tokenizer][settings][spaces]' => '',
-      'processors[tokenizer][settings][overlap_cjk]' => FALSE,
-      'processors[tokenizer][settings][minimum_word_size]' => 2,
-    );
-    $this->editSettingsForm($edit, 'tokenizer');
-  }
-
-  public function testStopWordsIntegration() {
-    $this->addFilter('stopwords');
-
-    $edit = array(
-      'processors[stopwords][settings][stopwords]' => 'the',
-    );
-    $this->editSettingsForm($edit, 'stopwords');
-  }
-
-  public function testRenderedItemIntegration() {
-    $this->addFilter('rendered_item');
-
-    $edit = array(
-      'processors[rendered_item][settings][roles][]' => 'authenticated',
-      'processors[rendered_item][settings][view_mode][entity:node]' => 'default',
-    );
-    $this->editSettingsForm($edit, 'rendered_item');
-  }
-
-  public function testIgnoreCharactersIntegration() {
-    $this->addFilter('ignore_character');
-
-    $edit = array(
-      'processors[ignore_character][settings][fields][search_api_language]' => FALSE,
-      'processors[ignore_character][settings][ignorable]' => '[¿¡!?,.]',
-      'processors[ignore_character][settings][strip][character_sets][Cc]' => TRUE,
-    );
-    $this->editSettingsForm($edit, 'ignore_character');
-  }
-
-  public function testHTMLFilterIntegration() {
-    $this->addFilter('html_filter');
-
-    $edit = array(
-      'processors[html_filter][settings][fields][search_api_language]' => FALSE,
-      'processors[html_filter][settings][title]' => FALSE,
-      'processors[html_filter][settings][alt]' => FALSE,
-      'processors[html_filter][settings][tags]' => 'h1: 10'
-    );
-    $this->editSettingsForm($edit, 'html_filter');
-  }
-
-  public function testHighlightFilter() {
-    $this->addFilter('highlight');
+  /**
+   * Tests the UI for the "Highlight" processor.
+   */
+  public function checkHighlightIntegration() {
+    $this->enableProcessor('highlight');
 
     $edit = array(
       'processors[highlight][settings][highlight]' => 'never',
@@ -139,164 +87,172 @@ class ProcessorIntegrationTest extends SearchApiWebTestBase {
   }
 
   /**
-   * Post edit settings to admin form
-   *
-   * @param array $editArray
-   * @param string $processorName
+   * Tests the UI for the "HTML filter" processor.
    */
-  private function editSettingsForm($editArray, $processorName) {
+  public function checkHtmlFilterIntegration() {
+    // Enable the "HTML filter" processor in the same request as setting the
+    // settings, since we otherwise run into a weird bug only present in the
+    // testing environment regarding the YAML in the "tags" setting.
+    $edit = array(
+      'processors[html_filter][status]' => 1,
+      'processors[html_filter][settings][fields][search_api_language]' => FALSE,
+      'processors[html_filter][settings][title]' => FALSE,
+      'processors[html_filter][settings][alt]' => FALSE,
+      'processors[html_filter][settings][tags]' => 'h1: 10'
+    );
+    $this->editSettingsForm($edit, 'html_filter');
+  }
+
+  /**
+   * Tests the UI for the "Ignore case" processor.
+   */
+  public function checkIgnoreCaseIntegration() {
+    $this->enableProcessor('ignorecase');
+
+    $edit = array(
+      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
+    );
+    $this->editSettingsForm($edit, 'ignorecase');
+  }
+
+  /**
+   * Tests the UI for the "Ignore characters" processor.
+   */
+  public function checkIgnoreCharactersIntegration() {
+    $this->enableProcessor('ignore_character');
+
+    $edit = array(
+      'processors[ignore_character][settings][fields][search_api_language]' => FALSE,
+      'processors[ignore_character][settings][ignorable]' => '[¿¡!?,.]',
+      'processors[ignore_character][settings][strip][character_sets][Cc]' => TRUE,
+    );
+    $this->editSettingsForm($edit, 'ignore_character');
+  }
+
+  /**
+   * Tests the UI for the "Language" processor.
+   */
+  public function checkLanguageIntegration() {
+    $this->enableProcessor('language');
+  }
+
+  /**
+   * Tests the UI for the "Node status" processor.
+   */
+  public function checkNodeStatusIntegration() {
+    $this->enableProcessor('node_status');
+  }
+
+  /**
+   * Tests the UI for the "Rendered item" processor.
+   */
+  public function checkRenderedItemIntegration() {
+    $this->enableProcessor('rendered_item');
+
+    $edit = array(
+      'processors[rendered_item][settings][roles][]' => 'authenticated',
+      'processors[rendered_item][settings][view_mode][entity:node]' => 'default',
+    );
+    $this->editSettingsForm($edit, 'rendered_item');
+  }
+
+  /**
+   * Tests the UI for the "Stopwords" processor.
+   */
+  public function checkStopWordsIntegration() {
+    $this->enableProcessor('stopwords');
+
+    $edit = array(
+      'processors[stopwords][settings][stopwords]' => 'the',
+    );
+    $this->editSettingsForm($edit, 'stopwords');
+  }
+
+  /**
+   * Tests the UI for the "Tokenizer" processor.
+   */
+  public function checkTokenizerIntegration() {
+    $this->enableProcessor('tokenizer');
+
+    $edit = array(
+      'processors[tokenizer][settings][spaces]' => '',
+      'processors[tokenizer][settings][overlap_cjk]' => FALSE,
+      'processors[tokenizer][settings][minimum_word_size]' => 2,
+    );
+    $this->editSettingsForm($edit, 'tokenizer');
+  }
+
+  /**
+   * Tests the UI for the "Transliteration" processor.
+   */
+  public function checkTransliterationIntegration() {
+    $this->enableProcessor('transliteration');
+
+    $edit = array(
+      'processors[transliteration][settings][fields][search_api_language]' => FALSE,
+    );
+    $this->editSettingsForm($edit, 'transliteration');
+  }
+
+  /**
+   * Tests the UI for the "URL field" processor.
+   */
+  public function checkUrlFieldIntegration() {
+    $this->enableProcessor('add_url');
+  }
+
+  /**
+   * Tests that a processor can be enabled.
+   *
+   * @param string $processor_id
+   *   The ID of the processor to enable.
+   */
+  protected function enableProcessor($processor_id) {
+    // Go to the index's "Filters" tab.
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
 
-    $this->drupalPostForm($settings_path, $editArray, $this->t('Save'));
+    $edit = array(
+      "processors[$processor_id][status]" => 1,
+    );
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $processors = $this->loadIndex()->getProcessors();
+    $this->assertTrue(isset($processors[$processor_id]), "Successfully enabled the '$processor_id' processor.'");
+  }
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $processors = $index->getProcessors();
-    if (isset($processors[$processorName])) {
-      $configuration = $processors[$processorName]->getConfiguration();
-      $this->assertTrue(
-        empty($configuration['fields']['search_api_language'])
-      );
+  /**
+   * Edits a processor's settings.
+   *
+   * @param array $edit
+   *   The settings to set for the processor.
+   * @param string $processor_id
+   *   The ID of the processor whose settings are edited.
+   */
+  protected function editSettingsForm($edit, $processor_id) {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+
+    $processors = $this->loadIndex()->getProcessors();
+    // @todo Actually test something here. Idea: pass in a $configuration array,
+    //   convert to POST format in here automatically and then check if the
+    //   processor's configuration matches.
+    if (isset($processors[$processor_id])) {
+      $configuration = $processors[$processor_id]->getConfiguration();
+      $this->assertTrue(empty($configuration['fields']['search_api_language']));
     }
     else {
-      $this->fail($processorName . ' settings not applied.');
+      $this->fail($processor_id . ' settings not applied.');
     }
-
   }
 
   /**
-   * Test that a filter can be added.
-   */
-  private function addFilter($filterName) {
-    // Go to the index filter path
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
-
-    $edit = array(
-      'processors['.$filterName.'][status]' => 1,
-    );
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = entity_load('search_api_index', $this->indexId, TRUE);
-    $processors = $index->getProcessors();
-    $this->assertTrue(isset($processors[$filterName]), ucfirst($filterName) . ' processor enabled');
-  }
-
-  /**
-   * Creates a server, so we can test the processors trough the UI
-   */
-  protected function createServer() {
-    $this->serverId = Unicode::strtolower($this->randomMachineName());
-    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_server.add_form', array(), array('absolute' => TRUE));
-
-    $this->drupalGet($settings_path);
-    $this->assertResponse(200, 'Server add page exists');
-
-    $edit = array(
-      'name' => '',
-      'status' => 1,
-      'description' => 'A server used for testing.',
-      'backend' => 'search_api_test_backend',
-    );
-
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Server name'))));
-
-    $edit = array(
-      'name' => 'Search API test server',
-      'status' => 1,
-      'description' => 'A server used for testing.',
-      'backend' => 'search_api_test_backend',
-    );
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
-
-    $edit = array(
-      'name' => 'Search API test server',
-      'machine_name' => $this->serverId,
-      'status' => 1,
-      'description' => 'A server used for testing.',
-      'backend' => 'search_api_test_backend',
-    );
-
-    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
-
-    $this->assertText($this->t('The server was successfully saved.'));
-  }
-
-  /**
-   * Creates an index, so we can test the processors trough the UI
-   */
-  protected function createIndex() {
-    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_index.add_form', array(), array('absolute' => TRUE));
-
-    $this->drupalGet($settings_path);
-    $this->assertResponse(200);
-    $edit = array(
-      'status' => 1,
-      'description' => 'An index used for testing.',
-    );
-
-    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Index name'))));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Data types'))));
-
-    $this->indexId = 'test_index';
-
-    $edit = array(
-      'name' => 'Search API test index',
-      'machine_name' => $this->indexId,
-      'status' => 1,
-      'description' => 'An index used for testing.',
-      'server' => $this->serverId,
-      'datasources[]' => array('entity:node'),
-    );
-
-    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
-
-    $this->assertText($this->t('The index was successfully saved.'));
-    $this->assertUrl('admin/config/search/search-api/index/' . $this->indexId, array(), $this->t('Correct redirect to index page.'));
-  }
-
-  /**
-   * Adds content to index.
-   */
-  private function trackContent() {
-    // Initially there should be no tracked items, because there are no nodes
-    $tracked_items = $this->countTrackedItems();
-
-    $this->assertEqual($tracked_items, 0, $this->t('No items are tracked yet'));
-
-    // Add two articles and a page
-    $this->drupalCreateNode(array('type' => 'article'));
-    $this->drupalCreateNode(array('type' => 'article'));
-    $this->drupalCreateNode(array('type' => 'page'));
-
-    // Those 3 new nodes should be added to the index immediately
-    $tracked_items = $this->countTrackedItems();
-    $this->assertEqual($tracked_items, 3, $this->t('Three items are tracked'));
-  }
-
-  /**
-   * Counts the number of tracked items from an index.
+   * Loads the search index used by this test.
    *
-   * @return int
+   * @return \Drupal\search_api\Index\IndexInterface
+   *   The search index used by this test.
    */
-  private function countTrackedItems() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
-    $index = entity_load('search_api_index', $this->indexId);
-    return $index->getTracker()->getTotalItemsCount();
-  }
-
-  /**
-   * Counts the number of remaining items from an index.
-   *
-   * @return int
-   */
-  private function countRemainingItems() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
-    $index = entity_load('search_api_index', $this->indexId);
-    return $index->getTracker()->getRemainingItemsCount();
+  protected function loadIndex() {
+    return entity_load('search_api_index', $this->indexId, TRUE);
   }
 
 }
