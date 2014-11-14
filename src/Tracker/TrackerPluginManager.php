@@ -13,7 +13,13 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Search API tracker plugin manager.
+ * Manages tracker plugins.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiTracker
+ * @see \Drupal\search_api\Tracker\TrackerPluginManager
+ * @see \Drupal\search_api\Tracker\TrackerInterface
+ * @see \Drupal\search_api\Tracker\TrackerPluginBase
+ * @see plugin_api
  */
 class TrackerPluginManager extends DefaultPluginManager {
 
@@ -29,25 +35,21 @@ class TrackerPluginManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    // Initialize the parent chain of objects.
     parent::__construct('Plugin/SearchApi/Tracker', $namespaces, $module_handler, 'Drupal\search_api\Tracker\TrackerInterface', 'Drupal\search_api\Annotation\SearchApiTracker');
-    // Configure the plugin manager.
     $this->setCacheBackend($cache_backend, 'search_api_trackers');
     $this->alterInfo('search_api_tracker_info');
   }
 
   /**
-   * Gets a list of plugin definition labels.
+   * Retrieves an options list of available trackers.
    *
-   * @return array
-   *   An associative array containing the plugin label, keyed by the plugin ID.
+   * @return string[]
+   *   An associative array mapping the IDs of all available tracker plugins to
+   *   their labels.
    */
-  public function getDefinitionLabels() {
-    // Initialize the options variable to an empty array.
+  public function getOptionsList() {
     $options = array();
-    // Iterate through the tracker plugin definitions.
     foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
-      // Add the plugin to the list.
       $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
     }
     return $options;

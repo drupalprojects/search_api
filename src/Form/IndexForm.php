@@ -249,12 +249,12 @@ class IndexForm extends EntityForm {
 
     $this->buildDatasourcesConfigForm($form, $form_state, $index);
 
-    $tracker_options = $this->getTrackerPluginManager()->getDefinitionLabels();
+    $tracker_options = $this->getTrackerPluginManager()->getOptionsList();
     $form['tracker'] = array(
       '#type' => 'radios',
       '#title' => $this->t('Tracker'),
       '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes.'),
-      '#options' => $this->getTrackerPluginManager()->getDefinitionLabels(),
+      '#options' => $this->getTrackerPluginManager()->getOptionsList(),
       '#default_value' => $index->hasValidTracker() ? $index->getTracker()->getPluginId() : key($tracker_options),
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),

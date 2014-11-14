@@ -24,7 +24,7 @@ use Drupal\search_api\Query\ResultSetInterface;
  * - label: The human-readable name of the processor, translated.
  * - description: A human-readable description for the processor, translated.
  *
- * A complete sample plugin definition should be defined as in this example:
+ * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiProcessor(

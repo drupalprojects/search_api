@@ -21,7 +21,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  * - label: The human-readable name of the datasource, translated.
  * - description: A human-readable description for the datasource, translated.
  *
- * A complete sample plugin definition should be defined as in this example:
+ * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiDatasource(

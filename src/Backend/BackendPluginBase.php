@@ -24,7 +24,7 @@ use Drupal\search_api\Server\ServerInterface;
  * - description: A human-readable description for the backend class,
  *   translated.
  *
- * A complete sample plugin definition should be defined as in this example:
+ * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiBackend(

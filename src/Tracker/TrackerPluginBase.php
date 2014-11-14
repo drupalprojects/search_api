@@ -13,7 +13,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  * Defines a base class from which other tracker classes may extend.
  *
  * Plugins extending this class need to define a plugin definition array through
- * annotation. These definition array may be altered through
+ * annotation. These definition arrays may be altered through
  * hook_search_api_tracker_info_alter(). The definition includes the following
  * keys:
  * - id: The unique, system-wide identifier of the tracker class.
@@ -21,7 +21,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  * - description: A human-readable description for the tracker class,
  *   translated.
  *
- * A complete sample plugin definition should be defined as in this example:
+ * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiTracker(
@@ -30,7 +30,14 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  *   description = @Translation("Simple tracking system.")
  * )
  * @endcode
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiTracker
+ * @see \Drupal\search_api\Tracker\TrackerPluginManager
+ * @see \Drupal\search_api\Tracker\TrackerInterface
+ * @see plugin_api
  */
 abstract class TrackerPluginBase extends IndexPluginBase implements TrackerInterface {
+
+  // @todo Move some of the methods from DefaultTracker to here?
 
 }

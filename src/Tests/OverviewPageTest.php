@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Server\ServerInterface;
 
@@ -46,7 +47,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
 
     $this->assertText($server->label(), 'Server present on overview page.');
     $this->assertRaw($server->get('description'), 'Description is present');
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Server is in proper table');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($server->getEntityTypeId() . '-' . $server->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Server is in proper table');
 
     // Test whether a newly created index appears on the overview page.
     $index = $this->getTestIndex();
@@ -55,7 +56,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
 
     $this->assertText($index->label(), 'Index present on overview page.');
     $this->assertRaw($index->get('description'), 'Index description is present');
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
 
     // Test that an entity without bundles can be used as data source.
     // @todo Why is this here? This hasn't got anything to do with the overview.
@@ -83,14 +84,16 @@ class OverviewPageTest extends SearchApiWebTestBase {
     // disabled.
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $server->getEntityTypeId() . '-' . $server->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The server has been disabled.');
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index has been disabled.');
+    $server_class = Html::cleanCssIdentifier($server->getEntityTypeId() . '-' . $server->id());
+    $index_class = Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id());
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $server_class . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The server has been disabled.');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $index_class . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index has been disabled.');
 
     // Test that an index can't be enabled if its server is disabled.
     // @todo A non-working "Enable" link should not be displayed at all.
     $this->clickLink('Enable', 1);
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index could not be enabled.');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $index_class . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The index could not be enabled.');
 
     // Enable the server and try again.
     $server->setStatus(TRUE)->save();
@@ -100,7 +103,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     // index.
     $this->clickLink('Enable');
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $index->getEntityTypeId() . '-' . $index->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The index has been enabled.');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $index_class . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The index has been enabled.');
 
     // Create a new index without a server assigned and test that it can't be
     // enabled. The overview UI is not very consistent at the moment, so test
@@ -120,7 +123,8 @@ class OverviewPageTest extends SearchApiWebTestBase {
    */
   protected function assertEntityStatusChange($entity) {
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The newly created entity is enabled by default.');
+    $row_class = Html::cleanCssIdentifier($entity->getEntityTypeId() . '-' . $entity->id());
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $row_class . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The newly created entity is enabled by default.');
 
     // The first "Disable" link on the page belongs to our server, the second
     // one to our index.
@@ -128,12 +132,12 @@ class OverviewPageTest extends SearchApiWebTestBase {
 
     // Submit the confirmation form and test that the entity has been disabled.
     $this->drupalPostForm(NULL, array(), 'Disable');
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The entity has been disabled.');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $row_class . '") and contains(@class, "search-api-list-disabled")]', NULL, 'The entity has been disabled.');
 
     // Now enable the entity and verify that the operation succeeded.
     $this->clickLink('Enable');
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertFieldByXPath('//tr[contains(@class,"' . $entity->getEntityTypeId() . '-' . $entity->id() . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The entity has benn enabled.');
+    $this->assertFieldByXPath('//tr[contains(@class,"' . $row_class . '") and contains(@class, "search-api-list-enabled")]', NULL, 'The entity has benn enabled.');
   }
 
   /**

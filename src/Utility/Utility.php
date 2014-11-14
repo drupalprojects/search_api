@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Deines the class Drupal\search_api\Utility\Utility.
+ * Contains \Drupal\search_api\Utility\Utility.
  */
 
 namespace Drupal\search_api\Utility;
@@ -27,42 +27,41 @@ use Drupal\search_api\Query\ResultSet;
  * Contains utility methods for the Search API.
  *
  * @todo Maybe move some of these methods to other classes (and/or split this
- *   class into several utility classes.
+ *   class into several utility classes).
  */
 class Utility {
 
   /**
-   * Static cache for field type mapping.
+   * Static cache for the field type mapping.
    *
    * @var array
    *
    * @see getFieldTypeMapping()
    */
-  static $fieldTypeMapping = array();
+  protected static $fieldTypeMapping = array();
 
   /**
-   * Determines whether a field of the given type contains text data.
+   * Determines whether fields of the given type contain fulltext data.
    *
    * @param string $type
-   *   A string containing the type to check.
-   * @param array $text_types
-   *   Optionally, an array of types to be considered as text.
+   *   The type to check.
+   * @param string[] $text_types
+   *   (optional) An array of types to be considered as text.
    *
    * @return bool
-   *   TRUE if $type is either one of the specified types, or a list of such
-   *   values. FALSE otherwise.
+   *   TRUE if $type is one of the specified types, FALSE otherwise.
    */
   // @todo Currently, this is useless, but later we could also check
   //   automatically for custom types that have one of the passed types as their
   //   fallback.
-  static function isTextType($type, array $text_types = array('text')) {
+  public static function isTextType($type, array $text_types = array('text')) {
     return in_array($type, $text_types);
   }
 
   /**
    * Returns all field data types known by the Search API as an options list.
    *
-   * @return array
+   * @return string[]
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
@@ -70,7 +69,7 @@ class Utility {
    * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
   // @todo Rename to something more self-documenting, like getDataTypeOptions().
-  static function getDataTypes() {
+  public static function getDataTypes() {
     $types = self::getDefaultDataTypes();
     foreach (self::getDataTypeInfo() as $id => $type) {
       $types[$id] = $type['name'];
@@ -80,16 +79,66 @@ class Utility {
   }
 
   /**
+   * Returns the default field types recognized by the Search API.
+   *
+   * @return string[]
+   *   An associative array with the default types as keys, mapped to their
+   *   translated display names.
+   */
+  public static function getDefaultDataTypes() {
+    return array(
+      'text' => \Drupal::translation()->translate('Fulltext'),
+      'string' => \Drupal::translation()->translate('String'),
+      'integer' => \Drupal::translation()->translate('Integer'),
+      'decimal' => \Drupal::translation()->translate('Decimal'),
+      'date' => \Drupal::translation()->translate('Date'),
+      'boolean' => \Drupal::translation()->translate('Boolean'),
+    );
+  }
+
+  /**
+   * Returns either all custom field type definitions, or a specific one.
+   *
+   * @param string|null $type
+   *   (optional) If specified, the type whose definition should be returned.
+   *
+   * @return string[][]|string[]|null
+   *   If $type was not given, an array containing all custom data types, in the
+   *   format specified by hook_search_api_data_type_info().
+   *   Otherwise, the definition for the given type, or NULL if it is unknown.
+   *
+   * @see hook_search_api_data_type_info()
+   */
+  public static function getDataTypeInfo($type = NULL) {
+    $types = &drupal_static(__FUNCTION__);
+    if (!isset($types)) {
+      $default_types = Utility::getDefaultDataTypes();
+      $types = \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
+      $types = $types ? $types : array();
+      foreach ($types as &$type_info) {
+        if (!isset($type_info['fallback']) || !isset($default_types[$type_info['fallback']])) {
+          $type_info['fallback'] = 'string';
+        }
+      }
+      \Drupal::moduleHandler()->alter('search_api_data_type_info', $types);
+    }
+    if (isset($type)) {
+      return isset($types[$type]) ? $types[$type] : NULL;
+    }
+    return $types;
+  }
+
+  /**
    * Retrieves the mapping for known data types to Search API's internal types.
    *
-   * @return array
+   * @return string[]
    *   An array mapping all known (and supported) Drupal data types to their
    *   corresponding Search API data types. Empty values mean that fields of
    *   that type should be ignored by the Search API.
    *
    * @see hook_search_api_field_type_mapping_alter()
    */
-  static function getFieldTypeMapping() {
+  public static function getFieldTypeMapping() {
     // Check the static cache first.
     if (empty(static::$fieldTypeMapping)) {
       // It's easier to write and understand this array in the form of
@@ -145,56 +194,6 @@ class Utility {
   }
 
   /**
-   * Returns the default field types recognized by the Search API framework.
-   *
-   * @return array
-   *   An associative array with the default types as keys, mapped to their
-   *   translated display names.
-   */
-  static function getDefaultDataTypes() {
-    return array(
-      'text' => \Drupal::translation()->translate('Fulltext'),
-      'string' => \Drupal::translation()->translate('String'),
-      'integer' => \Drupal::translation()->translate('Integer'),
-      'decimal' => \Drupal::translation()->translate('Decimal'),
-      'date' => \Drupal::translation()->translate('Date'),
-      'boolean' => \Drupal::translation()->translate('Boolean'),
-    );
-  }
-
-  /**
-   * Returns either all custom field type definitions, or a specific one.
-   *
-   * @param $type
-   *   If specified, the type whose definition should be returned.
-   *
-   * @return array
-   *   If $type was not given, an array containing all custom data types, in the
-   *   format specified by hook_search_api_data_type_info().
-   *   Otherwise, the definition for the given type, or NULL if it is unknown.
-   *
-   * @see hook_search_api_data_type_info()
-   */
-  static function getDataTypeInfo($type = NULL) {
-    $types = &drupal_static(__FUNCTION__);
-    if (!isset($types)) {
-      $default_types = Utility::getDefaultDataTypes();
-      $types =  \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
-      $types = $types ? $types : array();
-      foreach ($types as &$type_info) {
-        if (!isset($type_info['fallback']) || !isset($default_types[$type_info['fallback']])) {
-          $type_info['fallback'] = 'string';
-        }
-      }
-      \Drupal::moduleHandler()->alter('search_api_data_type_info', $types);
-    }
-    if (isset($type)) {
-      return isset($types[$type]) ? $types[$type] : NULL;
-    }
-    return $types;
-  }
-
-  /**
    * Extracts specific field values from a complex data object.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
@@ -203,7 +202,7 @@ class Utility {
    *   The field objects into which data should be extracted, keyed by their
    *   property paths on $item.
    */
-  static function extractFields(ComplexDataInterface $item, array $fields) {
+  public static function extractFields(ComplexDataInterface $item, array $fields) {
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $direct_fields = array();
@@ -261,7 +260,7 @@ class Utility {
    * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field into which to put the extracted data.
    */
-  static function extractField(TypedDataInterface $data, FieldInterface $field) {
+  public static function extractField(TypedDataInterface $data, FieldInterface $field) {
     if ($data->getDataDefinition()->isList()) {
       foreach ($data as $piece) {
         self::extractField($piece, $field);
@@ -283,10 +282,10 @@ class Utility {
   }
 
   /**
-   * Retrieves the server task manager to use.
+   * Retrieves the server task manager.
    *
    * @return \Drupal\search_api\Task\ServerTaskManagerInterface
-   *   The server task manager to use.
+   *   The server task manager.
    */
   public static function getServerTaskManager() {
     return \Drupal::service('search_api.server_task_manager');
@@ -325,7 +324,7 @@ class Utility {
   }
 
   /**
-   * Creates a Search API item.
+   * Creates a search item object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The item's search index.
@@ -336,14 +335,14 @@ class Utility {
    *   from the ID and loaded from the index if needed.
    *
    * @return \Drupal\search_api\Item\ItemInterface
-   *   A Search API item with the given values.
+   *   A search item with the given values.
    */
   public static function createItem(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
     return new Item($index, $id, $datasource);
   }
 
   /**
-   * Creates a Search API item by wrapping an existing complex data object.
+   * Creates a search item object by wrapping an existing complex data object.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The item's search index.
@@ -358,7 +357,7 @@ class Utility {
    *   from the ID and loaded from the index if needed.
    *
    * @return \Drupal\search_api\Item\ItemInterface
-   *   A Search API item with the given values.
+   *   A search item with the given values.
    *
    * @throws \InvalidArgumentException
    *   If both $datasource and $id are NULL.
@@ -378,7 +377,7 @@ class Utility {
   /**
    * Creates a new field object wrapping a field of the given index.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index to which this field should be attached.
    * @param string $field_identifier
    *   The field identifier.
@@ -393,7 +392,7 @@ class Utility {
   /**
    * Creates a new field object wrapping an additional field of the given index.
    *
-   * @param IndexInterface $index
+   * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index to which this field should be attached.
    * @param string $field_identifier
    *   The field identifier.
@@ -428,7 +427,11 @@ class Utility {
    * Returns a deep copy of the input array.
    *
    * The behavior of PHP regarding arrays with references pointing to it is
-   * rather weird.
+   * rather weird. Therefore, this method should be used when making a copy of
+   * such an array, or of an array containing references.
+   *
+   * This method will also omit empty array elements (i.e., elements that
+   * evaluate to FALSE according to PHP's native rules).
    *
    * @param array $array
    *   The array to copy.
@@ -440,7 +443,9 @@ class Utility {
     $copy = array();
     foreach ($array as $k => $v) {
       if (is_array($v)) {
-        $copy[$k] = static::deepCopy($v);
+        if ($v = static::deepCopy($v)) {
+          $copy[$k] = $v;
+        }
       }
       elseif (is_object($v)) {
         $copy[$k] = clone $v;
@@ -459,9 +464,8 @@ class Utility {
    * datasource ID and a datasource-specific raw item ID or property path.
    *
    * @param string|null $datasource_id
-   *   If NULL, the returned ID should be that for a datasource-independent
-   *   field. Otherwise, the ID of the datasource to which the item or field
-   *   belongs.
+   *   The ID of the datasource to which the item or field belongs. Or NULL, if
+   *   the returned ID should be that for a datasource-independent field.
    * @param string $raw_id
    *   The datasource-specific raw item ID or property path of the item or
    *   field.

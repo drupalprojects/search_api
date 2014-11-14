@@ -284,8 +284,8 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getRemainingItems($limit = -1, $datasource = NULL) {
-    $select = $this->createRemainingItemsStatement($datasource);
+  public function getRemainingItems($limit = -1, $datasource_id = NULL) {
+    $select = $this->createRemainingItemsStatement($datasource_id);
     if ($limit >= 0) {
       $select->range(0, $limit);
     }
@@ -295,21 +295,10 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getRemainingItemsCount($datasource = NULL) {
-    $select = $this->createRemainingItemsStatement();
-    if ($datasource) {
-      $select->condition('datasource', $datasource);
-    }
-    return (int) $select->countQuery()->execute()->fetchField();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getTotalItemsCount($datasource = NULL) {
+  public function getTotalItemsCount($datasource_id = NULL) {
     $select = $this->createSelectStatement();
-    if ($datasource) {
-      $select->condition('datasource', $datasource);
+    if ($datasource_id) {
+      $select->condition('datasource', $datasource_id);
     }
     return (int) $select->countQuery()->execute()->fetchField();
   }
@@ -317,11 +306,22 @@ class DefaultTracker extends TrackerPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getIndexedItemsCount($datasource = NULL) {
+  public function getIndexedItemsCount($datasource_id = NULL) {
     $select = $this->createSelectStatement();
     $select->condition('sai.status', $this::STATUS_INDEXED);
-    if ($datasource) {
-      $select->condition('datasource', $datasource);
+    if ($datasource_id) {
+      $select->condition('datasource', $datasource_id);
+    }
+    return (int) $select->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRemainingItemsCount($datasource_id = NULL) {
+    $select = $this->createRemainingItemsStatement();
+    if ($datasource_id) {
+      $select->condition('datasource', $datasource_id);
     }
     return (int) $select->countQuery()->execute()->fetchField();
   }
