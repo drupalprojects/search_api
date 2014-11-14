@@ -441,7 +441,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     if ($db_prefix = $this->database->tablePrefix()) {
       // Use strlen() instead of Unicode::strlen() since we want to measure
       // bytes, not characters.
-      $maxbytes -= Unicode::strlen($db_prefix);
+      $maxbytes -= strlen($db_prefix);
     }
 
     $base = $table = mb_strcut($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, $maxbytes);
