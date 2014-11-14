@@ -20,19 +20,19 @@ use Drupal\Tests\UnitTestCase;
  *
  * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
  */
-class AddUrlTest extends UnitTestCase {
+class AddURLTest extends UnitTestCase {
 
   use TestItemsTrait;
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
    */
   protected $processor;
 
   /**
-   * Index mock.
+   * A search index mock for the tests.
    *
    * @var \Drupal\search_api\Index\IndexInterface
    */
@@ -59,7 +59,7 @@ class AddUrlTest extends UnitTestCase {
       ->withAnyParameters()
       ->will($this->returnValue($url));
 
-    // Create a mock for the indexer to get the dataSource object which holds the URL.
+    // Create a mock for the index to return the datasource mock.
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
     $this->index->expects($this->any())
@@ -67,7 +67,7 @@ class AddUrlTest extends UnitTestCase {
       ->with('entity:node')
       ->will($this->returnValue($datasource));
 
-    // Create the URL-Processor and set the mocked indexer.
+    // Create the tested processor and set the mocked indexer.
     $this->processor = new AddURL(array(), 'add_url', array());
     $this->processor->setIndex($index);
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
@@ -76,9 +76,7 @@ class AddUrlTest extends UnitTestCase {
   }
 
   /**
-   * Tests processIndexItems.
-   *
-   * Check if the items are processed as expected.
+   * Tests whether indexed items are correctly preprocessed.
    */
   public function testProcessIndexItems() {
     // @todo Why Node, not NodeInterface? Normally, you mock an interface.
@@ -107,7 +105,7 @@ class AddUrlTest extends UnitTestCase {
     $field = $items[$this->item_ids[0]]->getField('search_api_url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field.');
 
-    // Check that no other fields where changed.
+    // Check that no other fields were changed.
     $field = $items[$this->item_ids[0]]->getField($body_field_id);
     $this->assertEquals($body_value, $field->getValues(), 'Body field was not changed.');
 
@@ -117,9 +115,9 @@ class AddUrlTest extends UnitTestCase {
   }
 
   /**
-   * Tests alterPropertyDefinitions.
+   * Tests whether the properties are correctly altered.
    *
-   * Checks for the correct DataDefinition added to the properties.
+   * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL::alterPropertyDefinitions()
    */
   public function testAlterPropertyDefinitions() {
     $properties = array();
@@ -137,7 +135,7 @@ class AddUrlTest extends UnitTestCase {
       }
     }
 
-    // Tests whether the properties of specific datasources stay untouched.
+    // Test whether the properties of specific datasources stay untouched.
     $properties = array();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');

@@ -24,7 +24,7 @@ class HighlightTest extends UnitTestCase {
   use TestItemsTrait;
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
    */
@@ -45,7 +45,7 @@ class HighlightTest extends UnitTestCase {
 
 
   /**
-   * Tests postprocessing with empty result set.
+   * Tests postprocessing with an empty result set.
    */
   public function testPostprocessSearchResultsWithEmptyResult() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
@@ -65,11 +65,13 @@ class HighlightTest extends UnitTestCase {
     /** @var \Drupal\search_api\Query\ResultSet $results */
 
     $this->processor->postprocessSearchResults($results);
+    $output = $results->getExtraData('highlighted_fields');
+    $this->assertEmpty($output, 'No highlighting data added to result set.');
   }
 
 
   /**
-   * Tests postprocessing with a query without keywords.
+   * Tests postprocessing on a query without keywords.
    */
   public function testPostprocessSearchResultsWithoutKeywords() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
@@ -94,6 +96,8 @@ class HighlightTest extends UnitTestCase {
     /** @var \Drupal\search_api\Query\ResultSet $results */
 
     $this->processor->postprocessSearchResults($results);
+    $output = $results->getExtraData('highlighted_fields');
+    $this->assertEmpty($output, 'No highlighting data added to result set.');
   }
 
   /**
@@ -187,7 +191,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if field highlighting can be disabled.
+   * Tests whether field highlighting can be disabled.
    */
   public function testPostprocessSearchResultsWithoutHighlight() {
     $this->processor->setConfiguration(array('highlight' => 'never'));
@@ -282,7 +286,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if highlight works on a longer text
+   * Tests whether highlighting works on a longer text.
    */
   public function testPostprocessSearchResultsExerpt() {
     $body_field_id = Utility::createCombinedId('entity:node', 'body');
@@ -374,9 +378,9 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if highlight works with a changed excerpt length
+   * Tests whether highlighting works with a changed excerpt length
    */
-  public function testPostprocessSearchResultsWithChangedExerptLength() {
+  public function testPostprocessSearchResultsWithChangedExcerptLength() {
     $this->processor->setConfiguration(array('excerpt_length' => 64));
 
     $body_field_id = Utility::createCombinedId('entity:node', 'body');
@@ -422,7 +426,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if adding an excerpt can be successfully disabled.
+   * Tests whether adding an excerpt can be successfully disabled.
    */
   public function testPostprocessSearchResultsWithoutExcerpt() {
     $this->processor->setConfiguration(array('excerpt' => FALSE));
@@ -469,7 +473,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Test to see if highlight works on a longer text
+   * Tests whether highlighting works on a longer text.
    */
   public function testPostprocessSearchResultsWithComplexKeys() {
     $body_field_id = Utility::createCombinedId('entity:node', 'body');
@@ -642,8 +646,10 @@ class HighlightTest extends UnitTestCase {
 
 
   /**
-   * Returns a longer string to work with
+   * Returns a long text to use for highlighting tests.
+   *
    * @return string
+   *   A Lorem Ipsum text.
    */
   protected function getFieldBody() {
     return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dictum ultricies sapien id consequat.

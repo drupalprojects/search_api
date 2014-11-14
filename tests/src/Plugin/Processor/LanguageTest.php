@@ -26,7 +26,7 @@ class LanguageTest extends UnitTestCase {
   use TestItemsTrait;
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\Language
    */
@@ -59,7 +59,7 @@ class LanguageTest extends UnitTestCase {
    * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language::alterPropertyDefinitions()
    */
   public function testAlterProperties() {
-    // Tests whether the property gets properly added to the
+    // Test whether the property gets properly added to the
     // datasource-independent properties.
     $properties = array();
     $this->processor->alterPropertyDefinitions($properties);
@@ -73,7 +73,7 @@ class LanguageTest extends UnitTestCase {
       }
     }
 
-    // Tests whether the properties of specific datasources stay untouched.
+    // Test whether the properties of specific datasources stay untouched.
     $properties = array();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');

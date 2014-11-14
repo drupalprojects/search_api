@@ -23,7 +23,7 @@ use Drupal\Tests\UnitTestCase;
 class NodeStatusTest extends UnitTestCase {
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus
    */
@@ -84,7 +84,7 @@ class NodeStatusTest extends UnitTestCase {
   }
 
   /**
-   * Tests whether supportsIndex() returns TRUE for an index cotnaining nodes.
+   * Tests whether supportsIndex() returns TRUE for an index containing nodes.
    */
   public function testSupportsIndexSupported() {
     $support = NodeStatus::supportsIndex(reset($this->items)->getIndex());
@@ -92,7 +92,7 @@ class NodeStatusTest extends UnitTestCase {
   }
 
   /**
-   * Tests whether supportsIndex() returns TRUE for an index cotnaining nodes.
+   * Tests whether supportsIndex() returns FALSE for an index without nodes.
    */
   public function testSupportsIndexUnsupported() {
     $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
@@ -105,12 +105,11 @@ class NodeStatusTest extends UnitTestCase {
   }
 
   /**
-   * Tests is unpublished nodes are removed from the items list.
+   * Tests if unpublished nodes are removed from the items list.
    */
   public function testNodeStatus() {
     $this->assertCount(2, $this->items, '2 nodes in the index.');
     $this->processor->preprocessIndexItems($this->items);
-
     $this->assertCount(1, $this->items, 'An item was removed from the items list.');
     $published_nid = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en';
     $this->assertTrue(isset($this->items[$published_nid]), 'Correct item was removed.');

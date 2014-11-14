@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\Tests\search_api\Plugin\Processor\ProcessorTestTrait.

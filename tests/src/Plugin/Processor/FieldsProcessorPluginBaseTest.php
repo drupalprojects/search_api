@@ -37,7 +37,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   protected $processor;
 
   /**
-   * {@inheritdoc}
+   * Creates a new processor object for use in the tests.
    */
   public function setUp() {
     parent::setUp();
@@ -60,7 +60,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   public function testTestTypeDefault() {
     $items = $this->getTestItem();
     $this->processor->preprocessIndexItems($items);
-    $this->verifyFieldsProcessed($items, array('text_field', 'string_field'));
+    $this->assertFieldsProcessed($items, array('text_field', 'string_field'));
   }
 
   /**
@@ -74,7 +74,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $items = $this->getTestItem();
     $this->processor->preprocessIndexItems($items);
-    $this->verifyFieldsProcessed($items, array('string_field', 'integer_field'));
+    $this->assertFieldsProcessed($items, array('string_field', 'integer_field'));
   }
 
   /**
@@ -91,7 +91,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $items = $this->getTestItem();
     $this->processor->preprocessIndexItems($items);
-    $this->verifyFieldsProcessed($items, array('text_field', 'float_field'));
+    $this->assertFieldsProcessed($items, array('text_field', 'float_field'));
   }
 
   /**
@@ -111,11 +111,11 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $items = $this->getTestItem();
     $this->processor->preprocessIndexItems($items);
-    $this->verifyFieldsProcessed($items, array('text_field', 'string_field'), '&');
+    $this->assertFieldsProcessed($items, array('text_field', 'string_field'), '&');
   }
 
   /**
-   * Tests whether overriding of processFieldValue() works correctly.
+   * Tests whether removing values in processFieldValue() works correctly.
    */
   public function testProcessFieldRemoveValue() {
     $override = function (&$value) {
@@ -386,7 +386,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   }
 
   /**
-   * Returns an array with one test item suitable for this test case.
+   * Asserts that the given fields have been correctly processed.
    *
    * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array containing one item.
@@ -395,7 +395,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * @param string $prefix
    *   (optional) The prefix that processed fields receive.
    */
-  protected function verifyFieldsProcessed(array $items, array $processed_fields, $prefix = "*") {
+  protected function assertFieldsProcessed(array $items, array $processed_fields, $prefix = "*") {
     $processed_fields = array_fill_keys($processed_fields, TRUE);
     foreach ($items as $item) {
       foreach ($item->getFields() as $field_id => $field) {

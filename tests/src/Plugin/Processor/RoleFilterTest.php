@@ -23,7 +23,7 @@ use Drupal\Tests\UnitTestCase;
 class RoleFilterTest extends UnitTestCase {
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter
    */

@@ -22,22 +22,26 @@ class IgnoreCaseTest extends UnitTestCase {
   use ProcessorTestTrait;
 
   /**
-   * {@inheritdoc}
+   * Creates a new processor object for use in the tests.
    */
   protected function setUp() {
     parent::setUp();
-
     $this->processor = new IgnoreCase(array(), 'string', array());
   }
 
   /**
    * Tests the process() method.
    *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param string $expected_value
+   *   The expected processed value.
+   *
    * @dataProvider processDataProvider
    */
-  public function testProcess($passedString, $expectedValue) {
-    $this->invokeMethod('process', array(&$passedString));
-    $this->assertEquals($passedString, $expectedValue);
+  public function testProcess($passed_value, $expected_value) {
+    $this->invokeMethod('process', array(&$passed_value));
+    $this->assertEquals($passed_value, $expected_value);
   }
 
   /**

@@ -22,23 +22,29 @@ class IgnoreCharacterTest extends UnitTestCase {
   use ProcessorTestTrait;
 
   /**
-   * {@inheritdoc}
+   * Creates a new processor object for use in the tests.
    */
   protected function setUp() {
     parent::setUp();
-
     $this->processor = new IgnoreCharacter(array('ignorable' => ''), 'ignore_character', array());
   }
 
   /**
-   * Test processFieldValue method with Punctuation Connector Ignores.
+   * Tests preprocessing with different ignorable character sets.
+   *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param string $expected_value
+   *   The expected processed value.
+   * @param string[] $character_classes
+   *   The "character_sets" setting to set on the processor.
    *
    * @dataProvider ignoreCharacterSetsDataProvider
    */
-  public function testIgnoreCharacterSets($passedString, $expectedValue, $character_classes) {
+  public function testIgnoreCharacterSets($passed_value, $expected_value, array $character_classes) {
     $this->processor->setConfiguration(array('strip' => array('character_sets' => $character_classes)));
-    $this->invokeMethod('process', array(&$passedString, 'text'));
-    $this->assertEquals($expectedValue, $passedString);
+    $this->invokeMethod('process', array(&$passed_value, 'text'));
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**
@@ -103,14 +109,21 @@ class IgnoreCharacterTest extends UnitTestCase {
   }
 
   /**
-   * Tests the processor if the "Ignorable characters" setting is used.
+   * Tests preprocessing with the "Ignorable characters" setting.
+   *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param string $expected_value
+   *   The expected processed value.
+   * @param string $ignorable
+   *   The "ignorable" setting to set on the processor.
    *
    * @dataProvider ignorableCharactersDataProvider
    */
-  public function testIgnorableCharacters($passedValue, $expectedValue, $ignorable) {
+  public function testIgnorableCharacters($passed_value, $expected_value, $ignorable) {
     $this->processor->setConfiguration(array('ignorable' => $ignorable, 'strip' => array('character_sets' => array())));
-    $this->invokeMethod('process', array(&$passedValue, 'text'));
-    $this->assertEquals($expectedValue, $passedValue);
+    $this->invokeMethod('process', array(&$passed_value, 'text'));
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**

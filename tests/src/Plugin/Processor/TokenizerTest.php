@@ -35,22 +35,22 @@ class TokenizerTest extends UnitTestCase {
   /**
    * Tests the processFieldValue() method.
    *
-   * @param string $passedString
+   * @param string $passed_value
    *   The field value passed to the processor's processFieldValue() method.
-   * @param string $expectedValue
+   * @param string $expected_value
    *   The expected preprocessed value.
    * @param array $config
    *   (optional) Configuration to override the processor's defaults.
    *
    * @dataProvider textDataProvider
    */
-  public function testProcessFieldValue($passedString, $expectedValue, array $config = array()) {
+  public function testProcessFieldValue($passed_value, $expected_value, array $config = array()) {
     if ($config) {
       $this->processor->setConfiguration($config);
     }
     $type = 'text';
-    $this->invokeMethod('processFieldValue', array(&$passedString, &$type));
-    $this->assertEquals($expectedValue, $passedString);
+    $this->invokeMethod('processFieldValue', array(&$passed_value, &$type));
+    $this->assertEquals($expected_value, $passed_value);
     $this->assertEquals('tokenized_text', $type);
   }
 
@@ -293,22 +293,22 @@ class TokenizerTest extends UnitTestCase {
   /**
    * Tests whether punctuation is treated correctly.
    *
-   * @param string $passedString
+   * @param string $passed_value
    *   The string passed to simplifyText().
-   * @param string $expectedValue
+   * @param string $expected_value
    *   The expected return value.
    * @param string $message
    *   The message to display for the assertion.
    *
    * @dataProvider searchSimplifyPunctuationProvider
    */
-  public function testSearchSimplifyPunctuation($passedString, $expectedValue, $message) {
+  public function testSearchSimplifyPunctuation($passed_value, $expected_value, $message) {
     // Set the minimum word size to 1 (to split all CJK characters).
     $this->processor->setConfiguration(array('minimum_word_size' => 1));
     $this->invokeMethod('prepare');
 
-    $out = $this->invokeMethod('simplifyText', array($passedString));
-    $this->assertEquals($expectedValue, $out, $message);
+    $out = $this->invokeMethod('simplifyText', array($passed_value));
+    $this->assertEquals($expected_value, $out, $message);
   }
 
   /**

@@ -33,12 +33,19 @@ class StopwordsTest extends UnitTestCase {
   /**
    * Tests the process() method of the Stopwords processor.
    *
+   * @param string $passed_value
+   *   The string that should be passed to process().
+   * @param string $expected_string
+   *   The expected altered string.
+   * @param string[] $stopwords
+   *   The stopwords with which to configure the test processor.
+   *
    * @dataProvider processDataProvider
    */
-  public function testProcess($passedString, $expectedString, $stopwordsConfig) {
-    $this->processor->setConfiguration(array('stopwords' => $stopwordsConfig));
-    $this->invokeMethod('process', array(&$passedString));
-    $this->assertEquals($passedString, $expectedString);
+  public function testProcess($passed_value, $expected_string, array $stopwords) {
+    $this->processor->setConfiguration(array('stopwords' => $stopwords));
+    $this->invokeMethod('process', array(&$passed_value));
+    $this->assertEquals($passed_value, $expected_string);
   }
 
   /**
@@ -94,9 +101,6 @@ class StopwordsTest extends UnitTestCase {
     $index->expects($this->any())
       ->method('status')
       ->will($this->returnValue(TRUE));
-    $index->expects($this->any())
-      ->method('getFields')
-      ->will($this->returnValue(array()));
     /** @var \Drupal\search_api\Index\IndexInterface $index */
 
     $this->processor->setIndex($index);

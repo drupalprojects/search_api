@@ -13,6 +13,10 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 /**
  * Mimics a processor working on individual fields of items.
  *
+ * Generally just uses the parent implementations for all methods, but also
+ * allows temporary overriding of any method. Also implements process() to have
+ * an easily recognizable return value.
+ *
  * Used by
  * \Drupal\Tests\search_api\Plugin\Processor\FieldsProcessorPluginBaseTest to
  * test the functionality provided by
@@ -21,24 +25,27 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
 
   /**
-   * Array of method overrides.
+   * Array of method overrides, keyed by method name.
    *
    * @var callable[]
+   *
+   * @see setMethodOverride()
    */
   protected $methodOverrides = array();
 
   /**
-   * Creates a valid tokenized_text field value for testing purposes.
+   * Creates a valid "tokenized_text" field value for testing purposes.
    *
    * @param string $value
    *   The value to be tokenized.
-   * @param int|null $score
-   *   The score to set, or NULL to omit setting a score.
+   * @param float|null $score
+   *   (optional) The score to set, or NULL to omit setting a score. Defaults to
+   *   1.
    *
    * @return array[]
    *   A valid tokenized_text field value.
    */
-  public static function createTokenizedText($value, $score = 1) {
+  public static function createTokenizedText($value, $score = 1.0) {
     $return = array();
     if (isset($score)) {
       $token['score'] = $score;

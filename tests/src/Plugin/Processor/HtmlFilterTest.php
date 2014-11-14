@@ -23,28 +23,37 @@ class HtmlFilterTest extends UnitTestCase {
   use ProcessorTestTrait;
 
   /**
-   * {@inheritdoc}
+   * Creates a new processor object for use in the tests.
    */
   public function setUp() {
     parent::setUp();
-
     $this->processor = new HtmlFilter(array(), 'html_filter', array());
   }
 
   /**
-   * Tests processFieldValue method with title fetching enabled.
+   * Tests preprocessing field values with "title" settings.
+   *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param string $expected_value
+   *   The expected processed value.
+   * @param bool $title_config
+   *   The value to set for the processor's "title" setting.
    *
    * @dataProvider titleConfigurationDataProvider
    */
-  public function testTitleConfiguration($passedString, $expectedValue, $titleConfig) {
-    $this->processor->setConfiguration(array('tags' => array(), 'title' => $titleConfig, 'alt' => FALSE));
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
-    $this->assertEquals($expectedValue, $passedString);
+  public function testTitleConfiguration($passed_value, $expected_value, $title_config) {
+    $this->processor->setConfiguration(array('tags' => array(), 'title' => $title_config, 'alt' => FALSE));
+    $this->invokeMethod('processFieldValue', array(&$passed_value, 'text'));
+    $this->assertEquals($expected_value, $passed_value);
 
   }
 
   /**
    * Data provider for testTitleConfiguration().
+   *
+   * @return array
+   *   An array of argument arrays for testTitleConfiguration().
    */
   public function titleConfigurationDataProvider() {
     return array(
@@ -59,18 +68,28 @@ class HtmlFilterTest extends UnitTestCase {
   }
 
   /**
-   * Tests processFieldValue method with alt fetching enabled.
+   * Tests preprocessing field values with "alt" settings.
+   *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param mixed $expected_value
+   *   The expected processed value.
+   * @param bool $alt_config
+   *   The value to set for the processor's "alt" setting.
    *
    * @dataProvider altConfigurationDataProvider
    */
-  public function testAltConfiguration($passedString, $expectedValue, $altBoost) {
-    $this->processor->setConfiguration(array('tags' => array('img' => '2'), 'title' => FALSE, 'alt' => $altBoost));
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
-    $this->assertEquals($expectedValue, $passedString);
+  public function testAltConfiguration($passed_value, $expected_value, $alt_config) {
+    $this->processor->setConfiguration(array('tags' => array('img' => '2'), 'title' => FALSE, 'alt' => $alt_config));
+    $this->invokeMethod('processFieldValue', array(&$passed_value, 'text'));
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**
-   * Data provider method for testAltConfiguration()
+   * Data provider method for testAltConfiguration().
+   *
+   * @return array
+   *   An array of argument arrays for testAltConfiguration().
    */
   public function altConfigurationDataProvider() {
     return array(
@@ -85,18 +104,28 @@ class HtmlFilterTest extends UnitTestCase {
   }
 
   /**
-   * Tests processFieldValue method with tag provided fetching enabled.
+   * Tests preprocessing field values with "alt" settings.
+   *
+   * @param string $passed_value
+   *   The value that should be passed into process().
+   * @param mixed $expected_value
+   *   The expected processed value.
+   * @param float[] $tags_config
+   *   The value to set for the processor's "tags" setting.
    *
    * @dataProvider tagConfigurationDataProvider
    */
-  public function testTagConfiguration($passedString, $expectedValue, array $tagsConfig) {
-    $this->processor->setConfiguration(array('tags' => $tagsConfig, 'title' => TRUE, 'alt' => TRUE));
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'text'));
-    $this->assertEquals($expectedValue, $passedString);
+  public function testTagConfiguration($passed_value, $expected_value, array $tags_config) {
+    $this->processor->setConfiguration(array('tags' => $tags_config, 'title' => TRUE, 'alt' => TRUE));
+    $this->invokeMethod('processFieldValue', array(&$passed_value, 'text'));
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**
-   * Data provider method for testTagConfiguration()
+   * Data provider method for testTagConfiguration().
+   *
+   * @return array
+   *   An array of argument arrays for testTagConfiguration().
    */
   public function tagConfigurationDataProvider() {
     $complex_test = array(
@@ -145,15 +174,15 @@ class HtmlFilterTest extends UnitTestCase {
   public function testStringProcessing(array $config) {
     $this->processor->setConfiguration($config);
 
-    $passedString = '<h2>Foo Bar <em>Baz</em></h2>
+    $passed_value = '<h2>Foo Bar <em>Baz</em></h2>
 
 <p>Bla Bla Bla. <strong title="Foobar">Important:</strong> Bla.</p>
 <img src="/foo.png" alt="Some picture" />
 <span>This is hidden</span>';
-    $expectedValue = preg_replace('/\s+/', ' ', strip_tags($passedString));
+    $expected_value = preg_replace('/\s+/', ' ', strip_tags($passed_value));
 
-    $this->invokeMethod('processFieldValue', array(&$passedString, 'string'));
-    $this->assertEquals($expectedValue, $passedString);
+    $this->invokeMethod('processFieldValue', array(&$passed_value, 'string'));
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**

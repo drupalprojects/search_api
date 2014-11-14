@@ -13,7 +13,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the "URL field" processor.
+ * Tests the "Aggregated fields" processor.
  *
  * @group search_api
  *
@@ -24,14 +24,14 @@ class AggregatedFieldTest extends UnitTestCase {
   use TestItemsTrait;
 
   /**
-   * Stores the processor to be tested.
+   * The processor to be tested.
    *
    * @var \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField
    */
   protected $processor;
 
   /**
-   * A mocked search index for the tests.
+   * A search index mock for the tests.
    *
    * @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject
    */
@@ -420,9 +420,9 @@ class AggregatedFieldTest extends UnitTestCase {
   }
 
   /**
-   * Tests alterPropertyDefinitions.
+   * Tests whether the properties are correctly altered.
    *
-   * Checks for the correct DataDefinition added to the properties.
+   * @see \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField::alterPropertyDefinitions()
    */
   public function testAlterPropertyDefinitions() {
     $fields = array(
@@ -494,7 +494,7 @@ class AggregatedFieldTest extends UnitTestCase {
       }
     }
 
-    // Tests whether the properties of specific datasources stay untouched.
+    // Test whether the properties of specific datasources stay untouched.
     $properties = array();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');

@@ -42,7 +42,7 @@ class TransliterationTest extends UnitTestCase {
 
     $transliterator = $this->getMock('\Drupal\Component\Transliteration\TransliterationInterface');
     $transliterate = function ($string, $langcode = 'en', $unknown_character = '?', $max_length = NULL) {
-      return "translit-$string-$langcode$max_length";
+      return "translit-$string-$langcode$unknown_character$max_length";
     };
     $transliterator->expects($this->any())
       ->method('transliterate')
@@ -74,14 +74,14 @@ class TransliterationTest extends UnitTestCase {
   }
 
   /**
-   * Tests that ASCII strings are not affected.
+   * Tests that strings are affected.
    */
   public function testTransliterationWithString() {
     $field_value = $this->getRandomGenerator()->string();
     /** @var \Drupal\search_api\Item\FieldInterface $field */
     $items = $this->createSingleFieldItem($this->index, 'string', $field_value, $field);
     $this->processor->preprocessIndexItems($items);
-    $expected_value = "translit-$field_value-en";
+    $expected_value = "translit-$field_value-en?";
     $this->assertEquals(array($expected_value), $field->getValues(), 'Strings are correctly transliterated.');
   }
 
