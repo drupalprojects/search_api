@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1861134 by Cyberwolf, jackbravo, drunken monkey: Fixed indexing on multiple
+  indexes with Drush.
 - #2347367 by drunken monkey, das-peter: Fixed forgotten usages of
   $index->item_type.
 - #2359201 by drunken monkey: Added a "List" option to "Aggregated fields".
