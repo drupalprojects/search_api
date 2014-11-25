@@ -249,7 +249,7 @@ class TokenizerTest extends UnitTestCase {
     $this->processor->setConfiguration(array('minimum_word_size' => 1));
     $this->invokeMethod('prepare');
 
-    $input = file_get_contents(DRUPAL_ROOT . '/core/modules/search/tests/UnicodeTest.txt');
+    $input = file_get_contents($this->root . '/core/modules/search/tests/UnicodeTest.txt');
     $basestrings = explode(chr(10), $input);
     $strings = array();
     foreach ($basestrings as $key => $string) {

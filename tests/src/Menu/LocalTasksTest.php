@@ -20,6 +20,7 @@ class LocalTasksTest extends LocalTaskIntegrationTest {
    * {@inheritdoc}
    */
   public function setUp() {
+    parent::setUp();
     $this->directoryList = array('search_api' => 'modules/search_api');
   }
 

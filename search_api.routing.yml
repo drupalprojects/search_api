@@ -16,7 +16,7 @@ entity.search_api_server.add_form:
 entity.search_api_server.canonical:
   path: '/admin/config/search/search-api/server/{search_api_server}'
   defaults:
-    _content: '\Drupal\search_api\Controller\SearchApiServerController::page'
+    _controller: '\Drupal\search_api\Controller\SearchApiServerController::page'
     _title_callback: '\Drupal\search_api\Controller\SearchApiServerController::pageTitle'
     _title: "View"
   requirements:
@@ -68,7 +68,7 @@ entity.search_api_index.add_form:
 entity.search_api_index.canonical:
   path: '/admin/config/search/search-api/index/{search_api_index}'
   defaults:
-    _content: '\Drupal\search_api\Controller\SearchApiIndexController::page'
+    _controller: '\Drupal\search_api\Controller\SearchApiIndexController::page'
     _title_callback: '\Drupal\search_api\Controller\SearchApiIndexController::pageTitle'
   requirements:
     _entity_access: 'search_api_index.view'

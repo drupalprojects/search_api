@@ -57,6 +57,7 @@ class RenderedItemTest extends ProcessorTestBase {
       'name' => 'page',
     ));
     $type->save();
+    node_add_body_field($type);
 
     // Create anonymous user role.
     $role = entity_create('user_role', array(

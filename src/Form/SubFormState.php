@@ -722,6 +722,28 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
+  public function &getTemporaryValue($key) {
+    return $this->mainFormState->getTemporaryValue($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setTemporaryValue($key, $value) {
+    $this->mainFormState->setTemporaryValue($key, $value);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasTemporaryValue($key) {
+    return $this->mainFormState->getTemporaryValue($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setTriggeringElement($triggering_element) {
     $this->mainFormState->setTriggeringElement($triggering_element);
     return $this;
@@ -771,4 +793,5 @@ class SubFormState implements FormStateInterface {
     $this->mainFormState->cleanValues();
     return $this;
   }
+
 }

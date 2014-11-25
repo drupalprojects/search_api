@@ -819,7 +819,8 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $server->delete();
 
     // Uninstall the module.
-    \Drupal::moduleHandler()->uninstall(array('search_api_db'), FALSE);
+    \Drupal::service('module_installer')->uninstall(array('search_api_db'), FALSE);
+    #\Drupal::moduleHandler()->uninstall(array('search_api_db'), FALSE);
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully disabled.');
     $prefix = \Drupal::database()->prefixTables('{search_api_db_}') . '%';
     $this->assertEqual(\Drupal::database()->schema()->findTables($prefix), array(), 'The Database Search module was successfully uninstalled.');
@@ -827,6 +828,13 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   /**
    * Asserts ignored fields from a set of search results.
+   *
+   * @param ResultSetInterface $results
+   *   The results to check.
+   * @param array $ignored
+   *   (optional) The ignored keywords that should be present, if any.
+   * @param string $message
+   *   (optional) The message to be displayed with the assertion.
    */
   protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
     $this->assertEqual($results->getIgnoredSearchKeys(), $ignored, $message);
@@ -834,6 +842,13 @@ class SearchApiDbTest extends EntityUnitTestBase {
 
   /**
    * Asserts warnings from a set of search results.
+   *
+   * @param ResultSetInterface $results
+   *   The results to check.
+   * @param array $warnings
+   *   (optional) The ignored warnings that should be present, if any.
+   * @param string $message
+   *   (optional) The message to be displayed with the assertion.
    */
   protected function assertWarnings(ResultSetInterface $results, array $warnings = array(), $message = 'No warnings were displayed.') {
     $this->assertEqual($results->getWarnings(), $warnings, $message);
