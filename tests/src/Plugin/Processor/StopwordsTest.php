@@ -35,17 +35,17 @@ class StopwordsTest extends UnitTestCase {
    *
    * @param string $passed_value
    *   The string that should be passed to process().
-   * @param string $expected_string
+   * @param string $expected_value
    *   The expected altered string.
    * @param string[] $stopwords
    *   The stopwords with which to configure the test processor.
    *
    * @dataProvider processDataProvider
    */
-  public function testProcess($passed_value, $expected_string, array $stopwords) {
+  public function testProcess($passed_value, $expected_value, array $stopwords) {
     $this->processor->setConfiguration(array('stopwords' => $stopwords));
     $this->invokeMethod('process', array(&$passed_value));
-    $this->assertEquals($passed_value, $expected_string);
+    $this->assertEquals($expected_value, $passed_value);
   }
 
   /**
