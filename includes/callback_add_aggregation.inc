@@ -298,6 +298,8 @@ class SearchApiAlterAddAggregation extends SearchApiAbstractAlterCallback {
   public function formButtonSubmit(array $form, array &$form_state) {
     $button_name = $form_state['triggering_element']['#name'];
     if ($button_name == 'op') {
+      // Increment $i until the corresponding field is not set, then create the
+      // field with that number as suffix.
       for ($i = 1; isset($this->options['fields']['search_api_aggregation_' . $i]); ++$i) {
       }
       $this->options['fields']['search_api_aggregation_' . $i] = array(
