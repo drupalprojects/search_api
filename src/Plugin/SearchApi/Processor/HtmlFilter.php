@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchAPI\Processor\HtmlFilter.
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;

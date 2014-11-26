@@ -1,9 +1,9 @@
 <?php
 
 /**
-* @file
-* Contains \Drupal\search_api\Controller\SearchApiServerController.
-*/
+ * @file
+ * Contains \Drupal\search_api\Controller\SearchApiServerController.
+ */
 
 namespace Drupal\search_api\Controller;
 

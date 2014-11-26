@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains SearchApiViewsHandlerFilterTaxonomyTerm.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiTerm.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;

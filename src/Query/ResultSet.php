@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Query\QueryResult.
+ * Contains \Drupal\search_api\Query\ResultSet.
  */
 
 namespace Drupal\search_api\Query;

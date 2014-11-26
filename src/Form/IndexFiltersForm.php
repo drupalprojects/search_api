@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Form\IndexFiltersFormController.
+ * Contains \Drupal\search_api\Form\IndexFiltersForm.
  */
 
 namespace Drupal\search_api\Form;

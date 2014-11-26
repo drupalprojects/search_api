@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Contains \Drupal\Tests\search_api\Plugin\Processor\AddUrlTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\AddURLTest.
  */
 
 namespace Drupal\Tests\search_api\Plugin\Processor;

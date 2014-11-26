@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+ * Contains \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess.
  */
 
 namespace Drupal\search_api\Plugin\SearchApi\Processor;

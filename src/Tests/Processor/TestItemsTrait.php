@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Plugin\Processor\TestItemsTrait.
+ * Contains \Drupal\search_api\Tests\Processor\TestItemsTrait.
  */
 
 namespace Drupal\search_api\Tests\Processor;

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\action\Tests\Menu\LocalActionsWebTest.
+ * Contains \Drupal\search_api\Tests\LocalActionsWebTest.
  */
 
 namespace Drupal\search_api\Tests;

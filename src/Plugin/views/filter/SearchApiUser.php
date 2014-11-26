@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiUserBase.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiUser.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -19,7 +19,7 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @ViewsFilter("search_api_user")
  */
-class SearchApiUserBase extends SearchApiFilterEntityBase {
+class SearchApiUser extends SearchApiFilterEntityBase {
 
   /**
    * {@inheritdoc}

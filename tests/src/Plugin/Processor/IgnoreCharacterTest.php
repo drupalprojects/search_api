@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\search_api\Plugin\Processor\IgnoreCaseTest.
+ * Contains \Drupal\Tests\search_api\Plugin\Processor\IgnoreCharacterTest.
  */
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
