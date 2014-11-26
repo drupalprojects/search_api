@@ -100,7 +100,7 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'name' => 'Search API test server',
-      'machine_name' => $this->serverId,
+      'id' => $this->serverId,
       'status' => 1,
       'description' => 'A server used for testing.',
       'backend' => 'search_api_test_backend',
@@ -134,7 +134,7 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     $edit = array(
       'name' => 'Search API test index',
-      'machine_name' => $this->indexId,
+      'id' => $this->indexId,
       'status' => 1,
       'description' => 'An index used for testing.',
       'server' => $this->serverId,
@@ -151,10 +151,10 @@ class IntegrationTest extends SearchApiWebTestBase {
 
     if ($this->assertTrue($index, 'Index was correctly created.')) {
       $this->assertEqual($index->label(), $edit['name'], 'Name correctly inserted.');
-      $this->assertEqual($index->id(), $edit['machine_name'], 'Index machine name correctly inserted.');
+      $this->assertEqual($index->id(), $edit['id'], 'Index ID correctly inserted.');
       $this->assertTrue($index->status(), 'Index status correctly inserted.');
-      $this->assertEqual($index->getDescription(), $edit['description'], 'Index machine name correctly inserted.');
-      $this->assertEqual($index->getServerId(), $edit['server'], 'Index server machine name correctly inserted.');
+      $this->assertEqual($index->getDescription(), $edit['description'], 'Index ID correctly inserted.');
+      $this->assertEqual($index->getServerId(), $edit['server'], 'Index server ID correctly inserted.');
       $this->assertEqual($index->getDatasourceIds(), $edit['datasources[]'], 'Index datasource id correctly inserted.');
     }
     else {

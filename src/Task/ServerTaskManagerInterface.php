@@ -38,7 +38,7 @@ interface ServerTaskManagerInterface {
    *   The type of task to perform.
    * @param \Drupal\search_api\Index\IndexInterface|string|null $index
    *   (optional) If applicable, the index to which the task pertains (or its
-   *   machine name).
+   *   ID).
    * @param mixed $data
    *   (optional) If applicable, some further data necessary for the task.
    */
@@ -54,8 +54,8 @@ interface ServerTaskManagerInterface {
    *   (optional) A server for which the tasks should be deleted. Set to NULL to
    *   delete tasks from all servers.
    * @param \Drupal\search_api\Index\IndexInterface|string|null $index
-   *   (optional) An index (or its machine name) for which the tasks should be
-   *   deleted. Set to NULL to delete tasks for all indexes.
+   *   (optional) An index (or its ID) for which the tasks should be deleted.
+   *   Set to NULL to delete tasks for all indexes.
    */
   public function delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL);
 

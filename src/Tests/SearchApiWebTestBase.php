@@ -86,7 +86,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    *
    * @param string $name
    *   (optional) The name of the server.
-   * @param string $machine_name
+   * @param string $id
    *   (optional) The ID of the server.
    * @param string $backend_id
    *   (optional) The ID of the backend to set for the server.
@@ -99,16 +99,16 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    * @return \Drupal\search_api\Server\ServerInterface
    *   A search server.
    */
-  public function getTestServer($name = 'WebTest server', $machine_name = 'webtest_server', $backend_id = 'search_api_test_backend', $backend_config = array(), $reset = FALSE) {
+  public function getTestServer($name = 'WebTest server', $id = 'webtest_server', $backend_id = 'search_api_test_backend', $backend_config = array(), $reset = FALSE) {
     if ($reset) {
-      $server = Server::load($machine_name);
+      $server = Server::load($id);
       if ($server) {
         $server->delete();
       }
     }
     else {
       $server = Server::create(array(
-        'machine_name' => $machine_name,
+        'id' => $id,
         'name' => $name,
         'description' => $name,
         'backend' => $backend_id,
@@ -125,7 +125,7 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    *
    * @param string $name
    *   (optional) The name of the index.
-   * @param string $machine_name
+   * @param string $id
    *   (optional) The ID of the index.
    * @param string $server_id
    *   (optional) The server to which the index should be attached.
@@ -138,16 +138,16 @@ abstract class SearchApiWebTestBase extends WebTestBase {
    * @return \Drupal\search_api\Index\IndexInterface
    *   A search index.
    */
-  public function getTestIndex($name = 'WebTest Index', $machine_name = 'webtest_index', $server_id = 'webtest_server', $datasource_id = 'entity:node', $reset = FALSE) {
+  public function getTestIndex($name = 'WebTest Index', $id = 'webtest_index', $server_id = 'webtest_server', $datasource_id = 'entity:node', $reset = FALSE) {
     if ($reset) {
-      $index = Index::load($machine_name);
+      $index = Index::load($id);
       if ($index) {
         $index->delete();
       }
     }
     else {
       $index = Index::create(array(
-        'machine_name' => $machine_name,
+        'id' => $id,
         'name' => $name,
         'description' => $name,
         'server' => $server_id,

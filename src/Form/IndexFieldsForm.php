@@ -151,7 +151,7 @@ class IndexFieldsForm extends EntityForm {
 
     foreach ($fields as $key => $field) {
       $build['fields'][$key]['title']['#markup'] = String::checkPlain($field->getLabel());
-      $build['fields'][$key]['machine_name']['#markup'] = String::checkPlain($key);
+      $build['fields'][$key]['id']['#markup'] = String::checkPlain($key);
       if ($field->getDescription()) {
         $build['fields'][$key]['description'] = array(
           '#type' => 'value',

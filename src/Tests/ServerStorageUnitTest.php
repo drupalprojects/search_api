@@ -61,7 +61,7 @@ class ServerStorageUnitTest extends KernelTestBase {
    */
   public function serverCreate() {
     $serverData = array(
-      'machine_name' => $this->randomMachineName(),
+      'id' => $this->randomMachineName(),
       'name' => $this->randomString(),
       'backend' => 'search_api_test_backend',
     );

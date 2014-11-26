@@ -36,7 +36,7 @@ class ProcessorIntegrationTest extends SearchApiWebTestBase {
     $this->indexId = 'test_index';
     Index::create(array(
       'name' => 'Test index',
-      'machine_name' => $this->indexId,
+      'id' => $this->indexId,
       'status' => 1,
       'datasources' => array('entity:node'),
     ))->save();

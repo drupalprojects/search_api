@@ -2,9 +2,9 @@ search_api.server.*:
   type: mapping
   label : 'Search server'
   mapping:
-    machine_name:
+    id:
       type: string
-      label: 'Machine name'
+      label: 'ID'
     name:
       type: label
       label: 'Name'

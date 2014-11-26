@@ -221,8 +221,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Retrieves the ID of the server the index is attached to.
    *
    * @return string|null
-   *   The index's server's machine name, or NULL if the index doesn't have a
-   *   server.
+   *   The index's server's ID, or NULL if the index doesn't have a server.
    */
   public function getServerId();
 

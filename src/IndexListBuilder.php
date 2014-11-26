@@ -131,7 +131,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         ),
         'operations' => $row['operations'],
       ),
-      'title' => $this->t('Machine name: @name', array('@name' => $entity->id())),
+      'title' => $this->t('ID: @name', array('@name' => $entity->id())),
       'class' => array(
         Html::cleanCssIdentifier($entity->getEntityTypeId() . '-' . $entity->id()),
         $entity->status() ? 'search-api-list-enabled' : 'search-api-list-disabled',

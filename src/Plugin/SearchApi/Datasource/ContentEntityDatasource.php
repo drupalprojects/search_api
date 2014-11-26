@@ -454,7 +454,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * Retrieves the bundles which will be indexed for this datasource.
    *
    * @return string[]
-   *   The machine names of all indexed bundles for this datasource.
+   *   The IDs of all indexed bundles for this datasource.
    */
   protected function getIndexedBundles() {
     if (!$this->hasBundles()) {

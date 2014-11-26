@@ -1,4 +1,4 @@
-machine_name: database_search_server
+id: database_search_server
 name: 'Database search server'
 description: 'A server used for testing.'
 backend: search_api_db

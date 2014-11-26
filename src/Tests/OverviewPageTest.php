@@ -62,7 +62,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
     // @todo Why is this here? This hasn't got anything to do with the overview.
     $edit = array(
       'name' => $this->randomMachineName(),
-      'machine_name' => Unicode::strtolower($this->randomMachineName()),
+      'id' => Unicode::strtolower($this->randomMachineName()),
       'datasources[]' => 'entity:user',
     );
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));

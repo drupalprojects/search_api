@@ -61,7 +61,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
 
     $server_name = $this->randomMachineName();
     $this->server = entity_create('search_api_server', array(
-      'machine_name' => strtolower($server_name),
+      'id' => strtolower($server_name),
       'name' => $server_name,
       'status' => TRUE,
       'backend' => 'search_api_db',
@@ -74,7 +74,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
 
     $index_name = $this->randomMachineName();
     $this->index = entity_create('search_api_index', array(
-      'machine_name' => strtolower($index_name),
+      'id' => strtolower($index_name),
       'name' => $index_name,
       'status' => TRUE,
       'datasources' => array('entity:comment', 'entity:node'),

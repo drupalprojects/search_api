@@ -249,7 +249,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * Tests whether a certain field should be processed.
    *
    * @param string $name
-   *   The field's machine name.
+   *   The field's ID.
    * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field's information.
    *

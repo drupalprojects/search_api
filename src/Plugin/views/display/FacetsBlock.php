@@ -307,7 +307,7 @@ class FacetsBlock extends Block {
     $index = $query->getIndex();
     $options['field'] = $index->options['fields'][$facet_field];
     $options['field']['key'] = $facet_field;
-    $options['index id'] = $index->machine_name;
+    $options['index id'] = $index->id;
     $options['value callback'] = '_search_api_facetapi_facet_create_label';
     $map = search_api_facetapi_facet_map_callback($filters, $options);
 

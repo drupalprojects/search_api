@@ -148,7 +148,7 @@ function drush_search_api_list() {
   }
 
   $rows[] = array(
-    dt('Machine name'),
+    dt('ID'),
     dt('Name'),
     dt('Server'),
     dt('Type'),
@@ -268,7 +268,7 @@ function drush_search_api_status($index_id = NULL) {
   }
 
   $rows[] = array(
-    dt('Machine name'),
+    dt('ID'),
     dt('Name'),
     dt('% Complete'),
     dt('Indexed'),

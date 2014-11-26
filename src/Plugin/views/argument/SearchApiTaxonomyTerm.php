@@ -51,8 +51,8 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
           // Set filters for all term reference fields which don't specify a
           // vocabulary, as well as for all fields specifying the term's
           // vocabulary.
-          if (!empty($vocabulary_fields[$term->vocabulary_machine_name])) {
-            foreach ($vocabulary_fields[$term->vocabulary_machine_name] as $field) {
+          if (!empty($vocabulary_fields[$term->vocabulary_id])) {
+            foreach ($vocabulary_fields[$term->vocabulary_id] as $field) {
               $inner_filter->condition($field, $term->tid, $condition_operator);
             }
           }

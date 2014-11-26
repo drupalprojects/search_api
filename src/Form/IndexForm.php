@@ -179,12 +179,12 @@ class IndexForm extends EntityForm {
       '#default_value' => $index->label(),
       '#required' => TRUE,
     );
-    $form['machine_name'] = array(
-      '#type' => 'machine_name',
+    $form['id'] = array(
+      '#type' => 'id',
       '#default_value' => $index->id(),
       '#maxlength' => 50,
       '#required' => TRUE,
-      '#machine_name' => array(
+      '#id' => array(
         'exists' => array($this->getIndexStorage(), 'load'),
         'source' => array('name'),
       ),

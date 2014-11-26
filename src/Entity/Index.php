@@ -46,7 +46,7 @@ use Drupal\search_api\Utility\Utility;
  *   admin_permission = "administer search_api",
  *   config_prefix = "index",
  *   entity_keys = {
- *     "id" = "machine_name",
+ *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "status" = "status"
@@ -68,7 +68,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string
    */
-  protected $machine_name;
+  protected $id;
 
   /**
    * A name to be displayed for the index.
@@ -121,7 +121,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @see getDatasources()
    */
-  protected $datasourcePluginInstances;
+  protected $datasourcePlugins;
 
   /**
    * The tracker plugin ID.
@@ -144,7 +144,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @see getTracker()
    */
-  protected $trackerPluginInstance;
+  protected $trackerPlugin;
 
   /**
    * The ID of the server on which data should be indexed.
@@ -262,7 +262,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function id() {
-    return $this->machine_name;
+    return $this->id;
   }
 
   /**
@@ -348,19 +348,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getDatasources() {
-    if (!isset($this->datasourcePluginInstances)) {
-      $this->datasourcePluginInstances = array();
+    if (!isset($this->datasourcePlugins)) {
+      $this->datasourcePlugins = array();
       $plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
       foreach ($this->datasources as $datasource) {
         $config = array('index' => $this);
         if (isset($this->datasource_configs[$datasource])) {
           $config += $this->datasource_configs[$datasource];
         }
-        $this->datasourcePluginInstances[$datasource] = $plugin_manager->createInstance($datasource, $config);
+        $this->datasourcePlugins[$datasource] = $plugin_manager->createInstance($datasource, $config);
       }
     }
 
-    return $this->datasourcePluginInstances;
+    return $this->datasourcePlugins;
   }
 
   /**
@@ -381,16 +381,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getTracker() {
-    if (!$this->trackerPluginInstance) {
+    if (!$this->trackerPlugin) {
       $tracker_plugin_configuration = array('index' => $this) + $this->tracker_config;
-      if (!($this->trackerPluginInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
+      if (!($this->trackerPlugin = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
         $args['@tracker'] = $this->tracker;
         $args['%index'] = $this->label();
         throw new SearchApiException(t('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
       }
     }
 
-    return $this->trackerPluginInstance;
+    return $this->trackerPlugin;
   }
 
   /**
@@ -1084,8 +1084,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function resetCaches($include_stored = TRUE) {
-    $this->datasourcePluginInstances = NULL;
-    $this->trackerPluginInstance = NULL;
+    $this->datasourcePlugins = NULL;
+    $this->trackerPlugin = NULL;
     $this->serverInstance = NULL;
     $this->fields = NULL;
     $this->datasourceFields = NULL;

@@ -35,7 +35,7 @@ use Drupal\search_api\Utility\Utility;
  *   admin_permission = "administer search_api",
  *   config_prefix = "server",
  *   entity_keys = {
- *     "id" = "machine_name",
+ *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "status" = "status"
@@ -53,11 +53,11 @@ use Drupal\search_api\Utility\Utility;
 class Server extends ConfigEntityBase implements ServerInterface {
 
   /**
-   * The machine name of the server.
+   * The ID of the server.
    *
    * @var string
    */
-  protected $machine_name;
+  protected $id;
 
   /**
    * The displayed name of the server.
@@ -92,14 +92,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var \Drupal\search_api\Backend\BackendInterface
    */
-  protected $backendPluginInstance;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function id() {
-    return $this->machine_name;
-  }
+  protected $backendPlugin;
 
   /**
    * {@inheritdoc}
@@ -127,17 +120,17 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function getBackend() {
-    if (!$this->backendPluginInstance) {
+    if (!$this->backendPlugin) {
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
       $config = $this->backend_config;
       $config['server'] = $this;
-      if (!($this->backendPluginInstance = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
+      if (!($this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
         $args['@backend'] = $this->getBackendId();
         $args['%server'] = $this->label();
         throw new SearchApiException(t('The backend with ID "@backend" could not be retrieved for server %server.', $args));
       }
     }
-    return $this->backendPluginInstance;
+    return $this->backendPlugin;
   }
 
   /**
@@ -460,7 +453,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * Prevents the backend plugin instance from being cloned.
    */
   public function __clone() {
-    $this->backendPluginInstance = NULL;
+    $this->backendPlugin = NULL;
   }
 
 }

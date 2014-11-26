@@ -13,7 +13,7 @@ function search_api_schema() {
     'description' => 'Stores the items which should be indexed for each index, and their state.',
     'fields' => array(
       'index_id' => array(
-        'description' => 'The machine name of the index this item belongs to.',
+        'description' => 'The ID of the index this item belongs to.',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,

@@ -260,7 +260,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
     $query->fields('td');
     $query->condition('td.name', $names);
     if (!empty($this->definition['vocabulary'])) {
-      $query->condition('tv.machine_name', $this->definition['vocabulary']);
+      $query->condition('tv.id', $this->definition['vocabulary']);
     }
     $query->addTag('term_access');
     $result = $query->execute();

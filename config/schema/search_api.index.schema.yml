@@ -2,9 +2,9 @@ search_api.index.*:
   type: mapping
   label : 'Search index'
   mapping:
-    machine_name:
+    id:
       type: string
-      label: 'Machine name'
+      label: 'ID'
     name:
       type: label
       label: Name'
@@ -79,7 +79,7 @@ search_api.index.*:
       type: search_api.tracker.plugin.[%parent.tracker]
     server:
       type: string
-      label: 'Server machine name'
+      label: 'Server ID'
     status:
       type: boolean
       label: 'Status'
