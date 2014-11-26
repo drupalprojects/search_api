@@ -311,11 +311,11 @@ class IntegrationTest extends SearchApiWebTestBase {
    */
   protected function addFieldsToIndex() {
     $edit = array(
-      'fields[entity:node|nid][indexed]' => 1,
-      'fields[entity:node|title][indexed]' => 1,
-      'fields[entity:node|title][type]' => 'text',
-      'fields[entity:node|title][boost]' => '21.0',
-      'fields[entity:node|body][indexed]' => 1,
+      'fields[entity:node/nid][indexed]' => 1,
+      'fields[entity:node/title][indexed]' => 1,
+      'fields[entity:node/title][type]' => 'text',
+      'fields[entity:node/title][boost]' => '21.0',
+      'fields[entity:node/body][indexed]' => 1,
     );
 
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
@@ -325,14 +325,14 @@ class IntegrationTest extends SearchApiWebTestBase {
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields(FALSE);
 
-    $this->assertEqual($fields['entity:node|nid']->isIndexed(), $edit['fields[entity:node|nid][indexed]'], 'nid field is indexed.');
-    $this->assertEqual($fields['entity:node|title']->isIndexed(), $edit['fields[entity:node|title][indexed]'], 'title field is indexed.');
-    $this->assertEqual($fields['entity:node|title']->getType(), $edit['fields[entity:node|title][type]'], 'title field type is text.');
-    $this->assertEqual($fields['entity:node|title']->getBoost(), $edit['fields[entity:node|title][boost]'], 'title field boost value is 21.');
+    $this->assertEqual($fields['entity:node/nid']->isIndexed(), $edit['fields[entity:node/nid][indexed]'], 'nid field is indexed.');
+    $this->assertEqual($fields['entity:node/title']->isIndexed(), $edit['fields[entity:node/title][indexed]'], 'title field is indexed.');
+    $this->assertEqual($fields['entity:node/title']->getType(), $edit['fields[entity:node/title][type]'], 'title field type is text.');
+    $this->assertEqual($fields['entity:node/title']->getBoost(), $edit['fields[entity:node/title][boost]'], 'title field boost value is 21.');
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.
-    $this->assertEqual($fields['entity:node|body']->getType(), 'text', 'Complex field mapping relationship works.');
+    $this->assertEqual($fields['entity:node/body']->getType(), 'text', 'Complex field mapping relationship works.');
   }
 
   /**
@@ -341,11 +341,11 @@ class IntegrationTest extends SearchApiWebTestBase {
   protected function addAdditionalFieldsToIndex() {
     // Test that an entity reference field which targets a content entity is
     // shown.
-    $this->assertFieldByName('additional[field][entity:node|uid]', NULL, 'Additional entity reference field targeting a content entity type is displayed.');
+    $this->assertFieldByName('additional[field][entity:node/uid]', NULL, 'Additional entity reference field targeting a content entity type is displayed.');
 
     // Test that an entity reference field which targets a config entity is not
     // shown as an additional field option.
-    $this->assertNoFieldByName('additional[field][entity:node|type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
+    $this->assertNoFieldByName('additional[field][entity:node/type]', NULL,'Additional entity reference field targeting a config entity type is not displayed.');
 
     // @todo Implement more tests for additional fields.
   }
@@ -355,14 +355,14 @@ class IntegrationTest extends SearchApiWebTestBase {
    */
   protected function removeFieldsFromIndex() {
     $edit = array(
-      'fields[entity:node|body][indexed]' => FALSE,
+      'fields[entity:node/body][indexed]' => FALSE,
     );
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
 
     /** @var $index \Drupal\search_api\Index\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields();
-    $this->assertTrue(!isset($fields['entity:node|body']), 'The body field has been removed from the index.');
+    $this->assertTrue(!isset($fields['entity:node/body']), 'The body field has been removed from the index.');
   }
 
   /**
@@ -386,7 +386,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $edit = array(
       'processors[ignorecase][status]' => 1,
       'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
-      'processors[ignorecase][settings][fields][entity:node|title]' => 'entity:node|title',
+      'processors[ignorecase][settings][fields][entity:node/title]' => 'entity:node/title',
     );
     $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
     /** @var \Drupal\search_api\Index\IndexInterface $index */

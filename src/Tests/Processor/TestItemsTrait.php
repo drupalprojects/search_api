@@ -38,7 +38,7 @@ trait TestItemsTrait {
    *   will be saved.
    * @param string|null $field_id
    *   (optional) The field ID to set for the field. Defaults to
-   *   "entity:node|field_test".
+   *   "entity:node/field_test".
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing a single item with the specified field.

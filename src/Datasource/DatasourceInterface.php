@@ -49,7 +49,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @param mixed $id
    *   The datasource-specific ID of the item.
    *
-   * @return \Drupal\Core\TypedData\ComplexDataInterface|NULL
+   * @return \Drupal\Core\TypedData\ComplexDataInterface|null
    *   The loaded item if it could be found, NULL otherwise.
    */
   public function load($id);

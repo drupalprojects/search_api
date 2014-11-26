@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Tests the "Rendered item" processor.
@@ -126,7 +127,7 @@ class RenderedItemTest extends ProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $key => $item) {
-      $idx = substr($key, strrpos($key, '|') + 1);
+      list(, $idx) = Utility::splitCombinedId($key);
       $field = $item->getField('rendered_item');
       $this->assertEqual($field->getType(), 'string', 'Node item ' . $idx . ' rendered value is identified as a string.');
       $values = $field->getValues();

@@ -83,19 +83,19 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     ));
     $this->index->setServer($this->server);
     $this->index->setOption('fields', array(
-      'entity:comment|subject' => array(
+      'entity:comment/subject' => array(
         'type' => 'text',
       ),
-      'entity:comment|status' => array(
+      'entity:comment/status' => array(
         'type' => 'boolean',
       ),
-      'entity:node|title' => array(
+      'entity:node/title' => array(
         'type' => 'text',
       ),
-      'entity:node|author' => array(
+      'entity:node/author' => array(
         'type' => 'integer',
       ),
-      'entity:node|status' => array(
+      'entity:node/status' => array(
         'type' => 'boolean',
       ),
     ));

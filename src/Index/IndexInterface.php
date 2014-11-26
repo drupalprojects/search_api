@@ -30,7 +30,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Likewise, internal item IDs consist of the datasource ID and the item ID
    * within that datasource, separated by this character.
    */
-  const DATASOURCE_ID_SEPARATOR = '|';
+  const DATASOURCE_ID_SEPARATOR = '/';
 
   /**
    * Retrieves the index description.

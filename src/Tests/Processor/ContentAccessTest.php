@@ -101,10 +101,10 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[1]->save();
 
     $fields = $this->index->getOption('fields');
-    $fields['entity:node|search_api_node_grants'] = array(
+    $fields['entity:node/search_api_node_grants'] = array(
       'type' => 'string',
     );
-    $fields['entity:comment|search_api_node_grants'] = array(
+    $fields['entity:comment/search_api_node_grants'] = array(
       'type' => 'string',
     );
     $this->index->setOption('fields', $fields);
