@@ -9,10 +9,10 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Session\UserSession;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
-use Drupal\search_api\Session\SearchApiUserSession;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -32,6 +32,13 @@ class RenderedItem extends ProcessorPluginBase {
   protected $currentUser;
 
   /**
+   * The renderer to use.
+   *
+   * @var \Drupal\Core\Render\RendererInterface|null
+   */
+  protected $renderer;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -41,6 +48,10 @@ class RenderedItem extends ProcessorPluginBase {
     /** @var \Drupal\Core\Session\AccountProxyInterface $current_user */
     $current_user = $container->get('current_user');
     $plugin->setCurrentUser($current_user);
+
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
+    $renderer = $container->get('renderer');
+    $plugin->setRenderer($renderer);
 
     return $plugin;
   }
@@ -60,9 +71,35 @@ class RenderedItem extends ProcessorPluginBase {
    *
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
+   *
+   * @return $this
    */
   public function setCurrentUser(AccountProxyInterface $current_user) {
     $this->currentUser = $current_user;
+    return $this;
+  }
+
+  /**
+   * Retrieves the renderer.
+   *
+   * @return \Drupal\Core\Render\RendererInterface
+   *   The renderer.
+   */
+  public function getRenderer() {
+    return $this->renderer ?: \Drupal::service('renderer');
+  }
+
+  /**
+   * Sets the renderer.
+   *
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The new renderer.
+   *
+   * @return $this
+   */
+  public function setRenderer($renderer) {
+    $this->renderer = $renderer;
+    return $this;
   }
 
   /**
@@ -137,7 +174,7 @@ class RenderedItem extends ProcessorPluginBase {
     // using the configured roles.
     $original_user = $this->currentUser->getAccount();
     // @todo Why not just use \Drupal\Core\Session\UserSession directly here?
-    $this->currentUser->setAccount(new SearchApiUserSession($this->configuration['roles']));
+    $this->currentUser->setAccount(new UserSession(array('roles' => $this->configuration['roles'])));
 
     // Annoyingly, this doc comment is needed for PHPStorm. See
     // http://youtrack.jetbrains.com/issue/WI-23586
@@ -150,7 +187,7 @@ class RenderedItem extends ProcessorPluginBase {
         continue;
       }
       $build = $item->getDatasource()->viewItem($item->getOriginalObject(), $this->configuration['view_mode'][$item->getDatasourceId()]);
-      $field->addValue(drupal_render($build));
+      $field->addValue($this->getRenderer()->render($build));
     }
 
     // Restore the original user.
