@@ -52,7 +52,7 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
   /**
    * {@inheritdoc}
    */
-  public function summary() {
+  public function getDescription() {
     $plugin_definition = $this->getPluginDefinition();
     return isset($plugin_definition['description']) ? $plugin_definition['description'] : '';
   }

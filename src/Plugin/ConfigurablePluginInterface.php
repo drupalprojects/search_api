@@ -27,12 +27,12 @@ interface ConfigurablePluginInterface extends PluginInspectionInterface, Derivat
   public function label();
 
   /**
-   * Returns the summary of the plugin configuration.
+   * Returns the plugin's description.
    *
    * @return string
-   *   The configuration summary.
+   *   A string describing the plugin. Might contain HTML and should be already
+   *   sanitized for output.
    */
-  // @todo Clarify whether this needs to be sanitized. And rename.
-  public function summary();
+  public function getDescription();
 
 }

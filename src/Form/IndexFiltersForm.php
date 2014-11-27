@@ -84,6 +84,7 @@ class IndexFiltersForm extends EntityForm {
 
     // Make sure that we have weights and status for all processors, even new
     // ones.
+    /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     foreach ($processors_by_name as $name => $processor) {
       $processors_settings[$name]['status'] = (!isset($processors_settings[$name]['status'])) ? 0 : $processors_settings[$name]['status'];
       $processors_settings[$name]['weight'] = (!isset($processors_settings[$name]['weight'])) ? 0 : $processors_settings[$name]['weight'];
@@ -110,7 +111,7 @@ class IndexFiltersForm extends EntityForm {
         '#title' => $processor->label(),
         '#default_value' => $processors_settings[$name]['status'],
         '#parents' => array('processors', $name, 'status'),
-        '#description' => $processor->getPluginDefinition()['description'],
+        '#description' => $processor->getDescription(),
       );
     }
 

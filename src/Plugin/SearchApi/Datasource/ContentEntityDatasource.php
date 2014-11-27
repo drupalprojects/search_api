@@ -370,7 +370,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function summary() {
+  public function getDescription() {
     $summary = '';
     if ($this->hasBundles()) {
       $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_filter($this->configuration['bundles'])));

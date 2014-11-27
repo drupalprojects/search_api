@@ -123,8 +123,8 @@ function theme_search_api_server($variables) {
 
   // Check if the backend used by the server is valid and get its label.
   if ($server->hasValidBackend()) {
-    $backend_plugin_definition = $server->getBackend()->getPluginDefinition();
-    $info = String::checkPlain($backend_plugin_definition['label']);
+    $backend = $server->getBackend();
+    $info = String::checkPlain($backend->label());
   }
   else {
     $class = 'error';
@@ -246,7 +246,7 @@ function theme_search_api_index($variables) {
   foreach ($index->getDatasourceIds() as $datasource_id) {
     // Check if the datasource is valid.
     if ($index->isValidDatasource($datasource_id)) {
-      $info = $index->getDatasource($datasource_id)->getPluginDefinition()['label'];
+      $info = $index->getDatasource($datasource_id)->label();
     }
     else {
       $class = 'error';
@@ -260,7 +260,7 @@ function theme_search_api_index($variables) {
 
   // Check if the tracker is valid.
   if ($tracker) {
-    $info = $tracker->getPluginDefinition()['label'];
+    $info = $tracker->label();
   }
   else {
     $class = 'error';
