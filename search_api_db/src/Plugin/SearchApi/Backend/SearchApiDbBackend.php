@@ -107,7 +107,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api_db\Plugin\SearchApi\Backend\SearchApiDbBackend $backend */
+    /** @var static $backend */
     $backend = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
@@ -845,7 +845,7 @@ class SearchApiDbBackend extends BackendPluginBase {
         'read_only' => TRUE,
       ));
     }
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+
     try {
       if (!isset($this->configuration['field_tables'][$index->id()]) && !isset($this->configuration['index_tables'][$index->id()])) {
         return;
@@ -920,8 +920,7 @@ class SearchApiDbBackend extends BackendPluginBase {
     try {
       $inserts = array();
       $text_inserts = array();
-      /** @var \Drupal\search_api\Item\FieldInterface $field */
-      foreach ($item as $name => $field) {
+      foreach ($item->getFields() as $name => $field) {
         $denormalized_value = NULL;
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables

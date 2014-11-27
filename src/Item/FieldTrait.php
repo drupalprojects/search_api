@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\Component\Utility\String;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Utility\Utility;
@@ -385,7 +386,7 @@ trait FieldTrait {
    */
   public function __wakeup() {
     if ($this->index_id) {
-      $this->index = entity_load('search_api_index', $this->index_id);
+      $this->index = Index::load($this->index_id);
       unset($this->index_id);
     }
   }

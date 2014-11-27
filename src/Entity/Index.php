@@ -397,7 +397,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->server !== NULL && entity_load('search_api_server', $this->server) !== NULL;
+    return $this->server !== NULL && Server::load($this->server) !== NULL;
   }
 
   /**
@@ -419,7 +419,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getServer() {
     if (!$this->serverInstance && $this->server) {
-      $this->serverInstance = entity_load('search_api_server', $this->server);
+      $this->serverInstance = Server::load($this->server);
       if (!$this->serverInstance) {
         $args['@server'] = $this->server;
         $args['%index'] = $this->label();
@@ -1138,8 +1138,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     try {
       // Fake an original for inserts to make code cleaner.
-      /** @var \Drupal\search_api\Index\IndexInterface $original */
-      $original = $update ? $this->original : entity_create($this->getEntityTypeId(), array('status' => FALSE));
+      $original = $update ? $this->original : static::create(array('status' => FALSE));
 
       if ($this->status() && $original->status()) {
         // React on possible changes that would require re-indexing, etc.

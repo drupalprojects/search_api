@@ -23,6 +23,7 @@ use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility\Utility;
+use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -45,7 +46,7 @@ class ContentAccess extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess $processor */
+    /** @var static $processor */
     $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
@@ -195,7 +196,7 @@ class ContentAccess extends ProcessorPluginBase {
     if (!$query->getOption('search_api_bypass_access')) {
       $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
       if (is_numeric($account)) {
-        $account = entity_load('user', $account);
+        $account = User::load($account);
       }
       if (is_object($account)) {
         try {

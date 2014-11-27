@@ -37,7 +37,7 @@ class Transliteration extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Processor\Transliteration $processor */
+    /** @var static $processor */
     $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Component\Transliteration\TransliterationInterface $transliterator */

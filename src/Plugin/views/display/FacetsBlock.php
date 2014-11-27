@@ -11,6 +11,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\display\Block;
@@ -184,7 +185,7 @@ class FacetsBlock extends Block {
       $index_id = $this->getSearchIndexId();
       /** @var \Drupal\search_api\Index\IndexInterface $index */
       $index = NULL;
-      if (!($index_id && ($index = entity_load('search_api_index', $index_id)))) {
+      if (!($index_id && ($index = Index::load($index_id)))) {
         $table = $this->view->storage->get('base_table');
         $views_data = Views::viewsData($table);
         $table = empty($views_data['table']['base']['title']) ? $table : $views_data['table']['base']['title'];

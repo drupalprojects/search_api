@@ -42,7 +42,7 @@ class RenderedItem extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Processor\RenderedItem $plugin */
+    /** @var static $plugin */
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Session\AccountProxyInterface $current_user */

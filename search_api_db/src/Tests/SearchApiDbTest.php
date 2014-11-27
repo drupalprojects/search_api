@@ -107,7 +107,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
    * Tests that all tables and all columns have been created.
    */
   protected function checkServerTables() {
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = Server::load($this->serverId);
 
     $normalized_storage_table = $server->getBackendConfig()['index_tables'][$this->indexId];
@@ -124,7 +123,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
    * Tests the index that was installed through default configuration files.
    */
   protected function checkDefaultIndex() {
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load($this->indexId);
     $this->assertTrue((bool) $index, 'The index was successfully created.');
 
@@ -148,7 +146,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
     $index->getFields()[$field_id]->setIndexed(FALSE, TRUE);
     $index->save();
 
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = Server::load($this->serverId);
     $index_fields = array_keys($index->getOption('fields', array()));
     $server_fields = array_keys($server->getBackendConfig()['field_tables'][$index->id()]);
@@ -345,7 +342,6 @@ class SearchApiDbTest extends EntityUnitTestBase {
    * Edits the server to change the "Minimum word length" setting.
    */
   protected function editServer() {
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = Server::load($this->serverId);
     $backend_config = $server->getBackendConfig();
     $backend_config['min_chars'] = 4;
@@ -798,9 +794,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   protected function checkModuleUninstall() {
     // See whether clearing the server works.
     // Regression test for #2156151.
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
     $server = Server::load($this->serverId);
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load($this->indexId);
     $server->deleteAllIndexItems($index);
     $query = $this->buildSearch();

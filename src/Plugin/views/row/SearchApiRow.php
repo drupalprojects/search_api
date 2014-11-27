@@ -56,7 +56,7 @@ class SearchApiRow extends RowPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\views\row\SearchApiRow $row */
+    /** @var static $row */
     $row = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */

@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\simpletest\KernelTestBase;
 
@@ -71,7 +73,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     // Create a test server.
-    $this->server = entity_create('search_api_server', array(
+    $this->server = Server::create(array(
       'name' => $this->randomString(),
       'id' => $this->randomMachineName(),
       'status' => 1,
@@ -80,7 +82,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
     $this->server->save();
 
     // Create a test index.
-    $this->index = entity_create('search_api_index', array(
+    $this->index = Index::create(array(
       'name' => $this->randomString(),
       'id' => $this->randomMachineName(),
       'status' => 1,

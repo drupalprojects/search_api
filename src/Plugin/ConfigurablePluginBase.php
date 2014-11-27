@@ -31,7 +31,6 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\ConfigurablePluginBase $plugin */
     $plugin = new static($configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */

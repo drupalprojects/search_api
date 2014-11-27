@@ -13,8 +13,6 @@ use Drupal\search_api\Entity\Index;
 function search_api_views_data() {
   $data = array();
   try {
-    // Sadly needed in PhpStorm: http://youtrack.jetbrains.com/issue/WI-19953
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
     foreach (Index::loadMultiple() as $index) {
       // Fill in base data.
       $key = 'search_api_index_' . $index->id();
@@ -81,8 +79,6 @@ function search_api_views_data() {
 function search_api_views_plugins_cache_alter(array &$plugins) {
   // Collect all base tables provided by this module.
   $bases = array();
-  // Sadly needed in PhpStorm: http://youtrack.jetbrains.com/issue/WI-19953
-  /** @var \Drupal\search_api\Index\IndexInterface $index */
   foreach (Index::loadMultiple() as $index) {
     $bases[] = 'search_api_index_' . $index->id();
   }
@@ -95,8 +91,6 @@ function search_api_views_plugins_cache_alter(array &$plugins) {
 function search_api_views_plugins_row_alter(array &$plugins) {
   // Collect all base tables provided by this module.
   $bases = array();
-  // Sadly needed in PhpStorm: http://youtrack.jetbrains.com/issue/WI-19953
-  /** @var \Drupal\search_api\Index\IndexInterface $index */
   foreach (Index::loadMultiple() as $index) {
     $bases[] = 'search_api_index_' . $index->id();
   }

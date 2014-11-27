@@ -97,7 +97,7 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->comments[] = $comment;
 
-    $this->nodes[1] = entity_create('node', array('status' => NODE_PUBLISHED, 'type' => 'page', 'title' => 'test title'));
+    $this->nodes[1] = Node::create(array('status' => NODE_PUBLISHED, 'type' => 'page', 'title' => 'test title'));
     $this->nodes[1]->save();
 
     $fields = $this->index->getOption('fields');

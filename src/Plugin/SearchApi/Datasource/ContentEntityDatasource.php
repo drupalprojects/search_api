@@ -18,6 +18,7 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\field\FieldConfigInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -67,7 +68,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource $datasource */
+    /** @var static $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var $entity_manager \Drupal\Core\Entity\EntityManagerInterface */
@@ -650,8 +651,9 @@ class ContentEntityDatasource extends DatasourcePluginBase {
       return array();
     }
 
+    // Needed for PhpStorm. See https://youtrack.jetbrains.com/issue/WI-23395.
     /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
-    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_names);
+    $indexes = Index::loadMultiple($index_names);
 
     // If the datasource's entity type supports bundles, we have to filter the
     // indexes for whether they also include the specific bundle of the given

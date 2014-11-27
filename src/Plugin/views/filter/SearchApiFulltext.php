@@ -247,7 +247,6 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   protected function getFulltextFields() {
     $fields = array();
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load(substr($this->table, 17));
 
     $fields_info = $index->getFields();

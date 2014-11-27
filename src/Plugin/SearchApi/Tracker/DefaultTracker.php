@@ -44,7 +44,7 @@ class DefaultTracker extends TrackerPluginBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Tracker\DefaultTracker $tracker */
+    /** @var static $tracker */
     $tracker = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\Core\Database\Connection $connection */

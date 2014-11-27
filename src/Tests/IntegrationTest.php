@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Exception\SearchApiException;
 
 /**
@@ -289,8 +290,7 @@ class IntegrationTest extends SearchApiWebTestBase {
    *   The number of tracked items in the test index.
    */
   protected function countTrackedItems() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
-    $index = entity_load('search_api_index', $this->indexId);
+    $index = Index::load($this->indexId);
     return $index->getTracker()->getTotalItemsCount();
   }
 
@@ -301,8 +301,7 @@ class IntegrationTest extends SearchApiWebTestBase {
    *   The number of unindexed items in the test index.
    */
   protected function countRemainingItems() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
-    $index = entity_load('search_api_index', $this->indexId);
+    $index = Index::load($this->indexId);
     return $index->getTracker()->getRemainingItemsCount();
   }
 

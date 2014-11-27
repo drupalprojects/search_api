@@ -39,7 +39,6 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
     unset($form['break_phrase']);
     unset($form['not']);
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
     $index = Index::load(substr($this->table, 17));
     $fields = array();
     foreach ($index->getFields() as $key => $field) {

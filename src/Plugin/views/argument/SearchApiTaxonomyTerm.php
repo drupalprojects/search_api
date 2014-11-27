@@ -38,7 +38,7 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
     }
 
     if (!empty($this->value)) {
-      $terms = entity_load('taxonomy_term', $this->value);
+      $terms = Term::load($this->value);
 
       if (!empty($terms)) {
         $filter = $this->query->createFilter($outer_conjunction);

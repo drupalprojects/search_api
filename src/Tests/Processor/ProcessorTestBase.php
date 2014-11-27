@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
@@ -60,7 +62,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
     $server_name = $this->randomMachineName();
-    $this->server = entity_create('search_api_server', array(
+    $this->server = Server::create(array(
       'id' => strtolower($server_name),
       'name' => $server_name,
       'status' => TRUE,
@@ -73,7 +75,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     $this->server->save();
 
     $index_name = $this->randomMachineName();
-    $this->index = entity_create('search_api_index', array(
+    $this->index = Index::create(array(
       'id' => strtolower($index_name),
       'name' => $index_name,
       'status' => TRUE,

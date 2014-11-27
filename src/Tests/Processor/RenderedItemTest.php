@@ -8,8 +8,11 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Utility\Utility;
+use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
 
 /**
  * Tests the "Rendered item" processor.
@@ -62,14 +65,14 @@ class RenderedItemTest extends ProcessorTestBase {
     node_add_body_field($type);
 
     // Create anonymous user role.
-    $role = entity_create('user_role', array(
+    $role = Role::create(array(
       'id' => 'anonymous',
       'label' => 'anonymous',
     ));
     $role->save();
 
     // Insert the anonymous user into the database.
-    $anonymous_user = entity_create('user', array(
+    $anonymous_user = User::create(array(
       'uid' => 0,
       'name' => '',
     ));
@@ -85,9 +88,9 @@ class RenderedItemTest extends ProcessorTestBase {
     );
 
     // Create some test nodes with valid user on it for rendering a picture.
-    $this->nodes[0] = entity_create('node', $this->node_data);
+    $this->nodes[0] = Node::create($this->node_data);
     $this->nodes[0]->save();
-    $this->nodes[1] = entity_create('node', $this->node_data);
+    $this->nodes[1] = Node::create($this->node_data);
     $this->nodes[1]->save();
 
     // Set proper configuration for the tested processor.
