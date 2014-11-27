@@ -111,8 +111,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param $option
    *   The new option.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setOption($name, $option);
 
@@ -122,8 +121,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param array $options
    *   The new index options.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setOptions(array $options);
 

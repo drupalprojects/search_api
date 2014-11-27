@@ -31,8 +31,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    *   (optional) Whether to notify the index of the change, i.e., set the field
    *   type in the index accordingly.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setType($type, $notify = FALSE);
 
@@ -51,8 +50,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    * @param array $values
    *   The values of the field.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setValues(array $values);
 
@@ -62,8 +60,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    * @param mixed $value
    *   A value to add to this field.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function addValue($value);
 
@@ -86,8 +83,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    * @param string $original_type
    *   The field's original data type.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setOriginalType($original_type);
 
@@ -108,8 +104,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    *   (optional) Whether to notify the index of the change, i.e., set the field
    *   to indexed in its options, too.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setIndexed($indexed, $notify = FALSE);
 
@@ -131,8 +126,7 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    *   (optional) Whether to notify the index of the change, i.e., set the
    *   field's boost in its options, too.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setBoost($boost, $notify = FALSE);
 

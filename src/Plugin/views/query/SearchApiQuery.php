@@ -538,8 +538,7 @@ class SearchApiQuery extends QueryPluginBase {
    *   getKeys(). A passed string will be parsed according to the set parse
    *   mode. Use NULL to not use any search keys.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @see \Drupal\search_api\Query\QueryInterface::keys()
    */
@@ -558,8 +557,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @param array $fields
    *   An array containing fulltext fields that should be searched.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If one of the fields isn't of type "text".
@@ -616,8 +614,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @param string|null $group
    *   (optional) The Views query filter group to add this filter to.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @see \Drupal\search_api\Query\QueryInterface::condition()
    */
@@ -640,8 +637,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @param string $order
    *   The order to sort items in - either 'ASC' or 'DESC'.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @throws \Drupal\search_api\Exception\SearchApiException
    *   If the field is multi-valued or of a fulltext type.
@@ -666,8 +662,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @param int|null $limit
    *   The number of results to return.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @see \Drupal\search_api\Query\QueryInterface::range()
    */

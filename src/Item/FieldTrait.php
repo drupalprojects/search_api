@@ -128,8 +128,7 @@ trait FieldTrait {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index to which this field belongs.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @throws \InvalidArgumentException
    *   If the ID of the given index is not the same as the ID of the index that
@@ -242,8 +241,7 @@ trait FieldTrait {
    * @param $label
    *   A human-readable label representing this field's property path.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::setLabel()
    */
@@ -280,8 +278,7 @@ trait FieldTrait {
    *   A human-readable description for this field, or NULL if the field has no
    *   description.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::setDescription()
    */
@@ -326,8 +323,7 @@ trait FieldTrait {
    *   A human-readable label representing this field's datasource and ending in
    *   some kind of visual separator.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::setLabelPrefix()
    */

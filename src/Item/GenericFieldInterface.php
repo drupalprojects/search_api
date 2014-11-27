@@ -32,8 +32,7 @@ interface GenericFieldInterface {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index to which this field belongs.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @throws \InvalidArgumentException
    *   If the ID of the given index is not the same as the ID of the index that
@@ -97,8 +96,7 @@ interface GenericFieldInterface {
    * @param $label
    *   A human-readable label representing this field's property path.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setLabel($label);
 
@@ -118,8 +116,7 @@ interface GenericFieldInterface {
    *   A human-readable description for this field, or NULL if the field has no
    *   description.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setDescription($description);
 
@@ -142,8 +139,7 @@ interface GenericFieldInterface {
    *   A human-readable label representing this field's datasource and ending in
    *   some kind of visual separator.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setLabelPrefix($label_prefix);
 

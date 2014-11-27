@@ -89,8 +89,7 @@ class Transliteration extends FieldsProcessorPluginBase {
    * @param string $langcode
    *   The new langcode.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setLangcode($langcode) {
     $this->langcode = $langcode;

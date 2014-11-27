@@ -46,8 +46,7 @@ interface ItemInterface extends \Traversable {
    * @param \Drupal\Core\TypedData\ComplexDataInterface $original_object
    *   The object that should be wrapped.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setOriginalObject(ComplexDataInterface $original_object);
 
@@ -115,8 +114,7 @@ interface ItemInterface extends \Traversable {
    *   (optional) The information and contents of this field. Or NULL to remove
    *   the field from the item.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    *
    * @throws \InvalidArgumentException
    *   If a $field is passed but has another field identifier than given as
@@ -130,8 +128,7 @@ interface ItemInterface extends \Traversable {
    * @param \Drupal\search_api\Item\FieldInterface[] $fields
    *   An array with the fields of this item, keyed by field identifier.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setFields(array $fields);
 
@@ -156,8 +153,7 @@ interface ItemInterface extends \Traversable {
    *   TRUE if all field values have been extracted already for this item. FALSE
    *   otherwise.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setFieldsExtracted($fieldsExtracted);
 
@@ -177,8 +173,7 @@ interface ItemInterface extends \Traversable {
    * @param float $score
    *   The score of the item.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setScore($score);
 
@@ -198,8 +193,7 @@ interface ItemInterface extends \Traversable {
    * @param float $boost
    *   The boost value to set.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setBoost($boost);
 
@@ -218,8 +212,7 @@ interface ItemInterface extends \Traversable {
    * @param string $excerpt
    *   The HTML text with highlighted text-parts that match the query.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setExcerpt($excerpt);
 
@@ -269,8 +262,7 @@ interface ItemInterface extends \Traversable {
    *   (optional) The data to set. If NULL, remove the extra data with the given
    *   key instead.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setExtraData($key, $data = NULL);
 

@@ -39,8 +39,7 @@ interface ResultSetInterface extends \Traversable {
    * @param int $result_count
    *   The number of search results, in total.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setResultCount($result_count);
 
@@ -61,8 +60,7 @@ interface ResultSetInterface extends \Traversable {
    * @param \Drupal\search_api\Item\ItemInterface $result_item
    *   One of the search results.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function addResultItem(ItemInterface $result_item);
 
@@ -72,8 +70,7 @@ interface ResultSetInterface extends \Traversable {
    * @param \Drupal\search_api\Item\ItemInterface[] $result_items
    *   The query result items, keyed by item ID.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setResultItems(array $result_items);
 
@@ -93,8 +90,7 @@ interface ResultSetInterface extends \Traversable {
    *   A translated, sanitized warning message that may be displayed to the
    *   user.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function addWarning($warning);
 
@@ -105,8 +101,7 @@ interface ResultSetInterface extends \Traversable {
    *   An array of translated, sanitized warning messages that may be displayed
    *   to the user.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setWarnings(array $warnings);
 
@@ -125,8 +120,7 @@ interface ResultSetInterface extends \Traversable {
    * @param string $ignored_search_key
    *   A single search key (word) that was ignored in the search.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function addIgnoredSearchKey($ignored_search_key);
 
@@ -137,8 +131,7 @@ interface ResultSetInterface extends \Traversable {
    *   An array of search keys (individual words) that were ignored in the
    *   search.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setIgnoredSearchKeys(array $ignored_search_keys);
 
@@ -189,8 +182,7 @@ interface ResultSetInterface extends \Traversable {
    *   (optional) The data to set. If NULL, remove the extra data with the given
    *   key instead.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   // @todo Add unsetExtraData() instead of special NULL handling? And/or
   //   just have to use &getAllExtraData()?

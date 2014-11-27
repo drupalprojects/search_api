@@ -29,8 +29,7 @@ interface AdditionalFieldInterface extends GenericFieldInterface {
    *   (optional) Whether to notify the index of the change, i.e., set this
    *   additional field to enabled in its options, too.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setEnabled($enabled, $notify = FALSE);
 
@@ -49,8 +48,7 @@ interface AdditionalFieldInterface extends GenericFieldInterface {
    * @param bool $locked
    *   TRUE if the state should be locked, FALSE otherwise.
    *
-   * @return self
-   *   The invoked object.
+   * @return $this
    */
   public function setLocked($locked);
 
