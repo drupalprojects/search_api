@@ -125,11 +125,11 @@ class ServerForm extends EntityForm {
       '#required' => TRUE,
     );
     $form['id'] = array(
-      '#type' => 'id',
+      '#type' => 'machine_name',
       '#default_value' => $server->id(),
       '#maxlength' => 50,
       '#required' => TRUE,
-      '#id' => array(
+      '#machine_name' => array(
         'exists' => array($this->getStorage(), 'load'),
         'source' => array('name'),
       ),
