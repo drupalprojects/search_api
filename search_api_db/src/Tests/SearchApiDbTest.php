@@ -829,7 +829,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   /**
    * Asserts ignored fields from a set of search results.
    *
-   * @param ResultSetInterface $results
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
    *   The results to check.
    * @param array $ignored
    *   (optional) The ignored keywords that should be present, if any.
@@ -843,7 +843,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   /**
    * Asserts warnings from a set of search results.
    *
-   * @param ResultSetInterface $results
+   * @param \Drupal\search_api\Query\ResultSetInterface $results
    *   The results to check.
    * @param array $warnings
    *   (optional) The ignored warnings that should be present, if any.

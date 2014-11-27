@@ -62,7 +62,7 @@ class ServerForm extends EntityForm {
    * Retrieves the server storage controller.
    *
    * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   An instance of EntityStorageInterface.
+   *   The server storage controller.
    */
   protected function getStorage() {
     return $this->storage ?: \Drupal::service('entity.manager')->getStorage('search_api_server');
@@ -72,7 +72,7 @@ class ServerForm extends EntityForm {
    * Retrieves the backend plugin manager.
    *
    * @return \Drupal\search_api\Backend\BackendPluginManager
-   *   An instance of BackendPluginManager.
+   *   The backend plugin manager.
    */
   protected function getBackendPluginManager() {
     return $this->backendPluginManager ?: \Drupal::service('plugin.manager.search_api.backend');

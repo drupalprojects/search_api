@@ -581,12 +581,11 @@ class SearchApiQuery extends QueryPluginBase {
    * instead.
    *
    * @param \Drupal\search_api\Query\FilterInterface $filter
-   *   A DefaultFilter object that should be added as a subfilter.
+   *   A filter that should be added as a subfilter.
    * @param string|null $group
    *   (optional) The Views query filter group to add this filter to.
    *
-   * @return \Drupal\search_api\Query\QueryInterface
-   *   The called object.
+   * @return $this
    *
    * @see \Drupal\search_api\Query\QueryInterface::filter()
    */
@@ -817,17 +816,18 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @param string $name
    *   The name of an option. The following options are recognized by default:
-   *   - conjunction: The type of conjunction to use for this query - either
+   *   - conjunction: The type of conjunction to use for this query – either
    *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
    *     filters will always use AND by default.
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See DefaultQuery::parseModes() for
-   *     recognized parse modes.
+   *     is set and not already an array. See
+   *     \Drupal\search_api\Query\Query::parseModes() for recognized parse
+   *     modes.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
-   *   - 'filter class': Can be used to change the FilterInterface
+   *   - 'filter class': Can be used to change the \Drupal\search_api\Query\FilterInterface
    *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
@@ -841,7 +841,7 @@ class SearchApiQuery extends QueryPluginBase {
    *     skipped, even if enabled for the index.
    *   However, contrib modules might introduce arbitrary other keys with their
    *   own, special meaning. (Usually they should be prefixed with the module
-   *   name, though.)
+   *   name, though, to avoid conflicts.)
    * @param mixed $value
    *   The new value of the option.
    *

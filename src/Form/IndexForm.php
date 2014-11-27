@@ -193,7 +193,7 @@ class IndexForm extends EntityForm {
     // If the user changed the datasources or the tracker, notify them that they
     // need to be configured.
     // @todo Only do that if the datasources/tracker have configuration forms.
-    //   (Same in ServerForm.)
+    //   (Same in \Drupal\search_api\Form\ServerForm.)
     $values = $form_state->getValues();
     if (!empty($values['datasources'])) {
       drupal_set_message($this->t('Please configure the used datasources.'), 'warning');

@@ -68,7 +68,7 @@ class IndexBatchHelper {
    * Creates an indexing batch for a given search index.
    *
    * @param \Drupal\search_api\Index\IndexInterface $index
-   *   An instance of IndexInterface.
+   *   The search index for which items should be indexed.
    * @param int|null $batch_size
    *   (optional) Number of items to index per batch. Defaults to the cron limit
    *   set for the index.

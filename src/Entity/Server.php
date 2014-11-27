@@ -425,7 +425,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     //   alternative would be to call $server->setBackendConfiguration() in the
     //   backend's setConfiguration() method and use a second $propagate
     //   parameter to avoid an infinite loop. Similar things go for the index's
-    //   various plugins. Maybe using PluginBagsInterface is the solution here?
+    //   various plugins. Maybe using plugin bags is the solution here?
     $properties = parent::toArray();
     if ($this->hasValidBackend()) {
       $properties['backend_config'] = $this->getBackend()->getConfiguration();

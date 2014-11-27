@@ -38,6 +38,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  */
 abstract class TrackerPluginBase extends IndexPluginBase implements TrackerInterface {
 
-  // @todo Move some of the methods from DefaultTracker to here?
+  // @todo Move some of the methods from
+  //   \Drupal\search_api\Plugin\SearchApi\Tracker\DefaultTracker to here?
 
 }

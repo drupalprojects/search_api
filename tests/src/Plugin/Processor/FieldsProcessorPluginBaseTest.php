@@ -12,7 +12,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Tests the FieldsProcessorPluginBase class.
+ * Tests the base class for fields-based processors.
  *
  * @coversDefaultClass \Drupal\search_api\Processor\FieldsProcessorPluginBase
  *

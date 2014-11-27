@@ -92,7 +92,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * Retrieves a URL at which the item can be viewed on the web.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
-   *   An item of this DataSource's type.
+   *   An item of this datasource's type.
    *
    * @return \Drupal\Core\Url|null
    *   Either an object representing the URL of the given item, or NULL if the

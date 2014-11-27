@@ -80,7 +80,6 @@ class AddURLTest extends UnitTestCase {
    * Tests whether indexed items are correctly preprocessed.
    */
   public function testProcessIndexItems() {
-    // @todo Why Node, not NodeInterface? Normally, you mock an interface.
     /** @var \Drupal\node\Entity\Node $node */
     $node = $this->getMockBuilder('Drupal\node\Entity\Node')
       ->disableOriginalConstructor()

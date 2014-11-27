@@ -157,8 +157,8 @@ class OverviewPageTest extends SearchApiWebTestBase {
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);
 
-    // Since CsrfTokenGenerator uses the current session ID we cannot generate a
-    // valid token.
+    // Since \Drupal\Core\Access\CsrfTokenGenerator uses the current session ID,
+    // we cannot verify the validity of the token from here.
     $this->assertRaw('<a href="' . $basic_url .'/enable?token=', 'Enable operation present');
     $this->assertNoRaw('<a href="' . $basic_url .'/disable">Disable</a>', 'Disable operation  is not present');
   }

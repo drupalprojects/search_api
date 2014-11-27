@@ -278,14 +278,15 @@ interface QueryInterface {
    *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
    *     filters will always use AND by default.
    *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See DefaultQuery::parseModes() for
-   *     recognized parse modes.
+   *     is set and not already an array. See
+   *     \Drupal\search_api\Query\Query::parseModes() for recognized parse
+   *     modes.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
-   *   - 'filter class': Can be used to change the FilterInterface
-   *     implementation to use.
+   *   - 'filter class': Can be used to change the
+   *     \Drupal\search_api\Query\FilterInterface implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
    *   - 'skip result count': If present and set to TRUE, the search's result
