@@ -79,7 +79,7 @@ class SearchApiIndexController extends ControllerBase {
     }
 
     // Redirect to the index's "View" page.
-    $url = $search_api_index->urlInfo();
+    $url = $search_api_index->urlInfo('canonical');
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }
 

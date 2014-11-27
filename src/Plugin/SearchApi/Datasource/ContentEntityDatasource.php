@@ -354,7 +354,7 @@ class ContentEntityDatasource extends DatasourcePluginBase {
    */
   public function getItemUrl(ComplexDataInterface $item) {
     if ($item instanceof EntityAdapter) {
-      return $item->getValue()->urlInfo();
+      return $item->getValue()->urlInfo('canonical');
     }
     return NULL;
   }
