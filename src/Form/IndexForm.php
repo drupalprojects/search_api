@@ -378,8 +378,8 @@ class IndexForm extends EntityForm {
   /**
    * Builds the tracker configuration form.
    *
-   * @param \Drupal\search_api\Index\IndexInterface index
-   *   The index begin created or edited.
+   * @param \Drupal\search_api\Index\IndexInterface $index
+   *   The index being created or edited.
    */
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     if ($index->hasValidTracker()) {

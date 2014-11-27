@@ -223,7 +223,7 @@ class ContentAccess extends ProcessorPluginBase {
    *
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query to which a node access filter should be added, if applicable.
-   * @param \Drupal\core\Session\AccountInterface $account
+   * @param \Drupal\Core\Session\AccountInterface $account
    *   The user for whom the search is executed.
    *
    * @throws \Drupal\search_api\Exception\SearchApiException

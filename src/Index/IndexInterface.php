@@ -51,10 +51,10 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Gets the cache ID prefix used for this index's caches.
    *
-   * @param $type
+   * @param string $type
    *   The type of cache. Currently only "fields" is used.
    *
-   * @return
+   * @return string
    *   The cache ID (prefix) for this index's caches.
    */
   public function getCacheId($type = 'fields');
@@ -108,7 +108,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @param string $name
    *   The name of an option.
-   * @param $option
+   * @param mixed $option
    *   The new option.
    *
    * @return $this

@@ -28,7 +28,7 @@ class ServerStorageUnitTest extends KernelTestBase {
   /**
    * The search server storage.
    *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface.
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
    */
   protected $storage;
 

@@ -1085,12 +1085,12 @@ class SearchApiDbBackend extends BackendPluginBase {
   /**
    * Converts a value between two search types.
    *
-   * @param $value
+   * @param mixed $value
    *   The value to convert.
-   * @param $type
+   * @param string $type
    *   The type to convert to. One of the keys from
    *   search_api_default_field_types().
-   * @param $original_type
+   * @param string $original_type
    *   The value's original type.
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index for which this conversion takes place.
@@ -1533,7 +1533,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    *
    * Used as a helper method in createDbQuery() and createFilterCondition().
    *
-   * @param $keys
+   * @param string|array $keys
    *   The search keys, formatted like the return value of
    *   \Drupal\search_api\Query\QueryInterface::getKeys(), but preprocessed
    *   according to internal requirements.
@@ -2076,7 +2076,7 @@ class SearchApiDbBackend extends BackendPluginBase {
    * @param \Drupal\search_api\Index\IndexInterface $index
    *   The index whose fields should be retrieved.
    *
-   * @return array $fields
+   * @return array[]
    *   An array of arrays. The outer array is keyed by field name. Each value
    *   is an associative array with information on the field.
    */

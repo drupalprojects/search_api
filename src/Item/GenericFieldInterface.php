@@ -93,7 +93,7 @@ interface GenericFieldInterface {
   /**
    * Sets this field's label.
    *
-   * @param $label
+   * @param string $label
    *   A human-readable label representing this field's property path.
    *
    * @return $this
@@ -135,7 +135,7 @@ interface GenericFieldInterface {
   /**
    * Sets this field's label prefix.
    *
-   * @param $label_prefix
+   * @param string $label_prefix
    *   A human-readable label representing this field's datasource and ending in
    *   some kind of visual separator.
    *

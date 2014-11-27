@@ -108,7 +108,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     // Loop over the character sets and strip the characters from the text.
     foreach ($this->configuration['strip']['character_sets'] as $character_set) {
       $regex = $this->getFormatRegularExpression($character_set);
-      if (!empty($regex)) {
+      if ($regex) {
         $value = preg_replace('/[' . $regex . ']+/u', '', $value);
       }
     }
@@ -150,15 +150,22 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
   }
 
   /**
-   * @param $character_set
-   * @return bool|string
+   * Retrieves a regular expression for a certain Unicode character property.
+   *
+   * @param string $property
+   *   The abbreviation of the character property for which to get the regular
+   *   expression.
+   *
+   * @return string|null
+   *   The regular expression for the property, or NULL if it could not be
+   *   found.
    */
-  protected function getFormatRegularExpression($character_set) {
-    $class = 'Drupal\search_api\Plugin\SearchApi\Processor\Resources\\' . $character_set;
+  protected function getFormatRegularExpression($property) {
+    $class = 'Drupal\search_api\Plugin\SearchApi\Processor\Resources\\' . $property;
     if (class_exists($class) && in_array('Drupal\search_api\Plugin\SearchApi\Processor\Resources\UnicodeCharacterPropertyInterface', class_implements($class))) {
       return $class::getRegularExpression();
     }
-    return FALSE;
+    return NULL;
   }
 
 }
