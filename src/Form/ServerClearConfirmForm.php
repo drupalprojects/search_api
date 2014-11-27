@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Form;
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;

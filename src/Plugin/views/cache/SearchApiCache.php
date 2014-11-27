@@ -18,7 +18,7 @@ use Drupal\views\Plugin\views\cache\Time;
  *
  * @ViewsCache(
  *   id = "search_api",
- *   title = @Translation("Search API specifc"),
+ *   title = @Translation("Search API specific"),
  *   help = @Translation("Cache Search API views. (Other methods probably won't work with search views.)")
  * )
  */

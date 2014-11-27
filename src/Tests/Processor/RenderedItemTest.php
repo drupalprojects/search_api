@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -53,7 +54,7 @@ class RenderedItemTest extends ProcessorTestBase {
     \Drupal::service('router.builder')->rebuild();
 
     // Create a node type for testing.
-    $type = entity_create('node_type', array(
+    $type = NodeType::create(array(
       'type' => 'page',
       'name' => 'page',
     ));

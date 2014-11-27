@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\views\display;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\display\Block;
@@ -211,7 +212,7 @@ class FacetsBlock extends Block {
           $url_options['query'] = $this->view->exposed_raw_input;
         }
         $theme = $this->view->buildThemeFunctions('views_more');
-        $path = check_url(_url($path, $url_options));
+        $path = check_url(Url::fromUri($path, $url_options)->toString());
 
         return array(
           '#theme' => $theme,

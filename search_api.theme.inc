@@ -7,6 +7,7 @@
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -57,7 +58,7 @@ function theme_search_api_admin_fields_table($variables) {
     '#rows' => $rows,
   );
 
-  $output .= drupal_render($build);
+  $output .= render($build);
   $output .= render($note);
   if ($additional) {
     $output .= render($additional);
@@ -174,7 +175,7 @@ function theme_search_api_server($variables) {
       ),
     ),
   );
-  $output .= drupal_render($server_info_table);
+  $output .= render($server_info_table);
 
   return $output;
 }
@@ -299,7 +300,7 @@ function theme_search_api_index($variables) {
       $response = $server->search($query);
 
       // Build the server index status translation variables.
-      $vars = array('@url' => _url('https://drupal.org/node/2009804#server-index-status'));
+      $vars = array('@url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
       // Build the server index status info.
       $label = t('Server index status');
       $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
@@ -333,7 +334,7 @@ function theme_search_api_index($variables) {
         '#message' => t('@indexed/@total indexed', array('@indexed' => $indexed_count, '@total' => $total_count)),
       );
       $output .= '<h3>' . t('Index status') . '</h3>';
-      $output .= '<div class="search-api-index-status">' . drupal_render($index_progress) . '</div>';
+      $output .= '<div class="search-api-index-status">' . render($index_progress) . '</div>';
     }
   }
 
@@ -347,7 +348,7 @@ function theme_search_api_index($variables) {
       ),
     ),
   );
-  $output .= drupal_render($index_info_table);
+  $output .= render($index_info_table);
 
   return $output;
 }

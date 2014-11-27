@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
@@ -58,7 +59,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     $form['ignorable'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Strip by regular expression'),
-      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href="@url">PCRE regular expression</a>.', array('@url' => _url('http://php.net/manual/en/reference.pcre.pattern.syntax.php'))),
+      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href="@url">PCRE regular expression</a>.', array('@url' => Url::fromUri('http://php.net/manual/en/reference.pcre.pattern.syntax.php'))),
       '#default_value' => $this->configuration['ignorable'],
     );
 
@@ -66,7 +67,7 @@ class IgnoreCharacter extends FieldsProcessorPluginBase {
     $form['strip'] = array(
       '#type' => 'details',
       '#title' => $this->t('Strip by character property'),
-      '#description' => $this->t('Specify <a href="@url">Unicode character properties</a> of characters to be ignored.', array('@url' => _url('http://www.fileformat.info/info/unicode/category/index.htm'))),
+      '#description' => $this->t('Specify <a href="@url">Unicode character properties</a> of characters to be ignored.', array('@url' => Url::fromUri('http://www.fileformat.info/info/unicode/category/index.htm'))),
       '#open' => FALSE,
     );
     $form['strip']['character_sets'] = array(

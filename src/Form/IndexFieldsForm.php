@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -162,7 +163,7 @@ class IndexFieldsForm extends EntityForm {
         '#type' => 'checkbox',
         '#default_value' => $field->isIndexed(),
       );
-      $css_key = '#edit-fields-' . drupal_clean_css_identifier($key);
+      $css_key = '#edit-fields-' . Html::cleanCssIdentifier($key);
       $build['fields'][$key]['type'] = array(
         '#type' => 'select',
         '#options' => $types,

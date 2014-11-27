@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Utility\String;
+use Drupal\taxonomy\Entity\Term;
 
 /**
  * Defines a contextual filter searching through all indexed taxonomy fields.
@@ -77,9 +78,9 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
       $this->fillValue();
       $terms = array();
       foreach ($this->value as $tid) {
-        $taxonomy_term = taxonomy_term_load($tid);
+        $taxonomy_term = Term::load($tid);
         if ($taxonomy_term) {
-          $terms[] = String::checkPlain($taxonomy_term->name);
+          $terms[] = String::checkPlain($taxonomy_term->label());
         }
       }
 

@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\SearchApi\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
 
@@ -54,8 +55,8 @@ class Tokenizer extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $args = array(
-      '@pcre-url' => _url('http://www.php.net/manual/en/regexp.reference.character-classes.php'),
-      '@doc-url' => _url('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')
+      '@pcre-url' => Url::fromUri('http://www.php.net/manual/en/regexp.reference.character-classes.php'),
+      '@doc-url' => Url::fromUri('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')
     );
     $form['spaces'] = array(
       '#type' => 'textfield',

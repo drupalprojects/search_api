@@ -11,8 +11,8 @@ use Drupal\search_api\Entity\Index;
  * Implements hook_views_data().
  */
 function search_api_views_data() {
+  $data = array();
   try {
-    $data = array();
     // Sadly needed in PhpStorm: http://youtrack.jetbrains.com/issue/WI-19953
     /** @var \Drupal\search_api\Index\IndexInterface $index */
     foreach (Index::loadMultiple() as $index) {
@@ -68,11 +68,11 @@ function search_api_views_data() {
 
       // @todo Add an "All taxonomy terms" contextual filter (if applicable).
     }
-    return $data;
   }
   catch (Exception $e) {
     watchdog_exception('search_api', $e);
   }
+  return $data;
 }
 
 /**

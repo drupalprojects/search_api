@@ -50,4 +50,4 @@ Todo
 MAINTAINERS
 -----------
 Current maintainers:
- * Thomas Seidl (drunkenmonkey) - https://drupal.org/user/205582
+ * Thomas Seidl (drunken monkey) - https://drupal.org/user/205582
