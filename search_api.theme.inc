@@ -110,11 +110,11 @@ function theme_search_api_server($variables) {
   // Check if the server is enabled.
   if ($server->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $server->urlInfo('disable')->toString()));
+    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $server->url('disable')));
   }
   else {
     $class = 'warning';
-    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $server->urlInfo('enable')->toString()));
+    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $server->url('enable')));
   }
   // Append the row and reset variables.
   $label = t('Status');
@@ -227,12 +227,12 @@ function theme_search_api_index($variables) {
   // Check if the index is enabled.
   if ($index->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $index->urlInfo('disable')->toString()));
+    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $index->url('disable')));
   }
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $class = 'warning';
-    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $index->urlInfo('enable')->toString()));
+    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $index->url('enable')));
   }
   else {
     $class = 'warning';
@@ -274,7 +274,7 @@ function theme_search_api_index($variables) {
   // Check if a server is available.
   if ($server) {
     $label = t('Server');
-    $info = \Drupal::linkGenerator()->generate($server->label(), $server->urlInfo('canonical'));
+    $info = $server->link(NULL, 'canonical');
     $rows[] = Utility::deepCopy($row);
   }
   elseif ($index->getServerId()) {
