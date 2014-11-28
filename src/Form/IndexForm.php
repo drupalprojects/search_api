@@ -219,7 +219,7 @@ class IndexForm extends EntityForm {
       '#required' => TRUE,
       '#ajax' => array(
         'trigger_as' => array('name' => 'datasourcepluginids_configure'),
-        'callback' => array(get_class($this), 'buildAjaxDatasourceConfigForm'),
+        'callback' => '::buildAjaxDatasourceConfigForm',
         'wrapper' => 'search-api-datasources-config-form',
         'method' => 'replace',
         'effect' => 'fade',
@@ -239,9 +239,9 @@ class IndexForm extends EntityForm {
       '#name' => 'datasourcepluginids_configure',
       '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('datasources')),
-      '#submit' => array(array(get_class($this), 'submitAjaxDatasourceConfigForm')),
+      '#submit' => array('::submitAjaxDatasourceConfigForm'),
       '#ajax' => array(
-        'callback' => array(get_class($this), 'buildAjaxDatasourceConfigForm'),
+        'callback' => '::buildAjaxDatasourceConfigForm',
         'wrapper' => 'search-api-datasources-config-form',
       ),
       '#attributes' => array('class' => array('js-hide')),
@@ -260,7 +260,7 @@ class IndexForm extends EntityForm {
       '#disabled' => !$index->isNew(),
       '#ajax' => array(
         'trigger_as' => array('name' => 'trackerpluginid_configure'),
-        'callback' => array(get_class($this), 'buildAjaxTrackerConfigForm'),
+        'callback' => '::buildAjaxTrackerConfigForm',
         'wrapper' => 'search-api-tracker-config-form',
         'method' => 'replace',
         'effect' => 'fade',
@@ -281,9 +281,9 @@ class IndexForm extends EntityForm {
       '#name' => 'trackerpluginid_configure',
       '#value' => $this->t('Configure'),
       '#limit_validation_errors' => array(array('tracker')),
-      '#submit' => array(array(get_class($this), 'submitAjaxTrackerConfigForm')),
+      '#submit' => array('::submitAjaxTrackerConfigForm'),
       '#ajax' => array(
-        'callback' => array(get_class($this), 'buildAjaxTrackerConfigForm'),
+        'callback' => '::buildAjaxTrackerConfigForm',
         'wrapper' => 'search-api-tracker-config-form',
       ),
       '#attributes' => array('class' => array('js-hide')),
@@ -407,14 +407,14 @@ class IndexForm extends EntityForm {
    *
    * Takes care of changes in the selected datasources.
    */
-  public static function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
+  public function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
   /**
    * Handles changes to the selected datasources.
    */
-  public static function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
+  public function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
     return $form['datasource_configs'];
   }
 
@@ -423,14 +423,14 @@ class IndexForm extends EntityForm {
    *
    * Takes care of changes in the selected tracker plugin.
    */
-  public static function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
+  public function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
   /**
    * Handles switching the selected tracker plugin.
    */
-  public static function buildAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
+  public function buildAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
     return $form['tracker_config'];
   }
 
