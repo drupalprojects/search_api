@@ -127,7 +127,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       if (!($this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
         $args['@backend'] = $this->getBackendId();
         $args['%server'] = $this->label();
-        throw new SearchApiException(t('The backend with ID "@backend" could not be retrieved for server %server.', $args));
+        throw new SearchApiException(String::format('The backend with ID "@backend" could not be retrieved for server %server.', $args));
       }
     }
     return $this->backendPlugin;
@@ -252,7 +252,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if ($server_task_manager->execute($this)) {
       return $this->getBackend()->indexItems($index, $items);
     }
-    throw new SearchApiException(t('Could not index items because pending server tasks could not be executed.'));
+    $args['%index'] = $index->label();
+    throw new SearchApiException(String::format('Could not index items on index %index because pending server tasks could not be executed.', $args));
   }
 
   /**

@@ -339,7 +339,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (empty($datasources[$datasource_id])) {
       $args['@datasource'] = $datasource_id;
       $args['%index'] = $this->label();
-      throw new SearchApiException(t('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
+      throw new SearchApiException(String::format('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
     }
     return $datasources[$datasource_id];
   }
@@ -386,7 +386,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (!($this->trackerPlugin = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
         $args['@tracker'] = $this->tracker;
         $args['%index'] = $this->label();
-        throw new SearchApiException(t('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
+        throw new SearchApiException(String::format('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
       }
     }
 
@@ -423,7 +423,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (!$this->serverInstance) {
         $args['@server'] = $this->server;
         $args['%index'] = $this->label();
-        throw new SearchApiException(t('The server with ID "@server" could not be retrieved for index %index.', $args));
+        throw new SearchApiException(String::format('The server with ID "@server" could not be retrieved for index %index.', $args));
       }
     }
 
@@ -921,10 +921,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return array();
     }
     if (!$this->status) {
-      throw new SearchApiException(t("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
+      throw new SearchApiException(String::format("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
     }
     if (empty($this->options['fields'])) {
-      throw new SearchApiException(t("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
+      throw new SearchApiException(String::format("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
@@ -1103,7 +1103,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function query(array $options = array()) {
     if (!$this->status()) {
-      throw new SearchApiException(t('Cannot search on a disabled index.'));
+      throw new SearchApiException('Cannot search on a disabled index.');
     }
     return Utility::createQuery($this, $options);
   }

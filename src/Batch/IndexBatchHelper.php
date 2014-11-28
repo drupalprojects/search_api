@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Batch;
 
+use Drupal\Component\Utility\String;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\search_api\Exception\SearchApiException;
 use Drupal\search_api\Index\IndexInterface;
@@ -104,7 +105,7 @@ class IndexBatchHelper {
         '%limit' => $limit,
         '%name' => $index->label(),
       );
-      throw new SearchApiException(static::t('Failed to create a batch with batch size %size and limit %limit for index %name', $args));
+      throw new SearchApiException(String::format('Failed to create a batch with batch size %size and limit %limit for index %name', $args));
     }
   }
 
