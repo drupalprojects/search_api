@@ -39,6 +39,6 @@ use Drupal\search_api\Plugin\IndexPluginBase;
 abstract class TrackerPluginBase extends IndexPluginBase implements TrackerInterface {
 
   // @todo Move some of the methods from
-  //   \Drupal\search_api\Plugin\SearchApi\Tracker\DefaultTracker to here?
+  //   \Drupal\search_api\Plugin\search_api\tracker\Basic to here?
 
 }

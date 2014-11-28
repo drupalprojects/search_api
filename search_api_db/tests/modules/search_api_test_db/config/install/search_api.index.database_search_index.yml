@@ -25,7 +25,7 @@ options:
 datasources:
   - 'entity:entity_test'
 datasource_configs: {  }
-tracker: default_tracker
+tracker: default
 tracker_config: {  }
 server: database_search_server
 status: 1

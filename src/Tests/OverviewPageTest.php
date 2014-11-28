@@ -9,14 +9,14 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Tests the Search API overview page.
  *
  * @group search_api_debug
  */
-class OverviewPageTest extends SearchApiWebTestBase {
+class OverviewPageTest extends WebTestBase {
 
   /**
    * The path of the overview page.
@@ -118,7 +118,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
   /**
    * Asserts enable/disable operations for a search server or index.
    *
-   * @param \Drupal\search_api\Server\ServerInterface|\Drupal\search_api\Index\IndexInterface $entity
+   * @param \Drupal\search_api\ServerInterface|\Drupal\search_api\IndexInterface $entity
    *   A search server or index.
    */
   protected function assertEntityStatusChange($entity) {
@@ -144,7 +144,7 @@ class OverviewPageTest extends SearchApiWebTestBase {
    * Tests server operations in the overview page.
    */
   public function testOperations() {
-    /** @var $server \Drupal\search_api\Server\ServerInterface */
+    /** @var $server \Drupal\search_api\ServerInterface */
     $server = $this->getTestServer();
 
     $this->drupalGet($this->overviewPageUrl);

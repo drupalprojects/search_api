@@ -429,7 +429,7 @@ function search_api_drush_get_index_count() {
  *   (optional) Either the ID of the search index to load, or NULL to load all
  *   indexes.
  *
- * @return \Drupal\search_api\Index\IndexInterface[]
+ * @return \Drupal\search_api\IndexInterface[]
  *   An array of search indexes.
  */
 function search_api_drush_get_indexes($index_id = NULL) {
@@ -461,7 +461,7 @@ function search_api_drush_get_indexes($index_id = NULL) {
  *
  * Displays helpful messages if the state cannot be changed.
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The index to be enabled.
  * @param boolean $enable
  *   (optional) TRUE to enable, FALSE to disable the index.

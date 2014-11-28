@@ -10,11 +10,11 @@ namespace Drupal\search_api\Entity;
 use Drupal\Component\Utility\String;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\ServerInterface;
+use Drupal\search_api\Utility;
 
 /**
  * Defines the search server configuration entity.
@@ -359,7 +359,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // If the server is being disabled, also disable all its indexes.
     if (!$this->status() && isset($this->original) && $this->original->status()) {
       foreach ($this->getIndexes(array('status' => TRUE)) as $index) {
-        /** @var \Drupal\search_api\Index\IndexInterface $index */
+        /** @var \Drupal\search_api\IndexInterface $index */
         $index->setStatus(FALSE)->save();
       }
     }
@@ -399,7 +399,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       ->execute();
     $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
     foreach ($indexes as $index) {
-      /** @var \Drupal\search_api\Index\IndexInterface $index */
+      /** @var \Drupal\search_api\IndexInterface $index */
       $index->setServer(NULL);
       $index->setStatus(FALSE);
       $index->save();
@@ -408,7 +408,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // Iterate through the servers, executing the backends' preDelete() methods
     // and removing all their pending server tasks.
     foreach ($entities as $server) {
-      /** @var \Drupal\search_api\Server\ServerInterface $server */
+      /** @var \Drupal\search_api\ServerInterface $server */
       if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }

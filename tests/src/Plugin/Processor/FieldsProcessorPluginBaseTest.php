@@ -8,7 +8,7 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -25,7 +25,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   /**
    * A search index mock to use in this test case.
    *
-   * @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $index;
 
@@ -42,7 +42,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   public function setUp() {
     parent::setUp();
 
-    $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $this->index = $this->getMock('Drupal\search_api\IndexInterface');
     $this->index->expects($this->any())
       ->method('status')
       ->will($this->returnValue(TRUE));

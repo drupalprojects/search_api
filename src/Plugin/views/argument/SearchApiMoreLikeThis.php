@@ -9,7 +9,7 @@ namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\SearchApiException;
 
 /**
  * Defines a contextual filter for displaying a "More Like This" list.

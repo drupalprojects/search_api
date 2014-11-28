@@ -13,7 +13,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Backend\BackendPluginManager;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -91,7 +91,7 @@ class ServerForm extends EntityForm {
 
     $form = parent::form($form, $form_state);
 
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    /** @var \Drupal\search_api\ServerInterface $server */
     $server = $this->getEntity();
 
     // Set the page title according to whether we are creating or editing the
@@ -112,7 +112,7 @@ class ServerForm extends EntityForm {
   /**
    * Builds the form for the basic server properties.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
+   * @param \Drupal\search_api\ServerInterface $server
    *   The server that is being created or edited.
    */
   public function buildEntityForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
@@ -191,7 +191,7 @@ class ServerForm extends EntityForm {
   /**
    * Builds the backend-specific configuration form.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
+   * @param \Drupal\search_api\ServerInterface $server
    *   The server that is being created or edited.
    */
   public function buildBackendConfigForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
@@ -244,7 +244,7 @@ class ServerForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     parent::validate($form, $form_state);
 
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    /** @var \Drupal\search_api\ServerInterface $server */
     $server = $this->getEntity();
 
     // Check if the backend plugin changed.
@@ -273,7 +273,7 @@ class ServerForm extends EntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    /** @var \Drupal\search_api\ServerInterface $server */
     $server = $this->getEntity();
 
     if ($backend_form_state = $form_state->get('backend_form_state')) {

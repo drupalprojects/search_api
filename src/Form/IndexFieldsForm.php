@@ -12,7 +12,7 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,7 +23,7 @@ class IndexFieldsForm extends EntityForm {
   /**
    * The index for which the fields are configured.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $entity;
 
@@ -225,7 +225,7 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $form_state->get('index');
 
     // Store the fields configuration.

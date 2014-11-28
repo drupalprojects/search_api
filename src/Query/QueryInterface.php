@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 
 /**
  * Represents a search query on a Search API index.
@@ -20,7 +20,7 @@ interface QueryInterface {
   /**
    * Instantiates a new instance of this query class.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index for which the query should be created.
    * @param array $options
    *   (optional) The options to set for the query.
@@ -78,7 +78,7 @@ interface QueryInterface {
    *
    * @return $this
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If one of the fields isn't a fulltext field.
    */
   // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
@@ -130,7 +130,7 @@ interface QueryInterface {
    *
    * @return $this
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the field is multi-valued or of a fulltext type.
    */
   public function sort($field, $order = 'ASC');
@@ -156,7 +156,7 @@ interface QueryInterface {
    * @return \Drupal\search_api\Query\ResultSetInterface
    *   The results of the search.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If an error occurred during the search.
    */
   public function execute();
@@ -167,7 +167,7 @@ interface QueryInterface {
    * This method should always be called by execute() and contain all necessary
    * operations before the query is passed to the server's search() method.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If any wrong options were set on the query (e.g., conditions or sorts on
    *   unknown fields).
    */
@@ -187,7 +187,7 @@ interface QueryInterface {
   /**
    * Retrieves the index associated with this search.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\IndexInterface
    *   The search index this query should be executed on.
    */
   public function getIndex();

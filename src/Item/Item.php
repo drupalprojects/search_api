@@ -9,9 +9,9 @@ namespace Drupal\search_api\Item;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Utility;
 
 /**
  * Provides a default implementation for a search item.
@@ -21,7 +21,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * The search index with which this item is associated.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -91,7 +91,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * Constructs an Item object.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The item's search index.
    * @param string $id
    *   The ID of this item.

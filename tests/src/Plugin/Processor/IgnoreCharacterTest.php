@@ -7,7 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter;
+use Drupal\search_api\Plugin\search_api\processor\IgnoreCharacters;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -15,7 +15,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCharacter
+ * @see \Drupal\search_api\Plugin\search_api\processor\IgnoreCharacter
  */
 class IgnoreCharacterTest extends UnitTestCase {
 
@@ -26,7 +26,7 @@ class IgnoreCharacterTest extends UnitTestCase {
    */
   protected function setUp() {
     parent::setUp();
-    $this->processor = new IgnoreCharacter(array('ignorable' => ''), 'ignore_character', array());
+    $this->processor = new IgnoreCharacters(array('ignorable' => ''), 'ignore_character', array());
   }
 
   /**

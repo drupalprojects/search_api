@@ -8,8 +8,8 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Plugin\search_api\processor\RoleFilter;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -17,14 +17,14 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter
+ * @see \Drupal\search_api\Plugin\search_api\processor\RoleFilter
  */
 class RoleFilterTest extends UnitTestCase {
 
   /**
    * The processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter
+   * @var \Drupal\search_api\Plugin\search_api\processor\RoleFilter
    */
   protected $processor;
 
@@ -43,8 +43,8 @@ class RoleFilterTest extends UnitTestCase {
 
     $this->processor = new RoleFilter(array(), 'role_filter', array());
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $node_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
     $node_datasource->expects($this->any())

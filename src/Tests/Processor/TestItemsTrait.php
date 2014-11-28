@@ -8,9 +8,9 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 
 /**
  * Provides common methods for test cases that need to create search items.
@@ -27,7 +27,7 @@ trait TestItemsTrait {
   /**
    * Creates an array with a single item which has the given field.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index that should be used for the item.
    * @param string $field_type
    *   The field type to set for the field.
@@ -61,7 +61,7 @@ trait TestItemsTrait {
   /**
    * Creates a certain number of test items.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index that should be used for the items.
    * @param int $count
    *   The number of items to create.

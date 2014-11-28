@@ -8,7 +8,7 @@
 use Drupal\Component\Utility\String;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 
 /**
  * Returns HTML for a fields form table.
@@ -81,7 +81,7 @@ function theme_search_api_admin_fields_table($variables) {
  */
 function theme_search_api_server($variables) {
   // Get the search server.
-  /** @var $server \Drupal\search_api\Server\ServerInterface */
+  /** @var $server \Drupal\search_api\ServerInterface */
   $server = $variables['server'];
 
   $output = '';
@@ -196,7 +196,7 @@ function theme_search_api_server($variables) {
 //   Definitely not cool.
 function theme_search_api_index($variables) {
   // Get the index.
-  /** @var $index \Drupal\search_api\Index\IndexInterface */
+  /** @var $index \Drupal\search_api\IndexInterface */
   $index = $variables['index'];
   $server = $index->hasValidServer() ? $index->getServer() : NULL;
   $tracker = $index->hasValidTracker() ? $index->getTracker() : NULL;

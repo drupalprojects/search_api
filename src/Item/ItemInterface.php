@@ -35,7 +35,7 @@ interface ItemInterface extends \Traversable {
    *   The wrapped object if it was previously set or could be loaded. NULL
    *   if it wasn't set previously and $load is FALSE.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If $load is TRUE but the object could not be loaded.
    */
   public function getOriginalObject($load = TRUE);
@@ -64,7 +64,7 @@ interface ItemInterface extends \Traversable {
    * @return \Drupal\search_api\Datasource\DatasourceInterface
    *   The datasource to which this item belongs.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the item's datasource wasn't set before and couldn't be loaded.
    */
   public function getDatasource();
@@ -72,7 +72,7 @@ interface ItemInterface extends \Traversable {
   /**
    * Returns the index of this item.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\IndexInterface
    *   The index to which this item belongs.
    */
   public function getIndex();

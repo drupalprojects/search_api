@@ -7,7 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase;
+use Drupal\search_api\Plugin\search_api\processor\IgnoreCase;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -15,7 +15,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\IgnoreCase
+ * @see \Drupal\search_api\Plugin\search_api\processor\IgnoreCase
  */
 class IgnoreCaseTest extends UnitTestCase {
 

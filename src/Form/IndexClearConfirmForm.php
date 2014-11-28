@@ -10,7 +10,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\SearchApiException;
 
 /**
  * Defines a confirm form for clearing an index.
@@ -42,7 +42,7 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api\Index\IndexInterface $entity */
+    /** @var \Drupal\search_api\IndexInterface $entity */
     $entity = $this->getEntity();
 
     try {

@@ -12,7 +12,7 @@ use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 
 /**
  * Provides a base class for processors that work on individual fields.

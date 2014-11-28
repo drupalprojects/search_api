@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 use Drupal\simpletest\KernelTestBase;
 
 /**
@@ -55,14 +55,14 @@ class IndexStorageUnitTest extends KernelTestBase {
   /**
    * Tests whether creating an index works correctly.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\IndexInterface
    *  The newly created search index.
    */
   public function indexCreate() {
     $indexData = array(
       'id' => $this->randomMachineName(),
       'name' => $this->randomString(),
-      'tracker' => 'default_tracker',
+      'tracker' => 'default',
     );
 
     $index = $this->storage->create($indexData);
@@ -75,7 +75,7 @@ class IndexStorageUnitTest extends KernelTestBase {
   /**
    * Tests whether loading an index works correctly.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index used for the test.
    */
   public function indexLoad(IndexInterface $index) {
@@ -86,7 +86,7 @@ class IndexStorageUnitTest extends KernelTestBase {
   /**
    * Tests whether deleting an index works correctly.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index used for the test.
    */
   public function indexDelete(IndexInterface $index) {

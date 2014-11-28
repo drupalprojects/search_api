@@ -7,10 +7,10 @@
 
 namespace Drupal\search_api\Backend;
 
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Defines a base class for backend plugins.
@@ -44,7 +44,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * The server this backend is configured for.
    *
-   * @var \Drupal\search_api\Server\ServerInterface
+   * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
 

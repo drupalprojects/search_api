@@ -7,9 +7,9 @@
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Plugin\search_api\datasource\ContentEntity;
+use Drupal\search_api\Utility;
 
 /**
  * Implements hook_help().
@@ -39,7 +39,7 @@ function search_api_cron() {
     'status' => TRUE,
     'read_only' => FALSE,
   );
-  /** @var \Drupal\search_api\Index\IndexInterface[] $indexes */
+  /** @var \Drupal\search_api\IndexInterface[] $indexes */
   $indexes = entity_load_multiple_by_properties('search_api_index', $conditions);
   if (!$indexes) {
     return;
@@ -106,7 +106,7 @@ function search_api_cron() {
 function search_api_entity_insert(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    $indexes = ContentEntity::getIndexesForEntity($entity);
     if (!$indexes) {
       return;
     }
@@ -137,7 +137,7 @@ function search_api_entity_update(EntityInterface $entity) {
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }
-  $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+  $indexes = ContentEntity::getIndexesForEntity($entity);
   if (!$indexes) {
     return;
   }
@@ -190,7 +190,7 @@ function search_api_entity_update(EntityInterface $entity) {
 function search_api_entity_delete(EntityInterface $entity) {
   // Check if the entity is a content entity.
   if ($entity instanceof ContentEntityInterface) {
-    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+    $indexes = ContentEntity::getIndexesForEntity($entity);
     if (!$indexes) {
       return;
     }

@@ -7,9 +7,9 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\Highlight;
+use Drupal\search_api\Plugin\search_api\processor\Highlight;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -17,7 +17,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
+ * @see \Drupal\search_api\Plugin\search_api\processor\Highlight
  */
 class HighlightTest extends UnitTestCase {
 
@@ -26,7 +26,7 @@ class HighlightTest extends UnitTestCase {
   /**
    * The processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Highlight
+   * @var \Drupal\search_api\Plugin\search_api\processor\Highlight
    */
   protected $processor;
 
@@ -112,8 +112,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue('foo'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -158,8 +158,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -204,8 +204,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -248,8 +248,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -297,8 +297,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -343,8 +343,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'diam')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -391,8 +391,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue('congue'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -439,8 +439,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $field = Utility::createField($index, $body_field_id);
     $field->setType('text');
@@ -499,8 +499,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue($keys));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $body_field = Utility::createField($index, $body_field_id);
     $body_field->setType('text');
@@ -547,8 +547,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $body_field = Utility::createField($index, $body_field_id);
     $body_field->setType('text');
@@ -603,8 +603,8 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'OR', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $body_field = Utility::createField($index, $body_field_id);
     $body_field->setType('text');

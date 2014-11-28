@@ -9,7 +9,7 @@ namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
@@ -34,14 +34,14 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
   /**
    * The search index used for this test.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
   /**
    * The search server used for this test.
    *
-   * @var \Drupal\search_api\Server\ServerInterface
+   * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
 
@@ -81,7 +81,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'status' => TRUE,
       'datasources' => array('entity:comment', 'entity:node'),
       'server' => $server_name,
-      'tracker' => 'default_tracker',
+      'tracker' => 'default',
     ));
     $this->index->setServer($this->server);
     $this->index->setOption('fields', array(

@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 
 /**
  * Contains helpers to create data that can be used by tests.

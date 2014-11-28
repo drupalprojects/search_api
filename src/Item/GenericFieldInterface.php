@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Item;
 
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 
 /**
  * Represents any field attached to an index.
@@ -17,7 +17,7 @@ interface GenericFieldInterface {
   /**
    * Returns the index of this field.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\IndexInterface
    *   The index to which this field belongs.
    */
   public function getIndex();
@@ -29,7 +29,7 @@ interface GenericFieldInterface {
    * set to the same object that is returning them. The method shouldn't be used
    * in any other case.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to which this field belongs.
    *
    * @return $this
@@ -64,7 +64,7 @@ interface GenericFieldInterface {
    *   The datasource to which this field belongs. NULL if the field is
    *   datasource-independent.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the field's datasource couldn't be loaded.
    */
   public function getDatasource();
@@ -149,7 +149,7 @@ interface GenericFieldInterface {
    * @return \Drupal\Core\TypedData\DataDefinitionInterface
    *   The data definition object for this field.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the field's data definition is unknown.
    */
   public function getDataDefinition();

@@ -8,9 +8,9 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField;
+use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -18,7 +18,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField
+ * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedField
  */
 class AggregatedFieldTest extends UnitTestCase {
 
@@ -27,14 +27,14 @@ class AggregatedFieldTest extends UnitTestCase {
   /**
    * The processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField
+   * @var \Drupal\search_api\Plugin\search_api\processor\AggregatedFields
    */
   protected $processor;
 
   /**
    * A search index mock for the tests.
    *
-   * @var \Drupal\search_api\Index\IndexInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $index;
 
@@ -44,8 +44,8 @@ class AggregatedFieldTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
-    $this->processor = new AggregatedField(array('index' => $this->index), 'aggregated_field', array());
+    $this->index = $this->getMock('Drupal\search_api\IndexInterface');
+    $this->processor = new AggregatedFields(array('index' => $this->index), 'aggregated_field', array());
   }
 
   /**
@@ -423,7 +423,7 @@ class AggregatedFieldTest extends UnitTestCase {
   /**
    * Tests whether the properties are correctly altered.
    *
-   * @see \Drupal\search_api\Plugin\SearchApi\Processor\AggregatedField::alterPropertyDefinitions()
+   * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedField::alterPropertyDefinitions()
    */
   public function testAlterPropertyDefinitions() {
     $fields = array(

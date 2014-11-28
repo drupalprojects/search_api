@@ -9,8 +9,8 @@ namespace Drupal\search_api\Query;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
 
 /**
  * Provides a standard implementation for a Search API query.
@@ -22,7 +22,7 @@ class Query implements QueryInterface {
   /**
    * The index on which the query will be executed.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -89,14 +89,14 @@ class Query implements QueryInterface {
   /**
    * Constructs a Query object.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index the query should be executed on.
    * @param array $options
    *   (optional) Associative array of options configuring this query. See
    *   \Drupal\search_api\Query\QueryInterface::setOption() for a list of
    *   options that are recognized by default.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
   public function __construct(IndexInterface $index, array $options = array()) {

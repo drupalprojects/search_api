@@ -10,7 +10,7 @@ namespace Drupal\Tests\search_api\Plugin\Processor;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Language\Language as CoreLanguage;
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\search_api\Plugin\SearchApi\Processor\Language;
+use Drupal\search_api\Plugin\search_api\processor\Language;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
@@ -19,7 +19,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language
+ * @see \Drupal\search_api\Plugin\search_api\processor\Language
  */
 class LanguageTest extends UnitTestCase {
 
@@ -28,14 +28,14 @@ class LanguageTest extends UnitTestCase {
   /**
    * The processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\Language
+   * @var \Drupal\search_api\Plugin\search_api\processor\Language
    */
   protected $processor;
 
   /**
    * A test index mock to use for tests.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -45,7 +45,7 @@ class LanguageTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $this->index = $this->getMock('Drupal\search_api\IndexInterface');
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
@@ -56,7 +56,7 @@ class LanguageTest extends UnitTestCase {
   /**
    * Tests whether the "Item language" field is properly added to the index.
    *
-   * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language::alterPropertyDefinitions()
+   * @see \Drupal\search_api\Plugin\search_api\processor\Language::alterPropertyDefinitions()
    */
   public function testAlterProperties() {
     // Test whether the property gets properly added to the
@@ -84,7 +84,7 @@ class LanguageTest extends UnitTestCase {
   /**
    * Tests whether the "Item language" field is properly added to indexed items.
    *
-   * @see \Drupal\search_api\Plugin\SearchApi\Processor\Language::preprocessIndexItems()
+   * @see \Drupal\search_api\Plugin\search_api\processor\Language::preprocessIndexItems()
    */
   public function testPreprocessIndexItems() {
     $fields = array(

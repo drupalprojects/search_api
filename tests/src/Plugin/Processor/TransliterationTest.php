@@ -7,7 +7,7 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\Transliteration;
+use Drupal\search_api\Plugin\search_api\processor\Transliteration;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
@@ -16,7 +16,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\Transliteration
+ * @see \Drupal\search_api\Plugin\search_api\processor\Transliteration
  */
 class TransliterationTest extends UnitTestCase {
 
@@ -25,7 +25,7 @@ class TransliterationTest extends UnitTestCase {
   /**
    * A test index mock to use for tests.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -35,7 +35,7 @@ class TransliterationTest extends UnitTestCase {
   public function setUp() {
     parent::setUp('transliteration');
 
-    $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    $this->index = $this->getMock('Drupal\search_api\IndexInterface');
 
     $this->processor = new Transliteration(array(), 'transliteration', array());
     $this->processor->setLangcode('en');

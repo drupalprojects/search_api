@@ -30,14 +30,14 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
   /**
    * The search server used for testing.
    *
-   * @var \Drupal\search_api\Server\ServerInterface
+   * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
 
   /**
    * The search index used for testing.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -71,7 +71,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'id' => $this->randomMachineName(),
       'status' => 1,
       'datasources' => array('entity:' . $this->testEntityTypeId),
-      'tracker' => 'default_tracker',
+      'tracker' => 'default',
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
     ));

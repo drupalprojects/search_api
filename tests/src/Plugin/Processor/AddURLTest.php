@@ -9,9 +9,9 @@ namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\search_api\Plugin\SearchApi\Processor\AddURL;
+use Drupal\search_api\Plugin\search_api\processor\AddURL;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -19,7 +19,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
+ * @see \Drupal\search_api\Plugin\search_api\processor\AddURL
  */
 class AddURLTest extends UnitTestCase {
 
@@ -28,14 +28,14 @@ class AddURLTest extends UnitTestCase {
   /**
    * The processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\AddURL
+   * @var \Drupal\search_api\Plugin\search_api\processor\AddURL
    */
   protected $processor;
 
   /**
    * A search index mock for the tests.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -61,8 +61,8 @@ class AddURLTest extends UnitTestCase {
       ->will($this->returnValue($url));
 
     // Create a mock for the index to return the datasource mock.
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
-    $index = $this->index = $this->getMock('Drupal\search_api\Index\IndexInterface');
+    /** @var \Drupal\search_api\IndexInterface $index */
+    $index = $this->index = $this->getMock('Drupal\search_api\IndexInterface');
     $this->index->expects($this->any())
       ->method('getDatasource')
       ->with('entity:node')
@@ -117,7 +117,7 @@ class AddURLTest extends UnitTestCase {
   /**
    * Tests whether the properties are correctly altered.
    *
-   * @see \Drupal\search_api\Plugin\SearchApi\Processor\AddURL::alterPropertyDefinitions()
+   * @see \Drupal\search_api\Plugin\search_api\processor\AddURL::alterPropertyDefinitions()
    */
   public function testAlterPropertyDefinitions() {
     $properties = array();

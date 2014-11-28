@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Provides a form for performing common actions on a server.
@@ -43,7 +43,7 @@ class ServerStatusForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Redirect to the "Clear server" confirmation form.
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    /** @var \Drupal\search_api\ServerInterface $server */
     $server = $form['#server'];
     $form_state->setRedirect('entity.search_api_server.clear', array('search_api_server' => $server->id()));
   }

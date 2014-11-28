@@ -8,8 +8,8 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Plugin\search_api\processor\Tokenizer;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -17,7 +17,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\Tokenizer
+ * @see \Drupal\search_api\Plugin\search_api\processor\Tokenizer
  */
 class TokenizerTest extends UnitTestCase {
 

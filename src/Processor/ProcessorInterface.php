@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Processor;
 
 use Drupal\search_api\Datasource\DatasourceInterface;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -34,7 +34,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    * index configurations and at least throw an exception with a descriptive
    * error message if this is violated on runtime.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index to check for.
    *
    * @return bool

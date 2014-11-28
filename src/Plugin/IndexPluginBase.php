@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin;
 
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 
 /**
  * Provides a base class for plugins linked to a search index.
@@ -17,7 +17,7 @@ abstract class IndexPluginBase extends ConfigurablePluginBase implements IndexPl
   /**
    * The index this processor is configured for.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 

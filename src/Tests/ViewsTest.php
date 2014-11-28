@@ -12,7 +12,7 @@ namespace Drupal\search_api\Tests;
  *
  * @group search_api
  */
-class ViewsTest extends SearchApiWebTestBase {
+class ViewsTest extends WebTestBase {
 
   use ExampleContentTrait;
 

@@ -15,13 +15,13 @@ use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Server\ServerInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\ServerInterface;
+use Drupal\search_api\Utility;
 
 /**
  * Defines the search index configuration entity.
@@ -156,7 +156,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * The server entity belonging to this index.
    *
-   * @var \Drupal\search_api\Server\ServerInterface
+   * @var \Drupal\search_api\ServerInterface
    *
    * @see getServer()
    */
@@ -629,7 +629,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   Internal use only. A prefix to use for the generated field labels in this
    *   method.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If $datasource_id is no valid datasource for this index.
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $label_prefix = '') {
@@ -1178,7 +1178,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Used as a helper method in postSave(). Should only be called when the index
    * was enabled before the change and remained so.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $original
+   * @param \Drupal\search_api\IndexInterface $original
    *   The previous version of the index.
    */
   protected function reactToServerSwitch(IndexInterface $original) {
@@ -1204,7 +1204,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Used as a helper method in postSave(). Should only be called when the index
    * was enabled before the change and remained so.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $original
+   * @param \Drupal\search_api\IndexInterface $original
    *   The previous version of the index.
    */
   protected function reactToDatasourceSwitch(IndexInterface $original) {
@@ -1231,7 +1231,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Used as a helper method in postSave(). Should only be called when the index
    * was enabled before the change and remained so.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $original
+   * @param \Drupal\search_api\IndexInterface $original
    *   The previous version of the index.
    */
   protected function reactToTrackerSwitch(IndexInterface $original) {
@@ -1250,7 +1250,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
-    /** @var \Drupal\search_api\Index\IndexInterface[] $entities */
+    /** @var \Drupal\search_api\IndexInterface[] $entities */
     foreach ($entities as $index) {
       if ($index->hasValidTracker()) {
         $index->getTracker()->trackAllItemsDeleted();

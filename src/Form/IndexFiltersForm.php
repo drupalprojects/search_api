@@ -22,7 +22,7 @@ class IndexFiltersForm extends EntityForm {
   /**
    * The index being configured.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $entity;
 

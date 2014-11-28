@@ -10,7 +10,7 @@ namespace Drupal\search_api\Tests\Processor;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -19,7 +19,7 @@ use Drupal\user\Entity\User;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\RenderedItem
+ * @see \Drupal\search_api\Plugin\search_api\processor\RenderedItem
  */
 class RenderedItemTest extends ProcessorTestBase {
 

@@ -48,7 +48,7 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * The index this view accesses.
    *
-   * @var \Drupal\search_api\Index\IndexInterface
+   * @var \Drupal\search_api\IndexInterface
    */
   protected $index;
 
@@ -559,7 +559,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @return $this
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If one of the fields isn't of type "text".
    *
    * @see \Drupal\search_api\Query\QueryInterface::fields()
@@ -639,7 +639,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @return $this
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If the field is multi-valued or of a fulltext type.
    *
    * @see \Drupal\search_api\Query\QueryInterface::sort()
@@ -676,7 +676,7 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Retrieves the index associated with this search.
    *
-   * @return \Drupal\search_api\Index\IndexInterface
+   * @return \Drupal\search_api\IndexInterface
    *   The search index this query should be executed on.
    *
    * @see \Drupal\search_api\Query\QueryInterface::getIndex()

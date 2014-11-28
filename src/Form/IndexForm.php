@@ -13,7 +13,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
-use Drupal\search_api\Index\IndexInterface;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Tracker\TrackerPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -130,7 +130,7 @@ class IndexForm extends EntityForm {
    */
   protected function getServerOptions() {
     $options = array();
-    /** @var \Drupal\search_api\Server\ServerInterface $server */
+    /** @var \Drupal\search_api\ServerInterface $server */
     foreach ($this->getServerStorage()->loadMultiple() as $server_id => $server) {
       // @todo Special formatting for disabled servers.
       $options[$server_id] = String::checkPlain($server->label());
@@ -150,7 +150,7 @@ class IndexForm extends EntityForm {
 
     $form = parent::form($form, $form_state);
 
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getEntity();
     if ($index->isNew()) {
       $form['#title'] = $this->t('Add search index');
@@ -167,7 +167,7 @@ class IndexForm extends EntityForm {
   /**
    * Builds the form for the basic index properties.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index that is being created or edited.
    */
   public function buildEntityForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
@@ -360,7 +360,7 @@ class IndexForm extends EntityForm {
   /**
    * Builds the configuration forms for all selected datasources.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index begin created or edited.
    */
   public function buildDatasourcesConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
@@ -378,7 +378,7 @@ class IndexForm extends EntityForm {
   /**
    * Builds the tracker configuration form.
    *
-   * @param \Drupal\search_api\Index\IndexInterface $index
+   * @param \Drupal\search_api\IndexInterface $index
    *   The index being created or edited.
    */
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
@@ -438,7 +438,7 @@ class IndexForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     parent::validate($form, $form_state);
 
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();
 
     // Store the array of datasource plugin IDs with integer keys.
@@ -497,7 +497,7 @@ class IndexForm extends EntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();
 
     $form_state->setValue('options', array_merge($index->getOptions(), $form_state->getValues()['options']));

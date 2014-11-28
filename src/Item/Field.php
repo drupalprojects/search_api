@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api\Item;
 
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Utility;
 
 /**
  * Represents a field on a search item that can be indexed.

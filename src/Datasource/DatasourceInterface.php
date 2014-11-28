@@ -15,7 +15,7 @@ use Drupal\search_api\Plugin\IndexPluginInterface;
  *
  * A datasource is used to abstract the type of data that can be indexed and
  * searched with the Search API. Content entities are supported by default (with
- * the \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasource
+ * the \Drupal\search_api\Plugin\search_api\datasource\ContentEntity
  * datasource), but others can be added by other modules. Datasources provide
  * all kinds of metadata for search items of their type, as well as loading and
  * viewing functionality.

@@ -16,8 +16,8 @@ entity.search_api_server.add_form:
 entity.search_api_server.canonical:
   path: '/admin/config/search/search-api/server/{search_api_server}'
   defaults:
-    _controller: '\Drupal\search_api\Controller\SearchApiServerController::page'
-    _title_callback: '\Drupal\search_api\Controller\SearchApiServerController::pageTitle'
+    _controller: '\Drupal\search_api\Controller\ServerController::page'
+    _title_callback: '\Drupal\search_api\Controller\ServerController::pageTitle'
     _title: "View"
   requirements:
     _entity_access: 'search_api_server.view'
@@ -39,7 +39,7 @@ entity.search_api_server.delete_form:
 entity.search_api_server.enable:
   path: '/admin/config/search/search-api/server/{search_api_server}/enable'
   defaults:
-    _controller: 'Drupal\search_api\Controller\SearchApiServerController::serverBypassEnable'
+    _controller: 'Drupal\search_api\Controller\ServerController::serverBypassEnable'
   requirements:
     _entity_access: 'search_api_server.enable'
     _csrf_token: 'TRUE'
@@ -68,8 +68,8 @@ entity.search_api_index.add_form:
 entity.search_api_index.canonical:
   path: '/admin/config/search/search-api/index/{search_api_index}'
   defaults:
-    _controller: '\Drupal\search_api\Controller\SearchApiIndexController::page'
-    _title_callback: '\Drupal\search_api\Controller\SearchApiIndexController::pageTitle'
+    _controller: '\Drupal\search_api\Controller\IndexController::page'
+    _title_callback: '\Drupal\search_api\Controller\IndexController::pageTitle'
   requirements:
     _entity_access: 'search_api_index.view'
 
@@ -90,7 +90,7 @@ entity.search_api_index.delete_form:
 entity.search_api_index.enable:
   path: '/admin/config/search/search-api/index/{search_api_index}/enable'
   defaults:
-    _controller: 'Drupal\search_api\Controller\SearchApiIndexController::indexBypassEnable'
+    _controller: 'Drupal\search_api\Controller\IndexController::indexBypassEnable'
   requirements:
     _entity_access: 'search_api_index.enable'
     _csrf_token: 'TRUE'

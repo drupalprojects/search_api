@@ -12,7 +12,7 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\display\Block;
 use Drupal\views\Views;
@@ -177,13 +177,13 @@ class FacetsBlock extends Block {
    *   An associative array mapping all indexed fields' identifiers to their
    *   prefixed labels.
    *
-   * @throws \Drupal\search_api\Exception\SearchApiException
+   * @throws \Drupal\search_api\SearchApiException
    *   If there couldn't be a search index retrieved for the current view.
    */
   protected function getFieldOptions() {
     if (!isset($this->field_options)) {
       $index_id = $this->getSearchIndexId();
-      /** @var \Drupal\search_api\Index\IndexInterface $index */
+      /** @var \Drupal\search_api\IndexInterface $index */
       $index = NULL;
       if (!($index_id && ($index = Index::load($index_id)))) {
         $table = $this->view->storage->get('base_table');

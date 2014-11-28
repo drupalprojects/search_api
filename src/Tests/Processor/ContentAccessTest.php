@@ -11,7 +11,7 @@ use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -20,14 +20,14 @@ use Drupal\user\Entity\User;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+ * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
 class ContentAccessTest extends ProcessorTestBase {
 
   /**
    * Stores the processor to be tested.
    *
-   * @var \Drupal\search_api\Plugin\SearchApi\Processor\ContentAccess
+   * @var \Drupal\search_api\Plugin\search_api\processor\ContentAccess
    */
   protected $processor;
 

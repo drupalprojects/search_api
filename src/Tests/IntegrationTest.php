@@ -9,14 +9,14 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Exception\SearchApiException;
+use Drupal\search_api\SearchApiException;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
  * @group search_api_debug
  */
-class IntegrationTest extends SearchApiWebTestBase {
+class IntegrationTest extends WebTestBase {
 
   /**
    * The ID of the search server used for this test.
@@ -147,7 +147,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->assertText($this->t('The index was successfully saved.'));
     $this->assertUrl($this->getIndexPath(), array(), 'Correct redirect to index page.');
 
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
 
     if ($this->assertTrue($index, 'Index was correctly created.')) {
@@ -320,7 +320,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
     $this->assertText($this->t('The changes were successfully saved.'));
 
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields(FALSE);
 
@@ -358,7 +358,7 @@ class IntegrationTest extends SearchApiWebTestBase {
     );
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
 
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $fields = $index->getFields();
     $this->assertTrue(!isset($fields['entity:node/body']), 'The body field has been removed from the index.');
@@ -372,7 +372,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'processors[ignorecase][status]' => 1,
     );
     $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
     $this->assertTrue(isset($processors['ignorecase']), 'Ignore case processor enabled');
@@ -388,7 +388,7 @@ class IntegrationTest extends SearchApiWebTestBase {
       'processors[ignorecase][settings][fields][entity:node/title]' => 'entity:node/title',
     );
     $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
-    /** @var \Drupal\search_api\Index\IndexInterface $index */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
     if (isset($processors['ignorecase'])) {
@@ -407,7 +407,7 @@ class IntegrationTest extends SearchApiWebTestBase {
    * keeps tracking but won't index any items.
    */
   protected function setReadOnly() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $index->reindex();
 
@@ -492,7 +492,7 @@ class IntegrationTest extends SearchApiWebTestBase {
    * handle and add the new ones.
    */
   protected function changeIndexDatasource() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $index->reindex();
 
@@ -527,7 +527,7 @@ class IntegrationTest extends SearchApiWebTestBase {
    * "unindexed" in the tracker.
    */
   protected function changeIndexServer() {
-    /** @var $index \Drupal\search_api\Index\IndexInterface */
+    /** @var $index \Drupal\search_api\IndexInterface */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
 
     $node_count = \Drupal::entityQuery('node')->count()->execute();

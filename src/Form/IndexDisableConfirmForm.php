@@ -48,7 +48,7 @@ class IndexDisableConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api\Index\IndexInterface $entity */
+    /** @var \Drupal\search_api\IndexInterface $entity */
     $entity = $this->entity;
 
     $entity->setStatus(FALSE)->save();

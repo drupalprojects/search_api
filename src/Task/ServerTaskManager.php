@@ -9,9 +9,9 @@ namespace Drupal\search_api\Task;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\search_api\Exception\SearchApiException;
-use Drupal\search_api\Index\IndexInterface;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\SearchApiException;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Provides a service for managing pending server tasks.
@@ -189,7 +189,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    * @param string $server_id
    *   The server's ID.
    *
-   * @return \Drupal\search_api\Server\ServerInterface|null
+   * @return \Drupal\search_api\ServerInterface|null
    *   The loaded server, or NULL if it could not be loaded.
    */
   protected function loadServer($server_id) {
@@ -202,7 +202,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    * @param string $index_id
    *   The index's ID.
    *
-   * @return \Drupal\search_api\Index\IndexInterface|null
+   * @return \Drupal\search_api\IndexInterface|null
    *   The loaded index, or NULL if it could not be loaded.
    */
   protected function loadIndex($index_id) {

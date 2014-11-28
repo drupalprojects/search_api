@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Plugin\ConfigurablePluginInterface;
-use Drupal\search_api\Server\ServerInterface;
+use Drupal\search_api\ServerInterface;
 
 /**
  * Defines an interface for search backend plugins.
@@ -28,7 +28,7 @@ interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificI
   /**
    * Retrieves the server entity for this backend.
    *
-   * @return \Drupal\search_api\Server\ServerInterface
+   * @return \Drupal\search_api\ServerInterface
    *   The server entity.
    */
   public function getServer();
@@ -36,7 +36,7 @@ interface BackendInterface extends ConfigurablePluginInterface, BackendSpecificI
   /**
    * Sets the server entity for this backend.
    *
-   * @param \Drupal\search_api\Server\ServerInterface $server
+   * @param \Drupal\search_api\ServerInterface $server
    *   The server entity.
    *
    * @return $this

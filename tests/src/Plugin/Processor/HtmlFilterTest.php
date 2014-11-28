@@ -7,8 +7,8 @@
 
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
-use Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Plugin\search_api\processor\HtmlFilter;
+use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -16,7 +16,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\SearchApi\Processor\HtmlFilter
+ * @see \Drupal\search_api\Plugin\search_api\processor\HtmlFilter
  */
 class HtmlFilterTest extends UnitTestCase {
 

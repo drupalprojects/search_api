@@ -76,7 +76,7 @@ function hook_search_api_processor_info_alter(array &$processors) {
  *   corresponding Search API data types. Empty values mean that fields of
  *   that type should be ignored by the Search API.
  *
- * @see \Drupal\search_api\Utility\Utility::getFieldTypeMapping()
+ * @see \Drupal\search_api\Utility::getFieldTypeMapping()
  */
 function hook_search_api_field_type_mapping_alter(array &$mapping) {
   $mapping['duration_iso8601'] = NULL;
@@ -92,14 +92,14 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
  * If your module will use this hook to reject certain items from indexing,
  * please document this clearly to avoid confusion.
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The search index on which items will be indexed.
  * @param \Drupal\search_api\Item\ItemInterface[] $items
  *   The items that will be indexed.
  */
-function hook_search_api_index_items_alter(\Drupal\search_api\Index\IndexInterface $index, array &$items) {
+function hook_search_api_index_items_alter(\Drupal\search_api\IndexInterface $index, array &$items) {
   foreach ($items as $item_id => $item) {
-    list(, $raw_id) = \Drupal\search_api\Utility\Utility::splitCombinedId($item->getId());
+    list(, $raw_id) = \Drupal\search_api\Utility::splitCombinedId($item->getId());
     if ($raw_id % 5 == 0) {
       unset($items[$item_id]);
     }
@@ -110,12 +110,12 @@ function hook_search_api_index_items_alter(\Drupal\search_api\Index\IndexInterfa
 /**
  * React after items were indexed.
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The used index.
  * @param array $item_ids
  *   An array containing the successfully indexed items' IDs.
  */
-function hook_search_api_items_indexed(\Drupal\search_api\Index\IndexInterface $index, array $item_ids) {
+function hook_search_api_items_indexed(\Drupal\search_api\IndexInterface $index, array $item_ids) {
   if ($index->isValidDatasource('entity:node')) {
     // Note that this is just an example, and would only work if there are only
     // nodes indexed in that index (and even then the printed IDs would probably
@@ -163,12 +163,12 @@ function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterfa
 /**
  * React when a search index was scheduled for reindexing
  *
- * @param \Drupal\search_api\Index\IndexInterface $index
+ * @param \Drupal\search_api\IndexInterface $index
  *   The index scheduled for reindexing.
  * @param $clear
  *   Boolean indicating whether the index was also cleared.
  */
-function hook_search_api_index_reindex(\Drupal\search_api\Index\IndexInterface $index, $clear = FALSE) {
+function hook_search_api_index_reindex(\Drupal\search_api\IndexInterface $index, $clear = FALSE) {
   db_insert('example_search_index_reindexed')
     ->fields(array(
       'index' => $index->id(),
