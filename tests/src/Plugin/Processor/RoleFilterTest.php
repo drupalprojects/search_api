@@ -8,7 +8,6 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\RoleFilter;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
@@ -58,7 +57,7 @@ class RoleFilterTest extends UnitTestCase {
       ->will($this->returnValue('user'));
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
 
-    $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $node_datasource);
+    $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '1:en'), $node_datasource);
     $node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
@@ -66,7 +65,7 @@ class RoleFilterTest extends UnitTestCase {
     $item->setOriginalObject(EntityAdapter::createFromEntity($node));
     $this->items[$item->getId()] = $item;
 
-    $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $user_datasource);
+    $item = Utility::createItem($index, Utility::createCombinedId('entity:user', '1:en'), $user_datasource);
     $account1 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
@@ -77,7 +76,7 @@ class RoleFilterTest extends UnitTestCase {
     $item->setOriginalObject(EntityAdapter::createFromEntity($account1));
     $this->items[$item->getId()] = $item;
 
-    $item = Utility::createItem($index, 'entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $user_datasource);
+    $item = Utility::createItem($index, Utility::createCombinedId('entity:user', '2:en'), $user_datasource);
     $account2 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
       ->disableOriginalConstructor()
       ->getMock();
@@ -99,9 +98,9 @@ class RoleFilterTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'User with two roles was not removed.');
-    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en']), 'User with only the authenticated role was not removed.');
-    $this->assertTrue(!empty($this->items['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'Node item was not removed.');
+    $this->assertTrue(!empty($this->items[Utility::createCombinedId('entity:user', '1:en')]), 'User with two roles was not removed.');
+    $this->assertTrue(!empty($this->items[Utility::createCombinedId('entity:user', '2:en')]), 'User with only the authenticated role was not removed.');
+    $this->assertTrue(!empty($this->items[Utility::createCombinedId('entity:node', '1:en')]), 'Node item was not removed.');
   }
 
   /**
@@ -114,9 +113,9 @@ class RoleFilterTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($this->items);
 
-    $this->assertTrue(empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'User with editor role was successfully removed.');
-    $this->assertTrue(!empty($this->items['entity:user' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en']), 'User without the editor role was not removed.');
-    $this->assertTrue(!empty($this->items['entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en']), 'Node item was not removed.');
+    $this->assertTrue(empty($this->items[Utility::createCombinedId('entity:user', '1:en')]), 'User with editor role was successfully removed.');
+    $this->assertTrue(!empty($this->items[Utility::createCombinedId('entity:user', '2:en')]), 'User without the editor role was not removed.');
+    $this->assertTrue(!empty($this->items[Utility::createCombinedId('entity:node', '1:en')]), 'Node item was not removed.');
   }
 
 }

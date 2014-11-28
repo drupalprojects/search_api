@@ -227,7 +227,7 @@ trait FieldTrait {
       if ($pos) {
         $parent_id = substr($this->propertyPath, 0, $pos);
         if ($this->datasource_id) {
-          $parent_id = $this->datasource_id . IndexInterface::DATASOURCE_ID_SEPARATOR . $parent_id;
+          $parent_id = Utility::createCombinedId($this->datasource_id, $parent_id);
         }
         $label = Utility::createField($this->index, $parent_id)->getLabel() . ' » ' . $label;
       }

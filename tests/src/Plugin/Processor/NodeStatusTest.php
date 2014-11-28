@@ -8,7 +8,6 @@
 namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\NodeStatus;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
@@ -56,7 +55,7 @@ class NodeStatusTest extends UnitTestCase {
       ->will($this->returnValue(array($datasource)));
       /** @var \Drupal\search_api\Index\IndexInterface $index */
 
-    $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '1:en', $datasource);
+    $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '1:en'), $datasource);
     $unpublished_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
@@ -69,7 +68,7 @@ class NodeStatusTest extends UnitTestCase {
     $item->setOriginalObject(EntityAdapter::createFromEntity($unpublished_node));
     $this->items[$item->getId()] = $item;
 
-    $item = Utility::createItem($index, 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en', $datasource);
+    $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '2:en'), $datasource);
     $published_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
       ->disableOriginalConstructor()
       ->getMock();
@@ -111,7 +110,7 @@ class NodeStatusTest extends UnitTestCase {
     $this->assertCount(2, $this->items, '2 nodes in the index.');
     $this->processor->preprocessIndexItems($this->items);
     $this->assertCount(1, $this->items, 'An item was removed from the items list.');
-    $published_nid = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . '2:en';
+    $published_nid = Utility::createCombinedId('entity:node', '2:en');
     $this->assertTrue(isset($this->items[$published_nid]), 'Correct item was removed.');
   }
 

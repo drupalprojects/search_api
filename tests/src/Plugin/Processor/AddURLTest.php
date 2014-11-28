@@ -9,9 +9,9 @@ namespace Drupal\Tests\search_api\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\TypedData\DataDefinitionInterface;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Plugin\SearchApi\Processor\AddURL;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
+use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -86,7 +86,7 @@ class AddURLTest extends UnitTestCase {
       ->getMock();
 
     $body_value = array('Some text value');
-    $body_field_id = 'entity:node' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'body';
+    $body_field_id = Utility::createCombinedId('entity:node', 'body');
     $fields = array(
       'search_api_url' => array(
         'type' => 'string'

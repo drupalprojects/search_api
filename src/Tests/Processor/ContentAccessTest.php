@@ -11,7 +11,6 @@ use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\search_api\Index\IndexInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -168,7 +167,7 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
 
-    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
+    $field_id = Utility::createCombinedId('entity:comment', 'search_api_node_grants');
     foreach ($items as $item) {
       $this->assertEqual($item->getField($field_id)->getValues(), array('node_access__all'));
     }
@@ -191,7 +190,7 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
 
-    $field_id = 'entity:comment' . IndexInterface::DATASOURCE_ID_SEPARATOR . 'search_api_node_grants';
+    $field_id = Utility::createCombinedId('entity:comment', 'search_api_node_grants');
     foreach ($items as $item) {
       $this->assertEqual($item->getField($field_id)->getValues(), array('node_access_search_api_test:0'));
     }
