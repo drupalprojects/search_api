@@ -9,8 +9,8 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Utility\String;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Exception;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
@@ -288,7 +288,7 @@ class SearchApiQuery extends QueryPluginBase {
 
     // If the View and the Panel conspire to provide an overridden path then
     // pass that through as the base path.
-    if (($path = $this->view->getPath()) && strpos(current_path(), $this->view->override_path) !== 0) {
+    if (($path = $this->view->getPath()) && strpos(Url::fromRoute('<current>')->toString(), $this->view->override_path) !== 0) {
       $this->query->setOption('search_api_base_path', $path);
     }
   }
