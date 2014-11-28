@@ -1,9 +1,0 @@
-name: 'Search API test'
-type: module
-description: 'Some dummy implementations for testing the Search API.'
-package: Testing
-core: 8.x
-hidden: true
-
-dependencies:
-  - search_api
