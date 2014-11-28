@@ -13,7 +13,7 @@ use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Default Search API tracker which implements a FIFO-like processing order.
+ * Provides a tracker implementation which uses a FIFO-like processing order.
  *
  * @SearchApiTracker(
  *   id = "default_tracker",

@@ -246,14 +246,14 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Button submit handler for this processor's form's AJAX buttons.
+   * Form submission handler for this processor form's AJAX buttons.
    */
   public static function submitAjaxFieldButton(array $form, FormStateInterface $form_state) {
     $form_state->setRebuild();
   }
 
   /**
-   * Callback handler for this processor's form's AJAX buttons.
+   * Handles adding or removing of aggregated fields via AJAX.
    */
   public static function buildAjaxAddFieldButton(array $form, FormStateInterface $form_state) {
     return $form['settings']['aggregated_field']['fields'];

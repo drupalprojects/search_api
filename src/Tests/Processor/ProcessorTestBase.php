@@ -13,7 +13,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
- * Search API Processor tests base class.
+ * Provides a base class for Drupal unit tests for processors.
  */
 abstract class ProcessorTestBase extends EntityUnitTestBase {
 

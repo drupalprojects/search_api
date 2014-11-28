@@ -47,7 +47,7 @@ class SearchApiServerController extends ControllerBase {
   }
 
   /**
-   * Page title callback for a server's "View" tab.
+   * Returns the page title for a server's "View" tab.
    *
    * @param \Drupal\search_api\Server\ServerInterface $search_api_server
    *   The server that is displayed.

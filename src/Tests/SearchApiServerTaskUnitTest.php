@@ -334,7 +334,7 @@ class SearchApiServerTaskUnitTest extends KernelTestBase {
   }
 
   /**
-   * Get the tasks set on the test server.
+   * Retrieves the tasks set on the test server.
    *
    * @return object[]
    *   All tasks read from the database for the test server, with numeric keys

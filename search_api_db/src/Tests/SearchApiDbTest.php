@@ -159,7 +159,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   /**
-   * Enable the "HTML Filter" processor for the index.
+   * Enables the "HTML Filter" processor for the index.
    */
   protected function enableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */
@@ -177,7 +177,7 @@ class SearchApiDbTest extends EntityUnitTestBase {
   }
 
   /**
-   * Disable the "HTML Filter" processor for the index.
+   * Disables the "HTML Filter" processor for the index.
    */
   protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\Index\IndexInterface $index */

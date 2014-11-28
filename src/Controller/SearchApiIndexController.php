@@ -42,7 +42,7 @@ class SearchApiIndexController extends ControllerBase {
   }
 
   /**
-   * Page title callback for an index's "View" tab.
+   * Returns the page title for an index's "View" tab.
    *
    * @param \Drupal\search_api\Index\IndexInterface $search_api_index
    *   The index that is displayed.
