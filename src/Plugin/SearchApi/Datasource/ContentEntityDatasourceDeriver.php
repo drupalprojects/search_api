@@ -41,7 +41,6 @@ class ContentEntityDatasourceDeriver implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
-    /** @var \Drupal\search_api\Plugin\SearchApi\Datasource\ContentEntityDatasourceDeriver $deriver */
     $deriver = new static();
 
     /** @var $entity_manager \Drupal\Core\Entity\EntityManagerInterface */

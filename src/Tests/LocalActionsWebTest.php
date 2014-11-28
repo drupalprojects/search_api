@@ -26,7 +26,7 @@ class LocalActionsWebTest extends LocalActionTest {
   /**
    * The administrator account to use for the tests.
    *
-   * @var \Drupal\user\Entity\User
+   * @var \Drupal\user\UserInterface
    */
   protected $adminUser;
 
