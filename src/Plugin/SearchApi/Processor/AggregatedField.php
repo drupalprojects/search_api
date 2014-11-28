@@ -179,23 +179,21 @@ class AggregatedField extends ProcessorPluginBase {
   }
 
   /**
-   * Retrieves the descriptions of all aggregation types.
+   * Retrieves form elements with the descriptions of all aggregation types.
    *
    * @return array
-   *   An array mapping aggregation types to their descriptions.
+   *   An array containing form elements with the descriptions of all
+   *   aggregation types.
    */
   protected function getTypeDescriptions() {
-    $types = $this->getTypes();
-    $previous_type_descriptions = $this->getTypes('description');
-
-    $type_descriptions = array();
-    foreach ($types as $type => $name) {
-      $type_descriptions[$type] = array(
+    $form = array();
+    foreach ($this->getTypes('description') as $type => $description) {
+      $form[$type] = array(
         '#type' => 'item',
-        '#description' => $previous_type_descriptions[$type],
+        '#description' => $description,
       );
     }
-    return $type_descriptions;
+    return $form;
   }
 
   /**

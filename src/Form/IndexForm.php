@@ -365,12 +365,12 @@ class IndexForm extends EntityForm {
    */
   public function buildDatasourcesConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
-      if ($datasource_plugin_config_form = $datasource->buildConfigurationForm(array(), $form_state)) {
+      if ($config_form = $datasource->buildConfigurationForm(array(), $form_state)) {
         $form['datasource_configs'][$datasource_id]['#type'] = 'details';
         $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure the %datasource datasource', array('%datasource' => $datasource->getPluginDefinition()['label']));
         $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew();
 
-        $form['datasource_configs'][$datasource_id] += $datasource_plugin_config_form;
+        $form['datasource_configs'][$datasource_id] += $config_form;
       }
     }
   }
@@ -384,15 +384,13 @@ class IndexForm extends EntityForm {
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     if ($index->hasValidTracker()) {
       $tracker = $index->getTracker();
-      $tracker_plugin_definition = $tracker->getPluginDefinition();
-
-      if ($tracker_plugin_config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
+      if ($config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
         $form['tracker_config']['#type'] = 'details';
-        $form['tracker_config']['#title'] = $this->t('Configure %plugin', array('%plugin' => $tracker_plugin_definition['label']));
-        $form['tracker_config']['#description'] = String::checkPlain($tracker_plugin_definition['description']);
+        $form['tracker_config']['#title'] = $this->t('Configure %plugin', array('%plugin' => $tracker->label()));
+        $form['tracker_config']['#description'] = String::checkPlain($tracker->getDescription());
         $form['tracker_config']['#open'] = $index->isNew();
 
-        $form['tracker_config'] += $tracker_plugin_config_form;
+        $form['tracker_config'] += $config_form;
       }
     }
     // Only notify the user of a missing tracker plugin if we're editing an
