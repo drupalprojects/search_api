@@ -134,48 +134,49 @@ function search_api_entity_insert(EntityInterface $entity) {
  */
 function search_api_entity_update(EntityInterface $entity) {
   // Check if the entity is a content entity.
-  if ($entity instanceof ContentEntityInterface) {
-    $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
-    if (!$indexes) {
-      return;
-    }
+  if (!($entity instanceof ContentEntityInterface)) {
+    return;
+  }
+  $indexes = ContentEntityDatasource::getIndexesForEntity($entity);
+  if (!$indexes) {
+    return;
+  }
 
-    // Compare old and new languages for the entity to identify inserted,
-    // updated and deleted translations (and, therefore, search items).
-    $entity_id = $entity->id();
-    $combine_id = function($langcode) use ($entity_id) {
-      return $entity_id . ':' . $langcode;
-    };
-    $inserted_item_ids = array();
-    $updated_item_ids = array_keys($entity->getTranslationLanguages());
-    $deleted_item_ids = array();
-    $old_translations = array_keys($entity->original->getTranslationLanguages());
-    foreach ($old_translations as $langcode) {
-      if (!in_array($langcode, $updated_item_ids)) {
-        $deleted_item_ids[] = $langcode;
-      }
+  // Compare old and new languages for the entity to identify inserted,
+  // updated and deleted translations (and, therefore, search items).
+  $entity_id = $entity->id();
+  $inserted_item_ids = array();
+  $updated_item_ids = $entity->getTranslationLanguages();
+  $deleted_item_ids = array();
+  $old_translations = $entity->original->getTranslationLanguages();
+  foreach ($old_translations as $langcode => $language) {
+    if (!isset($updated_item_ids[$langcode])) {
+      $deleted_item_ids[] = $langcode;
     }
-    foreach ($updated_item_ids as $i => $langcode) {
-      if (!in_array($langcode, $old_translations)) {
-        unset($updated_item_ids[$i]);
-        $inserted_item_ids[] = $langcode;
-      }
+  }
+  foreach ($updated_item_ids as $langcode => $language) {
+    if (!isset($old_translations[$langcode])) {
+      unset($updated_item_ids[$langcode]);
+      $inserted_item_ids[] = $langcode;
     }
+  }
 
-    $datasource_id = 'entity:' . $entity->getEntityTypeId();
-    $inserted_item_ids = array_map($combine_id, $inserted_item_ids);
-    $updated_item_ids = array_map($combine_id, $updated_item_ids);
-    $deleted_item_ids = array_map($combine_id, $deleted_item_ids);
-    foreach ($indexes as $index) {
-      if ($inserted_item_ids) {
-        $index->trackItemsInserted($datasource_id, $inserted_item_ids);
-      }
-      if ($updated_item_ids) {
-        $index->trackItemsUpdated($datasource_id, $updated_item_ids);
-      }
-      if ($deleted_item_ids) {
-        $index->trackItemsDeleted($datasource_id, $deleted_item_ids);
-      }
+  $datasource_id = 'entity:' . $entity->getEntityTypeId();
+  $combine_id = function ($langcode) use ($entity_id) {
+    return $entity_id . ':' . $langcode;
+  };
+  $inserted_item_ids = array_map($combine_id, $inserted_item_ids);
+  $updated_item_ids = array_map($combine_id, array_keys($updated_item_ids));
+  $deleted_item_ids = array_map($combine_id, $deleted_item_ids);
+  foreach ($indexes as $index) {
+    if ($inserted_item_ids) {
+      $index->trackItemsInserted($datasource_id, $inserted_item_ids);
+    }
+    if ($updated_item_ids) {
+      $index->trackItemsUpdated($datasource_id, $updated_item_ids);
+    }
+    if ($deleted_item_ids) {
+      $index->trackItemsDeleted($datasource_id, $deleted_item_ids);
     }
   }
 }
