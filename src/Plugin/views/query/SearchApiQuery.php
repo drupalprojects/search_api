@@ -234,6 +234,10 @@ class SearchApiQuery extends QueryPluginBase {
   public function build(ViewExecutable $view) {
     $this->view = $view;
 
+    if ($this->shouldAbort()) {
+      return;
+    }
+
     // Setup the nested filter structure for this query.
     if (!empty($this->filters)) {
       // If the different groups are combined with the OR operator, we have to
