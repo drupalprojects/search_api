@@ -33,9 +33,7 @@ class ServerController extends ControllerBase {
         '#server' => $search_api_server,
       ),
       '#attached' => array(
-        'css' => array(
-          drupal_get_path('module', 'search_api') . '/css/search_api.admin.css'
-        ),
+        'library' => array('search_api/drupal.search_api.admin_css'),
       ),
     );
     // Check if the server is enabled.
