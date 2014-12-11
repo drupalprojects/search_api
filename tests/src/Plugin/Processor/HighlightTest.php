@@ -141,7 +141,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->item_ids[0]][$body_field_id][0], 'Highlighting is correctly applied to body field.');
+    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->itemIds[0]][$body_field_id][0], 'Highlighting is correctly applied to body field.');
   }
 
   /**
@@ -187,7 +187,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('Some <em>foo</em> value', $output[$this->item_ids[0]][$body_field_id][0], 'Highlighting is correctly applied');
+    $this->assertEquals('Some <em>foo</em> value', $output[$this->itemIds[0]][$body_field_id][0], 'Highlighting is correctly applied');
   }
 
   /**
@@ -273,16 +273,16 @@ class HighlightTest extends UnitTestCase {
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
-    $highlighted_fields[$this->item_ids[0]]["{$body_field_id}_2"][0] = 'Old highlighting text';
-    $highlighted_fields[$this->item_ids[0]]["{$body_field_id}_2"][1] = 'More highlighting text';
+    $highlighted_fields[$this->itemIds[0]]["{$body_field_id}_2"][0] = 'Old highlighting text';
+    $highlighted_fields[$this->itemIds[0]]["{$body_field_id}_2"][1] = 'More highlighting text';
     $results->setExtraData('highlighted_fields', $highlighted_fields);
 
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->item_ids[0]][$body_field_id][0], 'Highlighting correctly applied to body field.');
-    $this->assertEquals('Old highlighting text', $output[$this->item_ids[0]]["{$body_field_id}_2"][0], 'Old highlighting data is preserved.');
-    $this->assertEquals('More highlighting text', $output[$this->item_ids[0]]["{$body_field_id}_2"][1], 'Old highlighting data is preserved.');
+    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->itemIds[0]][$body_field_id][0], 'Highlighting correctly applied to body field.');
+    $this->assertEquals('Old highlighting text', $output[$this->itemIds[0]]["{$body_field_id}_2"][0], 'Old highlighting data is preserved.');
+    $this->assertEquals('More highlighting text', $output[$this->itemIds[0]]["{$body_field_id}_2"][1], 'Old highlighting data is preserved.');
   }
 
   /**
@@ -326,7 +326,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getResultItems();
-    $excerpt = $output[$this->item_ids[0]]->getExcerpt();
+    $excerpt = $output[$this->itemIds[0]]->getExcerpt();
     $correct_output = '… tristique, ligula sit amet condimentum dapibus, lorem nunc <strong>congue</strong> velit, et dictum augue leo sodales augue. Maecenas …';
     $this->assertEquals($correct_output, $excerpt, 'Excerpt was added.');
   }
@@ -372,7 +372,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getResultItems();
-    $excerpt = $output[$this->item_ids[0]]->getExcerpt();
+    $excerpt = $output[$this->itemIds[0]]->getExcerpt();
     $correct_output = '… Fusce in mauris eu leo fermentum feugiat. Proin varius <strong>diam</strong> ante, non eleifend ipsum luctus sed. …';
     $this->assertEquals($correct_output, $excerpt, 'Excerpt was added.');
   }
@@ -420,7 +420,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getResultItems();
-    $excerpt = $output[$this->item_ids[0]]->getExcerpt();
+    $excerpt = $output[$this->itemIds[0]]->getExcerpt();
     $correct_output = '… dapibus, lorem nunc <strong>congue</strong> velit, et dictum augue …';
     $this->assertEquals($correct_output, $excerpt, 'Excerpt has correct reduced length.');
   }
@@ -467,7 +467,7 @@ class HighlightTest extends UnitTestCase {
 
     $this->processor->postprocessSearchResults($results);
 
-    $excerpt = $items[$this->item_ids[0]]->getExcerpt();
+    $excerpt = $items[$this->itemIds[0]]->getExcerpt();
 
     $this->assertEmpty($excerpt, 'No excerpt added when disabled.');
   }
@@ -528,9 +528,9 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $highlighted_fields = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('This <strong>foo</strong> text <strong>bar</strong> will get <strong>baz</strong> riddled with &lt;strong&gt; tags.', $highlighted_fields[$this->item_ids[0]][$body_field_id][0], 'Highlighting is correctly applied when keys are complex.');
+    $this->assertEquals('This <strong>foo</strong> text <strong>bar</strong> will get <strong>baz</strong> riddled with &lt;strong&gt; tags.', $highlighted_fields[$this->itemIds[0]][$body_field_id][0], 'Highlighting is correctly applied when keys are complex.');
     $correct_output = '… This <strong>foo</strong> text <strong>bar</strong> will get <strong>baz</strong> riddled with &lt;strong&gt; tags. …';
-    $excerpt = $items[$this->item_ids[0]]->getExcerpt();
+    $excerpt = $items[$this->itemIds[0]]->getExcerpt();
     $this->assertEquals($correct_output, $excerpt, 'Excerpt was added.');
   }
 
@@ -583,12 +583,12 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->item_ids[0]][$body_field_id][0], 'Highlighting is correctly applied to first body field value.');
-    $this->assertEquals('<strong>foo</strong> bar', $output[$this->item_ids[0]][$body_field_id][1], 'Highlighting is correctly applied to second body field value.');
-    $this->assertEquals('Title <strong>foo</strong>', $output[$this->item_ids[0]][$title_field_id][0], 'Highlighting is correctly applied to title field.');
+    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->itemIds[0]][$body_field_id][0], 'Highlighting is correctly applied to first body field value.');
+    $this->assertEquals('<strong>foo</strong> bar', $output[$this->itemIds[0]][$body_field_id][1], 'Highlighting is correctly applied to second body field value.');
+    $this->assertEquals('Title <strong>foo</strong>', $output[$this->itemIds[0]][$title_field_id][0], 'Highlighting is correctly applied to title field.');
 
     $excerpt = '… Some <strong>foo</strong> value … <strong>foo</strong> bar … Title <strong>foo</strong> …';
-    $this->assertEquals($excerpt, $items[$this->item_ids[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
+    $this->assertEquals($excerpt, $items[$this->itemIds[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
   }
 
   /**
@@ -625,7 +625,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($index, 2, $fields);
 
-    $items[$this->item_ids[1]]->getField($body_field_id)->setValues(array('The second item also contains foo in its body.'));
+    $items[$this->itemIds[1]]->getField($body_field_id)->setValues(array('The second item also contains foo in its body.'));
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -634,14 +634,14 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $output = $results->getExtraData('highlighted_fields');
-    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->item_ids[0]][$body_field_id][0], 'Highlighting is correctly applied to first body field value.');
-    $this->assertEquals('<strong>foo</strong> bar', $output[$this->item_ids[0]][$body_field_id][1], 'Highlighting is correctly applied to second body field value.');
-    $this->assertEquals('The second item also contains <strong>foo</strong> in its body.', $output[$this->item_ids[1]][$body_field_id][0], 'Highlighting is correctly applied to second item.');
+    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->itemIds[0]][$body_field_id][0], 'Highlighting is correctly applied to first body field value.');
+    $this->assertEquals('<strong>foo</strong> bar', $output[$this->itemIds[0]][$body_field_id][1], 'Highlighting is correctly applied to second body field value.');
+    $this->assertEquals('The second item also contains <strong>foo</strong> in its body.', $output[$this->itemIds[1]][$body_field_id][0], 'Highlighting is correctly applied to second item.');
 
     $excerpt1 = '… Some <strong>foo</strong> value … <strong>foo</strong> bar …';
     $excerpt2 = '… The second item also contains <strong>foo</strong> in its body. …';
-    $this->assertEquals($excerpt1, $items[$this->item_ids[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
-    $this->assertEquals($excerpt2, $items[$this->item_ids[1]]->getExcerpt(), 'Correct excerpt created for second item.');
+    $this->assertEquals($excerpt1, $items[$this->itemIds[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
+    $this->assertEquals($excerpt2, $items[$this->itemIds[1]]->getExcerpt(), 'Correct excerpt created for second item.');
   }
 
 

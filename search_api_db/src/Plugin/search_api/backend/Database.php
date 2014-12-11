@@ -1574,7 +1574,7 @@ class Database extends BackendPluginBase {
       }
       elseif (empty($key['#negation'])) {
         if ($neg) {
-          // If this query is negated, we also only need item_ids from
+          // If this query is negated, we also only need item IDs from
           // subqueries.
           $key['#negation'] = TRUE;
         }

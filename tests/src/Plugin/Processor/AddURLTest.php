@@ -102,15 +102,15 @@ class AddURLTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     // Check the valid item.
-    $field = $items[$this->item_ids[0]]->getField('search_api_url');
+    $field = $items[$this->itemIds[0]]->getField('search_api_url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field.');
 
     // Check that no other fields were changed.
-    $field = $items[$this->item_ids[0]]->getField($body_field_id);
+    $field = $items[$this->itemIds[0]]->getField($body_field_id);
     $this->assertEquals($body_value, $field->getValues(), 'Body field was not changed.');
 
     // Check the second item to be sure that all are processed.
-    $field = $items[$this->item_ids[1]]->getField('search_api_url');
+    $field = $items[$this->itemIds[1]]->getField('search_api_url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field in the second item.');
   }
 

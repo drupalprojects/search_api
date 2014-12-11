@@ -99,24 +99,24 @@ class LanguageTest extends UnitTestCase {
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'en'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object1 */
-    $items[$this->item_ids[0]]->setOriginalObject(EntityAdapter::createFromEntity($object1));
+    $items[$this->itemIds[0]]->setOriginalObject(EntityAdapter::createFromEntity($object1));
 
     $object2 = $this->getMock('Drupal\Tests\search_api\TestContentEntityInterface');
     $object2->expects($this->any())
       ->method('language')
       ->will($this->returnValue(new CoreLanguage(array('id' => 'es'))));
     /** @var \Drupal\Core\Entity\ContentEntityInterface $object2 */
-    $items[$this->item_ids[1]]->setOriginalObject(EntityAdapter::createFromEntity($object2));
+    $items[$this->itemIds[1]]->setOriginalObject(EntityAdapter::createFromEntity($object2));
 
     $object3 = $this->getMock('Drupal\Tests\search_api\TestComplexDataInterface');
     /** @var \Drupal\Tests\search_api\TestComplexDataInterface $object3 */
-    $items[$this->item_ids[2]]->setOriginalObject($object3);
+    $items[$this->itemIds[2]]->setOriginalObject($object3);
 
     $this->processor->preprocessIndexItems($items);
 
-    $this->assertEquals(array('en'), $items[$this->item_ids[0]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for an English item.');
-    $this->assertEquals(array('es'), $items[$this->item_ids[1]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for a Spanish item.');
-    $this->assertEquals(array(CoreLanguage::LANGCODE_NOT_SPECIFIED), $items[$this->item_ids[2]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for a non-translatable item.');
+    $this->assertEquals(array('en'), $items[$this->itemIds[0]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for an English item.');
+    $this->assertEquals(array('es'), $items[$this->itemIds[1]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for a Spanish item.');
+    $this->assertEquals(array(CoreLanguage::LANGCODE_NOT_SPECIFIED), $items[$this->itemIds[2]]->getField('search_api_language')->getValues(), 'The "Item language" value was correctly set for a non-translatable item.');
   }
 
 }

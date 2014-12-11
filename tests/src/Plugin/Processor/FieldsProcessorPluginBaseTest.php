@@ -46,7 +46,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $this->index->expects($this->any())
       ->method('status')
       ->will($this->returnValue(TRUE));
-    $fields = $this->getTestItem()[$this->item_ids[0]]->getFields();
+    $fields = $this->getTestItem()[$this->itemIds[0]]->getFields();
     $this->index->expects($this->any())
       ->method('getFields')
       ->will($this->returnValue($fields));
@@ -141,7 +141,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($items);
 
-    $item_fields = $items[$this->item_ids[0]]->getFields();
+    $item_fields = $items[$this->itemIds[0]]->getFields();
     $this->assertEquals(array('*foo'), $item_fields['field1']->getValues(), 'tokenized_text field correctly processed.');
   }
 
@@ -186,7 +186,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($items);
 
-    $item_fields = $items[$this->item_ids[0]]->getFields();
+    $item_fields = $items[$this->itemIds[0]]->getFields();
     $expected = array(
       TestFieldsProcessorPlugin::createTokenizedText('*foo *bar', 3),
       TestFieldsProcessorPlugin::createTokenizedText('*foobar'),

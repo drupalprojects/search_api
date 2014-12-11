@@ -90,10 +90,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array('foo', 'bar', 'baz');
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "union" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "union" aggregation for item 1.');
 
     $expected = array('foobar');
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "union" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "union" aggregation for item 1.');
   }
 
   /**
@@ -138,10 +138,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array("foo\n\nbar\n\nbaz");
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "concat" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "concat" aggregation for item 1.');
 
     $expected = array('foobar');
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "concat" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "concat" aggregation for item 1.');
   }
 
   /**
@@ -186,10 +186,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array(22);
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "sum" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "sum" aggregation for item 1.');
 
     $expected = array(7);
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "sum" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "sum" aggregation for item 1.');
   }
 
   /**
@@ -234,10 +234,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array(3);
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "count" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "count" aggregation for item 1.');
 
     $expected = array(1);
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "count" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "count" aggregation for item 1.');
   }
 
   /**
@@ -282,10 +282,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array(16);
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "max" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "max" aggregation for item 1.');
 
     $expected = array(7);
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "max" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "max" aggregation for item 1.');
   }
 
   /**
@@ -330,10 +330,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array(2);
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "min" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "min" aggregation for item 1.');
 
     $expected = array(7);
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "min" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "min" aggregation for item 1.');
   }
 
   /**
@@ -378,10 +378,10 @@ class AggregatedFieldTest extends UnitTestCase {
     $this->processor->preprocessIndexItems($items);
 
     $expected = array('foo');
-    $this->assertEquals($expected, $items[$this->item_ids[0]]->getField($field_id)->getValues(), 'Correct "first" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[0]]->getField($field_id)->getValues(), 'Correct "first" aggregation for item 1.');
 
     $expected = array('foobar');
-    $this->assertEquals($expected, $items[$this->item_ids[1]]->getField($field_id)->getValues(), 'Correct "first" aggregation for item 1.');
+    $this->assertEquals($expected, $items[$this->itemIds[1]]->getField($field_id)->getValues(), 'Correct "first" aggregation for item 1.');
   }
 
   /**
@@ -416,8 +416,8 @@ class AggregatedFieldTest extends UnitTestCase {
 
     $this->processor->preprocessIndexItems($items);
 
-    $this->assertEquals(NULL, $items[$this->item_ids[0]]->getField('search_api_aggregation_1'), 'Unindexed aggregated field was not added for item 1.');
-    $this->assertEquals(NULL, $items[$this->item_ids[1]]->getField('search_api_aggregation_1'), 'Unindexed aggregated field was not added for item 2.');
+    $this->assertEquals(NULL, $items[$this->itemIds[0]]->getField('search_api_aggregation_1'), 'Unindexed aggregated field was not added for item 1.');
+    $this->assertEquals(NULL, $items[$this->itemIds[1]]->getField('search_api_aggregation_1'), 'Unindexed aggregated field was not added for item 2.');
   }
 
   /**

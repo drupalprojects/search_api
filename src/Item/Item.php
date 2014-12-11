@@ -37,7 +37,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    *
    * @var string
    */
-  protected $datasource_id;
+  protected $datasourceId;
 
   /**
    * The datasource of this item.
@@ -104,7 +104,7 @@ class Item implements \IteratorAggregate, ItemInterface {
     $this->id = $id;
     if ($datasource) {
       $this->datasource = $datasource;
-      $this->datasource_id = $datasource->getPluginId();
+      $this->datasourceId = $datasource->getPluginId();
     }
   }
 
@@ -112,10 +112,10 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function getDatasourceId() {
-    if (!isset($this->datasource_id)) {
-      list($this->datasource_id) = Utility::splitCombinedId($this->id);
+    if (!isset($this->datasourceId)) {
+      list($this->datasourceId) = Utility::splitCombinedId($this->id);
     }
-    return $this->datasource_id;
+    return $this->datasourceId;
   }
 
   /**

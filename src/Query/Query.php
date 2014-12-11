@@ -33,7 +33,7 @@ class Query implements QueryInterface {
    *
    * @var string|null
    */
-  protected $index_id;
+  protected $indexId;
 
   /**
    * The search keys.
@@ -49,7 +49,7 @@ class Query implements QueryInterface {
    *
    * @var mixed
    */
-  protected $orig_keys;
+  protected $origKeys;
 
   /**
    * The fulltext fields that will be searched for the keys.
@@ -217,7 +217,7 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function keys($keys = NULL) {
-    $this->orig_keys = $keys;
+    $this->origKeys = $keys;
     if (isset($keys)) {
       $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
     }
@@ -351,7 +351,7 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function getOriginalKeys() {
-    return $this->orig_keys;
+    return $this->origKeys;
   }
 
   /**
@@ -402,7 +402,7 @@ class Query implements QueryInterface {
    * Implements the magic __sleep() method to avoid serializing the index.
    */
   public function __sleep() {
-    $this->index_id = $this->index->id();
+    $this->indexId = $this->index->id();
     $keys = get_object_vars($this);
     unset($keys['index']);
     return array_keys($keys);
@@ -412,9 +412,9 @@ class Query implements QueryInterface {
    * Implements the magic __wakeup() method to reload the query's index.
    */
   public function __wakeup() {
-    if (!isset($this->index) && !empty($this->index_id)) {
-      $this->index = \Drupal::entityManager()->getStorage('search_api_index')->load($this->index_id);
-      unset($this->index_id);
+    if (!isset($this->index) && !empty($this->indexId)) {
+      $this->index = \Drupal::entityManager()->getStorage('search_api_index')->load($this->indexId);
+      unset($this->indexId);
     }
   }
 
@@ -423,7 +423,7 @@ class Query implements QueryInterface {
    */
   public function __toString() {
     $ret = 'Index: ' . $this->index->id() . "\n";
-    $ret .= 'Keys: ' . str_replace("\n", "\n  ", var_export($this->orig_keys, TRUE)) . "\n";
+    $ret .= 'Keys: ' . str_replace("\n", "\n  ", var_export($this->origKeys, TRUE)) . "\n";
     if (isset($this->keys)) {
       $ret .= 'Parsed keys: ' . str_replace("\n", "\n  ", var_export($this->keys, TRUE)) . "\n";
       $ret .= 'Searched fields: ' . (isset($this->fields) ? implode(', ', $this->fields) : '[ALL]') . "\n";

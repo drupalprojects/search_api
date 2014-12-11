@@ -35,7 +35,7 @@ trait FieldTrait {
    *
    * @var string
    */
-  protected $index_id;
+  protected $indexId;
 
   /**
    * The field's identifier.
@@ -49,7 +49,7 @@ trait FieldTrait {
    *
    * @var string|null
    */
-  protected $datasource_id;
+  protected $datasourceId;
 
   /**
    * The field's datasource.
@@ -106,7 +106,7 @@ trait FieldTrait {
   public function __construct(IndexInterface $index, $field_identifier) {
     $this->index = $index;
     $this->fieldIdentifier = $field_identifier;
-    list($this->datasource_id, $this->propertyPath) = Utility::splitCombinedId($field_identifier);
+    list($this->datasourceId, $this->propertyPath) = Utility::splitCombinedId($field_identifier);
   }
 
   /**
@@ -169,7 +169,7 @@ trait FieldTrait {
    * @see \Drupal\search_api\Item\GenericFieldInterface::getDatasourceId()
    */
   public function getDatasourceId() {
-    return $this->datasource_id;
+    return $this->datasourceId;
   }
 
   /**
@@ -185,8 +185,8 @@ trait FieldTrait {
    * @see \Drupal\search_api\Item\GenericFieldInterface::getDatasource()
    */
   public function getDatasource() {
-    if (!isset($this->datasource) && isset($this->datasource_id)) {
-      $this->datasource = $this->index->getDatasource($this->datasource_id);
+    if (!isset($this->datasource) && isset($this->datasourceId)) {
+      $this->datasource = $this->index->getDatasource($this->datasourceId);
     }
     return $this->datasource;
   }
@@ -228,8 +228,8 @@ trait FieldTrait {
       $pos = strrpos($this->propertyPath, ':');
       if ($pos) {
         $parent_id = substr($this->propertyPath, 0, $pos);
-        if ($this->datasource_id) {
-          $parent_id = Utility::createCombinedId($this->datasource_id, $parent_id);
+        if ($this->datasourceId) {
+          $parent_id = Utility::createCombinedId($this->datasourceId, $parent_id);
         }
         $label = Utility::createField($this->index, $parent_id)->getLabel() . ' » ' . $label;
       }
@@ -307,8 +307,8 @@ trait FieldTrait {
   public function getPrefixedLabel() {
     if (!isset($this->labelPrefix)) {
       $this->labelPrefix = '';
-      if (isset($this->datasource_id)) {
-        $this->labelPrefix = $this->datasource_id;
+      if (isset($this->datasourceId)) {
+        $this->labelPrefix = $this->datasourceId;
         try {
           $this->labelPrefix = $this->getDatasource()->label();
         }
@@ -352,7 +352,7 @@ trait FieldTrait {
   //   Index::getPropertyDefinitions() won't return any nested ones.
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {
-      $definitions = $this->index->getPropertyDefinitions($this->datasource_id);
+      $definitions = $this->index->getPropertyDefinitions($this->datasourceId);
       if (!isset($definitions[$this->propertyPath])) {
         $args['@field'] = $this->fieldIdentifier;
         $args['%index'] = $this->index->label();
@@ -380,7 +380,7 @@ trait FieldTrait {
    *   An array mapping property names of this object to their values.
    */
   protected function getSerializationProperties() {
-    $this->index_id = $this->index->id();
+    $this->indexId = $this->index->id();
     $properties = get_object_vars($this);
     // Don't serialize objects in properties.
     unset($properties['index'], $properties['datasource'], $properties['dataDefinition']);
@@ -391,9 +391,9 @@ trait FieldTrait {
    * Implements the magic __wakeup() method to control object unserialization.
    */
   public function __wakeup() {
-    if ($this->index_id) {
-      $this->index = Index::load($this->index_id);
-      unset($this->index_id);
+    if ($this->indexId) {
+      $this->index = Index::load($this->indexId);
+      unset($this->indexId);
     }
   }
 

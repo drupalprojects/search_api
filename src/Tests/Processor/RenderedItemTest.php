@@ -35,7 +35,7 @@ class RenderedItemTest extends ProcessorTestBase {
    *
    * @var array
    */
-  protected $node_data;
+  protected $nodeData;
 
   /**
    * Modules to enable for this test.
@@ -79,7 +79,7 @@ class RenderedItemTest extends ProcessorTestBase {
     $anonymous_user->save();
 
     // Default node values for all nodes we create below.
-    $this->node_data = array(
+    $this->nodeData = array(
       'status' => NODE_PUBLISHED,
       'type' => 'page',
       'title' => $this->randomMachineName(8),
@@ -88,9 +88,9 @@ class RenderedItemTest extends ProcessorTestBase {
     );
 
     // Create some test nodes with valid user on it for rendering a picture.
-    $this->nodes[0] = Node::create($this->node_data);
+    $this->nodes[0] = Node::create($this->nodeData);
     $this->nodes[0]->save();
-    $this->nodes[1] = Node::create($this->node_data);
+    $this->nodes[1] = Node::create($this->nodeData);
     $this->nodes[1]->save();
 
     // Set proper configuration for the tested processor.
@@ -142,9 +142,9 @@ class RenderedItemTest extends ProcessorTestBase {
       // adding it to the output.
       $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $idx . ' rendered in view-mode "full".');
       $this->assertTrue(substr_count($values[0], 'field-name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->node_data['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
       $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $idx . ' has rendered member information HTML-Tags.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->node_data['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
     }
   }
 

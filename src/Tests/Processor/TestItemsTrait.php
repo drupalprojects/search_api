@@ -22,7 +22,7 @@ trait TestItemsTrait {
    *
    * @var string[]
    */
-  protected $item_ids = array();
+  protected $itemIds = array();
 
   /**
    * Creates an array with a single item which has the given field.
@@ -47,7 +47,7 @@ trait TestItemsTrait {
     if (!isset($field_id)) {
       $field_id = Utility::createCombinedId('entity:node', 'field_test');
     }
-    $this->item_ids[0] = $item_id = Utility::createCombinedId('entity:node', '1:en');
+    $this->itemIds[0] = $item_id = Utility::createCombinedId('entity:node', '1:en');
     $item = Utility::createItem($index, $item_id);
     $field = Utility::createField($index, $field_id);
     $field->setType($field_type);
@@ -88,7 +88,7 @@ trait TestItemsTrait {
     $items = array();
     for ($i = 0; $i < $count; ++$i) {
       $datasource_id = $datasource_ids[$i % $datasource_count];
-      $this->item_ids[$i] = $item_id = Utility::createCombinedId($datasource_id, ($i + 1) . ':en');
+      $this->itemIds[$i] = $item_id = Utility::createCombinedId($datasource_id, ($i + 1) . ':en');
       $item = Utility::createItem($index, $item_id);
       if (isset($object)) {
         $item->setOriginalObject($object);
