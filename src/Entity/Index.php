@@ -838,7 +838,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
     $alter = $alter ? 1 : 0;
     if (!isset($this->properties[$datasource_id][$alter])) {
-      if ($datasource_id) {
+      if (isset($datasource_id)) {
         $datasource = $this->getDatasource($datasource_id);
         $this->properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
       }

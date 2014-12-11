@@ -358,15 +358,16 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Retrieves the properties of one of this index's datasources.
    *
-   * @param string $datasource_id
-   *   The ID of the datasource for which the properties should be retrieved.
+   * @param string|null $datasource_id
+   *   The ID of the datasource for which the properties should be retrieved. Or
+   *   NULL to retrieve all datasource-independent properties.
    * @param bool $alter
    *   (optional) Whether to pass the property definitions to the index's
    *   enabled processors for altering before returning them.
    *
    * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
-   *   The properties included in this index, defined by the datasource and
-   *   optionally altered by the enabled processors.
+   *   The properties belonging to the given datasource that are available in
+   *   this index, keyed by their property names (not the complete field IDs).
    *
    * @throws \Drupal\search_api\SearchApiException
    *   If the specified datasource isn't enabled for this index, or couldn't be

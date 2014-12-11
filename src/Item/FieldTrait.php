@@ -82,7 +82,9 @@ trait FieldTrait {
   /**
    * The human-readable description for this field.
    *
-   * @var string|null
+   * FALSE if the field has no description.
+   *
+   * @var string|false
    */
   protected $description;
 
@@ -264,12 +266,13 @@ trait FieldTrait {
     if (!isset($this->description)) {
       try {
         $this->description = $this->getDataDefinition()->getDescription();
+        $this->description = $this->description ?: FALSE;
       }
       catch (SearchApiException $e) {
         watchdog_exception('search_api', $e);
       }
     }
-    return $this->description;
+    return $this->description ?: NULL;
   }
 
   /**
@@ -284,7 +287,8 @@ trait FieldTrait {
    * @see \Drupal\search_api\Item\GenericFieldInterface::setDescription()
    */
   public function setDescription($description) {
-    $this->description = $description;
+    // Set FALSE instead of NULL so caching will work properly.
+    $this->description = $description ?: FALSE;
     return $this;
   }
 
@@ -302,7 +306,7 @@ trait FieldTrait {
    */
   public function getPrefixedLabel() {
     if (!isset($this->labelPrefix)) {
-      $this->datasource_id = '';
+      $this->labelPrefix = '';
       if (isset($this->datasource_id)) {
         $this->labelPrefix = $this->datasource_id;
         try {
@@ -344,15 +348,17 @@ trait FieldTrait {
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::getDataDefinition()
    */
+  // @todo This currently only works for unnested fields, since
+  //   Index::getPropertyDefinitions() won't return any nested ones.
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {
       $definitions = $this->index->getPropertyDefinitions($this->datasource_id);
-      if (!isset($definitions[$this->fieldIdentifier])) {
+      if (!isset($definitions[$this->propertyPath])) {
         $args['@field'] = $this->fieldIdentifier;
         $args['%index'] = $this->index->label();
         throw new SearchApiException(String::format('Could not retrieve data definition for field "@field" on index %index.', $args));
       }
-      $this->dataDefinition = $definitions[$this->fieldIdentifier];
+      $this->dataDefinition = $definitions[$this->propertyPath];
     }
     return $this->dataDefinition;
   }
