@@ -1065,6 +1065,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function reindex() {
     if ($this->status()) {
       $this->getTracker()->trackAllItemsUpdated();
+      \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, FALSE));
     }
   }
 
@@ -1077,6 +1078,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (!$this->isReadOnly()) {
         $this->getServer()->deleteAllIndexItems($this);
       }
+      \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, !$this->isReadOnly()));
     }
   }
 
