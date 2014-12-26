@@ -57,7 +57,7 @@ class Highlight extends ProcessorPluginBase {
         '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
       self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
-      self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']+/iu';
+      self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
     }
   }
 
