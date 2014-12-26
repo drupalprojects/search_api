@@ -79,6 +79,8 @@ class AggregatedFields extends ProcessorPluginBase {
       drupal_set_message(t('Changes in this form will not be saved until the %button button at the form bottom is clicked.', array('%button' => t('Save'))), 'warning');
       $button_name = $triggering_element['#name'];
       if ($button_name == 'add_aggregation_field') {
+        // Increment $i until the corresponding field is not set, then create
+        // the field with that number as suffix.
         for ($i = 1; isset($form_state_fields['search_api_aggregation_' . $i]); ++$i) {
         }
         $form_state_fields['search_api_aggregation_' . $i] = array(
