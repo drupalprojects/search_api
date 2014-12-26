@@ -1276,7 +1276,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Add a dependency on the server, if there is one set.
     if ($this->hasValidServer()) {
-      $this->addDependency('entity', $this->getServer()->getConfigDependencyName());
+      $this->addDependency('config', $this->getServer()->getConfigDependencyName());
     }
     // Add dependencies for all of the index's plugins.
     if ($this->hasValidTracker()) {

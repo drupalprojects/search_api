@@ -574,7 +574,7 @@ class ContentEntity extends DatasourcePluginBase {
       }
     }
     if ($field_dependencies = $this->getFieldDependencies($this->getEntityTypeId(), $fields)) {
-      $this->addDependencies(array('entity' => $field_dependencies));
+      $this->addDependencies(array('config' => $field_dependencies));
     }
 
     return $this->dependencies;
