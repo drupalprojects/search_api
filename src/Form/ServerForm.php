@@ -104,7 +104,11 @@ class ServerForm extends EntityForm {
     }
 
     $this->buildEntityForm($form, $form_state, $server);
-    $this->buildBackendConfigForm($form, $form_state, $server);
+    // Skip adding the backend config form if we cleared the server form due to
+    // an error.
+    if ($form) {
+      $this->buildBackendConfigForm($form, $form_state, $server);
+    }
 
     return $form;
   }
