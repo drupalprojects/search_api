@@ -58,8 +58,11 @@ interface FilterInterface {
    * Retrieves all conditions and nested filters contained in this filter.
    *
    * @return array
-   *   An array containing this filter's sub-filters. Each of these is either an
-   *   array (field, value, operator), or another filter object.
+   *   An array containing this filter's subfilters. Each of these is either a
+   *   condition, represented as a numerically indexed array with the arguments
+   *   of a previous \Drupal\search_api\Query\FilterInterface::condition() call
+   *   (field, value, operator); or a nested filter, represented by a
+   *   \Drupal\search_api\Query\FilterInterface filter object.
    */
   public function &getFilters();
 
