@@ -334,8 +334,8 @@ function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = N
       drush_log(dt("Found !remaining items to index for !index. Indexing !limit items.", $args), 'ok');
     }
 
-    // If we will pass NULL it will be used as a value instead -1 that's why
-    // we have to specify it directly.
+    // If we pass NULL, it would be used as "no items". -1 is the correct way to
+    // index all items.
     $limit = $limit ?: -1;
     $index->index($limit);
     // @todo Report number of successfully indexed items, and check whether that
