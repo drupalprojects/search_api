@@ -400,7 +400,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       }
 
       // Check whether we need to extract any properties from the result item.
-      $missing_fields = array_diff_key($this->fields, $row);
+      $missing_fields = array_diff_key($this->fields, $row['_entity_properties']);
       if ($missing_fields) {
         $missing[$id] = $missing_fields;
         if (is_object($row['entity'])) {
@@ -418,14 +418,14 @@ class SearchApiViewsQuery extends views_plugin_query {
     // Load items of those rows which haven't got all field values, yet.
     if (!empty($ids)) {
       $items += $this->index->loadItems($ids);
-      // $items now includes loaded items, and those already passed in the
-      // search results.
-      foreach ($items as $id => $item) {
-        // Extract item properties.
-        $wrapper = $this->index->entityWrapper($item, FALSE);
-        $rows[$id]->_entity_properties += $this->extractFields($wrapper, $missing[$id]);
-        $rows[$id]->entity = $item;
-      }
+    }
+    // $items now includes all loaded items from which fields still need to be
+    // extracted.
+    foreach ($items as $id => $item) {
+      // Extract item properties.
+      $wrapper = $this->index->entityWrapper($item, FALSE);
+      $rows[$id]->_entity_properties += $this->extractFields($wrapper, $missing[$id]);
+      $rows[$id]->entity = $item;
     }
 
     // Finally, add all rows to the Views result set.

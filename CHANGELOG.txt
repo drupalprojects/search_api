@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2414367 by Darren Oh, drunken monkey: Fixed detection of missing fields in
+  Views.
 - #2387161 by drunken monkey: Added a hook for altering search results.
 
 Search API 1.14 (12/26/2014):
