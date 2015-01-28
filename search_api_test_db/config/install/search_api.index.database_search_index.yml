@@ -32,10 +32,10 @@ status: 1
 langcode: en
 dependencies:
   config:
-    - field.instance.entity_test.article.body
-    - field.instance.entity_test.article.keywords
-    - field.instance.entity_test.item.body
-    - field.instance.entity_test.item.keywords
+    - field.field.entity_test.article.body
+    - field.field.entity_test.article.keywords
+    - field.field.entity_test.item.body
+    - field.field.entity_test.item.keywords
     - field.storage.entity_test.body
     - field.storage.entity_test.keywords
     - search_api.server.database_search_server
