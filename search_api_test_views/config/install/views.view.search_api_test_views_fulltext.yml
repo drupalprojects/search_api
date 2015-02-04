@@ -9,26 +9,19 @@ display:
     id: default
     display_title: Master
     position: 0
-    provider: views
     display_options:
       access:
         type: none
         options: {  }
-        provider: views
-        dependencies: {  }
       cache:
         type: none
         options: {  }
-        provider: views
-        dependencies: {  }
       query:
-        type: views_query
+        type: search_api_query
         options:
           search_api_bypass_access: false
           entity_access: false
           parse_mode: terms
-        provider: views
-        dependencies: {  }
       exposed_form:
         type: basic
         options:
@@ -39,8 +32,6 @@ display:
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
-        provider: views
-        dependencies: {  }
       pager:
         type: full
         options:
@@ -75,11 +66,9 @@ display:
           field: search_api_id
           id: search_api_id
           plugin_id: numeric
-          provider: views
           relationship: none
           group_type: group
           admin_label: ''
-          dependencies: {  }
           label: 'Entity ID'
           exclude: false
           alter:
@@ -138,9 +127,6 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
-          dependencies:
-            module:
-              - search_api
           operator: AND
           value: ''
           group: 1
@@ -175,7 +161,6 @@ display:
           min_length: ''
           fields: {  }
           plugin_id: search_api_fulltext
-          provider: search_api
       sorts: {  }
       title: 'Fulltext test index'
       header:
@@ -198,7 +183,6 @@ display:
     id: page_1
     display_title: Page
     position: 1
-    provider: views
     display_options:
       path: search-api-test-fulltext
 label: 'Search API Test Fulltext search view'

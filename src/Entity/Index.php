@@ -128,7 +128,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *
    * @var string
    */
-  protected $tracker;
+  protected $tracker = 'default';
 
   /**
    * The tracker plugin configuration.
@@ -1127,6 +1127,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     //   https://drupal.org/node/2090341
     $this->options['processors']['language']['status'] = TRUE;
     $this->options['processors']['language']['weight'] = -50;
+    $this->options['processors']['language']['processorPluginId'] = 'language';
     $this->options['processors']['language'] += array('settings' => array());
     $this->options['fields']['search_api_language'] = array('type' => 'string');
   }

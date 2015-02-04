@@ -1,10 +1,9 @@
-# @todo Update the key when https://www.drupal.org/node/2291073 is fixed.
-search_api.datasource.plugin.entity:
+"search_api.datasource.plugin.entity:*":
   type: mapping
   label: 'Entity datasource configuration'
   mapping:
     default:
-      type: integer
+      type: string
       label: 'Decides if we want to include or exclude the selected bundles.'
     bundles:
       type: sequence

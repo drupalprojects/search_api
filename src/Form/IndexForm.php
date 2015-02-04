@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -156,7 +157,7 @@ class IndexForm extends EntityForm {
       $form['#title'] = $this->t('Add search index');
     }
     else {
-      $form['#title'] = $this->t('Edit search index %label', array('%label' => $index->label()));
+    $form['#title'] = $this->t('Edit search index %label', array('%label' => $index->label()));
     }
 
     $this->buildEntityForm($form, $form_state, $index);
@@ -505,14 +506,18 @@ class IndexForm extends EntityForm {
     $datasource_forms = $form_state->get('datasource_forms');
     $datasource_form_states = $form_state->get('datasource_form_states');
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    $datasource_configuration = array();
     foreach ($form_state->get('datasource_plugins') as $datasource_id => $datasource) {
       $datasource->submitConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
+      $datasource_configuration[$datasource_id] = $datasource->getConfiguration();
     }
+    $index->set('datasource_configs', $datasource_configuration);
 
     /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
     $tracker = $form_state->get('tracker_plugin');
     $tracker_form_state = $form_state->get('tracker_form_state');
     $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
+    $index->set('tracker_config', $tracker->getConfiguration());
 
     // Invalidate caches, so this gets picked up by the views wizard.
     Cache::invalidateTags(array('views_data'));
@@ -534,7 +539,7 @@ class IndexForm extends EntityForm {
         drupal_set_message($this->t('The index was successfully saved.'));
         $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $this->getEntity()->id()));
       }
-      catch (\Exception $ex) {
+      catch (SearchApiException $ex) {
         $form_state->setRebuild();
         watchdog_exception('search_api', $ex);
         drupal_set_message($this->t('The index could not be saved.'), 'error');

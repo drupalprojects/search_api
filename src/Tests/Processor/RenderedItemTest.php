@@ -112,6 +112,10 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->index->save();
 
     $this->index->getDatasources();
+
+    // Enable the classy theme as the tests rely on markup from that.
+    \Drupal::service('theme_handler')->install(array('classy'));
+    \Drupal::theme()->setActiveTheme(\Drupal::service('theme.initialization')->initTheme('classy'));
   }
 
   /**

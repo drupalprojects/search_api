@@ -52,7 +52,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
     $select = $this->database->select('search_api_task', 't');
     $select->fields('t')
       // Only retrieve tasks we can handle.
-      ->condition('t.type', array('addIndex', 'updateIndex', 'removeIndex', 'deleteItems', 'deleteAllIndexItems'));
+      ->condition('t.type', array('addIndex', 'updateIndex', 'removeIndex', 'deleteItems', 'deleteAllIndexItems'), 'IN');
     if ($server) {
       if (!$server->status()) {
         return FALSE;
@@ -172,7 +172,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   public function delete(array $ids = NULL, ServerInterface $server = NULL, $index = NULL) {
     $delete = $this->database->delete('search_api_task');
     if ($ids) {
-      $delete->condition('id', $ids);
+      $delete->condition('id', $ids, 'IN');
     }
     if ($server) {
       $delete->condition('server_id', $server->id());

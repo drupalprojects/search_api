@@ -86,7 +86,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::validateConfigurationForm($form, $form_state);
 
-    $tags = trim($form_state->getValues()['tags']);
+    $tags = trim($form_state->getValue('tags'));
     if (!$tags) {
       $form_state->setValue('tags', array());
       return;

@@ -76,10 +76,7 @@ class IndexFiltersForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $processors_by_weight = $this->entity->getProcessors(TRUE, 'weight');
-    if (!$form_state->has('processors')) {
-      $form_state->set('processors', $this->entity->getProcessors(TRUE, 'name'));
-    }
-    $processors_by_name = $form_state->get('processors');
+    $processors_by_name = $this->entity->getProcessors(TRUE, 'name');
     $processors_settings = $this->entity->getOption('processors');
 
     // Make sure that we have weights and status for all processors, even new
@@ -179,12 +176,15 @@ class IndexFiltersForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-    foreach ($form_state->get('processors') as $name => $processor) {
+    $processors = $this->entity->getProcessors(TRUE, 'name');
+    foreach ($processors as $name => $processor) {
       if (!empty($values['processors'][$name]['status']) && isset($values['processors'][$name]['settings'])) {
         $processor_form_state = new SubFormState($form_state, array('processors', $name, 'settings'));
         $processor->validateConfigurationForm($form['settings'][$name], $processor_form_state);
       }
     }
+
+    $form_state->set('processors', $processors);
   }
 
   /**
@@ -204,21 +204,32 @@ class IndexFiltersForm extends EntityForm {
     //   processor plugin to allow reaction.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     foreach ($form_state->get('processors') as $processor_id => $processor) {
-      $processor_form = array();
-      if (isset($form['settings'][$processor_id])) {
-        $processor_form = & $form['settings'][$processor_id];
+      if (!empty($values['processors'][$processor_id]['status'])) {
+        $processor_form = array();
+        if (isset($form['settings'][$processor_id])) {
+          $processor_form = &$form['settings'][$processor_id];
+        }
+        $default_settings = array(
+          'settings' => array(),
+          'processorPluginId' => $processor_id,
+        );
+        $values['processors'][$processor_id] += $default_settings;
+
+        $processor_form_state = new SubFormState($form_state, array(
+          'processors',
+          $processor_id,
+          'settings'
+        ));
+        $processor->submitConfigurationForm($processor_form, $processor_form_state);
+        $values['processors'][$processor_id]['settings'] = $processor->getConfiguration();
       }
-      $default_settings = array(
-        'settings' => array(),
-        'processorPluginId' => $processor_id,
-      );
-      $values['processors'][$processor_id] += $default_settings;
-
-      $processor_form_state = new SubFormState($form_state, array('processors', $processor_id, 'settings'));
-      $processor->submitConfigurationForm($processor_form, $processor_form_state);
-
-      $values['processors'][$processor_id]['settings'] = $processor->getConfiguration();
+      else {
+        // Settings of a sensor that is not enabled were not validated/
+        // processed, so we do not save them.
+        unset($values['processors'][$processor_id]);
+      }
     }
+
 
     if (!isset($options['processors']) || $options['processors'] !== $values['processors']) {
       // Save the already sorted arrays to avoid having to sort them at each

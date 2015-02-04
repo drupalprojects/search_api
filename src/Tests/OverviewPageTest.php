@@ -14,7 +14,7 @@ use Drupal\search_api\ServerInterface;
 /**
  * Tests the Search API overview page.
  *
- * @group search_api_debug
+ * @group search_api
  */
 class OverviewPageTest extends WebTestBase {
 

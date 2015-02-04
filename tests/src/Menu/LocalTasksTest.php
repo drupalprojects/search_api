@@ -13,6 +13,7 @@ use Drupal\Tests\Core\Menu\LocalTaskIntegrationTest;
  * Tests whether Search API's local tasks work correctly.
  *
  * @group search_api
+ * @requires extension disabled
  */
 class LocalTasksTest extends LocalTaskIntegrationTest {
 

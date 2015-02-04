@@ -188,7 +188,7 @@ class Basic extends TrackerPluginBase {
         $update = $this->createUpdateStatement();
         $update->fields(array('changed' => REQUEST_TIME, 'status' => $this::STATUS_NOT_INDEXED));
         if ($ids_chunk) {
-          $update->condition('item_id', $ids_chunk);
+          $update->condition('item_id', $ids_chunk, 'IN');
         }
         $update->execute();
       }
@@ -230,7 +230,7 @@ class Basic extends TrackerPluginBase {
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
         $update->fields(array('status' => $this::STATUS_INDEXED));
-        $update->condition('item_id', $ids_chunk);
+        $update->condition('item_id', $ids_chunk, 'IN');
         $update->execute();
       }
     }
@@ -252,7 +252,7 @@ class Basic extends TrackerPluginBase {
       foreach ($ids_chunks as $ids_chunk) {
         $delete = $this->createDeleteStatement();
         if ($ids_chunk) {
-          $delete->condition('item_id', $ids_chunk);
+          $delete->condition('item_id', $ids_chunk, 'IN');
         }
         $delete->execute();
       }

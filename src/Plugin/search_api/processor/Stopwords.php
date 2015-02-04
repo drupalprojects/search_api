@@ -61,14 +61,24 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
+
+    $stopwords = $this->getConfiguration()['stopwords'];
+    if (is_array($stopwords)) {
+      $default_value = implode("\n", $stopwords);
+    }
+    else {
+      $default_value = $stopwords;
+    }
+    $description = $this->t('Enter a list of stopwords, each on a separate line, that will be removed from content before it is indexed and from search terms before searching. <a href="@url">More info about stopwords.</a>.', array('@url' => 'https://en.wikipedia.org/wiki/Stop_words'));
 
     $form['stopwords'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Stopwords'),
-      '#description' => $this->t('Enter a list of stopwords, each on a separate line, that will be removed from content before it is indexed and from search terms before searching. <a href="@url">More info about stopwords.</a>.', array('@url' => 'https://en.wikipedia.org/wiki/Stop_words')),
-      '#default_value' => implode("\n", $this->getConfiguration()['stopwords']),
+      '#description' => $description,
+      '#default_value' => $default_value,
     );
 
     return $form;

@@ -1,0 +1,39 @@
+views.query.search_api_query:
+  type: views_query
+  label: 'Search API query'
+  mapping:
+    search_api_bypass_access:
+      type: boolean
+    entity_access:
+      type: boolean
+    parse_mode:
+      type: string
+
+views.row.search_api:
+  type: views_row
+  mapping:
+    view_modes:
+      type: sequence
+      label: View modes foreach source
+      sequence:
+        - type: string
+          label: View mode
+
+views.filter.search_api_fulltext:
+  type: views_filter
+  mapping:
+    value:
+      type: string
+      label: Fulltext search
+    mode:
+      type: string
+      label: Search mode
+    min_length:
+      type: integer
+      label: Minimum search string length
+    fields:
+      type: sequence
+      label: Fields to search on
+      sequence:
+        - type: string
+          label: Field name

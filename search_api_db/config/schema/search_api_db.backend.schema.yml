@@ -8,6 +8,16 @@ search_api.backend.plugin.search_api_db:
     min_chars:
       type: 'integer'
       label: '@todo'
+    autocomplete:
+      type: mapping
+      label: Autcomplete configuration
+      mapping:
+        suggest_suffix:
+          type: boolean
+          label: Suggest suffix
+        suggest_words:
+          type: boolean
+          label: Suggest words
     field_tables:
       type: sequence
       label: 'Field tables'

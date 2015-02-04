@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Core\Url;
 use Drupal\system\Tests\Menu\LocalActionTest;
 
 /**
@@ -49,10 +50,8 @@ class LocalActionsWebTest extends LocalActionTest {
     foreach ($this->getSearchAPIPageRoutes() as $routes) {
       foreach ($routes as $route) {
         $actions = array(
-          // entity.search_api_server.add_form
-          '/admin/config/search/search-api/add-server' => 'Add server',
-          // entity.search_api_index.add_form
-          '/admin/config/search/search-api/add-index' => 'Add index',
+          [Url::fromRoute('entity.search_api_server.add_form'), 'Add server'],
+          [Url::fromRoute('entity.search_api_index.add_form'), 'Add index'],
         );
         $this->drupalGet($route);
         $this->assertLocalAction($actions);

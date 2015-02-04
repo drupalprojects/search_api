@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Backend\BackendPluginManager;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -299,7 +300,7 @@ class ServerForm extends EntityForm {
         drupal_set_message($this->t('The server was successfully saved.'));
         $form_state->setRedirect('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
       }
-      catch (\Exception $e) {
+      catch (SearchApiException $e) {
         $form_state->setRebuild();
         watchdog_exception('search_api', $e);
         drupal_set_message($this->t('The server could not be saved.'), 'error');

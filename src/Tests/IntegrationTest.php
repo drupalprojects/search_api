@@ -14,7 +14,7 @@ use Drupal\search_api\SearchApiException;
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
  *
- * @group search_api_debug
+ * @group search_api
  */
 class IntegrationTest extends WebTestBase {
 
