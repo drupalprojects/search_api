@@ -375,8 +375,8 @@ class SearchApiViewsQuery extends views_plugin_query {
     // loading any items.
     foreach ($results as $id => $result) {
       if (!empty($this->options['entity_access']) && ($entity_type = $this->index->getEntityType())) {
-        $entity = entity_load($entity_type, array($id));
-        if (!entity_access('view', $entity_type, $entity[$id])) {
+        $entity = $this->index->loadItems(array($id));
+        if (!$entity || !entity_access('view', $entity_type, reset($entity))) {
           continue;
         }
       }

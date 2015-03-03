@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2412895 by drunken monkey: Fixed entity load for Views entity access check.
 - #2414367 by Darren Oh, drunken monkey: Fixed detection of missing fields in
   Views.
 - #2387161 by drunken monkey: Added a hook for altering search results.
