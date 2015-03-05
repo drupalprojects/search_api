@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1396222 by drunken monkey: Added a "First letter" aggregation type to the
+  "Aggregated fields" data alteration.
 - #2412895 by drunken monkey: Fixed entity load for Views entity access check.
 - #2414367 by Darren Oh, drunken monkey: Fixed detection of missing fields in
   Views.
