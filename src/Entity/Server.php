@@ -41,12 +41,12 @@ use Drupal\search_api\Utility;
  *     "status" = "status"
  *   },
  *   links = {
- *     "canonical" = "entity.search_api_server.canonical",
- *     "add-form" = "entity.search_api_server.add_form",
- *     "edit-form" = "entity.search_api_server.edit_form",
- *     "delete-form" = "entity.search_api_server.delete_form",
- *     "disable" = "entity.search_api_server.disable",
- *     "enable" = "entity.search_api_server.enable"
+ *     "canonical" = "/admin/config/search/search-api/index/{search_api_server}",
+ *     "add-form" = "/admin/config/search/search-api/add-server",
+ *     "edit-form" = "/admin/config/search/search-api/index/{search_api_server}/edit",
+ *     "delete-form" = "/admin/config/search/search-api/index/{search_api_server}/delete",
+ *     "disable" = "/admin/config/search/search-api/index/{search_api_server}/disable",
+ *     "enable" = "/admin/config/search/search-api/index/{search_api_server}/enable",
  *   }
  * )
  */
