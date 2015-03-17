@@ -9,6 +9,7 @@ namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Utility;
@@ -23,6 +24,8 @@ use Drupal\user\Entity\User;
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
 class ContentAccessTest extends ProcessorTestBase {
+
+  use CommentTestTrait;
 
   /**
    * Stores the processor to be tested.
@@ -83,7 +86,7 @@ class ContentAccessTest extends ProcessorTestBase {
     ));
     $comment_type->save();
 
-    $this->container->get('comment.manager')->addDefaultField('node', 'page');
+    $this->addDefaultCommentField('node', 'page');
 
     $comment = Comment::create(array(
       'entity_type' => 'node',

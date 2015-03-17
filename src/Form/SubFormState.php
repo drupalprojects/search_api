@@ -789,6 +789,29 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCleanValueKeys() {
+    return $this->mainFormState->getCleanValueKeys();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCleanValueKeys(array $keys) {
+    $this->mainFormState->setCleanValueKeys($keys);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addCleanValueKey($key) {
+    $this->mainFormState->addCleanValueKey($key);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function cleanValues() {
     $this->mainFormState->cleanValues();
     return $this;

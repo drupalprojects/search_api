@@ -55,8 +55,8 @@ class Tokenizer extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $args = array(
-      '@pcre-url' => Url::fromUri('http://www.php.net/manual/en/regexp.reference.character-classes.php'),
-      '@doc-url' => Url::fromUri('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')
+      '@pcre-url' => Url::fromUri('http://www.php.net/manual/en/regexp.reference.character-classes.php')->toString(),
+      '@doc-url' => Url::fromUri('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')->toString(),
     );
     $form['spaces'] = array(
       '#type' => 'textfield',
