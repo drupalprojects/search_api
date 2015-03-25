@@ -25,15 +25,15 @@ search_api.index.*:
           type: sequence
           label: 'Indexed fields'
           sequence:
-            - type: mapping
-              label: field
-              mapping:
-                type:
-                  type: string
-                  label: 'Type of field'
-                boost:
-                  type: integer
-                  label: 'Boost'
+            type: mapping
+            label: field
+            mapping:
+              type:
+                type: string
+                label: 'Type of field'
+              boost:
+                type: integer
+                label: 'Boost'
         additional fields:
           type: sequence
           label: 'Included additional fields'
@@ -47,31 +47,31 @@ search_api.index.*:
           type: sequence
           label: 'Processor settings'
           sequence:
-            - type: mapping
-              label: 'A processor'
-              mapping:
-                status:
-                  type: string
-                  label: 'Status of the processor'
-                weight:
-                  type: integer
-                  label: 'The weight of the processor'
-                processorPluginId:
-                  type: string
-                  label: 'The plugin ID of the processor'
-                settings:
-                  type: search_api.processor.plugin.[%parent.processorPluginId]
+            type: mapping
+            label: 'A processor'
+            mapping:
+              status:
+                type: string
+                label: 'Status of the processor'
+              weight:
+                type: integer
+                label: 'The weight of the processor'
+              processorPluginId:
+                type: string
+                label: 'The plugin ID of the processor'
+              settings:
+                type: search_api.processor.plugin.[%parent.processorPluginId]
     datasources:
       type: sequence
       label: 'Datasource plugin IDs'
       sequence:
-        - type: string
+        type: string
     datasource_configs:
       type: sequence
       label: 'Datasource plugin configurations'
       sequence:
-        - type: search_api.datasource.plugin.[%key]
-          label: 'Datasource plugin configuration'
+        type: search_api.datasource.plugin.[%key]
+        label: 'Datasource plugin configuration'
     tracker:
       type: string
       label: 'Tracker plugin ID'

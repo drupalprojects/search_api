@@ -16,8 +16,8 @@ views.row.search_api:
       type: sequence
       label: View modes foreach source
       sequence:
-        - type: string
-          label: View mode
+        type: string
+        label: View mode
 
 views.filter.search_api_fulltext:
   type: views_filter
@@ -35,5 +35,5 @@ views.filter.search_api_fulltext:
       type: sequence
       label: Fields to search on
       sequence:
-        - type: string
-          label: Field name
+        type: string
+        label: Field name

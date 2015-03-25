@@ -3,5 +3,5 @@ search_api.tracker.plugin.default:
   type: sequence
   label: 'Entity tracker configuration'
   sequence:
-    - type: string
-      label: 'An entity bundle'
+    type: string
+    label: 'An entity bundle'

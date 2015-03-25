@@ -6,8 +6,8 @@ search_api.processor.plugin.add_url:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
 
 search_api.processor.plugin.aggregated_field:
   type: mapping
@@ -17,27 +17,27 @@ search_api.processor.plugin.aggregated_field:
       type: sequence
       label: 'Action to take for aggregated fields'
       sequence:
-        - type: string
-          label: 'Could be to multiply or join or any other supported operation'
+        type: string
+        label: 'Could be to multiply or join or any other supported operation'
     fields:
       type: sequence
       label: 'The aggregated fields configured for this index'
       sequence:
-        - type: mapping
-          label: 'One field'
-          mapping:
-            fields:
-              type: sequence
-              label: 'The selected fields to be aggregated'
-              sequence:
-                - type: string
-                  label: 'One field that should be part of the aggregation'
-            label:
+        type: mapping
+        label: 'One field'
+        mapping:
+          fields:
+            type: sequence
+            label: 'The selected fields to be aggregated'
+            sequence:
               type: string
-              label: 'Label'
-            type:
-              type: string
-              label: 'Type'
+              label: 'One field that should be part of the aggregation'
+          label:
+            type: string
+            label: 'Label'
+          type:
+            type: string
+            label: 'Type'
 
 search_api.processor.plugin.highlight:
   type: mapping
@@ -67,8 +67,8 @@ search_api.processor.plugin.html_filter:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'The field name'
+        type: string
+        label: 'The field name'
     title:
       type: boolean
       label: 'Title'
@@ -79,8 +79,8 @@ search_api.processor.plugin.html_filter:
       type: sequence
       label: 'Tag boosts'
       sequence:
-        - type: integer
-          label: Boost
+        type: integer
+        label: Boost
 
 search_api.processor.plugin.ignorecase:
   type: mapping
@@ -90,8 +90,8 @@ search_api.processor.plugin.ignorecase:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
 
 search_api.processor.plugin.ignore_character:
   type: mapping
@@ -101,8 +101,8 @@ search_api.processor.plugin.ignore_character:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
     ignorable:
       type: string
       label: 'Regular expression for characters it should ignore to stem'
@@ -114,8 +114,8 @@ search_api.processor.plugin.ignore_character:
           type: sequence
           label: 'Configuration of the character sets'
           sequence:
-            - type: ignore
-              label: 'Character set'
+            type: ignore
+            label: 'Character set'
 
 search_api.processor.plugin.language:
   type: mapping
@@ -125,8 +125,8 @@ search_api.processor.plugin.language:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
 
 search_api.processor.plugin.node_status:
   type: mapping
@@ -136,8 +136,8 @@ search_api.processor.plugin.node_status:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
 
 search_api.processor.plugin.rendered_item:
   type: mapping
@@ -148,14 +148,14 @@ search_api.processor.plugin.rendered_item:
       type: sequence
       label: 'The selected view modes'
       sequence:
-        - type: string
-          label: 'The view mode used to render the entity'
+        type: string
+        label: 'The view mode used to render the entity'
     roles:
       type: sequence
       label: 'The selected roles'
       sequence:
-        - type: string
-          label: 'The user roles which will be active when the entity is rendered'
+        type: string
+        label: 'The user roles which will be active when the entity is rendered'
 
 search_api.processor.plugin.role_filter:
   type: mapping
@@ -168,8 +168,8 @@ search_api.processor.plugin.role_filter:
       type: sequence
       label: 'The selected roles'
       sequence:
-        - type: string
-          label: 'The role name'
+        type: string
+        label: 'The role name'
 
 search_api.processor.plugin.stopwords:
   type: mapping
@@ -179,14 +179,14 @@ search_api.processor.plugin.stopwords:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
     stopwords:
       type: sequence
       label: 'entered stopwords'
       sequence:
-        - type: string
-          label: Stopword
+        type: string
+        label: Stopword
 
 search_api.processor.plugin.tokenizer:
   type: mapping
@@ -196,8 +196,8 @@ search_api.processor.plugin.tokenizer:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
     spaces:
       type: string
       label: 'Regular expression for spaces'
@@ -219,8 +219,8 @@ search_api.processor.plugin.transliteration:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'
 
 search_api.processor.plugin.content_access:
   type: mapping
@@ -230,5 +230,5 @@ search_api.processor.plugin.content_access:
       type: sequence
       label: 'The selected fields'
       sequence:
-        - type: string
-          label: 'Selected field'
+        type: string
+        label: 'Selected field'

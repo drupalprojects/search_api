@@ -9,5 +9,5 @@
       type: sequence
       label: 'The selected bundles'
       sequence:
-        - type: string
-          label: 'An entity bundle'
+        type: string
+        label: 'An entity bundle'
