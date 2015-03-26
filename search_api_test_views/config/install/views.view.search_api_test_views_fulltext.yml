@@ -193,4 +193,4 @@ langcode: en
 dependencies:
   module:
     - search_api
-    - search_api_test_views_test
+    - search_api_test_views

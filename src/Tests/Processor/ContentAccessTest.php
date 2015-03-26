@@ -86,6 +86,7 @@ class ContentAccessTest extends ProcessorTestBase {
     ));
     $comment_type->save();
 
+    $this->installConfig(array('comment'));
     $this->addDefaultCommentField('node', 'page');
 
     $comment = Comment::create(array(

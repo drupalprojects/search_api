@@ -45,6 +45,13 @@ class IndexForm extends EntityForm {
   protected $trackerPluginManager;
 
   /**
+   * The index before the changes.
+   *
+   * @var \Drupal\search_api\IndexInterface
+   */
+  protected $originalEntity;
+
+  /**
    * Constructs an IndexForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
@@ -442,6 +449,14 @@ class IndexForm extends EntityForm {
     /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();
 
+    $storage = $this->entityManager->getStorage('search_api_index');
+    if (!$index->isNew()) {
+      $this->originalEntity = $storage->loadUnchanged($index->id());
+    }
+    if (empty($this->originalEntity)) {
+      $this->originalEntity = $storage->create(array('status' => FALSE));
+    }
+
     // Store the array of datasource plugin IDs with integer keys.
     $values = $form_state->getValues();
     $datasource_ids = array_values($values['datasources']);
@@ -456,11 +471,11 @@ class IndexForm extends EntityForm {
     $datasource_forms = array();
     $datasource_form_states = array();
     foreach ($datasource_ids as $datasource_id) {
-      if ($index->isValidDatasource($datasource_id)) {
-        $datasource_plugins[$datasource_id] = $index->getDatasource($datasource_id);
+      if ($this->originalEntity->isValidDatasource($datasource_id)) {
+        $datasource_plugins[$datasource_id] = $this->originalEntity->getDatasource($datasource_id);
       }
       else {
-        $datasource_plugins[$datasource_id] = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $index));
+        $datasource_plugins[$datasource_id] = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $this->originalEntity));
       }
       $datasource_forms[$datasource_id] = array();
       if (!empty($form['datasource_configs'][$datasource_id])) {
@@ -480,11 +495,11 @@ class IndexForm extends EntityForm {
     //   just always be empty (because datasources have their plugin ID in the
     //   form structure).
     $tracker_id = $values['tracker'];
-    if ($index->getTrackerId() == $tracker_id) {
-      $tracker = $index->getTracker();
+    if ($this->originalEntity->getTrackerId() == $tracker_id) {
+      $tracker = $this->originalEntity->getTracker();
     }
     else {
-      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $index));
+      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $this->originalEntity));
     }
     $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
     $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
@@ -500,8 +515,7 @@ class IndexForm extends EntityForm {
 
     /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();
-
-    $form_state->setValue('options', array_merge($index->getOptions(), $form_state->getValues()['options']));
+    $index->setOptions($form_state->getValue('options', array()) + $this->originalEntity->getOptions());
 
     $datasource_forms = $form_state->get('datasource_forms');
     $datasource_form_states = $form_state->get('datasource_form_states');

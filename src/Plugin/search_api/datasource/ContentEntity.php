@@ -218,6 +218,11 @@ class ContentEntity extends DatasourcePluginBase {
       return;
     }
 
+    // Including "$old_config != $new_config" for this "if" would make sense –
+    // however, since 0 == 'article', that leads to wrong results. "!==", on the
+    // other hand, is too restrictive, since it also checks order. Therefore,
+    // this can only be added once we prepare the "bundles" setting to be just a
+    // list of the checked ones.
     if ($this->hasBundles()) {
       // First, check if the "default" setting changed and invert the set
       // bundles for the old config, so the following comparison makes sense.
