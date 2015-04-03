@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #1184610 by drunken monkey: Added option to limit indexes to specific entity
+  bundles.
 - #1396222 by drunken monkey: Added a "First letter" aggregation type to the
   "Aggregated fields" data alteration.
 - #2412895 by drunken monkey: Fixed entity load for Views entity access check.
