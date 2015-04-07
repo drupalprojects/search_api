@@ -373,6 +373,8 @@ class IndexForm extends EntityForm {
    */
   public function buildDatasourcesConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
+      // @todo Create, use and save SubFormState already here, not only in
+      //   validate(). Also, use proper subset of $form for first parameter?
       if ($config_form = $datasource->buildConfigurationForm(array(), $form_state)) {
         $form['datasource_configs'][$datasource_id]['#type'] = 'details';
         $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure the %datasource datasource', array('%datasource' => $datasource->getPluginDefinition()['label']));
@@ -392,6 +394,8 @@ class IndexForm extends EntityForm {
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     if ($index->hasValidTracker()) {
       $tracker = $index->getTracker();
+      // @todo Create, use and save SubFormState already here, not only in
+      //   validate(). Also, use proper subset of $form for first parameter?
       if ($config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
         $form['tracker_config']['#type'] = 'details';
         $form['tracker_config']['#title'] = $this->t('Configure %plugin', array('%plugin' => $tracker->label()));

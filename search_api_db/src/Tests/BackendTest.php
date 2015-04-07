@@ -169,8 +169,9 @@ class BackendTest extends EntityUnitTestBase {
 
     $processors = $index->getOption('processors', array());
     $processors['html_filter'] = array(
-      'status' => TRUE,
-      'weight' => 0,
+      'processor_id' => 'html_filter',
+      'weights' => array(),
+      'settings' => array(),
     );
     $index->setOption('processors', $processors);
     $index->save();
@@ -183,10 +184,7 @@ class BackendTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
     $processors = $index->getOption('processors');
-    $processors['html_filter'] = array(
-      'status' => FALSE,
-      'weight' => 0,
-    );
+    unset($processors['html_filter']);
     $index->setOption('processors', $processors);
     $index->getFields()[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
     $index->save();

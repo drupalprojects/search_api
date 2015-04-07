@@ -12,6 +12,11 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Defines a Search API tracker annotation object.
  *
+ * @see \Drupal\search_api\Tracker\TrackerPluginManager
+ * @see \Drupal\search_api\Tracker\TrackerInterface
+ * @see \Drupal\search_api\Tracker\TrackerPluginBase
+ * @see plugin_api
+ *
  * @Annotation
  */
 class SearchApiTracker extends Plugin {

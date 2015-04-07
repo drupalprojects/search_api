@@ -50,17 +50,17 @@ search_api.index.*:
             type: mapping
             label: 'A processor'
             mapping:
-              status:
-                type: string
-                label: 'Status of the processor'
-              weight:
-                type: integer
-                label: 'The weight of the processor'
-              processorPluginId:
+              processor_id:
                 type: string
                 label: 'The plugin ID of the processor'
+              weights:
+                type: sequence
+                label: 'The processor''s weights for the different processing stages'
+                sequence:
+                  type: integer
+                  label: 'The processor''s weight for this stage'
               settings:
-                type: search_api.processor.plugin.[%parent.processorPluginId]
+                type: search_api.processor.plugin.[%parent.processor_id]
     datasources:
       type: sequence
       label: 'Datasource plugin IDs'

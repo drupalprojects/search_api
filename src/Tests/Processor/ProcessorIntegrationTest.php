@@ -94,7 +94,7 @@ class ProcessorIntegrationTest extends WebTestBase {
     // settings, since we otherwise run into a weird bug only present in the
     // testing environment regarding the YAML in the "tags" setting.
     $edit = array(
-      'processors[html_filter][status]' => 1,
+      'status[html_filter]' => 1,
       'processors[html_filter][settings][fields][search_api_language]' => FALSE,
       'processors[html_filter][settings][title]' => FALSE,
       'processors[html_filter][settings][alt]' => FALSE,
@@ -208,15 +208,14 @@ class ProcessorIntegrationTest extends WebTestBase {
    *   The ID of the processor to enable.
    */
   protected function enableProcessor($processor_id) {
-    // Go to the index's "Filters" tab.
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+    $this->loadFiltersTab();
 
     $edit = array(
-      "processors[$processor_id][status]" => 1,
+      "status[$processor_id]" => 1,
     );
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(isset($processors[$processor_id]), "Successfully enabled the '$processor_id' processor.'");
+    $this->assertTrue(!empty($processors[$processor_id]), "Successfully enabled the '$processor_id' processor.'");
   }
 
   /**
@@ -228,9 +227,9 @@ class ProcessorIntegrationTest extends WebTestBase {
    *   The ID of the processor whose settings are edited.
    */
   protected function editSettingsForm($edit, $processor_id) {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+    $this->loadFiltersTab();
 
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $processors = $this->loadIndex()->getProcessors();
     // @todo Actually test something here. Idea: pass in a $configuration array,
@@ -242,6 +241,16 @@ class ProcessorIntegrationTest extends WebTestBase {
     }
     else {
       $this->fail($processor_id . ' settings not applied.');
+    }
+  }
+
+  /**
+   * Loads the test index's "Filters" tab in the test browser, if necessary.
+   */
+  protected function loadFiltersTab() {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+    if ($this->getAbsoluteUrl($settings_path) != $this->getUrl()) {
+      $this->drupalGet($settings_path);
     }
   }
 

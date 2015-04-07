@@ -14,7 +14,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @SearchApiProcessor(
  *   id = "transliteration",
  *   label = @Translation("Transliteration"),
- *   description = @Translation("Makes searches insensitive to accents and other non-ASCII characters.")
+ *   description = @Translation("Makes searches insensitive to accents and other non-ASCII characters."),
+ *   stages = {
+ *     "preprocess_index" = 0,
+ *     "preprocess_query" = 0
+ *   }
  * )
  */
 class Transliteration extends FieldsProcessorPluginBase {

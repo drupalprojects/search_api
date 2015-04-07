@@ -18,7 +18,10 @@ use Drupal\user\UserInterface;
  * @SearchApiProcessor(
  *   id = "role_filter",
  *   label = @Translation("Role filter"),
- *   description = @Translation("Filters out users based on their role.")
+ *   description = @Translation("Filters out users based on their role."),
+ *   stages = {
+ *     "preprocess_index" = 0
+ *   }
  * )
  */
 class RoleFilter extends ProcessorPluginBase {

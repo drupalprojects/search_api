@@ -369,7 +369,7 @@ class IntegrationTest extends WebTestBase {
    */
   protected function addFilter() {
     $edit = array(
-      'processors[ignorecase][status]' => 1,
+      'status[ignorecase]' => 1,
     );
     $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
     /** @var \Drupal\search_api\IndexInterface $index */
@@ -383,7 +383,7 @@ class IntegrationTest extends WebTestBase {
    */
   protected function configureFilter() {
     $edit = array(
-      'processors[ignorecase][status]' => 1,
+      'status[ignorecase]' => 1,
       'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
       'processors[ignorecase][settings][fields][entity:node/title]' => 'entity:node/title',
     );

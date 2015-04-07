@@ -15,7 +15,10 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  * @SearchApiProcessor(
  *   id = "add_url",
  *   label = @Translation("URL field"),
- *   description = @Translation("Adds the item's URL to the indexed data.")
+ *   description = @Translation("Adds the item's URL to the indexed data."),
+ *   stages = {
+ *     "preprocess_index" = 0
+ *   }
  * )
  */
 class AddURL extends ProcessorPluginBase {

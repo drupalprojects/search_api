@@ -17,7 +17,10 @@ use Drupal\search_api\Utility;
  * @SearchApiProcessor(
  *   id = "aggregated_field",
  *   label = @Translation("Aggregated fields"),
- *   description = @Translation("Add customized aggregations of existing fields to the index.")
+ *   description = @Translation("Add customized aggregations of existing fields to the index."),
+ *   stages = {
+ *     "preprocess_index" = 0
+ *   }
  * )
  */
 class AggregatedFields extends ProcessorPluginBase {

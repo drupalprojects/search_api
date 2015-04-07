@@ -14,7 +14,11 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  * @SearchApiProcessor(
  *   id = "ignorecase",
  *   label = @Translation("Ignore case"),
- *   description = @Translation("Makes searches case-insensitive on selected fields.")
+ *   description = @Translation("Makes searches case-insensitive on selected fields."),
+ *   stages = {
+ *     "preprocess_index" = 0,
+ *     "preprocess_query" = 0
+ *   }
  * )
  */
 class IgnoreCase extends FieldsProcessorPluginBase {

@@ -10,7 +10,6 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\Component\Utility\String;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
@@ -30,7 +29,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @SearchApiProcessor(
  *   id = "content_access",
  *   label = @Translation("Content access"),
- *   description = @Translation("Adds content access checks for nodes and comments.")
+ *   description = @Translation("Adds content access checks for nodes and comments."),
+ *   stages = {
+ *     "preprocess_index" = 0,
+ *     "preprocess_query" = 0
+ *   }
  * )
  */
 class ContentAccess extends ProcessorPluginBase {
@@ -91,29 +94,17 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // @todo - here we need to secure that the author and published fields are
-    //   being indexed as we need them for the access filter.
-
-    parent::submitConfigurationForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
-    if (!$datasource) {
+    if ($datasource) {
       return;
     }
 
-    if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
-      $definition = array(
-        'label' => $this->t('Node access information'),
-        'description' => $this->t('Data needed to apply node access.'),
-        'type' => 'string',
-      );
-      $properties['search_api_node_grants'] = new DataDefinition($definition);
-    }
+    $definition = array(
+      'label' => $this->t('Node access information'),
+      'description' => $this->t('Data needed to apply node access.'),
+      'type' => 'string',
+    );
+    $properties['search_api_node_grants'] = new DataDefinition($definition);
   }
 
   /**
@@ -137,8 +128,7 @@ class ContentAccess extends ProcessorPluginBase {
       }
 
       // Bail if the field is not indexed.
-      $field_id = Utility::createCombinedId($item->getDatasourceId(), 'search_api_node_grants');
-      if (!($field = $item->getField($field_id))) {
+      if (!($field = $item->getField('search_api_node_grants'))) {
         continue;
       }
 
@@ -236,73 +226,129 @@ class ContentAccess extends ProcessorPluginBase {
       return;
     }
 
-    // @todo This is completely wrong. We shouldn't hardcode any datasource IDs,
-    //   but collect them according to contained entity type, then add filters
-    //   for each of those and its fields combined with an "or some other
-    //   datasource" condition. Or maybe the field should just be datasource-
-    //   independent? Probably makes more sense, since the conditions are the
-    //   same anyways.
-    // @todo Also definitely needs tests that this is working correctly with
-    //   items of different datasources mixed together.
-    // @todo Shouldn't hardcode the datasource separator (/) but use
-    //   Utility::createCombinedId().
-
-    // Get the fields that are being indexed.
-    $fields = $query->getIndex()->getOption('fields');
-    // Define required fields that need to be part of the index.
-    $required = array('entity:node/search_api_node_grants', 'entity:node/status');
-
-    $datasources_filter = $query->createFilter('OR');
-
-    // Go through the datasources and add conditions for status and author.
-    foreach ($this->index->getDatasources() as $datasource) {
-      if ($datasource->getEntityTypeId() == 'node') {
-        $node_filter = $query->createFilter('OR');
-        $node_filter->condition('entity:node/status', NODE_PUBLISHED);
-        if (\Drupal::currentUser()->hasPermission('view own unpublished content')) {
-          $node_filter->condition('entity:node/author', $account->id());
-        }
-        $datasources_filter->filter($node_filter);
-        // Add author as one of the required fields as we need to add query
-        // condition for the field.
-        $required[] = 'entity:node/author';
+    // Gather the affected datasources, grouped by entity type, as well as the
+    // unaffected ones.
+    $affected_datasources = array();
+    $unaffected_datasources = array();
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $entity_type = $datasource->getEntityTypeId();
+      if (in_array($entity_type, array('node', 'comment'))) {
+        $affected_datasources[$entity_type][] = $datasource_id;
       }
-      elseif ($datasource->getEntityTypeId() == 'comment') {
-        $datasources_filter->condition('entity:comment/status', Comment::PUBLISHED);
+      else {
+        $unaffected_datasources[] = $datasource_id;
       }
     }
 
-    $query->filter($datasources_filter);
-
-    // Check if all required fields are present in the index.
-    foreach ($required as $field) {
-      if (empty($fields[$field])) {
-        $vars['@field'] = $field;
-        $vars['@index'] = $query->getIndex()->label();
-        throw new SearchApiException(String::format('Required field @field not indexed on index @index. Could not perform access checks.', $vars));
+    // The filter structure we want looks like this:
+    //   [belongs to other datasource]
+    //   OR
+    //   (
+    //     [is enabled (or was created by the user, if applicable)]
+    //     AND
+    //     [grants view access to one of the user's gid/realm combinations]
+    //   )
+    // If there are no "other" datasources, we don't need the nested OR,
+    // however, and can add the "ADD"
+    // @todo Add a filter tag, once they are implemented.
+    if ($unaffected_datasources) {
+      $outer_filter = $query->createFilter('OR');
+      $query->filter($outer_filter);
+      foreach ($unaffected_datasources as $datasource_id) {
+        $outer_filter->condition('search_api_datasource', $datasource_id);
       }
+      $access_filter = $query->createFilter('AND');
+      $outer_filter->filter($access_filter);
+    }
+    else {
+      $access_filter = $query;
     }
 
-    // If the user cannot access content/comments at all, return no results.
-    if (!$account->hasPermission('access content')) {
-      // Simple hack for returning no results.
-      $query->condition('entity:node/status', 0);
-      $query->condition('entity:node/status', 1);
+    // If our custom property isn't indexed, or if the user does not have the
+    // permission to see any content at all, deny access to all items from
+    // affected datasources.
+    // @todo Once we can enforce properties to be indexed, remove all those
+    //   checks.
+    if (!$account->hasPermission('access content') || !$this->checkFieldIndexed('search_api_node_grants')) {
+      // If there were "other" datasources, the existing filter will already
+      // remove all results of node or comment datasources. Otherwise, we should
+      // not return any results at all.
+      if (!$unaffected_datasources) {
+        // @todo More elegant way to return no results?
+        $query->condition('search_api_language', '');
+      }
       return;
     }
 
+    // Collect all the required fields that need to be part of the index.
+    $unpublished_own = $account->hasPermission('view own unpublished content');
+
+    $enabled_filter = $query->createFilter('OR');
+    foreach ($affected_datasources as $entity_type => $datasources) {
+      $published = ($entity_type == 'node') ? NODE_PUBLISHED : Comment::PUBLISHED;
+      foreach ($datasources as $datasource_id) {
+        $status_field = Utility::createCombinedId($datasource_id, 'status');
+        if (!$this->checkFieldIndexed($status_field)) {
+          continue;
+        }
+        // If this is a comment datasource, or users cannot view their own
+        // unpublished nodes, a simple filter on "status" is enough. Otherwise,
+        // it's a bit more complicated.
+        $enabled_filter->condition($status_field, $published);
+        if ($entity_type == 'node' && $unpublished_own) {
+          $author_field = Utility::createCombinedId($datasource_id, 'author');
+          // If the necessary field is not present, we automatically fall back
+          // to only filtering on the status for this datasource.
+          if ($this->checkFieldIndexed($author_field)) {
+            $enabled_filter->condition($author_field, $account->id());
+          }
+        }
+      }
+    }
+    $access_filter->filter($enabled_filter);
+
     // Filter by the user's node access grants.
-    $node_filter = $query->createFilter('OR');
+    $grants_filter = $query->createFilter('OR');
     $grants = node_access_grants('view', $account);
     foreach ($grants as $realm => $gids) {
       foreach ($gids as $gid) {
-        $node_filter->condition('entity:node/search_api_node_grants', "node_access_$realm:$gid");
+        $grants_filter->condition('search_api_node_grants', "node_access_$realm:$gid");
       }
     }
     // Also add items that are accessible for everyone by checking the "access
     // all" pseudo grant.
-    $node_filter->condition('entity:node/search_api_node_grants', 'node_access__all');
-    $query->filter($node_filter);
+    $grants_filter->condition('search_api_node_grants', 'node_access__all');
+    $access_filter->filter($grants_filter);
+  }
+
+  /**
+   * Checks whether a certain required field is indexed
+   *
+   * @param string $field
+   *   The ID of the field for which to check.
+   *
+   * @return bool
+   *   TRUE if the field is indexed, FALSE otherwise.
+   */
+  protected function checkFieldIndexed($field) {
+    $fields = $this->index->getOption('fields', array());
+    if (empty($fields[$field])) {
+      $context = array(
+        '%index' => $this->index->label(),
+        '@field' => $field,
+        'link' => $this->index->url('fields'),
+      );
+      list($datasource_id) = Utility::splitCombinedId($field);
+      if ($datasource_id) {
+        $context['@datasource'] = $datasource_id;
+        $this->getLogger()->warning('Error while adding content access to search on index %index: required field "@field" is not indexed. All results from datasource "@datasource" were hidden from the search.', $context);
+      }
+      else {
+        $this->getLogger()->warning('Error while adding content access to search on index %index: required field "@field" is not indexed. All results from content or comment datasources were hidden from the search.', $context);
+      }
+      return FALSE;
+    }
+    return TRUE;
   }
 
 }

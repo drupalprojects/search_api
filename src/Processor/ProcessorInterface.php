@@ -21,8 +21,28 @@ use Drupal\search_api\Query\ResultSetInterface;
  * the other method(s) should simply be left blank. A processor should make it
  * clear in its description or documentation when it will run and what effect it
  * will have.
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiProcessor
+ * @see \Drupal\search_api\Processor\ProcessorPluginManager
+ * @see \Drupal\search_api\Processor\ProcessorPluginBase
+ * @see plugin_api
  */
 interface ProcessorInterface extends IndexPluginInterface {
+
+  /**
+   * Processing stage: preprocess index.
+   */
+  const STAGE_PREPROCESS_INDEX = 'preprocess_index';
+
+  /**
+   * Processing stage: preprocess query.
+   */
+  const STAGE_PREPROCESS_QUERY = 'preprocess_query';
+
+  /**
+   * Processing stage: postprocess query.
+   */
+  const STAGE_POSTPROCESS_QUERY = 'postprocess_query';
 
   /**
    * Checks whether this processor is applicable for a certain index.
@@ -41,6 +61,37 @@ interface ProcessorInterface extends IndexPluginInterface {
    *   TRUE if the processor can run on the given index; FALSE otherwise.
    */
   public static function supportsIndex(IndexInterface $index);
+
+  /**
+   * Checks whether this processor implements a particular stage.
+   *
+   * @param string $stage_identifier
+   *   The stage to check: self::STAGE_PREPROCESS_INDEX,
+   *   self::STAGE_PREPROCESS_QUERY
+   *   or self::STAGE_POSTPROCESS_QUERY.
+   *
+   * @return bool
+   *   TRUE if the processor runs on a particular stage; FALSE otherwise.
+   */
+  public function supportsStage($stage_identifier);
+
+  /**
+   * Returns the default weight for a specific processing stage.
+   *
+   * Some processors should ensure they run earlier or later in a particular
+   * stage. Processors with lower weights are run earlier. The default value is
+   * used when the processor is first enabled. It can then be changed through
+   * reordering by the user.
+   *
+   * @param string $stage
+   *   The stage whose default weight should be returned. See
+   *   \Drupal\search_api\Processor\ProcessorPluginManager::getProcessingStages()
+   *   for the valid values.
+   *
+   * @return int
+   *   The default weight for the given stage.
+   */
+  public function getDefaultWeight($stage);
 
   /**
    * Alters the given datasource's property definitions.

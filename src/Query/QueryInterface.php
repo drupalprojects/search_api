@@ -98,7 +98,7 @@ interface QueryInterface {
    * Adds a new ($field $operator $value) condition filter.
    *
    * @param string $field
-   *   The field to filter on, e.g. 'title'. The special field
+   *   The field to filter on, e.g. "title". The special field
    *   "search_api_datasource" can be used to filter by datasource ID.
    * @param mixed $value
    *   The value the field should have (or be related to by the operator).

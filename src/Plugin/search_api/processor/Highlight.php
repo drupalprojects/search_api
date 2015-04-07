@@ -21,7 +21,10 @@ use Drupal\search_api\Utility;
  * @SearchApiProcessor(
  *   id = "highlight",
  *   label = @Translation("Highlight"),
- *   description = @Translation("Adds a highlighted excerpt to results and highlights returned fields.")
+ *   description = @Translation("Adds a highlighted excerpt to results and highlights returned fields."),
+ *   stages = {
+ *     "postprocess_query" = 0
+ *   }
  * )
  */
 class Highlight extends ProcessorPluginBase {

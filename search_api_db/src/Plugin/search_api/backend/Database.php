@@ -1728,6 +1728,17 @@ class Database extends BackendPluginBase {
       }
       else {
         $empty = FALSE;
+        // We don't index the datasource explicitly, so this needs a bit of
+        // magic.
+        // @todo Index the datasource explicitly so this doesn't need magic.
+        if ($f[0] === 'search_api_datasource') {
+          $alias = $this->getTableAlias(array('table' => $this->configuration['index_tables'][$index->id()]), $db_query);
+          // @todo Stop recognizing "!=" as an operator.
+          $operator = ($f[2] == '<>' || $f[2] == '!=') ? 'NOT LIKE' : 'LIKE';
+          $prefix = Utility::createCombinedId($f[1], '');
+          $cond->condition($alias . '.item_id', db_like($prefix) . '%', $operator);
+          continue;
+        }
         if (!isset($fields[$f[0]])) {
           throw new SearchApiException(String::format('Unknown field in filter clause: @field.', array('@field' => $f[0])));
         }

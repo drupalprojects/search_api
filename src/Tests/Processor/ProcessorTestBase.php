@@ -104,8 +104,9 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     if ($processor) {
       $this->index->setOption('processors', array(
         $processor => array(
-          'status' => TRUE,
-          'weight' => 0,
+          'processor_id' => $processor,
+          'weights' => array(),
+          'settings' => array(),
         ),
       ));
 

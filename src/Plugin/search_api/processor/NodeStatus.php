@@ -15,7 +15,10 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  * @SearchApiProcessor(
  *   id = "node_status",
  *   label = @Translation("Node status"),
- *   description = @Translation("Exclude unpublished nodes from node indexes.")
+ *   description = @Translation("Exclude unpublished nodes from node indexes."),
+ *   stages = {
+ *     "preprocess_index" = 0
+ *   }
  * )
  */
 class NodeStatus extends ProcessorPluginBase {

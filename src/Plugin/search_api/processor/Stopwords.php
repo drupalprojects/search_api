@@ -17,7 +17,11 @@ use Drupal\search_api\Utility;
  * @SearchApiProcessor(
  *   id = "stopwords",
  *   label = @Translation("Stopwords"),
- *   description = @Translation("Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both 'Ignore case' and 'Tokenizer' have run.")
+ *   description = @Translation("Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both 'Ignore case' and 'Tokenizer' have run."),
+ *   stages = {
+ *     "preprocess_query" = -5,
+ *     "postprocess_query" = 5
+ *   }
  * )
  */
 class Stopwords extends FieldsProcessorPluginBase {

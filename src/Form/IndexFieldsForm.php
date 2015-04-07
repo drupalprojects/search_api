@@ -163,7 +163,7 @@ class IndexFieldsForm extends EntityForm {
         '#type' => 'checkbox',
         '#default_value' => $field->isIndexed(),
       );
-      $css_key = '#edit-fields-' . Html::getUniqueId($key);
+      $css_key = '#edit-fields-' . Html::getId($key);
       $build['fields'][$key]['type'] = array(
         '#type' => 'select',
         '#options' => $types,

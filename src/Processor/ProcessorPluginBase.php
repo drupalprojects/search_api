@@ -30,9 +30,19 @@ use Drupal\search_api\Query\ResultSetInterface;
  * @SearchApiProcessor(
  *   id = "my_processor",
  *   label = @Translation("My Processor"),
- *   description = @Translation("Does … something.")
+ *   description = @Translation("Does … something."),
+ *   stages = {
+ *     "preprocess_index" = 0,
+ *     "preprocess_query" = 0,
+ *     "postprocess_query" = 0
+ *   }
  * )
  * @endcode
+ *
+ * @see \Drupal\search_api\Annotation\SearchApiProcessor
+ * @see \Drupal\search_api\Processor\ProcessorPluginManager
+ * @see \Drupal\search_api\Processor\ProcessorInterface
+ * @see plugin_api
  */
 abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorInterface {
 
@@ -41,6 +51,22 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
    */
   public static function supportsIndex(IndexInterface $index) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsStage($stage_identifier) {
+    $plugin_definition = $this->getPluginDefinition();
+    return isset($plugin_definition['stages'][$stage_identifier]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultWeight($stage) {
+    $plugin_definition = $this->getPluginDefinition();
+    return isset($plugin_definition['stages'][$stage]) ? (int) $plugin_definition['stages'][$stage] : 0;
   }
 
   /**

@@ -89,6 +89,9 @@ class SubFormState implements FormStateInterface {
       $sub_state = array();
     }
     $this->internalStorage = &$this->applySubKeys($sub_state);
+    if (!isset($this->internalStorage)) {
+      $this->internalStorage = array();
+    }
     $this->values = &$this->applySubKeys($main_form_state->getValues());
     if (!is_array($this->values)) {
       $this->values = array();

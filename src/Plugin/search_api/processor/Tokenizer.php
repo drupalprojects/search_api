@@ -17,7 +17,11 @@ use Drupal\search_api\Utility;
  * @SearchApiProcessor(
  *   id = "tokenizer",
  *   label = @Translation("Tokenizer processor"),
- *   description = @Translation("Splits text into individual words for searching.")
+ *   description = @Translation("Splits text into individual words for searching."),
+ *   stages = {
+ *     "preprocess_index" = 0,
+ *     "preprocess_query" = 0
+ *   }
  * )
  */
 class Tokenizer extends FieldsProcessorPluginBase {

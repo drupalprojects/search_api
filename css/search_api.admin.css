@@ -65,6 +65,23 @@
 }
 
 /*
+ * Processors page
+ */
+.search-api-stage-wrapper.form-item {
+  width: 31%;
+  min-width: 16em;
+  float: left;
+  margin-right: 1%;
+}
+
+.search-api-stage-wrapper-preprocess_query {
+}
+
+.search-api-stage-wrapper-postprocess.form-item {
+  margin-right: 0;
+}
+
+/*
  * Miscellaneous
  */
 .search-api-checkboxes-list div {

@@ -18,6 +18,7 @@ use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
+use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\ServerInterface;
@@ -55,6 +56,8 @@ use Drupal\search_api\Utility;
  *     "canonical" = "/admin/config/search/search-api/index/{search_api_index}",
  *     "add-form" = "/admin/config/search/search-api/add-index",
  *     "edit-form" = "/admin/config/search/search-api/index/{search_api_index}/edit",
+ *     "fields" = "/admin/config/search/search-api/index/{search_api_index}/fields",
+ *     "filters" = "/admin/config/search/search-api/index/{search_api_index}/filters",
  *     "delete-form" = "/admin/config/search/search-api/index/{search_api_index}/delete",
  *     "disable" = "/admin/config/search/search-api/index/{search_api_index}/disable",
  *     "enable" = "/admin/config/search/search-api/index/{search_api_index}/enable",
@@ -224,11 +227,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $fulltextFields;
 
   /**
-   * The index's processor plugins.
+   * Cached information about the processors available for this index.
    *
    * @var \Drupal\search_api\Processor\ProcessorInterface[]|null
    *
-   * @see getProcessors()
+   * @see loadProcessors()
    */
   protected $processors;
 
@@ -441,68 +444,88 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getProcessors($all = FALSE, $sortBy = 'weight') {
-    /** @var $processorPluginManager \Drupal\search_api\Processor\ProcessorPluginManager */
-    $processorPluginManager = \Drupal::service('plugin.manager.search_api.processor');
-    $processor_definitions = $processorPluginManager->getDefinitions();
-    $processors_settings = $this->getOption('processors', array());
+  public function getProcessors($only_enabled = TRUE) {
+    $processors = $this->loadProcessors();
 
-    // Only do this if we do not already have our processors
-    foreach ($processor_definitions as $name => $processor_definition) {
-      // Instantiate the processors
-      if (class_exists($processor_definition['class'])) {
+    // Filter processors by status if required. Enabled processors are those
+    // which have settings in the "processors" option.
+    if ($only_enabled) {
+      $processors_settings = $this->getOption('processors', array());
+      $processors = array_intersect_key($processors, $processors_settings);
+    }
 
-        // Give it some sensible weight default so we can return them in order
-        if (empty($processors_settings[$name])) {
-          $processors_settings[$name] = array('weight' => 0, 'status' => 0);
+    return $processors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessorsByStage($stage, $only_enabled = TRUE) {
+    $processors = $this->loadProcessors();
+    $processor_settings = $this->getOption('processors', array());
+    $processor_weights = array();
+
+    // Get a list of all processors meeting the criteria (stage and, optionally,
+    // enabled) along with their effective weights (user-set or default).
+    foreach ($processors as $name => $processor) {
+      if ($processor->supportsStage($stage) && !($only_enabled && empty($processor_settings[$name]))) {
+        if (!empty($processor_settings[$name]['weights'][$stage])) {
+          $processor_weights[$name] = $processor_settings[$name]['weights'][$stage];
         }
+        else {
+          $processor_weights[$name] = $processor->getDefaultWeight($stage);
+        }
+      }
+    }
 
-        if (empty($this->processors[$name])) {
-          // Create our settings for this processor
-          $settings = empty($processors_settings[$name]['settings']) ? array() : $processors_settings[$name]['settings'];
+    // Sort requested processors by weight.
+    asort($processor_weights);
+
+    $return_processors = array();
+    foreach ($processor_weights as $name => $weight) {
+      $return_processors[$name] = $processors[$name];
+    }
+    return $return_processors;
+  }
+
+  /**
+   * Retrieves all processors supported by this index.
+   *
+   * @return \Drupal\search_api\Processor\ProcessorInterface[]
+   *   The loaded processors, keyed by processor ID.
+   */
+  protected function loadProcessors() {
+    if (!isset($this->processors)) {
+      /** @var $processor_plugin_manager \Drupal\search_api\Processor\ProcessorPluginManager */
+      $processor_plugin_manager = \Drupal::service('plugin.manager.search_api.processor');
+      $processor_settings = $this->getOption('processors', array());
+
+      foreach ($processor_plugin_manager->getDefinitions() as $name => $processor_definition) {
+        if (class_exists($processor_definition['class']) && empty($this->processors[$name])) {
+          // Create our settings for this processor.
+          $settings = empty($processor_settings[$name]['settings']) ? array() : $processor_settings[$name]['settings'];
           $settings['index'] = $this;
 
           /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-          $processor = $processorPluginManager->createInstance($name, $settings);
+          $processor = $processor_plugin_manager->createInstance($name, $settings);
           if ($processor->supportsIndex($this)) {
             $this->processors[$name] = $processor;
           }
         }
-      }
-      else {
-        \Drupal::logger('search_api')->warning('Processor @id specifies a non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class']));
-      }
-    }
-
-    if ($sortBy == 'weight') {
-      // Sort by weight.
-      uasort($processors_settings, array('Drupal\Component\Utility\SortArray', 'sortByWeightElement'));
-    }
-    else {
-      // Sort by processor ID.
-      ksort($processors_settings);
-    }
-
-    // Filter by status and return.
-    $active_processors = array();
-    // Find out which ones are enabled
-    foreach ($processors_settings as $name => $processor_setting) {
-      // Find out which ones we want
-      if ($all || $processor_setting['status']) {
-        if (!empty($this->processors[$name])) {
-          $active_processors[$name] = $this->processors[$name];
+        elseif (!class_exists($processor_definition['class'])) {
+          \Drupal::logger('search_api')->warning('Processor @id specifies a non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class']));
         }
       }
     }
 
-    return $active_processors;
+    return $this->processors;
   }
 
   /**
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {
-    foreach ($this->getProcessors() as $processor) {
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PREPROCESS_INDEX) as $processor) {
       $processor->preprocessIndexItems($items);
     }
   }
@@ -511,7 +534,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function preprocessSearchQuery(QueryInterface $query) {
-    foreach ($this->getProcessors() as $processor) {
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PREPROCESS_QUERY) as $processor) {
       $processor->preprocessSearchQuery($query);
     }
   }
@@ -521,7 +544,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function postprocessSearchResults(ResultSetInterface $results) {
     /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-    foreach (array_reverse($this->getProcessors()) as $processor) {
+    foreach (array_reverse($this->getProcessorsByStage(ProcessorInterface::STAGE_POSTPROCESS_QUERY)) as $processor) {
       $processor->postprocessSearchResults($results);
     }
   }
@@ -640,8 +663,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // All field identifiers should start with the datasource ID.
     if (!$prefix && $datasource_id) {
       $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-      $label_prefix = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
     }
+    $datasource_label = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
 
     // Loop over all properties and handle them accordingly.
     $recurse = array();
@@ -736,7 +759,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $field = Utility::createField($this, $key);
       $field->setType($field_type);
       $field->setLabel($label);
-      $field->setLabelPrefix($label_prefix);
+      $field->setLabelPrefix($datasource_label);
       $field->setDescription($description);
       $field->setIndexed(FALSE);
       $this->fields[0]['fields'][$key] = $field;
@@ -1125,10 +1148,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // language" field.
     // @todo Replace this with a cleaner, more flexible approach. See
     //   https://drupal.org/node/2090341
-    $this->options['processors']['language']['status'] = TRUE;
-    $this->options['processors']['language']['weight'] = -50;
-    $this->options['processors']['language']['processorPluginId'] = 'language';
-    $this->options['processors']['language'] += array('settings' => array());
+    $this->options['processors']['language'] = array(
+      'processor_id' => 'language',
+      'weights' =>
+        array(
+          'preprocess_index' => -50,
+        ),
+      'settings' => array(),
+    );
     $this->options['fields']['search_api_language'] = array('type' => 'string');
   }
 
@@ -1301,6 +1328,25 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function __clone() {
     $this->resetCaches(FALSE);
+  }
+
+  /**
+   * Implements the magic __sleep() method.
+   *
+   * Prevents the cached plugins and fields from being serialized.
+   */
+  public function __sleep() {
+    $properties = get_object_vars($this);
+    unset($properties['datasourcePlugins']);
+    unset($properties['trackerPlugin']);
+    unset($properties['serverInstance']);
+    unset($properties['fields']);
+    unset($properties['datasourceFields']);
+    unset($properties['fulltextFields']);
+    unset($properties['processors']);
+    unset($properties['properties']);
+    unset($properties['datasourceAdditionalFields']);
+    return array_keys($properties);
   }
 
 }

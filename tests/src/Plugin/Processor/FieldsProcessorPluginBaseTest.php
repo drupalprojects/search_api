@@ -270,7 +270,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $this->processor->setMethodOverride('processKey', $override);
 
     $query = Utility::createQuery($this->index);
-    $keys = & $query->getKeys();
+    $keys = &$query->getKeys();
     $keys = array(
       '#conjunction' => 'OR',
       'foo',

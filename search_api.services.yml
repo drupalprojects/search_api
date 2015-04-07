@@ -9,7 +9,7 @@ services:
 
   plugin.manager.search_api.processor:
     class: Drupal\search_api\Processor\ProcessorPluginManager
-    parent: default_plugin_manager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@string_translation']
 
   plugin.manager.search_api.tracker:
     class: Drupal\search_api\Tracker\TrackerPluginManager

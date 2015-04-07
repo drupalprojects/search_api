@@ -29,7 +29,8 @@ interface FilterInterface {
    * Adds a new ($field $operator $value) condition.
    *
    * @param string $field
-   *   The ID of the field to filter on.
+   *   The field to filter on, e.g. "title". The special field
+   *   "search_api_datasource" can be used to filter by datasource ID.
    * @param mixed $value
    *   The value the field should have (or be related to by the operator).
    * @param string $operator
