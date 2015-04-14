@@ -2094,4 +2094,31 @@ class Database extends BackendPluginBase {
     return $this->configuration['field_tables'][$index->id()];
   }
 
+  /**
+   * Implements the magic __sleep() method.
+   *
+   * Prevents the database connection and logger from being serialized.
+   */
+  public function __sleep() {
+    $properties = array_flip(parent::__sleep());
+    unset($properties['database']);
+    unset($properties['logger']);
+    return array_keys($properties);
+  }
+
+  /**
+   * Implements the magic __wakeup() method.
+   *
+   * Reloads the database connection and logger.
+   */
+  public function __wakeup() {
+    parent::__wakeup();
+
+    if (isset($this->configuration['database'])) {
+      list($key, $target) = explode(':', $this->configuration['database'], 2);
+      $this->database = CoreDatabase::getConnection($target, $key);
+    }
+    $this->logger = \Drupal::service('logger.factory')->get('search_api_db');
+  }
+
 }

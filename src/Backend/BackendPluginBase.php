@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Backend;
 
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
@@ -47,6 +48,15 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
+
+  /**
+   * The backend's server's ID.
+   *
+   * Used for serialization.
+   *
+   * @var string
+   */
+  protected $serverId;
 
   /**
    * {@inheritdoc}
@@ -141,5 +151,33 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function removeIndex($index) {}
+
+  /**
+   * Implements the magic __sleep() method.
+   *
+   * Prevents the server entity from being serialized.
+   */
+  public function __sleep() {
+    if ($this->server) {
+      $this->serverId = $this->server->id();
+    }
+    $properties = array_flip(parent::__sleep());
+    unset($properties['server']);
+    return array_keys($properties);
+  }
+
+  /**
+   * Implements the magic __wakeup() method.
+   *
+   * Reloads the server entity.
+   */
+  public function __wakeup() {
+    parent::__wakeup();
+
+    if ($this->serverId) {
+      $this->server = Server::load($this->serverId);
+      $this->serverId = NULL;
+    }
+  }
 
 }
