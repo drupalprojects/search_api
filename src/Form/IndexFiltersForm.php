@@ -86,7 +86,6 @@ class IndexFiltersForm extends EntityForm {
         return strnatcasecmp($a->label(), $b->label());
       };
       uasort($all_processors, $sort_processors);
-      $form_state->set('processors', $all_processors);
     }
     else {
       $all_processors = $form_state->get('processors');
@@ -211,7 +210,7 @@ class IndexFiltersForm extends EntityForm {
   public function validate(array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     /** @var \Drupal\search_api\Processor\ProcessorInterface[] $processors */
-    $processors = $form_state->get('processors');
+    $processors = $this->entity->getProcessors(FALSE);
 
     // Iterate over all processors that have a form and are enabled.
     foreach ($form['settings'] as $processor_id => $processor_form) {
@@ -235,7 +234,8 @@ class IndexFiltersForm extends EntityForm {
     // @todo Go through all available processors, enable/disable with method on
     //   processor plugin to allow reaction.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-    foreach ($form_state->get('processors') as $processor_id => $processor) {
+    $processors = $this->entity->getProcessors(FALSE);
+    foreach ($processors as $processor_id => $processor) {
       if (empty($values['status'][$processor_id])) {
         continue;
       }
