@@ -7,7 +7,8 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -371,7 +372,7 @@ class Highlight extends ProcessorPluginBase {
   protected function createExcerpt($text, array $keys) {
     // Prepare text by stripping HTML tags and decoding HTML entities.
     $text = strip_tags(str_replace(array('<', '>'), array(' <', '> '), $text));
-    $text = String::decodeEntities($text);
+    $text = Html::decodeEntities($text);
     $text = preg_replace('/\s+/', ' ', $text);
     $text = trim($text, ' ');
     $text_length = strlen($text);
@@ -486,7 +487,7 @@ class Highlight extends ProcessorPluginBase {
     // Fetch text within the combined ranges we found.
     $out = array();
     foreach ($new_ranges as $from => $to) {
-      $out[] = String::checkPlain(substr($text, $from, $to - $from));
+      $out[] = SafeMarkup::checkPlain(substr($text, $from, $to - $from));
     }
     if (!$out) {
       return NULL;

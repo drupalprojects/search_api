@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\query;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
@@ -119,7 +119,7 @@ class SearchApiQuery extends QueryPluginBase {
         ));
       }
       else {
-        $this->abort(String::format('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
+        $this->abort(SafeMarkup::format('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
       }
     }
     catch (\Exception $e) {
@@ -312,7 +312,7 @@ class SearchApiQuery extends QueryPluginBase {
     if ($this->shouldAbort()) {
       if (error_displayable()) {
         foreach ($this->errors as $msg) {
-          drupal_set_message(String::checkPlain($msg), 'error');
+          drupal_set_message(SafeMarkup::checkPlain($msg), 'error');
         }
       }
       $view->result = array();

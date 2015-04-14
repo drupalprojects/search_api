@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -90,8 +90,8 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_1->save();
-    $this->assertEqual($entity_1->language()->getId(), 'en', String::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
-    $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_1->language()->getId(), 'en', SafeMarkup::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertFalse($entity_1->getTranslationLanguages(FALSE), SafeMarkup::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     $entity_2 = EntityTestMul::create(array(
       'id' => 2,
@@ -99,8 +99,8 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_2->save();
-    $this->assertEqual($entity_2->language()->getId(), 'en', String::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
-    $this->assertFalse($entity_2->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_2->language()->getId(), 'en', SafeMarkup::format('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertFalse($entity_2->getTranslationLanguages(FALSE), SafeMarkup::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
     $datasource = $this->index->getDatasource('entity:' . $this->testEntityTypeId);
@@ -122,8 +122,8 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $default_langcode = $this->langcodes[0];
     $entity_1->get('langcode')->setValue($default_langcode);
     $entity_1->save();
-    $this->assertEqual($entity_1->language(), \Drupal::languageManager()->getLanguage($this->langcodes[0]), String::format('%entity_type: Entity language retrieved.', array('%entity_type' => $this->testEntityTypeId)));
-    $this->assertFalse($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEqual($entity_1->language(), \Drupal::languageManager()->getLanguage($this->langcodes[0]), SafeMarkup::format('%entity_type: Entity language retrieved.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertFalse($entity_1->getTranslationLanguages(FALSE), SafeMarkup::format('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
     $datasource_item_ids = $datasource->getItemIds();
@@ -144,7 +144,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     $translation->save();
     $translation = $entity_1->getTranslation($this->langcodes[2]);
     $translation->save();
-    $this->assertTrue($entity_1->getTranslationLanguages(FALSE), String::format('%entity_type: Translations are available', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertTrue($entity_1->getTranslationLanguages(FALSE), SafeMarkup::format('%entity_type: Translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     $datasource_item_ids = $datasource->getItemIds();
     sort($datasource_item_ids);

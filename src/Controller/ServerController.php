@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Controller;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\ServerInterface;
 
@@ -54,7 +54,7 @@ class ServerController extends ControllerBase {
    *   The page title.
    */
   public function pageTitle(ServerInterface $search_api_server) {
-    return String::checkPlain($search_api_server->label());
+    return SafeMarkup::checkPlain($search_api_server->label());
   }
 
   /**

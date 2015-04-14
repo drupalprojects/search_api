@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\display;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -189,7 +189,7 @@ class FacetsBlock extends Block {
         $table = $this->view->storage->get('base_table');
         $views_data = Views::viewsData($table);
         $table = empty($views_data['table']['base']['title']) ? $table : $views_data['table']['base']['title'];
-        throw new SearchApiException(String::format('The "Facets block" display cannot be used with a view for @base_table. Please only use this display with base tables representing Search API indexes.', array('@base_table' => $table)));
+        throw new SearchApiException(SafeMarkup::format('The "Facets block" display cannot be used with a view for @base_table. Please only use this display with base tables representing Search API indexes.', array('@base_table' => $table)));
       }
       $this->field_options = array();
       foreach ($index->getFields() as $key => $field) {
@@ -218,7 +218,7 @@ class FacetsBlock extends Block {
         return array(
           '#theme' => $theme,
           '#more_url' => $path,
-          '#link_text' => String::checkPlain($this->useMoreText()),
+          '#link_text' => SafeMarkup::checkPlain($this->useMoreText()),
           '#view' => $this->view,
         );
       }

@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api_db\Tests;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\field\Entity\FieldConfig;
@@ -114,8 +114,8 @@ class BackendTest extends EntityUnitTestBase {
 
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
     foreach ($field_tables as $field_table) {
-      $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), String::format('Field table %table exists', array('%table' => $field_table['table'])));
-      $this->assertTrue(\Drupal::database()->schema()->fieldExists($normalized_storage_table, $field_table['column']), String::format('Field column %column exists', array('%column' => $field_table['column'])));
+      $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), SafeMarkup::format('Field table %table exists', array('%table' => $field_table['table'])));
+      $this->assertTrue(\Drupal::database()->schema()->fieldExists($normalized_storage_table, $field_table['column']), SafeMarkup::format('Field column %column exists', array('%column' => $field_table['column'])));
     }
   }
 

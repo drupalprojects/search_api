@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Controller;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\IndexInterface;
 
@@ -51,7 +51,7 @@ class IndexController extends ControllerBase {
    *   The page title.
    */
   public function pageTitle(IndexInterface $search_api_index) {
-    return String::checkPlain($search_api_index->label());
+    return SafeMarkup::checkPlain($search_api_index->label());
   }
 
   /**

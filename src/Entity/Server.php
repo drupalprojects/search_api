@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api\SearchApiException;
@@ -127,7 +127,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       if (!($this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
         $args['@backend'] = $this->getBackendId();
         $args['%server'] = $this->label();
-        throw new SearchApiException(String::format('The backend with ID "@backend" could not be retrieved for server %server.', $args));
+        throw new SearchApiException(SafeMarkup::format('The backend with ID "@backend" could not be retrieved for server %server.', $args));
       }
     }
     return $this->backendPlugin;
@@ -253,7 +253,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       return $this->getBackend()->indexItems($index, $items);
     }
     $args['%index'] = $index->label();
-    throw new SearchApiException(String::format('Could not index items on index %index because pending server tasks could not be executed.', $args));
+    throw new SearchApiException(SafeMarkup::format('Could not index items on index %index because pending server tasks could not be executed.', $args));
   }
 
   /**
@@ -337,7 +337,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '@indexes' => implode(', ', $failed),
       );
-      $message = String::format('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
+      $message = SafeMarkup::format('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
       throw new SearchApiException($message, 0, $e);
     }
     return $this;

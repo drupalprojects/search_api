@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\search_api\datasource;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -329,7 +329,7 @@ class ContentEntity extends DatasourcePluginBase {
     if (($bundles = $this->getEntityBundles())) {
       unset($bundles[$this->getEntityTypeId()]);
       foreach ($bundles as $bundle => $bundle_info) {
-        $options[$bundle] = String::checkPlain($bundle_info['label']);
+        $options[$bundle] = SafeMarkup::checkPlain($bundle_info['label']);
       }
     }
     return $options;

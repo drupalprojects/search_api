@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -101,12 +101,12 @@ class Query implements QueryInterface {
    */
   public function __construct(IndexInterface $index, array $options = array()) {
     if (!$index->status()) {
-      throw new SearchApiException(String::format("Can't search on index %index which is disabled.", array('%index' => $index->label())));
+      throw new SearchApiException(SafeMarkup::format("Can't search on index %index which is disabled.", array('%index' => $index->label())));
     }
     if (isset($options['parse mode'])) {
       $modes = $this->parseModes();
       if (!isset($modes[$options['parse mode']])) {
-        throw new SearchApiException(String::format('Unknown parse mode: @mode.', array('@mode' => $options['parse mode'])));
+        throw new SearchApiException(SafeMarkup::format('Unknown parse mode: @mode.', array('@mode' => $options['parse mode'])));
       }
     }
     $this->index = $index;
@@ -232,7 +232,7 @@ class Query implements QueryInterface {
   public function fields(array $fields) {
     $fulltext_fields = $this->index->getFulltextFields();
     foreach (array_diff($fields, $fulltext_fields) as $field_id) {
-      throw new SearchApiException(String::format('Trying to search on field @field which is no indexed fulltext field.', array('@field' => $field_id)));
+      throw new SearchApiException(SafeMarkup::format('Trying to search on field @field which is no indexed fulltext field.', array('@field' => $field_id)));
     }
     $this->fields = $fields;
     return $this;
@@ -264,7 +264,7 @@ class Query implements QueryInterface {
       'search_api_id' => array('type' => 'integer'),
     );
     if (empty($fields[$field])) {
-      throw new SearchApiException(String::format('Trying to sort on unknown field @field.', array('@field' => $field)));
+      throw new SearchApiException(SafeMarkup::format('Trying to sort on unknown field @field.', array('@field' => $field)));
     }
     $order = strtoupper(trim($order)) == 'DESC' ? 'DESC' : 'ASC';
     $this->sorts[$field] = $order;

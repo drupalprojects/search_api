@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -160,7 +160,7 @@ class IndexFiltersForm extends EntityForm {
         $form['weights'][$stage]['order'][$processor_id]['#attributes']['class'][] = 'search-api-processor-weight--' . Html::cleanCssIdentifier($processor_id);
         $form['weights'][$stage]['order'][$processor_id]['#weight'] = $weight;
         $form['weights'][$stage]['order'][$processor_id]['label'] = array(
-          '#markup' => String::checkPlain($processor->label()),
+          '#markup' => SafeMarkup::checkPlain($processor->label()),
         );
         $form['weights'][$stage]['order'][$processor_id]['weight'] = array(
           '#type' => 'weight',

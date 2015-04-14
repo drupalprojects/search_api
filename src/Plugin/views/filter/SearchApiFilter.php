@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
@@ -90,7 +90,7 @@ class SearchApiFilter extends FilterPluginBase {
       return $this->t('is not empty');
     }
 
-    return String::checkPlain((string) $this->operator) . ' ' . String::checkPlain((string) $this->value);
+    return SafeMarkup::checkPlain((string) $this->operator) . ' ' . SafeMarkup::checkPlain((string) $this->value);
   }
 
   /**

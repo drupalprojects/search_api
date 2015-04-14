@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -225,7 +225,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
    *   back to plain text.
    */
   protected function normalizeText($value) {
-    $value = String::decodeEntities($value);
+    $value = Html::decodeEntities($value);
     $value = trim($value);
     $value = preg_replace('/\s+/', ' ', $value);
     return $value;

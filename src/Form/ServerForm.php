@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Form;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -188,7 +188,7 @@ class ServerForm extends EntityForm {
   protected function getBackendOptions() {
     $options = array();
     foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
-      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
+      $options[$plugin_id] = SafeMarkup::checkPlain($plugin_definition['label']);
     }
     return $options;
   }

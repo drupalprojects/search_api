@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 
 /**
  * Defines a contextual filter for conditions on date fields.
@@ -90,10 +90,10 @@ class SearchApiDate extends SearchApiArgument {
           $dates[] = $datestr;
         }
       }
-      return $dates ? implode(', ', $dates) : String::checkPlain($this->argument);
+      return $dates ? implode(', ', $dates) : SafeMarkup::checkPlain($this->argument);
     }
 
-    return String::checkPlain($this->argument);
+    return SafeMarkup::checkPlain($this->argument);
   }
 
   /**
@@ -152,7 +152,7 @@ class SearchApiDate extends SearchApiArgument {
    */
   protected function abort() {
     $variables['!field'] = $this->definition['group'] . ': ' . $this->definition['title'];
-    $this->query->abort(String::format('Illegal argument passed to !field contextual filter.', $variables));
+    $this->query->abort(SafeMarkup::format('Illegal argument passed to !field contextual filter.', $variables));
   }
 
 }

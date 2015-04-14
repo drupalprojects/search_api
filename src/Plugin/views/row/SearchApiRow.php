@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -120,7 +120,7 @@ class SearchApiRow extends RowPluginBase {
 
     $base_table = $view->storage->get('base_table');
     if (substr($base_table, 0, 17) !== 'search_api_index_') {
-      throw new \InvalidArgumentException(String::format('View %view is not based on Search API but tries to use its row plugin.', array('%view' => $view->storage->label())));
+      throw new \InvalidArgumentException(SafeMarkup::format('View %view is not based on Search API but tries to use its row plugin.', array('%view' => $view->storage->label())));
     }
     $index_id = substr($base_table, 17);
     $this->index = $this->getEntityManager()->getStorage('search_api_index')->load($index_id);

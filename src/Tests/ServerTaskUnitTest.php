@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
@@ -217,7 +217,7 @@ class ServerTaskUnitTest extends KernelTestBase {
     }
     catch (SearchApiException $e) {
       $args['%index'] = $this->index->label();
-      $expected_message = String::format('Could not index items on index %index because pending server tasks could not be executed.', $args);
+      $expected_message = SafeMarkup::format('Could not index items on index %index because pending server tasks could not be executed.', $args);
       $this->assertEqual($e->getMessage(), $expected_message, 'Pending server tasks prevented indexing of items.');
     }
     $this->assertEqual($this->getCalledServerMethods(), array(), 'indexItems was not executed.');

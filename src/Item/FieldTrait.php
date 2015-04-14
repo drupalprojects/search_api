@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Item;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -356,7 +356,7 @@ trait FieldTrait {
       if (!isset($definitions[$this->propertyPath])) {
         $args['@field'] = $this->fieldIdentifier;
         $args['%index'] = $this->index->label();
-        throw new SearchApiException(String::format('Could not retrieve data definition for field "@field" on index %index.', $args));
+        throw new SearchApiException(SafeMarkup::format('Could not retrieve data definition for field "@field" on index %index.', $args));
       }
       $this->dataDefinition = $definitions[$this->propertyPath];
     }

@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -151,8 +151,8 @@ class IndexFieldsForm extends EntityForm {
     );
 
     foreach ($fields as $key => $field) {
-      $build['fields'][$key]['title']['#markup'] = String::checkPlain($field->getLabel());
-      $build['fields'][$key]['id']['#markup'] = String::checkPlain($key);
+      $build['fields'][$key]['title']['#markup'] = SafeMarkup::checkPlain($field->getLabel());
+      $build['fields'][$key]['id']['#markup'] = SafeMarkup::checkPlain($key);
       if ($field->getDescription()) {
         $build['fields'][$key]['description'] = array(
           '#type' => 'value',

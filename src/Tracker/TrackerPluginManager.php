@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Tracker;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -50,7 +50,7 @@ class TrackerPluginManager extends DefaultPluginManager {
   public function getOptionsList() {
     $options = array();
     foreach ($this->getDefinitions() as $plugin_id => $plugin_definition) {
-      $options[$plugin_id] = String::checkPlain($plugin_definition['label']);
+      $options[$plugin_id] = SafeMarkup::checkPlain($plugin_definition['label']);
     }
     return $options;
   }
