@@ -77,6 +77,8 @@ class IndexFiltersForm extends EntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
+
     // Retrieve lists of all processors, and the stages and weights they have.
     if (!$form_state->has('processors')) {
       $all_processors = $this->entity->getProcessors(FALSE);
