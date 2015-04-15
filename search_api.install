@@ -90,3 +90,48 @@ function search_api_schema() {
 
   return $schema;
 }
+
+/**
+ * Implements hook_install().
+ */
+function search_api_install() {
+  $message = _search_api_search_module_warning();
+  if ($message) {
+    drupal_set_message($message, 'warning');
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function search_api_requirements($phase) {
+  if ($phase == 'runtime') {
+    $message = _search_api_search_module_warning();
+    if ($message) {
+      return array(
+        'search_api_core_search' => array(
+          'title' => t('Search API'),
+          'value' => $message,
+          'severity' => REQUIREMENT_WARNING,
+        ),
+      );
+    }
+  }
+  return array();
+}
+
+/**
+ * Returns a warning message if the Core Search module is enabled.
+ *
+ * @return string|null
+ *   A warning message if needed, NULL otherwise.
+ *
+ * @see search_api_install()
+ * @see search_api_requirements()
+ */
+function _search_api_search_module_warning() {
+  if (Drupal::moduleHandler()->moduleExists('search')) {
+    return t('The default Drupal Search module is still enabled. If you are using Search API, you probably want to <a href="@url">uninstall</a> the Search module for performance reasons.', array('@url' => \Drupal::url('system.modules_uninstall')));
+  }
+  return NULL;
+}
