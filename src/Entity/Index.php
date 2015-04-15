@@ -684,10 +684,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
         // Don't add the additional 'entity' property for entity reference
         // fields which don't target a content entity type.
-        if ($property instanceof FieldItemDataDefinition && $property->getDataType() == 'field_item:entity_reference') {
+        $referenced_entity_type_label = NULL;
+        if ($property instanceof FieldItemDataDefinition && in_array($property->getDataType(), array('field_item:entity_reference', 'field_item:image', 'field_item:file'))) {
           $entity_type = $this->entityManager()->getDefinition($property->getSetting('target_type'));
           if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
             unset($nested_properties['entity']);
+          }
+          else {
+            $referenced_entity_type_label = $entity_type->getLabel();
           }
         }
 
@@ -736,7 +740,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
         // If there are additional properties, add the label for the main
         // property to make it clear what it refers to.
         if ($additional) {
-          $label .= ' » ' . $property->getLabel();
+          $nested_label = $property->getLabel();
+          if ($referenced_entity_type_label) {
+            $nested_label = str_replace('@label', $referenced_entity_type_label, $nested_label);
+          }
+
+          $label .= ' » ' . $nested_label;
         }
       }
 
