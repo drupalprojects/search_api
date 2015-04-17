@@ -89,6 +89,21 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function getItemLabel(ComplexDataInterface $item);
 
   /**
+   * Retrieves the item's bundle.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this datasource's type.
+   *
+   * @return string
+   *   The bundle identifier of the item. Might be just the datasource
+   *   identifier or a similar pseudo-bundle if the datasource does not contain
+   *   any bundles.
+   *
+   * @see getBundles()
+   */
+  public function getItemBundle(ComplexDataInterface $item);
+
+  /**
    * Retrieves a URL at which the item can be viewed on the web.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
@@ -97,18 +112,33 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return \Drupal\Core\Url|null
    *   Either an object representing the URL of the given item, or NULL if the
    *   item has no URL of its own.
-   *
    */
   public function getItemUrl(ComplexDataInterface $item);
 
   /**
    * Returns the available view modes for this datasource.
    *
+   * @param string|null $bundle
+   *   (optional) The bundle for which to return the available view modes. Or
+   *   NULL to return all view modes for this datasource, across all bundles.
+   *
    * @return string[]
-   *   An associative array of view mode labels, keyed by the view mode ID. Or
-   *   empty if it isn't possible to view items of this datasource.
+   *   An associative array of view mode labels, keyed by the view mode ID. Can
+   *   be empty if it isn't possible to view items of this datasource.
    */
-  public function getViewModes();
+  public function getViewModes($bundle = NULL);
+
+
+  /**
+   * Retrieves the bundles associated to this datasource.
+   *
+   * @return string[]
+   *   An associative array mapping the datasource's bundles' IDs to their
+   *   labels. If the datasource doesn't contain any bundles, a single
+   *   pseudo-bundle should be returned, usually equal to the datasource
+   *   identifier (and label).
+   */
+  public function getBundles();
 
   /**
    * Returns the render array for the provided item and view mode.

@@ -41,7 +41,14 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   /**
    * {@inheritdoc}
    */
-  public function getViewModes() {
+  public function getBundles() {
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewModes($bundle = NULL) {
     return array();
   }
 

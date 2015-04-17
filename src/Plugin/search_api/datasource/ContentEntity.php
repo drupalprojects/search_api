@@ -154,9 +154,9 @@ class ContentEntity extends DatasourcePluginBase {
   public function getPropertyDefinitions() {
     $type = $this->getEntityTypeId();
     $properties = $this->getEntityManager()->getBaseFieldDefinitions($type);
-    if ($bundles = $this->getIndexedBundles()) {
-      foreach ($bundles as $bundle) {
-        $properties += $this->getEntityManager()->getFieldDefinitions($type, $bundle);
+    if ($bundles = array_keys($this->getBundles())) {
+      foreach ($bundles as $bundle_id) {
+        $properties += $this->getEntityManager()->getFieldDefinitions($type, $bundle_id);
       }
     }
     return $properties;
@@ -355,6 +355,17 @@ class ContentEntity extends DatasourcePluginBase {
     return NULL;
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemBundle(ComplexDataInterface $item) {
+    if ($item instanceof EntityAdapter) {
+      return $item->getValue()->bundle();
+    }
+    return NULL;
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -421,17 +432,17 @@ class ContentEntity extends DatasourcePluginBase {
   /**
    * Retrieves all item IDs of entities of the specified bundles.
    *
-   * @param array $bundles
+   * @param string[]|null $bundles
    *   (optional) The bundles for which all item IDs should be returned; or NULL
    *   to retrieve IDs from all enabled bundles in this datasource.
    *
-   * @return array
+   * @return string[]
    *   An array of all item IDs of these bundles.
    */
   protected function getBundleItemIds(array $bundles = NULL) {
     // If NULL was passed, use all enabled bundles.
     if (!isset($bundles)) {
-      $bundles = $this->getIndexedBundles();
+      $bundles = array_keys($this->getBundles());
     }
 
     $select = \Drupal::entityQuery($this->getEntityTypeId());
@@ -457,46 +468,42 @@ class ContentEntity extends DatasourcePluginBase {
   }
 
   /**
-   * Retrieves the bundles which will be indexed for this datasource.
-   *
-   * @return string[]
-   *   The IDs of all indexed bundles for this datasource.
+   * {@inheritdoc}
    */
-  protected function getIndexedBundles() {
+  public function getBundles() {
     if (!$this->hasBundles()) {
-      // For entity types that have no bundle, return the default bundle name.
-      return array($this->getEntityTypeId());
+      // For entity types that have no bundle, return a default pseudo-bundle.
+      return array($this->getEntityTypeId() => $this->label());
     }
 
     $configuration = $this->getConfiguration();
 
     // If "default" is TRUE (i.e., "All except those selected"), remove all the
     // selected bundles from the available ones to compute the indexed bundles.
-    if ($configuration['default']) {
-      $bundles = $this->getEntityBundles();
-      foreach ($configuration['bundles'] as $config_bundle) {
-        if (isset($bundles[$config_bundle])) {
-          unset($bundles[$config_bundle]);
-        }
-      }
+    // Otherwise, return all the selected bundles.
+    $bundles = array();
+    $entity_bundles = $this->getEntityBundles();
+    $selected_bundles = array_filter($configuration['bundles']);
+    $function = $configuration['default'] ? 'array_diff_key' : 'array_intersect_key';
+    $entity_bundles = $function($entity_bundles, $selected_bundles);
+    foreach ($entity_bundles as $bundle_id => $bundle_info) {
+      $bundles[$bundle_id] = isset($bundle_info['label']) ? $bundle_info['label'] : $bundle_id;
     }
-    // Otherwise, just return all selected bundles.
-    else {
-      $bundles = $configuration['bundles'];
-      foreach ($bundles as $bundle_key => $bundle_value) {
-        if ($bundle_value === 0) {
-          unset($bundles[$bundle_key]);
-        }
-      }
-    }
-    return array_keys($bundles);
+    return $bundles ?: array($this->getEntityTypeId() => $this->label());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getViewModes() {
-    return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
+  public function getViewModes($bundle = NULL) {
+    if (isset($bundle)) {
+      // @todo Implement getViewModeOptionsByBundle per https://www.drupal.org/node/2322503
+      //return $this->getEntityManager()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
+      return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId(), TRUE);
+    }
+    else {
+      return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
+    }
   }
 
   /**

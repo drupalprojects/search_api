@@ -143,24 +143,37 @@ class SearchApiRow extends RowPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
-      $view_modes = $datasource->getViewModes();
-      if (!$view_modes) {
+      $bundles = $datasource->getBundles();
+      if (!$datasource->getViewModes()) {
         $form['view_modes'][$datasource_id] = array(
           '#type' => 'item',
-          '#title' => $this->t('View mode for datasource %name', array('%name' => $datasource->label())),
+          '#title' => $this->t('Default View mode for datasource %name', array('%name' => $datasource->label())),
           '#description' => $this->t("This datasource doesn't have any view modes available. It is therefore not possible to display results of this datasource using this row plugin."),
         );
         continue;
       }
-      $form['view_modes'][$datasource_id] = array(
-        '#type' => 'select',
-        '#options' => $view_modes,
-        '#title' => $this->t('View mode for datasource %name', array('%name' => $datasource->label())),
-        '#default_value' => key($view_modes),
-      );
-      if (isset($this->options['view_modes'][$datasource_id])) {
-        $form['view_modes'][$datasource_id]['#default_value'] = $this->options['view_modes'][$datasource_id];
+
+      foreach ($bundles as $bundle_id => $bundle) {
+        $view_modes = $datasource->getViewModes($bundle_id);
+        if (!$view_modes) {
+          $form['view_modes'][$datasource_id][$bundle_id] = array(
+            '#type' => 'item',
+            '#title' => $this->t('View mode for bundle %name', array('%name' => $bundle['label'])),
+            '#description' => $this->t("This datasource doesn't have any view modes available. It is therefore not possible to display results of this bundle using this row plugin."),
+          );
+          continue;
+        }
+        $form['view_modes'][$datasource_id][$bundle_id] = array(
+          '#type' => 'select',
+          '#options' => $view_modes,
+          '#title' => $this->t('View mode for bundle %name', array('%name' => $bundle['label'])),
+          '#default_value' => key($view_modes),
+        );
+        if (isset($this->options['view_modes'][$datasource_id][$bundle_id])) {
+          $form['view_modes'][$datasource_id][$bundle_id]['#default_value'] = $this->options['view_modes'][$datasource_id][$bundle_id];
+        }
       }
     }
   }
@@ -169,22 +182,21 @@ class SearchApiRow extends RowPluginBase {
    * {@inheritdoc}
    */
   public function summaryTitle() {
-    $view_modes = array();
-    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
-      $view_modes[$datasource_id] = $datasource->getViewModes();
-    }
     $summary = array();
-    foreach ($this->options['view_modes'] as $datasource_id => $view_mode) {
-      if (isset($view_modes[$datasource_id][$view_mode])) {
-        $view_mode = $view_modes[$datasource_id][$view_mode];
+    foreach ($this->options['view_modes'] as $datasource_id => $bundles) {
+      $datasource = $this->index->getDatasource($datasource_id);
+      $bundles_info = $datasource->getBundles();
+      foreach ($bundles as $bundle => $view_mode) {
+        $view_modes = $datasource->getViewModes($bundle);
+        $args = array(
+          '@bundle' => $bundles_info[$bundle],
+          '@datasource' => $datasource->label(),
+          '@view_mode' => $view_modes[$view_mode],
+        );
+        $summary[] = $this->t('@datasource/@bundle: @view_mode', $args);
       }
-      $args = array(
-        '@datasource' => $this->index->getDatasource($datasource_id)->label(),
-        '@view_mode' => $view_mode,
-      );
-      $summary[] = $this->t('@datasource: @view_mode', $args);
     }
-    return $summary ? implode('; ', $summary) : '<em>' . $this->t('No settings') . '</em>';
+    return $summary ? implode('; ', $summary) : $this->t('No settings');
   }
 
   /**
@@ -202,6 +214,7 @@ class SearchApiRow extends RowPluginBase {
       return '';
     }
 
+    // @todo Use isValidDatasource() instead.
     try {
       $datasource = $this->index->getDatasource($datasource_id);
     }
@@ -213,17 +226,16 @@ class SearchApiRow extends RowPluginBase {
       $this->getLogger()->warning('Item of unknown datasource %datasource returned in view %view.', $context);
       return '';
     }
-    if (!isset($this->options['view_modes'][$datasource_id])) {
-      $context = array(
-        '%datasource' => $datasource->label(),
-        '%view' => $this->view->storage->label(),
-      );
-      $this->getLogger()->warning('No view mode set for datasource %datasource in view %view.', $context);
-      return '';
+    // Always use the default view mode if it was not set explicitly in the
+    // options.
+    $view_mode = 'default';
+    $bundle = $this->index->getDatasource($datasource_id)->getItemBundle($row->_item);
+    if (isset($this->options['view_modes'][$datasource_id][$bundle])) {
+      $view_mode = $this->options['view_modes'][$datasource_id][$bundle];
     }
+
     try {
-      $view_mode = $this->options['view_modes'][$datasource_id];
-      return $this->index->getDataSource($datasource_id)->viewItem($row->_item, $view_mode);
+      return $this->index->getDatasource($datasource_id)->viewItem($row->_item, $view_mode);
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);

@@ -14,10 +14,13 @@ views.row.search_api:
   mapping:
     view_modes:
       type: sequence
-      label: View modes foreach source
+      label: View modes for each datasource
       sequence:
-        type: string
-        label: View mode
+        type: sequence
+        label: A list of all the bundles and their configured view mode
+        sequence:
+          type: string
+          label: View mode for the specific bundle
 
 views.filter.search_api_fulltext:
   type: views_filter
