@@ -174,8 +174,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function supportsDatatype($type) {
-    return $this->hasValidBackend() ? $this->getBackend()->supportsDatatype($type) : FALSE;
+  public function supportsDataType($type) {
+    return $this->hasValidBackend() ? $this->getBackend()->supportsDataType($type) : FALSE;
   }
 
   /**

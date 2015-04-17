@@ -178,6 +178,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function getFields($extract = TRUE) {
+    $data_type_fallback_mapping = Utility::getDataTypeFallbackMapping($this->index);
     if ($extract && !$this->fieldsExtracted) {
       foreach (array(NULL, $this->getDatasourceId()) as $datasource_id) {
         $fields_by_property_path = array();
@@ -185,6 +186,14 @@ class Item implements \IteratorAggregate, ItemInterface {
           // Don't overwrite fields that were previously set.
           if (empty($this->fields[$field_id])) {
             $this->fields[$field_id] = clone $field;
+
+            $field_data_type = $this->fields[$field_id]->getType();
+            // If the field data type is in the fallback mapping list, then use
+            // the fallback type as field type.
+            if (isset($data_type_fallback_mapping[$field_data_type])) {
+              $this->fields[$field_id]->setType($data_type_fallback_mapping[$field_data_type]);
+            }
+
             $fields_by_property_path[$field->getPropertyPath()] = $this->fields[$field_id];
           }
         }
@@ -247,8 +256,8 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function setFieldsExtracted($fieldsExtracted) {
-    $this->fieldsExtracted = $fieldsExtracted;
+  public function setFieldsExtracted($fields_extracted) {
+    $this->fieldsExtracted = $fields_extracted;
     return $this;
   }
 

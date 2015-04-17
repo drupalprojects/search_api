@@ -66,7 +66,7 @@ interface BackendSpecificInterface {
    * @return bool
    *   TRUE if the backend supports that data type.
    */
-  public function supportsDatatype($type);
+  public function supportsDataType($type);
 
   /**
    * Adds a new index to this server.

@@ -5,7 +5,7 @@ This module provides a database based implementation of the Search API. The
 database and target to use for storing and accessing the indexes can be selected
 when creating a new server.
 
-All Search API datatypes are supported by using appropriate SQL datatypes for
+All Search API data types are supported by using appropriate SQL data types for
 their respective columns (with "String"/"URI", and "Integer"/"Duration" being
 equivalent).
 

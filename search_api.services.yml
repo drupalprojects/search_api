@@ -3,6 +3,10 @@ services:
     class: Drupal\search_api\Backend\BackendPluginManager
     parent: default_plugin_manager
 
+  plugin.manager.search_api.data_type:
+    class: Drupal\search_api\DataType\DataTypePluginManager
+    parent: default_plugin_manager
+
   plugin.manager.search_api.datasource:
     class: Drupal\search_api\Datasource\DatasourcePluginManager
     parent: default_plugin_manager

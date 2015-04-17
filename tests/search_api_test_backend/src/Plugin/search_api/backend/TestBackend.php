@@ -52,6 +52,13 @@ class TestBackend extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function supportsDataType($type) {
+    return $type == 'search_api_test_data_type' || $type == 'search_api_altering_test_data_type';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function defaultConfiguration() {
     return array('test' => '');
   }
@@ -173,5 +180,4 @@ class TestBackend extends BackendPluginBase {
     $methods_called[] = $method;
     $state->set($key, $methods_called);
   }
-
 }

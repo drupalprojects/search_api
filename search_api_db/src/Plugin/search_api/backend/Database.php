@@ -1366,8 +1366,8 @@ class Database extends BackendPluginBase {
             throw new SearchApiException(SafeMarkup::format('Unknown field @field specified as search target.', array('@field' => $name)));
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
-            $types = Utility::getDataTypes();
-            $type = $types[$fields[$name]['type']];
+            $types = Utility::getDataTypeInfo();
+            $type = $types[$fields[$name]['type']]['label'];
             throw new SearchApiException(SafeMarkup::format('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }
           $fulltext_fields[$name] = $fields[$name];

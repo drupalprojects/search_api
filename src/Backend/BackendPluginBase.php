@@ -100,7 +100,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * {@inheritdoc}
    */
-  public function supportsDatatype($type) {
+  public function supportsDataType($type) {
     return FALSE;
   }
 

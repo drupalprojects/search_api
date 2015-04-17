@@ -88,7 +88,7 @@ class IndexFieldsForm extends EntityForm {
     $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
     $form['#tree'] = TRUE;
 
-    $form['description']['#markup'] = $this->t('<p>The datatype of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>Whether detailed field types are supported depends on the type of server this index resides on In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>');
+    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>Whether detailed field types are supported depends on the type of server this index resides on. In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>');
     if ($index->hasValidServer()) {
       $form['description']['#markup'] .= '<p>' . $this->t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
           array('@server-url' => $index->getServer()->url('canonical'))) . '</p>';
@@ -129,15 +129,14 @@ class IndexFieldsForm extends EntityForm {
    *   The build structure.
    */
   protected function buildFields(array $fields, array $additional) {
-    $types = Utility::getDataTypes();
+    $types = Utility::getDataTypeOptions();
 
     $fulltext_types = array('text');
     // Add all custom data types with fallback "text" to fulltext types as well.
-    foreach (Utility::getDataTypeInfo() as $id => $type) {
-      if ($type['fallback'] != 'text') {
-        continue;
+    foreach (Utility::getCustomDataTypes() as $id => $type) {
+      if ($type->getFallbackType() == 'text') {
+        $fulltext_types[] = $id;
       }
-      $fulltext_types[] = $id;
     }
 
     $boost_values = array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');

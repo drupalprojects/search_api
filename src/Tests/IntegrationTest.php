@@ -67,7 +67,6 @@ class IntegrationTest extends WebTestBase {
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
-
   }
 
   /**
@@ -315,6 +314,8 @@ class IntegrationTest extends WebTestBase {
       'fields[entity:node/title][type]' => 'text',
       'fields[entity:node/title][boost]' => '21.0',
       'fields[entity:node/body][indexed]' => 1,
+      'fields[entity:node/uid][indexed]' => 1,
+      'fields[entity:node/uid][type]' => 'search_api_test_data_type',
     );
 
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
@@ -328,6 +329,8 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual($fields['entity:node/title']->isIndexed(), $edit['fields[entity:node/title][indexed]'], 'title field is indexed.');
     $this->assertEqual($fields['entity:node/title']->getType(), $edit['fields[entity:node/title][type]'], 'title field type is text.');
     $this->assertEqual($fields['entity:node/title']->getBoost(), $edit['fields[entity:node/title][boost]'], 'title field boost value is 21.');
+    $this->assertEqual($fields['entity:node/uid']->isIndexed(), $edit['fields[entity:node/uid][indexed]'], 'uid field is indexed.');
+    $this->assertEqual($fields['entity:node/uid']->getType(), $edit['fields[entity:node/uid][type]'], 'uid field type is search_api_test_data_type.');
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.

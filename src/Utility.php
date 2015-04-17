@@ -40,6 +40,15 @@ class Utility {
   protected static $fieldTypeMapping = array();
 
   /**
+   * Static cache for the fallback data type mapping per index.
+   *
+   * @var array
+   *
+   * @see getDataTypeFallbackMapping()
+   */
+  protected static $dataTypeFallbackMapping = array();
+
+  /**
    * Determines whether fields of the given type contain fulltext data.
    *
    * @param string $type
@@ -64,14 +73,12 @@ class Utility {
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
-   * @see \Drupal\search_api\Utility::getDefaultDataTypes()
    * @see \Drupal\search_api\Utility::getDataTypeInfo()
    */
-  // @todo Rename to something more self-documenting, like getDataTypeOptions().
-  public static function getDataTypes() {
-    $types = self::getDefaultDataTypes();
-    foreach (self::getDataTypeInfo() as $id => $type) {
-      $types[$id] = $type['name'];
+  public static function getDataTypeOptions() {
+    $types = array();
+    foreach (self::getDataTypeInfo() as $id => $info) {
+      $types[$id] = $info['label'];
     }
 
     return $types;
@@ -80,19 +87,76 @@ class Utility {
   /**
    * Returns the default field types recognized by the Search API.
    *
-   * @return string[]
-   *   An associative array with the default types as keys, mapped to their
-   *   translated display names.
+   * @return string[][]
+   *   A nested associative array with the default types as keys, mapped to
+   *   their translated labels and descriptions.
    */
   public static function getDefaultDataTypes() {
     return array(
-      'text' => \Drupal::translation()->translate('Fulltext'),
-      'string' => \Drupal::translation()->translate('String'),
-      'integer' => \Drupal::translation()->translate('Integer'),
-      'decimal' => \Drupal::translation()->translate('Decimal'),
-      'date' => \Drupal::translation()->translate('Date'),
-      'boolean' => \Drupal::translation()->translate('Boolean'),
+      'text' => array(
+        'label' => t('Fulltext'),
+        'description' => t('A fulltext field'),
+      ),
+      'string' => array(
+        'label' => t('String'),
+        'description' => t('A string field'),
+      ),
+      'integer' => array(
+        'label' => t('Integer'),
+        'description' => t('An integer field'),
+      ),
+      'decimal' => array(
+        'label' => t('Decimal'),
+        'description ' => t('A decimal field'),
+      ),
+      'date' => array(
+        'label' => t('Date'),
+        'description' => t('A date field'),
+      ),
+      'boolean' => array(
+        'label' => t('Boolean'),
+        'description' => t('A boolean field'),
+      ),
     );
+  }
+
+  /**
+   * Returns the custom data type plugins.
+   *
+   * @return \Drupal\search_api\DataType\DataTypeInterface[]
+   *   An array of data type plugins, keyed by type identifier.
+   */
+  public static function getCustomDataTypes() {
+    $custom_data_types = &drupal_static(__FUNCTION__);
+    if (!isset($custom_data_types)) {
+      $custom_data_types = array();
+      /** @var $data_type_plugin_manager \Drupal\search_api\DataType\DataTypePluginManager */
+      $data_type_plugin_manager = \Drupal::service('plugin.manager.search_api.data_type');
+
+      foreach ($data_type_plugin_manager->getDefinitions() as $name => $data_type_definition) {
+        if (class_exists($data_type_definition['class']) && empty($custom_data_types[$name])) {
+          $data_type = $data_type_plugin_manager->createInstance($name);
+          $custom_data_types[$name] = $data_type;
+        }
+      }
+    }
+
+    return $custom_data_types;
+  }
+
+  /**
+   * Returns a custom data type plugin.
+   *
+   * @param string $type
+   *   The type whose definition should be returned.
+   *
+   * @return \Drupal\search_api\DataType\DataTypeInterface|null
+   *   The data type plugin object with the specified identifier, if it exists.
+   *   NULL otherwise.
+   */
+  public static function getCustomDataType($type) {
+    $custom_data_types = self::getCustomDataTypes();
+    return isset($custom_data_types[$type]) ? $custom_data_types[$type] : NULL;
   }
 
   /**
@@ -101,25 +165,30 @@ class Utility {
    * @param string|null $type
    *   (optional) If specified, the type whose definition should be returned.
    *
-   * @return string[][]|string[]|null
-   *   If $type was not given, an array containing all custom data types, in the
-   *   format specified by hook_search_api_data_type_info().
-   *   Otherwise, the definition for the given type, or NULL if it is unknown.
+   * @return string[]|null
+   *   If $type was not given, an array containing all data types. Otherwise,
+   *   the definition for the given type, or NULL if it is unknown.
    *
-   * @see hook_search_api_data_type_info()
+   * @see \Drupal\search_api\Utility::getDefaultDataTypes()
+   * @see \Drupal\search_api\Utility::getCustomDataTypes()
+   *
    */
   public static function getDataTypeInfo($type = NULL) {
     $types = &drupal_static(__FUNCTION__);
     if (!isset($types)) {
-      $default_types = Utility::getDefaultDataTypes();
-      $types = \Drupal::moduleHandler()->invokeAll('search_api_data_type_info');
-      $types = $types ? $types : array();
-      foreach ($types as &$type_info) {
-        if (!isset($type_info['fallback']) || !isset($default_types[$type_info['fallback']])) {
-          $type_info['fallback'] = 'string';
-        }
+      $default_types = self::getDefaultDataTypes();
+      $custom_data_types = self::getCustomDataTypes();
+      $custom_data_types_info = array();
+
+      foreach ($custom_data_types as $name => &$custom_data_type) {
+        $custom_data_types_info[$name] = array(
+          'label' => $custom_data_type->label(),
+          'description' => $custom_data_type->getDescription(),
+          'fallback' => $custom_data_type->getFallbackType(),
+        );
       }
-      \Drupal::moduleHandler()->alter('search_api_data_type_info', $types);
+
+      $types = array_merge($default_types, $custom_data_types_info);
     }
     if (isset($type)) {
       return isset($types[$type]) ? $types[$type] : NULL;
@@ -190,6 +259,39 @@ class Utility {
     }
 
     return static::$fieldTypeMapping;
+  }
+
+  /**
+   * Retrieves the necessary type fallbacks for an index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index for which to return the type fallbacks.
+   *
+   * @return string[]
+   *   An array containing the IDs of all custom data types that are not
+   *   supported by the index's current server, mapped to their fallback types.
+   */
+  public static function getDataTypeFallbackMapping(IndexInterface $index) {
+    // Check the static cache first.
+    $index_id = $index->id();
+    if (empty(static::$dataTypeFallbackMapping[$index_id])) {
+      $server = NULL;
+      try {
+        $server = $index->getServer();
+      }
+      catch (SearchApiException $e) {
+        // If the server isn't available, just ignore it here and return all
+        // types.
+      }
+      static::$dataTypeFallbackMapping[$index_id] = array();
+      foreach (self::getCustomDataTypes() as $type_id => $data_type) {
+        if (!$server || !$server->supportsDataType($type_id)) {
+          static::$dataTypeFallbackMapping[$index_id][$type_id] = $data_type->getFallbackType();
+        }
+      }
+    }
+
+    return static::$dataTypeFallbackMapping[$index_id];
   }
 
   /**
@@ -271,12 +373,20 @@ class Utility {
     if ($definition instanceof ComplexDataDefinitionInterface) {
       $property = $definition->getMainPropertyName();
       if (isset($value[$property])) {
-        $field->addValue($value[$property]);
+        $value = $value[$property];
       }
     }
     else {
-      $field->addValue(reset($value));
+      $value = reset($value);
     }
+
+    // If the data type of the field is a custom one, then the value can be
+    // altered by the data type plugin.
+    if ($data_type = self::getCustomDataType($field->getType())) {
+      $value = $data_type->getValue($value);
+    }
+
+    $field->addValue($value);
     $field->setOriginalType($definition->getDataType());
   }
 
