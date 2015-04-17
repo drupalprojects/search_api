@@ -268,7 +268,6 @@ class ServerForm extends EntityForm {
     elseif ($form['backend_config']['#type'] == 'details' && $server->hasValidBackend()) {
       $backend_form_state = new SubFormState($form_state, array('backend_config'));
       $server->getBackend()->validateConfigurationForm($form['backend_config'], $backend_form_state);
-      $form_state->set('backend_form_state', $backend_form_state);
     }
   }
 
@@ -280,8 +279,9 @@ class ServerForm extends EntityForm {
 
     /** @var \Drupal\search_api\ServerInterface $server */
     $server = $this->getEntity();
-
-    if ($backend_form_state = $form_state->get('backend_form_state')) {
+    // Check before loading the backend plugin so we don't throw an exception.
+    if ($form['backend_config']['#type'] == 'details' && $server->hasValidBackend()) {
+      $backend_form_state = new SubFormState($form_state, array('backend_config'));
       $server->getBackend()->submitConfigurationForm($form['backend_config'], $backend_form_state);
     }
 

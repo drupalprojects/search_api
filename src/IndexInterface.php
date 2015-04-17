@@ -166,10 +166,14 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Retrieves this index's datasource plugins.
    *
+   * @param bool $only_enabled
+   *   (optional) If FALSE, also include disabled processors. Otherwise, only
+   *   load enabled ones.
+   *
    * @return \Drupal\search_api\Datasource\DatasourceInterface[]
    *   The datasource plugins used by this index, keyed by plugin ID.
    */
-  public function getDatasources();
+  public function getDatasources($only_enabled = TRUE);
 
   /**
    * Determines whether the tracker is valid.

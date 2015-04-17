@@ -462,8 +462,7 @@ class IndexForm extends EntityForm {
     }
 
     // Store the array of datasource plugin IDs with integer keys.
-    $values = $form_state->getValues();
-    $datasource_ids = array_values($values['datasources']);
+    $datasource_ids = array_values($form_state->getValue('datasources', array()));
     $form_state->setValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource.
@@ -471,26 +470,12 @@ class IndexForm extends EntityForm {
     //   without configuration forms? We currently don't for backend plugins,
     //   but do it here. We should be consistent.
     /** @var \Drupal\search_api\Datasource\DatasourceInterface[] $datasource_plugins */
-    $datasource_plugins = array();
-    $datasource_forms = array();
-    $datasource_form_states = array();
+    $datasource_plugins = $this->originalEntity->getDatasources(FALSE);
     foreach ($datasource_ids as $datasource_id) {
-      if ($this->originalEntity->isValidDatasource($datasource_id)) {
-        $datasource_plugins[$datasource_id] = $this->originalEntity->getDatasource($datasource_id);
-      }
-      else {
-        $datasource_plugins[$datasource_id] = $this->datasourcePluginManager->createInstance($datasource_id, array('index' => $this->originalEntity));
-      }
-      $datasource_forms[$datasource_id] = array();
-      if (!empty($form['datasource_configs'][$datasource_id])) {
-        $datasource_forms[$datasource_id] = &$form['datasource_configs'][$datasource_id];
-      }
-      $datasource_form_states[$datasource_id] = new SubFormState($form_state, array('datasource_configs', $datasource_id));
-      $datasource_plugins[$datasource_id]->validateConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
+      $datasource_form = (!empty($form['datasource_configs'][$datasource_id])) ? $form['datasource_configs'][$datasource_id] : array();
+      $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+      $datasource_plugins[$datasource_id]->validateConfigurationForm($datasource_form, $datasource_form_state);
     }
-    $form_state->set('datasource_plugins', $datasource_plugins);
-    $form_state->set('datasource_forms', $datasource_forms);
-    $form_state->set('datasource_form_states', $datasource_form_states);
 
     // Call validateConfigurationForm() for the (possibly new) tracker.
     // @todo It seems if we change the tracker, we would validate/submit the old
@@ -498,7 +483,7 @@ class IndexForm extends EntityForm {
     //   Similar above for datasources, though there of course the values will
     //   just always be empty (because datasources have their plugin ID in the
     //   form structure).
-    $tracker_id = $values['tracker'];
+    $tracker_id = $form_state->getValue('tracker', NULL);
     if ($this->originalEntity->getTrackerId() == $tracker_id) {
       $tracker = $this->originalEntity->getTracker();
     }
@@ -507,8 +492,6 @@ class IndexForm extends EntityForm {
     }
     $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
     $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
-    $form_state->set('tracker_plugin', $tracker);
-    $form_state->set('tracker_form_state', $tracker_form_state);
   }
 
   /**
@@ -521,19 +504,34 @@ class IndexForm extends EntityForm {
     $index = $this->getEntity();
     $index->setOptions($form_state->getValue('options', array()) + $this->originalEntity->getOptions());
 
-    $datasource_forms = $form_state->get('datasource_forms');
-    $datasource_form_states = $form_state->get('datasource_form_states');
-    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    $datasources = $form_state->getValue('datasources', array());
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface[] $datasource_plugins */
+    $datasource_plugins = $this->originalEntity->getDatasources(FALSE);
     $datasource_configuration = array();
-    foreach ($form_state->get('datasource_plugins') as $datasource_id => $datasource) {
-      $datasource->submitConfigurationForm($datasource_forms[$datasource_id], $datasource_form_states[$datasource_id]);
+    foreach ($datasources as $datasource_id) {
+      $datasource = $datasource_plugins[$datasource_id];
+      $datasource_form = (!empty($form['datasource_configs'][$datasource_id])) ? $form['datasource_configs'][$datasource_id] : array();
+      $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+      $datasource->submitConfigurationForm($datasource_form, $datasource_form_state);
       $datasource_configuration[$datasource_id] = $datasource->getConfiguration();
     }
     $index->set('datasource_configs', $datasource_configuration);
 
-    /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
-    $tracker = $form_state->get('tracker_plugin');
-    $tracker_form_state = $form_state->get('tracker_form_state');
+    // Call submitConfigurationForm() for the (possibly new) tracker.
+    // @todo It seems if we change the tracker, we would validate/submit the old
+    //   tracker's form using the new tracker. Shouldn't be done, of course.
+    //   Similar above for datasources, though there of course the values will
+    //   just always be empty (because datasources have their plugin ID in the
+    //   form structure).
+    $tracker_id = $form_state->getValue('tracker', NULL);
+    if ($this->originalEntity->getTrackerId() == $tracker_id) {
+      $tracker = $this->originalEntity->getTracker();
+    }
+    else {
+      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $this->originalEntity));
+    }
+
+    $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
     $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
     $index->set('tracker_config', $tracker->getConfiguration());
 

@@ -350,20 +350,33 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDatasources() {
+  public function getDatasources($only_enabled = TRUE) {
     if (!isset($this->datasourcePlugins)) {
       $this->datasourcePlugins = array();
-      $plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
-      foreach ($this->datasources as $datasource) {
-        $config = array('index' => $this);
-        if (isset($this->datasource_configs[$datasource])) {
-          $config += $this->datasource_configs[$datasource];
+      /** @var $datasource_plugin_manager \Drupal\search_api\Datasource\DatasourcePluginManager */
+      $datasource_plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
+
+      foreach ($datasource_plugin_manager->getDefinitions() as $name => $datasource_definition) {
+        if (class_exists($datasource_definition['class']) && empty($this->datasourcePlugins[$name])) {
+          // Create our settings for this datasource.
+          $config = isset($this->datasource_configs[$name]) ? $this->datasource_configs[$name] : array();
+          $config += array('index' => $this);
+
+          /** @var $datasource \Drupal\search_api\Datasource\DatasourceInterface */
+          $datasource = $datasource_plugin_manager->createInstance($name, $config);
+          $this->datasourcePlugins[$name] = $datasource;
         }
-        $this->datasourcePlugins[$datasource] = $plugin_manager->createInstance($datasource, $config);
+        elseif (!class_exists($datasource_definition['class'])) {
+          \Drupal::logger('search_api')->warning('Datasource @id specifies a non-existing @class.', array('@id' => $name, '@class' => $datasource_definition['class']));
+        }
       }
     }
 
-    return $this->datasourcePlugins;
+    // Filter datasources by status if required.
+    if (!$only_enabled) {
+      return $this->datasourcePlugins;
+    }
+    return array_intersect_key($this->datasourcePlugins, array_flip($this->datasources));
   }
 
   /**

@@ -82,7 +82,6 @@ class IndexFieldsForm extends EntityForm {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $index = $this->entity;
-    $form_state->set('index', $index);
 
     // Set an appropriate page title.
     $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
@@ -224,8 +223,7 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = $form_state->get('index');
+    $index = $this->entity;
 
     // Store the fields configuration.
     $values = $form_state->getValues();
