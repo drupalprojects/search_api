@@ -15,6 +15,10 @@ services:
     class: Drupal\search_api\Tracker\TrackerPluginManager
     parent: default_plugin_manager
 
+  search_api.results_static_cache:
+    class: Drupal\search_api\Query\ResultsCache
+    arguments: ['@request_stack']
+
   search_api.server_task_manager:
     class: Drupal\search_api\Task\ServerTaskManager
     arguments: ['@database', '@entity.manager']

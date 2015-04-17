@@ -22,13 +22,15 @@ interface QueryInterface {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The index for which the query should be created.
+   * @param \Drupal\search_api\Query\ResultsCacheInterface $results_cache
+   *   The results cache that should be used for this query.
    * @param array $options
    *   (optional) The options to set for the query.
    *
    * @return static
    *   A query object to use.
    */
-  public static function create(IndexInterface $index, array $options = array());
+  public static function create(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array());
 
   /**
    * Retrieves the parse modes supported by this query class.

@@ -306,7 +306,8 @@ class Utility {
    * @see \Drupal\search_api\Query\QueryInterface::create()
    */
   public static function createQuery(IndexInterface $index, array $options = array()) {
-    return Query::create($index, $options);
+    $search_results_cache = \Drupal::service('search_api.results_static_cache');
+    return Query::create($index, $search_results_cache, $options);
   }
 
   /**

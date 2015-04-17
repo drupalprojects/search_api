@@ -36,6 +36,13 @@ class Query implements QueryInterface {
   protected $indexId;
 
   /**
+   * The result cache service.
+   *
+   * @var \Drupal\search_api\Query\ResultsCacheInterface
+   */
+  protected $resultsCache;
+
+  /**
    * The search keys.
    *
    * If NULL, this will be a filter-only search.
@@ -91,6 +98,8 @@ class Query implements QueryInterface {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The index the query should be executed on.
+   * @param \Drupal\search_api\Query\ResultsCacheInterface $results_cache
+   *   The results cache that should be used for this query.
    * @param array $options
    *   (optional) Associative array of options configuring this query. See
    *   \Drupal\search_api\Query\QueryInterface::setOption() for a list of
@@ -99,7 +108,7 @@ class Query implements QueryInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   If a search on that index (or with those options) won't be possible.
    */
-  public function __construct(IndexInterface $index, array $options = array()) {
+  public function __construct(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array()) {
     if (!$index->status()) {
       throw new SearchApiException(SafeMarkup::format("Can't search on index %index which is disabled.", array('%index' => $index->label())));
     }
@@ -110,6 +119,7 @@ class Query implements QueryInterface {
       }
     }
     $this->index = $index;
+    $this->resultsCache = $results_cache;
     $this->options = $options + array(
       'conjunction' => 'AND',
       'parse mode' => 'terms',
@@ -122,8 +132,8 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(IndexInterface $index, array $options = array()) {
-    return new static($index, $options);
+  public static function create(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array()) {
+    return new static($index, $results_cache, $options);
   }
 
   /**
@@ -331,6 +341,9 @@ class Query implements QueryInterface {
 
     // Let modules alter the results.
     \Drupal::moduleHandler()->alter('search_api_results', $results);
+
+    // Store the results in the static cache.
+    $this->resultsCache->addResults($results);
   }
 
   /**
