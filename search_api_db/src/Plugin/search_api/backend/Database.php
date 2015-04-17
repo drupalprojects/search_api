@@ -444,11 +444,11 @@ class Database extends BackendPluginBase {
       $maxbytes -= strlen($db_prefix);
     }
 
-    $base = $table = mb_strcut($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), 0, $maxbytes);
+    $base = $table = Unicode::truncateBytes($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), $maxbytes);
     $i = 0;
     while ($this->database->schema()->tableExists($table)) {
       $suffix = '_' . ++$i;
-      $table = mb_strcut($base, 0, $maxbytes - strlen($suffix)) . $suffix;
+      $table = Unicode::truncateBytes($base, $maxbytes - strlen($suffix)) . $suffix;
     }
     return $table;
   }
@@ -473,13 +473,13 @@ class Database extends BackendPluginBase {
   protected function findFreeColumn($table, $column) {
     $maxbytes = 62;
 
-    $base = $name = mb_strcut(Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $column)), 0, $maxbytes);
+    $base = $name = Unicode::truncateBytes(Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $column)), $maxbytes);
     // If the table does not exist yet, the initial name is not taken.
     if ($this->database->schema()->tableExists($table)) {
       $i = 0;
       while ($this->database->schema()->fieldExists($table, $name)) {
         $suffix = '_' . ++$i;
-        $name = mb_strcut($base, 0, $maxbytes - strlen($suffix)) . $suffix;
+        $name = Unicode::truncateBytes($base, $maxbytes - strlen($suffix)) . $suffix;
       }
     }
     return $name;
@@ -970,7 +970,7 @@ class Database extends BackendPluginBase {
           do {
             $denormalized_value .= array_shift($field_value)['value'] . ' ';
           } while (strlen($denormalized_value) < 30);
-          $denormalized_value = mb_strcut(trim($denormalized_value), 0, 30);
+          $denormalized_value = Unicode::truncateBytes(trim($denormalized_value), 30);
 
           foreach ($value as $token) {
             // Taken from core search to reflect less importance of words later
@@ -1146,7 +1146,7 @@ class Database extends BackendPluginBase {
               foreach ($words as $word) {
                 if (strlen($word) > 50) {
                   $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.', array('%word' => $word));
-                  $word = mb_strcut($word, 0, 50);
+                  $word = Unicode::truncateBytes($word, 50);
                 }
                 $tokens[] = array(
                   'value' => $word,
@@ -1169,7 +1169,7 @@ class Database extends BackendPluginBase {
           return date('c', $value);
         }
         if (strlen($value) > 255) {
-          $value = mb_strcut($value, 0, 255);
+          $value = Unicode::truncateBytes($value, 255);
           $this->getLogger()->warning('An overlong value (more than 255 characters) was encountered while indexing: %value.<br />Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.', array('%value' => $value));
         }
         return $value;
