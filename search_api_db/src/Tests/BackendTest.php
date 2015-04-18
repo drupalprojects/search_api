@@ -784,6 +784,23 @@ class BackendTest extends EntityUnitTestBase {
 
     $count = $this->indexItems($this->indexId);
     $this->assertEqual($count, 1, 'Indexing an item with an empty value for a non string field worked.');
+
+    // Regression test for #2471509.
+    $index->getFields(FALSE)[$this->getFieldId('body')]->setIndexed(TRUE, TRUE);
+    $index->save();
+    $this->indexItems($this->indexId);
+
+    entity_create('entity_test', array(
+      'id' => 8,
+      'name' => 'Article with long body',
+      'type' => 'article',
+      'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
+    ))->save();
+    $count = $this->indexItems($this->indexId);
+    $this->assertEqual($count, 1, 'Indexing an item with a word longer than 50 characters worked.');
+
+    $index->getFields(FALSE)[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
+    $index->save();
   }
 
   /**

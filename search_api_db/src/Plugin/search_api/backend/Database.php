@@ -1114,6 +1114,10 @@ class Database extends BackendPluginBase {
         $ret = array();
         foreach (preg_split('/[^\p{L}\p{N}]+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
           if ($v) {
+            if (strlen($v) > 50) {
+              $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length. Ensure you are using a tokenizer preprocessor.', array('%word' => $v));
+              $v = Unicode::truncateBytes($v, 50);
+            }
             $ret[] = array(
               'value' => $v,
               'score' => 1,
