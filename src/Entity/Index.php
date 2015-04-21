@@ -15,6 +15,7 @@ use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
+use Drupal\search_api\Property\PropertyInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
@@ -682,6 +683,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Loop over all properties and handle them accordingly.
     $recurse = array();
     foreach ($properties as $property_path => $property) {
+      $original_property = $property;
+      if ($property instanceof PropertyInterface) {
+        $property = $property->getWrappedProperty();
+      }
       $key = "$prefix$property_path";
       $label = $label_prefix . $property->getLabel();
       $description = $property->getDescription();
@@ -727,6 +732,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $additional_field->setDescription($description);
           $additional_field->setEnabled(!empty($enabled_additional_fields[$key]));
           $additional_field->setLocked(FALSE);
+          if ($original_property instanceof PropertyInterface) {
+            $additional_field->setHidden($original_property->isHidden());
+          }
           $this->fields[0]['additional fields'][$key] = $additional_field;
           if ($additional_field->isEnabled()) {
             while ($pos = strrpos($property_path, ':')) {
@@ -784,12 +792,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $field->setLabelPrefix($datasource_label);
       $field->setDescription($description);
       $field->setIndexed(FALSE);
+      // To make it possible to lock fields that are, technically, nested, use
+      // the original $property for this check.
+      if ($original_property instanceof PropertyInterface) {
+        $field->setLocked($original_property->isLocked());
+        $field->setHidden($original_property->isHidden());
+      }
       $this->fields[0]['fields'][$key] = $field;
-      if (isset($field_options[$key])) {
+      if (isset($field_options[$key]) || $field->isLocked()) {
         $field->setIndexed(TRUE);
-        $field->setType($field_options[$key]['type']);
-        if (isset($field_options[$key]['boost'])) {
-          $field->setBoost($field_options[$key]['boost']);
+        if (isset($field_options[$key])) {
+          $field->setType($field_options[$key]['type']);
+          if (isset($field_options[$key]['boost'])) {
+            $field->setBoost($field_options[$key]['boost']);
+          }
         }
         $this->fields[1]['fields'][$key] = $field;
       }
@@ -1166,19 +1182,49 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->disable();
     }
 
-    // Always enable the "Language control" processor and corresponding "Item
-    // language" field.
-    // @todo Replace this with a cleaner, more flexible approach. See
-    //   https://drupal.org/node/2090341
-    $this->options['processors']['language'] = array(
-      'processor_id' => 'language',
-      'weights' =>
-        array(
-          'preprocess_index' => -50,
-        ),
-      'settings' => array(),
-    );
-    $this->options['fields']['search_api_language'] = array('type' => 'string');
+    $this->applyLockedConfiguration();
+  }
+
+  /**
+   * Makes sure that locked processors and fields are actually enabled/indexed.
+   *
+   * @return bool
+   *   TRUE if any changes were made to the index as a result of this operation;
+   *   FALSE otherwise.
+   */
+  public function applyLockedConfiguration() {
+    $change = FALSE;
+    // Obviously, we should first check for locked processors, because they
+    // might add new locked properties.
+    foreach ($this->getProcessors(FALSE) as $processor_id => $processor) {
+      if ($processor->isLocked() && !isset($this->options['processors'][$processor_id])) {
+        $this->options['processors'][$processor_id] = array(
+          'processor_id' => $processor_id,
+          'weights' => array(),
+          'settings' => array(),
+        );
+        $change = TRUE;
+      }
+    }
+    if ($change) {
+      $this->resetCaches(FALSE);
+    }
+    $datasource_ids = array_merge(array(NULL), $this->getDatasourceIds());
+    foreach ($datasource_ids as $datasource_id) {
+      foreach ($this->getPropertyDefinitions($datasource_id) as $key => $property) {
+        if ($property instanceof PropertyInterface && $property->isLocked()) {
+          $settings = $property->getFieldSettings();
+          if (empty($settings['type'])) {
+            $mapping = Utility::getFieldTypeMapping();
+            $type = $property->getDataType();
+            $settings['type'] = !empty($mapping[$type]) ? $mapping[$type] : 'string';
+          }
+          $this->options['fields'][$key] = $settings;
+          $change = TRUE;
+        }
+      }
+    }
+    return $change;
   }
 
   /**

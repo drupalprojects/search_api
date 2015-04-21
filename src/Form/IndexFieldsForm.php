@@ -185,6 +185,8 @@ class IndexFieldsForm extends EntityForm {
       foreach ($fulltext_types as $type) {
         $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
+      $build['fields'][$key]['#disabled'] = $field->isLocked();
+      $build['fields'][$key]['#access'] = !$field->isHidden();
     }
 
     if ($additional) {
@@ -207,6 +209,7 @@ class IndexFieldsForm extends EntityForm {
           '#title' => $additional_field->getLabel(),
           '#default_value' => $additional_field->isEnabled(),
           '#disabled' => $additional_field->isLocked(),
+          '#access' => !$additional_field->isHidden(),
         );
       }
       $build['additional']['actions']['#type'] = 'actions';

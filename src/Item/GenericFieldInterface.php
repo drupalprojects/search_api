@@ -144,6 +144,42 @@ interface GenericFieldInterface {
   public function setLabelPrefix($label_prefix);
 
   /**
+   * Determines whether this field should always be enabled/indexed.
+   *
+   * @return bool
+   *   TRUE if this field should be locked as enabled/indexed.
+   */
+  public function isLocked();
+
+  /**
+   * Sets whether this field should be locked.
+   *
+   * @param bool $locked
+   *   (optional) TRUE if the field should be locked, FALSE otherwise.
+   *
+   * @return $this
+   */
+  public function setLocked($locked = TRUE);
+
+  /**
+   * Determines whether this field should be hidden from the user.
+   *
+   * @return bool
+   *   TRUE if this field should be hidden from the user.
+   */
+  public function isHidden();
+
+  /**
+   * Sets whether this field should be hidden from the user.
+   *
+   * @param bool $hidden
+   *   (optional) TRUE if the field should be hidden, FALSE otherwise.
+   *
+   * @return $this
+   */
+  public function setHidden($hidden = TRUE);
+
+  /**
    * Retrieves this field's data definition.
    *
    * @return \Drupal\Core\TypedData\DataDefinitionInterface

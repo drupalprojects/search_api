@@ -117,7 +117,7 @@ class IndexFiltersForm extends EntityForm {
       $form['status'][$processor_id] = array(
         '#type' => 'checkbox',
         '#title' => $processor->label(),
-        '#default_value' => !empty($processor_settings[$processor_id]),
+        '#default_value' => $processor->isLocked() || !empty($processor_settings[$processor_id]),
         '#description' => $processor->getDescription(),
         '#attributes' => array(
           'class' => array(
@@ -125,6 +125,8 @@ class IndexFiltersForm extends EntityForm {
           ),
           'data-id' => $clean_css_id,
         ),
+        '#disabled' => $processor->isLocked(),
+        '#access' => !$processor->isHidden(),
       );
     }
 
@@ -157,6 +159,13 @@ class IndexFiltersForm extends EntityForm {
         $weight = isset($processor_settings[$processor_id]['weights'][$stage])
           ? $processor_settings[$processor_id]['weights'][$stage]
           : $processor->getDefaultWeight($stage);
+        if ($processor->isHidden()) {
+          $form['processors'][$processor_id]['weights'][$stage] = array(
+            '#type' => 'value',
+            '#value' => $weight,
+          );
+          continue;
+        }
         $form['weights'][$stage]['order'][$processor_id]['#attributes']['class'][] = 'draggable';
         $form['weights'][$stage]['order'][$processor_id]['#attributes']['class'][] = 'search-api-processor-weight--' . Html::cleanCssIdentifier($processor_id);
         $form['weights'][$stage]['order'][$processor_id]['#weight'] = $weight;

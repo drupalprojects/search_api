@@ -12,6 +12,7 @@ use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -100,40 +101,67 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->comments[] = $comment;
 
-    $this->nodes[1] = Node::create(array('status' => NODE_PUBLISHED, 'type' => 'page', 'title' => 'test title'));
+    $this->nodes[1] = Node::create(array('status' => NODE_PUBLISHED, 'type' => 'page', 'title' => 'some title'));
     $this->nodes[1]->save();
+
+    $this->nodes[2] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'other title'));
+    $this->nodes[2]->save();
 
     // Also index users, to verify that they are unaffected by the processor.
     $this->index->set('datasources', array('entity:comment', 'entity:node', 'entity:user'));
-    $fields = $this->index->getOption('fields');
-    $fields['search_api_node_grants'] = array(
-      'type' => 'string',
-    );
-    $fields['search_api_node_grants'] = array(
-      'type' => 'string',
-    );
-    $this->index->setOption('fields', $fields);
     $this->index->save();
 
     $this->index = entity_load('search_api_index', $this->index->id(), TRUE);
   }
 
   /**
-   * Tests building the query when content is accessible to all.
+   * Tests searching when content is accessible to all.
    */
   public function testQueryAccessAll() {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
+    $this->index->reindex();
     $this->index->index();
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
 
-    $this->assertEqual($result->getResultCount(), 4);
+    $this->assertResults($result, array('user' => array(0), 'comment' => array(0), 'node' => array(0, 1)));
+  }
+
+  /**
+   * Tests searching when only comments are accessible.
+   */
+  public function testQueryAccessComments() {
+    user_role_grant_permissions('anonymous', array('access comments'));
+    $this->index->reindex();
+    $this->index->index();
+    $query = Utility::createQuery($this->index);
+    $result = $query->execute();
+
+    $this->assertResults($result, array('user' => array(0), 'comment' => array(0)));
+  }
+
+  /**
+   * Tests searching for own unpublished content.
+   */
+  public function testQueryAccessOwn() {
+    // Create user that will be passed into the query.
+    $authenticated_user = $this->createUser(array('uid' => 2), array('access content', 'access comments', 'view own unpublished content'));
+
+    $this->nodes[3] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'foo', 'uid' => 2));
+    $this->nodes[3]->save();
+    $this->index->index();
+
+    $query = Utility::createQuery($this->index);
+    $query->setOption('search_api_access_account', $authenticated_user);
+    $result = $query->execute();
+
+    $this->assertResults($result, array('user' => array(0, 2), 'node' => array(3)));
   }
 
   /**
    * Tests building the query when content is accessible based on node grants.
    */
-  public function estQueryAccessWithNodeGrants() {
+  public function testQueryAccessWithNodeGrants() {
     // Create user that will be passed into the query.
     $authenticated_user = $this->createUser(array('uid' => 2), array('access content'));
 
@@ -147,18 +175,19 @@ class ContentAccessTest extends ProcessorTestBase {
       ))
       ->execute();
 
+    $this->index->reindex();
     $this->index->index();
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertEqual($result->getResultCount(), 3);
+    $this->assertResults($result, array('user' => array(0, 2), 'node' => array(0)));
   }
 
   /**
    *  Tests comment indexing when all users have access to content.
    */
-  public function estContentAccessAll() {
+  public function testContentAccessAll() {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
     $items = array();
     foreach ($this->comments as $comment) {
@@ -181,7 +210,7 @@ class ContentAccessTest extends ProcessorTestBase {
   /**
    * Tests comment indexing when hook_node_grants() takes effect.
    */
-  public function estContentAccessWithNodeGrants() {
+  public function testContentAccessWithNodeGrants() {
     $items = array();
     foreach ($this->comments as $comment) {
       $items[] = array(
@@ -198,6 +227,37 @@ class ContentAccessTest extends ProcessorTestBase {
     foreach ($items as $item) {
       $this->assertEqual($item->getField('search_api_node_grants')->getValues(), array('node_access_search_api_test:0'));
     }
+  }
+
+  /**
+   * Asserts that the search results contain the expected IDs.
+   *
+   * @param ResultSetInterface $result
+   *   The search results.
+   * @param int[][] $ids
+   *   The expected entity IDs, grouped by entity type and with their indexes in
+   *   this object's respective array properties as the values.
+   */
+  protected function assertResults(ResultSetInterface $result, array $expected) {
+    $results = array_keys($result->getResultItems());
+    sort($results);
+
+    $ids = array();
+    foreach ($expected as $entity_type => $items) {
+      $datasource_id = "entity:$entity_type";
+      foreach ($items as $i) {
+        if ($entity_type == 'user') {
+          $id = $i . ':en';
+        }
+        else {
+          $id = $this->{"{$entity_type}s"}[$i]->id() . ':en';
+        }
+        $ids[] = Utility::createCombinedId($datasource_id, $id);
+      }
+    }
+    sort($ids);
+
+    $this->assertEqual($results, $ids);
   }
 
 }

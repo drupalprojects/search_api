@@ -22,13 +22,6 @@ class AdditionalField implements AdditionalFieldInterface {
   protected $enabled;
 
   /**
-   * Whether this additional field's state is locked.
-   *
-   * @var bool
-   */
-  protected $locked;
-
-  /**
    * {@inheritdoc}
    */
   public function isEnabled() {
@@ -36,7 +29,7 @@ class AdditionalField implements AdditionalFieldInterface {
       $additional_fields = $this->index->getOption('additional fields', array());
       $this->enabled = isset($additional_fields[$this->fieldIdentifier]);
     }
-    return $this->enabled;
+    return $this->isLocked() || $this->enabled;
   }
 
   /**
@@ -61,7 +54,13 @@ class AdditionalField implements AdditionalFieldInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Determines whether this additional field's state should be locked.
+   *
+   * @return bool
+   *   TRUE if a child of this additional field is enabled or the field was
+   *   nevertheless marked as locked, FALSE otherwise.
+   *
+   * @see \Drupal\search_api\Item\GenericFieldInterface::isLocked()
    */
   public function isLocked() {
     if (!isset($this->locked)) {
@@ -78,14 +77,6 @@ class AdditionalField implements AdditionalFieldInterface {
 
     }
     return $this->locked;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setLocked($locked = TRUE) {
-    $this->locked = $locked;
-    return $this;
   }
 
   /**

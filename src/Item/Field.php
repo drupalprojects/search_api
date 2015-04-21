@@ -129,7 +129,7 @@ class Field implements \IteratorAggregate, FieldInterface {
       $fields = $this->index->getOption('fields', array());
       $this->indexed = isset($fields[$this->fieldIdentifier]);
     }
-    return $this->indexed;
+    return $this->isLocked() || $this->indexed;
   }
 
   /**

@@ -8,9 +8,9 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Property\BasicProperty;
 use Drupal\search_api\Utility;
 
 /**
@@ -388,7 +388,7 @@ class AggregatedFields extends ProcessorPluginBase {
           'description' => $this->fieldDescription($field, $index_fields),
           'type' => $types[$field['type']],
         );
-        $properties[$field_id] = new DataDefinition($definition);
+        $properties[$field_id] = BasicProperty::createFromDefinition($definition)->setLocked();
       }
     }
   }

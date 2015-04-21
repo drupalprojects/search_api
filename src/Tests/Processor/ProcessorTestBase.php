@@ -88,17 +88,8 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'entity:comment/subject' => array(
         'type' => 'text',
       ),
-      'entity:comment/status' => array(
-        'type' => 'boolean',
-      ),
       'entity:node/title' => array(
         'type' => 'text',
-      ),
-      'entity:node/author' => array(
-        'type' => 'integer',
-      ),
-      'entity:node/status' => array(
-        'type' => 'boolean',
       ),
     ));
     if ($processor) {

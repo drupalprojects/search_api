@@ -8,11 +8,12 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Session\UserSession;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Property\BasicProperty;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -110,7 +111,7 @@ class RenderedItem extends ProcessorPluginBase {
    */
   public function defaultConfiguration() {
     return array(
-      'roles' => array(DRUPAL_ANONYMOUS_RID),
+      'roles' => array(AccountInterface::ANONYMOUS_ROLE),
       'view_mode' => array(),
     );
   }
@@ -166,7 +167,7 @@ class RenderedItem extends ProcessorPluginBase {
       'label' => $this->t('Rendered HTML output'),
       'description' => $this->t('The complete HTML which would be displayed when viewing the item.'),
     );
-    $properties['rendered_item'] = new DataDefinition($definition);
+    $properties['rendered_item'] = BasicProperty::createFromDefinition($definition)->setLocked();
   }
 
   /**

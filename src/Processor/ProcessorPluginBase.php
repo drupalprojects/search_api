@@ -72,6 +72,20 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
+  public function isLocked() {
+    return !empty($this->pluginDefinition['locked']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isHidden() {
+    return !empty($this->pluginDefinition['hidden']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {}
 
   /**

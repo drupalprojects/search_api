@@ -13,9 +13,10 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
+use Drupal\search_api\Property\BasicProperty;
+use Drupal\search_api\Property\ProxyProperty;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
@@ -95,6 +96,13 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {
     if ($datasource) {
+      $entity_type = $datasource->getEntityTypeId();
+      if (in_array($entity_type, array('node', 'comment'))) {
+        $properties['status'] = ProxyProperty::create($properties['status'])->setLocked();
+        if ($entity_type == 'node') {
+          $properties['uid'] = ProxyProperty::create($properties['uid'])->setLocked();
+        }
+      }
       return;
     }
 
@@ -103,7 +111,7 @@ class ContentAccess extends ProcessorPluginBase {
       'description' => $this->t('Data needed to apply node access.'),
       'type' => 'string',
     );
-    $properties['search_api_node_grants'] = new DataDefinition($definition);
+    $properties['search_api_node_grants'] = BasicProperty::createFromDefinition($definition)->setLocked()->setHidden();
   }
 
   /**
@@ -263,12 +271,16 @@ class ContentAccess extends ProcessorPluginBase {
       $access_filter = $query;
     }
 
-    // If our custom property isn't indexed, or if the user does not have the
-    // permission to see any content at all, deny access to all items from
-    // affected datasources.
-    // @todo Once we can enforce properties to be indexed, remove all those
-    //   checks.
-    if (!$account->hasPermission('access content') || !$this->checkFieldIndexed('search_api_node_grants')) {
+    if (!$account->hasPermission('access content')) {
+      unset($affected_datasources['node']);
+    }
+    if (!$account->hasPermission('access comments')) {
+      unset($affected_datasources['comment']);
+    }
+
+    // If the user does not have the permission to see any content at all, deny
+    // access to all items from affected datasources.
+    if (!$affected_datasources) {
       // If there were "other" datasources, the existing filter will already
       // remove all results of node or comment datasources. Otherwise, we should
       // not return any results at all.
@@ -286,21 +298,14 @@ class ContentAccess extends ProcessorPluginBase {
     foreach ($affected_datasources as $entity_type => $datasources) {
       $published = ($entity_type == 'node') ? NODE_PUBLISHED : Comment::PUBLISHED;
       foreach ($datasources as $datasource_id) {
-        $status_field = Utility::createCombinedId($datasource_id, 'status');
-        if (!$this->checkFieldIndexed($status_field)) {
-          continue;
-        }
         // If this is a comment datasource, or users cannot view their own
         // unpublished nodes, a simple filter on "status" is enough. Otherwise,
         // it's a bit more complicated.
+        $status_field = Utility::createCombinedId($datasource_id, 'status');
         $enabled_filter->condition($status_field, $published);
         if ($entity_type == 'node' && $unpublished_own) {
-          $author_field = Utility::createCombinedId($datasource_id, 'author');
-          // If the necessary field is not present, we automatically fall back
-          // to only filtering on the status for this datasource.
-          if ($this->checkFieldIndexed($author_field)) {
-            $enabled_filter->condition($author_field, $account->id());
-          }
+          $author_field = Utility::createCombinedId($datasource_id, 'uid');
+          $enabled_filter->condition($author_field, $account->id());
         }
       }
     }
@@ -318,36 +323,6 @@ class ContentAccess extends ProcessorPluginBase {
     // all" pseudo grant.
     $grants_filter->condition('search_api_node_grants', 'node_access__all');
     $access_filter->filter($grants_filter);
-  }
-
-  /**
-   * Checks whether a certain required field is indexed
-   *
-   * @param string $field
-   *   The ID of the field for which to check.
-   *
-   * @return bool
-   *   TRUE if the field is indexed, FALSE otherwise.
-   */
-  protected function checkFieldIndexed($field) {
-    $fields = $this->index->getOption('fields', array());
-    if (empty($fields[$field])) {
-      $context = array(
-        '%index' => $this->index->label(),
-        '@field' => $field,
-        'link' => $this->index->url('fields'),
-      );
-      list($datasource_id) = Utility::splitCombinedId($field);
-      if ($datasource_id) {
-        $context['@datasource'] = $datasource_id;
-        $this->getLogger()->warning('Error while adding content access to search on index %index: required field "@field" is not indexed. All results from datasource "@datasource" were hidden from the search.', $context);
-      }
-      else {
-        $this->getLogger()->warning('Error while adding content access to search on index %index: required field "@field" is not indexed. All results from content or comment datasources were hidden from the search.', $context);
-      }
-      return FALSE;
-    }
-    return TRUE;
   }
 
 }

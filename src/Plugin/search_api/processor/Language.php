@@ -9,10 +9,10 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Language\Language as CoreLanguage;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Property\BasicProperty;
 
 /**
  * @SearchApiProcessor(
@@ -21,7 +21,9 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  *   description = @Translation("Adds the item language to indexed items."),
  *   stages = {
  *     "preprocess_index" = -50
- *   }
+ *   },
+ *   locked = true,
+ *   hidden = true
  * )
  */
 class Language extends ProcessorPluginBase {
@@ -37,11 +39,11 @@ class Language extends ProcessorPluginBase {
       return;
     }
     $definition = array(
+      'type' => 'string',
       'label' => $this->t('Item language'),
       'description' => $this->t('The language code of the item.'),
-      'type' => 'string',
     );
-    $properties['search_api_language'] = new DataDefinition($definition);
+    $properties['search_api_language'] = BasicProperty::createFromDefinition($definition)->setLocked();
   }
 
   /**

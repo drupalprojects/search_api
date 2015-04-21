@@ -7,9 +7,9 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Property\BasicProperty;
 
 /**
  * @SearchApiProcessor(
@@ -35,7 +35,7 @@ class AddURL extends ProcessorPluginBase {
       'description' => $this->t('A URI where the item can be accessed.'),
       'type' => 'uri',
     );
-    $properties['search_api_url'] = new DataDefinition($definition);
+    $properties['search_api_url'] = BasicProperty::createFromDefinition($definition)->setLocked();
   }
 
   /**

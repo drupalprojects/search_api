@@ -94,6 +94,22 @@ interface ProcessorInterface extends IndexPluginInterface {
   public function getDefaultWeight($stage);
 
   /**
+   * Determines whether this processor should always be enabled.
+   *
+   * @return bool
+   *   TRUE if this processor should be forced enabled; FALSE otherwise.
+   */
+  public function isLocked();
+
+  /**
+   * Determines whether this processor should be hidden from the user.
+   *
+   * @return bool
+   *   TRUE if this processor should be hidden from the user; FALSE otherwise.
+   */
+  public function isHidden();
+
+  /**
    * Alters the given datasource's property definitions.
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties

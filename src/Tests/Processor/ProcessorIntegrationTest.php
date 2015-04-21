@@ -133,7 +133,13 @@ class ProcessorIntegrationTest extends WebTestBase {
    * Tests the UI for the "Language" processor.
    */
   public function checkLanguageIntegration() {
-    $this->enableProcessor('language');
+    $index = $this->loadIndex();
+    $processors = $index->getOption('processors', array());
+    $this->assertTrue(!empty($processors['language']), 'The "language" processor is enabled by default.');
+    unset($processors['language']);
+    $index->setOption('processors', $processors)->save();
+    $processors = $this->loadIndex()->getProcessors();
+    $this->assertTrue(!empty($processors['language']), 'The "language" processor cannot be disabled.');
   }
 
   /**
