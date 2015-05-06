@@ -5,7 +5,7 @@ backend: search_api_db
 backend_config:
   min_chars: 3
   database: 'default:default'
-status: 1
+status: true
 langcode: en
 dependencies:
   module:

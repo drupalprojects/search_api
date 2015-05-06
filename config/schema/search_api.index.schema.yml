@@ -32,7 +32,7 @@ search_api.index.*:
                 type: string
                 label: 'Type of field'
               boost:
-                type: integer
+                type: float
                 label: 'Boost'
         additional fields:
           type: sequence

@@ -92,7 +92,7 @@ display:
             suffix: ''
             target: ''
             nl2br: false
-            max_length: ''
+            max_length: 0
             word_boundary: true
             ellipsis: true
             more_link: false
@@ -161,7 +161,7 @@ display:
             default_group_multiple: {  }
             group_items: {  }
           mode: keys
-          min_length: ''
+          min_length: 0
           fields: {  }
           plugin_id: search_api_fulltext
       sorts: {  }

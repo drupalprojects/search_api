@@ -10,7 +10,7 @@ options:
       type: integer
     'entity:entity_test/name':
       type: text
-      boost: '5.0'
+      boost: 5.0
     'entity:entity_test/body':
       type: text
     'entity:entity_test/type':
@@ -31,7 +31,7 @@ datasource_configs: {  }
 tracker: default
 tracker_config: {  }
 server: database_search_server
-status: 1
+status: true
 langcode: en
 dependencies:
   config:
