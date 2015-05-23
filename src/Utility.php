@@ -67,24 +67,6 @@ class Utility {
   }
 
   /**
-   * Returns all field data types known by the Search API as an options list.
-   *
-   * @return string[]
-   *   An associative array with all recognized types as keys, mapped to their
-   *   translated display names.
-   *
-   * @see \Drupal\search_api\Utility::getDataTypeInfo()
-   */
-  public static function getDataTypeOptions() {
-    $types = array();
-    foreach (self::getDataTypeInfo() as $id => $info) {
-      $types[$id] = $info['label'];
-    }
-
-    return $types;
-  }
-
-  /**
    * Returns the default field types recognized by the Search API.
    *
    * @return string[][]
@@ -120,81 +102,6 @@ class Utility {
     );
   }
 
-  /**
-   * Returns the custom data type plugins.
-   *
-   * @return \Drupal\search_api\DataType\DataTypeInterface[]
-   *   An array of data type plugins, keyed by type identifier.
-   */
-  public static function getCustomDataTypes() {
-    $custom_data_types = &drupal_static(__FUNCTION__);
-    if (!isset($custom_data_types)) {
-      $custom_data_types = array();
-      /** @var $data_type_plugin_manager \Drupal\search_api\DataType\DataTypePluginManager */
-      $data_type_plugin_manager = \Drupal::service('plugin.manager.search_api.data_type');
-
-      foreach ($data_type_plugin_manager->getDefinitions() as $name => $data_type_definition) {
-        if (class_exists($data_type_definition['class']) && empty($custom_data_types[$name])) {
-          $data_type = $data_type_plugin_manager->createInstance($name);
-          $custom_data_types[$name] = $data_type;
-        }
-      }
-    }
-
-    return $custom_data_types;
-  }
-
-  /**
-   * Returns a custom data type plugin.
-   *
-   * @param string $type
-   *   The type whose definition should be returned.
-   *
-   * @return \Drupal\search_api\DataType\DataTypeInterface|null
-   *   The data type plugin object with the specified identifier, if it exists.
-   *   NULL otherwise.
-   */
-  public static function getCustomDataType($type) {
-    $custom_data_types = self::getCustomDataTypes();
-    return isset($custom_data_types[$type]) ? $custom_data_types[$type] : NULL;
-  }
-
-  /**
-   * Returns either all custom field type definitions, or a specific one.
-   *
-   * @param string|null $type
-   *   (optional) If specified, the type whose definition should be returned.
-   *
-   * @return string[]|null
-   *   If $type was not given, an array containing all data types. Otherwise,
-   *   the definition for the given type, or NULL if it is unknown.
-   *
-   * @see \Drupal\search_api\Utility::getDefaultDataTypes()
-   * @see \Drupal\search_api\Utility::getCustomDataTypes()
-   *
-   */
-  public static function getDataTypeInfo($type = NULL) {
-    $types = &drupal_static(__FUNCTION__);
-    if (!isset($types)) {
-      $default_types = self::getDefaultDataTypes();
-      $custom_data_types = self::getCustomDataTypes();
-      $custom_data_types_info = array();
-
-      foreach ($custom_data_types as $name => &$custom_data_type) {
-        $custom_data_types_info[$name] = array(
-          'label' => $custom_data_type->label(),
-          'description' => $custom_data_type->getDescription(),
-          'fallback' => $custom_data_type->getFallbackType(),
-        );
-      }
-
-      $types = array_merge($default_types, $custom_data_types_info);
-    }
-    if (isset($type)) {
-      return isset($types[$type]) ? $types[$type] : NULL;
-    }
-    return $types;
-  }
 
   /**
    * Retrieves the mapping for known data types to Search API's internal types.
@@ -284,7 +191,8 @@ class Utility {
         // types.
       }
       static::$dataTypeFallbackMapping[$index_id] = array();
-      foreach (self::getCustomDataTypes() as $type_id => $data_type) {
+      /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type */
+      foreach (\Drupal::service('plugin.manager.search_api.data_type')->getCustomDataTypes() as $type_id => $data_type) {
         if (!$server || !$server->supportsDataType($type_id)) {
           static::$dataTypeFallbackMapping[$index_id][$type_id] = $data_type->getFallbackType();
         }
@@ -382,8 +290,9 @@ class Utility {
 
     // If the data type of the field is a custom one, then the value can be
     // altered by the data type plugin.
-    if ($data_type = self::getCustomDataType($field->getType())) {
-      $value = $data_type->getValue($value);
+    $data_type_manager = \Drupal::service('plugin.manager.search_api.data_type');
+    if ($data_type_manager->hasDefinition($field->getType())) {
+      $value = $data_type_manager->createInstance($field->getType())->getValue($value);
     }
 
     $field->addValue($value);

@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests\Processor;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
@@ -23,6 +24,13 @@ trait TestItemsTrait {
    * @var string[]
    */
   protected $itemIds = array();
+
+  /**
+   * The class container.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface $container
+   */
+  protected $container;
 
   /**
    * Creates an array with a single item which has the given field.
@@ -110,6 +118,30 @@ trait TestItemsTrait {
       $items[$item_id] = $item;
     }
     return $items;
+  }
+
+  /**
+   * Adds mock data type plugin manager and results cache services to \Drupal.
+   */
+  protected function setUpDataTypePlugin() {
+    $data_type_plugin = $this->getMockBuilder('Drupal\search_api\DataType\DataTypePluginManager')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $data_type_plugin->expects($this->any())
+      ->method('getCustomDataTypes')
+      ->will($this->returnValue(array()));
+
+    $results_static_cache = $this->getMockBuilder('Drupal\search_api\Query\ResultsCache')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $results_static_cache->expects($this->any())
+      ->method('getResults')
+      ->will($this->returnValue(array()));
+
+    $this->container = new ContainerBuilder();
+    $this->container->set('plugin.manager.search_api.data_type', $data_type_plugin);
+    $this->container->set('search_api.results_static_cache', $results_static_cache);
+    \Drupal::setContainer($this->container);
   }
 
 }

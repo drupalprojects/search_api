@@ -46,7 +46,7 @@ class ServerTaskUnitTest extends KernelTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('entity', 'user', 'search_api', 'search_api_test_backend');
+  public static $modules = array('user', 'search_api', 'search_api_test_backend');
 
   /**
    * The state service.

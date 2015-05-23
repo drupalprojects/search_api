@@ -5,8 +5,9 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\AggregatedFieldTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
@@ -46,6 +47,7 @@ class AggregatedFieldTest extends UnitTestCase {
 
     $this->index = $this->getMock('Drupal\search_api\IndexInterface');
     $this->processor = new AggregatedFields(array('index' => $this->index), 'aggregated_field', array());
+    $this->setUpDataTypePlugin();
   }
 
   /**

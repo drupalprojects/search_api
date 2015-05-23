@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\LanguageTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Language\Language as CoreLanguage;

@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\RoleFilterTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\search_api\Plugin\search_api\processor\RoleFilter;

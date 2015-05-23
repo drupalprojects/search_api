@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\HighlightTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Highlight;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;

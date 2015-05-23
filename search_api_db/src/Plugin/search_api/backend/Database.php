@@ -63,6 +63,13 @@ class Database extends BackendPluginBase {
   protected $configFactory;
 
   /**
+   * The data type plugin manager to use.
+   *
+   * @var \Drupal\search_api\DataType\DataTypePluginManager
+   */
+  protected $dataTypePluginManager;
+
+  /**
    * The logger to use for logging messages.
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface|null
@@ -118,6 +125,10 @@ class Database extends BackendPluginBase {
     $config_factory = $container->get('config.factory');
     $backend->setConfigFactory($config_factory);
 
+    /** @var \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager */
+    $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
+    $backend->setDataTypePluginManager($data_type_plugin_manager);
+
     /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
     $logger = $container->get('logger.factory')->get('search_api_db');
     $backend->setLogger($logger);
@@ -161,6 +172,26 @@ class Database extends BackendPluginBase {
    */
   public function setConfigFactory(ConfigFactoryInterface $config_factory) {
     $this->configFactory = $config_factory;
+  }
+
+  /**
+   * Retrieves the data type plugin manager.
+   *
+   * @return \Drupal\search_api\DataType\DataTypePluginManager
+   *   The data type plugin manager.
+   */
+  public function getDataTypePluginManager() {
+    return $this->dataTypePluginManager ?: \Drupal::service('plugin.manager.search_api.data_type');
+  }
+
+  /**
+   * Sets the data type plugin manager.
+   *
+   * @param \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager
+   *   The new data type plugin manager.
+   */
+  public function setDataTypePluginManager($data_type_plugin_manager) {
+    $this->dataTypePluginManager = $data_type_plugin_manager;
   }
 
   /**
@@ -1370,7 +1401,7 @@ class Database extends BackendPluginBase {
             throw new SearchApiException(SafeMarkup::format('Unknown field @field specified as search target.', array('@field' => $name)));
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
-            $types = Utility::getDataTypeInfo();
+            $types = $this->getDataTypePluginManager()->getDataTypeDefinitions();
             $type = $types[$fields[$name]['type']]['label'];
             throw new SearchApiException(SafeMarkup::format('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }

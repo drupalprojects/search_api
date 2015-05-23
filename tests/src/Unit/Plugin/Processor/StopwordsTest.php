@@ -5,9 +5,10 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\StopwordsTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Stopwords;
+use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
@@ -20,13 +21,14 @@ use Drupal\Tests\UnitTestCase;
  */
 class StopwordsTest extends UnitTestCase {
 
-  use ProcessorTestTrait;
+  use ProcessorTestTrait, TestItemsTrait;
 
   /**
    * Creates a new processor object for use in the tests.
    */
   protected function setUp() {
     parent::setUp();
+    $this->setUpDataTypePlugin();
     $this->processor = new Stopwords(array(), 'stopwords', array());;
   }
 

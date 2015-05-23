@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\TokenizerTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Plugin\search_api\processor\Tokenizer;

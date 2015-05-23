@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\FieldsProcessorPluginBaseTest.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility;
@@ -42,6 +42,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   public function setUp() {
     parent::setUp();
 
+    $this->setUpDataTypePlugin();
     $this->index = $this->getMock('Drupal\search_api\IndexInterface');
     $this->index->expects($this->any())
       ->method('status')

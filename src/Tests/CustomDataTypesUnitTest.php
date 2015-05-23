@@ -40,7 +40,7 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('field', 'menu_link', 'search_api', 'search_api_db', 'search_api_test_db', 'search_api_test_backend');
+  public static $modules = array('field', 'search_api', 'search_api_db', 'search_api_test_db', 'search_api_test_backend');
 
   /**
    * {@inheritdoc}

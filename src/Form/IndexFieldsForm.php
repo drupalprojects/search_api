@@ -12,7 +12,7 @@ use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Utility;
+use Drupal\search_api\DataType\DataTypePluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,6 +35,13 @@ class IndexFieldsForm extends EntityForm {
   protected $entityManager;
 
   /**
+   * The data type plugin manager.
+   *
+   * @var \Drupal\search_api\DataType\DataTypePluginManager
+   */
+  protected $dataTypePluginManager;
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -53,9 +60,12 @@ class IndexFieldsForm extends EntityForm {
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
+   * @param \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager
+   *   The data type plugin manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager) {
+  public function __construct(EntityManagerInterface $entity_manager, DataTypePluginManager $data_type_plugin_manager) {
     $this->entityManager = $entity_manager;
+    $this->dataTypePluginManager = $data_type_plugin_manager;
   }
 
   /**
@@ -64,7 +74,11 @@ class IndexFieldsForm extends EntityForm {
   public static function create(ContainerInterface $container) {
     /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
     $entity_manager = $container->get('entity.manager');
-    return new static($entity_manager);
+
+    /** @var \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager */
+    $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
+
+    return new static($entity_manager, $data_type_plugin_manager);
   }
 
   /**
@@ -75,6 +89,16 @@ class IndexFieldsForm extends EntityForm {
    */
   protected function getEntityManager() {
     return $this->entityManager;
+  }
+
+  /**
+   * Retrieves the data type plugin manager.
+   *
+   * @return \Drupal\search_api\DataType\DataTypePluginManager
+   *   The data type plugin manager.
+   */
+  public function getDataTypePluginManager() {
+    return $this->dataTypePluginManager;
   }
 
   /**
@@ -128,11 +152,12 @@ class IndexFieldsForm extends EntityForm {
    *   The build structure.
    */
   protected function buildFields(array $fields, array $additional) {
-    $types = Utility::getDataTypeOptions();
+    $data_type_plugin_manager = $this->getDataTypePluginManager();
+    $types = $data_type_plugin_manager->getDataTypeOptions();
 
     $fulltext_types = array('text');
     // Add all custom data types with fallback "text" to fulltext types as well.
-    foreach (Utility::getCustomDataTypes() as $id => $type) {
+    foreach ($data_type_plugin_manager->getCustomDataTypes() as $id => $type) {
       if ($type->getFallbackType() == 'text') {
         $fulltext_types[] = $id;
       }

@@ -5,7 +5,7 @@
  * Contains \Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin.
  */
 
-namespace Drupal\Tests\search_api\Plugin\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
