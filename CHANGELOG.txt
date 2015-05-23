@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2414425 by Darren Oh, drunken monkey: Fixed backend form validation when
+  adding or editing a server.
 - #2450333 by drunken monkey: Added performance improvement when indexing
   entity references.
 - #2450227 by StryKaizer, drunken monkey: Fixed OR facets on taxonomy terms.

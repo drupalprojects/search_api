@@ -303,8 +303,9 @@ function search_api_admin_add_server_validate(array $form, array &$form_state) {
     return;
   }
   $form_state['values']['options']['service'] = $service;
-  $values = isset($form_state['values']['options']['form']) ? $form_state['values']['options']['form'] : array();
-  $service->configurationFormValidate($form['options']['form'], $values, $form_state);
+  if (!empty($form_state['values']['options']['form'])) {
+    $service->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
+  }
 }
 
 /**
@@ -630,7 +631,9 @@ function search_api_admin_server_edit(array $form, array &$form_state, SearchApi
  * @see search_api_admin_server_edit_submit()
  */
 function search_api_admin_server_edit_validate(array $form, array &$form_state) {
-  $form_state['server']->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
+  if (!empty($form['options']['form']) && !empty($form_state['values']['options']['form'])) {
+    $form_state['server']->configurationFormValidate($form['options']['form'], $form_state['values']['options']['form'], $form_state);
+  }
 }
 
 /**
