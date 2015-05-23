@@ -157,7 +157,8 @@ class ProcessorIntegrationTest extends WebTestBase {
 
     $edit = array(
       'processors[rendered_item][settings][roles][]' => 'authenticated',
-      'processors[rendered_item][settings][view_mode][entity:node]' => 'default',
+      'processors[rendered_item][settings][view_mode][entity:node][page]' => 'default',
+      'processors[rendered_item][settings][view_mode][entity:node][article]' => 'default',
     );
     $this->editSettingsForm($edit, 'rendered_item');
   }
