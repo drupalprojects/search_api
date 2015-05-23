@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2448849 by cgoffin: Added "year range" option for date filters.
 - #2414425 by Darren Oh, drunken monkey: Fixed backend form validation when
   adding or editing a server.
 - #2450333 by drunken monkey: Added performance improvement when indexing
