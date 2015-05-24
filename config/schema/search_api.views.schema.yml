@@ -4,10 +4,13 @@ views.query.search_api_query:
   mapping:
     search_api_bypass_access:
       type: boolean
+      label: If the underlying search index has access checks enabled, this option allows you to disable them for this view.
     entity_access:
       type: boolean
+      label: Execute an access check for all result entities.
     parse_mode:
       type: string
+      label: Chooses how the search keys will be parsed.
 
 views.row.search_api:
   type: views_row

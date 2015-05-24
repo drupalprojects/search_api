@@ -1,0 +1,14 @@
+type: module
+name: 'Database Search Defaults'
+description: 'Enable this module for basic default configurations for Search API with Database backend.'
+package: Search
+core: 8.x
+dependencies:
+  - comment
+  - text
+  - field
+  - image
+  - node
+  - search_api_db
+  - user
+  - views

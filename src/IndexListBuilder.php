@@ -150,7 +150,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
       '#type' => 'table',
       '#header' => $this->buildHeader(),
       '#rows' => array(),
-      '#empty' => $entity_groups['lone_indexes'] ? '' : $this->t('There are no servers or indexes defined.'),
+      '#empty' => $entity_groups['lone_indexes'] ? '' : $this->t('There are no servers or indexes defined. For a quick start, we suggest you install the Database Search Defaults module.'),
       '#attributes' => array(
         'id' => 'search-api-entity-list',
       ),

@@ -37,6 +37,9 @@ search_api.index.*:
         additional fields:
           type: sequence
           label: 'Included additional fields'
+          sequence:
+            type: string
+            label: 'Additional field'
         cron_limit:
           type: integer
           label: 'Cron batch size'
