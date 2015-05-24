@@ -9,6 +9,7 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -67,6 +68,8 @@ class IntegrationTest extends WebTestBase {
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
+
+    $this->deleteServer();
   }
 
   /**
@@ -555,6 +558,33 @@ class IntegrationTest extends WebTestBase {
     // After saving the new index, we should have called reindex.
     $remaining_items = $this->countRemainingItems();
     $this->assertEqual($remaining_items, $node_count, 'All items still need to be indexed.');
+  }
+
+  /**
+   * Tests deleting a search server via the UI.
+   */
+  protected function deleteServer() {
+    $server = Server::load($this->serverId);
+
+    // Load confirmation form.
+    $this->drupalGet('admin/config/search/search-api/server/' . $this->serverId . '/delete');
+    $this->assertResponse(200, 'Server delete page exists');
+    $this->assertRaw(t('Are you sure you want to delete the search server %name?', array('%name' => $server->label())), 'Deleting a server sks for confirmation.');
+    $this->assertText(t('Deleting a server will disable all its indexes and their searches.'), 'Correct warning is displayed when deleting a server.');
+
+    // Confirm deletion.
+    $this->drupalPostForm(NULL, NULL, t('Delete'));
+    $this->assertRaw(t('The search server %name has been deleted.', array('%name' => $server->label())), 'The server was deleted.');
+    $this->assertFalse(Server::load($this->serverId), 'Server could not be found anymore.');
+    $this->assertUrl('admin/config/search/search-api', array(), 'Correct redirect to search api overview page.');
+
+    // Confirm that the index hasn't been deleted.
+    /** @var $index \Drupal\search_api\IndexInterface */
+    $index = entity_load('search_api_index', $this->indexId, TRUE);
+    if ($this->assertTrue($index, 'The index associated with the server was not deleted.')) {
+      $this->assertFalse($index->status(), 'The index associated with the server was disabled.');
+      $this->assertNull($index->getServerId(), 'The index was removed from the server.');
+    }
   }
 
   /**

@@ -10,6 +10,7 @@ namespace Drupal\search_api\Entity;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
@@ -1386,6 +1387,25 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     return $this->dependencies;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    $changed = parent::onDependencyRemoval($dependencies);
+
+    // @todo Also react sensibly when removing the dependency of a plugin.
+    foreach ($dependencies['config'] as $entity) {
+      if ($entity instanceof EntityInterface && $entity->getEntityTypeId() == 'search_api_server') {
+        // Remove this index from the deleted server (thus disabling it).
+        $this->setServer(NULL);
+        $this->setStatus(FALSE);
+        $changed = TRUE;
+      }
+    }
+
+    return $changed;
   }
 
   /**

@@ -383,27 +383,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
+    // @todo This will, via Index::onDependencyRemoval(), remove all indexes
+    // from this server, triggering the server's removeIndex() method. This is,
+    // at best, wasted performance and could at worst lead to a bug if
+    // removeIndex() saves the server. We should try what happens when this is
+    // the case, whether there really is a bug, and try to fix it somehow (maybe
+    // clever detection of this case in removeIndex() or Index::postSave().
     parent::preDelete($storage, $entities);
-
-    // @todo Would it make more sense to swap the order of these operations?
-    //   Setting the indexes to server => NULL will trigger the backend's
-    //   removeIndex() method which might save the server – which is bad. We'd
-    //   probably need an isBeingDeleted() flag in that case. Otherwise we'd
-    //   have to make sure that the index's postSave() method is smart enough to
-    //   realize the server isn't there anymore and not log (or throw) any
-    //   errors.
-
-    // Remove all indexes on the deleted servers from them.
-    $index_ids = \Drupal::entityQuery('search_api_index')
-      ->condition('server', array_keys($entities), 'IN')
-      ->execute();
-    $indexes = \Drupal::entityManager()->getStorage('search_api_index')->loadMultiple($index_ids);
-    foreach ($indexes as $index) {
-      /** @var \Drupal\search_api\IndexInterface $index */
-      $index->setServer(NULL);
-      $index->setStatus(FALSE);
-      $index->save();
-    }
 
     // Iterate through the servers, executing the backends' preDelete() methods
     // and removing all their pending server tasks.
