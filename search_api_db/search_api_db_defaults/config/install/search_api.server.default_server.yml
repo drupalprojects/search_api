@@ -1,6 +1,6 @@
 id: default_server
 name: 'Database Server'
-description: 'Default database server created by the Database Search Defaults module.'
+description: 'Default database server created by the Database Search Defaults module'
 status: true
 backend: search_api_db
 backend_config:

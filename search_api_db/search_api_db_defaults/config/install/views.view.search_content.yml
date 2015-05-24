@@ -11,7 +11,7 @@ dependencies:
     - search_api.index.default_index
 label: 'Search content'
 module: views
-description: 'A search page preconfigured to search through the content of your site.'
+description: 'A search page preconfigured to search through the content of your site'
 tag: ''
 base_table: search_api_index_default_index
 base_field: search_api_id

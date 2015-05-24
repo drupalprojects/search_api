@@ -27,7 +27,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  * @SearchApiDataType(
  *   id = "my_data_type",
  *   label = @Translation("My data type"),
- *   description = @Translation("Some information about my data type.")
+ *   description = @Translation("Some information about my data type")
  * )
  * @endcode
  *

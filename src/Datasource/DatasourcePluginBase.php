@@ -27,7 +27,7 @@ use Drupal\search_api\Plugin\IndexPluginBase;
  * @SearchApiDatasource(
  *   id = "my_datasource",
  *   label = @Translation("My datasource"),
- *   description = @Translation("Exposes my custom items as an datasource."),
+ *   description = @Translation("Exposes my custom items as a datasource."),
  * )
  * @endcode
  *
