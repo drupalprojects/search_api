@@ -1,6 +1,6 @@
 id: database_search_index
 name: 'Test index'
-description: 'An index used for testing.'
+description: 'An index used for testing'
 read_only: false
 options:
   cron_limit: -1

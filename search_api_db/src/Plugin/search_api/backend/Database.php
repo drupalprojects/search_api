@@ -278,7 +278,7 @@ class Database extends BackendPluginBase {
     $form['min_chars'] = array(
       '#type' => 'select',
       '#title' => $this->t('Minimum word length'),
-      '#description' => $this->t('The minimum number of characters a word must consist of to be indexed.'),
+      '#description' => $this->t('The minimum number of characters a word must consist of to be indexed'),
       '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
       '#default_value' => $this->configuration['min_chars'],
     );
@@ -541,7 +541,7 @@ class Database extends BackendPluginBase {
           'item_id' => array(
             'type' => 'varchar',
             'length' => 50,
-            'description' => 'The primary identifier of the item.',
+            'description' => 'The primary identifier of the item',
             'not null' => TRUE,
           ),
         ),
@@ -573,7 +573,7 @@ class Database extends BackendPluginBase {
     }
     $db_field = $this->sqlType($field->getType());
     $db_field += array(
-      'description' => "The field's value for this item.",
+      'description' => "The field's value for this item",
     );
     if ($new_table) {
       $db_field['not null'] = TRUE;
@@ -689,8 +689,8 @@ class Database extends BackendPluginBase {
           elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
             // There is a change in SQL type. We don't have to clear the index,
             // since types can be converted.
-            $this->database->schema()->changeField($field['table'], 'value', 'value', $this->sqlType($new_type) + array('description' => "The field's value for this item."));
-            $this->database->schema()->changeField($denormalized_table, $field['column'], $field['column'], $this->sqlType($new_type) + array('description' => "The field's value for this item."));
+            $this->database->schema()->changeField($field['table'], 'value', 'value', $this->sqlType($new_type) + array('description' => "The field's value for this item"));
+            $this->database->schema()->changeField($denormalized_table, $field['column'], $field['column'], $this->sqlType($new_type) + array('description' => "The field's value for this item"));
             $reindex = TRUE;
           }
           elseif ($old_type == 'date' || $new_type == 'date') {
@@ -767,23 +767,23 @@ class Database extends BackendPluginBase {
             'item_id' => array(
               'type' => 'varchar',
               'length' => 50,
-              'description' => 'The primary identifier of the item.',
+              'description' => 'The primary identifier of the item',
               'not null' => TRUE,
             ),
             'field_name' => array(
-              'description' => "The name of the field in which the token appears, or an MD5 hash of the field.",
+              'description' => "The name of the field in which the token appears, or an MD5 hash of the field",
               'not null' => TRUE,
               'type' => 'varchar',
               'length' => 255,
             ),
             'word' => array(
-              'description' => 'The text of the indexed token.',
+              'description' => 'The text of the indexed token',
               'type' => 'varchar',
               'length' => 50,
               'not null' => TRUE,
             ),
             'score' => array(
-              'description' => 'The score associated with this token.',
+              'description' => 'The score associated with this token',
               'type' => 'int',
               'unsigned' => TRUE,
               'not null' => TRUE,

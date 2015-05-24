@@ -30,19 +30,19 @@ function search_api_views_data() {
 
       // Add handlers for special fields.
       $table['search_api_id']['title'] = t('Entity ID');
-      $table['search_api_id']['help'] = t("The entity's ID.");
+      $table['search_api_id']['help'] = t("The entity's ID");
       $table['search_api_id']['field']['id'] = 'numeric';
       $table['search_api_id']['sort']['id'] = 'search_api_sort';
 
       $table['search_api_datasource']['title'] = t('Datasource');
-      $table['search_api_datasource']['help'] = t("The data source ID.");
+      $table['search_api_datasource']['help'] = t("The data source ID");
       $table['search_api_datasource']['field']['id'] = 'standard';
       // @todo Enable filtering on datasource.
       $table['search_api_datasource']['sort']['id'] = 'search_api_sort';
 
       $table['search_api_relevance']['group'] = t('Search');
       $table['search_api_relevance']['title'] = t('Relevance');
-      $table['search_api_relevance']['help'] = t('The relevance of this search result with respect to the query.');
+      $table['search_api_relevance']['help'] = t('The relevance of this search result with respect to the query');
       $table['search_api_relevance']['field']['type'] = 'decimal';
       $table['search_api_relevance']['field']['id'] = 'numeric';
       $table['search_api_relevance']['field']['click sortable'] = TRUE;
@@ -50,7 +50,7 @@ function search_api_views_data() {
 
       $table['search_api_excerpt']['group'] = t('Search');
       $table['search_api_excerpt']['title'] = t('Excerpt');
-      $table['search_api_excerpt']['help'] = t('The search result excerpted to show found search terms.');
+      $table['search_api_excerpt']['help'] = t('The search result excerpted to show found search terms');
       $table['search_api_excerpt']['field']['id'] = 'search_api_excerpt';
 
       $table['search_api_fulltext']['group'] = t('Search');

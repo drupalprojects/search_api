@@ -13,31 +13,31 @@ function search_api_schema() {
     'description' => 'Stores the items which should be indexed for each index, and their state.',
     'fields' => array(
       'index_id' => array(
-        'description' => 'The ID of the index this item belongs to.',
+        'description' => 'The ID of the index this item belongs to',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'datasource' => array(
-        'description' => 'The plugin ID of the datasource this item belongs to.',
+        'description' => 'The plugin ID of the datasource this item belongs to',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'item_id' => array(
-        'description' => 'The unique identifier of this item.',
+        'description' => 'The unique identifier of this item',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'changed' => array(
-        'description' => 'A timestamp indicating when the item was last changed.',
+        'description' => 'A timestamp indicating when the item was last changed',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'status' => array(
-        'description' => 'Boolean indicating whether the item needs to be reindexed.',
+        'description' => 'Boolean indicating whether the item needs to be reindexed',
         'type' => 'int',
         'not null' => TRUE,
       ),
@@ -51,31 +51,31 @@ function search_api_schema() {
     'description' => 'Stores pending tasks for servers.',
     'fields' => array(
       'id' => array(
-        'description' => 'An integer identifying this task.',
+        'description' => 'An integer identifying this task',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'server_id' => array(
-        'description' => 'The ID of the server for which this task should be executed.',
+        'description' => 'The ID of the server for which this task should be executed',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'type' => array(
-        'description' => 'A keyword identifying the type of task that should be executed.',
+        'description' => 'A keyword identifying the type of task that should be executed',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
       ),
       'index_id' => array(
-        'description' => 'The ID of the index to which this task pertains, if applicable for this type.',
+        'description' => 'The ID of the index to which this task pertains, if applicable for this type',
         'type' => 'varchar',
         'length' => 50,
         'not null' => FALSE,
       ),
       'data' => array(
-        'description' => 'Some data needed for the task, might be optional depending on the type.',
+        'description' => 'Some data needed for the task, might be optional depending on the type',
         'type' => 'text',
         'size' => 'medium',
         'serialize' => TRUE,

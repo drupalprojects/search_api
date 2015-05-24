@@ -1,6 +1,6 @@
 name: 'Search API Views Test'
 type: module
-description: 'Support module for Search API Views Tests.'
+description: 'Support module for Search API Views tests'
 package: Search
 dependencies:
   - search_api

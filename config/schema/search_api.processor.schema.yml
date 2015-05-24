@@ -45,19 +45,19 @@ search_api.processor.plugin.highlight:
   mapping:
     prefix:
       type: string
-      label: 'Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'
+      label: 'Text/HTML that will be prepended to all occurrences of search keywords in highlighted text'
     suffix:
       type: string
-      label: 'Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'
+      label: 'Text/HTML that will be appended to all occurrences of search keywords in highlighted text'
     excerpt:
       type: boolean
       label: 'When enabled, an excerpt will be created for searches with keywords, containing all occurrences of keywords in a fulltext field.'
     excerpt_length:
       type: integer
-      label: 'The requested length of the excerpt, in characters.'
+      label: 'The requested length of the excerpt, in characters'
     highlight:
       type: string
-      label: 'Select whether returned fields should be highlighted (always/if returned/never).'
+      label: 'Defines whether returned fields should be highlighted (always/if returned/never).'
 
 search_api.processor.plugin.html_filter:
   type: mapping
@@ -209,7 +209,7 @@ search_api.processor.plugin.tokenizer:
       label: 'Regular expression for ignorables'
     overlap_cjk:
       type: integer
-      label: 'Defines if the CJK should be configured to enable overlap.'
+      label: 'Defines if simple CJK handling should be enabled.'
     minimum_word_size:
       type: string
       label: 'Defines the minimum word size'

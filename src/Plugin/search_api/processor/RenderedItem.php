@@ -185,7 +185,7 @@ class RenderedItem extends ProcessorPluginBase {
     $definition = array(
       'type' => 'string',
       'label' => $this->t('Rendered HTML output'),
-      'description' => $this->t('The complete HTML which would be displayed when viewing the item.'),
+      'description' => $this->t('The complete HTML which would be displayed when viewing the item'),
     );
     $properties['rendered_item'] = BasicProperty::createFromDefinition($definition)->setLocked();
   }

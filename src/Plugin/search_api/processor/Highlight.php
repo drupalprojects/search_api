@@ -104,7 +104,7 @@ class Highlight extends ProcessorPluginBase {
     $form['excerpt_length'] = array(
       '#type' => 'number',
       '#title' => $this->t('Excerpt length'),
-      '#description' => $this->t('The requested length of the excerpt, in characters.'),
+      '#description' => $this->t('The requested length of the excerpt, in characters'),
       '#default_value' => $this->configuration['excerpt_length'],
       '#min' => 50,
       '#states' => array(
@@ -120,13 +120,13 @@ class Highlight extends ProcessorPluginBase {
     $form['prefix'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Highlighting prefix'),
-      '#description' => $this->t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text.'),
+      '#description' => $this->t('Text/HTML that will be prepended to all occurrences of search keywords in highlighted text'),
       '#default_value' => $this->configuration['prefix'],
     );
     $form['suffix'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Highlighting suffix'),
-      '#description' => $this->t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text.'),
+      '#description' => $this->t('Text/HTML that will be appended to all occurrences of search keywords in highlighted text'),
       '#default_value' => $this->configuration['suffix'],
     );
 
