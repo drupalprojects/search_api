@@ -129,7 +129,7 @@ class RenderedItem extends ProcessorPluginBase {
     $form['roles'] = array(
       '#type' => 'select',
       '#title' => $this->t('User roles'),
-      '#description' => $this->t('Your item will be rendered as seen by a user with the selected roles. We recommend to just use "@anonymous" here to prevent data leaking out to unauthorized roles.', array('@anonymous' => $roles[RoleInterface::ANONYMOUS_ID])),
+      '#description' => $this->t('Your item will be rendered as seen by a user with the selected roles. We recommend to just use "@anonymous" here to prevent data leaking out to unauthorized roles.', array('@anonymous' => $roles[AccountInterface::ANONYMOUS_ROLE])),
       '#options' => $roles,
       '#multiple' => TRUE,
       '#default_value' => $this->configuration['roles'],
