@@ -254,7 +254,7 @@ function theme_search_api_index($variables) {
       $info = t('Invalid or missing datasource plugin: %datasource_id', array('%datasource_id' => $datasource_id));
     }
     // Append the row and reset variables.
-    $label = t('Data sources');
+    $label = t('Data source');
     $rows[] = Utility::deepCopy($row);
     $class = '';
   }

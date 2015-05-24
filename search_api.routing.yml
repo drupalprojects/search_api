@@ -109,12 +109,12 @@ entity.search_api_index.fields:
   requirements:
     _entity_access: 'search_api_index.fields'
 
-entity.search_api_index.filters:
-  path: '/admin/config/search/search-api/index/{search_api_index}/filters'
+entity.search_api_index.processors:
+  path: '/admin/config/search/search-api/index/{search_api_index}/processors'
   defaults:
-    _entity_form: 'search_api_index.filters'
+    _entity_form: 'search_api_index.processors'
   requirements:
-    _entity_access: 'search_api_index.filters'
+    _entity_access: 'search_api_index.processors'
 
 entity.search_api_index.reindex:
   path: '/admin/config/search/search-api/index/{search_api_index}/reindex'

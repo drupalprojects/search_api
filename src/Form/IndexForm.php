@@ -219,8 +219,8 @@ class IndexForm extends EntityForm {
     }
     $form['datasources'] = array(
       '#type' => 'select',
-      '#title' => $this->t('Data types'),
-      '#description' => $this->t('Select one or more data type of items that will be stored in this index.'),
+      '#title' => $this->t('Data sources'),
+      '#description' => $this->t('Select one or more data sources of items that will be stored in this index.'),
       '#options' => $datasource_options,
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,

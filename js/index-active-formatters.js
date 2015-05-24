@@ -1,6 +1,6 @@
 /**
  * @file
- * Attaches show/hide functionality to processor checkboxes in "Filters" tabs.
+ * Attaches show/hide functionality to checkboxes in the "Processor" tab.
  */
 
 (function ($) {
@@ -17,7 +17,7 @@
         var tab = $('.search-api-processor-settings-' + processor_id, context).data('verticalTab');
 
         // Bind a click handler to this checkbox to conditionally show and hide
-        // the filter's table row and vertical tab pane.
+        // the processor's table row and vertical tab pane.
         $checkbox.on('click.searchApiUpdate', function () {
           if ($checkbox.is(':checked')) {
             $rows.show();

@@ -215,7 +215,7 @@ class ProcessorIntegrationTest extends WebTestBase {
    *   The ID of the processor to enable.
    */
   protected function enableProcessor($processor_id) {
-    $this->loadFiltersTab();
+    $this->loadProcessorsTab();
 
     $edit = array(
       "status[$processor_id]" => 1,
@@ -234,7 +234,7 @@ class ProcessorIntegrationTest extends WebTestBase {
    *   The ID of the processor whose settings are edited.
    */
   protected function editSettingsForm($edit, $processor_id) {
-    $this->loadFiltersTab();
+    $this->loadProcessorsTab();
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
@@ -252,10 +252,10 @@ class ProcessorIntegrationTest extends WebTestBase {
   }
 
   /**
-   * Loads the test index's "Filters" tab in the test browser, if necessary.
+   * Loads the test index's "Processors" tab in the test browser, if necessary.
    */
-  protected function loadFiltersTab() {
-    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/filters';
+  protected function loadProcessorsTab() {
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/processors';
     if ($this->getAbsoluteUrl($settings_path) != $this->getUrl()) {
       $this->drupalGet($settings_path);
     }

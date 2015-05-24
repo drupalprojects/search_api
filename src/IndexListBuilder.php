@@ -68,10 +68,10 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         'weight' => 20,
         'url' => new Url('entity.search_api_index.fields', $route_parameters),
       );
-      $operations['filters'] = array(
-        'title' => $this->t('Filters'),
+      $operations['processors'] = array(
+        'title' => $this->t('Processors'),
         'weight' => 30,
-        'url' => new Url('entity.search_api_index.filters', $route_parameters),
+        'url' => new Url('entity.search_api_index.processors', $route_parameters),
       );
     }
 

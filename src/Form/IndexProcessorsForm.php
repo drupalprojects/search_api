@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Form\IndexFiltersForm.
+ * Contains \Drupal\search_api\Form\IndexProcessorsForm.
  */
 
 namespace Drupal\search_api\Form;
@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a form for configuring the processors of a search index.
  */
-class IndexFiltersForm extends EntityForm {
+class IndexProcessorsForm extends EntityForm {
 
   /**
    * The index being configured.
@@ -43,7 +43,7 @@ class IndexFiltersForm extends EntityForm {
   protected $processorPluginManager;
 
   /**
-   * Constructs an IndexFiltersForm object.
+   * Constructs an IndexProcessorsForm.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
@@ -101,7 +101,7 @@ class IndexFiltersForm extends EntityForm {
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
-    $form['#title'] = $this->t('Manage filters for search index %label', array('%label' => $this->entity->label()));
+    $form['#title'] = $this->t('Manage processors for search index %label', array('%label' => $this->entity->label()));
     $form['description']['#markup'] = '<p>' . $this->t('Configure processors which will pre- and post-process data at index and search time.') . '</p>';
 
     // Add the list of processors with checkboxes to enable/disable them.

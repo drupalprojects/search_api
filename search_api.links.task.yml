@@ -20,8 +20,8 @@ entity.search_api_index.fields:
   route_name: entity.search_api_index.fields
   base_route: entity.search_api_index.canonical
   weight: 10
-entity.search_api_index.filters:
-  route_name: entity.search_api_index.filters
+entity.search_api_index.processors:
+  route_name: entity.search_api_index.processors
   base_route: entity.search_api_index.canonical
-  title: 'Filters'
+  title: 'Processors'
   weight: 20

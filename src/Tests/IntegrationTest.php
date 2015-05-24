@@ -128,7 +128,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Index name'))));
     $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Data types'))));
+    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Data sources'))));
 
     $this->indexId = 'test_index';
 
@@ -374,7 +374,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'status[ignorecase]' => 1,
     );
-    $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
+    $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
@@ -390,7 +390,7 @@ class IntegrationTest extends WebTestBase {
       'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
       'processors[ignorecase][settings][fields][entity:node/title]' => 'entity:node/title',
     );
-    $this->drupalPostForm($this->getIndexPath('filters'), $edit, $this->t('Save'));
+    $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = entity_load('search_api_index', $this->indexId, TRUE);
     $processors = $index->getProcessors();
