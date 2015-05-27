@@ -2212,6 +2212,9 @@ function search_api_index_update_datasource(SearchApiIndex $index, $table, $colu
  *   The $fields array with additional "value" and "original_type" keys set.
  */
 function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields, array $value_options = array()) {
+  $value_options += array(
+    'identifier' => TRUE,
+  );
   // If $wrapper is a list of entities, we have to aggregate their field values.
   $wrapper_info = $wrapper->info();
   if (search_api_is_list_type($wrapper_info['type'])) {
@@ -2249,20 +2252,31 @@ function search_api_extract_fields(EntityMetadataWrapper $wrapper, array $fields
       $info['original_type'] = $info['type'];
       if (isset($wrapper->$field)) {
         try {
-          $info['value'] = $wrapper->$field->value($value_options);
-          // For fulltext fields with options, also include the option labels.
-          if (search_api_is_text_type($info['type']) && $wrapper->$field->optionsList('view')) {
-            _search_api_add_option_values($info['value'], $wrapper->$field->optionsList('view'));
-          }
+          // Set the original type according to the field wrapper's info.
           $property_info = $wrapper->$field->info();
           $info['original_type'] = $property_info['type'];
 
-          // If the field value is an entity (or list of entities) but the field
-          // type is fulltext, we also add the label to the extracted value.
-          $t = search_api_extract_inner_type($property_info['type']);
-          if (isset($entity_infos[$t]) && search_api_is_text_type($info['type'])) {
-            // If no object is set, set this field to NULL.
-            $info['value'] = $info['value'] ? _search_api_extract_entity_value($wrapper->$field, TRUE) : NULL;
+          // Extract the basic value from the field wrapper.
+          $info['value'] = $wrapper->$field->value($value_options);
+
+          // For entities, we need to take care to differentiate between
+          // entities with ID 0 and empty fields. In the latter case, the
+          // wrapper's value() method returns, when called with "identifier =
+          // TRUE", FALSE instead of the (more logical) NULL.
+          $is_entity = isset($entity_infos[search_api_extract_inner_type($property_info['type'])]);
+          if ($is_entity && $info['value'] === FALSE) {
+            $info['value'] = NULL;
+          }
+
+          // If we index the field as fulltext, we also include the entity label
+          // or option list label, if applicable.
+          if (search_api_is_text_type($info['type']) && isset($info['value'])) {
+            if ($wrapper->$field->optionsList('view')) {
+              _search_api_add_option_values($info['value'], $wrapper->$field->optionsList('view'));
+            }
+            elseif ($is_entity) {
+              $info['value'] = _search_api_extract_entity_value($wrapper->$field, TRUE);
+            }
           }
         }
         catch (EntityMetadataWrapperException $e) {
