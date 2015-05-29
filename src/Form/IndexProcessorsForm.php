@@ -43,7 +43,7 @@ class IndexProcessorsForm extends EntityForm {
   protected $processorPluginManager;
 
   /**
-   * Constructs an IndexProcessorsForm.
+   * Constructs an IndexProcessorsForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
