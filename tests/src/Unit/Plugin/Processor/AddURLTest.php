@@ -131,7 +131,7 @@ class AddURLTest extends UnitTestCase {
       if ($properties['search_api_url'] instanceof DataDefinitionInterface) {
         $this->assertEquals('uri', $properties['search_api_url']->getDataType(), 'Correct data type set in the data definition.');
         $this->assertEquals('URI', $properties['search_api_url']->getLabel(), 'Correct label set in the data definition.');
-        $this->assertEquals('A URI where the item can be accessed.', $properties['search_api_url']->getDescription(), 'Correct description set in the data definition.');
+        $this->assertEquals('A URI where the item can be accessed', $properties['search_api_url']->getDescription(), 'Correct description set in the data definition.');
       }
     }
 

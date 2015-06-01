@@ -68,7 +68,7 @@ class LanguageTest extends UnitTestCase {
       $this->assertInstanceOf('Drupal\Core\TypedData\DataDefinitionInterface', $properties['search_api_language'], 'Added "search_api_language" property implements the necessary interface.');
       if ($properties['search_api_language'] instanceof DataDefinitionInterface) {
         $this->assertEquals('Item language', $properties['search_api_language']->getLabel(), 'Correct label for "search_api_language" property.');
-        $this->assertEquals('The language code of the item.', $properties['search_api_language']->getDescription(), 'Correct description for "search_api_language" property.');
+        $this->assertEquals('The language code of the item', $properties['search_api_language']->getDescription(), 'Correct description for "search_api_language" property.');
         $this->assertEquals('string', $properties['search_api_language']->getDataType(), 'Correct type for "search_api_language" property.');
       }
     }
