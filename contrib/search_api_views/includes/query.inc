@@ -203,6 +203,10 @@ class SearchApiViewsQuery extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   public function build(&$view) {
+    if (!empty($this->errors)) {
+      return;
+    }
+
     $this->view = $view;
 
     // Setup the nested filter structure for this query.

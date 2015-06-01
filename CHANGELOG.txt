@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2190627 by m1n0, drunken monkey: Fixed fatal errors for views of disabled
+  indexes.
 - #2448849 by cgoffin: Added "year range" option for date filters.
 - #2414425 by Darren Oh, drunken monkey: Fixed backend form validation when
   adding or editing a server.
