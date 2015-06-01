@@ -49,11 +49,13 @@ interface QueryInterface {
    *
    * @param string $conjunction
    *   The conjunction to use for the filter – either 'AND' or 'OR'.
+   * @param string[] $tags
+   *   (optional) Tags to set on the filter.
    *
    * @return \Drupal\search_api\Query\FilterInterface
    *   A filter object that is set to use the specified conjunction.
    */
-  public function createFilter($conjunction = 'AND');
+  public function createFilter($conjunction = 'AND', array $tags = array());
 
   /**
    * Sets the keys to search for.

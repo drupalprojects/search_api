@@ -288,52 +288,51 @@ class BackendTest extends EntityUnitTestBase {
    * Tests whether facets work correctly.
    */
   protected function checkFacets() {
-    // @todo Fix facets.
-//    $query = $this->buildSearch();
-//    $filter = $query->createFilter('OR', array('facet:type'));
-//    $filter->condition($this->getFieldId('type'), 'article');
-//    $query->filter($filter);
-//    $facets['type'] = array(
-//      'field' => $this->getFieldId('type'),
-//      'limit' => 0,
-//      'min_count' => 1,
-//      'missing' => TRUE,
-//      'operator' => 'or',
-//    );
-//    $query->setOption('search_api_facets', $facets);
-//    $query->range(0, 0);
-//    $results = $query->execute();
-//    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
-//    $expected = array(
-//      array('count' => 2, 'filter' => '"article"'),
-//      array('count' => 2, 'filter' => '"item"'),
-//      array('count' => 1, 'filter' => '!'),
-//    );
-//    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['type'], 'Correct OR facets were returned');
-//
-//    $query = $this->buildSearch();
-//    $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('type')));
-//    $filter->condition($this->getFieldId('type'), 'article');
-//    $query->filter($filter);
-//    $filter = $query->createFilter('AND');
-//    $filter->condition($this->getFieldId('type'), NULL, '<>');
-//    $query->filter($filter);
-//    $facets['type'] = array(
-//      'field' => $this->getFieldId('type'),
-//      'limit' => 0,
-//      'min_count' => 1,
-//      'missing' => TRUE,
-//      'operator' => 'or',
-//    );
-//    $query->setOption('search_api_facets', $facets);
-//    $query->range(0, 0);
-//    $results = $query->execute();
-//    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
-//    $expected = array(
-//      array('count' => 2, 'filter' => '"article"'),
-//      array('count' => 2, 'filter' => '"item"'),
-//    );
-//    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['type'], 'Correct OR facets were returned');
+    $query = $this->buildSearch();
+    $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('category')));
+    $filter->condition($this->getFieldId('category'), 'article_category');
+    $query->filter($filter);
+    $facets['category'] = array(
+      'field' => $this->getFieldId('category'),
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => TRUE,
+      'operator' => 'or',
+    );
+    $query->setOption('search_api_facets', $facets);
+    $query->range(0, 0);
+    $results = $query->execute();
+    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
+    $expected = array(
+      array('count' => 2, 'filter' => '"article_category"'),
+      array('count' => 2, 'filter' => '"item_category"'),
+      array('count' => 1, 'filter' => '!'),
+    );
+    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['category'], 'Correct OR facets were returned');
+
+    $query = $this->buildSearch();
+    $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('category')));
+    $filter->condition($this->getFieldId('category'), 'article_category');
+    $query->filter($filter);
+    $filter = $query->createFilter('AND');
+    $filter->condition($this->getFieldId('category'), NULL, '<>');
+    $query->filter($filter);
+    $facets['category'] = array(
+      'field' => $this->getFieldId('category'),
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => TRUE,
+      'operator' => 'or',
+    );
+    $query->setOption('search_api_facets', $facets);
+    $query->range(0, 0);
+    $results = $query->execute();
+    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
+    $expected = array(
+      array('count' => 2, 'filter' => '"article_category"'),
+      array('count' => 2, 'filter' => '"item_category"'),
+    );
+    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['category'], 'Correct OR facets were returned');
   }
 
   /**
@@ -518,38 +517,37 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     // Regression tests for #2040543.
-    // @todo Fix facets.
-//    $query = $this->buildSearch();
-//    $facets['type'] = array(
-//      'field' => $this->getFieldId('type'),
-//      'limit' => 0,
-//      'min_count' => 1,
-//      'missing' => TRUE,
-//    );
-//    $query->setOption('search_api_facets', $facets);
-//    $query->range(0, 0);
-//    $results = $query->execute();
-//    $expected = array(
-//      array('count' => 2, 'filter' => '"article"'),
-//      array('count' => 2, 'filter' => '"item"'),
-//      array('count' => 1, 'filter' => '!'),
-//    );
-//    $type_facets = $results->getExtraData('search_api_facets')['type'];
-//    usort($type_facets, array($this, 'facetCompare'));
-//    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
-//
-//    $query = $this->buildSearch();
-//    $facets['type']['missing'] = FALSE;
-//    $query->setOption('search_api_facets', $facets);
-//    $query->range(0, 0);
-//    $results = $query->execute();
-//    $expected = array(
-//      array('count' => 2, 'filter' => '"article"'),
-//      array('count' => 2, 'filter' => '"item"'),
-//    );
-//    $type_facets = $results->getExtraData('search_api_facets')['type'];
-//    usort($type_facets, array($this, 'facetCompare'));
-//    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
+    $query = $this->buildSearch();
+    $facets['category'] = array(
+      'field' => $this->getFieldId('category'),
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => TRUE,
+    );
+    $query->setOption('search_api_facets', $facets);
+    $query->range(0, 0);
+    $results = $query->execute();
+    $expected = array(
+      array('count' => 2, 'filter' => '"article_category"'),
+      array('count' => 2, 'filter' => '"item_category"'),
+      array('count' => 1, 'filter' => '!'),
+    );
+    $type_facets = $results->getExtraData('search_api_facets')['category'];
+    usort($type_facets, array($this, 'facetCompare'));
+    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
+
+    $query = $this->buildSearch();
+    $facets['category']['missing'] = FALSE;
+    $query->setOption('search_api_facets', $facets);
+    $query->range(0, 0);
+    $results = $query->execute();
+    $expected = array(
+      array('count' => 2, 'filter' => '"article_category"'),
+      array('count' => 2, 'filter' => '"item_category"'),
+    );
+    $type_facets = $results->getExtraData('search_api_facets')['category'];
+    usort($type_facets, array($this, 'facetCompare'));
+    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
 
     // Regression tests for #2111753.
     $keys = array(

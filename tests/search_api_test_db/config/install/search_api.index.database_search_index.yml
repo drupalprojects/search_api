@@ -17,6 +17,8 @@ options:
       type: string
     'entity:entity_test/keywords':
       type: string
+    'entity:entity_test/category':
+      type: string
     search_api_language:
       type: string
   processors:
@@ -37,10 +39,13 @@ dependencies:
   config:
     - field.field.entity_test.article.body
     - field.field.entity_test.article.keywords
+    - field.field.entity_test.article.category
     - field.field.entity_test.item.body
     - field.field.entity_test.item.keywords
+    - field.field.entity_test.item.category
     - field.storage.entity_test.body
     - field.storage.entity_test.keywords
+    - field.storage.entity_test.category
     - search_api.server.database_search_server
   module:
     - entity_test

@@ -42,6 +42,7 @@ trait ExampleContentTrait {
         'body' => 'test test',
         'type' => 'item',
         'keywords' => array('orange'),
+        'category' => 'item_category'
       ));
     $this->entities[1]->save();
     $this->entities[2] = entity_create('entity_test', array(
@@ -50,6 +51,7 @@ trait ExampleContentTrait {
         'body' => 'bar test',
         'type' => 'item',
         'keywords' => array('orange', 'apple', 'grape'),
+        'category' => 'item_category'
       ));
     $this->entities[2]->save();
     $this->entities[3] = entity_create('entity_test', array(
@@ -65,6 +67,7 @@ trait ExampleContentTrait {
         'body' => 'test test test',
         'type' => 'article',
         'keywords' => array('apple', 'strawberry', 'grape'),
+        'category' => 'article_category'
       ));
     $this->entities[4]->save();
     $this->entities[5] = entity_create('entity_test', array(
@@ -73,6 +76,7 @@ trait ExampleContentTrait {
         'body' => 'foo',
         'type' => 'article',
         'keywords' => array('orange', 'strawberry', 'grape', 'banana'),
+        'category' => 'article_category'
       ));
     $this->entities[5]->save();
     $count = \Drupal::entityQuery('entity_test')->count()->execute() - $count;
