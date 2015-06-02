@@ -129,7 +129,7 @@ class Utility {
           'email',
           'uri',
           'filter_format',
-          'duration_iso8601,'
+          'duration_iso8601',
         ),
         'integer' => array(
           'integer',
@@ -284,7 +284,7 @@ class Utility {
         $value = $value[$property];
       }
     }
-    else {
+    elseif (is_array($value)) {
       $value = reset($value);
     }
 
