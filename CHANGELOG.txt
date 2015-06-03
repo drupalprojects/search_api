@@ -1,3 +1,6 @@
+Search API 1.x, dev (xx/xx/xxxx):
+---------------------------------
+
 Search API 1.15 (2015-06-03):
 -----------------------------
 - #2190627 by m1n0, drunken monkey: Fixed fatal errors for views of disabled
