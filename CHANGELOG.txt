@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2447213 by drunken monkey: Fixed issues with stale field settings for MLT
+  contextual filter.
 
 Search API 1.15 (2015-06-03):
 -----------------------------
