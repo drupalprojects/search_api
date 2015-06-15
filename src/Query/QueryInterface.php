@@ -83,7 +83,7 @@ interface QueryInterface {
    * @return $this
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If one of the fields isn't a fulltext field.
+   *   Thrown if one of the fields isn't a fulltext field.
    */
   // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
   public function fields(array $fields);
@@ -135,7 +135,7 @@ interface QueryInterface {
    * @return $this
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field is multi-valued or of a fulltext type.
+   *   Thrown if the field is multi-valued or of a fulltext type.
    */
   public function sort($field, $order = 'ASC');
 
@@ -161,7 +161,7 @@ interface QueryInterface {
    *   The results of the search.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred during the search.
+   *   Thrown if an error occurred during the search.
    */
   public function execute();
 
@@ -172,8 +172,8 @@ interface QueryInterface {
    * operations before the query is passed to the server's search() method.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If any wrong options were set on the query (e.g., conditions or sorts on
-   *   unknown fields).
+   *   Thrown if any wrong options were set on the query (e.g., conditions or
+   *   sorts on unknown fields).
    */
   public function preExecute();
 

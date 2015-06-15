@@ -379,7 +379,7 @@ class Utility {
    *   A search item with the given values.
    *
    * @throws \InvalidArgumentException
-   *   If both $datasource and $id are NULL.
+   *   Thrown if both $datasource and $id are NULL.
    */
   public static function createItemFromObject(IndexInterface $index, ComplexDataInterface $original_object, $id = NULL, DatasourceInterface $datasource = NULL) {
     if (!isset($id)) {

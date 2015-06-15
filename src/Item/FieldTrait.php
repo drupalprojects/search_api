@@ -148,8 +148,8 @@ trait FieldTrait {
    * @return $this
    *
    * @throws \InvalidArgumentException
-   *   If the ID of the given index is not the same as the ID of the index that
-   *   was set up to now.
+   *   Thrown if the ID of the given index is not the same as the ID of the
+   *   index that was set up to now.
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::setIndex()
    */
@@ -194,7 +194,7 @@ trait FieldTrait {
    *   datasource-independent.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field's datasource couldn't be loaded.
+   *   Thrown if the field's datasource couldn't be loaded.
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::getDatasource()
    */
@@ -410,7 +410,7 @@ trait FieldTrait {
    *   The data definition object for this field.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field's data definition is unknown.
+   *   Thrown if the field's data definition is unknown.
    *
    * @see \Drupal\search_api\Item\GenericFieldInterface::getDataDefinition()
    */

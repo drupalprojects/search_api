@@ -114,7 +114,7 @@ class SearchApiCache extends Time {
    *   The Search API Views query associated with the current view.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If there is no current Views query, or it is no Search API query.
+   *   Thrown if there is no current Views query, or it is no Search API query.
    */
   protected function getQuery() {
     if (isset($this->view->query) && $this->view->query instanceof SearchApiQuery) {

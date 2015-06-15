@@ -225,7 +225,7 @@ class ContentAccess extends ProcessorPluginBase {
    *   The user for whom the search is executed.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If not all necessary fields are indexed on the index.
+   *   Thrown if not all necessary fields are indexed on the index.
    */
   protected function addNodeAccess(QueryInterface $query, AccountInterface $account) {
     // Don't do anything if the user can access all content.

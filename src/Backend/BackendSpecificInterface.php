@@ -78,7 +78,7 @@ interface BackendSpecificInterface {
    *   The index to add.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while adding the index.
+   *   Thrown if an error occurred while adding the index.
    */
   public function addIndex(IndexInterface $index);
 
@@ -92,7 +92,7 @@ interface BackendSpecificInterface {
    *   The updated index.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while reacting to the change.
+   *   Thrown if an error occurred while reacting to the change.
    */
   public function updateIndex(IndexInterface $index);
 
@@ -114,7 +114,7 @@ interface BackendSpecificInterface {
    *   index was completely deleted).
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while removing the index.
+   *   Thrown if an error occurred while removing the index.
    */
   public function removeIndex($index);
 
@@ -134,7 +134,7 @@ interface BackendSpecificInterface {
    *   The IDs of all items that were successfully indexed.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If indexing was prevented by a fundamental configuration error.
+   *   Thrown if indexing was prevented by a fundamental configuration error.
    */
   public function indexItems(IndexInterface $index, array $items);
 
@@ -147,7 +147,7 @@ interface BackendSpecificInterface {
    *   The IDs of the deleted items.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while trying to delete the items.
+   *   Thrown if an error occurred while trying to delete the items.
    */
   public function deleteItems(IndexInterface $index, array $item_ids);
 
@@ -158,7 +158,7 @@ interface BackendSpecificInterface {
    *   The index for which items should be deleted.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while trying to delete the items.
+   *   Thrown if an error occurred while trying to delete indexed items.
    */
   public function deleteAllIndexItems(IndexInterface $index);
 
@@ -172,7 +172,7 @@ interface BackendSpecificInterface {
    *   The search results.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error prevented the search from completing.
+   *   Thrown if an error prevented the search from completing.
    */
   public function search(QueryInterface $query);
 

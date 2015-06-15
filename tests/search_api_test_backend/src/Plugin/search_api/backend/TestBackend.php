@@ -168,7 +168,7 @@ class TestBackend extends BackendPluginBase {
    *   The method on this object from which this method was called.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If state "search_api_test_backend.exception.$method" is TRUE.
+   *   Thrown if state "search_api_test_backend.exception.$method" is TRUE.
    */
   protected function checkError($method) {
     $state = \Drupal::state();

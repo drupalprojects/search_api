@@ -178,7 +178,8 @@ class FacetsBlock extends Block {
    *   prefixed labels.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If there couldn't be a search index retrieved for the current view.
+   *   Thrown if there couldn't be a search index retrieved for the current
+   *   view.
    */
   protected function getFieldOptions() {
     if (!isset($this->field_options)) {

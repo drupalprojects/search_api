@@ -106,7 +106,8 @@ class Query implements QueryInterface {
    *   options that are recognized by default.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If a search on that index (or with those options) won't be possible.
+   *   Thrown if a search on that index (or with those options) won't be
+   *   possible.
    */
   public function __construct(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array()) {
     if (!$index->status()) {

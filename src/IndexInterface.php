@@ -158,8 +158,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The datasource plugin with the given ID.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the specified datasource isn't enabled for this index, or couldn't be
-   *   loaded.
+   *   Thrown if the specified datasource isn't enabled for this index, or
+   *   couldn't be loaded.
    */
   public function getDatasource($datasource_id);
 
@@ -198,7 +198,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The index's tracker plugin.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the tracker couldn't be instantiated.
+   *   Thrown if the tracker couldn't be instantiated.
    */
   public function getTracker();
 
@@ -234,7 +234,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   server.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the server couldn't be loaded.
+   *   Thrown if the server couldn't be loaded.
    */
   public function getServer();
 
@@ -390,8 +390,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *   this index, keyed by their property names (not the complete field IDs).
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the specified datasource isn't enabled for this index, or couldn't be
-   *   loaded.
+   *   Thrown if the specified datasource isn't enabled for this index, or
+   *   couldn't be loaded.
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE);
 
@@ -457,7 +457,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   The IDs of all items that should be marked as indexed.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If any error occurred during indexing.
+   *   Thrown if any error occurred during indexing.
    */
   public function indexItems(array $search_objects);
 
@@ -520,8 +520,8 @@ interface IndexInterface extends ConfigEntityInterface {
    * Marks all items in this index for reindexing.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an internal error prevented the operation from succeeding. E.g., if
-   *   the tracker couldn't be loaded.
+   *   Thrown if an internal error prevented the operation from succeeding.
+   *   E.g., if the tracker couldn't be loaded.
    */
   public function reindex();
 
@@ -529,7 +529,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Clears all indexed data from this index and marks it for reindexing.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the server couldn't be loaded, for example.
+   *   Thrown if the server couldn't be loaded, for example.
    */
   public function clear();
 
@@ -552,7 +552,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   A query object for searching this index.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the index is currently disabled or its server doesn't exist.
+   *   Thrown if the index is currently disabled or its server doesn't exist.
    *
    * @see \Drupal\search_api\Query\QueryInterface::create()
    */

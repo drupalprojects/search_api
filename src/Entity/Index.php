@@ -668,7 +668,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   method.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If $datasource_id is no valid datasource for this index.
+   *   Thrown if $datasource_id is not valid datasource for this index.
    */
   protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $label_prefix = '') {
     $type_mapping = Utility::getFieldTypeMapping();

@@ -36,7 +36,7 @@ interface ItemInterface extends \Traversable {
    *   if it wasn't set previously and $load is FALSE.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If $load is TRUE but the object could not be loaded.
+   *   Thrown if $load is TRUE but the object could not be loaded.
    */
   public function getOriginalObject($load = TRUE);
 
@@ -65,7 +65,7 @@ interface ItemInterface extends \Traversable {
    *   The datasource to which this item belongs.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the item's datasource wasn't set before and couldn't be loaded.
+   *   Thrown if the item's datasource wasn't set before and couldn't be loaded.
    */
   public function getDatasource();
 
@@ -117,8 +117,8 @@ interface ItemInterface extends \Traversable {
    * @return $this
    *
    * @throws \InvalidArgumentException
-   *   If a $field is passed but has another field identifier than given as
-   *   $field_id.
+   *   Thrown if a $field is passed but has another field identifier than given
+   *   as $field_id.
    */
   public function setField($field_id, FieldInterface $field = NULL);
 

@@ -564,7 +564,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @return $this
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If one of the fields isn't of type "text".
+   *   Thrown if one of the fields isn't of type "text".
    *
    * @see \Drupal\search_api\Query\QueryInterface::fields()
    */
@@ -644,7 +644,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @return $this
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field is multi-valued or of a fulltext type.
+   *   Thrown if the field is multi-valued or of a fulltext type.
    *
    * @see \Drupal\search_api\Query\QueryInterface::sort()
    */

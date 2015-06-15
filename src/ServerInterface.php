@@ -46,7 +46,7 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
    *   This server's backend plugin.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the backend plugin could not be retrieved.
+   *   Thrown if the backend plugin could not be retrieved.
    */
   public function getBackend();
 
@@ -85,7 +85,7 @@ interface ServerInterface extends ConfigEntityInterface, BackendSpecificInterfac
    * @return $this
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an error occurred while trying to delete the items.
+   *   Thrown if an error occurred while trying to delete the items.
    */
   public function deleteAllItems();
 

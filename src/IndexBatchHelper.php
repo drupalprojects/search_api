@@ -76,7 +76,7 @@ class IndexBatchHelper {
    *   remaining items.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the batch could not be created.
+   *   Thrown if the batch could not be created.
    */
   public static function create(IndexInterface $index, $batch_size = NULL, $limit = -1) {
     // Check if the size should be determined by the index cron limit option.

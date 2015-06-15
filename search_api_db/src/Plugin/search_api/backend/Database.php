@@ -609,7 +609,7 @@ class Database extends BackendPluginBase {
    *   Column configurations to use for the field's database column.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If $type is unknown.
+   *   Thrown if $type is unknown.
    */
   protected function sqlType($type) {
     switch ($type) {
@@ -642,7 +642,8 @@ class Database extends BackendPluginBase {
    *   TRUE if the data needs to be reindexed, FALSE otherwise.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   In case any exceptions occur internally, e.g., in the database layer.
+   *   Thrown if any exceptions occur internally, e.g., in the database
+   *   layer.
    */
   protected function fieldsUpdated(IndexInterface $index) {
     try {
@@ -1129,7 +1130,7 @@ class Database extends BackendPluginBase {
    *   The converted value.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If $type is unknown.
+   *   Thrown if $type is unknown.
    */
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
@@ -1373,7 +1374,8 @@ class Database extends BackendPluginBase {
    *   for the range and sorting) for the given search query.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If some illegal query setting (unknown field, etc.) was encountered.
+   *   Thrown if some illegal query setting (unknown field, etc.) was
+   *   encountered.
    */
   protected function createDbQuery(QueryInterface $query, array $fields) {
     $keys = &$query->getKeys();
@@ -1743,7 +1745,7 @@ class Database extends BackendPluginBase {
    *   The condition to set on the query, or NULL if none is necessary.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If an unknown field was used in the filter.
+   *   Thrown if an unknown field was used in the filter.
    */
   protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query, IndexInterface $index) {
     $cond = db_condition($filter->getConjunction());

@@ -35,8 +35,8 @@ interface GenericFieldInterface {
    * @return $this
    *
    * @throws \InvalidArgumentException
-   *   If the ID of the given index is not the same as the ID of the index that
-   *   was set up to now.
+   *   Thrown if the ID of the given index is not the same as the ID of the
+   *   index that was set up to now.
    */
   public function setIndex(IndexInterface $index);
 
@@ -65,7 +65,7 @@ interface GenericFieldInterface {
    *   datasource-independent.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field's datasource couldn't be loaded.
+   *   Thrown if the field's datasource couldn't be loaded.
    */
   public function getDatasource();
 
@@ -186,7 +186,7 @@ interface GenericFieldInterface {
    *   The data definition object for this field.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   If the field's data definition is unknown.
+   *   Thrown if the field's data definition is unknown.
    */
   public function getDataDefinition();
 
