@@ -775,7 +775,7 @@ class Database extends BackendPluginBase {
               'description' => "The name of the field in which the token appears, or an MD5 hash of the field",
               'not null' => TRUE,
               'type' => 'varchar',
-              'length' => 255,
+              'length' => 191,
             ),
             'word' => array(
               'description' => 'The text of the indexed token',
@@ -1104,7 +1104,7 @@ class Database extends BackendPluginBase {
    *   The field name as stored in the field_name column.
    */
   protected static function getTextFieldName($name) {
-    if (strlen($name) > 255) {
+    if (strlen($name) > 191) {
       // Replace long field names with something unique and predictable.
       return md5($name);
     }
