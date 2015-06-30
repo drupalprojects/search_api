@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2489882 by dww: Fixed Views taxonomy filter with "is (not) empty" operator
 - #2447213 by drunken monkey: Fixed issues with stale field settings for MLT
   contextual filter.
 
