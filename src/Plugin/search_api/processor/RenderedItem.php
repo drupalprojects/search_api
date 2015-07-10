@@ -211,7 +211,7 @@ class RenderedItem extends ProcessorPluginBase {
         continue;
       }
       $build = $item->getDatasource()->viewItem($item->getOriginalObject(), $this->configuration['view_mode'][$item->getDatasourceId()]);
-      $field->addValue($this->getRenderer()->render($build));
+      $field->addValue($this->getRenderer()->renderPlain($build));
     }
 
     // Restore the original user.
