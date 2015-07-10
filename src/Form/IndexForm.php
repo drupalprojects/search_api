@@ -447,8 +447,8 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validate(array $form, FormStateInterface $form_state) {
-    parent::validate($form, $form_state);
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
 
     /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();

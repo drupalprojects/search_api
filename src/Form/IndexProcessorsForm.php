@@ -216,7 +216,9 @@ class IndexProcessorsForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validate(array $form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
     $values = $form_state->getValues();
     /** @var \Drupal\search_api\Processor\ProcessorInterface[] $processors */
     $processors = $this->entity->getProcessors(FALSE);
