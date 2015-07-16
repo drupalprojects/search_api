@@ -1172,7 +1172,10 @@ function search_api_track_item_change($type, array $item_ids) {
     return;
   }
   try {
-    search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
+    $returned_indexes = search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
+    if (isset($returned_indexes)) {
+      $indexes = $returned_indexes;
+    }
     foreach ($indexes as $index) {
       if (!empty($index->options['index_directly'])) {
         // For indexes with the index_directly option set, queue the items to be
@@ -1247,7 +1250,10 @@ function search_api_track_item_delete($type, array $item_ids) {
   $indexes = search_api_index_load_multiple(FALSE, $conditions);
   if ($indexes) {
     try {
-      search_api_get_datasource_controller($type)->trackItemDelete($item_ids, $indexes);
+      $changed_indexes = search_api_get_datasource_controller($type)->trackItemDelete($item_ids, $indexes);
+      if (isset($changed_indexes)) {
+        $indexes = $changed_indexes;
+      }
     }
     catch (SearchApiException $e) {
       $vars['%item_type'] = $type;
@@ -1257,8 +1263,9 @@ function search_api_track_item_delete($type, array $item_ids) {
 
   // Then, delete it from all servers. Servers of disabled indexes have to be
   // considered, too!
-  unset($conditions['enabled']);
-  foreach (search_api_index_load_multiple(FALSE, $conditions) as $index) {
+  $conditions['enabled'] = 0;
+  $indexes = array_merge($indexes, search_api_index_load_multiple(FALSE, $conditions));
+  foreach ($indexes as $index) {
     try {
       if ($server = $index->server()) {
         $server->deleteItems($item_ids, $index);
