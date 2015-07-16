@@ -575,6 +575,14 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
+  public function setRequestMethod($method) {
+    $this->mainFormState->setRequestMethod($method);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isMethodType($method_type) {
     return $this->mainFormState->isMethodType($method_type);
   }
