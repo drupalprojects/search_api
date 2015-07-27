@@ -141,7 +141,7 @@ class BackendTest extends EntityUnitTestBase {
     // server configuration.
     $field_id = $this->getFieldId('keywords');
     if (empty($index->getFields()[$field_id])) {
-      throw new Exception();
+      throw new \Exception();
     }
     $index->getFields()[$field_id]->setIndexed(FALSE, TRUE);
     $index->save();
