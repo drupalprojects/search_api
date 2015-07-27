@@ -1,5 +1,5 @@
 search_api.server.*:
-  type: mapping
+  type: config_entity
   label : 'Search server'
   mapping:
     id:

@@ -54,6 +54,22 @@ use Drupal\search_api\Utility;
  *     "uuid" = "uuid",
  *     "status" = "status"
  *   },
+ *   config_export = {
+ *     "id",
+ *     "name",
+ *     "uuid",
+ *     "description",
+ *     "read_only",
+ *     "options",
+ *     "datasources",
+ *     "datasource_configs",
+ *     "tracker",
+ *     "tracker_config",
+ *     "server",
+ *     "status",
+ *     "langcode",
+ *     "dependencies",
+ *   },
  *   links = {
  *     "canonical" = "/admin/config/search/search-api/index/{search_api_index}",
  *     "add-form" = "/admin/config/search/search-api/add-index",
