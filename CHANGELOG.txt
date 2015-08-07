@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2520934 by drunken monkey: Added an item type for indexing several types of
+  entities in one index.
 - #2533096 by drunken monkey: Fixed uncaught exception when deleting a server.
 - #2479453 by prics, drunken monkey: Added a Drush command to
   list/enable/disable servers.

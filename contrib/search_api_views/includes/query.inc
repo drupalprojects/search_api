@@ -494,31 +494,31 @@ class SearchApiViewsQuery extends views_plugin_query {
    * query backend.
    */
   public function get_result_wrappers($results, $relationship = NULL, $field = NULL) {
-    $entity_type = $this->index->getEntityType();
+    $type = $this->index->item_type;
     $wrappers = array();
-    $load_entities = array();
+    $load_items = array();
     foreach ($results as $row_index => $row) {
-      if ($entity_type && isset($row->entity)) {
+      if (isset($row->entity)) {
         // If this entity isn't load, register it for pre-loading.
         if (!is_object($row->entity)) {
-          $load_entities[$row->entity] = $row_index;
+          $load_items[$row->entity] = $row_index;
         }
-
-        $wrappers[$row_index] = $this->index->entityWrapper($row->entity);
+        else {
+          $wrappers[$row_index] = $this->index->entityWrapper($row->entity);
+        }
       }
     }
 
     // If the results are entities, we pre-load them to make use of a multiple
     // load. (Otherwise, each result would be loaded individually.)
-    if (!empty($load_entities)) {
-      $entities = entity_load($entity_type, array_keys($load_entities));
-      foreach ($entities as $entity_id => $entity) {
-        $wrappers[$load_entities[$entity_id]] = $this->index->entityWrapper($entity);
+    if (!empty($load_items)) {
+      $items = $this->index->loadItems(array_keys($load_items));
+      foreach ($items as $id => $item) {
+        $wrappers[$load_items[$id]] = $this->index->entityWrapper($item);
       }
     }
 
     // Apply the relationship, if necessary.
-    $type = $entity_type ? $entity_type : $this->index->item_type;
     $selector_suffix = '';
     if ($field && ($pos = strrpos($field, ':'))) {
       $selector_suffix = substr($field, 0, $pos);
