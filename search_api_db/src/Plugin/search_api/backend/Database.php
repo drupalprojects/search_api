@@ -568,9 +568,7 @@ class Database extends BackendPluginBase {
       return;
     }
 
-    if (!isset($db['column'])) {
-      $db['column'] = 'value';
-    }
+    $column = isset($db['column']) ? $db['column'] : 'value';
     $db_field = $this->sqlType($field->getType());
     $db_field += array(
       'description' => "The field's value for this item",
@@ -578,17 +576,28 @@ class Database extends BackendPluginBase {
     if ($new_table) {
       $db_field['not null'] = TRUE;
     }
-    $this->database->schema()->addField($db['table'], $db['column'], $db_field);
+    $this->database->schema()->addField($db['table'], $column, $db_field);
     if ($db_field['type'] === 'varchar') {
-      $this->database->schema()->addIndex($db['table'], $db['column'], array(array($db['column'], 10)));
+      $index_spec = array(array($column, 10));
     }
     else {
-      $this->database->schema()->addIndex($db['table'], $db['column'], array($db['column']));
+      $index_spec = array($column);
     }
+    // Create a table specification skeleton to pass to addIndex().
+    $table_spec = array(
+      'fields' => array(
+        $column => $db_field,
+      ),
+      'indexes' => array(
+        $column => $index_spec,
+      ),
+    );
+    $this->database->schema()->addIndex($db['table'], $column, $index_spec, $table_spec);
+
     if ($new_table) {
       // Add a covering index for fields with multiple values.
-      if ($db['column'] === 'value') {
-        $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $db['column']));
+      if (!isset($db['column'])) {
+        $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $column));
       }
       // This is a denormalized table with many columns, where we can't predict
       // the best covering index.

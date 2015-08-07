@@ -1,5 +1,5 @@
 search_api.settings:
-  type: mapping
+  type: config_object
   label: 'Search API settings'
   mapping:
     default_cron_limit:
