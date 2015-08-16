@@ -57,7 +57,6 @@ use Drupal\search_api\Utility;
  *   config_export = {
  *     "id",
  *     "name",
- *     "uuid",
  *     "description",
  *     "read_only",
  *     "options",
@@ -66,9 +65,6 @@ use Drupal\search_api\Utility;
  *     "tracker",
  *     "tracker_config",
  *     "server",
- *     "status",
- *     "langcode",
- *     "dependencies",
  *   },
  *   links = {
  *     "canonical" = "/admin/config/search/search-api/index/{search_api_index}",
