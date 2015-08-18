@@ -497,6 +497,26 @@ class IndexForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function actions(array $form, FormStateInterface $form_state) {
+    $actions = parent::actions($form, $form_state);
+
+    if ($this->getEntity()->isNew()) {
+      $submit_callbacks = $actions['submit']['#submit'];
+      $submit_callbacks[] = '::redirectToFieldsForm';
+      $actions['save_edit'] = array(
+        '#type' => 'submit',
+        '#value' => $this->t('Save and edit'),
+        '#submit' => $submit_callbacks,
+        '#button_type' => 'primary',
+      );
+    }
+
+    return $actions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
@@ -564,10 +584,12 @@ class IndexForm extends EntityForm {
   }
 
   /**
-   * {@inheritdoc}
+   * Form submission handler for the 'save and edit' action.
+   *
+   * Redirects to the index's "Fields" config form.
    */
-  public function delete(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirect('entity.search_api_index.delete', array('search_api_index' => $this->getEntity()->id()));
+  public function redirectToFieldsForm(array $form, FormStateInterface $form_state) {
+    $form_state->setRedirectUrl($this->getEntity()->urlInfo('fields'));
   }
 
 }

@@ -164,6 +164,16 @@ class IntegrationTest extends WebTestBase {
       // Since none of the other tests would work, bail at this point.
       throw new SearchApiException();
     }
+
+    // Test the "Save and edit" button.
+    $index2_id = 'test_index2';
+    $edit['id'] = $index2_id;
+    unset($edit['server']);
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save and edit'));
+
+    $this->assertText($this->t('The index was successfully saved.'));
+    $index = entity_load('search_api_index', $index2_id, TRUE);
+    $this->assertUrl($index->urlInfo('fields'), array(), 'Correct redirect to index fields page.');
   }
 
   /**
