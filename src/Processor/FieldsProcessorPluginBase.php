@@ -260,7 +260,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     if (!isset($this->configuration['fields'])) {
       return $this->testType($field->getType());
     }
-    return !empty($this->configuration['fields'][$name]);
+    return in_array($name, $this->configuration['fields'], TRUE);
   }
 
   /**
