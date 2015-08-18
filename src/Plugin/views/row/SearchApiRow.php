@@ -145,30 +145,32 @@ class SearchApiRow extends RowPluginBase {
 
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $datasource_label = $datasource->label();
       $bundles = $datasource->getBundles();
       if (!$datasource->getViewModes()) {
         $form['view_modes'][$datasource_id] = array(
           '#type' => 'item',
-          '#title' => $this->t('Default View mode for datasource %name', array('%name' => $datasource->label())),
+          '#title' => $this->t('Default View mode for datasource %name', array('%name' => $datasource_label)),
           '#description' => $this->t("This datasource doesn't have any view modes available. It is therefore not possible to display results of this datasource using this row plugin."),
         );
         continue;
       }
 
-      foreach ($bundles as $bundle_id => $bundle) {
+      foreach ($bundles as $bundle_id => $bundle_label) {
+        $title = $this->t('View mode for datasource %datasource, bundle %bundle', array('%datasource' => $datasource_label, '%bundle' => $bundle_label));
         $view_modes = $datasource->getViewModes($bundle_id);
         if (!$view_modes) {
           $form['view_modes'][$datasource_id][$bundle_id] = array(
             '#type' => 'item',
-            '#title' => $this->t('View mode for bundle %name', array('%name' => $bundle['label'])),
-            '#description' => $this->t("This datasource doesn't have any view modes available. It is therefore not possible to display results of this bundle using this row plugin."),
+            '#title' => $title,
+            '#description' => $this->t("This bundle doesn't have any view modes available. It is therefore not possible to display results of this bundle using this row plugin."),
           );
           continue;
         }
         $form['view_modes'][$datasource_id][$bundle_id] = array(
           '#type' => 'select',
           '#options' => $view_modes,
-          '#title' => $this->t('View mode for bundle %name', array('%name' => $bundle['label'])),
+          '#title' => $title,
           '#default_value' => key($view_modes),
         );
         if (isset($this->options['view_modes'][$datasource_id][$bundle_id])) {
