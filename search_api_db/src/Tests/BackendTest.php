@@ -827,10 +827,10 @@ class BackendTest extends EntityUnitTestBase {
 
     // Uninstall the module.
     \Drupal::service('module_installer')->uninstall(array('search_api_db'), FALSE);
-    #\Drupal::moduleHandler()->uninstall(array('search_api_db'), FALSE);
-    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully disabled.');
-    $prefix = \Drupal::database()->prefixTables('{search_api_db_}') . '%';
-    $this->assertEqual(\Drupal::database()->schema()->findTables($prefix), array(), 'The Database Search module was successfully uninstalled.');
+    $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully uninstalled.');
+
+    $tables = \Drupal::database()->schema()->findTables('search_api_db_%');
+    $this->assertEqual($tables, [], 'All the tables of the the Database Search module have been removed.');
   }
 
   /**
