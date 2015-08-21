@@ -417,7 +417,7 @@ class Query implements QueryInterface {
   public function __sleep() {
     $this->indexId = $this->index->id();
     $keys = get_object_vars($this);
-    unset($keys['index']);
+    unset($keys['index'], $keys['resultsCache'], $keys['stringTranslation']);
     return array_keys($keys);
   }
 
