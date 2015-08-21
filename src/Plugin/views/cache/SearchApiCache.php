@@ -47,7 +47,7 @@ class SearchApiCache extends Time {
       'current_page' => $this->view->getCurrentPage(),
       'search_api results' => $this->getQuery()->getSearchApiResults(),
     );
-    \Drupal::cache($this->resultsBin)->set($this->generateResultsKey(), $data, $this->cacheSetExpire($type), $this->getCacheTags());
+    \Drupal::cache($this->resultsBin)->set($this->generateResultsKey(), $data, $this->cacheSetMaxAge($type), $this->getCacheTags());
   }
 
   /**
@@ -70,9 +70,10 @@ class SearchApiCache extends Time {
 
         // Trick Search API into believing a search happened, to make facetting
         // et al. work.
-        $query = $this->getQuery()->getSearchApiQuery();
-        // @todo Find a replacement for that. Also set it on the Views Query?
-        search_api_current_search($query->getOption('search id'), $query, $cache->data['search_api results']);
+        // @todo Also set results on the Views Query?
+        /** @var \Drupal\search_api\Query\ResultsCacheInterface $static_results_cache */
+        $static_results_cache = \Drupal::service('search_api.results_static_cache');
+        $static_results_cache->addResults($cache->data['search_api results']);
 
         return TRUE;
       }
