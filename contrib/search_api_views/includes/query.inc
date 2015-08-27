@@ -122,17 +122,61 @@ class SearchApiViewsQuery extends views_plugin_query {
   }
 
   /**
-   * Add a sort to the query.
+   * Adds a sort to the query.
    *
-   * @param $selector
+   * @param string $selector
    *   The field to sort on. All indexed fields of the index are valid values.
-   *   In addition, the special fields 'search_api_relevance' (sort by
-   *   relevance) and 'search_api_id' (sort by item id) may be used.
-   * @param $order
+   *   In addition, these special fields may be used:
+   *   - search_api_relevance: sort by relevance;
+   *   - search_api_id: sort by item id;
+   *   - search_api_random: random sort (available only if the server supports
+   *     the "search_api_random_sort" feature).
+   * @param string $order
    *   The order to sort items in - either 'ASC' or 'DESC'. Defaults to 'ASC'.
    */
   public function add_selector_orderby($selector, $order = 'ASC') {
     $this->query->sort($selector, $order);
+  }
+
+  /**
+   * Provides a sorting method as present in the Views default query plugin.
+   *
+   * This is provided so that the "Global: Random" sort included in Views will
+   * work properly with Search API Views. Random sorting is only supported if
+   * the active search server supports the "search_api_random_sort" feature,
+   * though, otherwise the call will be ignored.
+   *
+   * This method can only be used to sort randomly, as would be done with the
+   * default query plugin. All other calls are ignored.
+   *
+   * @param string|null $table
+   *   Only "rand" is recognized here, all other calls are ignored.
+   * @param string|null $field
+   *   Is ignored and only present for compatibility reasons.
+   * @param string $order
+   *   Either "ASC" or "DESC".
+   * @param string|null $alias
+   *   Is ignored and only present for compatibility reasons.
+   * @param array $params
+   *   The following optional parameters are recognized:
+   *   - seed: a predefined seed for the random generator.
+   *
+   * @see views_plugin_query_default::add_orderby()
+   */
+  public function add_orderby($table, $field = NULL, $order = 'ASC', $alias = '', $params = array()) {
+    $server = $this->getIndex()->server();
+    if ($table == 'rand') {
+      if ($server->supportsFeature('search_api_random_sort')) {
+        $this->add_selector_orderby('search_api_random', $order);
+        if ($params) {
+          $this->setOption('search_api_random_sort', $params);
+        }
+      }
+      else {
+        $variables['%server'] = $server->label();
+        watchdog('search_api_views', 'Tried to sort results randomly on server %server which does not support random sorting.', $variables, WATCHDOG_WARNING);
+      }
+    }
   }
 
   /**
