@@ -145,7 +145,7 @@ class RenderedItemTest extends ProcessorTestBase {
       // when the processor was broken, because the schema metadata was also
       // adding it to the output.
       $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $idx . ' rendered in view-mode "full".');
-      $this->assertTrue(substr_count($values[0], 'field-name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
+      $this->assertTrue(substr_count($values[0], 'field--name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
       $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
       $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $idx . ' has rendered member information HTML-Tags.');
       $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
