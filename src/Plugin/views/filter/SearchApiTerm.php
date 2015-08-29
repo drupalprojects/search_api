@@ -97,7 +97,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       }
       else {
         $options = array();
-        $query = db_select('taxonomy_term_data', 'td');
+        $query = Database::getConnection()->select('taxonomy_term_data', 'td');
         $query->innerJoin('taxonomy_vocabulary', 'tv', 'td.vid = tv.vid');
         $query->fields('td');
         $query->orderby('tv.weight');
@@ -255,7 +255,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
       return array();
     }
 
-    $query = db_select('taxonomy_term_data', 'td');
+    $query = Database::getConnection()->select('taxonomy_term_data', 'td');
     $query->innerJoin('taxonomy_vocabulary', 'tv', 'td.vid = tv.vid');
     $query->fields('td');
     $query->condition('td.name', $names);
@@ -303,7 +303,7 @@ class SearchApiTerm extends SearchApiFilterEntityBase {
    * {@inheritdoc}
    */
   protected function idsToString(array $ids) {
-    return implode(', ', db_select('taxonomy_term_data', 'td')
+    return implode(', ', Database::getConnection()->select('taxonomy_term_data', 'td')
       ->fields('td', array('name'))
       ->condition('td.tid', array_filter($ids))
       ->execute()

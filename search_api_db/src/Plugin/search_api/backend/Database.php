@@ -11,6 +11,7 @@ use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database as CoreDatabase;
+use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -1718,7 +1719,7 @@ class Database extends BackendPluginBase {
         }
       }
       else {
-        $or = db_or();
+        $or = new Condition('OR');
         foreach ($negated as $k) {
           $or->condition('t.item_id', $this->createKeysQuery($k, $fields, $all_fields, $index), 'NOT IN');
         }
@@ -1757,7 +1758,7 @@ class Database extends BackendPluginBase {
    *   Thrown if an unknown field was used in the filter.
    */
   protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query, IndexInterface $index) {
-    $cond = db_condition($filter->getConjunction());
+    $cond =  new Condition($filter->getConjunction());
     $empty = TRUE;
     // Store whether a JOIN already occurred for a field, so we don't JOIN
     // repeatedly for OR filters.
@@ -1782,7 +1783,7 @@ class Database extends BackendPluginBase {
           // @todo Stop recognizing "!=" as an operator.
           $operator = ($f[2] == '<>' || $f[2] == '!=') ? 'NOT LIKE' : 'LIKE';
           $prefix = Utility::createCombinedId($f[1], '');
-          $cond->condition($alias . '.item_id', db_like($prefix) . '%', $operator);
+          $cond->condition($alias . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
           continue;
         }
         if (!isset($fields[$f[0]])) {
@@ -1893,7 +1894,7 @@ class Database extends BackendPluginBase {
 
       if (empty($facet['operator']) || $facet['operator'] != 'or') {
         // All the AND facets can use the main query.
-        $select = db_select($table, 't');
+        $select = $this->database->select($table, 't');
       }
       else {
         // For OR facets, we need to build a different base query that excludes
@@ -1907,7 +1908,7 @@ class Database extends BackendPluginBase {
           }
         }
         $or_db_query = $this->createDbQuery($or_query, $fields);
-        $select = db_select($or_db_query, 't');
+        $select = $this->database->select($or_db_query, 't');
       }
 
       // If "Include missing facet" is disabled, we use an INNER JOIN and add IS

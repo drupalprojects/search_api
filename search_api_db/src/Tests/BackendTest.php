@@ -8,6 +8,7 @@
 namespace Drupal\search_api_db\Tests;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\field\Entity\FieldConfig;
@@ -814,7 +815,7 @@ class BackendTest extends EntityUnitTestBase {
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 0, 'Clearing the server worked correctly.');
     $table = 'search_api_db_' . $this->indexId;
-    $this->assertTrue(db_table_exists($table), 'The index tables were left in place.');
+    $this->assertTrue(Database::getConnection()->schema()->tableExists($table), 'The index tables were left in place.');
 
     // Remove first the index and then the server.
     $index->setServer();
@@ -822,7 +823,7 @@ class BackendTest extends EntityUnitTestBase {
 
     $server = Server::load($this->serverId);
     $this->assertEqual($server->getBackendConfig()['field_tables'], array(), 'The index was successfully removed from the server.');
-    $this->assertFalse(db_table_exists($table), 'The index tables were deleted.');
+    $this->assertFalse(Database::getConnection()->schema()->tableExists($table), 'The index tables were deleted.');
     $server->delete();
 
     // Uninstall the module.

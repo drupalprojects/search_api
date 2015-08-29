@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
@@ -150,7 +151,7 @@ class ContentAccess extends ProcessorPluginBase {
       if (!$node->access('view', $anonymous_user)) {
         // If anonymous user has no permission we collect all grants with their
         // realms in the item.
-        $result = db_query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
+        $result = Database::getConnection()->query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
         foreach ($result as $grant) {
           $field->addValue("node_access_{$grant->realm}:{$grant->gid}");
         }

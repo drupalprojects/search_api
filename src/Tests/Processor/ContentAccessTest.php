@@ -10,6 +10,7 @@ namespace Drupal\search_api\Tests\Processor;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
+use Drupal\Core\Database\Database;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -165,7 +166,7 @@ class ContentAccessTest extends ProcessorTestBase {
     // Create user that will be passed into the query.
     $authenticated_user = $this->createUser(array('uid' => 2), array('access content'));
 
-    db_insert('node_access')
+    Database::getConnection()->insert('node_access')
       ->fields(array(
         'nid' => $this->nodes[0]->id(),
         'langcode' => $this->nodes[0]->language()->getId(),

@@ -169,7 +169,7 @@ function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterfa
  *   Boolean indicating whether the index was also cleared.
  */
 function hook_search_api_index_reindex(\Drupal\search_api\IndexInterface $index, $clear = FALSE) {
-  db_insert('example_search_index_reindexed')
+  \Drupal\Core\Database\Database::getConnection()->insert('example_search_index_reindexed')
     ->fields(array(
       'index' => $index->id(),
       'clear' => $clear,

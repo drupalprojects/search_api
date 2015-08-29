@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -38,7 +39,7 @@ class SearchApiUser extends SearchApiFilterEntityBase {
   protected function idsToString(array $ids) {
     $names = array();
     $args[':uids'] = array_filter($ids);
-    $result = db_query("SELECT uid, name FROM {users} u WHERE uid IN (:uids)", $args);
+    $result = Database::getConnection()->query("SELECT uid, name FROM {users} u WHERE uid IN (:uids)", $args);
     $result = $result->fetchAllKeyed();
     foreach ($ids as $uid) {
       if (!$uid) {
@@ -70,7 +71,7 @@ class SearchApiUser extends SearchApiFilterEntityBase {
       return $uids;
     }
 
-    $result = db_query("SELECT * FROM {users} WHERE name IN (:names)", array(':names' => array_values($missing)));
+    $result = Database::getConnection()->query("SELECT * FROM {users} WHERE name IN (:names)", array(':names' => array_values($missing)));
     foreach ($result as $account) {
       unset($missing[strtolower($account->name)]);
       $uids[] = $account->uid;
