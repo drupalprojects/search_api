@@ -25,6 +25,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Utility;
+use Drupal\views\Views;
 
 /**
  * Defines the search index configuration entity.
@@ -1273,7 +1274,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
 
       if (\Drupal::moduleHandler()->moduleExists('views')) {
-        views_invalidate_cache();
+        Views::viewsData()->clear();
       }
 
       $this->resetCaches();
