@@ -3,8 +3,8 @@ type: module
 description: 'Support module for Search API Views tests'
 package: Search
 dependencies:
-  - search_api
-  - search_api_test_db
-  - views
+  - search_api:search_api
+  - search_api:search_api_test_db
+  - drupal:views
 core: 8.x
 hidden: true
