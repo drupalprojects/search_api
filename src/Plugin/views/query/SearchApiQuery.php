@@ -875,4 +875,13 @@ class SearchApiQuery extends QueryPluginBase {
     return $ret;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    $dependencies = parent::calculateDependencies();
+    $dependencies[$this->index->getConfigDependencyKey()][] = $this->index->getConfigDependencyName();
+    return $dependencies;
+  }
+
 }
