@@ -1,5 +1,5 @@
-Search API 1.x, dev (xx/xx/xxxx):
----------------------------------
+Search API 1.16 (2015-08-30):
+-----------------------------
 - #2502819: Fixed example code for hook_search_api_query_alter().
 - #2491175 by ptmkenny, drunken monkey: Added a data alteration for filtering
   out blocked users.
