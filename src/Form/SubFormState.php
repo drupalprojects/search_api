@@ -411,6 +411,21 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
+  public function setInvalidToken($invalid_token) {
+    $this->mainFormState->setInvalidToken($invalid_token);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasInvalidToken() {
+    return $this->mainFormState->hasInvalidToken();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function prepareCallback($callback) {
     return $this->mainFormState->prepareCallback($callback);
   }
