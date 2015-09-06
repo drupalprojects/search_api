@@ -883,7 +883,7 @@ function search_api_entity_update($entity, $type) {
   list($id, , $new_bundle) = entity_extract_ids($type, $entity);
 
   // Check if the entity's bundle changed.
-  if (isset($entity->original)) {
+  if (!empty($entity->original)) {
     list(, , $old_bundle) = entity_extract_ids($type, $entity->original);
     if ($new_bundle != $old_bundle) {
       _search_api_entity_datasource_bundle_change($type, $id, $old_bundle, $new_bundle);
