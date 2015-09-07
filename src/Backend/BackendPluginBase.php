@@ -132,7 +132,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       $vars = array(
         '%server' => $this->getServer()->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
       drupal_set_message($this->t('Deleting some of the items on the server failed. Check the logs for details. The server was still removed.'), 'error');
     }
   }

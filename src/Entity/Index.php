@@ -625,7 +625,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
-          watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: !message in %function (line %line of %file).', $variables);
+          watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: @message in %function (line %line of %file).', $variables);
         }
       }
       if ($this->unmappedFields) {
@@ -981,7 +981,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
-          watchdog_exception('search_api', $e, '%type while trying to index items on index %index: !message in %function (line %line of %file)', $variables);
+          watchdog_exception('search_api', $e, '%type while trying to index items on index %index: @message in %function (line %line of %file)', $variables);
         }
       }
     }

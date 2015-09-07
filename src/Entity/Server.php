@@ -203,7 +203,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while adding index %index to server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while adding index %index to server %server: @message in %function (line %line of %file).', $vars);
       $server_task_manager->add($this, __FUNCTION__, $index);
     }
   }
@@ -224,7 +224,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: @message in %function (line %line of %file).', $vars);
     }
     $server_task_manager->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
   }
@@ -246,7 +246,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => is_object($index) ? $index->label() : $index,
       );
-      watchdog_exception('search_api', $e, '%type while removing index %index from server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while removing index %index from server %server: @message in %function (line %line of %file).', $vars);
       $server_task_manager->add($this, __FUNCTION__, $index);
     }
   }
@@ -286,7 +286,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%server' => $this->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items from server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
     }
     $server_task_manager->add($this, __FUNCTION__, $index, $item_ids);
   }
@@ -315,7 +315,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: !message in %function (line %line of %file).', $vars);
+      watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: @message in %function (line %line of %file).', $vars);
     }
     $server_task_manager->add($this, __FUNCTION__, $index);
   }
@@ -335,7 +335,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         $args = array(
           '%index' => $index->label(),
         );
-        watchdog_exception('search_api', $e, '%type while deleting all items from index %index: !message in %function (line %line of %file).', $args);
+        watchdog_exception('search_api', $e, '%type while deleting all items from index %index: @message in %function (line %line of %file).', $args);
         $failed[] = $index->label();
       }
     }

@@ -51,7 +51,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
     }
     catch (SearchApiException $e) {
       drupal_set_message($this->t('Failed to reindex items for the search index %name.', array('%name' => $entity->label())), 'error');
-      watchdog_exception('search_api', $e, '%type while trying to reindex items on index %name: !message in %function (line %line of %file)', array('%name' => $entity->label()));
+      watchdog_exception('search_api', $e, '%type while trying to reindex items on index %name: @message in %function (line %line of %file)', array('%name' => $entity->label()));
     }
 
     $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $entity->id()));

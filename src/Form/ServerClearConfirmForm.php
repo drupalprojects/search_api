@@ -66,7 +66,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
         $args = array(
           '%index' => $index->label(),
         );
-        watchdog_exception('search_api', $e, '%type while clearing index %index: !message in %function (line %line of %file).', $args);
+        watchdog_exception('search_api', $e, '%type while clearing index %index: @message in %function (line %line of %file).', $args);
         $failed_reindexing[] = $index->label();
       }
     }

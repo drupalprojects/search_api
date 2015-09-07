@@ -832,7 +832,7 @@ class Database extends BackendPluginBase {
         }
         catch (\PDOException $e) {
           $vars['%index'] = $index->label();
-          watchdog_exception('search_api_db', $e, '%type while trying to change collation for the fulltext table of index %index: !message in %function (line %line of %file).', $vars);
+          watchdog_exception('search_api_db', $e, '%type while trying to change collation for the fulltext table of index %index: @message in %function (line %line of %file).', $vars);
         }
       }
 

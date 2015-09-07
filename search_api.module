@@ -84,7 +84,7 @@ function search_api_cron() {
           // Therefore, don't index for any index on this server.
           $ignored_servers[$index->getServerId()] = TRUE;
           $vars['%index'] = $index->label();
-          watchdog_exception('search_api', $e, '%type while trying to index items on %index: !message in %function (line %line of %file).', $vars);
+          watchdog_exception('search_api', $e, '%type while trying to index items on %index: @message in %function (line %line of %file).', $vars);
         }
       }
       if (!$num) {
