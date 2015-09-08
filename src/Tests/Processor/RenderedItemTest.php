@@ -135,20 +135,20 @@ class RenderedItemTest extends ProcessorTestBase {
 
     $this->processor->preprocessIndexItems($items);
     foreach ($items as $key => $item) {
-      list(, $idx) = Utility::splitCombinedId($key);
+      list(, $nid) = Utility::splitCombinedId($key);
       $field = $item->getField('rendered_item');
-      $this->assertEqual($field->getType(), 'string', 'Node item ' . $idx . ' rendered value is identified as a string.');
+      $this->assertEqual($field->getType(), 'string', 'Node item ' . $nid . ' rendered value is identified as a string.');
       $values = $field->getValues();
       // These tests rely on the template not changing. However, if we'd only
       // check whether the field values themselves are included, there could
       // easier be false positives. For example the title text was present even
       // when the processor was broken, because the schema metadata was also
       // adding it to the output.
-      $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $idx . ' rendered in view-mode "full".');
-      $this->assertTrue(substr_count($values[0], 'field--name-title') > 0, 'Node item ' . $idx . ' has a rendered title field.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['title'] . '<') > 0, 'Node item ' . $idx . ' has a rendered title inside HTML-Tags.');
-      $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $idx . ' has rendered member information HTML-Tags.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['body']['value'] . '<') > 0, 'Node item ' . $idx . ' has rendered content inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $nid . ' rendered in view-mode "full".');
+      $this->assertTrue(substr_count($values[0], 'field--name-title') > 0, 'Node item ' . $nid . ' has a rendered title field.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['title'] . '<') > 0, 'Node item ' . $nid . ' has a rendered title inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $nid . ' has rendered member information HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['body']['value'] . '<') > 0, 'Node item ' . $nid . ' has rendered content inside HTML-Tags.');
     }
   }
 
