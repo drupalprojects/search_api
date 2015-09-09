@@ -529,7 +529,7 @@ class Database extends BackendPluginBase {
    *   Associative array containing the following:
    *   - table: The table to use for the field.
    *   - column: (optional) The column to use in that table. Defaults to
-   *     "value".
+   *     "value". For creating a separate field table, it must be left empty!
    */
   // @todo Write a test to ensure a field named "value" doesn't break this.
   protected function createFieldTable(FieldInterface $field = NULL, $db) {
@@ -723,12 +723,13 @@ class Database extends BackendPluginBase {
 
         // Make sure the table and column now exist. (Especially important when
         // we actually add the index for the first time.)
-        $storage_exists = $this->database->schema()->tableExists($field['table']) && $this->database->schema()->fieldExists($field['table'], 'value');
-        $denormalized_storage_exists = $this->database->schema()->tableExists($denormalized_table) && $this->database->schema()->fieldExists($denormalized_table, $field['column']);
+        $storage_exists = $this->database->schema()
+          ->fieldExists($field['table'], 'value');
+        $denormalized_storage_exists = $this->database->schema()
+          ->fieldExists($denormalized_table, $field['column']);
         if (!Utility::isTextType($field['type']) && !$storage_exists) {
           $db = array(
             'table' => $field['table'],
-            'column' => 'value',
           );
           $this->createFieldTable($new_fields[$field_id], $db);
         }

@@ -123,6 +123,7 @@ class Utility {
           'field_item:string_long.string',
           'field_item:text_long.string',
           'field_item:text_with_summary.string',
+          'text',
         ),
         'string' => array(
           'string',

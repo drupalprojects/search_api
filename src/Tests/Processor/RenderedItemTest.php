@@ -137,7 +137,7 @@ class RenderedItemTest extends ProcessorTestBase {
     foreach ($items as $key => $item) {
       list(, $nid) = Utility::splitCombinedId($key);
       $field = $item->getField('rendered_item');
-      $this->assertEqual($field->getType(), 'string', 'Node item ' . $nid . ' rendered value is identified as a string.');
+      $this->assertEqual($field->getType(), 'text', 'Node item ' . $nid . ' rendered value is identified as text.');
       $values = $field->getValues();
       // These tests rely on the template not changing. However, if we'd only
       // check whether the field values themselves are included, there could
@@ -162,7 +162,7 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->processor->alterPropertyDefinitions($properties, NULL);
     $this->assertTrue(array_key_exists('rendered_item', $properties), 'The Properties where modified with the "rendered_item".');
     $this->assertTrue(($properties['rendered_item'] instanceof DataDefinition), 'The "rendered_item" contains a valid DataDefinition instance.');
-    $this->assertEqual('string', $properties['rendered_item']->getDataType(), 'Valid DataType set in the DataDefinition.');
+    $this->assertEqual('text', $properties['rendered_item']->getDataType(), 'Correct DataType set in the DataDefinition.');
 
     // Check if the properties stay untouched if a datasource is given.
     $properties = array();

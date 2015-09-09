@@ -183,7 +183,7 @@ class RenderedItem extends ProcessorPluginBase {
       return;
     }
     $definition = array(
-      'type' => 'string',
+      'type' => 'text',
       'label' => $this->t('Rendered HTML output'),
       'description' => $this->t('The complete HTML which would be displayed when viewing the item'),
     );
