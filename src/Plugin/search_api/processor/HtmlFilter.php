@@ -40,7 +40,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         'h1' => 5,
         'h2' => 3,
         'h3' => 2,
-        'string' => 2,
+        'strong' => 2,
         'b' => 2,
         'em' => 1.5,
         'u' => 1.5,
