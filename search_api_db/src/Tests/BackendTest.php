@@ -309,7 +309,9 @@ class BackendTest extends EntityUnitTestBase {
       array('count' => 2, 'filter' => '"item_category"'),
       array('count' => 1, 'filter' => '!'),
     );
-    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['category'], 'Correct OR facets were returned');
+    $category_facets = $results->getExtraData('search_api_facets')['category'];
+    usort($category_facets, array($this, 'facetCompare'));
+    $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
 
     $query = $this->buildSearch();
     $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('category')));
@@ -333,7 +335,9 @@ class BackendTest extends EntityUnitTestBase {
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
     );
-    $this->assertEqual($expected, $results->getExtraData('search_api_facets')['category'], 'Correct OR facets were returned');
+    $category_facets = $results->getExtraData('search_api_facets')['category'];
+    usort($category_facets, array($this, 'facetCompare'));
+    $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
   }
 
   /**
