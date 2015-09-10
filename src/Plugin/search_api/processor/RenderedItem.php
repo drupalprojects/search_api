@@ -8,12 +8,14 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Session\UserSession;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Property\BasicProperty;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -43,6 +45,13 @@ class RenderedItem extends ProcessorPluginBase {
   protected $renderer;
 
   /**
+   * The logger to use for log messages.
+   *
+   * @var \Psr\Log\LoggerInterface|null
+   */
+  protected $logger;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -56,6 +65,10 @@ class RenderedItem extends ProcessorPluginBase {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $container->get('renderer');
     $plugin->setRenderer($renderer);
+
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.factory')->get('search_api');
+    $plugin->setLogger($logger);
 
     return $plugin;
   }
@@ -101,8 +114,31 @@ class RenderedItem extends ProcessorPluginBase {
    *
    * @return $this
    */
-  public function setRenderer($renderer) {
+  public function setRenderer(RendererInterface $renderer) {
     $this->renderer = $renderer;
+    return $this;
+  }
+
+  /**
+   * Retrieves the logger to use for log messages.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   The logger to use.
+   */
+  public function getLogger() {
+    return $this->logger ?: \Drupal::logger('search_api');
+  }
+
+  /**
+   * Sets the logger to use for log messages.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The new logger.
+   *
+   * @return $this
+   */
+  public function setLogger(LoggerInterface $logger) {
+    $this->logger = $logger;
     return $this;
   }
 
@@ -157,10 +193,10 @@ class RenderedItem extends ProcessorPluginBase {
           }
           $options_present = TRUE;
         }
-        elseif ($view_modes) {
+        else {
           $form['view_mode'][$datasource_id][$bundle_id] = array(
             '#type' => 'value',
-            '#value' => key($view_modes),
+            '#value' => $view_modes ? key($view_modes) : FALSE,
           );
         }
       }
@@ -200,18 +236,41 @@ class RenderedItem extends ProcessorPluginBase {
     // @todo Why not just use \Drupal\Core\Session\UserSession directly here?
     $this->currentUser->setAccount(new UserSession(array('roles' => $this->configuration['roles'])));
 
+    // Count of items that don't have a view mode.
+    $unset_view_modes = 0;
+
     // Annoyingly, this doc comment is needed for PHPStorm. See
     // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
-      if (empty($this->configuration['view_mode'][$item->getDatasourceId()])) {
-        continue;
-      }
       if (!($field = $item->getField('rendered_item'))) {
         continue;
       }
-      $build = $item->getDatasource()->viewItem($item->getOriginalObject(), $this->configuration['view_mode'][$item->getDatasourceId()]);
+
+      $datasource_id = $item->getDatasourceId();
+      $datasource = $item->getDatasource();
+      $bundle = $datasource->getItemBundle($item->getOriginalObject());
+      if (empty($this->configuration['view_mode'][$datasource_id][$bundle])) {
+        if (!isset($this->configuration['view_mode'][$datasource_id][$bundle])) {
+          ++$unset_view_modes;
+        }
+        continue;
+      }
+      else {
+        $view_mode = (string) $this->configuration['view_mode'][$datasource_id][$bundle];
+      }
+
+      $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
       $field->addValue($this->getRenderer()->renderPlain($build));
+    }
+
+    if ($unset_view_modes > 0) {
+      $context = array(
+        '%index' => $this->index->label(),
+        '%processor' => $this->label(),
+        '@count' => $unset_view_modes,
+      );
+      $this->getLogger()->warning('Warning: While indexing items on search index %index, @count item(s) did not have a view mode configured for the %processor processor.', $context);
     }
 
     // Restore the original user.
