@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\query;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -312,7 +313,7 @@ class SearchApiQuery extends QueryPluginBase {
     if ($this->shouldAbort()) {
       if (error_displayable()) {
         foreach ($this->errors as $msg) {
-          drupal_set_message(SafeMarkup::checkPlain($msg), 'error');
+          drupal_set_message(Html::escape($msg), 'error');
         }
       }
       $view->result = array();

@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api_db\Plugin\search_api\backend;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -271,7 +272,7 @@ class Database extends BackendPluginBase {
         'database_text' => array(
           '#type' => 'item',
           '#title' => $this->t('Database'),
-          '#markup' => SafeMarkup::checkPlain(str_replace(':', ' > ', $this->configuration['database'])),
+          '#plain_text' => str_replace(':', ' > ', $this->configuration['database']),
         ),
       );
     }
@@ -310,12 +311,12 @@ class Database extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getExtraInformation() {
+  public function viewSettings() {
     $info = array();
 
     $info[] = array(
       'label' => $this->t('Database'),
-      'info' => SafeMarkup::checkPlain(str_replace(':', ' > ', $this->configuration['database'])),
+      'info' => str_replace(':', ' > ', $this->configuration['database']),
     );
     if ($this->configuration['min_chars'] > 1) {
       $info[] = array(
@@ -930,7 +931,7 @@ class Database extends BackendPluginBase {
       }
       catch (\Exception $e) {
         // We just log the error, hoping we can index the other items.
-        $this->getLogger()->warning(SafeMarkup::checkPlain($e->getMessage()));
+        $this->getLogger()->warning(Html::escape($e->getMessage()));
       }
     }
     return $indexed;

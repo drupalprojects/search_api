@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\display;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
@@ -219,7 +220,7 @@ class FacetsBlock extends Block {
         return array(
           '#theme' => $theme,
           '#more_url' => $path,
-          '#link_text' => SafeMarkup::checkPlain($this->useMoreText()),
+          '#link_text' => Html::escape($this->useMoreText()),
           '#view' => $this->view,
         );
       }

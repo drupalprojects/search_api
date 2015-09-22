@@ -5,7 +5,7 @@
  * Defines theme functions for the Search API module.
  */
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\search_api\Utility;
@@ -88,7 +88,7 @@ function theme_search_api_server($variables) {
 
   if (($description = $server->getDescription())) {
     // Sanitize the description and append to the output.
-    $output .= '<p class="description">' . nl2br(SafeMarkup::checkPlain($description)) . '</p>';
+    $output .= '<p class="description">' . nl2br(Html::escape($description)) . '</p>';
   }
 
   // Initialize the $rows variable which will hold the different parts of server
@@ -125,7 +125,7 @@ function theme_search_api_server($variables) {
   // Check if the backend used by the server is valid and get its label.
   if ($server->hasValidBackend()) {
     $backend = $server->getBackend();
-    $info = SafeMarkup::checkPlain($backend->label());
+    $info = Html::escape($backend->label());
   }
   else {
     $class = 'error';
@@ -205,7 +205,7 @@ function theme_search_api_index($variables) {
 
   if (($description = $index->getDescription())) {
     // Sanitize the description and append to the output.
-    $output .= '<p class="description">' . nl2br(SafeMarkup::checkPlain($description)) . '</p>';
+    $output .= '<p class="description">' . nl2br(Html::escape($description)) . '</p>';
   }
 
   // Initialize the $rows variable which will hold the different parts of server

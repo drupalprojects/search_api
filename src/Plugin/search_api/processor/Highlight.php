@@ -487,7 +487,7 @@ class Highlight extends ProcessorPluginBase {
     // Fetch text within the combined ranges we found.
     $out = array();
     foreach ($new_ranges as $from => $to) {
-      $out[] = SafeMarkup::checkPlain(substr($text, $from, $to - $from));
+      $out[] = Html::escape(substr($text, $from, $to - $from));
     }
     if (!$out) {
       return NULL;

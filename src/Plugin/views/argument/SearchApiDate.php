@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 
 /**
@@ -90,10 +91,10 @@ class SearchApiDate extends SearchApiArgument {
           $dates[] = $datestr;
         }
       }
-      return $dates ? implode(', ', $dates) : SafeMarkup::checkPlain($this->argument);
+      return $dates ? implode(', ', $dates) : Html::escape($this->argument);
     }
 
-    return SafeMarkup::checkPlain($this->argument);
+    return Html::escape($this->argument);
   }
 
   /**

@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\IndexInterface;
@@ -57,7 +58,7 @@ class RoleFilter extends ProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $options = array_map(function (RoleInterface $role) {
-      return SafeMarkup::checkPlain($role->label());
+      return Html::escape($role->label());
     }, user_roles());
 
     $form['default'] = array(

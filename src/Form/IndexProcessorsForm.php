@@ -169,9 +169,7 @@ class IndexProcessorsForm extends EntityForm {
         $form['weights'][$stage]['order'][$processor_id]['#attributes']['class'][] = 'draggable';
         $form['weights'][$stage]['order'][$processor_id]['#attributes']['class'][] = 'search-api-processor-weight--' . Html::cleanCssIdentifier($processor_id);
         $form['weights'][$stage]['order'][$processor_id]['#weight'] = $weight;
-        $form['weights'][$stage]['order'][$processor_id]['label'] = array(
-          '#markup' => SafeMarkup::checkPlain($processor->label()),
-        );
+        $form['weights'][$stage]['order'][$processor_id]['label']['#plain_text'] = $processor->label();
         $form['weights'][$stage]['order'][$processor_id]['weight'] = array(
           '#type' => 'weight',
           '#title' => $this->t('Weight for processor %title', array('%title' => $processor->label())),

@@ -174,8 +174,8 @@ class IndexFieldsForm extends EntityForm {
     );
 
     foreach ($fields as $key => $field) {
-      $build['fields'][$key]['title']['#markup'] = SafeMarkup::checkPlain($field->getLabel());
-      $build['fields'][$key]['id']['#markup'] = SafeMarkup::checkPlain($key);
+      $build['fields'][$key]['title']['#plain_text'] = $field->getLabel();
+      $build['fields'][$key]['id']['#plain_text'] = $key;
       if ($field->getDescription()) {
         $build['fields'][$key]['description'] = array(
           '#type' => 'value',

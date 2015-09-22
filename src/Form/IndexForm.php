@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityForm;
@@ -141,7 +142,7 @@ class IndexForm extends EntityForm {
     /** @var \Drupal\search_api\ServerInterface $server */
     foreach ($this->getServerStorage()->loadMultiple() as $server_id => $server) {
       // @todo Special formatting for disabled servers.
-      $options[$server_id] = SafeMarkup::checkPlain($server->label());
+      $options[$server_id] = Html::escape($server->label());
     }
     return $options;
   }
@@ -399,7 +400,7 @@ class IndexForm extends EntityForm {
       if ($config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
         $form['tracker_config']['#type'] = 'details';
         $form['tracker_config']['#title'] = $this->t('Configure %plugin', array('%plugin' => $tracker->label()));
-        $form['tracker_config']['#description'] = SafeMarkup::checkPlain($tracker->getDescription());
+        $form['tracker_config']['#description'] = Html::escape($tracker->getDescription());
         $form['tracker_config']['#open'] = $index->isNew();
 
         $form['tracker_config'] += $config_form;

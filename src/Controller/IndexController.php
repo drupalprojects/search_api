@@ -51,7 +51,7 @@ class IndexController extends ControllerBase {
    *   The page title.
    */
   public function pageTitle(IndexInterface $search_api_index) {
-    return SafeMarkup::checkPlain($search_api_index->label());
+    return SafeMarkup::format('@title', array('@title' => $search_api_index->label()));
   }
 
   /**

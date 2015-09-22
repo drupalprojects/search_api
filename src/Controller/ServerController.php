@@ -54,7 +54,7 @@ class ServerController extends ControllerBase {
    *   The page title.
    */
   public function pageTitle(ServerInterface $search_api_server) {
-    return SafeMarkup::checkPlain($search_api_server->label());
+    return SafeMarkup::format('@title', array('@title' => $search_api_server->label()));
   }
 
   /**

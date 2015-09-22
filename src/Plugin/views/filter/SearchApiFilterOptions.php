@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
@@ -218,8 +219,8 @@ class SearchApiFilterOptions extends SearchApiFilter {
           break;
       }
       // If there is only a single value, use just the plain operator, = or <>.
-      $operator = SafeMarkup::checkPlain($operator);
-      $values = SafeMarkup::checkPlain($this->valueOptions[reset($this->value)]);
+      $operator = Html::escape($operator);
+      $values = Html::escape($this->valueOptions[reset($this->value)]);
     }
     else {
       foreach ($this->value as $value) {
@@ -230,7 +231,7 @@ class SearchApiFilterOptions extends SearchApiFilter {
           $values .= '…';
           break;
         }
-        $values .= SafeMarkup::checkPlain($this->valueOptions[$value]);
+        $values .= Html::escape($this->valueOptions[$value]);
       }
     }
 
