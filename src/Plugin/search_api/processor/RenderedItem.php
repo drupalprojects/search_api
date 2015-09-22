@@ -261,7 +261,10 @@ class RenderedItem extends ProcessorPluginBase {
       }
 
       $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
-      $field->addValue($this->getRenderer()->renderPlain($build));
+      $value = (string) $this->getRenderer()->renderPlain($build);
+      if ($value) {
+        $field->addValue($value);
+      }
     }
 
     if ($unset_view_modes > 0) {
