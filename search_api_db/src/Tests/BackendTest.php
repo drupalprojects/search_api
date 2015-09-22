@@ -384,7 +384,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($results->getResultCount(), 3, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3)), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
-    $this->assertWarnings($results, array($this->t('No valid search keys were present in the query.')), 'No warnings were displayed.');
+    $this->assertWarnings($results, array((string) $this->t('No valid search keys were present in the query.')), '"No valid keys" warning was displayed.');
 
     $keys = array(
       '#conjunction' => 'AND',

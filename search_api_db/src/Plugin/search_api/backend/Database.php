@@ -1320,7 +1320,7 @@ class Database extends BackendPluginBase {
         foreach ($sort as $field_name => $order) {
           if ($order != 'ASC' && $order != 'DESC') {
             $msg = $this->t('Unknown sort order @order. Assuming "ASC".', array('@order' => $order));
-            $this->warnings[$msg] = $msg;
+            $this->warnings[(string) $msg] = 1;
             $order = 'ASC';
           }
           if ($field_name == 'search_api_relevance') {
@@ -1426,12 +1426,12 @@ class Database extends BackendPluginBase {
       else {
         $this->getLogger()->warning('Search keys are given but no fulltext fields are defined.');
         $msg = $this->t('Search keys are given but no fulltext fields are defined.');
-        $this->warnings[$msg] = 1;
+        $this->warnings[(string) $msg] = 1;
       }
     }
     elseif ($keys_set) {
       $msg = $this->t('No valid search keys were present in the query.');
-      $this->warnings[$msg] = 1;
+      $this->warnings[(string) $msg] = 1;
     }
 
     if (!isset($db_query)) {
@@ -1888,7 +1888,8 @@ class Database extends BackendPluginBase {
     $ret = array();
     foreach ($query->getOption('search_api_facets') as $key => $facet) {
       if (empty($fields[$facet['field']])) {
-        $this->warnings[] = $this->t('Unknown facet field @field.', array('@field' => $facet['field']));
+        $msg = $this->t('Unknown facet field @field.', array('@field' => $facet['field']));
+        $this->warnings[(string) $msg] = 1;
         continue;
       }
       $field = $fields[$facet['field']];
