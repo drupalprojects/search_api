@@ -7,6 +7,8 @@
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\IndexBatchHelper;
+use Drupal\search_api\SearchApiException;
 
 /**
  * Implements hook_drush_command().
@@ -342,8 +344,6 @@ function drush_search_api_status($index_id = NULL) {
  * @param int|null $batch_size
  *   (optional) Number of items to index per batch, or NULL to use the index's
  *   "cron_limit" setting.
- *
- * @todo Currently, $batch_size is ignored and all items indexed at once.
  */
 function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = NULL) {
   $indexes = search_api_drush_get_indexes($index_id);
@@ -371,18 +371,11 @@ function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = N
     // If we pass NULL, it would be used as "no items". -1 is the correct way to
     // index all items.
     $limit = $limit ?: -1;
-    $index->index($limit);
-    // @todo Report number of successfully indexed items, and check whether that
-    //   matched the expectations.
 
-    // Get the number of items to index per batch run.
-    /*if (!isset($batch_size)) {
+    // Get the default batch size.
+    if (!isset($batch_size)) {
       $cron_limit = $index->getOption('cron_limit');
-      $searchApiSettings = \Drupal::configFactory()->get('search_api.settings');
-      $batch_size = empty($cron_limit) ?: $searchApiSettings->get('cron_limit');
-    }
-    elseif ($batch_size <= 0) {
-      $batch_size = $remaining;
+      $batch_size = $cron_limit ?: \Drupal::configFactory()->get('search_api.settings')->get('default_cron_limit');
     }
 
     // Get the number items to index.
@@ -390,19 +383,19 @@ function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = N
       $limit = $remaining;
     }
 
-    drush_log(dt("Indexing a maximum number of !limit items (!batch_size items per batch run) for the index !index.", array('!index' => $index->name, '!limit' => $limit, '!batch_size' => $batch_size)), 'ok');
-
-    drush_log("@todo: INITIATING BATCH IS NOT YET IMPLEMENTED.", 'error');
-    return;
+    drush_log(dt("Indexing a maximum number of !limit items (!batch_size items per batch run) for the index '!index'.", array('!index' => $index->label(), '!limit' => $limit, '!batch_size' => $batch_size)), 'ok');
 
     // Create the batch.
-    if (!_search_api_batch_indexing_create($index, $batch_size, $limit, $remaining, TRUE)) {
+    try {
+      IndexBatchHelper::create($index, $batch_size, $limit);
+      drush_backend_batch_process();
+    }
+    catch (SearchApiException $e) {
       drush_log(dt("Couldn't create a batch, please check the batch size and limit parameters."), 'error');
     }
-    else {
-      // Launch the batch process.
-      drush_backend_batch_process();
-    }*/
+
+    // @todo Report number of successfully indexed items, and check whether that
+    //   matched the expectations.
   }
 }
 
