@@ -239,7 +239,7 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function fields(array $fields) {
+  public function setFulltextFields(array $fields = NULL) {
     $fulltext_fields = $this->index->getFulltextFields();
     foreach (array_diff($fields, $fulltext_fields) as $field_id) {
       throw new SearchApiException(SafeMarkup::format('Trying to search on field @field which is no indexed fulltext field.', array('@field' => $field_id)));
@@ -319,11 +319,6 @@ class Query implements QueryInterface {
     if (!$this->preExecuteRan) {
       $this->preExecuteRan = TRUE;
 
-      // Add fulltext fields, unless set
-      if ($this->fields === NULL) {
-        $this->fields = $this->index->getFulltextFields();
-      }
-
       // Preprocess query.
       $this->index->preprocessSearchQuery($this);
 
@@ -370,7 +365,7 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function &getFields() {
+  public function &getFulltextFields() {
     return $this->fields;
   }
 

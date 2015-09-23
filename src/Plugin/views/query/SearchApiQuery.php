@@ -567,12 +567,11 @@ class SearchApiQuery extends QueryPluginBase {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if one of the fields isn't of type "text".
    *
-   * @see \Drupal\search_api\Query\QueryInterface::fields()
+   * @see \Drupal\search_api\Query\QueryInterface::setFulltextFields()
    */
-  // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
-  public function fields(array $fields) {
+  public function setFulltextFields($fields = NULL) {
     if (!$this->shouldAbort()) {
-      $this->query->fields($fields);
+      $this->query->setFulltextFields($fields);
     }
     return $this;
   }
@@ -740,17 +739,16 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Retrieves the fulltext fields that will be searched for the search keys.
    *
-   * @return array
+   * @return string[]|null
    *   An array containing the fields that should be searched for the search
    *   keys.
    *
-   * @see fields()
-   *
-   * @see \Drupal\search_api\Query\QueryInterface::getFields()
+   * @see setFulltextFields()
+   * @see \Drupal\search_api\Query\QueryInterface::getFulltextFields()
    */
-  public function &getFields() {
+  public function &getFulltextFields() {
     if (!$this->shouldAbort()) {
-      return $this->query->getFields();
+      return $this->query->getFulltextFields();
     }
     $ret = NULL;
     return $ret;

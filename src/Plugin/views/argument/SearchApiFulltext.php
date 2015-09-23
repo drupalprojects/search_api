@@ -75,7 +75,7 @@ class SearchApiFulltext extends SearchApiArgument {
    */
   public function query($group_by = FALSE) {
     if ($this->options['fields']) {
-      $this->query->fields($this->options['fields']);
+      $this->query->setFulltextFields($this->options['fields']);
     }
     if ($this->options['conjunction'] != 'AND') {
       $this->query->setOption('conjunction', $this->options['conjunction']);

@@ -211,7 +211,7 @@ class BackendTest extends EntityUnitTestBase {
     if ($keys) {
       $query->keys($keys);
       if ($fields) {
-        $query->fields($fields);
+        $query->setFulltextFields($fields);
       }
     }
     foreach ($filters as $filter) {

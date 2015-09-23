@@ -163,7 +163,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     // back to mere filtering.
     $filter = $this->options['mode'] == 'filter';
     if (!$filter) {
-      $old = $this->query->getFields();
+      $old = $this->query->getFulltextFields();
       $filter = $old && (array_diff($old, $fields) || array_diff($fields, $old));
     }
 
@@ -183,7 +183,7 @@ class SearchApiFulltext extends SearchApiFilterText {
       $this->query->setOption('conjunction', 'OR');
     }
 
-    $this->query->fields($fields);
+    $this->query->setFulltextFields($fields);
     $old = $this->query->getKeys();
     $old_original = $this->query->getOriginalKeys();
     $this->query->keys($this->value);

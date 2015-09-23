@@ -7,7 +7,9 @@
 
 namespace Drupal\search_api\Backend;
 
+use Drupal\Core\Annotation\Action;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
@@ -178,6 +180,25 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       $this->server = Server::load($this->serverId);
       $this->serverId = NULL;
     }
+  }
+
+  /**
+   * Retrieves the effective fulltext fields from the query.
+   *
+   * Automatically translates a NULL value in the query object to all fulltext
+   * fields in the search index.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search query.
+   *
+   * @return string[]
+   *   The fulltext fields in which to search for the search keys.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getFulltextFields()
+   */
+  protected function getQueryFulltextFields(QueryInterface $query) {
+    $fulltext_fields = $query->getFulltextFields();
+    return $fulltext_fields === NULL ? $query->getIndex()->getFulltextFields() : $fulltext_fields;
   }
 
 }

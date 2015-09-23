@@ -1406,11 +1406,10 @@ class Database extends BackendPluginBase {
         );
       }
 
-      $fulltext_fields = $query->getFields();
+      $fulltext_fields = $this->getQueryFulltextFields($query);
       if ($fulltext_fields) {
-        $_fulltext_fields = $fulltext_fields;
-        $fulltext_fields = array();
-        foreach ($_fulltext_fields as $name) {
+        $fulltext_field_information = array();
+        foreach ($fulltext_fields as $name) {
           if (!isset($fields[$name])) {
             throw new SearchApiException(SafeMarkup::format('Unknown field @field specified as search target.', array('@field' => $name)));
           }
@@ -1419,10 +1418,10 @@ class Database extends BackendPluginBase {
             $type = $types[$fields[$name]['type']]['label'];
             throw new SearchApiException(SafeMarkup::format('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }
-          $fulltext_fields[$name] = $fields[$name];
+          $fulltext_field_information[$name] = $fields[$name];
         }
 
-        $db_query = $this->createKeysQuery($keys, $fulltext_fields, $fields, $query->getIndex());
+        $db_query = $this->createKeysQuery($keys, $fulltext_field_information, $fields, $query->getIndex());
       }
       else {
         $this->getLogger()->warning('Search keys are given but no fulltext fields are defined.');
@@ -2076,7 +2075,8 @@ class Database extends BackendPluginBase {
       // We need a list of all current results to match the suggestions against.
       // However, since MySQL doesn't allow using a temporary table multiple
       // times in one query, we regrettably have to do it this way.
-      if (count($query->getFields()) > 1) {
+      $fulltext_fields = $this->getQueryFulltextFields($query);
+      if (count($fulltext_fields) > 1) {
         $all_results = $db_query->execute()->fetchCol();
         // Compute the total number of results so we can later sort out matches
         // that occur too often.
@@ -2103,7 +2103,7 @@ class Database extends BackendPluginBase {
 
       /** @var \Drupal\Core\Database\Query\SelectInterface|null $word_query */
       $word_query = NULL;
-      foreach ($query->getFields() as $field) {
+      foreach ($fulltext_fields as $field) {
         if (!isset($fields[$field]) || !Utility::isTextType($fields[$field]['type'])) {
           continue;
         }

@@ -296,7 +296,7 @@ function theme_search_api_index($variables) {
       // directly to the server.
       // @todo Add a cleaner way for doing this (i.e., skipping preprocessing).
       $query = $index->query();
-      $query->fields(array())->range(0, 0);
+      $query->range(0, 0);
       $response = $server->search($query);
 
       // Build the server index status translation variables.

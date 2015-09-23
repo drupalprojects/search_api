@@ -85,8 +85,7 @@ interface QueryInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if one of the fields isn't a fulltext field.
    */
-  // @todo Allow calling with NULL, and maybe rename to setFulltextFields().
-  public function fields(array $fields);
+  public function setFulltextFields(array $fields = NULL);
 
   /**
    * Adds a subfilter to this query's filter.
@@ -231,13 +230,13 @@ interface QueryInterface {
   /**
    * Retrieves the fulltext fields that will be searched for the search keys.
    *
-   * @return string[]
+   * @return string[]|null
    *   An array containing the fields that should be searched for the search
-   *   keys.
+   *   keys, or NULL if all indexed fulltext fields should be used.
    *
-   * @see fields()
+   * @see setFulltextFields()
    */
-  public function &getFields();
+  public function &getFulltextFields();
 
   /**
    * Retrieves the filter object associated with this search query.
