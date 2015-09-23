@@ -26,3 +26,5 @@ services:
   search_api.server_task_manager:
     class: Drupal\search_api\Task\ServerTaskManager
     arguments: ['@database', '@entity.manager']
+    tags:
+      - { name: backend_overridable }
