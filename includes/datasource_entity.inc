@@ -160,7 +160,17 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
         $query->addExpression(':index_id', 'index_id', array(':index_id' => $index->id));
         $query->addExpression('1', 'changed');
         if ($bundles = $this->getIndexBundles($index)) {
-          $query->condition($this->bundleKey, $bundles);
+          $bundle_column = $this->bundleKey;
+          if (!db_field_exists($table, $bundle_column)) {
+            if ($this->entityType == 'taxonomy_term') {
+              $bundle_column = 'vid';
+              $bundles = db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name IN (:bundles)', array(':bundles' => $bundles))->fetchCol();
+            }
+            else {
+              $this->startTrackingFallback(array($index->machine_name => $index));
+            }
+          }
+          $query->condition($bundle_column, $bundles);
         }
 
         // INSERT ... SELECT ...
@@ -170,20 +180,38 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
       }
     }
     else {
-      // In the absence of a 'base table', use the slower way of retrieving the
-      // items and inserting them "manually". For each index we get the item IDs
-      // (since selected bundles might differ) and insert all of them as new.
-      foreach ($indexes as $index) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', $this->entityType);
-        if ($bundles = $this->getIndexBundles($index)) {
-          $query->entityCondition('bundle', $bundles);
-        }
-        $result = $query->execute();
-        $ids = !empty($result[$this->entityType]) ? array_keys($result[$this->entityType]) : array();
-        if ($ids) {
-          $this->trackItemInsert($ids, array($index));
-        }
+      $this->startTrackingFallback($indexes);
+    }
+  }
+
+  /**
+   * Initializes tracking of the index status of items for the given indexes.
+   *
+   * Fallback for when the items cannot directly be loaded into
+   * {search_api_item} via "INSERT INTO … SELECT …".
+   *
+   * @param SearchApiIndex[] $indexes
+   *   The indexes for which item tracking should be initialized.
+   *
+   * @throws SearchApiDataSourceException
+   *   Thrown if any error state was encountered.
+   *
+   * @see SearchApiEntityDataSourceController::startTracking()
+   */
+  protected function startTrackingFallback(array $indexes) {
+    // In the absence of a 'base table', use the slower way of retrieving the
+    // items and inserting them "manually". For each index we get the item IDs
+    // (since selected bundles might differ) and insert all of them as new.
+    foreach ($indexes as $index) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', $this->entityType);
+      if ($bundles = $this->getIndexBundles($index)) {
+        $query->entityCondition('bundle', $bundles);
+      }
+      $result = $query->execute();
+      $ids = !empty($result[$this->entityType]) ? array_keys($result[$this->entityType]) : array();
+      if ($ids) {
+        $this->trackItemInsert($ids, array($index));
       }
     }
   }

@@ -1,5 +1,6 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2524314 by drunken monkey: Fixed bundle-setting for taxonomy term indexes.
 - #2550599 by ACF, drunken monkey: Fixed error on entity rebuilds.
 
 Search API 1.16 (2015-08-30):
