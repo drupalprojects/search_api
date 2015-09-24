@@ -99,9 +99,13 @@ class ContentAccess extends ProcessorPluginBase {
     if ($datasource) {
       $entity_type = $datasource->getEntityTypeId();
       if (in_array($entity_type, array('node', 'comment'))) {
-        $properties['status'] = ProxyProperty::create($properties['status'])->setLocked();
+        $properties['status'] = ProxyProperty::create($properties['status'])
+          ->setIndexedLocked()
+          ->setTypeLocked();
         if ($entity_type == 'node') {
-          $properties['uid'] = ProxyProperty::create($properties['uid'])->setLocked();
+          $properties['uid'] = ProxyProperty::create($properties['uid'])
+            ->setIndexedLocked()
+            ->setTypeLocked();
         }
       }
       return;
@@ -112,7 +116,10 @@ class ContentAccess extends ProcessorPluginBase {
       'description' => $this->t('Data needed to apply node access.'),
       'type' => 'string',
     );
-    $properties['search_api_node_grants'] = BasicProperty::createFromDefinition($definition)->setLocked()->setHidden();
+    $properties['search_api_node_grants'] = BasicProperty::createFromDefinition($definition)
+      ->setIndexedLocked()
+      ->setTypeLocked()
+      ->setHidden();
   }
 
   /**

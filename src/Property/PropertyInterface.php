@@ -15,12 +15,20 @@ use Drupal\Core\TypedData\DataDefinitionInterface;
 interface PropertyInterface extends DataDefinitionInterface {
 
   /**
-   * Determines whether this processor should always be enabled.
+   * Determines whether this property should always be indexed.
    *
    * @return bool
-   *   TRUE if this processor should be forced enabled; FALSE otherwise.
+   *   TRUE if this property should always be indexed; FALSE otherwise.
    */
-  public function isLocked();
+  public function isIndexedLocked();
+
+  /**
+   * Determines whether the type of this property should be locked.
+   *
+   * @return bool
+   *   TRUE if the type should be locked; FALSE otherwise.
+   */
+  public function isTypeLocked();
 
   /**
    * Determines whether this processor should be hidden from the user.

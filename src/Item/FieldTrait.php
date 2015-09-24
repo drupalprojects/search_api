@@ -96,13 +96,6 @@ trait FieldTrait {
   protected $labelPrefix;
 
   /**
-   * Whether this field should always be enabled/indexed.
-   *
-   * @var bool
-   */
-  protected $locked;
-
-  /**
    * Whether this field should be hidden from the user.
    *
    * @var bool
@@ -348,33 +341,6 @@ trait FieldTrait {
    */
   public function setLabelPrefix($label_prefix) {
     $this->labelPrefix = $label_prefix;
-    return $this;
-  }
-
-  /**
-   * Determines whether this field should always be enabled/indexed.
-   *
-   * @return bool
-   *   TRUE if this field should be locked as enabled/indexed.
-   *
-   * @see \Drupal\search_api\Item\GenericFieldInterface::isLocked()
-   */
-  public function isLocked() {
-    return (bool) $this->locked;
-  }
-
-  /**
-   * Sets whether this field should be locked.
-   *
-   * @param bool $locked
-   *   (optional) TRUE if the field should be locked, FALSE otherwise.
-   *
-   * @return $this
-   *
-   * @see \Drupal\search_api\Item\GenericFieldInterface::setLocked()
-   */
-  public function setLocked($locked = TRUE) {
-    $this->locked = $locked;
     return $this;
   }
 

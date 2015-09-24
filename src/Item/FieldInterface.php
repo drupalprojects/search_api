@@ -130,4 +130,41 @@ interface FieldInterface extends GenericFieldInterface, \Traversable {
    */
   public function setBoost($boost, $notify = FALSE);
 
+  /**
+   * Determines whether this field should always be enabled/indexed.
+   *
+   * @return bool
+   *   TRUE if this field should be locked as enabled/indexed.
+   */
+  public function isIndexedLocked();
+
+  /**
+   * Sets whether this field should be locked.
+   *
+   * @param bool $indexed_locked
+   *   (optional) TRUE if the field should be locked, FALSE otherwise.
+   *
+   * @return $this
+   */
+  public function setIndexedLocked($indexed_locked = TRUE);
+
+  /**
+   * Determines whether the type of this field should be locked.
+   *
+   * @return bool
+   *   TRUE if the type of this field should be locked.
+   */
+  public function isTypeLocked();
+
+  /**
+   * Sets whether the type of this field should be locked.
+   *
+   * @param bool $type_locked
+   *   (optional) TRUE if the type of the field should be locked, FALSE
+   *   otherwise.
+   *
+   * @return $this
+   */
+  public function setTypeLocked($type_locked = TRUE);
+
 }

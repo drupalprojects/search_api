@@ -35,7 +35,8 @@ class AddURL extends ProcessorPluginBase {
       'description' => $this->t('A URI where the item can be accessed'),
       'type' => 'uri',
     );
-    $properties['search_api_url'] = BasicProperty::createFromDefinition($definition)->setLocked();
+    $properties['search_api_url'] = BasicProperty::createFromDefinition($definition)
+      ->setIndexedLocked();
   }
 
   /**

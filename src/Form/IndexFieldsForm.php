@@ -185,6 +185,7 @@ class IndexFieldsForm extends EntityForm {
       $build['fields'][$key]['indexed'] = array(
         '#type' => 'checkbox',
         '#default_value' => $field->isIndexed(),
+        '#disabled' => $field->isIndexedLocked(),
       );
       $css_key = '#edit-fields-' . Html::getId($key);
       $build['fields'][$key]['type'] = array(
@@ -196,6 +197,7 @@ class IndexFieldsForm extends EntityForm {
             $css_key . '-indexed' => array('checked' => TRUE),
           ),
         ),
+        '#disabled' => $field->isTypeLocked(),
       );
       $build['fields'][$key]['boost'] = array(
         '#type' => 'select',
@@ -210,7 +212,6 @@ class IndexFieldsForm extends EntityForm {
       foreach ($fulltext_types as $type) {
         $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
-      $build['fields'][$key]['#disabled'] = $field->isLocked();
       $build['fields'][$key]['#access'] = !$field->isHidden();
     }
 

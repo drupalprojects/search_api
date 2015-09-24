@@ -388,7 +388,8 @@ class AggregatedFields extends ProcessorPluginBase {
           'description' => $this->fieldDescription($field, $index_fields),
           'type' => $types[$field['type']],
         );
-        $properties[$field_id] = BasicProperty::createFromDefinition($definition)->setLocked();
+        $properties[$field_id] = BasicProperty::createFromDefinition($definition)
+          ->setIndexedLocked();
       }
     }
   }

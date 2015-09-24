@@ -18,7 +18,14 @@ trait PropertyTrait {
    *
    * @var bool
    */
-  protected $locked = FALSE;
+  protected $indexedLocked = FALSE;
+
+  /**
+   * The locked state of the property's type.
+   *
+   * @var bool
+   */
+  protected $typeLocked = FALSE;
 
   /**
    * The hidden state of the property.
@@ -35,28 +42,53 @@ trait PropertyTrait {
   protected $fieldSettings = array();
 
   /**
-   * Sets the locked state.
+   * Sets the indexed locked state for the property.
    *
-   * @param bool $locked
-   *   (optional) The new locked state.
+   * @param bool $indexed_locked
+   *   (optional) The new indexed locked state for the property.
    *
    * @return $this
    */
-  public function setLocked($locked = TRUE) {
-    $this->locked = $locked;
+  public function setIndexedLocked($indexed_locked = TRUE) {
+    $this->indexedLocked = $indexed_locked;
     return $this;
   }
 
   /**
-   * Determines whether this processor should always be enabled.
+   * Determines whether the property should always be indexed.
    *
    * @return bool
-   *   TRUE if this processor should be forced enabled; FALSE otherwise.
+   *   TRUE if this indexed property should be locked; FALSE otherwise.
    *
-   * @see \Drupal\search_api\Property\PropertyInterface::isLocked()
+   * @see \Drupal\search_api\Property\PropertyInterface::isIndexedLocked()
    */
-  public function isLocked() {
-    return $this->locked;
+  public function isIndexedLocked() {
+    return $this->indexedLocked;
+  }
+
+  /**
+   * Sets the type locked state for the property.
+   *
+   * @param bool $type_locked
+   *   (optional) The new type locked state for the property.
+   *
+   * @return $this
+   */
+  public function setTypeLocked($type_locked = TRUE) {
+    $this->typeLocked = $type_locked;
+    return $this;
+  }
+
+  /**
+   * Determines whether the type of this property should be locked.
+   *
+   * @return bool
+   *   TRUE if the type should be locked; FALSE otherwise.
+   *
+   * @see \Drupal\search_api\Property\PropertyInterface::isTypeLocked()
+   */
+  public function isTypeLocked() {
+    return $this->typeLocked;
   }
 
   /**

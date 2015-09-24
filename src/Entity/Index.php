@@ -756,7 +756,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
               /** @var \Drupal\search_api\Item\AdditionalFieldInterface $additional_field */
               $additional_field = $this->fields[0]['additional fields'][$property_path];
               $additional_field->setEnabled(TRUE);
-              $additional_field->setLocked(TRUE);
+              $additional_field->setLocked();
             }
           }
         }
@@ -809,11 +809,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // To make it possible to lock fields that are, technically, nested, use
       // the original $property for this check.
       if ($original_property instanceof PropertyInterface) {
-        $field->setLocked($original_property->isLocked());
+        $field->setIndexedLocked($original_property->isIndexedLocked());
+        $field->setTypeLocked($original_property->isTypeLocked());
         $field->setHidden($original_property->isHidden());
       }
       $this->fields[0]['fields'][$key] = $field;
-      if (isset($field_options[$key]) || $field->isLocked()) {
+      if (isset($field_options[$key]) || $field->isIndexedLocked()) {
         $field->setIndexed(TRUE);
         if (isset($field_options[$key])) {
           $field->setType($field_options[$key]['type']);
@@ -1226,7 +1227,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $datasource_ids = array_merge(array(NULL), $this->getDatasourceIds());
     foreach ($datasource_ids as $datasource_id) {
       foreach ($this->getPropertyDefinitions($datasource_id) as $key => $property) {
-        if ($property instanceof PropertyInterface && $property->isLocked()) {
+        if ($property instanceof PropertyInterface && $property->isIndexedLocked()) {
           $settings = $property->getFieldSettings();
           if (empty($settings['type'])) {
             $mapping = Utility::getFieldTypeMapping();
