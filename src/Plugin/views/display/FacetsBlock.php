@@ -79,7 +79,7 @@ class FacetsBlock extends Block {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    if (!$this->getSearchIndexId()) {
+    if (!$this->isTableValid()) {
       return;
     }
 
@@ -122,7 +122,7 @@ class FacetsBlock extends Block {
    * {@inheritdoc}
    */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
-    if (!$this->getSearchIndexId()) {
+    if (!$this->isTableValid()) {
       $form_state->setError($form, $this->t('The "Facets block" display can only be used with base tables based on search indexes.'));
     }
   }
@@ -184,11 +184,9 @@ class FacetsBlock extends Block {
    */
   protected function getFieldOptions() {
     if (!isset($this->field_options)) {
-      $index_id = $this->getSearchIndexId();
-      /** @var \Drupal\search_api\IndexInterface $index */
-      $index = NULL;
-      if (!($index_id && ($index = Index::load($index_id)))) {
-        $table = $this->view->storage->get('base_table');
+      $table = $this->view->storage->get('base_table');
+      $index = SearchApiQuery::getIndexFromTable($table);
+      if (!$index) {
         $views_data = Views::viewsData($table);
         $table = empty($views_data['table']['base']['title']) ? $table : $views_data['table']['base']['title'];
         throw new SearchApiException(SafeMarkup::format('The "Facets block" display cannot be used with a view for @base_table. Please only use this display with base tables representing Search API indexes.', array('@base_table' => $table)));
@@ -368,16 +366,12 @@ class FacetsBlock extends Block {
   /**
    * Checks whether the current view has a correct base table.
    *
-   * @return string|null
-   *   If the current view has a Search API base table, the associated search
-   *   index's ID. NULL otherwise.
+   * @return bool
+   *   TRUE if the current view has a Search API base table, FALSE otherwise.
    */
-  protected function getSearchIndexId() {
+  protected function isTableValid() {
     $table = $this->view->storage->get('base_table');
-    if (substr($table, 0, 17) == 'search_api_index_') {
-      return substr($table, 17);
-    }
-    return NULL;
+    return (bool) SearchApiQuery::getIndexFromTable($table);
   }
 
 }

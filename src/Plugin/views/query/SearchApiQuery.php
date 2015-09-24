@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
@@ -106,22 +107,41 @@ class SearchApiQuery extends QueryPluginBase {
   public $group_operator = 'AND';
 
   /**
+   * Loads the search index belonging to the given Views base table.
+   *
+   * @param string $table
+   *   The Views base table ID.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   (optional) The entity manager to use.
+   *
+   * @return \Drupal\search_api\IndexInterface|null
+   *   The requested search index, or NULL if it could not be found and loaded.
+   */
+  public static function getIndexFromTable($table, EntityManagerInterface $entity_manager = NULL) {
+    if (substr($table, 0, 17) == 'search_api_index_') {
+      $index_id = substr($table, 17);
+      if ($entity_manager) {
+        return $entity_manager->getStorage('search_api_index')->load($index_id);
+      }
+      return Index::load($index_id);
+    }
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     try {
       parent::init($view, $display, $options);
       $this->fields = array();
-      if (substr($view->storage->get('base_table'), 0, 17) == 'search_api_index_') {
-        $id = substr($view->storage->get('base_table'), 17);
-        $this->index = Index::load($id);
-        $this->query = $this->index->query(array(
-          'parse mode' => $this->options['parse_mode'],
-        ));
-      }
-      else {
+      $this->index = self::getIndexFromTable($view->storage->get('base_table'));
+      if (!$this->index) {
         $this->abort(SafeMarkup::format('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
       }
+      $this->query = $this->index->query(array(
+        'parse mode' => $this->options['parse_mode'],
+      ));
     }
     catch (\Exception $e) {
       $this->abort($e->getMessage());

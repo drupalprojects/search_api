@@ -10,6 +10,8 @@ namespace Drupal\search_api\Plugin\views\argument;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 
 /**
  * Defines a contextual filter for doing fulltext searches.
@@ -106,7 +108,17 @@ class SearchApiFulltext extends SearchApiArgument {
    */
   protected function getFulltextFields() {
     $fields = array();
-    $index = $this->query->getIndex();
+
+    if (!empty($this->query)) {
+      $index = $this->query->getIndex();
+    }
+    else {
+      $index = SearchApiQuery::getIndexFromTable($this->table);
+    }
+
+    if (!$index) {
+      return array();
+    }
 
     $fields_info = $index->getFields();
     foreach ($index->getFulltextFields() as $field_id) {
