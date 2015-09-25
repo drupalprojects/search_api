@@ -5,6 +5,7 @@
  * Provides a rich framework for creating searches.
  */
 
+use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\search_api\SearchApiException;
@@ -37,7 +38,6 @@ function search_api_cron() {
   // Load all enabled, not read-only indexes.
   $conditions = array(
     'status' => TRUE,
-    'read_only' => FALSE,
   );
   /** @var \Drupal\search_api\IndexInterface[] $indexes */
   $indexes = entity_load_multiple_by_properties('search_api_index', $conditions);
@@ -45,6 +45,21 @@ function search_api_cron() {
     return;
   }
 
+  // Add items to the tracking system for all indexes for which this hasn't
+  // happened yet.
+  $index_task_manager = Utility::getIndexTaskManager();
+  foreach ($indexes as $index_id => $index) {
+    if (!$index_task_manager->isTrackingComplete($index)) {
+      $index_task_manager->addItemsOnce($index);
+    }
+    // Filter out read-only indexes here, since we want to have tracking but not
+    // index items for them.
+    if ($index->isReadOnly()) {
+      unset($indexes[$index_id]);
+    }
+  }
+
+  // Now index items.
   // Remember servers which threw an exception.
   $ignored_servers = array();
 
@@ -94,6 +109,22 @@ function search_api_cron() {
       }
     }
     $first_pass = FALSE;
+  }
+}
+
+/**
+ * Implements hook_config_import_steps_alter().
+ */
+function search_api_config_import_steps_alter(&$sync_steps, ConfigImporter $config_importer) {
+  $new = $config_importer->getUnprocessedConfiguration('create');
+  $changed = $config_importer->getUnprocessedConfiguration('update');
+  $new_or_changed = array_merge($new, $changed);
+  $prefix = \Drupal::entityManager()->getDefinition('search_api_index')->getConfigPrefix() . '.';
+  $prefix_length = strlen($prefix);
+  foreach ($new_or_changed as $config_id) {
+    if (substr($config_id, 0, $prefix_length) === $prefix) {
+      $sync_steps[] = array('Drupal\search_api\Utility', 'processIndexTasks');
+    }
   }
 }
 

@@ -1050,29 +1050,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function startTracking() {
-    if ($this->hasValidTracker()) {
-      foreach ($this->getDatasources() as $datasource) {
-        $item_ids = $datasource->getItemIds();
-        if ($item_ids) {
-          $this->trackItemsInserted($datasource->getPluginId(), $item_ids);
-        }
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function stopTracking() {
-    if ($this->hasValidTracker()) {
-      $this->getTracker()->trackAllItemsDeleted(NULL);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function trackItemsInserted($datasource_id, array $ids) {
     $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
   }
@@ -1099,7 +1076,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   "trackItemsUpdated".
    */
   protected function trackItemsInsertedOrUpdated($datasource_id, array $ids, $tracker_method) {
-    if ($this->hasValidTracker() && $this->status()) {
+    if ($this->hasValidTracker() && $this->status() && Utility::getIndexTaskManager()->isTrackingComplete($this)) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = Utility::createCombinedId($datasource_id, $id);
@@ -1261,7 +1238,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
-          $this->stopTracking();
+          Utility::getIndexTaskManager()->stopTracking($this);
         }
         if ($original->isServerEnabled()) {
           $original->getServer()->removeIndex($this);
@@ -1270,7 +1247,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       elseif ($this->status() && !$original->status()) {
         $this->getServer()->addIndex($this);
         if ($this->hasValidTracker()) {
-          $this->startTracking();
+          Utility::getIndexTaskManager()->startTracking($this);
         }
       }
 
@@ -1324,16 +1301,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $new_datasource_ids = $this->getDatasourceIds();
     $original_datasource_ids = $original->getDatasourceIds();
     if ($new_datasource_ids != $original_datasource_ids) {
-      $removed = array_diff($original_datasource_ids, $new_datasource_ids);
       $added = array_diff($new_datasource_ids, $original_datasource_ids);
-      foreach ($removed as $datasource_id) {
-        $this->getTracker()->trackAllItemsDeleted($datasource_id);
-      }
-      foreach ($added as $datasource_id) {
-        $datasource = $this->getDatasource($datasource_id);
-        $item_ids = $datasource->getItemIds();
-        $this->trackItemsInserted($datasource_id, $item_ids);
-      }
+      $removed = array_diff($original_datasource_ids, $new_datasource_ids);
+      $index_task_manager = Utility::getIndexTaskManager();
+      $index_task_manager->stopTracking($this, $removed);
+      $index_task_manager->startTracking($this, $added);
     }
   }
 
@@ -1349,11 +1321,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   protected function reactToTrackerSwitch(IndexInterface $original) {
     if ($this->tracker != $original->getTrackerId()) {
+      $index_task_manager = Utility::getIndexTaskManager();
       if ($original->hasValidTracker()) {
-        $original->stopTracking();
+        $index_task_manager->stopTracking($this);
       }
       if ($this->hasValidTracker()) {
-        $this->startTracking();
+        $index_task_manager->startTracking($this);
       }
     }
   }

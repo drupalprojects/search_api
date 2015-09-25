@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\search_api\datasource;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -49,6 +50,13 @@ class ContentEntity extends DatasourcePluginBase {
   protected $typedDataManager;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|null
+   */
+  protected $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
@@ -79,6 +87,10 @@ class ContentEntity extends DatasourcePluginBase {
     /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */
     $typed_data_manager = $container->get('typed_data_manager');
     $datasource->setTypedDataManager($typed_data_manager);
+
+    /** @var $config_factory \Drupal\Core\Config\ConfigFactoryInterface */
+    $config_factory = $container->get('config.factory');
+    $datasource->setConfigFactory($config_factory);
 
     return $datasource;
   }
@@ -149,6 +161,41 @@ class ContentEntity extends DatasourcePluginBase {
     return $this;
   }
 
+  /**
+   * Retrieves the config factory.
+   *
+   * @return \Drupal\Core\Config\ConfigFactoryInterface
+   *   The config factory.
+   */
+  public function getConfigFactory() {
+    return $this->configFactory ?: \Drupal::configFactory();
+  }
+
+  /**
+   * Retrieves the config value for a certain key in the Search API settings.
+   *
+   * @param string $key
+   *   The key whose value should be retrieved.
+   *
+   * @return mixed
+   *   The config value for the given key.
+   */
+  protected function getConfigValue($key) {
+    return $this->getConfigFactory()->get('search_api.settings')->get($key);
+  }
+
+  /**
+   * Sets the config factory.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The new config factory.
+   *
+   * @return $this
+   */
+  public function setConfigFactory(ConfigFactoryInterface $config_factory) {
+    $this->configFactory = $config_factory;
+    return $this;
+  }
   /**
    * {@inheritdoc}
    */
@@ -387,9 +434,8 @@ class ContentEntity extends DatasourcePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getItemIds($limit = '-1', $from = NULL) {
-    // @todo Implement paging.
-    return $this->getBundleItemIds();
+  public function getItemIds($page = NULL) {
+    return $this->getBundleItemIds(NULL, $page);
   }
 
   /**
@@ -443,11 +489,14 @@ class ContentEntity extends DatasourcePluginBase {
    * @param string[]|null $bundles
    *   (optional) The bundles for which all item IDs should be returned; or NULL
    *   to retrieve IDs from all enabled bundles in this datasource.
+   * @param int|null $page
+   *   The zero-based page of IDs to retrieve, for the paging mechanism
+   *   implemented by this datasource; or NULL to retrieve all items at once.
    *
    * @return string[]
    *   An array of all item IDs of these bundles.
    */
-  protected function getBundleItemIds(array $bundles = NULL) {
+  protected function getBundleItemIds(array $bundles = NULL, $page = NULL) {
     // If NULL was passed, use all enabled bundles.
     if (!isset($bundles)) {
       $bundles = array_keys($this->getBundles());
@@ -461,7 +510,15 @@ class ContentEntity extends DatasourcePluginBase {
         $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');
       }
     }
+    if (isset($page)) {
+      $page_size = $this->getConfigValue('tracking_page_size');
+      $select->range($page * $page_size, $page_size);
+    }
     $entity_ids = $select->execute();
+
+    if (!$entity_ids) {
+      return NULL;
+    }
 
     // For all the loaded entities, compute all their item IDs (one for each
     // translation).

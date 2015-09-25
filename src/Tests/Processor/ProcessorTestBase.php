@@ -106,6 +106,11 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       $this->processor = $plugin_manager->createInstance($processor, array('index' => $this->index));
     }
     $this->index->save();
+    \Drupal::configFactory()
+      ->getEditable('search_api.settings')
+      ->set('tracking_page_size', 100)
+      ->save();
+    Utility::getIndexTaskManager()->addItemsAll($this->index);
   }
 
   /**

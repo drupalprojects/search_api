@@ -112,6 +112,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->index->set('datasources', array('entity:comment', 'entity:node', 'entity:user'));
     $this->index->save();
 
+    Utility::getIndexTaskManager()->addItemsAll($this->index);
     $this->index = entity_load('search_api_index', $this->index->id(), TRUE);
   }
 

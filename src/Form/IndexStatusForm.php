@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\IndexBatchHelper;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Utility;
 
 /**
  * Provides a form for indexing, clearing, etc., an index.
@@ -30,11 +31,32 @@ class IndexStatusForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, IndexInterface $index = NULL) {
+    if (!isset($index)) {
+      return array();
+    }
+
     $form['#index'] = $index;
 
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
     if ($index->hasValidTracker()) {
+      if (!Utility::getIndexTaskManager()->isTrackingComplete($index)) {
+        $form['tracking'] = array(
+          '#type' => 'details',
+          '#title' => $this->t('Track items for index'),
+          '#description' => $this->t('Not all items have been tracked for this index. This means the displayed index status is incomplete and not all items will currently be indexed.'),
+          '#open' => TRUE,
+          '#attributes' => array(
+            'class' => array('container-inline'),
+          ),
+        );
+        $form['tracking']['index_now'] = array(
+          '#type' => 'submit',
+          '#value' => $this->t('Track now'),
+          '#name' => 'track_now',
+        );
+      }
+
       // Add the "Index now" form.
       $form['index'] = array(
         '#type' => 'details',
@@ -177,6 +199,10 @@ class IndexStatusForm extends FormBase {
 
       case 'clear':
         $form_state->setRedirect('entity.search_api_index.clear', array('search_api_index' => $index->id()));
+        break;
+
+      case 'track_now':
+        Utility::getIndexTaskManager()->addItemsBatch($index);
         break;
     }
   }

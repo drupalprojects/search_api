@@ -17,6 +17,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
+use Drupal\search_api\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 use SebastianBergmann\Exporter\Exception;
 
@@ -64,6 +65,8 @@ class BackendTest extends EntityUnitTestBase {
     $this->setUpExampleStructure();
 
     $this->installConfig(array('search_api_test_db'));
+
+    Utility::getIndexTaskManager()->addItemsAll(Index::load($this->indexId));
   }
 
   /**

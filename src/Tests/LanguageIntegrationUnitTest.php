@@ -11,6 +11,7 @@ use Drupal\Component\Utility\SafeMarkup;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Utility;
 use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 
 /**
@@ -76,6 +77,8 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       'options' => array('index_directly' => FALSE),
     ));
     $this->index->save();
+
+    Utility::getIndexTaskManager()->addItemsAll($this->index);
   }
 
   /**

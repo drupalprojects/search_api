@@ -462,22 +462,6 @@ interface IndexInterface extends ConfigEntityInterface {
   public function indexItems(array $search_objects);
 
   /**
-   * Starts tracking for this index.
-   *
-   * This is normally done when the index is first created (if it is enabled) or
-   * when it is enabled.
-   */
-  public function startTracking();
-
-  /**
-   * Stops tracking for this index.
-   *
-   * This is done when the index is disabled, or when an enabled index is
-   * deleted.
-   */
-  public function stopTracking();
-
-  /**
    * Adds items from a specific datasource to the index.
    *
    * Note that this method receives datasource-specific item IDs as the

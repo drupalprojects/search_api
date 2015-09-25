@@ -184,20 +184,21 @@ interface DatasourceInterface extends IndexPluginInterface {
   /**
    * Returns a list of IDs of items from this datasource.
    *
-   * Returns all items IDs by default. Allows for simple paging by passing
-   * along a limit and a pointer from where it should start.
+   * Returns all items IDs by default. However, to avoid issues for large data
+   * sets, plugins should also implement a paging mechanism (the details of
+   * which are up to the datasource to decide) which guarantees that all item
+   * IDs can be retrieved by repeatedly calling this method with increasing
+   * values for $page (starting with 0) until NULL is returned.
    *
-   * @param int $limit
-   *   The amount of items to return
-   * @param string $from
-   *   The pointer as from where we want to start returning.
+   * @param int|null $page
+   *   The zero-based page of IDs to retrieve, for the paging mechanism
+   *   implemented by this datasource; or NULL to retrieve all items at once.
    *
-   * @return array
+   * @return string[]|null
    *   An array with datasource-specific (i.e., not prefixed with the datasource
-   *   ID) item IDs.
-   *
-   * @todo Change to single $page parameter.
+   *   ID) item IDs; or NULL if there are no more items for this and all
+   *   following pages.
    */
-  public function getItemIds($limit = -1, $from = NULL);
+  public function getItemIds($page = NULL);
 
 }

@@ -11,3 +11,6 @@ search_api.settings:
     default_tracker:
       type: string
       label: 'The default tracker plugin'
+    tracking_page_size:
+      type: integer
+      label: 'The number of entities loaded at once when adding items to the tracker for a newly created index'

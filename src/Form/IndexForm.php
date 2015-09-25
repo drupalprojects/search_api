@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -17,6 +16,7 @@ use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
+use Drupal\search_api\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -572,9 +572,15 @@ class IndexForm extends EntityForm {
     // Only save the index if the form doesn't need to be rebuilt.
     if (!$form_state->isRebuilding()) {
       try {
-        $this->getEntity()->save();
+        /** @var \Drupal\search_api\IndexInterface $index */
+        $index = $this->getEntity();
+        $index->save();
         drupal_set_message($this->t('The index was successfully saved.'));
-        $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $this->getEntity()->id()));
+        $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
+        $index_task_manager = Utility::getIndexTaskManager();
+        if (!$index_task_manager->isTrackingComplete($index)) {
+          $index_task_manager->addItemsBatch($index);
+        }
       }
       catch (SearchApiException $ex) {
         $form_state->setRebuild();
