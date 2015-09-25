@@ -2034,6 +2034,11 @@ class Database extends BackendPluginBase {
     $passes = array();
     $incomplete_like = NULL;
 
+    // Make the input lowercase as the indexed data is (usually) also all
+    // lowercase.
+    $incomplete_key = Unicode::strtolower($incomplete_key);
+    $user_input = Unicode::strtolower($user_input);
+
     // Decide which methods we want to use.
     if ($incomplete_key && $settings['suggest_suffix']) {
       $passes[] = 1;
