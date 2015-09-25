@@ -161,6 +161,15 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function process(&$value) {
+    $value = str_replace(array('<', '>'), array(' <', '> '), $value);
+    $value = strip_tags($value);
+    $value = $this->normalizeText($value);
+  }
+
+  /**
    * Tokenizes an HTML string according to the HTML elements.
    *
    * Assigns boost values to the elements' contents accordingly.
