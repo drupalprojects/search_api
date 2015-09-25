@@ -187,6 +187,9 @@ class ContentEntity extends DatasourcePluginBase {
     $items = array();
     foreach ($entity_ids as $entity_id => $langcodes) {
       foreach ($langcodes as $item_id => $langcode) {
+        // @todo Also refuse to load entities from not-included bundles? This
+        //   would help to avoid possible race conditions when removing bundles
+        //   from the datasource config. See #2574583.
         if (!empty($entities[$entity_id]) && $entities[$entity_id]->hasTranslation($langcode)) {
           $items[$item_id] = $entities[$entity_id]->getTranslation($langcode)->getTypedData();
         }
@@ -197,7 +200,7 @@ class ContentEntity extends DatasourcePluginBase {
     }
     // If we were unable to load some of the items, mark them as deleted.
     // @todo The index should be responsible for this, not individual
-    //   datasources.
+    //   datasources. See #2574589.
     if ($missing) {
       $this->getIndex()->trackItemsDeleted($this->getPluginId(), array_keys($missing));
     }
@@ -228,8 +231,10 @@ class ContentEntity extends DatasourcePluginBase {
       // First, check if the "default" setting changed and invert the set
       // bundles for the old config, so the following comparison makes sense.
       // @todo If the available bundles changed in between, this will still
-      //   produce wrong results. And we should definitely only store a numeric
-      //   array of the selected bundles, not the "checkboxes" raw format.
+      //   produce wrong results. Also, we should definitely only store a
+      //   numerically-indexed array of the selected bundles, not the
+      //   "checkboxes" raw format. This will, very likely, also resolve that
+      //   issue. See #2471535.
       if ($old_config['default'] != $new_config['default']) {
         foreach ($old_config['bundles'] as $bundle_key => $bundle) {
           if ($bundle_key == $bundle) {
@@ -264,6 +269,8 @@ class ContentEntity extends DatasourcePluginBase {
             }
           }
         }
+        // @todo Make this use a batch instead, like when enabling a datasource.
+        //   See #2574611.
         if (!empty($bundles_start)) {
           if ($entity_ids = $this->getBundleItemIds(array_keys($bundles_start))) {
             $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
@@ -498,7 +505,8 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getViewModes($bundle = NULL) {
     if (isset($bundle)) {
-      // @todo Implement getViewModeOptionsByBundle per https://www.drupal.org/node/2322503
+      // @todo Implement getViewModeOptionsByBundle after #2322503 lands. See
+      //   #2574617.
       //return $this->getEntityManager()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
       return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId(), TRUE);
     }

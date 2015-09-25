@@ -1409,7 +1409,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function onDependencyRemoval(array $dependencies) {
     $changed = parent::onDependencyRemoval($dependencies);
 
-    // @todo Also react sensibly when removing the dependency of a plugin.
+    // @todo Also react sensibly when removing the dependency of a plugin or an
+    //   indexed field. See #2574633 and #2541206.
     foreach ($dependencies['config'] as $entity) {
       if ($entity instanceof EntityInterface && $entity->getEntityTypeId() == 'search_api_server') {
         // Remove this index from the deleted server (thus disabling it).
