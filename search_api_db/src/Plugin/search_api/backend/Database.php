@@ -1020,7 +1020,7 @@ class Database extends BackendPluginBase {
           // Log an error, but only once per field. Since a superfluous field is
           // not too serious, we just index the rest of the item normally.
           $field_errors[$name] = TRUE;
-          $this->getLogger()->warning("Unknown field !field: please check (and re-save) the index's fields settings.", array('!field' => $name));
+          $this->getLogger()->warning("Unknown field @field: please check (and re-save) the index's fields settings.", array('@field' => $name));
           continue;
         }
         $table = $fields[$name]['table'];

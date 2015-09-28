@@ -631,7 +631,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($this->unmappedFields) {
         $vars['@fields'] = array();
         foreach ($this->unmappedFields as $type => $fields) {
-          $vars['@fields'][] = implode(', ', $fields) . ' (' . SafeMarkup::format('type !type', array('!type' => $type)) . ')';
+          $vars['@fields'][] = implode(', ', $fields) . ' (' . SafeMarkup::format('type @type', array('@type' => $type)) . ')';
         }
         $vars['@fields'] = implode('; ', $vars['@fields']);
         $vars['%index'] = $this->label();

@@ -152,8 +152,8 @@ class SearchApiDate extends SearchApiArgument {
    * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::abort()
    */
   protected function abort() {
-    $variables['!field'] = $this->definition['group'] . ': ' . $this->definition['title'];
-    $this->query->abort(SafeMarkup::format('Illegal argument passed to !field contextual filter.', $variables));
+    $variables['@field'] = $this->definition['group'] . ': ' . $this->definition['title'];
+    $this->query->abort(SafeMarkup::format('Illegal argument passed to @field contextual filter.', $variables));
   }
 
 }

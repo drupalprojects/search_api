@@ -532,7 +532,7 @@ class Highlight extends ProcessorPluginBase {
   protected function getEllipses() {
     // Combine the text chunks with "…" separators. The "…" needs to be
     // translated. Let translators have the … separator text as one chunk.
-    $ellipses = explode('!excerpt', $this->t('… !excerpt … !excerpt …'));
+    $ellipses = explode('@excerpt', $this->t('… @excerpt … @excerpt …'));
     return $ellipses;
   }
 

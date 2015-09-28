@@ -90,7 +90,7 @@ class IntegrationTest extends WebTestBase {
     );
 
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Server name'))));
+    $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Server name'))));
 
     $edit = array(
       'name' => 'Search API test server',
@@ -99,7 +99,7 @@ class IntegrationTest extends WebTestBase {
       'backend' => 'search_api_test_backend',
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
+    $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
 
     $edit = array(
       'name' => 'Search API test server',
@@ -129,9 +129,9 @@ class IntegrationTest extends WebTestBase {
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Index name'))));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Machine-readable name'))));
-    $this->assertText($this->t('!name field is required.', array('!name' => $this->t('Data sources'))));
+    $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Index name'))));
+    $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
+    $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Data sources'))));
 
     $this->indexId = 'test_index';
 
