@@ -16,8 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Transliteration"),
  *   description = @Translation("Makes searches insensitive to accents and other non-ASCII characters."),
  *   stages = {
- *     "preprocess_index" = 0,
- *     "preprocess_query" = 0
+ *     "preprocess_index" = -20,
+ *     "preprocess_query" = -20
  *   }
  * )
  */

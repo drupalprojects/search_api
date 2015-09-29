@@ -17,7 +17,7 @@ use Drupal\search_api\Property\BasicProperty;
  *   label = @Translation("URL field"),
  *   description = @Translation("Adds the item's URL to the indexed data."),
  *   stages = {
- *     "preprocess_index" = 0
+ *     "preprocess_index" = -30
  *   }
  * )
  */

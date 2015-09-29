@@ -21,7 +21,7 @@ use Drupal\user\UserInterface;
  *   label = @Translation("Role filter"),
  *   description = @Translation("Filters out users based on their role."),
  *   stages = {
- *     "preprocess_index" = 0
+ *     "preprocess_index" = -50
  *   }
  * )
  */

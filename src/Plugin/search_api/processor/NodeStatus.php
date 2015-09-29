@@ -17,7 +17,7 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
  *   label = @Translation("Node status"),
  *   description = @Translation("Exclude unpublished nodes from node indexes."),
  *   stages = {
- *     "preprocess_index" = 0
+ *     "preprocess_index" = -50
  *   }
  * )
  */

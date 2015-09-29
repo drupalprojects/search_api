@@ -32,8 +32,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Content access"),
  *   description = @Translation("Adds content access checks for nodes and comments."),
  *   stages = {
- *     "preprocess_index" = 0,
- *     "preprocess_query" = 0
+ *     "preprocess_index" = -30,
+ *     "preprocess_query" = -30
  *   }
  * )
  */

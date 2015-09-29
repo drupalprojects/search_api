@@ -19,7 +19,7 @@ use Drupal\search_api\Utility;
  *   label = @Translation("Aggregated fields"),
  *   description = @Translation("Add customized aggregations of existing fields to the index."),
  *   stages = {
- *     "preprocess_index" = 0
+ *     "preprocess_index" = -25
  *   }
  * )
  */

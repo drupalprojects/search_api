@@ -24,7 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Rendered item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed."),
  *   stages = {
- *     "preprocess_index" = 0
+ *     "preprocess_index" = -30
  *   }
  * )
  */
