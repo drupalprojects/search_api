@@ -696,6 +696,30 @@ class BackendTest extends EntityUnitTestBase {
     $facets = $results->getExtraData('search_api_facets', array())['type'];
     usort($facets, array($this, 'facetCompare'));
     $this->assertEqual($facets, $expected, 'Correct facets were returned');
+
+    // Regression tests for #2469547.
+    $query = $this->buildSearch();
+    $facets = array();
+    $facets['body'] = array(
+      'field' => $this->getFieldId('body'),
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => FALSE,
+    );
+    $query->setOption('search_api_facets', $facets);
+    $query->condition($this->getFieldId('id'), 5, '<>');
+    $query->range(0, 0);
+    $results = $query->execute();
+    $expected = array(
+      array('count' => 4, 'filter' => '"test"'),
+      array('count' => 1, 'filter' => '"bar"'),
+      array('count' => 1, 'filter' => '"foobar"'),
+    );
+    // We can't guarantee the order of returned facets, since "bar" and "foobar"
+    // both occur once, so we have to do a more complex check.
+    $facets = $results->getExtraData('search_api_facets', array())['body'];
+    usort($facets, array($this, 'facetCompare'));
+    $this->assertEqual($facets, $expected, 'Correct facets were returned for a fulltext field.');
   }
 
   /**

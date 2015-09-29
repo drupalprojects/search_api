@@ -1967,9 +1967,13 @@ class Database extends BackendPluginBase {
 
       // If "Include missing facet" is disabled, we use an INNER JOIN and add IS
       // NOT NULL for shared tables.
+      $is_text_type = Utility::isTextType($field['type']);
       $alias = $this->getTableAlias($field, $select, TRUE, $facet['missing'] ? 'leftJoin' : 'innerJoin');
-      $select->addField($alias, Utility::isTextType($field['type']) ? 'word' : 'value', 'value');
-      if (!$facet['missing'] && !Utility::isTextType($field['type'])) {
+      $select->addField($alias, $is_text_type ? 'word' : 'value', 'value');
+      if ($is_text_type) {
+        $select->condition("$alias.field_name", $this->getTextFieldName($facet['field']));
+      }
+      if (!$facet['missing'] && !$is_text_type) {
         $select->isNotNull($alias . '.' . 'value');
       }
       $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
