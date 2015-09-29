@@ -171,6 +171,19 @@ function search_api_drush_command() {
     'aliases' => array('sapi-sd'),
   );
 
+  $items['search-api-set-index-server'] = array(
+    'description' => 'Set the search server used by a given index.',
+    'examples' => array(
+      'drush search-api-set-index-server default_node_index my_solr_server' => dt('Set the @index index to used the @server server.', array('@index' => 'default_node_index', '@server' => 'my_solr_server')),
+      'drush sapi-sis default_node_index my_solr_server' => dt('Alias to set the @index index to used the @server server.', array('@index' => 'default_node_index', '@server' => 'my_solr_server')),
+    ),
+    'arguments' => array(
+      'index_id' => dt('The machine name of an index.'),
+      'server_id' => dt('The machine name of a server to set on the index.'),
+    ),
+    'aliases' => array('sapi-sis'),
+  );
+
   return $items;
 }
 
@@ -610,4 +623,45 @@ function drush_search_api_server_disable($server_id = NULL) {
   }
   $server->setStatus(FALSE)->save();
   drush_print(dt('The server was disabled successfully.'));
+}
+
+/**
+ * Sets the server for a given index.
+ *
+ * @param string $index_id
+ *   The ID of the index whose server should be changed.
+ * @param string $server_id
+ *   The ID of the new server for the index.
+ */
+function drush_search_api_set_index_server($index_id = NULL, $server_id = NULL) {
+  // Make sure we have parameters to work with.
+  if (empty($index_id) || empty($server_id)) {
+    drush_log(dt('You must specify both an index and server.'), 'error');
+    return;
+  }
+  // Fetch current index and server data.
+  $index = Index::load($index_id);
+  $server = Server::load($server_id);
+  if (!$index) {
+    drush_set_error(dt('Invalid index ID "@index_id". The following indexes are defined:', array('@index_id' => $index_id)));
+    drush_print();
+    drush_search_api_list();
+    return;
+  }
+  if (!$server) {
+    drush_set_error(dt('Invalid server ID "@server_id". The following servers are defined:', array('@server_id' => $server_id)));
+    drush_print();
+    drush_search_api_server_list();
+    return;
+  }
+  // Set the new server on the index.
+  try {
+    $index->setServer($server);
+    $index->save();
+    drush_log(dt('Index @index has been set to use server @server and items have been queued for indexing.', array('@index' => $index_id, '@server' => $server_id)), 'ok');
+  }
+  catch (SearchApiException $e) {
+    drush_log($e->getMessage(), 'error');
+    drush_log(dt('There was an error setting index @index to use server @server, or this index is already configured to use this server.', array('@index' => $index_id, '@server' => $server_id)), 'error');
+  }
 }
