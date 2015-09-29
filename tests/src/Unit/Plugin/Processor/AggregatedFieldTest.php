@@ -7,7 +7,6 @@
 
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;

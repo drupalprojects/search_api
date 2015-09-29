@@ -7,7 +7,6 @@
 
 namespace Drupal\search_api\Backend;
 
-use Drupal\Core\Annotation\Action;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;

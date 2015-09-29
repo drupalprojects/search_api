@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\taxonomy\Entity\Term;
 
 /**

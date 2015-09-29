@@ -8,9 +8,7 @@
 namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 
 /**

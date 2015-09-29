@@ -216,11 +216,7 @@ class SearchApiRow extends RowPluginBase {
       return '';
     }
 
-    // @todo Use isValidDatasource() instead.
-    try {
-      $datasource = $this->index->getDatasource($datasource_id);
-    }
-    catch (SearchApiException $e) {
+    if (!$this->index->isValidDatasource($datasource_id)) {
       $context = array(
         '%datasource' => $datasource_id,
         '%view' => $this->view->storage->label(),
