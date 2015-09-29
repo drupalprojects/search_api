@@ -108,10 +108,12 @@ class IntegrationTest extends WebTestBase {
 
     // Add tags field to Article.
     // Create a tags vocabulary for the 'article' content type.
-    $vocabulary = entity_create('taxonomy_vocabulary',  array(
-      'name' => 'Tags',
-      'vid' => 'tags',
-    ));
+    $vocabulary = \Drupal::entityManager()
+      ->getStorage('taxonomy_vocabulary')
+      ->create(array(
+        'name' => 'Tags',
+        'vid' => 'tags',
+      ));
     $vocabulary->save();
     $field_name = 'field_' . $vocabulary->id();
 
@@ -123,20 +125,20 @@ class IntegrationTest extends WebTestBase {
     );
     $this->createEntityReferenceField('node', 'article', $field_name, 'Tags', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    entity_get_form_display('node', 'article', 'default')
+   $this->getEntityDisplay('form', 'node', 'article', 'default')
       ->setComponent($field_name, array(
         'type' => 'entity_reference_autocomplete_tags',
         'weight' => -4,
       ))
       ->save();
 
-    entity_get_display('node', 'article', 'default')
+   $this->getEntityDisplay('view', 'node', 'article', 'default')
       ->setComponent($field_name, array(
         'type' => 'entity_reference_label',
         'weight' => 10,
       ))
       ->save();
-    entity_get_display('node', 'article', 'teaser')
+   $this->getEntityDisplay('view', 'node', 'article', 'teaser')
       ->setComponent($field_name, array(
         'type' => 'entity_reference_label',
         'weight' => 10,
@@ -207,36 +209,73 @@ class IntegrationTest extends WebTestBase {
    *   The newly created field configuration.
    */
   protected function createImageField($name, $type_name, $storage_settings = array(), $field_settings = array(), $widget_settings = array()) {
-    entity_create('field_storage_config', array(
-      'field_name' => $name,
-      'entity_type' => 'node',
-      'type' => 'image',
-      'settings' => $storage_settings,
-      'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
-    ))->save();
+    \Drupal::entityManager()
+      ->getStorage('field_storage_config')
+      ->create(array(
+        'field_name' => $name,
+        'entity_type' => 'node',
+        'type' => 'image',
+        'settings' => $storage_settings,
+        'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
+      ))->save();
 
-    $field_config = entity_create('field_config', array(
-      'field_name' => $name,
-      'label' => $name,
-      'entity_type' => 'node',
-      'bundle' => $type_name,
-      'required' => !empty($field_settings['required']),
-      'settings' => $field_settings,
-    ));
+    $field_config = \Drupal::entityManager()
+      ->getStorage('field_config')
+      ->create(array(
+        'field_name' => $name,
+        'label' => $name,
+        'entity_type' => 'node',
+        'bundle' => $type_name,
+        'required' => !empty($field_settings['required']),
+        'settings' => $field_settings,
+      ));
     $field_config->save();
 
-    entity_get_form_display('node', $type_name, 'default')
+   $this->getEntityDisplay('form', 'node', $type_name, 'default')
       ->setComponent($name, array(
         'type' => 'image_image',
         'settings' => $widget_settings,
       ))
       ->save();
 
-    entity_get_display('node', $type_name, 'default')
+   $this->getEntityDisplay('view', 'node', $type_name, 'default')
       ->setComponent($name)
       ->save();
 
     return $field_config;
+  }
+
+  /**
+   * Retrieves an entity's view or form display.
+   *
+   * @param string $type
+   *   The type of display, either "view" or "form".
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $bundle
+   *   The bundle.
+   * @param string $mode
+   *   The view or form mode.
+   *
+   * @return \Drupal\Core\Entity\Display\EntityDisplayInterface
+   *   The requested display.
+   */
+  protected function getEntityDisplay($type, $entity_type, $bundle, $mode) {
+    // Try loading the entity from configuration.
+    $display_storage = \Drupal::entityManager()->getStorage("entity_{$type}_display");
+    $display = $display_storage->load($entity_type . '.' . $bundle . '.' . $mode);
+
+    // If not found, create a fresh configuration object.
+    if (!$display) {
+      $display = $display_storage->create(array(
+        'targetEntityType' => $entity_type,
+        'bundle' => $bundle,
+        'mode' => $mode,
+        'status' => TRUE,
+      ));
+    }
+
+    return $display;
   }
 
 }

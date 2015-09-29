@@ -524,7 +524,7 @@ class ContentEntity extends DatasourcePluginBase {
     // translation).
     $item_ids = array();
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    foreach (entity_load_multiple($this->getEntityTypeId(), $entity_ids) as $entity_id => $entity) {
+    foreach ($this->getEntityStorage()->loadMultiple($entity_ids) as $entity_id => $entity) {
       foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
         $item_ids[] = "$entity_id:$langcode";
       }

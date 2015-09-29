@@ -785,11 +785,13 @@ class BackendTest extends EntityUnitTestBase {
     \Drupal::entityManager()->getStorage('search_api_server')->resetCache(array($this->serverId));
     \Drupal::entityManager()->getStorage('search_api_index')->resetCache(array($this->serverId));
 
-    entity_create('entity_test', array(
-      'id' => 6,
-      'prices' => array('3.5', '3.25', '3.75', '3.5'),
-      'type' => 'item',
-    ))->save();
+    \Drupal::entityManager()
+      ->getStorage('entity_test')
+      ->create(array(
+        'id' => 6,
+        'prices' => array('3.5', '3.25', '3.75', '3.5'),
+        'type' => 'item',
+      ))->save();
 
     $this->indexItems($this->indexId);
 
@@ -808,10 +810,12 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     // Regression test for #2284199.
-    entity_create('entity_test', array(
-      'id' => 7,
-      'type' => 'item',
-    ))->save();
+    \Drupal::entityManager()
+      ->getStorage('entity_test')
+      ->create(array(
+        'id' => 7,
+        'type' => 'item',
+      ))->save();
 
     $count = $this->indexItems($this->indexId);
     $this->assertEqual($count, 1, 'Indexing an item with an empty value for a non string field worked.');
@@ -821,12 +825,14 @@ class BackendTest extends EntityUnitTestBase {
     $index->save();
     $this->indexItems($this->indexId);
 
-    entity_create('entity_test', array(
-      'id' => 8,
-      'name' => 'Article with long body',
-      'type' => 'article',
-      'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
-    ))->save();
+    \Drupal::entityManager()
+      ->getStorage('entity_test')
+      ->create(array(
+        'id' => 8,
+        'name' => 'Article with long body',
+        'type' => 'article',
+        'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
+      ))->save();
     $count = $this->indexItems($this->indexId);
     $this->assertEqual($count, 1, 'Indexing an item with a word longer than 50 characters worked.');
 

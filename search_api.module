@@ -8,6 +8,7 @@
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\search_api\Entity\Index;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntity;
 use Drupal\search_api\Utility;
@@ -39,8 +40,9 @@ function search_api_cron() {
   $conditions = array(
     'status' => TRUE,
   );
+  $index_storage = \Drupal::entityManager()->getStorage('search_api_index');
   /** @var \Drupal\search_api\IndexInterface[] $indexes */
-  $indexes = entity_load_multiple_by_properties('search_api_index', $conditions);
+  $indexes = $index_storage->loadByProperties($conditions);
   if (!$indexes) {
     return;
   }
