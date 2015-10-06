@@ -172,7 +172,7 @@ abstract class SearchApiAbstractProcessor implements SearchApiProcessorInterface
       $default_fields = drupal_map_assoc(array_keys($this->options['fields']));
     }
     foreach ($fields as $name => $field) {
-      $field_options[$name] = $field['name'];
+      $field_options[$name] = check_plain($field['name']);
       if (!empty($default_fields[$name]) || (!isset($this->options['fields']) && $this->testField($name, $field))) {
         $default_fields[$name] = $name;
       }
