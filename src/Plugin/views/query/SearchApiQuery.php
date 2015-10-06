@@ -435,17 +435,21 @@ class SearchApiQuery extends QueryPluginBase {
     $rows = array();
     $missing = array();
 
+    if (!empty($this->configuration['entity_access'])) {
+      $items = $this->index->loadItemsMultiple(array_keys($results));
+      $results = array_intersect_key($results, $items);
+      /** @var \Drupal\Core\Entity\Plugin\DataType\EntityAdapter $item */
+      foreach ($items as $item_id => $item) {
+        if (!$item->getValue()->access('view')) {
+          unset($results[$item_id]);
+        }
+      }
+    }
+
     // First off, we try to gather as much field values as possible without
     // loading any items.
     foreach ($results as $item_id => $result) {
       $datasource_id = $result->getDatasourceId();
-
-      /*if (!empty($this->options['entity_access'])) {
-        $entity = entity_load($this->index->item_type, $id);
-        if (!$entity[$id]->access('view')) {
-          continue;
-        }
-      }*/
 
       // @todo Find a more elegant way of passing metadata here.
       $values['search_api_id'] = $item_id;
