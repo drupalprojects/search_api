@@ -7,13 +7,13 @@
 
 namespace Drupal\search_api\Plugin\views\display;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
+use Drupal\search_api\SearchApiException;
 use Drupal\views\Plugin\views\display\Block;
 use Drupal\views\Views;
 
@@ -188,7 +188,7 @@ class FacetsBlock extends Block {
       if (!$index) {
         $views_data = Views::viewsData($table);
         $table = empty($views_data['table']['base']['title']) ? $table : $views_data['table']['base']['title'];
-        throw new SearchApiException(SafeMarkup::format('The "Facets block" display cannot be used with a view for @base_table. Please only use this display with base tables representing Search API indexes.', array('@base_table' => $table)));
+        throw new SearchApiException(new FormattableMarkup('The "Facets block" display cannot be used with a view for @base_table. Please only use this display with base tables representing Search API indexes.', array('@base_table' => $table)));
       }
       $this->field_options = array();
       foreach ($index->getFields() as $key => $field) {

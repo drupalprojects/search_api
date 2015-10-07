@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\IndexStorageUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\IndexStorageUnitTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\search_api\IndexInterface;
-use Drupal\simpletest\KernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Tests whether the storage of search indexes works correctly.
@@ -80,7 +80,7 @@ class IndexStorageUnitTest extends KernelTestBase {
    */
   public function indexLoad(IndexInterface $index) {
     $loaded_index = $this->storage->load($index->id());
-    $this->assertIdentical($index->label(), $loaded_index->label());
+    $this->assertSame($index->label(), $loaded_index->label());
   }
 
   /**

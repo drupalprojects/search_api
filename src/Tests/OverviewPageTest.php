@@ -149,10 +149,10 @@ class OverviewPageTest extends WebTestBase {
 
     $this->drupalGet($this->overviewPageUrl);
     $basic_url = $this->urlGenerator->generateFromRoute('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
-    $this->assertRaw('<a href="' . $basic_url . '/edit" hreflang="en">Edit</a>', 'Edit operation presents');
-    $this->assertRaw('<a href="' . $basic_url . '/disable" hreflang="en">Disable</a>', 'Disable operation presents');
-    $this->assertRaw('<a href="' . $basic_url . '/delete" hreflang="en">Delete</a>', 'Delete operation presents');
-    $this->assertNoRaw('<a href="' . $basic_url . '/enable" hreflang="en">Enable</a>', 'Enable operation is not present');
+    $this->assertRaw('<a href="' . $basic_url . '/edit">Edit</a>', 'Edit operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '/disable">Disable</a>', 'Disable operation presents');
+    $this->assertRaw('<a href="' . $basic_url . '/delete">Delete</a>', 'Delete operation presents');
+    $this->assertNoRaw('<a href="' . $basic_url . '/enable">Enable</a>', 'Enable operation is not present');
 
     $server->setStatus(FALSE)->save();
     $this->drupalGet($this->overviewPageUrl);

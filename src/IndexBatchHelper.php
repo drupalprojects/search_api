@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\TranslationInterface;
 
 /**
@@ -103,7 +103,7 @@ class IndexBatchHelper {
         '%limit' => $limit,
         '%name' => $index->label(),
       );
-      throw new SearchApiException(SafeMarkup::format('Failed to create a batch with batch size %size and limit %limit for index %name', $args));
+      throw new SearchApiException(new FormattableMarkup('Failed to create a batch with batch size %size and limit %limit for index %name', $args));
     }
   }
 

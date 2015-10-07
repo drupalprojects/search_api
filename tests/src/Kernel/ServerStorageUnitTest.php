@@ -2,14 +2,14 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\ServerStorageUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\ServerStorageUnitTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\search_api\ServerInterface;
-use Drupal\simpletest\KernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Tests whether the storage of search servers works correctly.
@@ -81,7 +81,7 @@ class ServerStorageUnitTest extends KernelTestBase {
    */
   public function serverLoad(ServerInterface $server) {
     $loaded_server = $this->storage->load($server->id());
-    $this->assertIdentical($server->label(), $loaded_server->label());
+    $this->assertSame($server->label(), $loaded_server->label());
   }
 
   /**

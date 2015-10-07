@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\ServerTaskUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\ServerTaskUnitTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Kernel;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
-use Drupal\simpletest\KernelTestBase;
 
 /**
  * Tests whether the server task system works correctly.
@@ -113,24 +113,24 @@ class ServerTaskUnitTest extends KernelTestBase {
 
     // Try to add the index.
     $this->server->addIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'addIndex correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'addIndex correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'addIndex';
     }
     $this->assertTrue(!empty($task_created), 'The addIndex task was successfully added.');
     if ($tasks) {
-      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the addIndex task.');
+      $this->assertEquals($this->index->id(), $tasks[0]->index_id, 'The right index ID was used for the addIndex task.');
     }
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
-      $this->pass("Second task ('updateIndex') was added.");
-      $this->assertEqual($tasks[0]->type, 'addIndex', 'First task stayed the same.');
-      $this->assertEqual($tasks[1]->type, 'updateIndex', 'New task was queued as last.');
+      $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
+      $this->assertEquals('addIndex', $tasks[0]->type, 'First task stayed the same.');
+      $this->assertEquals('updateIndex', $tasks[1]->type, 'New task was queued as last.');
     }
     else {
       $this->fail("Second task (updateIndex) was not added.");
@@ -140,8 +140,8 @@ class ServerTaskUnitTest extends KernelTestBase {
     // run.
     $this->state->set('search_api_test_backend.exception.addIndex', FALSE);
     search_api_cron();
-    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('addIndex', 'updateIndex'), 'Right methods were called during task execution.');
+    $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
+    $this->assertEquals(array('addIndex', 'updateIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
   }
 
   /**
@@ -155,24 +155,24 @@ class ServerTaskUnitTest extends KernelTestBase {
 
     // Try to update the index.
     $this->server->updateIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'updateIndex';
     }
     $this->assertTrue(!empty($task_created), 'The updateIndex task was successfully added.');
     if ($tasks) {
-      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the updateIndex task.');
+      $this->assertEquals($this->index->id(), $tasks[0]->index_id, 'The right index ID was used for the updateIndex task.');
     }
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->deleteAllIndexItems($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteAllIndexItems was not executed.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteAllIndexItems was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
-      $this->pass("Second task ('deleteAllIndexItems') was added.");
-      $this->assertEqual($tasks[0]->type, 'updateIndex', 'First task stayed the same.');
-      $this->assertEqual($tasks[1]->type, 'deleteAllIndexItems', 'New task was queued as last.');
+      $this->assertTrue(TRUE, "Second task ('deleteAllIndexItems') was added.");
+      $this->assertEquals('updateIndex', $tasks[0]->type, 'First task stayed the same.');
+      $this->assertEquals('deleteAllIndexItems', $tasks[1]->type, 'New task was queued as last.');
     }
     else {
       $this->fail("Second task (deleteAllIndexItems) was not added.");
@@ -182,8 +182,8 @@ class ServerTaskUnitTest extends KernelTestBase {
     // call to indexItems().
     $this->state->set('search_api_test_backend.exception.updateIndex', FALSE);
     $this->server->indexItems($this->index, array());
-    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('updateIndex', 'deleteAllIndexItems', 'indexItems'), 'Right methods were called during task execution.');
+    $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
+    $this->assertEquals(array('updateIndex', 'deleteAllIndexItems', 'indexItems'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
   }
 
   /**
@@ -200,14 +200,14 @@ class ServerTaskUnitTest extends KernelTestBase {
     // that the tasks were set correctly.
     $this->server->updateIndex($this->index);
     $this->server->removeIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex and removeIndex correctly threw exceptions.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex and removeIndex correctly threw exceptions.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'removeIndex';
     }
     $this->assertTrue(!empty($task_created), 'The removeIndex task was successfully added and other tasks removed.');
     if ($tasks) {
-      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the removeIndex task.');
+      $this->assertEquals($this->index->id(), $tasks[0]->index_id, 'The right index ID was used for the removeIndex task.');
     }
 
     // Check whether other task-system-integrated methods now fail, too.
@@ -217,19 +217,19 @@ class ServerTaskUnitTest extends KernelTestBase {
     }
     catch (SearchApiException $e) {
       $args['%index'] = $this->index->label();
-      $expected_message = SafeMarkup::format('Could not index items on index %index because pending server tasks could not be executed.', $args);
-      $this->assertEqual($e->getMessage(), $expected_message, 'Pending server tasks prevented indexing of items.');
+      $expected_message = new FormattableMarkup('Could not index items on index %index because pending server tasks could not be executed.', $args);
+      $this->assertEquals($expected_message, $e->getMessage(), 'Pending server tasks prevented indexing of items.');
     }
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'indexItems was not executed.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'indexItems was not executed.');
     $tasks = $this->getServerTasks();
-    $this->assertEqual(count($tasks), 1, 'No task added for indexItems.');
+    $this->assertEquals(1, count($tasks), 'No task added for indexItems.');
 
     // Let removeIndex() succeed again, then trigger the task execution with a
     // cron run.
     $this->state->set("search_api_test_backend.exception.removeIndex", FALSE);
     search_api_cron();
-    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('removeIndex'), 'Right methods were called during task execution.');
+    $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
+    $this->assertEquals(array('removeIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
   }
 
   /**
@@ -243,24 +243,24 @@ class ServerTaskUnitTest extends KernelTestBase {
 
     // Try to update the index.
     $this->server->deleteItems($this->index, array());
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteItems correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteItems correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'deleteItems';
     }
     $this->assertTrue(!empty($task_created), 'The deleteItems task was successfully added.');
     if ($tasks) {
-      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the deleteItems task.');
+      $this->assertEquals($this->index->id(), $tasks[0]->index_id, 'The right index ID was used for the deleteItems task.');
     }
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
-      $this->pass("Second task ('updateIndex') was added.");
-      $this->assertEqual($tasks[0]->type, 'deleteItems', 'First task stayed the same.');
-      $this->assertEqual($tasks[1]->type, 'updateIndex', 'New task was queued as last.');
+      $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
+      $this->assertEquals('deleteItems', $tasks[0]->type, 'First task stayed the same.');
+      $this->assertEquals('updateIndex', $tasks[1]->type, 'New task was queued as last.');
     }
     else {
       $this->fail("Second task (updateIndex) was not added.");
@@ -270,8 +270,8 @@ class ServerTaskUnitTest extends KernelTestBase {
     // with a cron run.
     $this->state->set('search_api_test_backend.exception.deleteItems', FALSE);
     search_api_cron();
-    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('deleteItems', 'updateIndex'), 'Right methods were called during task execution.');
+    $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
+    $this->assertEquals(array('deleteItems', 'updateIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
   }
 
   /**
@@ -285,24 +285,24 @@ class ServerTaskUnitTest extends KernelTestBase {
 
     // Try to update the index.
     $this->server->deleteAllIndexItems($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'deleteAllIndexItems correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteAllIndexItems correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'deleteAllIndexItems';
     }
     $this->assertTrue(!empty($task_created), 'The deleteAllIndexItems task was successfully added.');
     if ($tasks) {
-      $this->assertEqual($tasks[0]->index_id, $this->index->id(), 'The right index ID was used for the deleteAllIndexItems task.');
+      $this->assertEquals($this->index->id(), $tasks[0]->index_id, 'The right index ID was used for the deleteAllIndexItems task.');
     }
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEqual($this->getCalledServerMethods(), array(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
-      $this->pass("Second task ('updateIndex') was added.");
-      $this->assertEqual($tasks[0]->type, 'deleteAllIndexItems', 'First task stayed the same.');
-      $this->assertEqual($tasks[1]->type, 'updateIndex', 'New task was queued as last.');
+      $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
+      $this->assertEquals('deleteAllIndexItems', $tasks[0]->type, 'First task stayed the same.');
+      $this->assertEquals('updateIndex', $tasks[1]->type, 'New task was queued as last.');
     }
     else {
       $this->fail("Second task (updateIndex) was not added.");
@@ -312,8 +312,8 @@ class ServerTaskUnitTest extends KernelTestBase {
     // with a call to indexItems().
     $this->state->set('search_api_test_backend.exception.deleteAllIndexItems', FALSE);
     $this->server->indexItems($this->index, array());
-    $this->assertEqual($this->getServerTasks(), array(), 'Server tasks were correctly executed.');
-    $this->assertEqual($this->getCalledServerMethods(), array('deleteAllIndexItems', 'updateIndex', 'indexItems'), 'Right methods were called during task execution.');
+    $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
+    $this->assertEquals(array('deleteAllIndexItems', 'updateIndex', 'indexItems'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
   }
 
   /**

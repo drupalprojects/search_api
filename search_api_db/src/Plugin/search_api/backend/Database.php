@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api_db\Plugin\search_api\backend;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database as CoreDatabase;
@@ -21,12 +21,12 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\FilterInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -682,7 +682,7 @@ class Database extends BackendPluginBase {
         return array('type' => 'int', 'size' => 'tiny');
 
       default:
-        throw new SearchApiException(SafeMarkup::format('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException(new FormattableMarkup('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
     }
   }
 
@@ -960,7 +960,7 @@ class Database extends BackendPluginBase {
    */
   public function indexItems(IndexInterface $index, array $items) {
     if (!$this->getIndexDbInfo($index)) {
-      throw new SearchApiException(SafeMarkup::format('No field settings for index with id @id.', array('@id' => $index->id())));
+      throw new SearchApiException(new FormattableMarkup('No field settings for index with id @id.', array('@id' => $index->id())));
     }
     $indexed = array();
     foreach ($items as $id => $item) {
@@ -1278,7 +1278,7 @@ class Database extends BackendPluginBase {
         return strtotime($value);
 
       default:
-        throw new SearchApiException(SafeMarkup::format('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException(new FormattableMarkup('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
     }
   }
 
@@ -1337,7 +1337,7 @@ class Database extends BackendPluginBase {
     $db_info = $this->getIndexDbInfo($index);
 
     if (!isset($db_info['field_tables'])) {
-      throw new SearchApiException(SafeMarkup::format('Unknown index @id.', array('@id' => $index->id())));
+      throw new SearchApiException(new FormattableMarkup('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
 
@@ -1381,7 +1381,7 @@ class Database extends BackendPluginBase {
           }
 
           if (!isset($fields[$field_name])) {
-            throw new SearchApiException(SafeMarkup::format('Trying to sort on unknown field @field.', array('@field' => $field_name)));
+            throw new SearchApiException(new FormattableMarkup('Trying to sort on unknown field @field.', array('@field' => $field_name)));
           }
           $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
           $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
@@ -1458,12 +1458,12 @@ class Database extends BackendPluginBase {
         $fulltext_field_information = array();
         foreach ($fulltext_fields as $name) {
           if (!isset($fields[$name])) {
-            throw new SearchApiException(SafeMarkup::format('Unknown field @field specified as search target.', array('@field' => $name)));
+            throw new SearchApiException(new FormattableMarkup('Unknown field @field specified as search target.', array('@field' => $name)));
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
             $types = $this->getDataTypePluginManager()->getDataTypeDefinitions();
             $type = $types[$fields[$name]['type']]['label'];
-            throw new SearchApiException(SafeMarkup::format('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
+            throw new SearchApiException(new FormattableMarkup('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
           }
           $fulltext_field_information[$name] = $fields[$name];
         }
@@ -1840,7 +1840,7 @@ class Database extends BackendPluginBase {
           continue;
         }
         if (!isset($fields[$f[0]])) {
-          throw new SearchApiException(SafeMarkup::format('Unknown field in filter clause: @field.', array('@field' => $f[0])));
+          throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $f[0])));
         }
         $field = $fields[$f[0]];
         // Fields have their own table, so we have to check for NULL values in
@@ -2083,7 +2083,7 @@ class Database extends BackendPluginBase {
     $index = $query->getIndex();
     $db_info = $this->getIndexDbInfo($index);
     if (empty($db_info['field_tables'])) {
-      throw new SearchApiException(SafeMarkup::format('Unknown index @id.', array('@id' => $index->id())));
+      throw new SearchApiException(new FormattableMarkup('Unknown index @id.', array('@id' => $index->id())));
     }
     $fields = $this->getFieldInfo($index);
 

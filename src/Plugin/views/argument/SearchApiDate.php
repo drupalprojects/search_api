@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 
 /**
  * Defines a contextual filter for conditions on date fields.
@@ -153,7 +153,7 @@ class SearchApiDate extends SearchApiArgument {
    */
   protected function abort() {
     $variables['@field'] = $this->definition['group'] . ': ' . $this->definition['title'];
-    $this->query->abort(SafeMarkup::format('Illegal argument passed to @field contextual filter.', $variables));
+    $this->query->abort(new FormattableMarkup('Illegal argument passed to @field contextual filter.', $variables));
   }
 
 }

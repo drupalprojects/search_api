@@ -9,13 +9,13 @@ namespace Drupal\search_api_db_defaults\Tests;
 
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\UnmetDependenciesException;
-use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Entity\Server;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\entity_reference\Tests\EntityReferenceTestTrait;
+use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
+use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -66,7 +66,7 @@ class IntegrationTest extends WebTestBase {
       $this->rebuildContainer();
 
       // Assert if the module was successfully enabled.
-      $this->assertTrue($success, SafeMarkup::format('Enabled search_api_db_defaults, including its dependencies: %modules', array('%modules' => implode(', ', $dependencies))));
+      $this->assertTrue($success, new FormattableMarkup('Enabled search_api_db_defaults, including its dependencies: %modules', array('%modules' => implode(', ', $dependencies))));
     }
     catch (UnmetDependenciesException $e) {
       // The exception message has all the details.

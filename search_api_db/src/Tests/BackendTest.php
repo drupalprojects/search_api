@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api_db\Tests;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -117,8 +117,8 @@ class BackendTest extends EntityUnitTestBase {
 
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
     foreach ($field_tables as $field_table) {
-      $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), SafeMarkup::format('Field table %table exists', array('%table' => $field_table['table'])));
-      $this->assertTrue(\Drupal::database()->schema()->fieldExists($normalized_storage_table, $field_table['column']), SafeMarkup::format('Field column %column exists', array('%column' => $field_table['column'])));
+      $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
+      $this->assertTrue(\Drupal::database()->schema()->fieldExists($normalized_storage_table, $field_table['column']), new FormattableMarkup('Field column %column exists', array('%column' => $field_table['column'])));
     }
   }
 
@@ -866,7 +866,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($db_info, array(), 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
-      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), SafeMarkup::format('Field table %table exists', array('%table' => $field_table['table'])));
+      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
     }
 
     // Re-add the index to see if the associated tables are also properly
@@ -880,7 +880,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($db_info, array(), 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
-      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), SafeMarkup::format('Field table %table exists', array('%table' => $field_table['table'])));
+      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
     }
 
     // Uninstall the module.

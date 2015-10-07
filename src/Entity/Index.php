@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
@@ -16,13 +16,13 @@ use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
-use Drupal\search_api\Property\PropertyInterface;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\GenericFieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
+use Drupal\search_api\Property\PropertyInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Utility;
 use Drupal\views\Views;
@@ -357,7 +357,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (empty($datasources[$datasource_id])) {
       $args['@datasource'] = $datasource_id;
       $args['%index'] = $this->label();
-      throw new SearchApiException(SafeMarkup::format('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
+      throw new SearchApiException(new FormattableMarkup('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
     }
     return $datasources[$datasource_id];
   }
@@ -417,7 +417,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (!($this->trackerPlugin = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($this->getTrackerId(), $tracker_plugin_configuration))) {
         $args['@tracker'] = $this->tracker;
         $args['%index'] = $this->label();
-        throw new SearchApiException(SafeMarkup::format('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
+        throw new SearchApiException(new FormattableMarkup('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
       }
     }
 
@@ -454,7 +454,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if (!$this->serverInstance) {
         $args['@server'] = $this->server;
         $args['%index'] = $this->label();
-        throw new SearchApiException(SafeMarkup::format('The server with ID "@server" could not be retrieved for index %index.', $args));
+        throw new SearchApiException(new FormattableMarkup('The server with ID "@server" could not be retrieved for index %index.', $args));
       }
     }
 
@@ -631,7 +631,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       if ($this->unmappedFields) {
         $vars['@fields'] = array();
         foreach ($this->unmappedFields as $type => $fields) {
-          $vars['@fields'][] = implode(', ', $fields) . ' (' . SafeMarkup::format('type @type', array('@type' => $type)) . ')';
+          $vars['@fields'][] = implode(', ', $fields) . ' (' . new FormattableMarkup('type @type', array('@type' => $type)) . ')';
         }
         $vars['@fields'] = implode('; ', $vars['@fields']);
         $vars['%index'] = $this->label();
@@ -997,10 +997,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return array();
     }
     if (!$this->status) {
-      throw new SearchApiException(SafeMarkup::format("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
+      throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
     }
     if (empty($this->options['fields'])) {
-      throw new SearchApiException(SafeMarkup::format("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
+      throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */

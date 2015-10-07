@@ -7,8 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\query;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -137,7 +137,7 @@ class SearchApiQuery extends QueryPluginBase {
       $this->fields = array();
       $this->index = self::getIndexFromTable($view->storage->get('base_table'));
       if (!$this->index) {
-        $this->abort(SafeMarkup::format('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
+        $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
       }
       $this->query = $this->index->query(array(
         'parse mode' => $this->options['parse_mode'],
