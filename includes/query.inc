@@ -220,6 +220,9 @@ interface SearchApiQueryInterface {
    *     - postprocessing: Preparing the results for returning.
    *   Additional metadata may be returned in other keys. Only 'result count'
    *   and 'result' always have to be set, all other entries are optional.
+   *
+   * @throws SearchApiException
+   *   If an error prevented the search from completing.
    */
   public function execute();
 
