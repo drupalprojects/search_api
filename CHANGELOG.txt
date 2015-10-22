@@ -1,5 +1,7 @@
 Search API 1.x, dev (xx/xx/xxxx):
 ---------------------------------
+- #2567775 by joseph.olstad, drunken monkey: Fixed handling of broken HTML in
+  the "HTML filter" processor.
 - #2565005 by drunken monkey: Properly escape labels of "checkboxes"/"radios"
   options
 - #2524314 by drunken monkey: Fixed bundle-setting for taxonomy term indexes.
