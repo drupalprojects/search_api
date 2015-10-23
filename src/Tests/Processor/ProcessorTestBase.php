@@ -22,7 +22,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference');
+  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment');
 
   /**
    * The processor used for this test.

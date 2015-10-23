@@ -42,7 +42,7 @@ class RenderedItemTest extends ProcessorTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'entity_reference', 'system');
+  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'system');
 
   /**
    * Performs setup tasks before each individual test method is run.
