@@ -69,43 +69,6 @@ class Utility {
   }
 
   /**
-   * Returns the default field types recognized by the Search API.
-   *
-   * @return string[][]
-   *   A nested associative array with the default types as keys, mapped to
-   *   their translated labels and descriptions.
-   */
-  public static function getDefaultDataTypes() {
-    return array(
-      'text' => array(
-        'label' => t('Fulltext'),
-        'description' => t('A fulltext field'),
-      ),
-      'string' => array(
-        'label' => t('String'),
-        'description' => t('A string field'),
-      ),
-      'integer' => array(
-        'label' => t('Integer'),
-        'description' => t('An integer field'),
-      ),
-      'decimal' => array(
-        'label' => t('Decimal'),
-        'description ' => t('A decimal field'),
-      ),
-      'date' => array(
-        'label' => t('Date'),
-        'description' => t('A date field'),
-      ),
-      'boolean' => array(
-        'label' => t('Boolean'),
-        'description' => t('A boolean field'),
-      ),
-    );
-  }
-
-
-  /**
    * Retrieves the mapping for known data types to Search API's internal types.
    *
    * @return string[]
@@ -191,12 +154,15 @@ class Utility {
       }
       catch (SearchApiException $e) {
         // If the server isn't available, just ignore it here and return all
-        // types.
+        // custom types.
       }
       static::$dataTypeFallbackMapping[$index_id] = array();
       /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type */
-      foreach (\Drupal::service('plugin.manager.search_api.data_type')->getCustomDataTypes() as $type_id => $data_type) {
-        if (!$server || !$server->supportsDataType($type_id)) {
+      foreach (\Drupal::service('plugin.manager.search_api.data_type')->getInstances() as $type_id => $data_type) {
+        // We know for sure that we do not need to fall back for the default
+        // data types as they are always present and are required to be
+        // supported by all backends.
+        if (!$data_type->isDefault() && (!$server || !$server->supportsDataType($type_id))) {
           static::$dataTypeFallbackMapping[$index_id][$type_id] = $data_type->getFallbackType();
         }
       }

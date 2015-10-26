@@ -152,11 +152,11 @@ class IndexFieldsForm extends EntityForm {
    */
   protected function buildFields(array $fields, array $additional) {
     $data_type_plugin_manager = $this->getDataTypePluginManager();
-    $types = $data_type_plugin_manager->getDataTypeOptions();
+    $types = $data_type_plugin_manager->getInstancesOptions();
 
     $fulltext_types = array('text');
-    // Add all custom data types with fallback "text" to fulltext types as well.
-    foreach ($data_type_plugin_manager->getCustomDataTypes() as $id => $type) {
+    // Add all data types with fallback "text" to fulltext types as well.
+    foreach ($data_type_plugin_manager->getInstances() as $id => $type) {
       if ($type->getFallbackType() == 'text') {
         $fulltext_types[] = $id;
       }

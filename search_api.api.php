@@ -69,6 +69,20 @@ function hook_search_api_processor_info_alter(array &$processors) {
 }
 
 /**
+ * Alter the available data types.
+ *
+ * @param array $data_type_definitions
+ *   The definitions of the data type plugins.
+ *
+ * @see \Drupal\search_api\DataType\DataTypePluginBase
+ */
+function hook_search_api_data_type_info_alter(array &$data_type_definitions) {
+  if (isset($data_type_definitions['text'])) {
+    $data_type_definitions['text'] = t('Parsed text');
+  }
+}
+
+/**
  * Alter the mapping of Drupal data types to Search API data types.
  *
  * @param array $mapping

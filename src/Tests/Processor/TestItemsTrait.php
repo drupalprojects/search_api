@@ -128,7 +128,7 @@ trait TestItemsTrait {
       ->disableOriginalConstructor()
       ->getMock();
     $data_type_plugin->expects($this->any())
-      ->method('getCustomDataTypes')
+      ->method('getInstances')
       ->will($this->returnValue(array()));
 
     $results_static_cache = $this->getMockBuilder('Drupal\search_api\Query\ResultsCache')

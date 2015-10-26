@@ -40,4 +40,17 @@ interface DataTypeInterface extends ConfigurablePluginInterface {
    */
   public function getFallbackType();
 
+  /**
+   * Determines whether this data type is a default data type.
+   *
+   * Default data types are provided by the Search API module itself and have to
+   * be supported by all backends. They therefore are the only ones that can be
+   * used as a fallback for other data types, and don't need to have a fallback
+   * type themselves.
+   *
+   * @return bool
+   *   TRUE if the data type is a default type, FALSE otherwise.
+   */
+  public function isDefault();
+
 }

@@ -46,4 +46,11 @@ class SearchApiDataType extends Plugin {
    */
   public $description;
 
+  /**
+   * Whether this is one of the default data types provided by the Search API.
+   *
+   * @var bool
+   */
+  public $default = FALSE;
+
 }
