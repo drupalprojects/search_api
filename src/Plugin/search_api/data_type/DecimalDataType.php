@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\search_api\data_type\Decimal.
+ * Contains \Drupal\search_api\Plugin\search_api\data_type\DecimalDataType.
  */
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
@@ -19,6 +19,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  *   default = "true"
  * )
  */
-class Decimal extends DataTypePluginBase {
+class DecimalDataType extends DataTypePluginBase {
 
 }

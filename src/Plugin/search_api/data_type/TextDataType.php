@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\search_api\data_type\Text.
+ * Contains \Drupal\search_api\Plugin\search_api\data_type\TextDataType.
  */
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
@@ -19,6 +19,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  *   default = "true"
  * )
  */
-class Text extends DataTypePluginBase {
+class TextDataType extends DataTypePluginBase {
 
 }

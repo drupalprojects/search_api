@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\search_api\data_type\Boolean.
+ * Contains \Drupal\search_api\Plugin\search_api\data_type\BooleanDataType.
  */
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
@@ -19,6 +19,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  *   default = "true"
  * )
  */
-class Boolean extends DataTypePluginBase {
+class BooleanDataType extends DataTypePluginBase {
 
 }

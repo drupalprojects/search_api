@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\search_api\data_type\Date.
+ * Contains \Drupal\search_api\Plugin\search_api\data_type\DateDataType.
  */
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
@@ -19,6 +19,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  *   default = "true"
  * )
  */
-class Date extends DataTypePluginBase {
+class DateDataType extends DataTypePluginBase {
 
 }
