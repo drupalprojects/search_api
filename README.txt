@@ -13,7 +13,7 @@ CONTENTS OF THIS FILE
 This module provides a framework for easily creating searches on any entity
 known to Drupal, using any kind of search engine. For site administrators,
 it is a great alternative to other search solutions, since it already
-incorporates facetting support and the ability to use the Views module for
+incorporates faceting support and the ability to use the Views module for
 displaying search results, filters, etc. Also, with the Apache Solr
 integration, a high-performance search engine is available for this module.
 Developers, on the other hand, will be impressed by the large flexibility and

@@ -68,7 +68,7 @@ class SearchApiCache extends Time {
         $this->view->setCurrentPage($cache->data['current_page']);
         $this->view->execute_time = 0;
 
-        // Trick Search API into believing a search happened, to make facetting
+        // Trick Search API into believing a search happened, to make faceting
         // et al. work.
         // @todo Also set results on the Views Query?
         /** @var \Drupal\search_api\Query\ResultsCacheInterface $static_results_cache */
