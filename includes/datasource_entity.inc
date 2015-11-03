@@ -166,6 +166,25 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
               $bundle_column = 'vid';
               $bundles = db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name IN (:bundles)', array(':bundles' => $bundles))->fetchCol();
             }
+            elseif ($this->entityType == 'comment') {
+              // Comments are significantly more complicated, since they don't
+              // store their bundle explicitly in their database table. Instead,
+              // we need to get all the nodes from the enabled types and filter
+              // by those.
+              $bundle_column = 'nid';
+              $node_types = array();
+              foreach ($bundles as $bundle) {
+                if (substr($bundle, 0, 13) === 'comment_node_') {
+                  $node_types[] = substr($bundle, 13);
+                }
+              }
+              if ($node_types) {
+                $bundles = db_query('SELECT nid FROM {node} WHERE type IN (:bundles)', array(':bundles' => $node_types))->fetchCol();
+              }
+              else {
+                return;
+              }
+            }
             else {
               $this->startTrackingFallback(array($index->machine_name => $index));
             }
