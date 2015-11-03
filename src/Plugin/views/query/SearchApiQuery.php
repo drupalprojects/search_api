@@ -508,6 +508,9 @@ class SearchApiQuery extends QueryPluginBase {
 
     // Finally, add all rows to the Views result set.
     $view->result = array_values($rows);
+    array_walk($view->result, function (ResultRow $row, $index) {
+      $row->index = $index;
+    });
   }
 
   /**
