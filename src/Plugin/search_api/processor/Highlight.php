@@ -408,7 +408,7 @@ class Highlight extends ProcessorPluginBase {
         // we are requiring a match on a word boundary, make sure $text starts
         // and ends with a space.
         $matches = array();
-        if (preg_match('/' . self::$boundary . $key . self::$boundary . '/iu', ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
+        if (preg_match('/' . self::$boundary . preg_quote($key, '/') . self::$boundary . '/iu', ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
           $found_position = $matches[0][1];
           $look_start[$key] = $found_position + 1;
           // Keep track of which keys we found this time, in case we need to
