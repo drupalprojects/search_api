@@ -246,6 +246,10 @@ class Highlight extends ProcessorPluginBase {
     $needs_extraction = array();
     foreach ($result_items as $item_id => $result_item) {
       $datasource_id = $result_item->getDatasourceId();
+      // Make sure this datasource even has any indexed fulltext fields.
+      if (empty($fulltext_fields[$datasource_id])) {
+        continue;
+      }
       /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($fulltext_fields[$datasource_id] as $field_id => $field) {
         if ($result_item->getField($field_id, FALSE)) {
