@@ -15,6 +15,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\search_api\Utility;
@@ -242,7 +243,7 @@ class BackendTest extends EntityUnitTestBase {
    * Tests whether some test searches have the correct results.
    */
   protected function searchSuccess1() {
-    $results = $this->buildSearch('test')->range(1, 2)->sort($this->getFieldId('id'), 'ASC')->execute();
+    $results = $this->buildSearch('test')->range(1, 2)->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Search for »test« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 3)), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
@@ -255,13 +256,13 @@ class BackendTest extends EntityUnitTestBase {
       $this->assertEqual($results->getResultItems()[$id]->getDatasourceId(), 'entity:entity_test');
     }
 
-    $results = $this->buildSearch('test foo')->sort($this->getFieldId('id'), 'ASC')->execute();
+    $results = $this->buildSearch('test foo')->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Search for »test foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'Search for »test foo« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch('foo', array('type,item'))->sort($this->getFieldId('id'), 'ASC')->execute();
+    $results = $this->buildSearch('foo', array('type,item'))->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2)), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results);
@@ -460,7 +461,7 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function regressionTests() {
     // Regression tests for #2007872.
-    $results = $this->buildSearch('test')->sort($this->getFieldId('id'), 'ASC')->sort($this->getFieldId('type'), 'ASC')->execute();
+    $results = $this->buildSearch('test')->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->sort($this->getFieldId('type'), QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Sorting on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3, 4)), 'Sorting on field with NULLs returned correct result.');
     $this->assertIgnored($results);
@@ -471,7 +472,7 @@ class BackendTest extends EntityUnitTestBase {
     $filter->condition($this->getFieldId('id'), 3);
     $filter->condition($this->getFieldId('type'), 'article');
     $query->filter($filter);
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'OR filter on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4, 5)), 'OR filter on field with NULLs returned correct result.');
@@ -484,7 +485,7 @@ class BackendTest extends EntityUnitTestBase {
     $filter->condition($this->getFieldId('keywords'), 'orange');
     $filter->condition($this->getFieldId('keywords'), 'apple');
     $query->filter($filter);
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'OR filter on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'OR filter on multi-valued field returned correct result.');
@@ -500,7 +501,7 @@ class BackendTest extends EntityUnitTestBase {
     $filter->condition($this->getFieldId('keywords'), 'apple');
     $filter->condition($this->getFieldId('keywords'), 'grape');
     $query->filter($filter);
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Multiple OR filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Multiple OR filters on multi-valued field returned correct result.');
@@ -518,7 +519,7 @@ class BackendTest extends EntityUnitTestBase {
     $filter->condition($this->getFieldId('keywords'), 'grape');
     $filter1->filter($filter);
     $query->filter($filter1);
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Complex nested filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Complex nested filters on multi-valued field returned correct result.');
@@ -565,7 +566,7 @@ class BackendTest extends EntityUnitTestBase {
       'test',
     );
     $query = $this->buildSearch($keys, array(), array($this->getFieldId('name')));
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'OR keywords returned correct result.');
@@ -591,7 +592,7 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $query = $this->buildSearch($keys, array(), array($this->getFieldId('name')));
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Nested OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested OR keywords returned correct result.');
@@ -612,7 +613,7 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $query = $this->buildSearch($keys, array(), array($this->getFieldId('name'), $this->getFieldId('body')));
-    $query->sort($this->getFieldId('id'), 'ASC');
+    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Nested multi-field OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested multi-field OR keywords returned correct result.');
@@ -626,7 +627,7 @@ class BackendTest extends EntityUnitTestBase {
       'foo',
       'bar',
     );
-    $results = $this->buildSearch($keys)->sort('search_api_id', 'ASC')->execute();
+    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Negated AND fulltext search returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Negated AND fulltext search returned correct result.');
     $this->assertIgnored($results);
@@ -654,7 +655,7 @@ class BackendTest extends EntityUnitTestBase {
         'bar',
       ),
     );
-    $results = $this->buildSearch($keys)->sort('search_api_id', 'ASC')->execute();
+    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Nested NOT AND fulltext search returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Nested NOT AND fulltext search returned correct result.');
     $this->assertIgnored($results);
@@ -664,14 +665,14 @@ class BackendTest extends EntityUnitTestBase {
     // @todo Fix NULL and NOT NULL conditions.
 //    $query = $this->buildSearch();
 //    $query->condition($this->getFieldId('type'), NULL);
-//    $query->sort($this->getFieldId('id'), 'ASC');
+//    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
 //    $results = $query->execute();
 //    $this->assertEqual($results->getResultCount(), 1, 'NULL filter returned correct number of results.');
 //    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'NULL filter returned correct result.');
 //
 //    $query = $this->buildSearch();
 //    $query->condition($this->getFieldId('type'), NULL, '<>');
-//    $query->sort($this->getFieldId('id'), 'ASC');
+//    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
 //    $results = $query->execute();
 //    $this->assertEqual($results->getResultCount(), 4, 'NOT NULL filter returned correct number of results.');
 //    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'NOT NULL filter returned correct result.');

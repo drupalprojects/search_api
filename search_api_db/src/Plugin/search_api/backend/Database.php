@@ -1366,10 +1366,10 @@ class Database extends BackendPluginBase {
       $sort = $query->getSorts();
       if ($sort) {
         foreach ($sort as $field_name => $order) {
-          if ($order != 'ASC' && $order != 'DESC') {
-            $msg = $this->t('Unknown sort order @order. Assuming "ASC".', array('@order' => $order));
+          if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
+            $msg = $this->t('Unknown sort order @order. Assuming "@default".', array('@order' => $order, '@default' => QueryInterface::SORT_ASC));
             $this->warnings[(string) $msg] = 1;
-            $order = 'ASC';
+            $order = QueryInterface::SORT_ASC;
           }
           if ($field_name == 'search_api_relevance') {
             $db_query->orderBy('score', $order);
