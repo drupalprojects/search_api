@@ -1253,6 +1253,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       if (\Drupal::moduleHandler()->moduleExists('views')) {
         Views::viewsData()->clear();
+        // Remove this line when https://www.drupal.org/node/2370365 gets fixed.
+        Cache::invalidateTags(array('extension:views'));
+        \Drupal::cache('discovery')->delete('views:wizard');
       }
 
       $this->resetCaches();
@@ -1345,8 +1348,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $index->getServer()->removeIndex($index);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
     if (\Drupal::moduleHandler()->moduleExists('views')) {
-      views_invalidate_cache();
+      Views::viewsData()->clear();
+      // Remove this line when https://www.drupal.org/node/2370365 gets fixed.
+      Cache::invalidateTags(array('extension:views'));
+      \Drupal::cache('discovery')->delete('views:wizard');
     }
   }
 
