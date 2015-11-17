@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2570879 by thePanz, drunken monkey: Added sorting of remembered search IDs.
 - #2565743 by drunken monkey: Fixed creation of comment indexes with specific
   bundles.
 - #2563793 by drunken monkey, smitty, ReBa: Fixed Views base table definition
