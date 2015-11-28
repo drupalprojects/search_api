@@ -48,7 +48,6 @@ class SearchApiFulltext extends SearchApiFilterText {
 
     $options['operator']['default'] = 'AND';
 
-    $options['mode']['default'] = 'keys';
     $options['min_length']['default'] = '';
     $options['fields']['default'] = array();
 
@@ -60,16 +59,6 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-
-    $form['mode'] = array(
-      '#title' => $this->t('Use as'),
-      '#type' => 'radios',
-      '#options' => array(
-        'keys' => $this->t('Search keys – multiple words will be split and the filter will influence relevance. You can change how search keys are parsed under "Advanced" > "Query settings".'),
-        'filter' => $this->t("Search filter – use as a fulltext filter that restricts the result set but doesn't influence relevance."),
-      ),
-      '#default_value' => $this->options['mode'],
-    );
 
     $fields = $this->getFulltextFields();
     if (!empty($fields)) {
@@ -161,11 +150,8 @@ class SearchApiFulltext extends SearchApiFilterText {
 
     // If something already specifically set different fields, we silently fall
     // back to mere filtering.
-    $filter = $this->options['mode'] == 'filter';
-    if (!$filter) {
-      $old = $this->query->getFulltextFields();
-      $filter = $old && (array_diff($old, $fields) || array_diff($fields, $old));
-    }
+    $old = $this->query->getFulltextFields();
+    $filter = $old && (array_diff($old, $fields) || array_diff($fields, $old));
 
     if ($filter) {
       $filter = $this->query->createFilter('OR');

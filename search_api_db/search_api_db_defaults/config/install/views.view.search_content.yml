@@ -170,7 +170,6 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-          mode: keys
           min_length: 3
           fields: {  }
           plugin_id: search_api_fulltext

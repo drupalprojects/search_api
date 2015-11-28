@@ -31,9 +31,6 @@ views.filter.search_api_fulltext:
     value:
       type: string
       label: Fulltext search
-    mode:
-      type: string
-      label: Search mode
     min_length:
       type: integer
       label: Minimum search string length
