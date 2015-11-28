@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "boolean",
  *   label = @Translation("Boolean"),
- *   description = @Translation("A boolean field"),
  *   default = "true"
  * )
  */

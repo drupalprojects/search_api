@@ -20,16 +20,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * keys:
  * - id: The unique, system-wide identifier of the data type class.
  * - label: The human-readable name of the data type class, translated.
- * - description: A human-readable description for the data type class,
- *   translated.
  *
  * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiDataType(
  *   id = "my_data_type",
- *   label = @Translation("My data type"),
- *   description = @Translation("Some information about my data type")
+ *   label = @Translation("My data type")
  * )
  * @endcode
  *

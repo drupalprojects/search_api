@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "integer",
  *   label = @Translation("Integer"),
- *   description = @Translation("An integer field"),
  *   default = "true"
  * )
  */

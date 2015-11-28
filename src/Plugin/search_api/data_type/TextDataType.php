@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "text",
  *   label = @Translation("Fulltext"),
- *   description = @Translation("A fulltext field"),
  *   default = "true"
  * )
  */

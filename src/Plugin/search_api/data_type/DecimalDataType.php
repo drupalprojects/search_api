@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "decimal",
  *   label = @Translation("Decimal"),
- *   description = @Translation("A decimal field"),
  *   default = "true"
  * )
  */

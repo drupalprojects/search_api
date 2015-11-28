@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "string",
  *   label = @Translation("String"),
- *   description = @Translation("A string field"),
  *   default = "true"
  * )
  */

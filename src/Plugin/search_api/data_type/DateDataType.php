@@ -15,7 +15,6 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "date",
  *   label = @Translation("Date"),
- *   description = @Translation("A date field"),
  *   default = "true"
  * )
  */
