@@ -571,10 +571,6 @@ class IndexForm extends EntityForm {
         $index->save();
         drupal_set_message($this->t('The index was successfully saved.'));
         $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
-        $index_task_manager = Utility::getIndexTaskManager();
-        if (!$index_task_manager->isTrackingComplete($index)) {
-          $index_task_manager->addItemsBatch($index);
-        }
       }
       catch (SearchApiException $ex) {
         $form_state->setRebuild();

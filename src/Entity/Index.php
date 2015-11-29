@@ -1251,6 +1251,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
 
+      $index_task_manager = Utility::getIndexTaskManager();
+      if (!$index_task_manager->isTrackingComplete($this)) {
+        // Give tests and site admins the possibility to disable the use of a
+        // batch for tracking items. Also, do not use a batch if running in the
+        // CLI.
+        $use_batch = \Drupal::state()->get('search_api_use_tracking_batch', TRUE);
+        if (!$use_batch || php_sapi_name() == 'cli') {
+          $index_task_manager->addItemsAll($this);
+        }
+        else {
+          $index_task_manager->addItemsBatch($this);
+        }
+      }
+
       if (\Drupal::moduleHandler()->moduleExists('views')) {
         Views::viewsData()->clear();
         // Remove this line when https://www.drupal.org/node/2370365 gets fixed.
