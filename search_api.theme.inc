@@ -8,6 +8,7 @@
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
 
 /**
@@ -297,13 +298,19 @@ function theme_search_api_index($variables) {
       // @todo Add a cleaner way for doing this (i.e., skipping preprocessing).
       $query = $index->query();
       $query->range(0, 0);
-      $response = $server->search($query);
-
-      // Build the server index status translation variables.
-      $vars = array('@url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
-      // Build the server index status info.
       $label = t('Server index status');
-      $info = \Drupal::translation()->formatPlural($response->getResultCount(), 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+      try {
+        $response = $server->search($query);
+        $count = $response->getResultCount();
+        // Build the server index status translation variables.
+        $vars = array('@url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
+        // Build the server index status info.
+        $info = \Drupal::translation()->formatPlural($count, 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+      }
+      catch(SearchApiException $e) {
+        $info = t('Error while checking server index status: @message', array('@message' => $e->getMessage()));
+        $class = 'error';
+      }
       $rows[] = Utility::deepCopy($row);
     }
 
