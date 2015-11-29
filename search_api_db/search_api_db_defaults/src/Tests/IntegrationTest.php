@@ -7,11 +7,9 @@
 
 namespace Drupal\search_api_db_defaults\Tests;
 
-use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\UnmetDependenciesException;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\search_api\Entity\Index;
