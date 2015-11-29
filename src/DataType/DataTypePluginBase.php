@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\DataType;
 
-use Drupal\search_api\Plugin\ConfigurablePluginBase;
+use Drupal\Core\Plugin\PluginBase;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -39,7 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\search_api\DataType\DataTypeInterface
  * @see plugin_api
  */
-abstract class DataTypePluginBase extends ConfigurablePluginBase implements DataTypeInterface {
+abstract class DataTypePluginBase extends PluginBase implements DataTypeInterface {
 
   /**
    * The backend plugin manager.
@@ -47,18 +47,6 @@ abstract class DataTypePluginBase extends ConfigurablePluginBase implements Data
    * @var \Drupal\search_api\Backend\BackendPluginManager|null
    */
   protected $backendManager;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    // Since defaultConfiguration() depends on the plugin definition, we need to
-    // override the constructor and set the definition property before calling
-    // that method.
-    $this->pluginDefinition = $plugin_definition;
-    $this->pluginId = $plugin_id;
-    $this->configuration = $configuration + $this->defaultConfiguration();
-  }
 
   /**
    * {@inheritdoc}
@@ -116,6 +104,14 @@ abstract class DataTypePluginBase extends ConfigurablePluginBase implements Data
    */
   public function isDefault() {
     return !empty($this->pluginDefinition['default']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    $plugin_definition = $this->getPluginDefinition();
+    return $plugin_definition['label'];
   }
 
 }

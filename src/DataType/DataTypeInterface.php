@@ -7,7 +7,8 @@
 
 namespace Drupal\search_api\DataType;
 
-use Drupal\search_api\Plugin\ConfigurablePluginInterface;
+use Drupal\Component\Plugin\DerivativeInspectionInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
  * Defines an interface for data type plugins.
@@ -17,7 +18,15 @@ use Drupal\search_api\Plugin\ConfigurablePluginInterface;
  * @see \Drupal\search_api\DataType\DataTypePluginBase
  * @see plugin_api
  */
-interface DataTypeInterface extends ConfigurablePluginInterface {
+interface DataTypeInterface extends PluginInspectionInterface, DerivativeInspectionInterface {
+
+  /**
+   * Returns the label for use on the administration pages.
+   *
+   * @return string
+   *   The administration label.
+   */
+  public function label();
 
   /**
    * Converts a field value to match the data type (if needed).
