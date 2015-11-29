@@ -12,4 +12,3 @@ dependencies:
   - search_api:search_api_db
   - drupal:user
   - drupal:views
-  - drupal:standard
