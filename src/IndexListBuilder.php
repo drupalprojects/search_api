@@ -153,6 +153,7 @@ class IndexListBuilder extends ConfigEntityListBuilder {
       '#empty' => $entity_groups['lone_indexes'] ? '' : $this->t('There are no servers or indexes defined. For a quick start, we suggest you install the Database Search Defaults module.'),
       '#attributes' => array(
         'id' => 'search-api-entity-list',
+        'class' => array('search-api-entity-list'),
       ),
     );
     foreach ($entity_groups['servers'] as $server_groups) {
