@@ -561,10 +561,7 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getViewModes($bundle = NULL) {
     if (isset($bundle)) {
-      // @todo Implement getViewModeOptionsByBundle after #2322503 lands. See
-      //   #2574617.
-      //return $this->getEntityManager()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
-      return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId(), TRUE);
+      return $this->getEntityManager()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
     }
     else {
       return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
