@@ -637,7 +637,28 @@ class Database extends BackendPluginBase {
         $column => $index_spec,
       ),
     );
-    $this->database->schema()->addIndex($db['table'], $column, $index_spec, $table_spec);
+
+    // This is a quick fix for a core bug, so we can run the tests with SQLite
+    // until this is fixed.
+    //
+    // In SQLite, indexes and tables can't have the same name, which is
+    // the case for Search API DB. We have following situation:
+    //  - a table named search_api_db_default_index_search_api_language
+    //  - a table named search_api_db_default_index
+    //
+    // The last table has an index on the search_api_language column,
+    // which results in an index with the same as the first table, which
+    // conflicts in SQLite.
+    //
+    // The core issue addressing this (https://www.drupal.org/node/1008128) was
+    // closed as it fixed the PostgresSQL part. The SQLite fix is added in
+    // https://www.drupal.org/node/2625664
+    // We prevent this by adding an extra underscore (which is also the proposed
+    // solution in the original core issue).
+    //
+    // @todo: Remove when #2625664 lands in Core. See #2625722 for a patch that
+    //   implements this.
+    $this->database->schema()->addIndex($db['table'], '_' . $column, $index_spec, $table_spec);
 
     if ($new_table) {
       // Add a covering index for fields with multiple values.
