@@ -13,18 +13,12 @@ search_api.processor.plugin.aggregated_field:
   type: mapping
   label: 'Add aggregation processor configuration'
   mapping:
-    actions:
-      type: sequence
-      label: 'Action to take for aggregated fields'
-      sequence:
-        type: string
-        label: 'Could be to multiply or join or any other supported operation'
     fields:
       type: sequence
       label: 'The aggregated fields configured for this index'
       sequence:
         type: mapping
-        label: 'One field'
+        label: 'One field to add'
         mapping:
           fields:
             type: sequence
@@ -34,10 +28,10 @@ search_api.processor.plugin.aggregated_field:
               label: 'One field that should be part of the aggregation'
           label:
             type: string
-            label: 'Label'
+            label: 'The label of the new field'
           type:
             type: string
-            label: 'Type'
+            label: 'The type of the aggregation'
 
 search_api.processor.plugin.highlight:
   type: mapping

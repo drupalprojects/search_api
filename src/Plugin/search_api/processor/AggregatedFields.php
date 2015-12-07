@@ -161,7 +161,7 @@ class AggregatedFields extends ProcessorPluginBase {
         '#type' => 'checkboxes',
         '#title' => $this->t('Contained fields'),
         '#options' => $field_options,
-        '#default_value' => array_combine($field['fields'], $field['fields']),
+        '#default_value' => $field['fields'],
         '#attributes' => array('class' => array('search-api-checkboxes-list')),
         '#required' => TRUE,
       ));
@@ -267,19 +267,32 @@ class AggregatedFields extends ProcessorPluginBase {
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    unset($values['actions']);
     if (empty($values['fields'])) {
       return;
     }
     foreach ($values['fields'] as $field_id => &$field) {
-      unset($field['type_descriptions'], $field['actions']);
-      $field['fields'] = array_values(array_filter($field['fields']));
       if ($field['label'] && !$field['fields']) {
         $error_message = $this->t('You have to select at least one field to aggregate.');
         $form_state->setError($form['fields'][$field_id]['fields'], $error_message);
       }
     }
-    $form_state->set('values', $values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+
+    // Remove the unnecessary form_state values, so no overhead is stored.
+    unset($values['actions']);
+    foreach ($values['fields'] as &$field_definition) {
+      unset($field_definition['type_descriptions'], $field_definition['actions']);
+      $field_definition['fields'] = array_values(array_filter($field_definition['fields']));
+    }
+
+    $form_state->setValues($values);
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**
