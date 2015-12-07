@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2583263 by drunken monkey: Fixed Views integration in combination with
+  Search API ET and similar modules.
 - #2592231 by drunken monkey, balintcsaba: Fixed ignored item language when
   viewing translated items.
 - #2570879 by thePanz, drunken monkey: Added sorting of remembered search IDs.
