@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2529262 by kingmackenzie, stefan.r: Added an option to Views date filters to
+  choose the format used by date popup.
 - #2583263 by drunken monkey: Fixed Views integration in combination with
   Search API ET and similar modules.
 - #2592231 by drunken monkey, balintcsaba: Fixed ignored item language when
