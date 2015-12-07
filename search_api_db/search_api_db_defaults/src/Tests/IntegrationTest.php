@@ -40,78 +40,112 @@ class IntegrationTest extends WebTestBase {
   protected $authenticatedUser;
 
   /**
+   * An admin user used for this test.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $adminUser;
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
 
     // Create user with content access permission to see if the view is
-    // accessible.
+    // accessible, and an admin to do the setup.
     $this->authenticatedUser = $this->drupalCreateUser();
-
-    try {
-      // Install the module and also auto-enable the dependencies.
-      $module = 'search_api_db_defaults';
-      $dependencies = $this->getModuleDependencies($module);
-      $success = $this->container->get('module_installer')->install(array($module), TRUE);
-      // Required after enabling a module using the module_installer service.
-      $this->rebuildContainer();
-
-      // Assert if the module was successfully enabled.
-      $this->assertTrue($success, new FormattableMarkup('Enabled search_api_db_defaults, including its dependencies: %modules', array('%modules' => implode(', ', $dependencies))));
-    }
-    catch (UnmetDependenciesException $e) {
-      // The exception message has all the details.
-      $this->fail($e->getMessage());
-    }
-
-    // Rebuild menu so our anonymous user can access the search view.
-    $route_builder = $this->container->get('router.builder');
-    $route_builder->rebuild();
-
-  }
-
-  /**
-   * Lists all dependencies of the given module.
-   *
-   * @param string $module
-   *   The module for which to check.
-   *
-   * @return string[]
-   *   A numerically indexed array containing all dependencies of the module.
-   */
-  protected function getModuleDependencies($module) {
-    // Get all module data so we can find dependencies and sort.
-    $extension_config = \Drupal::configFactory()->getEditable('core.extension');
-    $module_data = system_rebuild_module_data();
-    $installed_modules = $extension_config->get('module') ?: array();
-    $dependencies = array();
-    // Add dependencies to the list. The new modules will be processed as
-    // the while loop continues.
-    foreach (array_keys($module_data[$module]->requires) as $dependency) {
-      // Skip already installed modules.
-      if (!isset($module_list[$dependency]) && !isset($installed_modules[$dependency])) {
-        $dependencies[$dependency] = $dependency;
-      }
-    }
-    return $dependencies;
+    $this->adminUser = $this->drupalCreateUser(array(), NULL, true);
   }
 
   /**
    * Tests whether the default search was correctly installed.
    */
-  protected function testDefaultSetupWorking() {
+  protected function testInstallAndDefaultSetupWorking() {
+    $this->drupalLogin($this->adminUser);
+
+    // Install the search_api_db_defaults module.
+    $edit_enable = array(
+      'modules[Search][search_api_db_defaults][enable]' => TRUE,
+    );
+    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
+
+    $this->assertText(t('Some required modules must be enabled'), 'Dependencies required.');
+
+    $this->drupalPostForm(NULL, NULL, t('Continue'));
+    $args = array(
+      '@count' => 3,
+      '%names' => 'Database Search Defaults, Database search, Search API',
+    );
+    $success_text = strip_tags(t('@count modules have been enabled: %names.', $args));
+    $this->assertText($success_text, 'Modules have been installed.');
+
+    $this->rebuildContainer();
+
     $server = Server::load('default_server');
     $this->assertTrue($server, 'Server can be loaded');
 
     $index = Index::load('default_index');
     $this->assertTrue($index, 'Index can be loaded');
 
-    $this->drupalGet('search/content');
-    $this->assertResponse(200, 'Anonymous user can access the search page.');
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('search/content');
-    $this->assertResponse(200, 'Authenticated user can access the search page.');
+    $this->assertResponse(200, 'Authenticated user can access the search view.');
+    $this->drupalLogin($this->adminUser);
+
+    // Uninstall the module.
+    $edit_disable = array(
+      'uninstall[search_api_db_defaults]' => TRUE,
+    );
+    $this->drupalPostForm('admin/modules/uninstall', $edit_disable, t('Uninstall'));
+    $this->drupalPostForm(NULL, array(), t('Uninstall'));
+    $this->rebuildContainer();
+    $this->assertFalse($this->container->get('module_handler')->moduleExists('search_api_db_defaults'), 'Search API DB Defaults module uninstalled.');
+
+    // Check if the server is found in the Search API admin UI.
+    $this->drupalGet('admin/config/search/search-api/server/default_server');
+    $this->assertResponse(200, 'Server was not removed.');
+
+    // Check if the index is found in the Search API admin UI.
+    $this->drupalGet('admin/config/search/search-api/index/default_index');
+    $this->assertResponse(200, 'Index was not removed.');
+
+    $this->drupalLogin($this->authenticatedUser);
+    $this->drupalGet('search/content');
+    $this->assertResponse(200, 'Authenticated user can access the search view.');
+    $this->drupalLogin($this->adminUser);
+
+    // Enable the module again. This should fail because the either the index
+    // or the server or the view was found.
+    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
+    $this->assertText(t('It looks like the default setup provided by this module already exists on your site. Cannot re-install module.'));
+
+    // Delete all the entities that we would fail on if they exist.
+    $entities_to_remove = array('search_api_index' => 'default_index', 'search_api_server' => 'default_server', 'view' => 'search_content');
+    /** @var \Drupal\Core\Entity\EntityManager $entity_repository */
+    $entity_manager = \Drupal::service('entity.manager');
+    foreach ($entities_to_remove as $entity_type => $entity_id) {
+      /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
+      $entity_storage = $entity_manager->getStorage($entity_type);
+      $entity_storage->resetCache();
+      $entities = $entity_storage->loadByProperties(array('id' => $entity_id));
+
+      if (!empty($entities[$entity_id])) {
+        $entities[$entity_id]->delete();
+      }
+    }
+
+    // Delete the article content type.
+    $this->drupalGet('admin/structure/types/manage/article');
+    $this->clickLink(t('Delete'));
+    $this->assertResponse(200);
+    $this->drupalPostForm(NULL, array(), t('Delete'));
+
+    // Try to install search_api_db_defaults module and test if it failed
+    // because there was no content type "article".
+    $this->drupalPostForm('admin/modules', $edit_enable, t('Install'));
+    $success_text = t('Content type @content_type not found. Database Search Defaults module could not be installed.', array('@content_type' => 'article'));
+    $this->assertText($success_text);
   }
 
 }

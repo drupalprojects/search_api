@@ -1,6 +1,6 @@
 type: module
 name: 'Database Search Defaults'
-description: 'Enable this module for basic default configurations for Search API with Database backend.'
+description: 'Enable this module for a best-practice default setup of Search API with the Database backend. After installation it is recommended to uninstall this module again for performance reasons. The provided configuration will not be removed.'
 package: Search
 core: 8.x
 dependencies:

@@ -378,7 +378,7 @@ class Database extends BackendPluginBase {
     }
     $info[] = array(
       'label' => $this->t('Search on parts of a word'),
-      'info' => $this->configuration['partial_matches'] ? $this->t('enabled') : $this->t('disabled'),
+      'info' => !empty($this->configuration['partial_matches']) ? $this->t('enabled') : $this->t('disabled'),
     );
     if (!empty($this->configuration['autocomplete'])) {
       $this->configuration['autocomplete'] += array(
