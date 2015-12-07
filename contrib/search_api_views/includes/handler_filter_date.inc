@@ -36,8 +36,12 @@ class SearchApiViewsHandlerFilterDate extends SearchApiViewsHandlerFilter {
    */
   public function extra_options_form(&$form, &$form_state) {
     parent::extra_options_form($form, $form_state);
+
     if (module_exists('date_popup')) {
-      $widget_options = array('default' => 'Default', 'date_popup' => 'Date popup');
+      $widget_options = array(
+        'default' => 'Default',
+        'date_popup' => 'Date popup',
+      );
       $form['widget_type'] = array(
         '#type' => 'radios',
         '#title' => t('Date selection form element'),
