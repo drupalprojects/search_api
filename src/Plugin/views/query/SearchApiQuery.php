@@ -535,6 +535,15 @@ class SearchApiQuery extends QueryPluginBase {
     return $this->searchApiResults;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    $dependencies = parent::calculateDependencies();
+    $dependencies[$this->index->getConfigDependencyKey()][] = $this->index->getConfigDependencyName();
+    return $dependencies;
+  }
+
   //
   // Query interface methods (proxy to $this->query)
   //
@@ -901,13 +910,24 @@ class SearchApiQuery extends QueryPluginBase {
     return $ret;
   }
 
+  //
+  // Methods from Views' SQL query plugin (to simplify integration)
+  //
+
   /**
-   * {@inheritdoc}
+   * Ensures a table exists in the query.
+   *
+   * This replicates the interface of Views' default SQL backend to simplify
+   * the Views integration of the Search API. Since the Search API has no
+   * concept of "tables", this method implementation does nothing. If you are
+   * writing Search API-specific Views code, there is therefore no reason at all
+   * to call this method.
+   *
+   * @return string
+   *   An empty string.
    */
-  public function calculateDependencies() {
-    $dependencies = parent::calculateDependencies();
-    $dependencies[$this->index->getConfigDependencyKey()][] = $this->index->getConfigDependencyName();
-    return $dependencies;
+  public function ensureTable() {
+    return '';
   }
 
 }
