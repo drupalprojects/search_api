@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2611726 by Hubbs, rakesh.gectcr: Fixed several typos.
 - #2603500 by drunken monkey, krishna savithraj: Fixed Views fulltext searches
   for keyword "All".
 - #2529262 by kingmackenzie, stefan.r: Added an option to Views date filters to

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Provides a flexible framework for implementing search servives.
+ * Provides a flexible framework for implementing search services.
  */
 
 /**
@@ -2196,7 +2196,7 @@ function search_api_extract_inner_type($type) {
  *
  * Modules implementing other datasource controllers, that use a table other
  * than {search_api_item}, can use this function, too. It should be called
- * uncoditionally in a hook_search_api_index_update() implementation. If this
+ * unconditionally in a hook_search_api_index_update() implementation. If this
  * function isn't used, similar code should be added there.
  *
  * However, note that this is only necessary (and this function should only be
@@ -3174,7 +3174,7 @@ function _search_api_batch_indexing_callback(SearchApiIndex $index, $batch_size,
  * @param boolean $success
  *   Whether the batch finished successfully.
  * @param array $results
- *   Detailed informations about the result.
+ *   Detailed information about the result.
  */
 function _search_api_batch_indexing_finished($success, $results) {
   // Check if called from drush.
