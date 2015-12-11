@@ -18,6 +18,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\Entity\Index;
@@ -658,7 +659,14 @@ class Database extends BackendPluginBase {
     //
     // @todo: Remove when #2625664 lands in Core. See #2625722 for a patch that
     //   implements this.
-    $this->database->schema()->addIndex($db['table'], '_' . $column, $index_spec, $table_spec);
+    try {
+      $this->database->schema()->addIndex($db['table'], '_' . $column, $index_spec, $table_spec);
+    }
+    catch (\PDOException $e) {
+      $variables['%column'] = $column;
+      $variables['%table'] = $db['table'];
+      watchdog_exception('search_api_db', $e, '%type while trying to add a database index for column %column to table %table: @message in %function (line %line of %file).', $variables, RfcLogLevel::WARNING);
+    }
 
     if ($new_table) {
       // Add a covering index for fields with multiple values.
