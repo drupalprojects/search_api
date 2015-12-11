@@ -10,7 +10,8 @@ namespace Drupal\search_api\Processor;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
-use Drupal\search_api\Query\FilterInterface;
+use Drupal\search_api\Query\ConditionGroupInterface;
+use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility;
 
@@ -25,8 +26,8 @@ use Drupal\search_api\Utility;
  * - processFieldValue()
  * - processKeys()
  * - processKey()
- * - processFilters()
- * - processFilterValue()
+ * - processConditions()
+ * - processConditionValue()
  * - process()
  *
  * The following methods can be used for specific logic regarding the fields to
@@ -107,9 +108,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     if (isset($keys)) {
       $this->processKeys($keys);
     }
-    $filter = $query->getFilter();
-    $filters = &$filter->getFilters();
-    $this->processFilters($filters);
+    $conditions = $query->getConditionGroup();
+    $this->processConditions($conditions->getConditions());
   }
 
   /**
@@ -214,33 +214,39 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Preprocesses the query filters.
+   * Preprocesses the query conditions.
    *
-   * @param array $filters
-   *   An array of filters, passed by reference. The contents follow the format
-   *   of \Drupal\search_api\Query\FilterInterface::getFilters().
+   * @param \Drupal\search_api\Query\ConditionInterface[]|\Drupal\search_api\Query\ConditionGroupInterface[] $conditions
+   *   An array of conditions, as returned by
+   *   \Drupal\search_api\Query\ConditionGroupInterface::getConditions(),
+   *   passed by reference.
    */
-  protected function processFilters(array &$filters) {
+  protected function processConditions(array &$conditions) {
     $fields = $this->index->getFields();
-    foreach ($filters as $key => &$f) {
-      if (is_array($f)) {
-        if (isset($fields[$f[0]]) && $this->testField($f[0], $fields[$f[0]])) {
-          // We want to allow processors also to easily remove complete filters.
-          // However, we can't use empty() or the like, as that would sort out
-          // filters for 0 or NULL. So we specifically check only for the empty
-          // string, and we also make sure the filter value was actually changed
-          // by storing whether it was empty before.
-          $empty_string = $f[1] === '';
-          $this->processFilterValue($f[1]);
+    foreach ($conditions as $key => &$condition) {
+      if ($condition instanceof ConditionInterface) {
+        $field = $condition->getField();
+        if ($this->testField($field, $fields[$field])) {
+          // We want to allow processors also to easily remove complete
+          // conditions. However, we can't use empty() or the like, as that
+          // would sort out filters for 0 or NULL. So we specifically check only
+          // for the empty string, and we also make sure the condition value was
+          // actually changed by storing whether it was empty before.
+          $value = $condition->getValue();
+          $empty_string = $value === '';
+          $this->processConditionValue($value);
 
-          if ($f[1] === '' && !$empty_string) {
-            unset($filters[$key]);
+          if ($value === '' && !$empty_string) {
+            unset($conditions[$key]);
+          }
+          else {
+            $condition->setValue($value);
           }
         }
       }
-      elseif ($f instanceof FilterInterface) {
-        $child_filters = &$f->getFilters();
-        $this->processFilters($child_filters);
+      elseif ($condition instanceof ConditionGroupInterface) {
+        $child_conditions = &$condition->getConditions();
+        $this->processConditions($child_conditions);
       }
     }
   }
@@ -271,7 +277,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *
    * @param string $type
    *   The type of the field (either when preprocessing the field at index time,
-   *   or a filter on the field at query time).
+   *   or a condition on the field at query time).
    *
    * @return bool
    *   TRUE if fields of that type should be processed, FALSE otherwise.
@@ -321,17 +327,17 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
   }
 
   /**
-   * Processes a single filter value.
+   * Processes a single condition value.
    *
-   * Called for processing a single filter value. The default implementation
+   * Called for processing a single condition value. The default implementation
    * just calls process().
    *
    * @param string $value
    *   The string value to preprocess, as a reference. Can be manipulated
    *   directly, nothing has to be returned. Has to remain a string. Set to an
-   *   empty string to remove the filter.
+   *   empty string to remove the condition.
    */
-  protected function processFilterValue(&$value) {
+  protected function processConditionValue(&$value) {
     $this->process($value);
   }
 

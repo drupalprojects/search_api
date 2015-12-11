@@ -41,31 +41,31 @@ class SearchApiTaxonomyTerm extends SearchApiArgument {
       $terms = Term::load($this->value);
 
       if (!empty($terms)) {
-        $filter = $this->query->createFilter($outer_conjunction);
+        $conditions = $this->query->createConditionGroup($outer_conjunction);
         $vocabulary_fields = $this->definition['vocabulary_fields'];
         $vocabulary_fields += array('' => array());
         foreach ($terms as $term) {
-          $inner_filter = $filter;
+          $inner_conditions = $conditions;
           if ($outer_conjunction != $inner_conjunction) {
-            $inner_filter = $this->query->createFilter($inner_conjunction);
+            $inner_conditions = $this->query->createConditionGroup($inner_conjunction);
           }
           // Set filters for all term reference fields which don't specify a
           // vocabulary, as well as for all fields specifying the term's
           // vocabulary.
           if (!empty($vocabulary_fields[$term->vocabulary_id])) {
             foreach ($vocabulary_fields[$term->vocabulary_id] as $field) {
-              $inner_filter->condition($field, $term->tid, $condition_operator);
+              $inner_conditions->addCondition($field, $term->tid, $condition_operator);
             }
           }
           foreach ($vocabulary_fields[''] as $field) {
-            $inner_filter->condition($field, $term->tid, $condition_operator);
+            $inner_conditions->addCondition($field, $term->tid, $condition_operator);
           }
           if ($outer_conjunction != $inner_conjunction) {
-            $filter->filter($inner_filter);
+            $conditions->addConditionGroup($inner_conditions);
           }
         }
 
-        $this->query->filter($filter);
+        $this->query->addConditionGroup($conditions);
       }
     }
   }

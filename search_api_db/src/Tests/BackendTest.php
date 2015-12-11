@@ -203,15 +203,15 @@ class BackendTest extends EntityUnitTestBase {
    *
    * @param string|array|null $keys
    *   (optional) The search keys to set, if any.
-   * @param array $filters
-   *   (optional) Filters to set on the query, in the format "field,value".
+   * @param array $conditions
+   *   (optional) Conditions to set on the query, in the format "field,value".
    * @param array $fields
    *   (optional) Fulltext fields to search for the keys.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   A search query on the test index.
    */
-  protected function buildSearch($keys = NULL, array $filters = array(), array $fields = array()) {
+  protected function buildSearch($keys = NULL, array $conditions = array(), array $fields = array()) {
     $query = $this->getIndex()->query();
     if ($keys) {
       $query->keys($keys);
@@ -219,9 +219,9 @@ class BackendTest extends EntityUnitTestBase {
         $query->setFulltextFields($fields);
       }
     }
-    foreach ($filters as $filter) {
-      list($field, $value) = explode(',', $filter, 2);
-      $query->condition($this->getFieldId($field), $value);
+    foreach ($conditions as $condition) {
+      list($field, $value) = explode(',', $condition, 2);
+      $query->addCondition($this->getFieldId($field), $value);
     }
     $query->range(0, 10);
 
@@ -295,9 +295,9 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function checkFacets() {
     $query = $this->buildSearch();
-    $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('category')));
-    $filter->condition($this->getFieldId('category'), 'article_category');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup('OR', array('facet:' . $this->getFieldId('category')));
+    $conditions->addCondition($this->getFieldId('category'), 'article_category');
+    $query->addConditionGroup($conditions);
     $facets['category'] = array(
       'field' => $this->getFieldId('category'),
       'limit' => 0,
@@ -319,12 +319,12 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
 
     $query = $this->buildSearch();
-    $filter = $query->createFilter('OR', array('facet:' . $this->getFieldId('category')));
-    $filter->condition($this->getFieldId('category'), 'article_category');
-    $query->filter($filter);
-    $filter = $query->createFilter('AND');
-    $filter->condition($this->getFieldId('category'), NULL, '<>');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup('OR', array('facet:' . $this->getFieldId('category')));
+    $conditions->addCondition($this->getFieldId('category'), 'article_category');
+    $query->addConditionGroup($conditions);
+    $conditions = $query->createConditionGroup('AND');
+    $conditions->addCondition($this->getFieldId('category'), NULL, '<>');
+    $query->addConditionGroup($conditions);
     $facets['category'] = array(
       'field' => $this->getFieldId('category'),
       'limit' => 0,
@@ -439,17 +439,17 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $filters = array(
+    $conditions = array(
       'keywords,orange',
       'keywords,apple',
     );
-    $results = $this->buildSearch(NULL, $filters)->execute();
+    $results = $this->buildSearch(NULL, $conditions)->execute();
     $this->assertEqual($results->getResultCount(), 1, 'Filter query 2 on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2)), 'Filter query 2 on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()->condition($this->getFieldId('keywords'), NULL)->execute();
+    $results = $this->buildSearch()->addCondition($this->getFieldId('keywords'), NULL)->execute();
     $this->assertEqual($results->getResultCount(), 1, 'Query with NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Query with NULL filter returned correct result.');
     $this->assertIgnored($results);
@@ -468,10 +468,10 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     $query = $this->buildSearch();
-    $filter = $query->createFilter('OR');
-    $filter->condition($this->getFieldId('id'), 3);
-    $filter->condition($this->getFieldId('type'), 'article');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition($this->getFieldId('id'), 3);
+    $conditions->addCondition($this->getFieldId('type'), 'article');
+    $query->addConditionGroup($conditions);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'OR filter on field with NULLs returned correct number of results.');
@@ -481,10 +481,10 @@ class BackendTest extends EntityUnitTestBase {
 
     // Regression tests for #1863672.
     $query = $this->buildSearch();
-    $filter = $query->createFilter('OR');
-    $filter->condition($this->getFieldId('keywords'), 'orange');
-    $filter->condition($this->getFieldId('keywords'), 'apple');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
+    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
+    $query->addConditionGroup($conditions);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'OR filter on multi-valued field returned correct number of results.');
@@ -493,14 +493,14 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     $query = $this->buildSearch();
-    $filter = $query->createFilter('OR');
-    $filter->condition($this->getFieldId('keywords'), 'orange');
-    $filter->condition($this->getFieldId('keywords'), 'strawberry');
-    $query->filter($filter);
-    $filter = $query->createFilter('OR');
-    $filter->condition($this->getFieldId('keywords'), 'apple');
-    $filter->condition($this->getFieldId('keywords'), 'grape');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
+    $conditions->addCondition($this->getFieldId('keywords'), 'strawberry');
+    $query->addConditionGroup($conditions);
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
+    $conditions->addCondition($this->getFieldId('keywords'), 'grape');
+    $query->addConditionGroup($conditions);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Multiple OR filters on multi-valued field returned correct number of results.');
@@ -509,16 +509,16 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     $query = $this->buildSearch();
-    $filter1 = $query->createFilter('OR');
-    $filter = $query->createFilter('AND');
-    $filter->condition($this->getFieldId('keywords'), 'orange');
-    $filter->condition($this->getFieldId('keywords'), 'apple');
-    $filter1->filter($filter);
-    $filter = $query->createFilter('AND');
-    $filter->condition($this->getFieldId('keywords'), 'strawberry');
-    $filter->condition($this->getFieldId('keywords'), 'grape');
-    $filter1->filter($filter);
-    $query->filter($filter1);
+    $conditions1 = $query->createConditionGroup('OR');
+    $conditions = $query->createConditionGroup('AND');
+    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
+    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
+    $conditions1->addConditionGroup($conditions);
+    $conditions = $query->createConditionGroup('AND');
+    $conditions->addCondition($this->getFieldId('keywords'), 'strawberry');
+    $conditions->addCondition($this->getFieldId('keywords'), 'grape');
+    $conditions1->addConditionGroup($conditions);
+    $query->addConditionGroup($conditions1);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Complex nested filters on multi-valued field returned correct number of results.');
@@ -686,7 +686,7 @@ class BackendTest extends EntityUnitTestBase {
       'missing' => TRUE,
     );
     $query->setOption('search_api_facets', $facets);
-    $query->condition($this->getFieldId('type'), 'article');
+    $query->addCondition($this->getFieldId('type'), 'article');
     $query->range(0, 0);
     $results = $query->execute();
     $expected = array(
@@ -708,7 +708,7 @@ class BackendTest extends EntityUnitTestBase {
       'missing' => FALSE,
     );
     $query->setOption('search_api_facets', $facets);
-    $query->condition($this->getFieldId('id'), 5, '<>');
+    $query->addCondition($this->getFieldId('id'), 5, '<>');
     $query->range(0, 0);
     $results = $query->execute();
     $expected = array(

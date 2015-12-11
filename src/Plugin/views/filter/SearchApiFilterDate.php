@@ -83,10 +83,10 @@ class SearchApiFilterDate extends SearchApiFilter {
    */
   public function query() {
     if ($this->operator === 'empty') {
-      $this->query->condition($this->realField, NULL, '=', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '=', $this->options['group']);
     }
     elseif ($this->operator === 'not empty') {
-      $this->query->condition($this->realField, NULL, '<>', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '<>', $this->options['group']);
     }
     else {
       while (is_array($this->value)) {
@@ -94,7 +94,7 @@ class SearchApiFilterDate extends SearchApiFilter {
       }
       $v = is_numeric($this->value) ? $this->value : strtotime($this->value, REQUEST_TIME);
       if ($v !== FALSE) {
-        $this->query->condition($this->realField, $v, $this->operator, $this->options['group']);
+        $this->query->addCondition($this->realField, $v, $this->operator, $this->options['group']);
       }
     }
   }

@@ -267,16 +267,16 @@ class ContentAccess extends ProcessorPluginBase {
     // however, and can add the "ADD"
     // @todo Add a filter tag, once they are implemented.
     if ($unaffected_datasources) {
-      $outer_filter = $query->createFilter('OR');
-      $query->filter($outer_filter);
+      $outer_conditions = $query->createConditionGroup('OR');
+      $query->addConditionGroup($outer_conditions);
       foreach ($unaffected_datasources as $datasource_id) {
-        $outer_filter->condition('search_api_datasource', $datasource_id);
+        $outer_conditions->addCondition('search_api_datasource', $datasource_id);
       }
-      $access_filter = $query->createFilter('AND');
-      $outer_filter->filter($access_filter);
+      $access_conditions = $query->createConditionGroup('AND');
+      $outer_conditions->addConditionGroup($access_conditions);
     }
     else {
-      $access_filter = $query;
+      $access_conditions = $query;
     }
 
     if (!$account->hasPermission('access content')) {
@@ -294,7 +294,7 @@ class ContentAccess extends ProcessorPluginBase {
       // not return any results at all.
       if (!$unaffected_datasources) {
         // @todo More elegant way to return no results?
-        $query->condition('search_api_language', '');
+        $query->addCondition('search_api_language', '');
       }
       return;
     }
@@ -302,7 +302,7 @@ class ContentAccess extends ProcessorPluginBase {
     // Collect all the required fields that need to be part of the index.
     $unpublished_own = $account->hasPermission('view own unpublished content');
 
-    $enabled_filter = $query->createFilter('OR');
+    $enabled_conditions = $query->createConditionGroup('OR');
     foreach ($affected_datasources as $entity_type => $datasources) {
       $published = ($entity_type == 'node') ? NODE_PUBLISHED : Comment::PUBLISHED;
       foreach ($datasources as $datasource_id) {
@@ -310,27 +310,27 @@ class ContentAccess extends ProcessorPluginBase {
         // unpublished nodes, a simple filter on "status" is enough. Otherwise,
         // it's a bit more complicated.
         $status_field = Utility::createCombinedId($datasource_id, 'status');
-        $enabled_filter->condition($status_field, $published);
+        $enabled_conditions->addCondition($status_field, $published);
         if ($entity_type == 'node' && $unpublished_own) {
           $author_field = Utility::createCombinedId($datasource_id, 'uid');
-          $enabled_filter->condition($author_field, $account->id());
+          $enabled_conditions->addCondition($author_field, $account->id());
         }
       }
     }
-    $access_filter->filter($enabled_filter);
+    $access_conditions->addConditionGroup($enabled_conditions);
 
     // Filter by the user's node access grants.
-    $grants_filter = $query->createFilter('OR');
+    $grants_conditions = $query->createConditionGroup('OR');
     $grants = node_access_grants('view', $account);
     foreach ($grants as $realm => $gids) {
       foreach ($gids as $gid) {
-        $grants_filter->condition('search_api_node_grants', "node_access_$realm:$gid");
+        $grants_conditions->addCondition('search_api_node_grants', "node_access_$realm:$gid");
       }
     }
     // Also add items that are accessible for everyone by checking the "access
     // all" pseudo grant.
-    $grants_filter->condition('search_api_node_grants', 'node_access__all');
-    $access_filter->filter($grants_filter);
+    $grants_conditions->addCondition('search_api_node_grants', 'node_access__all');
+    $access_conditions->addConditionGroup($grants_conditions);
   }
 
 }

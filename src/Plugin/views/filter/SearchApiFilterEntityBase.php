@@ -195,23 +195,23 @@ abstract class SearchApiFilterEntityBase extends SearchApiFilter {
    */
   public function query() {
     if ($this->operator === 'empty') {
-      $this->query->condition($this->realField, NULL, '=', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '=', $this->options['group']);
     }
     elseif ($this->operator === 'not empty') {
-      $this->query->condition($this->realField, NULL, '<>', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '<>', $this->options['group']);
     }
     elseif (is_array($this->value)) {
       $all_of = $this->operator === 'all of';
       $operator = $all_of ? '=' : $this->operator;
       if (count($this->value) == 1) {
-        $this->query->condition($this->realField, reset($this->value), $operator, $this->options['group']);
+        $this->query->addCondition($this->realField, reset($this->value), $operator, $this->options['group']);
       }
       else {
-        $filter = $this->query->createFilter($operator === '<>' || $all_of ? 'AND' : 'OR');
+        $conditions = $this->query->createConditionGroup($operator === '<>' || $all_of ? 'AND' : 'OR');
         foreach ($this->value as $value) {
-          $filter->condition($this->realField, $value, $operator);
+          $conditions->addCondition($this->realField, $value, $operator);
         }
-        $this->query->filter($filter, $this->options['group']);
+        $this->query->addConditionGroup($conditions, $this->options['group']);
       }
     }
   }

@@ -43,6 +43,15 @@ class Query implements QueryInterface {
   protected $resultsCache;
 
   /**
+   * The parse mode to use for fulltext search keys.
+   *
+   * @var string
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::parseModes()
+   */
+  protected $parseMode = 'terms';
+
+  /**
    * The search keys.
    *
    * If NULL, this will be a filter-only search.
@@ -66,11 +75,11 @@ class Query implements QueryInterface {
   protected $fields;
 
   /**
-   * The search filter associated with this query.
+   * The root condition group associated with this query.
    *
-   * @var \Drupal\search_api\Query\FilterInterface
+   * @var \Drupal\search_api\Query\ConditionGroupInterface
    */
-  protected $filter;
+  protected $conditionGroup;
 
   /**
    * The sorts associated with this query.
@@ -85,6 +94,13 @@ class Query implements QueryInterface {
    * @var array
    */
   protected $options;
+
+  /**
+   * The tags set on this query.
+   *
+   * @var string[]
+   */
+  protected $tags = array();
 
   /**
    * Flag for whether preExecute() was already called for this query.
@@ -113,21 +129,13 @@ class Query implements QueryInterface {
     if (!$index->status()) {
       throw new SearchApiException(new FormattableMarkup("Can't search on index %index which is disabled.", array('%index' => $index->label())));
     }
-    if (isset($options['parse mode'])) {
-      $modes = $this->parseModes();
-      if (!isset($modes[$options['parse mode']])) {
-        throw new SearchApiException(new FormattableMarkup('Unknown parse mode: @mode.', array('@mode' => $options['parse mode'])));
-      }
-    }
     $this->index = $index;
     $this->resultsCache = $results_cache;
     $this->options = $options + array(
       'conjunction' => 'AND',
-      'parse mode' => 'terms',
-      'filter class' => '\Drupal\search_api\Query\Filter',
       'search id' => __CLASS__,
     );
-    $this->filter = $this->createFilter('AND');
+    $this->conditionGroup = $this->createConditionGroup('AND');
   }
 
   /**
@@ -162,12 +170,36 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  protected function parseKeys($keys, $mode) {
+  public function getParseMode() {
+    return $this->parseMode;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParseMode($parse_mode) {
+    $this->parseMode = $parse_mode;
+    return $this;
+  }
+
+  /**
+   * Parses search keys input by the user according to the given parse mode.
+   *
+   * @param string|array|null $keys
+   *   The keywords to parse.
+   *
+   * @return array|null|string
+   *   The parsed keywords, in the format defined by
+   *   \Drupal\search_api\Query\QueryInterface::getKeys().
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::parseModes()
+   */
+  protected function parseKeys($keys) {
     if ($keys === NULL || is_array($keys)) {
       return $keys;
     }
     $keys = '' . $keys;
-    switch ($mode) {
+    switch ($this->parseMode) {
       case 'direct':
         return $keys;
 
@@ -218,9 +250,8 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function createFilter($conjunction = 'AND', array $tags = array()) {
-    $filter_class = $this->options['filter class'];
-    return new $filter_class($conjunction, $tags);
+  public function createConditionGroup($conjunction = 'AND', array $tags = array()) {
+    return new ConditionGroup($conjunction, $tags);
   }
 
   /**
@@ -229,7 +260,7 @@ class Query implements QueryInterface {
   public function keys($keys = NULL) {
     $this->origKeys = $keys;
     if (isset($keys)) {
-      $this->keys = $this->parseKeys($keys, $this->options['parse mode']);
+      $this->keys = $this->parseKeys($keys);
     }
     else {
       $this->keys = NULL;
@@ -247,16 +278,16 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function filter(FilterInterface $filter) {
-    $this->filter->filter($filter);
+  public function addConditionGroup(ConditionGroupInterface $condition_group) {
+    $this->conditionGroup->addConditionGroup($condition_group);
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function condition($field, $value, $operator = '=') {
-    $this->filter->condition($field, $value, $operator);
+  public function addCondition($field, $value, $operator = '=') {
+    $this->conditionGroup->addCondition($field, $value, $operator);
     return $this;
   }
 
@@ -311,7 +342,11 @@ class Query implements QueryInterface {
       $this->index->preprocessSearchQuery($this);
 
       // Let modules alter the query.
-      \Drupal::moduleHandler()->alter('search_api_query', $this);
+      $hooks = array('search_api_query');
+      foreach ($this->tags as $tag) {
+        $hooks[] = "search_api_query_$tag";
+      }
+      \Drupal::moduleHandler()->alter($hooks, $this);
     }
   }
 
@@ -323,7 +358,11 @@ class Query implements QueryInterface {
     $this->index->postprocessSearchResults($results);
 
     // Let modules alter the results.
-    \Drupal::moduleHandler()->alter('search_api_results', $results);
+    $hooks = array('search_api_results');
+    foreach ($this->tags as $tag) {
+      $hooks[] = "search_api_results_$tag";
+    }
+    \Drupal::moduleHandler()->alter($hooks, $results);
 
     // Store the results in the static cache.
     $this->resultsCache->addResults($results);
@@ -360,8 +399,8 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFilter() {
-    return $this->filter;
+  public function getConditionGroup() {
+    return $this->conditionGroup;
   }
 
   /**
@@ -424,9 +463,9 @@ class Query implements QueryInterface {
       $ret .= 'Parsed keys: ' . str_replace("\n", "\n  ", var_export($this->keys, TRUE)) . "\n";
       $ret .= 'Searched fields: ' . (isset($this->fields) ? implode(', ', $this->fields) : '[ALL]') . "\n";
     }
-    if ($filter = (string) $this->filter) {
-      $filter = str_replace("\n", "\n  ", $filter);
-      $ret .= "Filters:\n  $filter\n";
+    if ($conditions = (string) $this->conditionGroup) {
+      $conditions = str_replace("\n", "\n  ", $conditions);
+      $ret .= "Conditions:\n  $conditions\n";
     }
     if ($this->sorts) {
       $sorts = array();
@@ -439,6 +478,42 @@ class Query implements QueryInterface {
     //    var_export() due to circular references).
     $ret .= 'Options: ' . str_replace("\n", "\n  ", var_export($this->options, TRUE)) . "\n";
     return $ret;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addTag($tag) {
+    $this->tags[$tag] = $tag;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasTag($tag) {
+    return isset($this->tags[$tag]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAllTags() {
+    return !array_diff_key(array_flip(func_get_args()), $this->tags);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAnyTag() {
+    return (bool) array_intersect_key(array_flip(func_get_args()), $this->tags);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function &getTags() {
+    return $this->tags;
   }
 
 }

@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
+use Drupal\search_api\Query\Condition;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
@@ -32,7 +33,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   /**
    * The class under test.
    *
-   * @var \Drupal\Tests\search_api\Plugin\Processor\TestFieldsProcessorPlugin
+   * @var \Drupal\Tests\search_api\Unit\Plugin\Processor\TestFieldsProcessorPlugin
    */
   protected $processor;
 
@@ -298,68 +299,68 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   }
 
   /**
-   * Tests whether preprocessing search filters works correctly.
+   * Tests whether preprocessing search conditions works correctly.
    */
-  public function testProcessFilters() {
+  public function testProcessConditions() {
     $query = Utility::createQuery($this->index);
-    $query->condition('text_field', 'foo');
-    $query->condition('string_field', NULL, '<>');
-    $query->condition('integer_field', 'bar');
+    $query->addCondition('text_field', 'foo');
+    $query->addCondition('string_field', NULL, '<>');
+    $query->addCondition('integer_field', 'bar');
 
     $this->processor->preprocessSearchQuery($query);
 
     $expected = array(
-      array('text_field', '*foo', '='),
-      array('string_field', 'undefined', '<>'),
-      array('integer_field', 'bar', '='),
+      new Condition('text_field', '*foo'),
+      new Condition('string_field', 'undefined', '<>'),
+      new Condition('integer_field', 'bar'),
     );
-    $this->assertEquals($expected, $query->getFilter()->getFilters(), 'Filters were preprocessed correctly.');
+    $this->assertEquals($expected, $query->getConditionGroup()->getConditions(), 'Conditions were preprocessed correctly.');
   }
 
   /**
-   * Tests whether preprocessing nested search filters works correctly.
+   * Tests whether preprocessing nested search conditions works correctly.
    */
-  public function testProcessFiltersNestedFilter() {
+  public function testProcessConditionsNestedConditions() {
     $query = Utility::createQuery($this->index);
-    $filter = $query->createFilter();
-    $filter->condition('text_field', 'foo');
-    $filter->condition('string_field', NULL, '<>');
-    $filter->condition('integer_field', 'bar');
-    $query->filter($filter);
+    $conditions = $query->createConditionGroup();
+    $conditions->addCondition('text_field', 'foo');
+    $conditions->addCondition('string_field', NULL, '<>');
+    $conditions->addCondition('integer_field', 'bar');
+    $query->addConditionGroup($conditions);
 
     $this->processor->preprocessSearchQuery($query);
 
     $expected = array(
-      array('text_field', '*foo', '='),
-      array('string_field', 'undefined', '<>'),
-      array('integer_field', 'bar', '='),
+      new Condition('text_field', '*foo'),
+      new Condition('string_field', 'undefined', '<>'),
+      new Condition('integer_field', 'bar'),
     );
-    $this->assertEquals($expected, $query->getFilter()->getFilters()[0]->getFilters(), 'Filters were preprocessed correctly.');
+    $this->assertEquals($expected, $query->getConditionGroup()->getConditions()[0]->getConditions(), 'Conditions were preprocessed correctly.');
   }
 
   /**
-   * Tests whether overriding processFilterValue() works correctly.
+   * Tests whether overriding processConditionValue() works correctly.
    */
-  public function testProcessFilterValueOverride() {
+  public function testProcessConditionValueOverride() {
     $override = function (&$value) {
       if (isset($value)) {
         $value = '';
       }
     };
-    $this->processor->setMethodOverride('processFilterValue', $override);
+    $this->processor->setMethodOverride('processConditionValue', $override);
 
     $query = Utility::createQuery($this->index);
-    $query->condition('text_field', 'foo');
-    $query->condition('string_field', NULL, '<>');
-    $query->condition('integer_field', 'bar');
+    $query->addCondition('text_field', 'foo');
+    $query->addCondition('string_field', NULL, '<>');
+    $query->addCondition('integer_field', 'bar');
 
     $this->processor->preprocessSearchQuery($query);
 
     $expected = array(
-      array('string_field', NULL, '<>'),
-      array('integer_field', 'bar', '='),
+      new Condition('string_field', NULL, '<>'),
+      new Condition('integer_field', 'bar'),
     );
-    $this->assertEquals($expected, array_merge($query->getFilter()->getFilters()), 'Filters were preprocessed correctly.');
+    $this->assertEquals($expected, array_merge($query->getConditionGroup()->getConditions()), 'Conditions were preprocessed correctly.');
   }
 
   /**

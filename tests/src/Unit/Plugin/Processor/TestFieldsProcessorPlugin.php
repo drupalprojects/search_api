@@ -114,12 +114,12 @@ class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function processFilterValue(&$value) {
+  protected function processConditionValue(&$value) {
     if (isset($this->methodOverrides[__FUNCTION__])) {
       $this->methodOverrides[__FUNCTION__]($value);
       return;
     }
-    parent::processFilterValue($value);
+    parent::processConditionValue($value);
   }
 
   /**

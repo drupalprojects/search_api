@@ -96,17 +96,17 @@ class SearchApiArgument extends ArgumentPluginBase {
     $condition_operator = empty($this->options['not']) ? '=' : '<>';
 
     if (count($this->value) > 1) {
-      $filter = $this->query->createFilter(Unicode::strtoupper($this->operator));
-      // $filter will be NULL if there were errors in the query.
-      if ($filter) {
+      $conditions = $this->query->createConditionGroup(Unicode::strtoupper($this->operator));
+      // $conditions will be NULL if there were errors in the query.
+      if ($conditions) {
         foreach ($this->value as $value) {
-          $filter->condition($this->realField, $value, $condition_operator);
+          $conditions->addCondition($this->realField, $value, $condition_operator);
         }
-        $this->query->filter($filter);
+        $this->query->addConditionGroup($conditions);
       }
     }
     else {
-      $this->query->condition($this->realField, reset($this->value), $condition_operator);
+      $this->query->addCondition($this->realField, reset($this->value), $condition_operator);
     }
   }
 

@@ -151,15 +151,15 @@ class SearchApiFulltext extends SearchApiFilterText {
     // If something already specifically set different fields, we silently fall
     // back to mere filtering.
     $old = $this->query->getFulltextFields();
-    $filter = $old && (array_diff($old, $fields) || array_diff($fields, $old));
+    $conditions = $old && (array_diff($old, $fields) || array_diff($fields, $old));
 
-    if ($filter) {
-      $filter = $this->query->createFilter('OR');
+    if ($conditions) {
+      $conditions = $this->query->createConditionGroup('OR');
       $op = $this->operator === 'NOT' ? '<>' : '=';
       foreach ($fields as $field) {
-        $filter->condition($field, $this->value, $op);
+        $conditions->addCondition($field, $this->value, $op);
       }
-      $this->query->filter($filter);
+      $this->query->addConditionGroup($conditions);
       return;
     }
 

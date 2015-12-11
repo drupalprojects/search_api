@@ -242,11 +242,11 @@ class SearchApiFilterOptions extends SearchApiFilter {
    */
   public function query() {
     if ($this->operator === 'empty') {
-      $this->query->condition($this->realField, NULL, '=', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '=', $this->options['group']);
       return;
     }
     if ($this->operator === 'not empty') {
-      $this->query->condition($this->realField, NULL, '<>', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '<>', $this->options['group']);
       return;
     }
 
@@ -273,22 +273,22 @@ class SearchApiFilterOptions extends SearchApiFilter {
     // "is none of"), or want to find only items with no value for the field.
     if ($this->value === array()) {
       if ($operator != '<>') {
-        $this->query->condition($this->realField, NULL, '=', $this->options['group']);
+        $this->query->addCondition($this->realField, NULL, '=', $this->options['group']);
       }
       return;
     }
 
     if (is_scalar($this->value) && $this->value !== '') {
-      $this->query->condition($this->realField, $this->value, $operator, $this->options['group']);
+      $this->query->addCondition($this->realField, $this->value, $operator, $this->options['group']);
     }
     elseif ($this->value) {
-      $filter = $this->query->createFilter($conjunction);
-      // $filter will be NULL if there were errors in the query.
-      if ($filter) {
+      $conditions = $this->query->createConditionGroup($conjunction);
+      // $conditions will be NULL if there were errors in the query.
+      if ($conditions) {
         foreach ($this->value as $v) {
-          $filter->condition($this->realField, $v, $operator);
+          $conditions->addCondition($this->realField, $v, $operator);
         }
-        $this->query->filter($filter, $this->options['group']);
+        $this->query->addConditionGroup($conditions, $this->options['group']);
       }
     }
   }

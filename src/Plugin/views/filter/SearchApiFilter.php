@@ -98,17 +98,17 @@ class SearchApiFilter extends FilterPluginBase {
    */
   public function query() {
     if ($this->operator === 'empty') {
-      $this->query->condition($this->realField, NULL, '=', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '=', $this->options['group']);
     }
     elseif ($this->operator === 'not empty') {
-      $this->query->condition($this->realField, NULL, '<>', $this->options['group']);
+      $this->query->addCondition($this->realField, NULL, '<>', $this->options['group']);
     }
     else {
       while (is_array($this->value)) {
         $this->value = $this->value ? reset($this->value) : NULL;
       }
       if (strlen($this->value) > 0) {
-        $this->query->condition($this->realField, $this->value, $this->operator, $this->options['group']);
+        $this->query->addCondition($this->realField, $this->value, $this->operator, $this->options['group']);
       }
     }
   }

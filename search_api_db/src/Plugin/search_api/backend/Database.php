@@ -24,7 +24,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
-use Drupal\search_api\Query\FilterInterface;
+use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
@@ -1510,9 +1510,9 @@ class Database extends BackendPluginBase {
       $db_query->distinct();
     }
 
-    $filter = $query->getFilter();
-    if ($filter->getFilters()) {
-      $condition = $this->createFilterCondition($filter, $fields, $db_query, $query->getIndex());
+    $condition_group = $query->getConditionGroup();
+    if ($condition_group->getConditions()) {
+      $condition = $this->createDbCondition($condition_group, $fields, $db_query, $query->getIndex());
       if ($condition) {
         $db_query->condition($condition);
       }
@@ -1528,7 +1528,7 @@ class Database extends BackendPluginBase {
   /**
    * Removes nested expressions and phrase groupings from the search keys.
    *
-   * Used as a helper method in createDbQuery() and createFilterCondition().
+   * Used as a helper method in createDbQuery() and createDbCondition().
    *
    * @param array|string|null $keys
    *   The keys which should be preprocessed.
@@ -1647,7 +1647,7 @@ class Database extends BackendPluginBase {
   /**
    * Creates a SELECT query for given search keys.
    *
-   * Used as a helper method in createDbQuery() and createFilterCondition().
+   * Used as a helper method in createDbQuery() and createDbCondition().
    *
    * @param string|array $keys
    *   The search keys, formatted like the return value of
@@ -1814,8 +1814,8 @@ class Database extends BackendPluginBase {
    *
    * Used as a helper method in createDbQuery().
    *
-   * @param \Drupal\search_api\Query\FilterInterface $filter
-   *   The filter for which a condition should be created.
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $conditions
+   *   The conditions for which a condition should be created.
    * @param array $fields
    *   Internal information about the index's fields.
    * @param \Drupal\Core\Database\Query\SelectInterface $db_query
@@ -1829,8 +1829,8 @@ class Database extends BackendPluginBase {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an unknown field was used in the filter.
    */
-  protected function createFilterCondition(FilterInterface $filter, array $fields, SelectInterface $db_query, IndexInterface $index) {
-    $cond =  new Condition($filter->getConjunction());
+  protected function createDbCondition(ConditionGroupInterface $conditions, array $fields, SelectInterface $db_query, IndexInterface $index) {
+    $db_condition = new Condition($conditions->getConjunction());
     $db_info = $this->getIndexDbInfo($index);
 
     $empty = TRUE;
@@ -1839,43 +1839,47 @@ class Database extends BackendPluginBase {
     $first_join = array();
     // Store the table aliases for the fields in this condition group.
     $tables = array();
-    foreach ($filter->getFilters() as $f) {
-      if (is_object($f)) {
-        $c = $this->createFilterCondition($f, $fields, $db_query, $index);
-        if ($c) {
+    foreach ($conditions->getConditions() as $condition) {
+      if ($condition instanceof ConditionGroupInterface) {
+        $sub_condition = $this->createDbCondition($condition, $fields, $db_query, $index);
+        if ($sub_condition) {
           $empty = FALSE;
-          $cond->condition($c);
+          $db_condition->condition($sub_condition);
         }
       }
       else {
         $empty = FALSE;
+        $field = $condition->getField();
+        $operator = $condition->getOperator();
+        $value = $condition->getValue();
+
         // We don't index the datasource explicitly, so this needs a bit of
         // magic.
         // @todo Index the datasource explicitly so this doesn't need magic.
-        if ($f[0] === 'search_api_datasource') {
+        if ($field === 'search_api_datasource') {
           $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
           // @todo Stop recognizing "!=" as an operator.
-          $operator = ($f[2] == '<>' || $f[2] == '!=') ? 'NOT LIKE' : 'LIKE';
-          $prefix = Utility::createCombinedId($f[1], '');
-          $cond->condition($alias . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
+          $operator = ($operator == '<>' || $operator == '!=') ? 'NOT LIKE' : 'LIKE';
+          $prefix = Utility::createCombinedId($value, '');
+          $db_condition->condition($alias . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
           continue;
         }
-        if (!isset($fields[$f[0]])) {
-          throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $f[0])));
+        if (!isset($fields[$field])) {
+          throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $field)));
         }
-        $field = $fields[$f[0]];
+        $field_info = $fields[$field];
         // Fields have their own table, so we have to check for NULL values in
         // a special way (i.e., check for missing entries in that table).
         // @todo This can probably always use the denormalized table.
-        if ($f[1] === NULL) {
-          $query = $this->database->select($field['table'], 't')
+        if ($value === NULL) {
+          $query = $this->database->select($field_info['table'], 't')
             ->fields('t', array('item_id'));
-          $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'IN' : 'NOT IN');
+          $db_condition->condition('t.item_id', $query, $operator == '<>' || $operator == '!=' ? 'IN' : 'NOT IN');
           continue;
         }
-        if (Utility::isTextType($field['type'])) {
-          $keys = $this->prepareKeys($f[1]);
-          $query = $this->createKeysQuery($keys, array($f[0] => $field), $fields, $index);
+        if (Utility::isTextType($field_info['type'])) {
+          $keys = $this->prepareKeys($value);
+          $query = $this->createKeysQuery($keys, array($field => $field_info), $fields, $index);
           // We don't need the score, so we remove it. The score might either be
           // an expression or a field.
           $query_expressions = &$query->getExpressions();
@@ -1888,26 +1892,26 @@ class Database extends BackendPluginBase {
             unset($query_fields);
           }
           unset($query_expressions);
-          $cond->condition('t.item_id', $query, $f[2] == '<>' || $f[2] == '!=' ? 'NOT IN' : 'IN');
+          $db_condition->condition('t.item_id', $query, $operator == '<>' || $operator == '!=' ? 'NOT IN' : 'IN');
         }
         else {
-          $new_join = ($filter->getConjunction() == 'AND' || empty($first_join[$f[0]]));
-          if ($new_join || empty($tables[$f[0]])) {
-            $tables[$f[0]] = $this->getTableAlias($field, $db_query, $new_join);
-            $first_join[$f[0]] = TRUE;
+          $new_join = ($conditions->getConjunction() == 'AND' || empty($first_join[$field]));
+          if ($new_join || empty($tables[$field])) {
+            $tables[$field] = $this->getTableAlias($field_info, $db_query, $new_join);
+            $first_join[$field] = TRUE;
           }
-          $column = $tables[$f[0]] . '.' . 'value';
-          if ($f[1] !== NULL) {
-            $cond->condition($column, $f[1], $f[2]);
+          $column = $tables[$field] . '.' . 'value';
+          if ($value !== NULL) {
+            $db_condition->condition($column, $value, $operator);
           }
           else {
-            $method = ($f[2] == '=') ? 'isNull' : 'isNotNull';
-            $cond->$method($column);
+            $method = ($operator == '=') ? 'isNull' : 'isNotNull';
+            $db_condition->$method($column);
           }
         }
       }
     }
-    return $empty ? NULL : $cond;
+    return $empty ? NULL : $db_condition;
   }
 
   /**
@@ -1975,11 +1979,11 @@ class Database extends BackendPluginBase {
         // For OR facets, we need to build a different base query that excludes
         // the facet filters applied to the facet.
         $or_query = clone $query;
-        $filters = &$or_query->getFilter()->getFilters();
+        $conditions = &$or_query->getConditionGroup()->getConditions();
         $tag = 'facet:' . $facet['field'];
-        foreach ($filters as $filter_id => $filter) {
-          if ($filter instanceof FilterInterface && $filter->hasTag($tag)) {
-            unset($filters[$filter_id]);
+        foreach ($conditions as $i => $condition) {
+          if ($condition instanceof ConditionGroupInterface && $condition->hasTag($tag)) {
+            unset($conditions[$i]);
           }
         }
         $or_db_query = $this->createDbQuery($or_query, $fields);

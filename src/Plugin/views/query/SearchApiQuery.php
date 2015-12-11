@@ -13,7 +13,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Query\FilterInterface;
+use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
@@ -90,14 +90,14 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @var array
    */
-  protected $fields;
+  protected $fields = array();
 
   /**
-   * The query's sub-filters representing the different Views filter groups.
+   * The query's conditions representing the different Views filter groups.
    *
    * @var array
    */
-  protected $filters = array();
+  protected $conditions = array();
 
   /**
    * The conjunction with which multiple filter groups are combined.
@@ -139,9 +139,12 @@ class SearchApiQuery extends QueryPluginBase {
       if (!$this->index) {
         $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
       }
-      $this->query = $this->index->query(array(
-        'parse mode' => $this->options['parse_mode'],
-      ));
+      $this->query = $this->index->query();
+      $this->query->setParseMode($this->options['parse_mode']);
+      $this->query->addTag('views');
+      $this->query->addTag('views_' . $view->id());
+      $this->query->setOption('search_api_view', $view);
+
     }
     catch (\Exception $e) {
       $this->abort($e->getMessage());
@@ -265,8 +268,8 @@ class SearchApiQuery extends QueryPluginBase {
       // add a new OR filter to the query to which the filters for the groups
       // will be added.
       if ($this->group_operator === 'OR') {
-        $base = $this->query->createFilter('OR');
-        $this->query->filter($base);
+        $base = $this->query->createConditionGroup('OR');
+        $this->query->addConditionGroup($base);
       }
       else {
         $base = $this->query;
@@ -277,21 +280,21 @@ class SearchApiQuery extends QueryPluginBase {
           $group += array('type' => 'AND');
           // For filters without a group, we want to always add them directly to
           // the query.
-          $filter = ($group_id === '') ? $this->query : $this->query->createFilter($group['type']);
+          $conditions = ($group_id === '') ? $this->query : $this->query->createConditionGroup($group['type']);
           if (!empty($group['conditions'])) {
             foreach ($group['conditions'] as $condition) {
               list($field, $value, $operator) = $condition;
-              $filter->condition($field, $value, $operator);
+              $conditions->addCondition($field, $value, $operator);
             }
           }
           if (!empty($group['filters'])) {
-            foreach ($group['filters'] as $nested_filter) {
-              $filter->filter($nested_filter);
+            foreach ($group['filters'] as $nested_conditions) {
+              $conditions->addConditionGroup($nested_conditions);
             }
           }
           // If no group was given, the filters were already set on the query.
           if ($group_id !== '') {
-            $base->filter($filter);
+            $base->addConditionGroup($conditions);
           }
         }
       }
@@ -323,7 +326,6 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function alter(ViewExecutable $view) {
     \Drupal::moduleHandler()->invokeAll('views_query_alter', array($view, $this));
-    \Drupal::moduleHandler()->alter('search_api_views_query', $view, $this->query);
   }
 
   /**
@@ -549,21 +551,21 @@ class SearchApiQuery extends QueryPluginBase {
   //
 
   /**
-   * Creates a new filter to use with this query object.
+   * Creates a new condition group to use with this query object.
    *
    * @param string $conjunction
-   *   The conjunction to use for the filter - either 'AND' or 'OR'.
+   *   The conjunction to use for the condition group – either 'AND' or 'OR'.
    * @param string[] $tags
-   *   (optional) Tags to set on the filter.
+   *   (optional) Tags to set on the condition group.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   A filter object that is set to use the specified conjunction.
+   * @return \Drupal\search_api\Query\ConditionGroupInterface
+   *   A condition group object that is set to use the specified conjunction.
    *
-   * @see \Drupal\search_api\Query\QueryInterface::createFilter()
+   * @see \Drupal\search_api\Query\QueryInterface::createConditionGroup()
    */
-  public function createFilter($conjunction = 'AND', array $tags = array()) {
+  public function createConditionGroup($conjunction = 'AND', array $tags = array()) {
     if (!$this->shouldAbort()) {
-      return $this->query->createFilter($conjunction, $tags);
+      return $this->query->createConditionGroup($conjunction, $tags);
     }
     return NULL;
   }
@@ -613,23 +615,23 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Adds a subfilter to this query's filter.
+   * Adds a nested condition group.
    *
    * If $group is given, the filter is added to the relevant filter group
    * instead.
    *
-   * @param \Drupal\search_api\Query\FilterInterface $filter
-   *   A filter that should be added as a subfilter.
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
+   *   A condition group that should be added.
    * @param string|null $group
    *   (optional) The Views query filter group to add this filter to.
    *
    * @return $this
    *
-   * @see \Drupal\search_api\Query\QueryInterface::filter()
+   * @see \Drupal\search_api\Query\QueryInterface::addConditionGroup()
    */
-  public function filter(FilterInterface $filter, $group = NULL) {
+  public function addConditionGroup(ConditionGroupInterface $condition_group, $group = NULL) {
     if (!$this->shouldAbort()) {
-      $this->filters[$group]['filters'][] = $filter;
+      $this->filters[$group]['filters'][] = $condition_group;
     }
     return $this;
   }
@@ -656,9 +658,9 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @return $this
    *
-   * @see \Drupal\search_api\Query\QueryInterface::condition()
+   * @see \Drupal\search_api\Query\QueryInterface::addCondition()
    */
-  public function condition($field, $value, $operator = '=', $group = NULL) {
+  public function addCondition($field, $value, $operator = '=', $group = NULL) {
     if (!$this->shouldAbort()) {
       $this->filters[$group]['conditions'][] = array($field, $value, $operator);
     }
@@ -793,14 +795,14 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Retrieves the filter object associated with this search query.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
+   * @return \Drupal\search_api\Query\ConditionGroupInterface
    *   This object's associated filter object.
    *
-   * @see \Drupal\search_api\Query\QueryInterface::getFilter()
+   * @see \Drupal\search_api\Query\QueryInterface::getConditionGroup()
    */
   public function getFilter() {
     if (!$this->shouldAbort()) {
-      return $this->query->getFilter();
+      return $this->query->getConditionGroup();
     }
     return NULL;
   }
@@ -861,8 +863,6 @@ class SearchApiQuery extends QueryPluginBase {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
-   *   - 'filter class': Can be used to change the \Drupal\search_api\Query\FilterInterface
-   *     implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
    *   - 'skip result count': If present and set to TRUE, the search's result

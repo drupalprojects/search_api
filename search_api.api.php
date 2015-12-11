@@ -147,16 +147,39 @@ function hook_search_api_items_indexed(\Drupal\search_api\IndexInterface $index,
  *   The query that will be executed.
  */
 function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface &$query) {
-  // Exclude entities with ID 0. (Assume the ID field is always indexed.)
-  $types = $query->getIndex()->getDatasourceIds();
-  foreach ($types as $type) {
-    if (strpos($type, ':')) {
-      list(, $type) = explode(':', $type);
+  // Do not run for queries with a certain tag.
+  if ($query->hasTag('example_tag')) {
+    return;
+  }
+  // Otherwise, exclude the node with ID 10 from the search results.
+  $fields = $query->getIndex()->getFields();
+  foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
+    if ($datasource->getEntityTypeId() == 'node') {
+      $field = \Drupal\search_api\Utility::createCombinedId($datasource_id, 'nid');
+      if (isset($fields[$field])) {
+        $query->addCondition($field, 10, '<>');
+      }
     }
-    $definition = \Drupal::entityManager()->getDefinition($type, FALSE);
-    if ($definition) {
-      $keys = $definition->getKeys();
-      $query->condition($keys['id'], 0, '<>');
+  }
+}
+
+/**
+ * Alter a search query with a specific tag before it gets executed.
+ *
+ * The hook is invoked after all enabled processors have preprocessed the query.
+ *
+ * @param \Drupal\search_api\Query\QueryInterface $query
+ *   The query that will be executed.
+ */
+function hook_search_api_query_TAG_alter(\Drupal\search_api\Query\QueryInterface &$query) {
+  // Exclude the node with ID 10 from the search results.
+  $fields = $query->getIndex()->getFields();
+  foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
+    if ($datasource->getEntityTypeId() == 'node') {
+      $field = \Drupal\search_api\Utility::createCombinedId($datasource_id, 'nid');
+      if (isset($fields[$field])) {
+        $query->addCondition($field, 10, '<>');
+      }
     }
   }
 }
@@ -171,6 +194,19 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface &$q
  *   The search results to alter.
  */
 function hook_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterface &$results) {
+  $results->setExtraData('example_hook_invoked', microtime(TRUE));
+}
+
+/**
+ * Alter the result set of a search query with a specific tag.
+ *
+ * The hook is invoked after all enabled processors have postprocessed the
+ * results.
+ *
+ * @param \Drupal\search_api\Query\ResultSetInterface $results
+ *   The search results to alter.
+ */
+function hook_search_api_results_TAG_alter(\Drupal\search_api\Query\ResultSetInterface &$results) {
   $results->setExtraData('example_hook_invoked', microtime(TRUE));
 }
 
@@ -190,27 +226,6 @@ function hook_search_api_index_reindex(\Drupal\search_api\IndexInterface $index,
       'update_time' => REQUEST_TIME,
     ))
     ->execute();
-}
-
-/**
- * Alter the query before executing the query.
- *
- * @param \Drupal\views\ViewExecutable $view
- *   The view object about to be processed.
- * @param \Drupal\search_api\Query\QueryInterface $query
- *   The Search API Views query to be altered.
- *
- * @deprecated Use hook_views_query_alter() instead.
- *
- * @see hook_views_query_alter()
- *
- * @todo Possibly remove this, since hook_views_query_alter() works just as well
- *   (with instanceof check and $query->getSearchApiQuery()).
- */
-function hook_search_api_views_query_alter(\Drupal\views\ViewExecutable $view, \Drupal\search_api\Query\QueryInterface &$query) {
-  if ($view->getPath() === 'search') {
-    $query->setOption('custom_do_magic', TRUE);
-  }
 }
 
 /**

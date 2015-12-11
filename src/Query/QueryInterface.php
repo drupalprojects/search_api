@@ -15,7 +15,7 @@ use Drupal\search_api\IndexInterface;
  * Methods not returning something else will return the object itself, so calls
  * can be chained.
  */
-interface QueryInterface {
+interface QueryInterface extends ConditionSetInterface {
 
   /**
    * Constant representing ascending sorting.
@@ -59,23 +59,41 @@ interface QueryInterface {
   public function parseModes();
 
   /**
-   * Creates a new filter to use with this query object.
+   * Retrieves the parse mode.
+   *
+   * @return string
+   *   The parse mode.
+   */
+  public function getParseMode();
+
+  /**
+   * Sets the parse mode.
+   *
+   * @param string $parse_mode
+   *   The parse mode.
+   *
+   * @return $this
+   */
+  public function setParseMode($parse_mode);
+
+  /**
+   * Creates a new condition group to use with this query object.
    *
    * @param string $conjunction
-   *   The conjunction to use for the filter – either 'AND' or 'OR'.
+   *   The conjunction to use for the condition group – either 'AND' or 'OR'.
    * @param string[] $tags
-   *   (optional) Tags to set on the filter.
+   *   (optional) Tags to set on the condition group.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   A filter object that is set to use the specified conjunction.
+   * @return \Drupal\search_api\Query\ConditionGroupInterface
+   *   A condition group object that is set to use the specified conjunction.
    */
-  public function createFilter($conjunction = 'AND', array $tags = array());
+  public function createConditionGroup($conjunction = 'AND', array $tags = array());
 
   /**
    * Sets the keys to search for.
    *
    * If this method is not called on the query before execution, this will be a
-   * filter-only query.
+   * filters-only query.
    *
    * @param string|array|null $keys
    *   A string with the search keys, in one of the formats specified by
@@ -97,38 +115,6 @@ interface QueryInterface {
    * @return $this
    */
   public function setFulltextFields(array $fields = NULL);
-
-  /**
-   * Adds a subfilter to this query's filter.
-   *
-   * @param \Drupal\search_api\Query\FilterInterface $filter
-   *   A filter that should be added as a subfilter.
-   *
-   * @return $this
-   */
-  public function filter(FilterInterface $filter);
-
-  /**
-   * Adds a new ($field $operator $value) condition filter.
-   *
-   * @param string $field
-   *   The field to filter on, e.g. "title". The special field
-   *   "search_api_datasource" can be used to filter by datasource ID.
-   * @param mixed $value
-   *   The value the field should have (or be related to by the operator).
-   * @param string $operator
-   *   The operator to use for checking the constraint. The following operators
-   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
-   *   have the same semantics as the corresponding SQL operators.
-   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
-   *   are in this case interpreted as "contains" or "doesn't contain",
-   *   respectively.
-   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
-   *   field must have no or some value, respectively.
-   *
-   * @return $this
-   */
-  public function condition($field, $value, $operator = '=');
 
   /**
    * Adds a sort directive to this search query.
@@ -250,12 +236,12 @@ interface QueryInterface {
   public function &getFulltextFields();
 
   /**
-   * Retrieves the filter object associated with this search query.
+   * Retrieves the condition group object associated with this search query.
    *
-   * @return \Drupal\search_api\Query\FilterInterface
-   *   This object's associated filter object.
+   * @return \Drupal\search_api\Query\ConditionGroupInterface
+   *   This object's associated condition group object.
    */
-  public function getFilter();
+  public function getConditionGroup();
 
   /**
    * Retrieves the sorts set for this query.
@@ -290,17 +276,11 @@ interface QueryInterface {
    *   The name of an option. The following options are recognized by default:
    *   - conjunction: The type of conjunction to use for this query – either
    *     'AND' or 'OR'. 'AND' by default. This only influences the search keys,
-   *     filters will always use AND by default.
-   *   - 'parse mode': The mode with which to parse the $keys variable, if it
-   *     is set and not already an array. See
-   *     \Drupal\search_api\Query\Query::parseModes() for recognized parse
-   *     modes.
+   *     condition groups will always use AND by default.
    *   - offset: The position of the first returned search results relative to
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
-   *   - 'filter class': Can be used to change the
-   *     \Drupal\search_api\Query\FilterInterface implementation to use.
    *   - 'search id': A string that will be used as the identifier when storing
    *     this search in the Search API's static cache.
    *   - 'skip result count': If present and set to TRUE, the search's result
@@ -332,5 +312,70 @@ interface QueryInterface {
    *   An associative array of query options.
    */
   public function &getOptions();
+
+  /**
+   * Sets the given tag on this query.
+   *
+   * Tags are strings that categorize a query. A query may have any number of
+   * tags. Tags are used to mark a query so that alter hooks may decide if they
+   * wish to take action. Tags should be all lower-case and contain only
+   * letters, numbers, and underscore, and start with a letter. That is, they
+   * should follow the same rules as PHP identifiers in general.
+   *
+   * The call will be ignored if the tag is already set on this query.
+   *
+   * @param string $tag
+   *   The tag to set.
+   *
+   * @return $this
+   *
+   * @see hook_search_api_query_TAG_alter()
+   */
+  public function addTag($tag);
+
+  /**
+   * Checks whether a certain tag was set on this search query.
+   *
+   * @param string $tag
+   *   The tag to check for.
+   *
+   * @return bool
+   *   TRUE if the tag was set for this search query, FALSE otherwise.
+   */
+  public function hasTag($tag);
+
+  /**
+   * Determines whether this query has all the given tags set on it.
+   *
+   * @param string ...
+   *   The tags to check for.
+   *
+   * @return bool
+   *   TRUE if all the method parameters were set as tags on this query; FALSE
+   *   otherwise.
+   */
+  public function hasAllTags();
+
+  /**
+   * Determines whether this query has any of the given tags set on it.
+   *
+   * @param string ...
+   *   The tags to check for.
+   *
+   * @return bool
+   *   TRUE if any of the method parameters was set as a tag on this query;
+   *   FALSE otherwise.
+   */
+  public function hasAnyTag();
+
+  /**
+   * Retrieves the tags set on this query.
+   *
+   * @return string[]
+   *   The tags associated with this search query, as both the array keys and
+   *   values. Returned by reference so it's possible to, e.g., remove existing
+   *   tags.
+   */
+  public function &getTags();
 
 }
