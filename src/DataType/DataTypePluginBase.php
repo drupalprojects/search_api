@@ -20,13 +20,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * keys:
  * - id: The unique, system-wide identifier of the data type class.
  * - label: The human-readable name of the data type class, translated.
+ * - fallback_type: (optional) The fallback data type for this data type. Needs
+ *   to be one of the default data types defined in the Search API itself.
+ *   Defaults to "text".
  *
  * A complete plugin definition should be written as in this example:
  *
  * @code
  * @SearchApiDataType(
  *   id = "my_data_type",
- *   label = @Translation("My data type")
+ *   label = @Translation("My data type"),
+ *   fallback_type = "string"
  * )
  * @endcode
  *
@@ -96,7 +100,7 @@ abstract class DataTypePluginBase extends PluginBase implements DataTypeInterfac
    * {@inheritdoc}
    */
   public function getFallbackType() {
-    return 'text';
+    return !empty($this->pluginDefinition['fallback_type']) ? $this->pluginDefinition['fallback_type'] : 'text';
   }
 
   /**
