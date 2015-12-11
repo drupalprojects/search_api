@@ -2083,7 +2083,14 @@ class Database extends BackendPluginBase {
       return FALSE;
     }
     $args = $db_query->getArguments();
-    return $this->database->queryTemporary((string) $db_query, $args);
+    try {
+      $result = $this->database->queryTemporary((string)$db_query, $args);
+    }
+    catch(\PDOException $e) {
+      watchdog_exception('search_api', $e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
+      return FALSE;
+    }
+    return $result;
   }
 
   /**
