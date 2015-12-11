@@ -2102,6 +2102,9 @@ function _search_api_admin_get_fields(SearchApiIndex $index, EntityMetadataWrapp
  * @param array $variables
  *   An associative array containing:
  *   - element: A render element representing the form.
+ *
+ * @return string
+ *   The HTML for a field list form.
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];

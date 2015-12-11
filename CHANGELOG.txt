@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2611714 by rakesh.gectcr, drunken monkey: Improved compliance with
+  documentation standards.
 - #2613054 by temkin: Fixed the "search-api-index" Drush command to allow
   setting further options when indexing on all indexes.
 - #2611726 by Hubbs, rakesh.gectcr: Fixed several typos.
