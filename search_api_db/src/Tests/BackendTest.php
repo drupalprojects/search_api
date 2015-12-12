@@ -449,9 +449,22 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()->addCondition($this->getFieldId('keywords'), NULL)->execute();
+    $keywords_field = $this->getFieldId('keywords');
+    $results = $this->buildSearch()->addCondition($keywords_field, 'orange', '<>')->execute();
+    $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Negated filter on multi-valued field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition($keywords_field, NULL)->execute();
     $this->assertEqual($results->getResultCount(), 1, 'Query with NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Query with NULL filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition($keywords_field, NULL, '<>')->execute();
+    $this->assertEqual($results->getResultCount(), 4, 'Query with NOT NULL filter returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Query with NOT NULL filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -480,10 +493,11 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     // Regression tests for #1863672.
+    $keywords_field = $this->getFieldId('keywords');
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
-    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
+    $conditions->addCondition($keywords_field, 'orange');
+    $conditions->addCondition($keywords_field, 'apple');
     $query->addConditionGroup($conditions);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
@@ -494,12 +508,12 @@ class BackendTest extends EntityUnitTestBase {
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
-    $conditions->addCondition($this->getFieldId('keywords'), 'strawberry');
+    $conditions->addCondition($keywords_field, 'orange');
+    $conditions->addCondition($keywords_field, 'strawberry');
     $query->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
-    $conditions->addCondition($this->getFieldId('keywords'), 'grape');
+    $conditions->addCondition($keywords_field, 'apple');
+    $conditions->addCondition($keywords_field, 'grape');
     $query->addConditionGroup($conditions);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
     $results = $query->execute();
@@ -511,12 +525,12 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch();
     $conditions1 = $query->createConditionGroup('OR');
     $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition($this->getFieldId('keywords'), 'orange');
-    $conditions->addCondition($this->getFieldId('keywords'), 'apple');
+    $conditions->addCondition($keywords_field, 'orange');
+    $conditions->addCondition($keywords_field, 'apple');
     $conditions1->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition($this->getFieldId('keywords'), 'strawberry');
-    $conditions->addCondition($this->getFieldId('keywords'), 'grape');
+    $conditions->addCondition($keywords_field, 'strawberry');
+    $conditions->addCondition($keywords_field, 'grape');
     $conditions1->addConditionGroup($conditions);
     $query->addConditionGroup($conditions1);
     $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
@@ -778,7 +792,7 @@ class BackendTest extends EntityUnitTestBase {
    * Executes regression tests which are unpractical to run in between.
    */
   protected function regressionTests2() {
-    // Create a "keywords" field on the test entity type.
+    // Create a "prices" field on the test entity type.
     FieldStorageConfig::create(array(
       'field_name' => 'prices',
       'entity_type' => 'entity_test',

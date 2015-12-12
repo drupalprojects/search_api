@@ -1860,6 +1860,7 @@ class Database extends BackendPluginBase {
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
+        $not_equals = $operator == '<>' || $operator == '!=';
 
         // We don't index the datasource explicitly, so this needs a bit of
         // magic.
@@ -1867,7 +1868,7 @@ class Database extends BackendPluginBase {
         if ($field === 'search_api_datasource') {
           $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
           // @todo Stop recognizing "!=" as an operator.
-          $operator = ($operator == '<>' || $operator == '!=') ? 'NOT LIKE' : 'LIKE';
+          $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
           $prefix = Utility::createCombinedId($value, '');
           $db_condition->condition($alias . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
           continue;
@@ -1882,7 +1883,7 @@ class Database extends BackendPluginBase {
         if ($value === NULL) {
           $query = $this->database->select($field_info['table'], 't')
             ->fields('t', array('item_id'));
-          $db_condition->condition('t.item_id', $query, $operator == '<>' || $operator == '!=' ? 'IN' : 'NOT IN');
+          $db_condition->condition('t.item_id', $query, $not_equals ? 'IN' : 'NOT IN');
           continue;
         }
         if (Utility::isTextType($field_info['type'])) {
@@ -1900,7 +1901,7 @@ class Database extends BackendPluginBase {
             unset($query_fields);
           }
           unset($query_expressions);
-          $db_condition->condition('t.item_id', $query, $operator == '<>' || $operator == '!=' ? 'NOT IN' : 'IN');
+          $db_condition->condition('t.item_id', $query, $not_equals ? 'NOT IN' : 'IN');
         }
         else {
           $new_join = ($conditions->getConjunction() == 'AND' || empty($first_join[$field]));
@@ -1909,12 +1910,21 @@ class Database extends BackendPluginBase {
             $first_join[$field] = TRUE;
           }
           $column = $tables[$field] . '.' . 'value';
-          if ($value !== NULL) {
-            $db_condition->condition($column, $value, $operator);
-          }
-          else {
+          if ($value === NULL) {
             $method = ($operator == '=') ? 'isNull' : 'isNotNull';
             $db_condition->$method($column);
+          }
+          elseif ($not_equals) {
+            // The situation is more complicated for multi-valued fields, since
+            // we must make sure that results are excluded if ANY of the field's
+            // values equals the one given in this condition.
+            $query = $this->database->select($field_info['table'], 't')
+              ->fields('t', array('item_id'))
+              ->condition($field_info['column'], $value);
+            $db_condition->condition('t.item_id', $query, 'NOT IN');
+          }
+          else {
+            $db_condition->condition($column, $value, $operator);
           }
         }
       }
