@@ -1866,24 +1866,31 @@ class Database extends BackendPluginBase {
         // magic.
         // @todo Index the datasource explicitly so this doesn't need magic.
         if ($field === 'search_api_datasource') {
-          $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
-          // @todo Stop recognizing "!=" as an operator.
+          if (empty($tables[NULL])) {
+            $table = array(
+              'table' => $db_info['index_table'],
+            );
+            $tables[NULL] = $this->getTableAlias($table, $db_query);
+          }
           $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
           $prefix = Utility::createCombinedId($value, '');
-          $db_condition->condition($alias . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
+          $db_condition->condition($tables[NULL] . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
           continue;
         }
         if (!isset($fields[$field])) {
           throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $field)));
         }
         $field_info = $fields[$field];
-        // Fields have their own table, so we have to check for NULL values in
-        // a special way (i.e., check for missing entries in that table).
-        // @todo This can probably always use the denormalized table.
+        // For NULL values, we can just use the single-values table, since we
+        // only need to know if there's any value at all for that field.
         if ($value === NULL) {
-          $query = $this->database->select($field_info['table'], 't')
-            ->fields('t', array('item_id'));
-          $db_condition->condition('t.item_id', $query, $not_equals ? 'IN' : 'NOT IN');
+          if (empty($tables[NULL])) {
+            $table = array('table' => $db_info['index_table']);
+            $tables[NULL] = $this->getTableAlias($table, $db_query);
+          }
+          $column = $tables[NULL] . '.' . $field_info['column'];
+          $method = $not_equals ? 'isNotNull' : 'isNull';
+          $db_condition->$method($column);
           continue;
         }
         if (Utility::isTextType($field_info['type'])) {
@@ -1910,11 +1917,7 @@ class Database extends BackendPluginBase {
             $first_join[$field] = TRUE;
           }
           $column = $tables[$field] . '.' . 'value';
-          if ($value === NULL) {
-            $method = ($operator == '=') ? 'isNull' : 'isNotNull';
-            $db_condition->$method($column);
-          }
-          elseif ($not_equals) {
+          if ($not_equals) {
             // The situation is more complicated for multi-valued fields, since
             // we must make sure that results are excluded if ANY of the field's
             // values equals the one given in this condition.

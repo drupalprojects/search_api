@@ -675,21 +675,20 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    // Regression tests for #2136409
-    // @todo Fix NULL and NOT NULL conditions.
-//    $query = $this->buildSearch();
-//    $query->condition($this->getFieldId('type'), NULL);
-//    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
-//    $results = $query->execute();
-//    $this->assertEqual($results->getResultCount(), 1, 'NULL filter returned correct number of results.');
-//    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'NULL filter returned correct result.');
-//
-//    $query = $this->buildSearch();
-//    $query->condition($this->getFieldId('type'), NULL, '<>');
-//    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
-//    $results = $query->execute();
-//    $this->assertEqual($results->getResultCount(), 4, 'NOT NULL filter returned correct number of results.');
-//    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'NOT NULL filter returned correct result.');
+    // Regression tests for #2136409.
+    $query = $this->buildSearch();
+    $query->addCondition($this->getFieldId('category'), NULL);
+    $query->sort('search_api_id', QueryInterface::SORT_ASC);
+    $results = $query->execute();
+    $this->assertEqual($results->getResultCount(), 1, 'NULL filter returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'NULL filter returned correct result.');
+
+    $query = $this->buildSearch();
+    $query->addCondition($this->getFieldId('category'), NULL, '<>');
+    $query->sort('search_api_id', QueryInterface::SORT_ASC);
+    $results = $query->execute();
+    $this->assertEqual($results->getResultCount(), 4, 'NOT NULL filter returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'NOT NULL filter returned correct result.');
 
     // Regression tests for #1658964.
     $query = $this->buildSearch();
