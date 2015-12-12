@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2576265 by drunken monkey: Fixed view trying to search on non-fulltext field.
 - #2572487 by drunken monkey: Removed operator setting for date facets.
 - #2611714 by rakesh.gectcr, drunken monkey: Improved compliance with
   documentation standards.
