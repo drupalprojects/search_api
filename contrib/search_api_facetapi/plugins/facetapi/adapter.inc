@@ -271,6 +271,9 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
         '#options' => $granularity_options,
         '#default_value' => isset($options['date_granularity']) ? $options['date_granularity'] : FACETAPI_DATE_MINUTE,
       );
+
+      // Date facets don't support the "OR" operator (for now).
+      $form['global']['operator']['#access'] = FALSE;
     }
 
     // Add an "Exclude" option for terms.

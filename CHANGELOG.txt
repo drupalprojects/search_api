@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2572487 by drunken monkey: Removed operator setting for date facets.
 - #2611714 by rakesh.gectcr, drunken monkey: Improved compliance with
   documentation standards.
 - #2613054 by temkin: Fixed the "search-api-index" Drush command to allow
