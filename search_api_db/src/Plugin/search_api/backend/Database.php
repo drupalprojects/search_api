@@ -994,7 +994,7 @@ class Database extends BackendPluginBase {
     $indexed = array();
     foreach ($items as $id => $item) {
       try {
-        $this->indexItem($index, $id, $item);
+        $this->indexItem($index, $item);
         $indexed[] = $id;
       }
       catch (\Exception $e) {
@@ -1012,8 +1012,6 @@ class Database extends BackendPluginBase {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The index for which the item is being indexed.
-   * @param string $id
-   *   The item's ID.
    * @param \Drupal\search_api\Item\ItemInterface $item
    *   The item to index.
    *
@@ -1021,157 +1019,157 @@ class Database extends BackendPluginBase {
    *   Any encountered database (or other) exceptions are passed on, out of this
    *   method.
    */
-  protected function indexItem(IndexInterface $index, $id, ItemInterface $item) {
+  protected function indexItem(IndexInterface $index, ItemInterface $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
     $field_errors = array();
     $db_info = $this->getIndexDbInfo($index);
-
     $denormalized_table = $db_info['index_table'];
-    $txn = $this->database->startTransaction('search_api_indexing');
-    $text_table = $denormalized_table . '_text';
+    $item_id = $item->getId();
+
+    $transaction = $this->database->startTransaction('search_api_db_indexing');
 
     try {
-      $inserts = array();
+      // Remove the item from the denormalized table.
+      $this->database->delete($denormalized_table)
+        ->condition('item_id', $item_id)
+        ->execute();
+
+      $denormalized_values = array();
       $text_inserts = array();
-      foreach ($item->getFields() as $name => $field) {
-        $denormalized_value = NULL;
+      foreach ($item->getFields() as $field_id => $field) {
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables
         // here before indexing.
-        if (empty($fields[$name]['table']) && !$fields_updated) {
-          unset($db_info['field_tables'][$name]);
+        if (empty($fields[$field_id]['table']) && !$fields_updated) {
+          unset($db_info['field_tables'][$field_id]);
           $this->fieldsUpdated($index);
           $fields_updated = TRUE;
           $fields = $db_info['field_tables'];
         }
-        if (empty($fields[$name]['table']) && empty($field_errors[$name])) {
+        if (empty($fields[$field_id]['table']) && empty($field_errors[$field_id])) {
           // Log an error, but only once per field. Since a superfluous field is
           // not too serious, we just index the rest of the item normally.
-          $field_errors[$name] = TRUE;
-          $this->getLogger()->warning("Unknown field @field: please check (and re-save) the index's fields settings.", array('@field' => $name));
+          $field_errors[$field_id] = TRUE;
+          $this->getLogger()->warning("Unknown field @field: please check (and re-save) the index's fields settings.", array('@field' => $field_id));
           continue;
         }
-        $table = $fields[$name]['table'];
 
-        $boost = $fields[$name]['boost'];
+        $field_info = $fields[$field_id];
+        $table = $field_info['table'];
+        $column = $field_info['column'];
+
         $this->database->delete($table)
-          ->condition('item_id', $id)
-          ->execute();
-        $this->database->delete($denormalized_table)
-          ->condition('item_id', $id)
+          ->condition('item_id', $item_id)
           ->execute();
 
         $type = $field->getType();
-        $value = array();
+        $values = array();
         foreach ($field->getValues() as $field_value) {
           $converted_value = $this->convert($field_value, $type, $field->getOriginalType(), $index);
 
           // Don't add NULL values to the return array. Also, adding an empty
           // array is, of course, a waste of time.
           if (isset($converted_value) && $converted_value !== array()) {
-            $value = array_merge($value, is_array($converted_value) ? $converted_value : array($converted_value));
+            $values = array_merge($values, is_array($converted_value) ? $converted_value : array($converted_value));
           }
         }
 
+        if (!$values) {
+          continue;
+        }
+
         if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
-          $words = array();
-          // Store the first 30 characters of the string as the denormalized
-          // value.
-          $field_value = $value;
+          // Remember the text table the first time we encounter it.
+          if (!isset($text_table)) {
+            $text_table = $table;
+          }
+
+          $unique_tokens = array();
           $denormalized_value = '';
+          foreach ($values as $token) {
+            $word = $token['value'];
+            $score = $token['score'];
 
-          do {
-            $denormalized_value .= array_shift($field_value)['value'] . ' ';
-          } while (strlen($denormalized_value) < 30);
-          $denormalized_value = Unicode::truncateBytes(trim($denormalized_value), 30);
+            // Store the first 30 characters of the string as the denormalized
+            // value.
+            if (strlen($denormalized_value) < 30) {
+              $denormalized_value .= $word . ' ';
+            }
 
-          foreach ($value as $token) {
+            // Skip words that are too short, except for numbers.
+            if (is_numeric($word)) {
+              $word = ltrim($word, '-0');
+            }
+            elseif (Unicode::strlen($word) < $this->configuration['min_chars']) {
+              continue;
+            }
+
             // Taken from core search to reflect less importance of words later
             // in the text.
             // Focus is a decaying value in terms of the amount of unique words
             // up to this point. From 100 words and more, it decays, to e.g. 0.5
             // at 500 words and 0.3 at 1000 words.
-            $focus = min(1, .01 + 3.5 / (2 + count($words) * .015));
+            $score *= min(1, .01 + 3.5 / (2 + count($unique_tokens) * .015));
 
-            $value = $token['value'];
-            if (is_numeric($value)) {
-              $value = ltrim($value, '-0');
-            }
-            elseif (Unicode::strlen($value) < $this->configuration['min_chars']) {
-              continue;
-            }
-            $value = Unicode::strtolower($value);
-            $token['score'] = $token['score'] * $focus;
-            if (!isset($words[$value])) {
-              $words[$value] = $token;
+            $word = Unicode::strtolower($word);
+            if (!isset($unique_tokens[$word])) {
+              $unique_tokens[$word] = array(
+                'value' => $word,
+                'score' => $score,
+              );
             }
             else {
-              $words[$value]['score'] += $token['score'];
+              $unique_tokens[$word]['score'] += $score;
             }
-            $token['value'] = $value;
           }
-          if ($words) {
-            $field_name = self::getTextFieldName($name);
-            foreach ($words as $word) {
-              $text_inserts[$text_table][] = array(
-                'item_id' => $id,
+          $denormalized_values[$column] = Unicode::truncateBytes(trim($denormalized_value), 30);
+          if ($unique_tokens) {
+            $field_name = self::getTextFieldName($field_id);
+            $boost = $field_info['boost'];
+            foreach ($unique_tokens as $token) {
+              $text_inserts[] = array(
+                'item_id' => $item_id,
                 'field_name' => $field_name,
-                'word' => $word['value'],
-                'score' => (int) round($word['score'] * $boost * self::SCORE_MULTIPLIER),
+                'word' => $token['value'],
+                'score' => (int) round($token['score'] * $boost * self::SCORE_MULTIPLIER),
               );
             }
           }
         }
         else {
-          $values = array();
-          if (is_array($value)) {
-            foreach ($value as $v) {
-              if (isset($v)) {
-                $values["$v"] = TRUE;
-              }
-            }
-            $values = array_keys($values);
+          $denormalized_values[$column] = reset($values);
+          // Make sure no duplicate values are inserted (which would lead to a
+          // database exception). array_flip(array_flip($values)) would be much
+          // faster, but wouldn't work with floats, and casting to string almost
+          // neutralizes the performance improvement.
+          $values = array_unique($values);
+          $insert = $this->database->insert($table)
+            ->fields(array('item_id', 'value'));
+          foreach ($values as $value) {
+            $insert->values(array(
+              'item_id' => $item_id,
+              'value' => $value,
+            ));
           }
-          elseif (isset($value)) {
-            $values[] = $value;
-          }
-          if ($values) {
-            $denormalized_value = reset($values);
-            $insert = $this->database->insert($table)
-              ->fields(array('item_id', 'value'));
-            foreach ($values as $v) {
-              $insert->values(array(
-                'item_id' => $id,
-                'value' => $v,
-              ));
-            }
-            $insert->execute();
-          }
-        }
-
-        // Insert a value in the denormalized table for all fields.
-        if (isset($denormalized_value)) {
-          $inserts[$denormalized_table][$fields[$name]['column']] = trim($denormalized_value);
+          $insert->execute();
         }
       }
 
-      foreach ($inserts as $table => $data) {
-        $this->database->insert($table)
-          ->fields(array_merge($data, array('item_id' => $id)))
-          ->execute();
-      }
-      foreach ($text_inserts as $table => $data) {
-        $query = $this->database->insert($table)
+      $this->database->insert($denormalized_table)
+        ->fields(array_merge($denormalized_values, array('item_id' => $item_id)))
+        ->execute();
+      if ($text_inserts && isset($text_table)) {
+        $query = $this->database->insert($text_table)
           ->fields(array('item_id', 'field_name', 'word', 'score'));
-        foreach ($data as $row) {
+        foreach ($text_inserts as $row) {
           $query->values($row);
         }
         $query->execute();
       }
     }
     catch (\Exception $e) {
-      $txn->rollback();
+      $transaction->rollback();
       throw $e;
     }
   }
