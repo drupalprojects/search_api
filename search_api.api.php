@@ -78,7 +78,7 @@ function hook_search_api_processor_info_alter(array &$processors) {
  */
 function hook_search_api_data_type_info_alter(array &$data_type_definitions) {
   if (isset($data_type_definitions['text'])) {
-    $data_type_definitions['text'] = t('Parsed text');
+    $data_type_definitions['text']['label'] = t('Parsed text');
   }
 }
 
