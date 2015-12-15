@@ -819,6 +819,7 @@ class Database extends BackendPluginBase {
       // These are new fields that were previously not indexed.
       foreach ($new_fields as $field_id => $field) {
         $reindex = TRUE;
+        $fields[$field_id] = array();
         if (Utility::isTextType($field->getType())) {
           if (!isset($text_table)) {
             // If we have not encountered a text table, assign a name for it.

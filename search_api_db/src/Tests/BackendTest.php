@@ -870,7 +870,21 @@ class BackendTest extends EntityUnitTestBase {
     $count = $this->indexItems($this->indexId);
     $this->assertEqual($count, 1, 'Indexing an item with a word longer than 50 characters worked.');
 
-    $index->getFields(FALSE)[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
+    // Regression test for #2616268.
+    $index->getFields()[$this->getFieldId('body')]->setType('string', TRUE);
+    $index->save();
+    $count = $this->indexItems($this->indexId);
+    $this->assertEqual($count, 8, 'Switching type from text to string worked.');
+
+    // For a string field, 50 characters shouldn't be a problem.
+    $query = $this->buildSearch(NULL, array('body,astringlongerthanfiftycharactersthatcantbestoredbythedbbackend'));
+    $results = $query->execute();
+    $this->assertEqual($results->getResultCount(), 1, 'Filter on new string field returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(8)), 'Filter on new string field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $index->getFields()[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
     $index->save();
   }
 
