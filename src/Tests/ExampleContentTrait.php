@@ -89,8 +89,9 @@ trait ExampleContentTrait {
    *   The number of successfully indexed items.
    */
   protected function indexItems($index_id) {
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($index_id);
-    return $index->index();
+    return $index->indexItems();
   }
 
   /**

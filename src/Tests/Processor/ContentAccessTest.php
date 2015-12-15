@@ -124,7 +124,7 @@ class ContentAccessTest extends ProcessorTestBase {
   public function testQueryAccessAll() {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
     $this->index->reindex();
-    $this->index->index();
+    $this->index->indexItems();
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
 
@@ -137,7 +137,7 @@ class ContentAccessTest extends ProcessorTestBase {
   public function testQueryAccessComments() {
     user_role_grant_permissions('anonymous', array('access comments'));
     $this->index->reindex();
-    $this->index->index();
+    $this->index->indexItems();
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
 
@@ -153,7 +153,7 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->nodes[3] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'foo', 'uid' => 2));
     $this->nodes[3]->save();
-    $this->index->index();
+    $this->index->indexItems();
 
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
@@ -180,7 +180,7 @@ class ContentAccessTest extends ProcessorTestBase {
       ->execute();
 
     $this->index->reindex();
-    $this->index->index();
+    $this->index->indexItems();
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();

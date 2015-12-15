@@ -472,7 +472,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertNoText($this->t('Index now'), 'The "Index now" button is not displayed.');
 
     // Also try indexing via the API to make sure it is really not possible.
-    $indexed = $index->index();
+    $indexed = $index->indexItems();
     $this->assertEqual(0, $indexed, 'No items were indexed after setting the index to "read only".');
     $remaining_after = $this->countRemainingItems();
     $this->assertEqual($remaining_before, $remaining_after, 'No items were indexed after setting the index to "read only".');
@@ -575,7 +575,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual($node_count, $this->countTrackedItems(), 'All nodes are correctly tracked by the index.');
 
     // Index all remaining items on the index.
-    $index->index();
+    $index->indexItems();
 
     $remaining_items = $this->countRemainingItems();
     $this->assertEqual($remaining_items, 0, 'All items have been successfully indexed.');

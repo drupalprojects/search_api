@@ -86,7 +86,7 @@ function search_api_cron() {
       $num = 0;
       if ($limit) {
         try {
-          $num = $index->index($limit);
+          $num = $index->indexItems($limit);
           if ($num) {
             $variables = array(
               '@num' => $num,

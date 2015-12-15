@@ -971,14 +971,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function index($limit = '-1', $datasource_id = NULL) {
+  public function indexItems($limit = '-1', $datasource_id = NULL) {
     if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items = $this->loadItemsMultiple($next_set);
       if ($items) {
         try {
-          return count($this->indexItems($items));
+          return count($this->indexSpecificItems($items));
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
@@ -992,7 +992,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function indexItems(array $search_objects) {
+  public function indexSpecificItems(array $search_objects) {
     if (!$search_objects || $this->read_only) {
       return array();
     }
@@ -1086,7 +1086,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         try {
           $items = $this->loadItemsMultiple($item_ids);
           if ($items) {
-            $this->indexItems($items);
+            $this->indexSpecificItems($items);
           }
         }
         catch (SearchApiException $e) {

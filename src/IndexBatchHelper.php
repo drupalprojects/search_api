@@ -162,7 +162,7 @@ class IndexBatchHelper {
     // Catch any exception that may occur during indexing.
     try {
       // Index items limited by the given count.
-      $indexed = $index->index($to_index);
+      $indexed = $index->indexItems($to_index);
       // Increment the indexed result and progress.
       $context['results']['indexed'] += $indexed;
       $context['results']['not indexed'] += ($to_index - $indexed);

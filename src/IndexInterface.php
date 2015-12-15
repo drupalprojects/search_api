@@ -441,7 +441,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @return int
    *   The number of items successfully indexed.
    */
-  public function index($limit = -1, $datasource_id = NULL);
+  public function indexItems($limit = -1, $datasource_id = NULL);
 
   /**
    * Indexes some objects on this index.
@@ -459,7 +459,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if any error occurred during indexing.
    */
-  public function indexItems(array $search_objects);
+  public function indexSpecificItems(array $search_objects);
 
   /**
    * Adds items from a specific datasource to the index.

@@ -118,7 +118,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     // Test indexing the new entity.
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 0, 'The index is empty.');
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items to be indexed.');
-    $this->index->index();
+    $this->index->indexItems();
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 2, 'Two items have been indexed.');
 
     // Now, make the first entity language-specific by assigning a language.
@@ -180,7 +180,7 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
     // Test reindexing.
     $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 3, 'There are three items in total.');
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be reindexed.');
-    $this->index->index();
+    $this->index->indexItems();
     $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 3, 'Three items are indexed.');
   }
 
