@@ -14,6 +14,7 @@ views.query.search_api_query:
 
 views.row.search_api:
   type: views_row
+  label: 'Search API rendered item'
   mapping:
     view_modes:
       type: sequence
@@ -25,12 +26,29 @@ views.row.search_api:
           type: string
           label: View mode for the specific bundle
 
-views.filter.search_api_fulltext:
+views.argument.search_api_more_like_this:
+  type: views_argument
+  label: 'Search API more like this'
+  mapping:
+    fields:
+      type: sequence
+      label: 'Fields'
+      sequence:
+        type: string
+        label: 'Field'
+
+views.filter.search_api_filter:
   type: views_filter
+  label: 'Search API filter'
   mapping:
     value:
       type: string
-      label: Fulltext search
+      label: 'Value'
+
+views.filter.search_api_fulltext:
+  type: views.filter.search_api_filter
+  label: 'Search API fulltext search'
+  mapping:
     min_length:
       type: integer
       label: Minimum search string length
@@ -40,3 +58,17 @@ views.filter.search_api_fulltext:
       sequence:
         type: string
         label: Field name
+
+views.filter.search_api_term:
+  type: views.filter.search_api_filter
+  label: 'Search API taxonomy term'
+  mapping:
+    type:
+      type: string
+      label: 'Type'
+    hierarchy:
+      type: integer
+      label: 'Hierarchy'
+    error_message:
+      type: boolean
+      label: 'Error message'
