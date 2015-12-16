@@ -263,7 +263,8 @@ class IndexProcessorsForm extends EntityForm {
 
     // Sort the processors so we won't have unnecessary changes.
     ksort($new_settings);
-    if (!$this->entity->getOption('processors', array()) !== $new_settings) {
+    $original_settings = $this->entity->getOption('processors', array());
+    if ($original_settings != $new_settings) {
       $this->entity->setOption('processors', $new_settings);
       $this->entity->save();
       $this->entity->reindex();

@@ -78,6 +78,7 @@ class IntegrationTest extends WebTestBase {
 
     $this->addFilter();
     $this->configureFilter();
+    $this->configureFilterPage();
 
     $this->setReadOnly();
     $this->disableEnableIndex();
@@ -412,6 +413,7 @@ class IntegrationTest extends WebTestBase {
     $index = $this->indexStorage->load($this->indexId);
     $processors = $index->getProcessors();
     $this->assertTrue(isset($processors['ignorecase']), 'Ignore case processor enabled');
+    $this->assertText($this->t('The indexing workflow was successfully edited.'));
   }
 
   /**
@@ -435,6 +437,16 @@ class IntegrationTest extends WebTestBase {
     else {
       $this->fail('"Ignore case" processor not enabled.');
     }
+    $this->assertText($this->t('The indexing workflow was successfully edited.'));
+  }
+
+  /**
+   * Tests that the "no values changed" message on the "Processors" tab works.
+   */
+  public function configureFilterPage() {
+    $edit = array();
+    $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
+    $this->assertText('No values were changed.');
   }
 
   /**
