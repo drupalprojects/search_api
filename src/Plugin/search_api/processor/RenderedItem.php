@@ -182,6 +182,7 @@ class RenderedItem extends ProcessorPluginBase {
       $bundles = $datasource->getBundles();
       foreach ($bundles as $bundle_id => $bundle_label) {
         $view_modes = $datasource->getViewModes($bundle_id);
+        $view_modes[''] = $this->t("Don't include the rendered item.");
         if (count($view_modes) > 1) {
           $form['view_mode'][$datasource_id][$bundle_id] = array(
             '#type' => 'select',
@@ -251,7 +252,10 @@ class RenderedItem extends ProcessorPluginBase {
       $datasource_id = $item->getDatasourceId();
       $datasource = $item->getDatasource();
       $bundle = $datasource->getItemBundle($item->getOriginalObject());
+      // When no view mode has been set for the bundle, or it has been set to
+      // "Don't include the rendered item", skip this item.
       if (empty($this->configuration['view_mode'][$datasource_id][$bundle])) {
+        // If it was really not set, also notify the user through the log.
         if (!isset($this->configuration['view_mode'][$datasource_id][$bundle])) {
           ++$unset_view_modes;
         }

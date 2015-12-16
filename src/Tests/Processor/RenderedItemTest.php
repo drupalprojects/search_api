@@ -159,6 +159,43 @@ class RenderedItemTest extends ProcessorTestBase {
   }
 
   /**
+   * Tests that hiding a rendered item works.
+   */
+  public function testHideRenderedItem() {
+    // Change the processor configuration to make sure that that the rendered
+    // item content will be empty.
+    $config = $this->processor->getConfiguration();
+    $config['view_mode'] = array(
+      'entity:node' => [
+        'page' => '',
+        'article' => '',
+      ],
+    );
+    $this->processor->setConfiguration($config);
+
+    // Create items that we can index.
+    $items = array();
+    foreach ($this->nodes as $node) {
+      $items[] = array(
+        'datasource' => 'entity:node',
+        'item' => $node->getTypedData(),
+        'item_id' => $node->id(),
+        'text' => $this->randomMachineName(),
+      );
+    }
+    $items = $this->generateItems($items);
+
+    // Preprocess the items for indexing.
+    $this->processor->preprocessIndexItems($items);
+
+    // Verify that no field values were added.
+    foreach ($items as $key => $item) {
+      $rendered_item = $item->getField('rendered_item');
+      $this->assertFalse($rendered_item->getValues(), 'No rendered_item field value added when disabled for content type.');
+    }
+  }
+
+  /**
    * Tests whether the property is correctly added by the processor.
    */
   public function testAlterPropertyDefinitions() {
