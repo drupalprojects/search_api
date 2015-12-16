@@ -1077,6 +1077,10 @@ class Database extends BackendPluginBase {
         }
 
         if (!$values) {
+          // SQLite as problems letting columns not present in an INSERT
+          // statement default to NULL, so we set NULL values for the
+          // denormalized table explicitly.
+          $denormalized_values[$column] = NULL;
           continue;
         }
 
