@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -43,6 +44,16 @@ class IntegrationTest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
+  public static $modules = array(
+    'node',
+    'search_api',
+    'search_api_test_backend',
+    'field_ui',
+  );
+
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp();
     $this->indexStorage = \Drupal::entityManager()->getStorage('search_api_index');
@@ -72,6 +83,8 @@ class IntegrationTest extends WebTestBase {
     $this->createIndex();
     $this->checkContentEntityTracking();
 
+    $this->checkFieldLabels();
+
     $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
     $this->removeFieldsFromIndex();
@@ -91,8 +104,10 @@ class IntegrationTest extends WebTestBase {
   /**
    * Tests creating a search server via the UI.
    */
-  protected function createServer() {
-    $this->serverId = Unicode::strtolower($this->randomMachineName());
+  protected function createServer($server_id = '_test_server') {
+    $this->serverId = $server_id;
+    $server_name = 'Search API &{}<>! Server';
+    $server_description = 'A >server< used for testing &.';
     $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_server.add_form', array(), array('absolute' => TRUE));
 
     $this->drupalGet($settings_path);
@@ -109,19 +124,19 @@ class IntegrationTest extends WebTestBase {
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Server name'))));
 
     $edit = array(
-      'name' => 'Search API test server',
+      'name' => $server_name,
       'status' => 1,
-      'description' => 'A server used for testing.',
+      'description' => $server_description,
       'backend' => 'search_api_test_backend',
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
 
     $edit = array(
-      'name' => 'Search API test server',
+      'name' => $server_name,
       'id' => $this->serverId,
       'status' => 1,
-      'description' => 'A server used for testing.',
+      'description' => $server_description,
       'backend' => 'search_api_test_backend',
     );
 
@@ -129,6 +144,12 @@ class IntegrationTest extends WebTestBase {
 
     $this->assertText($this->t('The server was successfully saved.'));
     $this->assertUrl('admin/config/search/search-api/server/' . $this->serverId, array(), 'Correct redirect to server page.');
+    $this->assertHtmlEscaped($server_name);
+    $this->assertHtmlEscaped($server_description);
+
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertHtmlEscaped($server_name);
+    $this->assertHtmlEscaped($server_description);
   }
 
   /**
@@ -136,12 +157,15 @@ class IntegrationTest extends WebTestBase {
    */
   protected function createIndex() {
     $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_index.add_form', array(), array('absolute' => TRUE));
+    $this->indexId = 'test_index';
+    $index_description = 'An >index< used for &! tęsting.';
+    $index_name = 'Search >API< test &!^* index';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
     $edit = array(
       'status' => 1,
-      'description' => 'An index used for testing.',
+      'description' => $index_description,
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
@@ -149,13 +173,12 @@ class IntegrationTest extends WebTestBase {
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Data sources'))));
 
-    $this->indexId = 'test_index';
 
     $edit = array(
-      'name' => 'Search API test index',
+      'name' => $index_name,
       'id' => $this->indexId,
       'status' => 1,
-      'description' => 'An index used for testing.',
+      'description' => $index_description,
       'server' => $this->serverId,
       'datasources[]' => array('entity:node'),
     );
@@ -164,6 +187,10 @@ class IntegrationTest extends WebTestBase {
 
     $this->assertText($this->t('The index was successfully saved.'));
     $this->assertUrl($this->getIndexPath(), array(), 'Correct redirect to index page.');
+    $this->assertHtmlEscaped($index_name);
+
+    $this->drupalGet($this->getIndexPath('edit'));
+    $this->assertHtmlEscaped($index_name);
 
     $this->indexStorage->resetCache(array($this->indexId));
     /** @var $index \Drupal\search_api\IndexInterface */
@@ -192,6 +219,10 @@ class IntegrationTest extends WebTestBase {
     $this->indexStorage->resetCache(array($index2_id));
     $index = $this->indexStorage->load($index2_id);
     $this->assertUrl($index->urlInfo('fields'), array(), 'Correct redirect to index fields page.');
+
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertHtmlEscaped($index_name);
+    $this->assertHtmlEscaped($index_description);
   }
 
   /**
@@ -333,6 +364,61 @@ class IntegrationTest extends WebTestBase {
   protected function countRemainingItems() {
     $index = Index::load($this->indexId);
     return $index->getTracker()->getRemainingItemsCount();
+  }
+
+  /**
+   * Tests that field labels are always properly escaped.
+   */
+  protected function checkFieldLabels() {
+    $permissions = array(
+      'administer search_api',
+      'access administration pages',
+      'administer content types',
+      'administer node fields'
+    );
+    $this->drupalLogin($this->createUser($permissions));
+
+    $content_type_name = '&%@Content()_=';
+
+    // Add a new content type with funky chars.
+    $edit = array(
+      'name' => $content_type_name,
+      'type' => '_content_'
+    );
+    $this->drupalGet('admin/structure/types/add');
+    $this->assertResponse(200);
+    $this->drupalPostForm(NULL, $edit, $this->t('Save and manage fields'));
+
+    $field_name = '^6%{[*>.<"field';
+
+    // Add a field to that content type with funky chars.
+    $edit = array(
+      'new_storage_type' => 'string',
+      'label' => $field_name,
+      'field_name' => '_field_'
+    );
+    $this->drupalGet('admin/structure/types/manage/_content_/fields/add-field');
+    $this->assertResponse(200);
+    $this->drupalPostForm(NULL, $edit, $this->t('Save and continue'));
+    $this->drupalPostForm(NULL, array(), $this->t('Save field settings'));
+
+    $edit = array('fields[entity:node/field__field_][indexed]' => 1);
+    $this->drupalGet($this->getIndexPath('fields'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save changes'));
+    $this->assertHtmlEscaped($field_name);
+
+    $edit = array(
+      'datasource_configs[entity:node][default]' => 1,
+    );
+    $this->drupalGet($this->getIndexPath('edit'));
+    $this->assertHtmlEscaped($content_type_name);
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+
+    $edit = array('status[ignore_character]' => 1);
+    $this->drupalGet($this->getIndexPath('processors'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertHtmlEscaped($content_type_name);
+    $this->assertHtmlEscaped($field_name);
   }
 
   /**
@@ -593,7 +679,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual($remaining_items, 0, 'All items have been successfully indexed.');
 
     // Create a second search server.
-    $this->createServer();
+    $this->createServer('test_server_2');
 
     // Change the index's server to the new one.
     $settings_path = $this->getIndexPath('edit');
@@ -650,6 +736,21 @@ class IntegrationTest extends WebTestBase {
       $path .= "/$tab";
     }
     return $path;
+  }
+
+  /**
+   * Ensures that all occurrences of the string are properly escaped.
+   *
+   * This makes sure that the string is only mentioned in an escaped version and
+   * is never double escaped.
+   *
+   * @param string $string
+   *   The raw string to check for.
+   */
+  protected function assertHtmlEscaped($string) {
+    $this->assertRaw(Html::escape($string));
+    $this->assertNoRaw(Html::escape(Html::escape($string)));
+    $this->assertNoRaw($string);
   }
 
 }

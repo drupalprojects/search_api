@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Processor;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
@@ -54,7 +55,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     }
     foreach ($fields as $name => $field) {
       if ($this->testType($field->getType())) {
-        $field_options[$name] = $field->getPrefixedLabel();
+        $field_options[$name] = Html::escape($field->getPrefixedLabel());
         if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
           $default_fields[$name] = $name;
         }
