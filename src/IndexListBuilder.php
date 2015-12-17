@@ -99,17 +99,26 @@ class IndexListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
     $row = parent::buildRow($entity);
 
-    $status_label = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
+    $status = $entity->status();
+    $status_server = TRUE;
+    $status_label = $status ? $this->t('Enabled') : $this->t('Disabled');
+
+    if ($entity instanceof ServerInterface && $entity->status() && !$entity->isAvailable()) {
+      $status = FALSE;
+      $status_server = FALSE;
+      $status_label = $this->t('Unavailable');
+    }
+
     $status_icon = array(
       '#theme' => 'image',
-      '#uri' => $entity->status() ? 'core/misc/icons/73b355/check.svg' : 'core/misc/icons/e32700/error.svg',
+      '#uri' => $status ? 'core/misc/icons/73b355/check.svg' : 'core/misc/icons/e32700/error.svg',
       '#width' => 18,
       '#height' => 18,
       '#alt' => $status_label,
       '#title' => $status_label,
     );
 
-    return array(
+    $row = array(
       'data' => array(
         'type' => array(
           'data' => $entity instanceof ServerInterface ? $this->t('Server') : $this->t('Index'),
@@ -132,10 +141,16 @@ class IndexListBuilder extends ConfigEntityListBuilder {
       'title' => $this->t('ID: @name', array('@name' => $entity->id())),
       'class' => array(
         Html::cleanCssIdentifier($entity->getEntityTypeId() . '-' . $entity->id()),
-        $entity->status() ? 'search-api-list-enabled' : 'search-api-list-disabled',
+        $status ? 'search-api-list-enabled' : 'search-api-list-disabled',
         $entity instanceof ServerInterface ? 'search-api-list-server' : 'search-api-list-index',
       ),
     );
+
+    if (!$status_server) {
+      $row['class'][] = 'color-error';
+    }
+
+    return $row;
   }
 
   /**

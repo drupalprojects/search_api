@@ -160,6 +160,13 @@ class TestBackend extends BackendPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isAvailable() {
+    return \Drupal::state()->get('search_api_test_backend.available', TRUE);
+  }
+
+  /**
    * Throws an exception if set in the Drupal state for the given method.
    *
    * Also records (successful) calls to these methods.

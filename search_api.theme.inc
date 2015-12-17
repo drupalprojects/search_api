@@ -132,6 +132,7 @@ function theme_search_api_server($variables) {
     $class = 'error';
     $info = t('Invalid or missing backend plugin: %backend_id', array('%backend_id' => $server->getBackendId()));
   }
+
   // Append the row and reset variables.
   $label = t('Backend class');
   $rows[] = Utility::deepCopy($row);

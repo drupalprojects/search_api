@@ -37,6 +37,20 @@ interface BackendSpecificInterface {
   public function viewSettings();
 
   /**
+   * Returns a boolean with the availability of the backend.
+   *
+   * This can implement a specific call to test if the backend is available for
+   * reading. For SOLR or elasticsearch this would be a "ping" to the server to
+   * test if it's online. If this is a db-backend that is running on a seperate
+   * server, this can also be a ping. When it's a db-backend that runs in the
+   * same database as the drupal installation; just returning TRUE is enough.
+   *
+   * @return bool
+   *   The availability of the backend.
+   */
+  public function isAvailable();
+
+  /**
    * Determines whether the backend supports a given feature.
    *
    * Features are optional extensions to Search API functionality and usually

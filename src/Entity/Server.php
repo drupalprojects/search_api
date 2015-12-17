@@ -174,6 +174,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
+  public function isAvailable() {
+    return $this->hasValidBackend() ? $this->getBackend()->isAvailable() : FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function supportsFeature($feature) {
     return $this->hasValidBackend() ? $this->getBackend()->supportsFeature($feature) : FALSE;
   }

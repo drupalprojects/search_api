@@ -80,6 +80,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     $this->createServer();
+    $this->checkServerAvailability();
     $this->createIndex();
     $this->checkContentEntityTracking();
 
@@ -223,6 +224,24 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('admin/config/search/search-api');
     $this->assertHtmlEscaped($index_name);
     $this->assertHtmlEscaped($index_description);
+  }
+
+  /**
+   * Tests the server availability.
+   */
+  protected function checkServerAvailability() {
+    $this->drupalGet('admin/config/search/search-api/server/' . $this->serverId . '/edit');
+
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertResponse(200);
+    $this->assertRaw($this->t('Enabled'));
+
+    \Drupal::state()->set('search_api_test_backend.available', FALSE);
+    $this->drupalGet('admin/config/search/search-api');
+    $this->assertResponse(200);
+    $this->assertRaw($this->t('Unavailable'));
+
+    \Drupal::state()->set('search_api_test_backend.available', TRUE);
   }
 
   /**

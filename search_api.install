@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the Search API module.
  */
 
+use Drupal\search_api\Entity\Server;
+
 /**
  * Implements hook_schema().
  */
@@ -106,9 +108,10 @@ function search_api_install() {
  */
 function search_api_requirements($phase) {
   if ($phase == 'runtime') {
+    $requirements = array();
     $message = _search_api_search_module_warning();
     if ($message) {
-      return array(
+      $requirements += array(
         'search_api_core_search' => array(
           'title' => t('Search API'),
           'value' => $message,
@@ -116,6 +119,30 @@ function search_api_requirements($phase) {
         ),
       );
     }
+
+    $servers = Server::loadMultiple();
+    $unavailable_servers = array();
+    foreach ($servers as $server) {
+      if ($server->status() && !$server->isAvailable()) {
+        $unavailable_servers[] = $server->label();
+      }
+    }
+    if (!empty($unavailable_servers)) {
+      $requirements += array(
+        'search_api_server_unavailable' => array(
+          'title' => t('Search API'),
+          'value' => \Drupal::translation()->formatPlural(
+            count($unavailable_servers),
+            'The search server "@servers" is currently not available',
+            'The following search servers are not available: @servers',
+            array('@servers' => implode(', ', $unavailable_servers))
+          ),
+          'severity' => REQUIREMENT_ERROR
+        )
+      );
+    }
+
+    return $requirements;
   }
   return array();
 }
