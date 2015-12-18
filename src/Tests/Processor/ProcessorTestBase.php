@@ -61,6 +61,14 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     $this->installSchema('node', array('node_access'));
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
+    \Drupal::configFactory()
+      ->getEditable('search_api.settings')
+      ->set('tracking_page_size', 100)
+      ->save();
+    // Do not use a batch for tracking the initial items after creating an
+    // index. Without this, this test will fail when run through the GUI.
+    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+
     $server_name = $this->randomMachineName();
     $this->server = Server::create(array(
       'id' => strtolower($server_name),
@@ -106,11 +114,6 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       $this->processor = $plugin_manager->createInstance($processor, array('index' => $this->index));
     }
     $this->index->save();
-    \Drupal::configFactory()
-      ->getEditable('search_api.settings')
-      ->set('tracking_page_size', 100)
-      ->save();
-    Utility::getIndexTaskManager()->addItemsAll($this->index);
   }
 
   /**

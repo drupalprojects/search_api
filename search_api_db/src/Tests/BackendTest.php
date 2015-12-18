@@ -63,11 +63,13 @@ class BackendTest extends EntityUnitTestBase {
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
 
+    // Do not use a batch for tracking the initial items after creating an
+    // index. Without this, this test will fail when run through the GUI.
+    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+
     $this->setUpExampleStructure();
 
     $this->installConfig(array('search_api_test_db'));
-
-    Utility::getIndexTaskManager()->addItemsAll($this->getIndex());
   }
 
   /**
