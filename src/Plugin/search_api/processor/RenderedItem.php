@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -283,6 +284,30 @@ class RenderedItem extends ProcessorPluginBase {
 
     // Restore the original user.
     $this->currentUser->setAccount($original_user);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    parent::calculateDependencies();
+
+    $view_modes = $this->configuration['view_mode'];
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      if ($entity_type_id = $datasource->getEntityTypeId() && !empty($view_modes[$datasource_id])) {
+        foreach ($view_modes[$datasource_id] as $view_mode) {
+          if ($view_mode) {
+            /** @var \Drupal\Core\Entity\EntityViewModeInterface $view_mode_entity */
+            $view_mode_entity = EntityViewMode::load($entity_type_id . '.' . $view_mode);
+            if ($view_mode_entity) {
+              $this->addDependency($view_mode_entity->getConfigDependencyKey(), $view_mode_entity->getConfigDependencyName());
+            }
+          }
+        }
+      }
+    }
+
+    return $this->dependencies;
   }
 
 }
