@@ -84,13 +84,13 @@ class IntegrationTest extends WebTestBase {
     $this->createIndex();
     $this->checkContentEntityTracking();
 
+    $this->enableAllProcessors();
     $this->checkFieldLabels();
 
     $this->addFieldsToIndex();
     $this->addAdditionalFieldsToIndex();
     $this->removeFieldsFromIndex();
 
-    $this->addFilter();
     $this->configureFilter();
     $this->configureFilterPage();
 
@@ -370,8 +370,7 @@ class IntegrationTest extends WebTestBase {
    *   The number of tracked items in the test index.
    */
   protected function countTrackedItems() {
-    $index = Index::load($this->indexId);
-    return $index->getTracker()->getTotalItemsCount();
+    return $this->getIndex()->getTracker()->getTotalItemsCount();
   }
 
   /**
@@ -381,8 +380,31 @@ class IntegrationTest extends WebTestBase {
    *   The number of unindexed items in the test index.
    */
   protected function countRemainingItems() {
-    $index = Index::load($this->indexId);
-    return $index->getTracker()->getRemainingItemsCount();
+    return $this->getIndex()->getTracker()->getRemainingItemsCount();
+  }
+
+  /**
+   * Enables all processors.
+   */
+  public function enableAllProcessors() {
+    $this->drupalGet($this->getIndexPath('processors'));
+
+    $edit = array(
+      'status[aggregated_field]' => 1,
+      'status[content_access]' => 1,
+      'status[highlight]' => 1,
+      'status[html_filter]' => 1,
+      'status[ignorecase]' => 1,
+      'status[ignore_character]' => 1,
+      'status[node_status]' => 1,
+      'status[rendered_item]' => 1,
+      'status[stopwords]' => 1,
+      'status[tokenizer]' => 1,
+      'status[transliteration]' => 1,
+      'status[add_url]' => 1,
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The indexing workflow was successfully edited.'));
   }
 
   /**
@@ -421,6 +443,10 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save and continue'));
     $this->drupalPostForm(NULL, array(), $this->t('Save field settings'));
 
+    // @todo This should not be necessary, the field cache should be invalidated
+    //   automatically when available fields change. See #2637032.
+    $this->getIndex()->resetCaches();
+
     $edit = array('fields[entity:node/field__field_][indexed]' => 1);
     $this->drupalGet($this->getIndexPath('fields'));
     $this->drupalPostForm(NULL, $edit, $this->t('Save changes'));
@@ -433,9 +459,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertHtmlEscaped($content_type_name);
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
-    $edit = array('status[ignore_character]' => 1);
     $this->drupalGet($this->getIndexPath('processors'));
-    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertHtmlEscaped($content_type_name);
     $this->assertHtmlEscaped($field_name);
   }
@@ -450,8 +474,8 @@ class IntegrationTest extends WebTestBase {
       'fields[entity:node/title][type]' => 'text',
       'fields[entity:node/title][boost]' => '21.0',
       'fields[entity:node/body][indexed]' => 1,
-      'fields[entity:node/uid][indexed]' => 1,
-      'fields[entity:node/uid][type]' => 'search_api_test_data_type',
+      'fields[entity:node/revision_log][indexed]' => 1,
+      'fields[entity:node/revision_log][type]' => 'search_api_test_data_type',
     );
 
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
@@ -466,8 +490,14 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual($fields['entity:node/title']->isIndexed(), $edit['fields[entity:node/title][indexed]'], 'title field is indexed.');
     $this->assertEqual($fields['entity:node/title']->getType(), $edit['fields[entity:node/title][type]'], 'title field type is text.');
     $this->assertEqual($fields['entity:node/title']->getBoost(), $edit['fields[entity:node/title][boost]'], 'title field boost value is 21.');
-    $this->assertEqual($fields['entity:node/uid']->isIndexed(), $edit['fields[entity:node/uid][indexed]'], 'uid field is indexed.');
-    $this->assertEqual($fields['entity:node/uid']->getType(), $edit['fields[entity:node/uid][type]'], 'uid field type is search_api_test_data_type.');
+    $this->assertEqual($fields['entity:node/revision_log']->isIndexed(), $edit['fields[entity:node/revision_log][indexed]'], 'revision_log field is indexed.');
+    $this->assertEqual($fields['entity:node/revision_log']->getType(), $edit['fields[entity:node/revision_log][type]'], 'revision_log field type is search_api_test_data_type.');
+
+    // The "Content access" processor correctly marked fields as locked.
+    $this->assertEqual($fields['entity:node/uid']->isIndexed(), TRUE, 'uid field is indexed.');
+    $this->assertEqual($fields['entity:node/uid']->getType(), 'integer', 'uid field has type integer.');
+    $this->assertEqual($fields['entity:node/status']->isIndexed(), TRUE, 'status field is indexed.');
+    $this->assertEqual($fields['entity:node/status']->getType(), 'boolean', 'status field has type integer.');
 
     // Check that a 'parent_data_type.data_type' Search API field type => data
     // type mapping relationship works.
@@ -503,22 +533,6 @@ class IntegrationTest extends WebTestBase {
     $index = $this->indexStorage->load($this->indexId);
     $fields = $index->getFields();
     $this->assertTrue(!isset($fields['entity:node/body']), 'The body field has been removed from the index.');
-  }
-
-  /**
-   * Tests that enabling a processor works.
-   */
-  protected function addFilter() {
-    $edit = array(
-      'status[ignorecase]' => 1,
-    );
-    $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
-    $this->indexStorage->resetCache(array($this->indexId));
-    /** @var \Drupal\search_api\IndexInterface $index */
-    $index = $this->indexStorage->load($this->indexId);
-    $processors = $index->getProcessors();
-    $this->assertTrue(isset($processors['ignorecase']), 'Ignore case processor enabled');
-    $this->assertText($this->t('The indexing workflow was successfully edited.'));
   }
 
   /**
@@ -755,6 +769,16 @@ class IntegrationTest extends WebTestBase {
       $path .= "/$tab";
     }
     return $path;
+  }
+
+  /**
+   * Retrieves test index.
+   *
+   * @return \Drupal\search_api\IndexInterface
+   *   The test index.
+   */
+  protected function getIndex() {
+    return Index::load($this->indexId);
   }
 
   /**

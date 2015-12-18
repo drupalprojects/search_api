@@ -286,9 +286,14 @@ class AggregatedFields extends ProcessorPluginBase {
 
     // Remove the unnecessary form_state values, so no overhead is stored.
     unset($values['actions']);
-    foreach ($values['fields'] as &$field_definition) {
-      unset($field_definition['type_descriptions'], $field_definition['actions']);
-      $field_definition['fields'] = array_values(array_filter($field_definition['fields']));
+    if (!empty($values['fields'])) {
+      foreach ($values['fields'] as &$field_definition) {
+        unset($field_definition['type_descriptions'], $field_definition['actions']);
+        $field_definition['fields'] = array_values(array_filter($field_definition['fields']));
+      }
+    }
+    else {
+      $values['fields'] = array();
     }
 
     $form_state->setValues($values);
