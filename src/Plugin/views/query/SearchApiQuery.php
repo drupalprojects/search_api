@@ -527,6 +527,23 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
+   * Sets the Search API query object.
+   *
+   * Usually this is done by the query plugin class itself, but in rare cases
+   * (such as for caching purposes) it might be necessary to set it from
+   * outside.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The new query.
+   *
+   * @return $this
+   */
+  public function setSearchApiQuery($query) {
+    $this->query = $query;
+    return $this;
+  }
+
+  /**
    * Retrieves the Search API result set returned for this query.
    *
    * @return \Drupal\search_api\Query\ResultSetInterface|null
@@ -535,6 +552,23 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function getSearchApiResults() {
     return $this->searchApiResults;
+  }
+
+  /**
+   * Sets the Search API result set.
+   *
+   * Usually this is done by the query plugin class itself, but in rare cases
+   * (such as for caching purposes) it might be necessary to set it from
+   * outside.
+   *
+   * @param \Drupal\search_api\Query\ResultSetInterface $search_api_results
+   *   The result set.
+   *
+   * @return $this
+   */
+  public function setSearchApiResults($search_api_results) {
+    $this->searchApiResults = $search_api_results;
+    return $this;
   }
 
   /**

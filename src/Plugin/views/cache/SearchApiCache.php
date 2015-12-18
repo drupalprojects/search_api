@@ -70,10 +70,19 @@ class SearchApiCache extends Time {
 
         // Trick Search API into believing a search happened, to make faceting
         // et al. work.
-        // @todo Also set results on the Views Query?
+        /** @var \Drupal\search_api\Query\ResultSetInterface $results */
+        $results = $cache->data['search_api results'];
         /** @var \Drupal\search_api\Query\ResultsCacheInterface $static_results_cache */
         $static_results_cache = \Drupal::service('search_api.results_static_cache');
-        $static_results_cache->addResults($cache->data['search_api results']);
+        $static_results_cache->addResults($results);
+
+        try {
+          $this->getQuery()->setSearchApiResults($results);
+          $this->getQuery()->setSearchApiQuery($results->getQuery());
+        }
+        catch (SearchApiException $e) {
+          // Ignore.
+        }
 
         return TRUE;
       }
