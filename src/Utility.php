@@ -269,26 +269,6 @@ class Utility {
   }
 
   /**
-   * Retrieves the server task manager.
-   *
-   * @return \Drupal\search_api\Task\ServerTaskManagerInterface
-   *   The server task manager.
-   */
-  public static function getServerTaskManager() {
-    return \Drupal::service('search_api.server_task_manager');
-  }
-
-  /**
-   * Retrieves the index task manager.
-   *
-   * @return \Drupal\search_api\Task\IndexTaskManagerInterface
-   *   The index task manager.
-   */
-  public static function getIndexTaskManager() {
-    return \Drupal::service('search_api.index_task_manager');
-  }
-
-  /**
    * Processes all pending index tasks inside a batch run.
    *
    * @param array $context
@@ -297,7 +277,7 @@ class Utility {
    *   The config importer.
    */
   public static function processIndexTasks(array &$context, ConfigImporter $config_importer) {
-    $index_task_manager = static::getIndexTaskManager();
+    $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
 
     if (!isset($context['sandbox']['indexes'])) {
       $context['sandbox']['indexes'] = array();

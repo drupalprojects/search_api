@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Utility;
 
 /**
  * Tests the Views integration of the Search API.
@@ -41,7 +40,7 @@ class ViewsTest extends WebTestBase {
 
     $this->setUpExampleStructure();
 
-    Utility::getIndexTaskManager()->addItemsAll(Index::load($this->indexId));
+    \Drupal::getContainer()->get('search_api.index_task_manager')->addItemsAll(Index::load($this->indexId));
   }
 
   /**

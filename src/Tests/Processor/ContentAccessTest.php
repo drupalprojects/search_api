@@ -112,7 +112,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->index->set('datasources', array('entity:comment', 'entity:node', 'entity:user'));
     $this->index->save();
 
-    Utility::getIndexTaskManager()->addItemsAll($this->index);
+    \Drupal::getContainer()->get('search_api.index_task_manager')->addItemsAll($this->index);
     $index_storage = \Drupal::entityManager()->getStorage('search_api_index');
     $index_storage->resetCache([$this->index->id()]);
     $this->index = $index_storage->load($this->index->id());

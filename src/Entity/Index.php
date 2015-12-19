@@ -1091,7 +1091,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   "trackItemsUpdated".
    */
   protected function trackItemsInsertedOrUpdated($datasource_id, array $ids, $tracker_method) {
-    if ($this->hasValidTracker() && $this->status() && Utility::getIndexTaskManager()->isTrackingComplete($this)) {
+    if ($this->hasValidTracker() && $this->status() && \Drupal::getContainer()->get('search_api.index_task_manager')->isTrackingComplete($this)) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = Utility::createCombinedId($datasource_id, $id);
@@ -1271,7 +1271,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
-          Utility::getIndexTaskManager()->stopTracking($this);
+          \Drupal::getContainer()->get('search_api.index_task_manager')->stopTracking($this);
         }
         if ($original->isServerEnabled()) {
           $original->getServer()->removeIndex($this);
@@ -1280,11 +1280,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
       elseif ($this->status() && !$original->status()) {
         $this->getServer()->addIndex($this);
         if ($this->hasValidTracker()) {
-          Utility::getIndexTaskManager()->startTracking($this);
+          \Drupal::getContainer()->get('search_api.index_task_manager')->startTracking($this);
         }
       }
 
-      $index_task_manager = Utility::getIndexTaskManager();
+      $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       if (!$index_task_manager->isTrackingComplete($this)) {
         // Give tests and site admins the possibility to disable the use of a
         // batch for tracking items. Also, do not use a batch if running in the
@@ -1353,7 +1353,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($new_datasource_ids != $original_datasource_ids) {
       $added = array_diff($new_datasource_ids, $original_datasource_ids);
       $removed = array_diff($original_datasource_ids, $new_datasource_ids);
-      $index_task_manager = Utility::getIndexTaskManager();
+      $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       $index_task_manager->stopTracking($this, $removed);
       $index_task_manager->startTracking($this, $added);
     }
@@ -1371,7 +1371,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   protected function reactToTrackerSwitch(IndexInterface $original) {
     if ($this->tracker != $original->getTrackerId()) {
-      $index_task_manager = Utility::getIndexTaskManager();
+      $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       if ($original->hasValidTracker()) {
         $index_task_manager->stopTracking($this);
       }

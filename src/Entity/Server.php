@@ -14,7 +14,6 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api\Utility;
 
 /**
  * Defines the search server configuration entity.
@@ -196,7 +195,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function addIndex(IndexInterface $index) {
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     // When freshly adding an index to a server, it doesn't make any sense to
     // execute possible other tasks for that server/index combination.
     // (removeIndex() is implicit when adding an index which was already added.)
@@ -219,7 +218,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function updateIndex(IndexInterface $index) {
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     try {
       if ($server_task_manager->execute($this)) {
         $this->getBackend()->updateIndex($index);
@@ -240,7 +239,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function removeIndex($index) {
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     // When removing an index from a server, it doesn't make any sense anymore
     // to delete items from it, or react to other changes.
     $server_task_manager->delete(NULL, $this, $index);
@@ -262,7 +261,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     if ($server_task_manager->execute($this)) {
       return $this->getBackend()->indexItems($index, $items);
     }
@@ -282,7 +281,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       return;
     }
 
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     try {
       if ($server_task_manager->execute($this)) {
         $this->getBackend()->deleteItems($index, $item_ids);
@@ -310,7 +309,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       return;
     }
 
-    $server_task_manager = Utility::getServerTaskManager();
+    $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     try {
       if ($server_task_manager->execute($this)) {
         $this->getBackend()->deleteAllIndexItems($index);
@@ -412,7 +411,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }
-      Utility::getServerTaskManager()->delete(NULL, $server);
+      \Drupal::getContainer()->get('search_api.server_task_manager')->delete(NULL, $server);
     }
   }
 

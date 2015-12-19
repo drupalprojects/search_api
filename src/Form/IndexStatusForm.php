@@ -13,7 +13,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\IndexBatchHelper;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Utility;
 
 /**
  * Provides a form for indexing, clearing, etc., an index.
@@ -40,7 +39,7 @@ class IndexStatusForm extends FormBase {
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
     if ($index->hasValidTracker()) {
-      if (!Utility::getIndexTaskManager()->isTrackingComplete($index)) {
+      if (!\Drupal::getContainer()->get('search_api.index_task_manager')->isTrackingComplete($index)) {
         $form['tracking'] = array(
           '#type' => 'details',
           '#title' => $this->t('Track items for index'),
@@ -202,7 +201,7 @@ class IndexStatusForm extends FormBase {
         break;
 
       case 'track_now':
-        Utility::getIndexTaskManager()->addItemsBatch($index);
+        \Drupal::getContainer()->get('search_api.index_task_manager')->addItemsBatch($index);
         break;
     }
   }
