@@ -15,7 +15,6 @@ use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
-use Drupal\search_api\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
