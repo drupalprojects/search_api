@@ -1238,7 +1238,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
       foreach ($this->getPropertyDefinitions($datasource_id) as $key => $property) {
         if ($property instanceof PropertyInterface && $property->isIndexedLocked()) {
           $settings = $property->getFieldSettings();
-          if (empty($settings['type'])) {
+          // Don't overwrite settings that aren't locked (like the boost).
+          if (isset($this->options['fields'][$key])) {
+            $settings += $this->options['fields'][$key];
+          }
+          if (empty($settings['type']) || $property->isTypeLocked()) {
             $mapping = Utility::getFieldTypeMapping();
             $type = $property->getDataType();
             $settings['type'] = !empty($mapping[$type]) ? $mapping[$type] : 'string';

@@ -93,6 +93,7 @@ class IntegrationTest extends WebTestBase {
     $this->configureFilter();
     $this->configureFilterPage();
     $this->checkProcessorChanges();
+    $this->changeProcessorFieldBoost();
 
     $this->setReadOnly();
     $this->disableEnableIndex();
@@ -591,6 +592,27 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertResponse(200);
     $this->assertText($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
+  }
+
+  /**
+   * Tests that a field added by a processor can be changed.
+   *
+   * For most fields added by processors, such as the "URL field" processor,
+   * only be the "Indexed" checkbox should be locked, not type and boost. This
+   * method verifies this.
+   */
+  protected function changeProcessorFieldBoost() {
+    // Change the boost of the field.
+    $this->drupalGet($this->getIndexPath('fields'));
+    $this->drupalPostForm(NULL, array('fields[search_api_url][boost]' => '8.0'), $this->t('Save changes'));
+    $this->assertText('The changes were successfully saved.');
+    $this->assertOptionSelected('edit-fields-search-api-url-boost', '8.0', 'Boost is correctly saved.');
+
+    // Change the type of the field.
+    $this->drupalGet($this->getIndexPath('fields'));
+    $this->drupalPostForm(NULL, array('fields[search_api_url][type]' => 'text'), $this->t('Save changes'));
+    $this->assertText('The changes were successfully saved.');
+    $this->assertOptionSelected('edit-fields-search-api-url-type', 'text', 'Type is correctly saved.');
   }
 
   /**

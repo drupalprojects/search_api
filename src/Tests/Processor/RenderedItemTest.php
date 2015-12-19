@@ -106,12 +106,6 @@ class RenderedItemTest extends ProcessorTestBase {
     $config['roles'] = array($role->id());
     $this->processor->setConfiguration($config);
 
-    // Enable the processor's field on the index.
-    $fields = $this->index->getOption('fields');
-    $fields['rendered_item'] = array(
-      'type' => 'string',
-    );
-    $this->index->setOption('fields', $fields);
     $this->index->save();
 
     $this->index->getDatasources();

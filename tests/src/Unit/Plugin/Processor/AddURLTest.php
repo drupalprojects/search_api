@@ -129,7 +129,7 @@ class AddURLTest extends UnitTestCase {
     if ($property_added) {
       $this->assertInstanceOf('Drupal\Core\TypedData\DataDefinitionInterface', $properties['search_api_url'], 'The "search_api_url" property contains a valid data definition.');
       if ($properties['search_api_url'] instanceof DataDefinitionInterface) {
-        $this->assertEquals('uri', $properties['search_api_url']->getDataType(), 'Correct data type set in the data definition.');
+        $this->assertEquals('string', $properties['search_api_url']->getDataType(), 'Correct data type set in the data definition.');
         $this->assertEquals('URI', $properties['search_api_url']->getLabel(), 'Correct label set in the data definition.');
         $this->assertEquals('A URI where the item can be accessed', $properties['search_api_url']->getDescription(), 'Correct description set in the data definition.');
       }
