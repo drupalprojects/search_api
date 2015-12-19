@@ -277,4 +277,17 @@ class IndexFieldsForm extends EntityForm {
     drupal_set_message($this->t('The changes were successfully saved.'));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    $save_status = parent::save($form, $form_state);
+
+    if ($this->entity->isReindexing()) {
+      drupal_set_message(t('All content was scheduled for reindexing so the new settings can take effect.'));
+    }
+
+    return $save_status;
+  }
+
 }

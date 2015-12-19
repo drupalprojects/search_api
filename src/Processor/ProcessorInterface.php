@@ -148,4 +148,30 @@ interface ProcessorInterface extends IndexPluginInterface {
    */
   public function postprocessSearchResults(ResultSetInterface $results);
 
+  /**
+   * Determines whether re-indexing is required after a settings change.
+   *
+   * Enabling a processor, or changing it's settings, isn't always an action
+   * that requires an index to be reindexed. This method should return FALSE if
+   * re-indexing is not necessary and TRUE if it is.
+   *
+   * @param array|null $old_settings
+   *   NULL if the processor is being enabled. Otherwise, an associative array
+   *   containing the old user settings for the processor. The
+   *   processor-specific configuration is available under key "settings", while
+   *   "weights" contains the respective weights for the different stages which
+   *   this processor supports.
+   * @param array|null $new_settings
+   *   NULL if the processor is being disabled. Otherwise, an associative array
+   *   containing the new user settings for the processor. The
+   *   processor-specific configuration is available under key "settings", while
+   *   "weights" contains the respective weights for the different stages which
+   *   this processor supports.
+   *
+   * @return bool
+   *   TRUE if this change means the index should be scheduled for re-indexing;
+   *   FALSE otherwise.
+   */
+  public function requiresReindexing(array $old_settings = NULL, array $new_settings = NULL);
+
 }

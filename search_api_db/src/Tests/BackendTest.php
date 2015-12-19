@@ -873,6 +873,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($count, 1, 'Indexing an item with a word longer than 50 characters worked.');
 
     // Regression test for #2616268.
+    $index = $this->getIndex();
     $index->getFields()[$this->getFieldId('body')]->setType('string', TRUE);
     $index->save();
     $count = $this->indexItems($this->indexId);

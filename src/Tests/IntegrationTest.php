@@ -93,6 +93,7 @@ class IntegrationTest extends WebTestBase {
 
     $this->configureFilter();
     $this->configureFilterPage();
+    $this->checkProcessorChanges();
 
     $this->setReadOnly();
     $this->disableEnableIndex();
@@ -566,6 +567,31 @@ class IntegrationTest extends WebTestBase {
     $edit = array();
     $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
     $this->assertText('No values were changed.');
+  }
+
+  /**
+   * Tests that changing or a processor doesn't always trigger reindexing.
+   */
+  protected function checkProcessorChanges() {
+    $edit = array(
+      'status[ignorecase]' => 1,
+      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
+      'processors[ignorecase][settings][fields][entity:node/title]' => 'entity:node/title',
+    );
+    // Enable just the ignore case processor, just to have a clean default state
+    // before testing.
+    $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
+    $this->assertResponse(200);
+
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertResponse(200);
+    $this->assertText($this->t('No values were changed.'));
+    $this->assertNoText($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
+
+    $edit['processors[ignorecase][settings][fields][entity:node/title]'] = FALSE;
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertResponse(200);
+    $this->assertText($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
   }
 
   /**

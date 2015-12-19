@@ -103,4 +103,12 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
    */
   public function postprocessSearchResults(ResultSetInterface $results) {}
 
+  /**
+   * {@inheritdoc}
+   */
+  public function requiresReindexing(array $old_settings = NULL, array $new_settings = NULL) {
+    // Only require re-indexing for processors that actually run during the
+    // indexing process.
+    return $this->supportsStage(ProcessorInterface::STAGE_PREPROCESS_INDEX);
+  }
 }

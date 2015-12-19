@@ -263,16 +263,30 @@ class IndexProcessorsForm extends EntityForm {
 
     // Sort the processors so we won't have unnecessary changes.
     ksort($new_settings);
-    $original_settings = $this->entity->getOption('processors', array());
-    if ($original_settings != $new_settings) {
+    $settings_changed = $new_settings != $this->entity->getOption('processors', array());
+    $form_state->set('processors_changed', $settings_changed);
+    if ($settings_changed) {
       $this->entity->setOption('processors', $new_settings);
-      $this->entity->save();
-      $this->entity->reindex();
-      drupal_set_message($this->t('The indexing workflow was successfully edited. All content was scheduled for reindexing so the new settings can take effect.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    if ($form_state->get('processors_changed')) {
+      $save_status = parent::save($form, $form_state);
+      drupal_set_message(t('The indexing workflow was successfully edited.'));
+      if ($this->entity->isReindexing()) {
+        drupal_set_message(t('All content was scheduled for reindexing so the new settings can take effect.'));
+      }
     }
     else {
-      drupal_set_message($this->t('No values were changed.'));
+      drupal_set_message(t('No values were changed.'));
+      $save_status = SAVED_UPDATED;
     }
+
+    return $save_status;
   }
 
   /**

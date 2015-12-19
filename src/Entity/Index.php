@@ -261,6 +261,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $unmappedFields = array();
 
   /**
+   * Whether reindexing has been triggered for this index in this page request.
+   *
+   * @var bool
+   */
+  protected $hasReindexed = FALSE;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
@@ -1037,13 +1044,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($items) {
       $indexed_ids = $this->getServer()->indexItems($this, $items);
     }
+
     // Return the IDs of all items that were either successfully indexed or
     // rejected before being handed to the server.
     $processed_ids = array_merge(array_values($rejected_ids), array_values($indexed_ids));
-    if ($this->hasValidTracker()) {
-      $this->getTracker()->trackItemsIndexed($processed_ids);
+
+    if ($processed_ids) {
+      if ($this->hasValidTracker()) {
+        $this->getTracker()->trackItemsIndexed($processed_ids);
+      }
+      // Since we've indexed items now, triggering reindexing would have some
+      // effect again. Therefore, we reset the flag.
+      $this->hasReindexed = FALSE;
+      \Drupal::moduleHandler()->invokeAll('search_api_items_indexed', array($this, $processed_ids));
     }
-    \Drupal::moduleHandler()->invokeAll('search_api_items_indexed', array($this, $processed_ids));
+
     return $processed_ids;
   }
 
@@ -1116,7 +1131,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    if ($this->status()) {
+    if ($this->status() && !$this->hasReindexed) {
+      $this->hasReindexed = TRUE;
       $this->getTracker()->trackAllItemsUpdated();
       \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, FALSE));
     }
@@ -1127,12 +1143,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function clear() {
     if ($this->status()) {
-      $this->getTracker()->trackAllItemsUpdated();
+      // Only invoke the hook if we actually did something.
+      $invoke_hook = FALSE;
+      if (!$this->hasReindexed) {
+        $invoke_hook = TRUE;
+        $this->hasReindexed = TRUE;
+        $this->getTracker()->trackAllItemsUpdated();
+      }
       if (!$this->isReadOnly()) {
+        $invoke_hook = TRUE;
         $this->getServer()->deleteAllIndexItems($this);
       }
-      \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, !$this->isReadOnly()));
+      if ($invoke_hook) {
+        \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, !$this->isReadOnly()));
+      }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isReindexing() {
+    return $this->hasReindexed;
   }
 
   /**
@@ -1235,6 +1267,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $this->reactToServerSwitch($original);
         $this->reactToDatasourceSwitch($original);
         $this->reactToTrackerSwitch($original);
+        $this->reactToProcessorChanges($original);
       }
       elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
@@ -1344,6 +1377,62 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       if ($this->hasValidTracker()) {
         $index_task_manager->startTracking($this);
+      }
+    }
+  }
+
+  /**
+   * Reacts to changes in processor configuration.
+   *
+   * @param \Drupal\search_api\IndexInterface $original
+   *   The previous version of the index.
+   */
+  protected function reactToProcessorChanges(IndexInterface $original) {
+    $original_settings = $original->getOption('processors', array());
+    $new_settings = $this->getOption('processors', array());
+
+    // Only actually do something when the processor settings are changed.
+    if ($original_settings != $new_settings) {
+      $requires_reindex = FALSE;
+      $processors = $this->getProcessors(FALSE);
+
+      // Loop over all new settings and check if the processors were already set
+      // in the original entity.
+      foreach ($new_settings as $key => $setting) {
+        // The processor is new, because it wasn't configured in the original
+        // entity.
+        if (!isset($original_settings[$key])) {
+          if ($processors[$key]->requiresReindexing(NULL, $new_settings[$key])) {
+            $requires_reindex = TRUE;
+            break;
+          }
+        }
+      }
+
+      if (!$requires_reindex) {
+        // Loop over all original settings and check if one of them has been
+        // removed or changed.
+        foreach ($original_settings as $key => $old_processor_settings) {
+          // If the processor isn't even available any more, we can't determine
+          // what it would have said about the need to reindex. Err on the side
+          // of caution and guess "yes".
+          if (empty($processors[$key])) {
+            $requires_reindex = TRUE;
+            break;
+          }
+          $new_processor_settings = isset($new_settings[$key]) ? $new_settings[$key] : NULL;
+          if (!isset($new_processor_settings) || $new_processor_settings != $old_processor_settings) {
+            if ($processors[$key]->requiresReindexing($old_processor_settings, $new_processor_settings)) {
+              $requires_reindex = TRUE;
+              break;
+            }
+          }
+
+        }
+      }
+
+      if ($requires_reindex) {
+        $this->reindex();
       }
     }
   }

@@ -518,6 +518,17 @@ interface IndexInterface extends ConfigEntityInterface {
   public function clear();
 
   /**
+   * Determines whether reindexing has been triggered in this page request.
+   *
+   * @return bool
+   *   TRUE if reindexing for this index has been triggered in this page
+   *   request, and no items have been indexed since; FALSE otherwise. In other
+   *   words, this returns FALSE if and only if calling reindex() on this index
+   *   would have any effect (or if it is disabled).
+   */
+  public function isReindexing();
+
+  /**
    * Resets the static and stored caches associated with this index.
    *
    * @param bool $include_stored
