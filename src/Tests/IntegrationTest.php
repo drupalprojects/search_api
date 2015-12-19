@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
