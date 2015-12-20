@@ -63,7 +63,7 @@ search_api.index.*:
                   type: integer
                   label: 'The processor''s weight for this stage'
               settings:
-                type: search_api.processor.plugin.[%parent.processor_id]
+                type: plugin.plugin_configuration.search_api_processor.[%parent.processor_id]
     datasources:
       type: sequence
       label: 'Datasource plugin IDs'
@@ -80,7 +80,7 @@ search_api.index.*:
       label: 'Tracker plugin ID'
     tracker_config:
       label: 'Tracker config plugin'
-      type: search_api.tracker.plugin.[%parent.tracker]
+      type: plugin.plugin_configuration.search_api_tracker.[%parent.tracker]
     server:
       type: string
       label: 'Server ID'

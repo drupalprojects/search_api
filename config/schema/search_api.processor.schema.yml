@@ -1,4 +1,4 @@
-search_api.processor.plugin.add_url:
+plugin.plugin_configuration.search_api_processor.add_url:
   type: mapping
   label: 'Add URL configuration'
   mapping:
@@ -9,7 +9,7 @@ search_api.processor.plugin.add_url:
         type: string
         label: 'Selected field'
 
-search_api.processor.plugin.aggregated_field:
+plugin.plugin_configuration.search_api_processor.aggregated_field:
   type: mapping
   label: 'Add aggregation processor configuration'
   mapping:
@@ -33,7 +33,7 @@ search_api.processor.plugin.aggregated_field:
             type: string
             label: 'The type of the aggregation'
 
-search_api.processor.plugin.highlight:
+plugin.plugin_configuration.search_api_processor.highlight:
   type: mapping
   label: 'Highlight processor configuration'
   mapping:
@@ -53,7 +53,7 @@ search_api.processor.plugin.highlight:
       type: string
       label: 'Defines whether returned fields should be highlighted (always/if returned/never).'
 
-search_api.processor.plugin.html_filter:
+plugin.plugin_configuration.search_api_processor.html_filter:
   type: mapping
   label: 'HTML filter processor configuration'
   mapping:
@@ -76,7 +76,7 @@ search_api.processor.plugin.html_filter:
         type: integer
         label: Boost
 
-search_api.processor.plugin.ignorecase:
+plugin.plugin_configuration.search_api_processor.ignorecase:
   type: mapping
   label: 'Ignore case processor configuration'
   mapping:
@@ -87,7 +87,7 @@ search_api.processor.plugin.ignorecase:
         type: string
         label: 'Selected field'
 
-search_api.processor.plugin.ignore_character:
+plugin.plugin_configuration.search_api_processor.ignore_character:
   type: mapping
   label: 'Ignore Character processor configuration'
   mapping:
@@ -111,7 +111,7 @@ search_api.processor.plugin.ignore_character:
             type: ignore
             label: 'Character set'
 
-search_api.processor.plugin.language:
+plugin.plugin_configuration.search_api_processor.language:
   type: mapping
   label: 'Language field processor configuration'
   mapping:
@@ -122,7 +122,7 @@ search_api.processor.plugin.language:
         type: string
         label: 'Selected field'
 
-search_api.processor.plugin.node_status:
+plugin.plugin_configuration.search_api_processor.node_status:
   type: mapping
   label: 'node status processor configuration'
   mapping:
@@ -133,7 +133,7 @@ search_api.processor.plugin.node_status:
         type: string
         label: 'Selected field'
 
-search_api.processor.plugin.rendered_item:
+plugin.plugin_configuration.search_api_processor.rendered_item:
   type: mapping
   label: 'Rendered item processor configuration'
   mapping:
@@ -154,7 +154,7 @@ search_api.processor.plugin.rendered_item:
         type: string
         label: 'The user roles which will be active when the entity is rendered'
 
-search_api.processor.plugin.role_filter:
+plugin.plugin_configuration.search_api_processor.role_filter:
   type: mapping
   label: 'Role filter processor configuration'
   mapping:
@@ -168,7 +168,7 @@ search_api.processor.plugin.role_filter:
         type: string
         label: 'The role name'
 
-search_api.processor.plugin.stopwords:
+plugin.plugin_configuration.search_api_processor.stopwords:
   type: mapping
   label: 'Stopwords processor configuration'
   mapping:
@@ -185,7 +185,7 @@ search_api.processor.plugin.stopwords:
         type: string
         label: Stopword
 
-search_api.processor.plugin.tokenizer:
+plugin.plugin_configuration.search_api_processor.tokenizer:
   type: mapping
   label: 'Tokenizer processor configuration'
   mapping:
@@ -208,7 +208,7 @@ search_api.processor.plugin.tokenizer:
       type: string
       label: 'Defines the minimum word size'
 
-search_api.processor.plugin.transliteration:
+plugin.plugin_configuration.search_api_processor.transliteration:
   type: mapping
   label: 'Transliteration processor configuration'
   mapping:
@@ -219,7 +219,7 @@ search_api.processor.plugin.transliteration:
         type: string
         label: 'Selected field'
 
-search_api.processor.plugin.content_access:
+plugin.plugin_configuration.search_api_processor.content_access:
   type: mapping
   label: 'Content Access configuration'
   mapping:
