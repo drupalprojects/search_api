@@ -39,7 +39,7 @@ class Highlight extends ProcessorPluginBase {
   protected static $boundary;
 
   /**
-   * PREG regular expression for splitting words.
+   * PCRE regular expression for splitting words.
    *
    * We highlight around non-indexable or CJK characters.
    *
@@ -145,15 +145,15 @@ class Highlight extends ProcessorPluginBase {
       $this->addExcerpts($result_items, $keys);
     }
     if ($this->configuration['highlight'] != 'never') {
-      $higlighted_fields = $this->highlightFields($result_items, $keys);
-      if ($higlighted_fields) {
+      $highlighted_fields = $this->highlightFields($result_items, $keys);
+      if ($highlighted_fields) {
         // Maybe the backend or some other processor has already set highlighted
         // field values.
         foreach ($results->getExtraData('highlighted_fields', array()) as $item_id => $old_highlighting) {
-          $higlighted_fields += array($item_id => array());
-          $higlighted_fields[$item_id] += $old_highlighting;
+          $highlighted_fields += array($item_id => array());
+          $highlighted_fields[$item_id] += $old_highlighting;
         }
-        $results->setExtraData('highlighted_fields', $higlighted_fields);
+        $results->setExtraData('highlighted_fields', $highlighted_fields);
       }
     }
   }

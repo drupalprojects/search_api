@@ -42,7 +42,7 @@ class AggregatedFields extends ProcessorPluginBase {
 
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
     $form['description'] = array(
-      '#markup' => $this->t('This data alteration lets you define additional fields that will be added to this index. Each of these new fields will be an aggregation of one or more existing fields.<br />To add a new aggregated field, click the "Add new field" button and then fill out the form.<br />To remove a previously defined field, click the "Remove field" button.<br />You can also change the names or contained fields of existing aggregated fields.'),
+      '#markup' => $this->t('This processor lets you define additional fields that will be added to this index. Each of these new fields will be an aggregation of one or more existing fields.<br />To add a new aggregated field, click the "Add new field" button and then fill out the form.<br />To remove a previously defined field, click the "Remove field" button.<br />You can also change the names or contained fields of existing aggregated fields.'),
     );
 
     $this->buildFieldsForm($form, $form_state);
