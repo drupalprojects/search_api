@@ -118,6 +118,19 @@ class BackendTest extends EntityUnitTestBase {
     $normalized_storage_table = $db_info['index_table'];
     $field_tables = $db_info['field_tables'];
 
+    $expected_fields = array_map(array($this, 'getFieldId'), array(
+      'body',
+      'category',
+      'id',
+      'keywords',
+      'name',
+      'type',
+    ));
+    $expected_fields[] = 'search_api_language';
+    $actual_fields = array_keys($field_tables);
+    sort($actual_fields);
+    $this->assertEqual($expected_fields, $actual_fields, 'All expected field tables were created.');
+
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
     foreach ($field_tables as $field_table) {
       $this->assertTrue(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
@@ -728,11 +741,14 @@ class BackendTest extends EntityUnitTestBase {
     $results = $query->execute();
     $expected = array(
       array('count' => 4, 'filter' => '"test"'),
+      array('count' => 2, 'filter' => '"Case"'),
+      array('count' => 2, 'filter' => '"casE"'),
       array('count' => 1, 'filter' => '"bar"'),
+      array('count' => 1, 'filter' => '"case"'),
       array('count' => 1, 'filter' => '"foobar"'),
     );
     // We can't guarantee the order of returned facets, since "bar" and "foobar"
-    // both occur once, so we have to do a more complex check.
+    // both occur once, so we have to manually sort the returned facets first.
     $facets = $results->getExtraData('search_api_facets', array())['body'];
     usort($facets, array($this, 'facetCompare'));
     $this->assertEqual($facets, $expected, 'Correct facets were returned for a fulltext field.');
@@ -756,6 +772,43 @@ class BackendTest extends EntityUnitTestBase {
     $facets = $results->getExtraData('search_api_facets', array())['type'];
     usort($facets, array($this, 'facetCompare'));
     $this->assertEqual($facets, $expected, 'Correct facets were returned');
+
+    // Regression tests for #2557291.
+    $results = $this->buildSearch('case')->execute();
+    $this->assertEqual($results->getResultCount(), 1, 'Search for lowercase "case" returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for lowercase "case" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('Case')->sort('search_api_id')->execute();
+    $this->assertEqual($results->getResultCount(), 2, 'Search for capitalized "Case" returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 3)), 'Search for capitalized "Case" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('CASE')->execute();
+    $this->assertEqual($results->getResultCount(), 0, 'Search for non-existent uppercase version of "CASE" returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), array(), 'Search for non-existent uppercase version of "CASE" returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('föö')->execute();
+    $this->assertEqual($results->getResultCount(), 1, 'Search for keywords with umlauts returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for keywords with umlauts returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('smile' . json_decode('"\u1F601"'))->execute();
+    $this->assertEqual($results->getResultCount(), 1, 'Search for keywords with umlauts returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for keywords with umlauts returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition($this->getFieldId('keywords'), 'grape', '<>')->execute();
+    $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
+    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 3)), 'Negated filter on multi-valued field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   /**
@@ -779,7 +832,7 @@ class BackendTest extends EntityUnitTestBase {
     if ($a['count'] != $b['count']) {
       return $b['count'] - $a['count'];
     }
-    return strcasecmp($a['filter'], $b['filter']);
+    return strcmp($a['filter'], $b['filter']);
   }
 
   /**

@@ -37,17 +37,19 @@ trait ExampleContentTrait {
     $count = \Drupal::entityQuery('entity_test')->count()->execute();
 
     $entity_test_storage = \Drupal::entityTypeManager()->getStorage('entity_test');
+    // To test Unicode compliance, include all kind of strange characters here.
+    $smiley = json_decode('"\u1F601"');
     $this->entities[1] = $entity_test_storage->create(array(
-        'name' => 'foo bar baz',
-        'body' => 'test test',
+        'name' => 'foo bar baz föö smile' . $smiley,
+        'body' => 'test test case Case casE',
         'type' => 'item',
-        'keywords' => array('orange'),
+        'keywords' => array('Orange', 'orange', 'örange', 'Orange', $smiley),
         'category' => 'item_category'
       ));
     $this->entities[1]->save();
     $this->entities[2] = $entity_test_storage->create(array(
         'name' => 'foo test',
-        'body' => 'bar test',
+        'body' => 'bar test casE',
         'type' => 'item',
         'keywords' => array('orange', 'apple', 'grape'),
         'category' => 'item_category'
@@ -55,7 +57,7 @@ trait ExampleContentTrait {
     $this->entities[2]->save();
     $this->entities[3] = $entity_test_storage->create(array(
         'name' => 'bar',
-        'body' => 'test foobar',
+        'body' => 'test foobar Case',
         'type' => 'item',
       ));
     $this->entities[3]->save();

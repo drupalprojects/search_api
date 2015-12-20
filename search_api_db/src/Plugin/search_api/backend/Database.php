@@ -29,6 +29,8 @@ use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
+use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
+use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,6 +58,13 @@ class Database extends BackendPluginBase {
    * @var \Drupal\Core\Database\Connection
    */
   protected $database;
+
+  /**
+   * DBMS compatibility handler for this type of database.
+   *
+   * @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface
+   */
+  protected $dbmsCompatibility;
 
   /**
    * The module handler to use.
@@ -91,6 +100,13 @@ class Database extends BackendPluginBase {
    * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
    */
   protected $keyValueStore;
+
+  /**
+   * The transliteration service to use.
+   *
+   * @var \Drupal\Component\Transliteration\TransliterationInterface
+   */
+  protected $transliterator;
 
   /**
    * The keywords ignored during the current search query.
@@ -153,7 +169,28 @@ class Database extends BackendPluginBase {
     $keyvalue_factory = $container->get('keyvalue');
     $backend->setKeyValueStore($keyvalue_factory->get(self::INDEXES_KEY_VALUE_STORE_ID));
 
+    /** @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $dbms_compatibility_handler */
+    $dbms_compatibility_handler = $container->get('search_api_db.database_compatibility');
+    // Make sure that we actually provide a handler for the right database,
+    // otherwise fall back to the generic handler.
+    if ($dbms_compatibility_handler->getDatabase() != $backend->getDatabase()) {
+      /** @var \Drupal\Component\Transliteration\TransliterationInterface $transliterator */
+      $transliterator = $container->get('transliteration');
+      $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $transliterator);
+    }
+    $backend->setDbmsCompatibilityHandler($dbms_compatibility_handler);
+
     return $backend;
+  }
+
+  /**
+   * Retrieves the database connection used by this backend.
+   *
+   * @return \Drupal\Core\Database\Connection
+   *   The database connection.
+   */
+  public function getDatabase() {
+    return $this->database;
   }
 
   /**
@@ -266,6 +303,19 @@ class Database extends BackendPluginBase {
    */
   public function setKeyValueStore(KeyValueStoreInterface $keyValueStore) {
     $this->keyValueStore = $keyValueStore;
+    return $this;
+  }
+
+  /**
+   * Sets the DBMS compatibility handler.
+   *
+   * @param \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $handler
+   *   The DBMS compatibility handler.
+   *
+   * @return $this
+   */
+  protected function setDbmsCompatibilityHandler(DatabaseCompatibilityHandlerInterface $handler) {
+    $this->dbmsCompatibility = $handler;
     return $this;
   }
 
@@ -457,7 +507,7 @@ class Database extends BackendPluginBase {
     try {
       // Create the denormalized table now.
       $index_table = $this->findFreeTable('search_api_db_', $index->id());
-      $this->createFieldTable(NULL, array('table' => $index_table));
+      $this->createFieldTable(NULL, array('table' => $index_table), 'index');
 
       $db_info = array();
       $db_info['field_tables'] = array();
@@ -575,9 +625,13 @@ class Database extends BackendPluginBase {
    *   - table: The table to use for the field.
    *   - column: (optional) The column to use in that table. Defaults to
    *     "value". For creating a separate field table, it must be left empty!
+   * @param string $type
+   *   (optional) The type of table being created. Either "index" (for the
+   *   denormalized table for an entire index) or "field" (for field-specific
+   *   tables).
    */
   // @todo Write a test to ensure a field named "value" doesn't break this.
-  protected function createFieldTable(FieldInterface $field = NULL, $db) {
+  protected function createFieldTable(FieldInterface $field = NULL, $db, $type = 'field') {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = array(
@@ -593,20 +647,7 @@ class Database extends BackendPluginBase {
         ),
       );
       $this->database->schema()->createTable($db['table'], $table);
-
-      // Some DBMSs will need a character encoding and collation set.
-      switch ($this->database->databaseType()) {
-        case 'mysql':
-          $this->database->query("ALTER TABLE {{$db['table']}} CONVERT TO CHARACTER SET 'utf8' COLLATE 'utf8_bin'");
-          break;
-
-        // @todo Add fixes for other DBMSs.
-        case 'oracle':
-        case 'pgsql':
-        case 'sqlite':
-        case 'sqlsrv':
-          break;
-      }
+      $this->dbmsCompatibility->alterNewTable($db['table'], $type);
     }
 
     // Stop here if we want to create a table with just the 'item_id' column.
@@ -810,7 +851,7 @@ class Database extends BackendPluginBase {
             'table' => $denormalized_table,
             'column' => $field['column'],
           );
-          $this->createFieldTable($new_fields[$field_id], $db);
+          $this->createFieldTable($new_fields[$field_id], $db, 'index');
         }
         unset($new_fields[$field_id]);
       }
@@ -834,7 +875,7 @@ class Database extends BackendPluginBase {
 
         // Always add a column in the denormalized table.
         $fields[$field_id]['column'] = $this->findFreeColumn($denormalized_table, $field_id);
-        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$field_id]['column']));
+        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$field_id]['column']), 'index');
 
         $fields[$field_id]['type'] = $field->getType();
         $fields[$field_id]['boost'] = $field->getBoost();
@@ -863,6 +904,7 @@ class Database extends BackendPluginBase {
               'type' => 'varchar',
               'length' => 50,
               'not null' => TRUE,
+              'binary' => TRUE,
             ),
             'score' => array(
               'description' => 'The score associated with this token',
@@ -879,40 +921,15 @@ class Database extends BackendPluginBase {
           'primary key' => array('item_id', 'field_name', 'word'),
         );
         $this->database->schema()->createTable($text_table, $table);
-
-        // Some DBMSs will need a character encoding and collation set. Since
-        // this largely circumvents Drupal's database layer, but isn't integral
-        // enough to fail completely when it doesn't work, we wrap it in a
-        // try/catch, to be on the safe side.
-        try {
-          switch ($this->database->databaseType()) {
-            case 'mysql':
-              $this->database->query("ALTER TABLE {{$text_table}} CONVERT TO CHARACTER SET 'utf8' COLLATE 'utf8_bin'");
-              break;
-
-            case 'pgsql':
-              $this->database->query("ALTER TABLE {{$text_table}} ALTER COLUMN word SET DATA TYPE character varying(50) COLLATE \"C\"");
-              break;
-
-            // @todo Add fixes for other DBMSs.
-            case 'oracle':
-            case 'sqlite':
-            case 'sqlsrv':
-              break;
-          }
-        }
-        catch (\PDOException $e) {
-          $vars['%index'] = $index->label();
-          watchdog_exception('search_api_db', $e, '%type while trying to change collation for the fulltext table of index %index: @message in %function (line %line of %file).', $vars);
-        }
+        $this->dbmsCompatibility->alterNewTable($text_table, 'text');
       }
 
       $this->getKeyValueStore()->set($index->id(), $db_info);
 
       return $reindex;
     }
-      // The database operations might throw PDO or other exceptions, so we catch
-      // them all and re-wrap them appropriately.
+    // The database operations might throw PDO or other exceptions, so we catch
+    // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -1117,15 +1134,17 @@ class Database extends BackendPluginBase {
             // at 500 words and 0.3 at 1000 words.
             $score *= min(1, .01 + 3.5 / (2 + count($unique_tokens) * .015));
 
-            $word = Unicode::strtolower($word);
-            if (!isset($unique_tokens[$word])) {
-              $unique_tokens[$word] = array(
+            // Only insert each canonical base form of a word once.
+            $word_base_form = $this->dbmsCompatibility->preprocessIndexValue($word);
+
+            if (!isset($unique_tokens[$word_base_form])) {
+              $unique_tokens[$word_base_form] = array(
                 'value' => $word,
                 'score' => $score,
               );
             }
             else {
-              $unique_tokens[$word]['score'] += $score;
+              $unique_tokens[$word_base_form]['score'] += $score;
             }
           }
           $denormalized_values[$column] = Unicode::truncateBytes(trim($denormalized_value), 30);
@@ -1144,11 +1163,20 @@ class Database extends BackendPluginBase {
         }
         else {
           $denormalized_values[$column] = reset($values);
+
           // Make sure no duplicate values are inserted (which would lead to a
-          // database exception). array_flip(array_flip($values)) would be much
-          // faster, but wouldn't work with floats, and casting to string almost
-          // neutralizes the performance improvement.
-          $values = array_unique($values);
+          // database exception).
+          // Use the canonical base form of the value for the comparison to
+          // avoid not catching different values that are duplicates under the
+          // database table's collation.
+          $case_insensitive_unique_values = array();
+          foreach ($values as $value) {
+            $value_base_form = $this->dbmsCompatibility->preprocessIndexValue("$value", 'field');
+            // We still insert the value in its original case.
+            $case_insensitive_unique_values[$value_base_form] = $value;
+          }
+          $values = array_values($case_insensitive_unique_values);
+
           $insert = $this->database->insert($table)
             ->fields(array('item_id', 'value'));
           foreach ($values as $value) {
@@ -1598,20 +1626,20 @@ class Database extends BackendPluginBase {
    */
   protected function splitKeys($keys) {
     if (is_scalar($keys)) {
-      $proc = Unicode::strtolower(trim($keys));
-      if (is_numeric($proc)) {
-        return ltrim($proc, '-0');
+      $processed_keys = $this->dbmsCompatibility->preprocessIndexValue(trim($keys));
+      if (is_numeric($processed_keys)) {
+        return ltrim($processed_keys, '-0');
       }
-      elseif (Unicode::strlen($proc) < $this->configuration['min_chars']) {
+      elseif (Unicode::strlen($processed_keys) < $this->configuration['min_chars']) {
         $this->ignored[$keys] = 1;
         return NULL;
       }
-      $words = preg_split('/[^\p{L}\p{N}]+/u', $proc, -1, PREG_SPLIT_NO_EMPTY);
+      $words = preg_split('/[^\p{L}\p{N}]+/u', $processed_keys, -1, PREG_SPLIT_NO_EMPTY);
       if (count($words) > 1) {
-        $proc = $this->splitKeys($words);
-        $proc['#conjunction'] = 'AND';
+        $processed_keys = $this->splitKeys($words);
+        $processed_keys['#conjunction'] = 'AND';
       }
-      return $proc;
+      return $processed_keys;
     }
     foreach ($keys as $i => $key) {
       if (Element::child($i)) {
@@ -1926,7 +1954,7 @@ class Database extends BackendPluginBase {
             // values equals the one given in this condition.
             $query = $this->database->select($field_info['table'], 't')
               ->fields('t', array('item_id'))
-              ->condition($field_info['column'], $value);
+              ->condition('value', $value);
             $db_condition->condition('t.item_id', $query, 'NOT IN');
           }
           else {
