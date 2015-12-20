@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Backend\BackendPluginManager;
@@ -39,13 +39,13 @@ class ServerForm extends EntityForm {
   /**
    * Constructs a ServerForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager
    *   The backend plugin manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, BackendPluginManager $backend_plugin_manager) {
-    $this->storage = $entity_manager->getStorage('search_api_server');
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, BackendPluginManager $backend_plugin_manager) {
+    $this->storage = $entity_type_manager->getStorage('search_api_server');
     $this->backendPluginManager = $backend_plugin_manager;
   }
 
@@ -53,11 +53,11 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = $container->get('entity_type.manager');
     /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_plugin_manager */
     $backend_plugin_manager = $container->get('plugin.manager.search_api.backend');
-    return new static($entity_manager, $backend_plugin_manager);
+    return new static($entity_type_manager, $backend_plugin_manager);
   }
 
   /**
@@ -67,7 +67,7 @@ class ServerForm extends EntityForm {
    *   The server storage controller.
    */
   protected function getStorage() {
-    return $this->storage ?: \Drupal::service('entity.manager')->getStorage('search_api_server');
+    return $this->storage ?: \Drupal::service('entity_type.manager')->getStorage('search_api_server');
   }
 
   /**

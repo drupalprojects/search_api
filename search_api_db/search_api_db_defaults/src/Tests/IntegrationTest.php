@@ -120,11 +120,11 @@ class IntegrationTest extends WebTestBase {
 
     // Delete all the entities that we would fail on if they exist.
     $entities_to_remove = array('search_api_index' => 'default_index', 'search_api_server' => 'default_server', 'view' => 'search_content');
-    /** @var \Drupal\Core\Entity\EntityManager $entity_repository */
-    $entity_manager = \Drupal::service('entity.manager');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = \Drupal::service('entity_type.manager');
     foreach ($entities_to_remove as $entity_type => $entity_id) {
       /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
-      $entity_storage = $entity_manager->getStorage($entity_type);
+      $entity_storage = $entity_type_manager->getStorage($entity_type);
       $entity_storage->resetCache();
       $entities = $entity_storage->loadByProperties(array('id' => $entity_id));
 

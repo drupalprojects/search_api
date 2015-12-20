@@ -725,7 +725,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         // fields which don't target a content entity type.
         $referenced_entity_type_label = NULL;
         if ($property instanceof FieldItemDataDefinition && in_array($property->getDataType(), array('field_item:entity_reference', 'field_item:image', 'field_item:file'))) {
-          $entity_type = $this->entityManager()->getDefinition($property->getSetting('target_type'));
+          $entity_type = $this->entityTypeManager()->getDefinition($property->getSetting('target_type'));
           if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
             unset($nested_properties['entity']);
           }

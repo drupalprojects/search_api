@@ -282,7 +282,7 @@ class Utility {
     if (!isset($context['sandbox']['indexes'])) {
       $context['sandbox']['indexes'] = array();
 
-      $indexes = \Drupal::entityManager()
+      $indexes = \Drupal::entityTypeManager()
         ->getStorage('search_api_index')
         ->loadByProperties(array(
           'status' => TRUE,

@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
@@ -23,11 +23,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class IndexForm extends EntityForm {
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The datasource plugin manager.
@@ -53,15 +53,15 @@ class IndexForm extends EntityForm {
   /**
    * Constructs an IndexForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager
    *   The search datasource plugin manager.
    * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
    *   The Search API tracker plugin manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->datasourcePluginManager = $datasource_plugin_manager;
     $this->trackerPluginManager = $tracker_plugin_manager;
   }
@@ -70,23 +70,23 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = $container->get('entity_type.manager');
     /** @var \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager */
     $datasource_plugin_manager = $container->get('plugin.manager.search_api.datasource');
     /** @var \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager */
     $tracker_plugin_manager = $container->get('plugin.manager.search_api.tracker');
-    return new static($entity_manager, $datasource_plugin_manager, $tracker_plugin_manager);
+    return new static($entity_type_manager, $datasource_plugin_manager, $tracker_plugin_manager);
   }
 
   /**
-   * Returns the entity manager.
+   * Returns the entity type manager.
    *
-   * @return \Drupal\Core\Entity\EntityManagerInterface
-   *   The entity manager.
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
-  protected function getEntityManager() {
-    return $this->entityManager ?: \Drupal::service('entity.manager');
+  protected function getEntityTypeManager() {
+    return $this->entityTypeManager ?: \Drupal::service('entity_type.manager');
   }
 
   /**
@@ -116,7 +116,7 @@ class IndexForm extends EntityForm {
    *   The index storage controller.
    */
   protected function getIndexStorage() {
-    return $this->getEntityManager()->getStorage('search_api_index');
+    return $this->getEntityTypeManager()->getStorage('search_api_index');
   }
 
   /**
@@ -126,7 +126,7 @@ class IndexForm extends EntityForm {
    *   The server storage controller.
    */
   protected function getServerStorage() {
-    return $this->getEntityManager()->getStorage('search_api_server');
+    return $this->getEntityTypeManager()->getStorage('search_api_server');
   }
 
   /**
@@ -452,7 +452,7 @@ class IndexForm extends EntityForm {
     /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->getEntity();
 
-    $storage = $this->entityManager->getStorage('search_api_index');
+    $storage = $this->entityTypeManager->getStorage('search_api_index');
     if (!$index->isNew()) {
       $this->originalEntity = $storage->loadUnchanged($index->id());
     }

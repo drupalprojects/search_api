@@ -448,7 +448,7 @@ class Query implements QueryInterface {
    */
   public function __wakeup() {
     if (!isset($this->index) && !empty($this->indexId)) {
-      $this->index = \Drupal::entityManager()->getStorage('search_api_index')->load($this->indexId);
+      $this->index = \Drupal::entityTypeManager()->getStorage('search_api_index')->load($this->indexId);
       unset($this->indexId);
     }
   }

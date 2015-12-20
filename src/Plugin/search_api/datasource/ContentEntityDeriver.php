@@ -9,7 +9,7 @@ namespace Drupal\search_api\Plugin\search_api\datasource;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Entity\ContentEntityType;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,11 +31,11 @@ class ContentEntityDeriver implements ContainerDeriverInterface {
   protected $derivatives = array();
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
@@ -43,9 +43,9 @@ class ContentEntityDeriver implements ContainerDeriverInterface {
   public static function create(ContainerInterface $container, $base_plugin_id) {
     $deriver = new static();
 
-    /** @var $entity_manager \Drupal\Core\Entity\EntityManagerInterface */
-    $entity_manager = $container->get('entity.manager');
-    $deriver->setEntityManager($entity_manager);
+    /** @var $entity_type_manager \Drupal\Core\Entity\EntityTypeManagerInterface */
+    $entity_type_manager = $container->get('entity_type.manager');
+    $deriver->setEntityTypeManager($entity_type_manager);
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $container->get('string_translation');
@@ -55,25 +55,25 @@ class ContentEntityDeriver implements ContainerDeriverInterface {
   }
 
   /**
-   * Retrieves the entity manager.
+   * Retrieves the entity type manager.
    *
-   * @return \Drupal\Core\Entity\EntityManagerInterface
-   *   The entity manager.
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
-  public function getEntityManager() {
-    return $this->entityManager ?: \Drupal::entityManager();
+  public function getEntityTypeManager() {
+    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
   }
 
   /**
-   * Sets the entity manager.
+   * Sets the entity type manager.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    *
    * @return $this
    */
-  public function setEntityManager(EntityManagerInterface $entity_manager) {
-    $this->entityManager = $entity_manager;
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     return $this;
   }
 
@@ -93,7 +93,7 @@ class ContentEntityDeriver implements ContainerDeriverInterface {
 
     if (!isset($this->derivatives[$base_plugin_id])) {
       $plugin_derivatives = array();
-      foreach ($this->getEntityManager()->getDefinitions() as $entity_type => $entity_type_definition) {
+      foreach ($this->getEntityTypeManager()->getDefinitions() as $entity_type => $entity_type_definition) {
         // We only support content entity types at the moment, since config
         // entities don't implement \Drupal\Core\TypedData\ComplexDataInterface.
         if ($entity_type_definition instanceof ContentEntityType) {

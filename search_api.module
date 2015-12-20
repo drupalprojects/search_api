@@ -38,7 +38,7 @@ function search_api_cron() {
   $conditions = array(
     'status' => TRUE,
   );
-  $index_storage = \Drupal::entityManager()->getStorage('search_api_index');
+  $index_storage = \Drupal::entityTypeManager()->getStorage('search_api_index');
   /** @var \Drupal\search_api\IndexInterface[] $indexes */
   $indexes = $index_storage->loadByProperties($conditions);
   if (!$indexes) {
@@ -119,7 +119,7 @@ function search_api_config_import_steps_alter(&$sync_steps, ConfigImporter $conf
   $new = $config_importer->getUnprocessedConfiguration('create');
   $changed = $config_importer->getUnprocessedConfiguration('update');
   $new_or_changed = array_merge($new, $changed);
-  $prefix = \Drupal::entityManager()->getDefinition('search_api_index')->getConfigPrefix() . '.';
+  $prefix = \Drupal::entityTypeManager()->getDefinition('search_api_index')->getConfigPrefix() . '.';
   $prefix_length = strlen($prefix);
   foreach ($new_or_changed as $config_id) {
     if (substr($config_id, 0, $prefix_length) === $prefix) {

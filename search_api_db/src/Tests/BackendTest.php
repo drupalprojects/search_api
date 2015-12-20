@@ -362,7 +362,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->indexItems($this->indexId);
 
     // Reset the internal cache so the new values will be available.
-    \Drupal::entityManager()->getStorage('search_api_index')->resetCache(array($this->indexId));
+    \Drupal::entityTypeManager()->getStorage('search_api_index')->resetCache(array($this->indexId));
   }
 
   /**
@@ -818,10 +818,10 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertTrue($success, 'The index field settings were successfully changed.');
 
     // Reset the static cache so the new values will be available.
-    \Drupal::entityManager()->getStorage('search_api_server')->resetCache(array($this->serverId));
-    \Drupal::entityManager()->getStorage('search_api_index')->resetCache(array($this->serverId));
+    \Drupal::entityTypeManager()->getStorage('search_api_server')->resetCache(array($this->serverId));
+    \Drupal::entityTypeManager()->getStorage('search_api_index')->resetCache(array($this->serverId));
 
-    \Drupal::entityManager()
+    \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->create(array(
         'id' => 6,
@@ -846,7 +846,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     // Regression test for #2284199.
-    \Drupal::entityManager()
+    \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->create(array(
         'id' => 7,
@@ -861,7 +861,7 @@ class BackendTest extends EntityUnitTestBase {
     $index->save();
     $this->indexItems($this->indexId);
 
-    \Drupal::entityManager()
+    \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->create(array(
         'id' => 8,

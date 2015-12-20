@@ -38,7 +38,7 @@ class IndexStorageUnitTest extends KernelTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->storage = $this->container->get('entity.manager')->getStorage('search_api_index');
+    $this->storage = $this->container->get('entity_type.manager')->getStorage('search_api_index');
   }
 
   /**

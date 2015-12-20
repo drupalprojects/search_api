@@ -9,7 +9,7 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
@@ -111,17 +111,17 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @param string $table
    *   The Views base table ID.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   (optional) The entity manager to use.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   (optional) The entity type manager to use.
    *
    * @return \Drupal\search_api\IndexInterface|null
    *   The requested search index, or NULL if it could not be found and loaded.
    */
-  public static function getIndexFromTable($table, EntityManagerInterface $entity_manager = NULL) {
+  public static function getIndexFromTable($table, EntityTypeManagerInterface $entity_type_manager = NULL) {
     if (substr($table, 0, 17) == 'search_api_index_') {
       $index_id = substr($table, 17);
-      if ($entity_manager) {
-        return $entity_manager->getStorage('search_api_index')->load($index_id);
+      if ($entity_type_manager) {
+        return $entity_type_manager->getStorage('search_api_index')->load($index_id);
       }
       return Index::load($index_id);
     }

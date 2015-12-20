@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,11 +27,11 @@ class IndexFieldsForm extends EntityForm {
   protected $entity;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The data type plugin manager.
@@ -57,13 +57,13 @@ class IndexFieldsForm extends EntityForm {
   /**
    * Constructs an IndexFieldsForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager
    *   The data type plugin manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, DataTypePluginManager $data_type_plugin_manager) {
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, DataTypePluginManager $data_type_plugin_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->dataTypePluginManager = $data_type_plugin_manager;
   }
 
@@ -71,23 +71,23 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = $container->get('entity_type.manager');
 
     /** @var \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager */
     $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
 
-    return new static($entity_manager, $data_type_plugin_manager);
+    return new static($entity_type_manager, $data_type_plugin_manager);
   }
 
   /**
-   * Retrieves the entity manager.
+   * Retrieves the entity type manager.
    *
-   * @return \Drupal\Core\Entity\EntityManagerInterface
-   *   The entity manager.
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
-  protected function getEntityManager() {
-    return $this->entityManager;
+  protected function getEntityTypeManager() {
+    return $this->entityTypeManager;
   }
 
   /**

@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Plugin\views\row;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -38,11 +38,11 @@ class SearchApiRow extends RowPluginBase {
   protected $index;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The logger to use for logging messages.
@@ -59,9 +59,9 @@ class SearchApiRow extends RowPluginBase {
     /** @var static $row */
     $row = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
-    $row->setEntityManager($entity_manager);
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = $container->get('entity_type.manager');
+    $row->setEntityTypeManager($entity_type_manager);
 
     /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
     $logger = $container->get('logger.factory')->get('search_api');
@@ -71,25 +71,25 @@ class SearchApiRow extends RowPluginBase {
   }
 
   /**
-   * Retrieves the entity manager.
+   * Retrieves the entity type manager.
    *
-   * @return \Drupal\Core\Entity\EntityManagerInterface
-   *   The entity manager.
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
-  public function getEntityManager() {
-    return $this->entityManager ?: \Drupal::entityManager();
+  public function getEntityTypeManager() {
+    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
   }
 
   /**
-   * Sets the entity manager.
+   * Sets the entity type manager.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entityManager
-   *   The new entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The new entity type manager.
    *
    * @return $this
    */
-  public function setEntityManager(EntityManagerInterface $entityManager) {
-    $this->entityManager = $entityManager;
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     return $this;
   }
 
@@ -120,7 +120,7 @@ class SearchApiRow extends RowPluginBase {
     parent::init($view, $display, $options);
 
     $base_table = $view->storage->get('base_table');
-    $this->index = SearchApiQuery::getIndexFromTable($base_table, $this->getEntityManager());
+    $this->index = SearchApiQuery::getIndexFromTable($base_table, $this->getEntityTypeManager());
     if (!$this->index) {
       throw new \InvalidArgumentException(new FormattableMarkup('View %view is not based on Search API but tries to use its row plugin.', array('%view' => $view->storage->label())));
     }

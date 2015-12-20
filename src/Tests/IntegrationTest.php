@@ -55,7 +55,7 @@ class IntegrationTest extends WebTestBase {
    */
   public function setUp() {
     parent::setUp();
-    $this->indexStorage = \Drupal::entityManager()->getStorage('search_api_index');
+    $this->indexStorage = \Drupal::entityTypeManager()->getStorage('search_api_index');
   }
 
   /**

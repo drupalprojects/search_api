@@ -9,7 +9,7 @@ namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorPluginManager;
@@ -28,11 +28,11 @@ class IndexProcessorsForm extends EntityForm {
   protected $entity;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The datasource manager.
@@ -44,13 +44,13 @@ class IndexProcessorsForm extends EntityForm {
   /**
    * Constructs an IndexProcessorsForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\search_api\Processor\ProcessorPluginManager $processor_plugin_manager
    *   The processor plugin manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager, ProcessorPluginManager $processor_plugin_manager) {
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ProcessorPluginManager $processor_plugin_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->processorPluginManager = $processor_plugin_manager;
   }
 
@@ -58,11 +58,11 @@ class IndexProcessorsForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+    $entity_type_manager = $container->get('entity_type.manager');
     /** @var \Drupal\search_api\Processor\ProcessorPluginManager $processor_plugin_manager */
     $processor_plugin_manager = $container->get('plugin.manager.search_api.processor');
-    return new static($entity_manager, $processor_plugin_manager);
+    return new static($entity_type_manager, $processor_plugin_manager);
   }
 
   /**

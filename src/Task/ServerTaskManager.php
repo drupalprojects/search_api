@@ -8,7 +8,7 @@
 namespace Drupal\search_api\Task;
 
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ServerInterface;
@@ -26,23 +26,23 @@ class ServerTaskManager implements ServerTaskManagerInterface {
   protected $database;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * Constructs a ServerTaskManager object.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(Connection $database, EntityManagerInterface $entity_manager) {
+  public function __construct(Connection $database, EntityTypeManagerInterface $entity_type_manager) {
     $this->database = $database;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -193,7 +193,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    *   The loaded server, or NULL if it could not be loaded.
    */
   protected function loadServer($server_id) {
-    return $this->entityManager->getStorage('search_api_server')->load($server_id);
+    return $this->entityTypeManager->getStorage('search_api_server')->load($server_id);
   }
 
   /**
@@ -206,7 +206,7 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    *   The loaded index, or NULL if it could not be loaded.
    */
   protected function loadIndex($index_id) {
-    return $this->entityManager->getStorage('search_api_index')->load($index_id);
+    return $this->entityTypeManager->getStorage('search_api_index')->load($index_id);
   }
 
 }

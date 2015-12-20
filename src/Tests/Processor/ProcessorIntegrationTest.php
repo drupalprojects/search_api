@@ -268,7 +268,7 @@ class ProcessorIntegrationTest extends WebTestBase {
    *   The search index used by this test.
    */
   protected function loadIndex() {
-    $index_storage = \Drupal::entityManager()->getStorage('search_api_index');
+    $index_storage = \Drupal::entityTypeManager()->getStorage('search_api_index');
     $index_storage->resetCache([$this->indexId]);
 
     return $index_storage->load($this->indexId);

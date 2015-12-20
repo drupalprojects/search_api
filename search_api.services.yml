@@ -21,7 +21,7 @@ services:
 
   search_api.index_task_manager:
     class: Drupal\search_api\Task\IndexTaskManager
-    arguments: ['@state', '@entity.manager']
+    arguments: ['@state', '@entity_type.manager']
 
   search_api.results_static_cache:
     class: Drupal\search_api\Query\ResultsCache
@@ -29,6 +29,6 @@ services:
 
   search_api.server_task_manager:
     class: Drupal\search_api\Task\ServerTaskManager
-    arguments: ['@database', '@entity.manager']
+    arguments: ['@database', '@entity_type.manager']
     tags:
       - { name: backend_overridable }

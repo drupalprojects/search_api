@@ -159,7 +159,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function getIndexes(array $properties = array()) {
-    $storage = \Drupal::entityManager()->getStorage('search_api_index');
+    $storage = \Drupal::entityTypeManager()->getStorage('search_api_index');
     return $storage->loadByProperties(array('server' => $this->id()) + $properties);
   }
 

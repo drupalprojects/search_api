@@ -7,7 +7,7 @@
 
 namespace Drupal\search_api\Task;
 
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
@@ -28,23 +28,23 @@ class IndexTaskManager implements IndexTaskManagerInterface {
   protected $state;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * Constructs a IndexTaskManager object.
    *
    * @param \Drupal\Core\State\StateInterface $state
    *   The site state.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(StateInterface $state, EntityManagerInterface $entity_manager) {
+  public function __construct(StateInterface $state, EntityTypeManagerInterface $entity_type_manager) {
     $this->state = $state;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -141,7 +141,7 @@ class IndexTaskManager implements IndexTaskManagerInterface {
    */
   public function processBatch($index_id, array &$context) {
     /** @var \Drupal\search_api\IndexInterface $index */
-    $index = $this->entityManager->getStorage('search_api_index')->load($index_id);
+    $index = $this->entityTypeManager->getStorage('search_api_index')->load($index_id);
     $added = $this->addItemsOnce($index);
     if (!isset($context['results']['added'])) {
       $context['results']['added'] = 0;
@@ -286,7 +286,7 @@ class IndexTaskManager implements IndexTaskManagerInterface {
    */
   public function __wakeup() {
     $this->state = \Drupal::state();
-    $this->entityManager = \Drupal::entityManager();
+    $this->entityTypeManager = \Drupal::entityTypeManager();
   }
 
 }

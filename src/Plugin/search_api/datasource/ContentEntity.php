@@ -10,8 +10,11 @@ namespace Drupal\search_api\Plugin\search_api\datasource;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
@@ -35,11 +38,32 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ContentEntity extends DatasourcePluginBase {
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface|null
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|null
    */
-  protected $entityManager;
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface|null
+   */
+  protected $entityFieldManager;
+
+  /**
+   * The entity display repository manager.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface|null
+   */
+  protected $entityDisplayRepository;
+
+  /**
+   * The entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface|null
+   */
+  protected $entityTypeBundleInfo;
 
   /**
    * The typed data manager.
@@ -79,9 +103,21 @@ class ContentEntity extends DatasourcePluginBase {
     /** @var static $datasource */
     $datasource = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var $entity_manager \Drupal\Core\Entity\EntityManagerInterface */
-    $entity_manager = $container->get('entity.manager');
-    $datasource->setEntityManager($entity_manager);
+    /** @var $entity_type_manager \Drupal\Core\Entity\EntityTypeManagerInterface */
+    $entity_type_manager = $container->get('entity_type.manager');
+    $datasource->setEntityTypeManager($entity_type_manager);
+
+    /** @var $entity_field_manager \Drupal\Core\Entity\EntityFieldManagerInterface */
+    $entity_field_manager = $container->get('entity_field.manager');
+    $datasource->setEntityFieldManager($entity_field_manager);
+
+    /** @var $entity_display_repo \Drupal\Core\Entity\EntityDisplayRepositoryInterface */
+    $entity_display_repo = $container->get('entity_display.repository');
+    $datasource->setEntityDisplayRepository($entity_display_repo);
+
+    /** @var $entity_type_bundle_info \Drupal\Core\Entity\EntityTypeBundleInfoInterface */
+    $entity_type_bundle_info = $container->get('entity_type.bundle.info');
+    $datasource->setEntityTypeBundleInfo($entity_type_bundle_info);
 
     /** @var \Drupal\Core\TypedData\TypedDataManager $typed_data_manager */
     $typed_data_manager = $container->get('typed_data_manager');
@@ -95,13 +131,43 @@ class ContentEntity extends DatasourcePluginBase {
   }
 
   /**
-   * Retrieves the entity manager.
+   * Retrieves the entity type manager.
    *
-   * @return \Drupal\Core\Entity\EntityManagerInterface
-   *   The entity manager.
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
    */
-  public function getEntityManager() {
-    return $this->entityManager ?: \Drupal::entityManager();
+  public function getEntityTypeManager() {
+    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
+  }
+
+  /**
+   * Retrieves the entity field manager.
+   *
+   * @return \Drupal\Core\Entity\EntityFieldManagerInterface
+   *   The entity field manager.
+   */
+  public function getEntityFieldManager() {
+    return $this->entityFieldManager ?: \Drupal::getContainer()->get('entity_field.manager');
+  }
+
+  /**
+   * Retrieves the entity display repository.
+   *
+   * @return \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   *   The entity entity display repository.
+   */
+  public function getEntityDisplayRepository() {
+    return $this->entityDisplayRepository ?: \Drupal::getContainer()->get('entity_display.repository');
+  }
+
+  /**
+   * Retrieves the entity display repository.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   *   The entity entity display repository.
+   */
+  public function getEntityTypeBundleInfo() {
+    return $this->entityTypeBundleInfo ?: \Drupal::getContainer()->get('entity_type.bundle.info');
   }
 
   /**
@@ -111,7 +177,7 @@ class ContentEntity extends DatasourcePluginBase {
    *   The entity storage.
    */
   protected function getEntityStorage() {
-    return $this->getEntityManager()->getStorage($this->pluginDefinition['entity_type']);
+    return $this->getEntityTypeManager()->getStorage($this->pluginDefinition['entity_type']);
   }
 
   /**
@@ -121,19 +187,58 @@ class ContentEntity extends DatasourcePluginBase {
    *   The entity type definition.
    */
   protected function getEntityType() {
-    return $this->getEntityManager()->getDefinition($this->getEntityTypeId());
+    return $this->getEntityTypeManager()->getDefinition($this->getEntityTypeId());
   }
 
   /**
-   * Sets the entity manager.
+   * Sets the entity type manager.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The new entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The new entity type manager.
    *
    * @return $this
    */
-  public function setEntityManager(EntityManagerInterface $entity_manager) {
-    $this->entityManager = $entity_manager;
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+    return $this;
+  }
+
+  /**
+   * Sets the entity field manager.
+   *
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The new entity field manager.
+   *
+   * @return $this
+   */
+  public function setEntityFieldManager(EntityFieldManagerInterface $entity_field_manager) {
+    $this->entityFieldManager = $entity_field_manager;
+    return $this;
+  }
+
+  /**
+   * Sets the entity display repository.
+   *
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
+   *   The new entity display repository.
+   *
+   * @return $this
+   */
+  public function setEntityDisplayRepository(EntityDisplayRepositoryInterface $entity_display_repository) {
+    $this->entityDisplayRepository = $entity_display_repository;
+    return $this;
+  }
+
+  /**
+   * Sets the entity type bundle info.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The new entity type bundle info.
+   *
+   * @return $this
+   */
+  public function setEntityTypeBundleInfo(EntityTypeBundleInfoInterface $entity_type_bundle_info) {
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
     return $this;
   }
 
@@ -200,10 +305,10 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getPropertyDefinitions() {
     $type = $this->getEntityTypeId();
-    $properties = $this->getEntityManager()->getBaseFieldDefinitions($type);
+    $properties = $this->getEntityFieldManager()->getBaseFieldDefinitions($type);
     if ($bundles = array_keys($this->getBundles())) {
       foreach ($bundles as $bundle_id) {
-        $properties += $this->getEntityManager()->getFieldDefinitions($type, $bundle_id);
+        $properties += $this->getEntityFieldManager()->getFieldDefinitions($type, $bundle_id);
       }
     }
     return $properties;
@@ -479,7 +584,7 @@ class ContentEntity extends DatasourcePluginBase {
    *   An associative array of bundle infos, keyed by the bundle names.
    */
   protected function getEntityBundles() {
-    return $this->hasBundles() ? $this->getEntityManager()->getBundleInfo($this->getEntityTypeId()) : array();
+    return $this->hasBundles() ? $this->getEntityTypeBundleInfo()->getBundleInfo($this->getEntityTypeId()) : array();
   }
 
   /**
@@ -561,10 +666,10 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getViewModes($bundle = NULL) {
     if (isset($bundle)) {
-      return $this->getEntityManager()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
+      return $this->getEntityDisplayRepository()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
     }
     else {
-      return $this->getEntityManager()->getViewModeOptions($this->getEntityTypeId());
+      return $this->getEntityDisplayRepository()->getViewModeOptions($this->getEntityTypeId());
     }
   }
 
@@ -576,7 +681,7 @@ class ContentEntity extends DatasourcePluginBase {
       if ($item instanceof EntityAdapter) {
         $entity = $item->getValue();
         $langcode = $langcode ?: $entity->language()->getId();
-        return $this->getEntityManager()->getViewBuilder($this->getEntityTypeId())->view($entity, $view_mode, $langcode);
+        return $this->getEntityTypeManager()->getViewBuilder($this->getEntityTypeId())->view($entity, $view_mode, $langcode);
       }
     }
     catch (\Exception $e) {
@@ -593,7 +698,7 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function viewMultipleItems(array $items, $view_mode, $langcode = NULL) {
     try {
-      $view_builder = $this->getEntityManager()->getViewBuilder($this->getEntityTypeId());
+      $view_builder = $this->getEntityTypeManager()->getViewBuilder($this->getEntityTypeId());
       // Langcode passed, use that for viewing.
       if (isset($langcode)) {
         $entities = array();
@@ -683,8 +788,8 @@ class ContentEntity extends DatasourcePluginBase {
     }
 
     // Extract the config dependency name for direct fields.
-    foreach (array_keys($this->getEntityManager()->getBundleInfo($entity_type_id)) as $bundle) {
-      foreach ($this->getEntityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+    foreach (array_keys($this->getEntityTypeBundleInfo()->getBundleInfo($entity_type_id)) as $bundle) {
+      foreach ($this->getEntityFieldManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
         if ($field_definition instanceof FieldConfigInterface) {
           if (in_array($field_name, $direct_fields) || isset($nested_fields[$field_name])) {
             $field_dependencies[$field_definition->getConfigDependencyName()] = TRUE;
