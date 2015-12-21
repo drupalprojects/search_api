@@ -11,3 +11,9 @@
       sequence:
         type: string
         label: 'An entity bundle'
+    languages:
+      type: sequence
+      label: 'The selected languages'
+      sequence:
+        type: string
+        label: 'An entity language'

@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
@@ -80,6 +81,13 @@ class ContentEntity extends DatasourcePluginBase {
   protected $configFactory;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
@@ -126,6 +134,10 @@ class ContentEntity extends DatasourcePluginBase {
     /** @var $config_factory \Drupal\Core\Config\ConfigFactoryInterface */
     $config_factory = $container->get('config.factory');
     $datasource->setConfigFactory($config_factory);
+
+    /** @var $language_manager \Drupal\Core\Language\LanguageManagerInterface */
+    $language_manager = $container->get('language_manager');
+    $datasource->setLanguageManager($language_manager);
 
     return $datasource;
   }
@@ -300,6 +312,27 @@ class ContentEntity extends DatasourcePluginBase {
     $this->configFactory = $config_factory;
     return $this;
   }
+
+  /**
+   * Retrieves the language manager.
+   *
+   * @return \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   */
+  public function getLanguageManager() {
+    return $this->languageManager ?: \Drupal::languageManager();
+  }
+
+  /**
+   * Sets the language manager.
+   *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The new language manager.
+   */
+  public function setLanguageManager(LanguageManagerInterface $language_manager) {
+    $this->languageManager = $language_manager;
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -326,10 +359,24 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function loadMultiple(array $ids) {
+    $allowed_languages = $all_languages = $this->getLanguageManager()->getLanguages();
+
+    if ($this->isTranslatable()) {
+      $selected_languages = array_flip($this->configuration['languages']);
+      if ($this->configuration['default']) {
+        $allowed_languages = array_diff_key($all_languages, $selected_languages);
+      }
+      else {
+        $allowed_languages = array_intersect_key($all_languages, $selected_languages);
+      }
+    }
+
     $entity_ids = array();
     foreach ($ids as $item_id) {
       list($entity_id, $langcode) = explode(':', $item_id, 2);
-      $entity_ids[$entity_id][$item_id] = $langcode;
+      if (isset($allowed_languages[$langcode])) {
+        $entity_ids[$entity_id][$item_id] = $langcode;
+      }
     }
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
@@ -440,21 +487,27 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    if ($this->hasBundles()) {
-      return array(
-        'default' => 1,
-        'bundles' => array(),
-      );
+    $default_configuration = array();
+    if ($this->hasBundles() || $this->isTranslatable()) {
+      $default_configuration['default'] = 1;
     }
-    return array();
+
+    if ($this->hasBundles()) {
+      $default_configuration['bundles'] = array();
+    }
+
+    if ($this->isTranslatable()) {
+      $default_configuration['languages'] = array();
+    }
+
+    return $default_configuration;
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    if ($this->hasBundles()) {
-      $bundles = $this->getEntityBundleOptions();
+    if ($this->hasBundles() || $this->isTranslatable()) {
       $form['default'] = array(
         '#type' => 'radios',
         '#title' => $this->t('What should be indexed?'),
@@ -464,12 +517,26 @@ class ContentEntity extends DatasourcePluginBase {
         ),
         '#default_value' => $this->configuration['default'],
       );
+    }
+
+    if ($this->hasBundles()) {
+      $bundles = $this->getEntityBundleOptions();
       $form['bundles'] = array(
         '#type' => 'checkboxes',
         '#title' => $this->t('Bundles'),
         '#options' => $bundles,
         '#default_value' => $this->configuration['bundles'],
         '#size' => min(4, count($bundles)),
+        '#multiple' => TRUE,
+      );
+    }
+
+    if ($this->isTranslatable()) {
+      $form['languages'] = array(
+        '#type' => 'checkboxes',
+        '#title' => $this->t('Languages'),
+        '#options' => $this->getTranslationOptions(),
+        '#default_value' => array_combine($this->configuration['languages'], $this->configuration['languages']),
         '#multiple' => TRUE,
       );
     }
@@ -492,6 +559,32 @@ class ContentEntity extends DatasourcePluginBase {
       }
     }
     return $options;
+  }
+
+  /**
+   * Retrieves the available languages of this entity type as an options list.
+   *
+   * @return array
+   *   An associative array of language labels, keyed by the language name.
+   */
+  protected function getTranslationOptions() {
+    $options = array();
+    foreach ($this->getLanguageManager()->getLanguages() as $language) {
+      $options[$language->getId()] = $language->getName();
+    }
+
+    return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $languages = $form_state->getValue('languages', array());
+    $languages = array_keys(array_filter($languages));
+    $form_state->setValue('languages', $languages);
+
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   /**
@@ -547,15 +640,32 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getDescription() {
     $summary = '';
+
+    // Add bundle information in the description.
     if ($this->hasBundles()) {
       $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_filter($this->configuration['bundles'])));
-      if ($this->configuration['default'] == TRUE) {
-        $summary = $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+      if ($this->configuration['default']) {
+        $summary .= $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
       else {
-        $summary = $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
+        $summary .= $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
     }
+
+    // Add language information in the description.
+    if ($this->isTranslatable()) {
+      if ($summary) {
+        $summary .= '; ';
+      }
+      $languages = array_intersect_key($this->getTranslationOptions(), array_flip($this->configuration['languages']));
+      if ($this->configuration['default']) {
+        $summary .= $this->t('Excluded languages: @languages', array('@languages' => implode(', ', $languages)));
+      }
+      else {
+        $summary .= $this->t('Included languages: @languages', array('@languages' => implode(', ', $languages)));
+      }
+    }
+
     return $summary;
   }
 
@@ -575,6 +685,16 @@ class ContentEntity extends DatasourcePluginBase {
    */
   protected function hasBundles() {
     return $this->getEntityType()->hasKey('bundle');
+  }
+
+  /**
+   * Determines whether the entity type supports translations.
+   *
+   * @return bool
+   *   TRUE if the entity is translatable, FALSE otherwise.
+   */
+  protected function isTranslatable() {
+    return $this->getEntityType()->isTranslatable();
   }
 
   /**
@@ -633,6 +753,7 @@ class ContentEntity extends DatasourcePluginBase {
         $item_ids[] = "$entity_id:$langcode";
       }
     }
+
     return $item_ids;
   }
 

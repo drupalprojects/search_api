@@ -658,6 +658,9 @@ class IntegrationTest extends WebTestBase {
     // Disable "read only" and verify indexing now works again.
     $edit = array(
       'read_only' => FALSE,
+      'datasource_configs[entity:node][default]' => TRUE,
+      'datasource_configs[entity:node][bundles][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][page]' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
 

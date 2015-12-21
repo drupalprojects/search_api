@@ -291,10 +291,12 @@ class SubFormState implements FormStateInterface {
    * {@inheritdoc}
    */
   public function &getValue($key, $default = NULL) {
-    if ($this->hasValue($key)) {
-      return $this->values[$key];
+    $exists = NULL;
+    $value = &NestedArray::getValue($this->getValues(), (array) $key, $exists);
+    if (!$exists) {
+      $value = $default;
     }
-    return FALSE;
+    return $value;
   }
 
   /**
