@@ -7,14 +7,14 @@
 
 namespace Drupal\search_api\Form;
 
-use Drupal\Core\Entity\EntityConfirmFormBase;
+use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
  * Defines a confirm form for deleting a server.
  */
-class ServerDeleteConfirmForm extends EntityConfirmFormBase {
+class ServerDeleteConfirmForm extends EntityDeleteForm {
 
   /**
    * {@inheritdoc}
