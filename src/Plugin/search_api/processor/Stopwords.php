@@ -77,7 +77,7 @@ class Stopwords extends FieldsProcessorPluginBase {
     else {
       $default_value = $stopwords;
     }
-    $description = $this->t('Enter a list of stopwords, each on a separate line, that will be removed from content before it is indexed and from search terms before searching. <a href="@url">More info about stopwords.</a>.', array('@url' => 'https://en.wikipedia.org/wiki/Stop_words'));
+    $description = $this->t('Enter a list of stopwords, each on a separate line, that will be removed from content before it is indexed and from search terms before searching. <a href=":url">More info about stopwords.</a>.', array(':url' => 'https://en.wikipedia.org/wiki/Stop_words'));
 
     $form['stopwords'] = array(
       '#type' => 'textarea',

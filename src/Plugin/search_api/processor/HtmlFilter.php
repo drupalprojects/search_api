@@ -73,11 +73,11 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     $tags = str_replace('\r\n', "\n", $tags);
     $tags = str_replace('"', '', $tags);
 
-    $t_args['@url'] = Url::fromUri('https://en.wikipedia.org/wiki/YAML')->toString();
+    $t_args[':url'] = Url::fromUri('https://en.wikipedia.org/wiki/YAML')->toString();
     $form['tags'] = array(
       '#type' => 'textarea',
       '#title' => $this->t('Tag boosts'),
-      '#description' => $this->t('Specify special boost values for certain HTML elements, in <a href="@url">YAML file format</a>. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
+      '#description' => $this->t('Specify special boost values for certain HTML elements, in <a href=":url">YAML file format</a>. The boost values of nested elements are multiplied, elements not mentioned will have the default boost value of 1. Assign a boost of 0 to ignore the text content of that HTML element.', $t_args),
       '#default_value' => $tags,
     );
 

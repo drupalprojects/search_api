@@ -59,13 +59,13 @@ class Tokenizer extends FieldsProcessorPluginBase {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $args = array(
-      '@pcre-url' => Url::fromUri('http://www.php.net/manual/en/regexp.reference.character-classes.php')->toString(),
-      '@doc-url' => Url::fromUri('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')->toString(),
+      ':pcre-url' => Url::fromUri('http://www.php.net/manual/en/regexp.reference.character-classes.php')->toString(),
+      ':doc-url' => Url::fromUri('https://api.drupal.org/api/drupal/core!lib!Drupal!Component!Utility!Unicode.php/constant/Unicode%3A%3APREG_CLASS_WORD_BOUNDARY/8')->toString(),
     );
     $form['spaces'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Whitespace characters'),
-      '#description' => $this->t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. Specify the characters as the inside of a <a href="@pcre-url">PCRE character class</a>. Leave empty to use a <a href="@doc-url">default</a> which should be suitable for most languages with a Latin alphabet.', $args),
+      '#description' => $this->t('Specify the characters that should be regarded as whitespace and therefore used as word-delimiters. Specify the characters as the inside of a <a href=":pcre-url">PCRE character class</a>. Leave empty to use a <a href=":doc-url">default</a> which should be suitable for most languages with a Latin alphabet.', $args),
       '#default_value' => $this->configuration['spaces'],
     );
 

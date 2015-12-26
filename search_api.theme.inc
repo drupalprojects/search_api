@@ -112,11 +112,11 @@ function theme_search_api_server($variables) {
   // Check if the server is enabled.
   if ($server->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $server->url('disable')));
+    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $server->url('disable')));
   }
   else {
     $class = 'warning';
-    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $server->url('enable')));
+    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $server->url('enable')));
   }
   // Append the row and reset variables.
   $label = t('Status');
@@ -230,12 +230,12 @@ function theme_search_api_index($variables) {
   // Check if the index is enabled.
   if ($index->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href="@url">disable</a>)', array('@url' => $index->url('disable')));
+    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $index->url('disable')));
   }
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $class = 'warning';
-    $info = t('disabled (<a href="@url">enable</a>)', array('@url' => $index->url('enable')));
+    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $index->url('enable')));
   }
   else {
     $class = 'warning';
@@ -304,9 +304,9 @@ function theme_search_api_index($variables) {
         $response = $server->search($query);
         $count = $response->getResultCount();
         // Build the server index status translation variables.
-        $vars = array('@url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
+        $vars = array(':url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
         // Build the server index status info.
-        $info = \Drupal::translation()->formatPlural($count, 'There is 1 item indexed on the server for this index. (<a href="@url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href="@url">More information</a>)', $vars);
+        $info = \Drupal::translation()->formatPlural($count, 'There is 1 item indexed on the server for this index. (<a href=":url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href=":url">More information</a>)', $vars);
       }
       catch(SearchApiException $e) {
         $info = t('Error while checking server index status: @message', array('@message' => $e->getMessage()));

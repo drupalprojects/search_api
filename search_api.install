@@ -158,7 +158,7 @@ function search_api_requirements($phase) {
  */
 function _search_api_search_module_warning() {
   if (Drupal::moduleHandler()->moduleExists('search')) {
-    return t('The default Drupal Search module is still enabled. If you are using Search API, you probably want to <a href="@url">uninstall</a> the Search module for performance reasons.', array('@url' => \Drupal::url('system.modules_uninstall')));
+    return t('The default Drupal Search module is still enabled. If you are using Search API, you probably want to <a href=":url">uninstall</a> the Search module for performance reasons.', array(':url' => \Drupal::url('system.modules_uninstall')));
   }
   return NULL;
 }

@@ -173,7 +173,7 @@ class ServerForm extends EntityForm {
       );
     }
     else {
-      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href="@url">module that provides a backend plugin</a> to proceed.', array('@url' => Url::fromUri('https://www.drupal.org/node/1254698')->toString())), 'error');
+      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href=":url">module that provides a backend plugin</a> to proceed.', array(':url' => Url::fromUri('https://www.drupal.org/node/1254698')->toString())), 'error');
       $form = array();
     }
   }

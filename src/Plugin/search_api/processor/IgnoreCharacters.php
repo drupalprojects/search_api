@@ -63,7 +63,7 @@ class IgnoreCharacters extends FieldsProcessorPluginBase {
     $form['ignorable'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Strip by regular expression'),
-      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href="@url">PCRE regular expression</a>.', array('@url' => Url::fromUri('http://php.net/manual/en/reference.pcre.pattern.syntax.php')->toString())),
+      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href=":url">PCRE regular expression</a>.', array(':url' => Url::fromUri('http://php.net/manual/en/reference.pcre.pattern.syntax.php')->toString())),
       '#default_value' => $this->configuration['ignorable'],
       '#maxlength' => 1000,
     );
@@ -72,7 +72,7 @@ class IgnoreCharacters extends FieldsProcessorPluginBase {
     $form['strip'] = array(
       '#type' => 'details',
       '#title' => $this->t('Strip by character property'),
-      '#description' => $this->t('Specify <a href="@url">Unicode character properties</a> of characters to be ignored.', array('@url' => Url::fromUri('http://www.fileformat.info/info/unicode/category/index.htm')->toString())),
+      '#description' => $this->t('Specify <a href=":url">Unicode character properties</a> of characters to be ignored.', array(':url' => Url::fromUri('http://www.fileformat.info/info/unicode/category/index.htm')->toString())),
       '#open' => FALSE,
       '#maxlength' => 300,
 

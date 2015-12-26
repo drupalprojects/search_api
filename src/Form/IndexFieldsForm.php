@@ -112,8 +112,8 @@ class IndexFieldsForm extends EntityForm {
 
     $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>Whether detailed field types are supported depends on the type of server this index resides on. In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>');
     if ($index->hasValidServer()) {
-      $form['description']['#markup'] .= '<p>' . $this->t('Check the <a href="@server-url">' . "server's</a> backend class description for details.",
-          array('@server-url' => $index->getServer()->url('canonical'))) . '</p>';
+      $form['description']['#markup'] .= '<p>' . $this->t('Check the <a href=":server-url">' . "server's</a> backend class description for details.",
+          array(':server-url' => $index->getServer()->url('canonical'))) . '</p>';
     }
 
     if ($fields = $index->getFieldsByDatasource(NULL, FALSE)) {
