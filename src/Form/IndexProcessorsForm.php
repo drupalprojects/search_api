@@ -96,6 +96,22 @@ class IndexProcessorsForm extends EntityForm {
       $processors_by_stage[$stage] = $this->entity->getProcessorsByStage($stage, FALSE);
     }
 
+    if ($this->entity->getServer()) {
+      $backend_discouraged_processors = $this->entity->getServer()
+        ->getBackend()
+        ->getDiscouragedProcessors();
+
+      foreach ($backend_discouraged_processors as $processor_id) {
+        // Remove processors from the overview.
+        unset($all_processors[$processor_id]);
+
+        // Remove processors from the stages.
+        foreach ($processors_by_stage as $stage => $processors) {
+          unset($processors_by_stage[$stage][$processor_id]);
+        }
+      }
+    }
+
     $processor_settings = $this->entity->getOption('processors');
 
     $form['#tree'] = TRUE;

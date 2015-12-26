@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Tests\WebTestBase;
 
 /**
@@ -61,6 +62,46 @@ class ProcessorIntegrationTest extends WebTestBase {
     $this->checkTokenizerIntegration();
     $this->checkTransliterationIntegration();
     $this->checkUrlFieldIntegration();
+  }
+
+  /**
+   * Test that the "Alter processors test backend" actually alters processors.
+   *
+   * @see https://www.drupal.org/node/2228739
+   */
+  public function testLimitProcessors() {
+    $this->loadProcessorsTab();
+    $this->assertResponse(200);
+    $this->assertText($this->t('Highlight'));
+    $this->assertText($this->t('Ignore character'));
+    $this->assertText($this->t('Tokenizer'));
+    $this->assertText($this->t('Stopwords'));
+
+    // Create a new server with the "search_api_test_backend" backend.
+    $server = Server::create(array(
+      'id' => 'webtest_server',
+      'name' => 'WebTest server',
+      'description' => 'WebTest server',
+      'backend' => 'search_api_test_backend',
+      'backend_config' => array(),
+    ));
+    $server->save();
+    $key = 'search_api_test_backend.discouraged_processors';
+    $processors = array('highlight', 'ignore_character', 'tokenizer', 'stopwords');
+    \Drupal::state()->set($key, $processors);
+
+    // Use the newly created server.
+    $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
+    $this->drupalGet($settings_path);
+    $this->drupalPostForm(NULL, array('server' => 'webtest_server'), $this->t('Save'));
+
+    // Load the processors again and check that they are not shown anymore.
+    $this->loadProcessorsTab();
+    $this->assertResponse(200);
+    $this->assertNoText($this->t('Highlight'));
+    $this->assertNoText($this->t('Ignore character'));
+    $this->assertNoText($this->t('Tokenizer'));
+    $this->assertNoText($this->t('Stopwords'));
   }
 
   /**

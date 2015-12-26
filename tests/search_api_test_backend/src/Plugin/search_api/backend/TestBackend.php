@@ -167,6 +167,13 @@ class TestBackend extends BackendPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDiscouragedProcessors() {
+    return \Drupal::state()->get('search_api_test_backend.discouraged_processors', array());
+  }
+
+  /**
    * Throws an exception if set in the Drupal state for the given method.
    *
    * Also records (successful) calls to these methods.

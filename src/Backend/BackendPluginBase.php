@@ -161,6 +161,13 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   public function removeIndex($index) {}
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDiscouragedProcessors() {
+    return array();
+  }
+
+  /**
    * Implements the magic __sleep() method.
    *
    * Prevents the server entity from being serialized.
