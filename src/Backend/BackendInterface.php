@@ -16,7 +16,7 @@ use Drupal\search_api\ServerInterface;
  * Consists of general plugin methods and the backend-specific methods defined
  * in \Drupal\search_api\Backend\BackendSpecificInterface, as well as special
  * CRUD "hook" methods that cannot be present on the server entity (which also
- * implements \Drupal\search_api\Backend\BackendSpecificInterface.
+ * implements \Drupal\search_api\Backend\BackendSpecificInterface).
  *
  * @see \Drupal\search_api\Annotation\SearchApiBackend
  * @see \Drupal\search_api\Backend\BackendPluginManager
