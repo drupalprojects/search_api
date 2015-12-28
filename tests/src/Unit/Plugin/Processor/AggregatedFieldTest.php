@@ -8,6 +8,7 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\TypedData\DataDefinitionInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility;
@@ -45,6 +46,8 @@ class AggregatedFieldTest extends UnitTestCase {
     parent::setUp();
 
     $this->index = $this->getMock('Drupal\search_api\IndexInterface');
+    $this->index->method('getDatasourceIds')
+      ->will($this->returnValue(array('entity:test1', 'entity:test2')));
     $this->processor = new AggregatedFields(array('index' => $this->index), 'aggregated_field', array());
     $this->setUpDataTypePlugin();
   }
@@ -413,7 +416,7 @@ class AggregatedFieldTest extends UnitTestCase {
         'values' => array('baz'),
       ),
     );
-    $items = $this->createItems($this->index, 2, $fields);
+    $items = $this->createItems($this->index, 2, $fields, NULL, array('entity:test1', 'entity:test2'));
 
     $this->processor->preprocessIndexItems($items);
 
@@ -442,7 +445,17 @@ class AggregatedFieldTest extends UnitTestCase {
     }
     $this->index->expects($this->any())
       ->method('getFields')
-      ->will($this->returnValue($index_fields));
+      ->willReturn($index_fields);
+    $this->index->method('getPropertyDefinitions')
+      ->willReturn(array());
+    $dummy_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $dummy_datasource->method('label')
+      ->willReturn('datasource');
+    $this->index->method('getDatasources')
+      ->willReturn(array(
+        'entity:test1' => $dummy_datasource,
+        'entity:test2' => $dummy_datasource,
+      ));
 
     $configuration['fields'] = array(
       'search_api_aggregation_1' => array(
@@ -468,7 +481,7 @@ class AggregatedFieldTest extends UnitTestCase {
     $translation = $this->getStringTranslationStub();
     $this->processor->setStringTranslation($translation);
 
-    // Check for modified properties when no data source is given.
+    // Check for modified properties when no datasource is given.
     $properties = array();
     $this->processor->alterPropertyDefinitions($properties, NULL);
 
@@ -479,7 +492,8 @@ class AggregatedFieldTest extends UnitTestCase {
       if ($properties['search_api_aggregation_1'] instanceof DataDefinitionInterface) {
         $this->assertEquals('string', $properties['search_api_aggregation_1']->getDataType(), 'Correct data type set in the data definition.');
         $this->assertEquals('Field 1', $properties['search_api_aggregation_1']->getLabel(), 'Correct label set in the data definition.');
-        $description = $translation->translate('A @type aggregation of the following fields: @fields.', array('@type' => 'Union', '@fields' => 'entity » test1 » foo, entity » test1 » foo » bar, entity » test2 » foobaz » bla'));;
+        $fields_string = 'datasource » foo, datasource » foo:bar, datasource » foobaz:bla';
+        $description = $translation->translate('A @type aggregation of the following fields: @fields.', array('@type' => $translation->translate('Union'), '@fields' => $fields_string));;
         $this->assertEquals($description, $properties['search_api_aggregation_1']->getDescription(), 'Correct description set in the data definition.');
       }
     }
@@ -491,7 +505,7 @@ class AggregatedFieldTest extends UnitTestCase {
       if ($properties['search_api_aggregation_2'] instanceof DataDefinitionInterface) {
         $this->assertEquals('integer', $properties['search_api_aggregation_2']->getDataType(), 'Correct data type set in the data definition.');
         $this->assertEquals('Field 2', $properties['search_api_aggregation_2']->getLabel(), 'Correct label set in the data definition.');
-        $description = $translation->translate('A @type aggregation of the following fields: @fields.', array('@type' => 'Maximum', '@fields' => 'entity » test1 » foo » bar'));;
+        $description = $translation->translate('A @type aggregation of the following fields: @fields.', array('@type' => $translation->translate('Maximum'), '@fields' => 'datasource » foo:bar'));;
         $this->assertEquals($description, $properties['search_api_aggregation_2']->getDescription(), 'Correct description set in the data definition.');
       }
     }

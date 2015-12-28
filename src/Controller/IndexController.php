@@ -10,6 +10,8 @@ namespace Drupal\search_api\Controller;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\SearchApiException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides route responses for search indexes.
@@ -80,6 +82,41 @@ class IndexController extends ControllerBase {
 
     // Redirect to the index's "View" page.
     $url = $search_api_index->urlInfo('canonical');
+    return $this->redirect($url->getRouteName(), $url->getRouteParameters());
+  }
+
+  /**
+   * Removes a field from a search index.
+   *
+   * @param \Drupal\search_api\IndexInterface $search_api_index
+   *   The search index.
+   * @param string $field_id
+   *   The ID of the field to remove.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
+   *   The response to send to the browser.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   *   Thrown when the field was not found.
+   */
+  public function removeField(IndexInterface $search_api_index, $field_id) {
+    $fields = $search_api_index->getFields();
+    if (isset($fields[$field_id])) {
+      try {
+        $search_api_index->removeField($field_id);
+        $search_api_index->save();
+      }
+      catch (SearchApiException $e) {
+        $args['%field'] = $fields[$field_id]->getLabel();
+        drupal_set_message($this->t('The field %field is locked and cannot be removed.', $args), 'error');
+      }
+    }
+    else {
+      throw new NotFoundHttpException();
+    }
+
+    // Redirect to the index's "View" page.
+    $url = $search_api_index->toUrl('fields');
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }
 

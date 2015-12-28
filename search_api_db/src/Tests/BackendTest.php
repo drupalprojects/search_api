@@ -15,6 +15,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
@@ -118,15 +119,15 @@ class BackendTest extends EntityUnitTestBase {
     $normalized_storage_table = $db_info['index_table'];
     $field_tables = $db_info['field_tables'];
 
-    $expected_fields = array_map(array($this, 'getFieldId'), array(
+    $expected_fields = array(
       'body',
       'category',
       'id',
       'keywords',
       'name',
+      'search_api_language',
       'type',
-    ));
-    $expected_fields[] = 'search_api_language';
+    );
     $actual_fields = array_keys($field_tables);
     sort($actual_fields);
     $this->assertEqual($expected_fields, $actual_fields, 'All expected field tables were created.');
@@ -158,11 +159,11 @@ class BackendTest extends EntityUnitTestBase {
 
     // Remove a field from the index and check if the change is matched in the
     // server configuration.
-    $field_id = $this->getFieldId('keywords');
-    if (empty($index->getFields()[$field_id])) {
+    $field = $index->getField('keywords');
+    if (!$field) {
       throw new \Exception();
     }
-    $index->getFields()[$field_id]->setIndexed(FALSE, TRUE);
+    $index->removeField('keywords');
     $index->save();
 
     $index_fields = array_keys($index->getOption('fields', array()));
@@ -175,8 +176,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($index_fields, $server_fields);
 
     // Add the field back for the next assertions.
-    $index->getFields(FALSE)[$field_id]->setIndexed(TRUE, TRUE);
-    $index->save();
+    $index->addField($field)->save();
   }
 
   /**
@@ -186,7 +186,8 @@ class BackendTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
 
-    $index->getFields(FALSE)[$this->getFieldId('body')]->setIndexed(TRUE, TRUE);
+    $property = 'body';
+    $this->addField($index, $property);
 
     $processors = $index->getOption('processors', array());
     $processors['html_filter'] = array(
@@ -207,7 +208,7 @@ class BackendTest extends EntityUnitTestBase {
     $processors = $index->getOption('processors');
     unset($processors['html_filter']);
     $index->setOption('processors', $processors);
-    $index->getFields()[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
+    $index->removeField('body');
     $index->save();
   }
 
@@ -236,7 +237,7 @@ class BackendTest extends EntityUnitTestBase {
     }
     foreach ($conditions as $condition) {
       list($field, $value) = explode(',', $condition, 2);
-      $query->addCondition($this->getFieldId($field), $value);
+      $query->addCondition($field, $value);
     }
     $query->range(0, 10);
 
@@ -258,7 +259,7 @@ class BackendTest extends EntityUnitTestBase {
    * Tests whether some test searches have the correct results.
    */
   protected function searchSuccess1() {
-    $results = $this->buildSearch('test')->range(1, 2)->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
+    $results = $this->buildSearch('test')->range(1, 2)->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Search for »test« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 3)), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
@@ -271,13 +272,13 @@ class BackendTest extends EntityUnitTestBase {
       $this->assertEqual($results->getResultItems()[$id]->getDatasourceId(), 'entity:entity_test');
     }
 
-    $results = $this->buildSearch('test foo')->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
+    $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Search for »test foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'Search for »test foo« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch('foo', array('type,item'))->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->execute();
+    $results = $this->buildSearch('foo', array('type,item'))->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Search for »foo« returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2)), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results);
@@ -310,11 +311,11 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function checkFacets() {
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR', array('facet:' . $this->getFieldId('category')));
-    $conditions->addCondition($this->getFieldId('category'), 'article_category');
+    $conditions = $query->createConditionGroup('OR', array('facet:' . 'category'));
+    $conditions->addCondition('category', 'article_category');
     $query->addConditionGroup($conditions);
     $facets['category'] = array(
-      'field' => $this->getFieldId('category'),
+      'field' => 'category',
       'limit' => 0,
       'min_count' => 1,
       'missing' => TRUE,
@@ -334,14 +335,14 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
 
     $query = $this->buildSearch();
-    $conditions = $query->createConditionGroup('OR', array('facet:' . $this->getFieldId('category')));
-    $conditions->addCondition($this->getFieldId('category'), 'article_category');
+    $conditions = $query->createConditionGroup('OR', array('facet:' . 'category'));
+    $conditions->addCondition('category', 'article_category');
     $query->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition($this->getFieldId('category'), NULL, '<>');
+    $conditions->addCondition('category', NULL, '<>');
     $query->addConditionGroup($conditions);
     $facets['category'] = array(
-      'field' => $this->getFieldId('category'),
+      'field' => 'category',
       'limit' => 0,
       'min_count' => 1,
       'missing' => TRUE,
@@ -464,20 +465,19 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $keywords_field = $this->getFieldId('keywords');
-    $results = $this->buildSearch()->addCondition($keywords_field, 'orange', '<>')->execute();
+    $results = $this->buildSearch()->addCondition('keywords', 'orange', '<>')->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()->addCondition($keywords_field, NULL)->execute();
+    $results = $this->buildSearch()->addCondition('keywords', NULL)->execute();
     $this->assertEqual($results->getResultCount(), 1, 'Query with NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Query with NULL filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()->addCondition($keywords_field, NULL, '<>')->execute();
+    $results = $this->buildSearch()->addCondition('keywords', NULL, '<>')->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Query with NOT NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Query with NOT NULL filter returned correct result.');
     $this->assertIgnored($results);
@@ -489,7 +489,7 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function regressionTests() {
     // Regression tests for #2007872.
-    $results = $this->buildSearch('test')->sort($this->getFieldId('id'), QueryInterface::SORT_ASC)->sort($this->getFieldId('type'), QueryInterface::SORT_ASC)->execute();
+    $results = $this->buildSearch('test')->sort('id', QueryInterface::SORT_ASC)->sort('type', QueryInterface::SORT_ASC)->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Sorting on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3, 4)), 'Sorting on field with NULLs returned correct result.');
     $this->assertIgnored($results);
@@ -497,10 +497,10 @@ class BackendTest extends EntityUnitTestBase {
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($this->getFieldId('id'), 3);
-    $conditions->addCondition($this->getFieldId('type'), 'article');
+    $conditions->addCondition('id', 3);
+    $conditions->addCondition('type', 'article');
     $query->addConditionGroup($conditions);
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'OR filter on field with NULLs returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4, 5)), 'OR filter on field with NULLs returned correct result.');
@@ -508,13 +508,12 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertWarnings($results);
 
     // Regression tests for #1863672.
-    $keywords_field = $this->getFieldId('keywords');
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($keywords_field, 'orange');
-    $conditions->addCondition($keywords_field, 'apple');
+    $conditions->addCondition('keywords', 'orange');
+    $conditions->addCondition('keywords', 'apple');
     $query->addConditionGroup($conditions);
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'OR filter on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'OR filter on multi-valued field returned correct result.');
@@ -523,14 +522,14 @@ class BackendTest extends EntityUnitTestBase {
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($keywords_field, 'orange');
-    $conditions->addCondition($keywords_field, 'strawberry');
+    $conditions->addCondition('keywords', 'orange');
+    $conditions->addCondition('keywords', 'strawberry');
     $query->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('OR');
-    $conditions->addCondition($keywords_field, 'apple');
-    $conditions->addCondition($keywords_field, 'grape');
+    $conditions->addCondition('keywords', 'apple');
+    $conditions->addCondition('keywords', 'grape');
     $query->addConditionGroup($conditions);
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Multiple OR filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Multiple OR filters on multi-valued field returned correct result.');
@@ -540,15 +539,15 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch();
     $conditions1 = $query->createConditionGroup('OR');
     $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition($keywords_field, 'orange');
-    $conditions->addCondition($keywords_field, 'apple');
+    $conditions->addCondition('keywords', 'orange');
+    $conditions->addCondition('keywords', 'apple');
     $conditions1->addConditionGroup($conditions);
     $conditions = $query->createConditionGroup('AND');
-    $conditions->addCondition($keywords_field, 'strawberry');
-    $conditions->addCondition($keywords_field, 'grape');
+    $conditions->addCondition('keywords', 'strawberry');
+    $conditions->addCondition('keywords', 'grape');
     $conditions1->addConditionGroup($conditions);
     $query->addConditionGroup($conditions1);
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'Complex nested filters on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Complex nested filters on multi-valued field returned correct result.');
@@ -558,7 +557,7 @@ class BackendTest extends EntityUnitTestBase {
     // Regression tests for #2040543.
     $query = $this->buildSearch();
     $facets['category'] = array(
-      'field' => $this->getFieldId('category'),
+      'field' => 'category',
       'limit' => 0,
       'min_count' => 1,
       'missing' => TRUE,
@@ -594,15 +593,15 @@ class BackendTest extends EntityUnitTestBase {
       'foo',
       'test',
     );
-    $query = $this->buildSearch($keys, array(), array($this->getFieldId('name')));
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query = $this->buildSearch($keys, array(), array('name'));
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 3, 'OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'OR keywords returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $query = $this->buildSearch($keys, array(), array($this->getFieldId('name'), $this->getFieldId('body')));
+    $query = $this->buildSearch($keys, array(), array('name', 'body'));
     $query->range(0, 0);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 5, 'Multi-field OR keywords returned correct number of results.');
@@ -620,8 +619,8 @@ class BackendTest extends EntityUnitTestBase {
         'baz',
       ),
     );
-    $query = $this->buildSearch($keys, array(), array($this->getFieldId('name')));
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query = $this->buildSearch($keys, array(), array('name'));
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Nested OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested OR keywords returned correct result.');
@@ -641,8 +640,8 @@ class BackendTest extends EntityUnitTestBase {
         'baz',
       ),
     );
-    $query = $this->buildSearch($keys, array(), array($this->getFieldId('name'), $this->getFieldId('body')));
-    $query->sort($this->getFieldId('id'), QueryInterface::SORT_ASC);
+    $query = $this->buildSearch($keys, array(), array('name', 'body'));
+    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'Nested multi-field OR keywords returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested multi-field OR keywords returned correct result.');
@@ -692,14 +691,14 @@ class BackendTest extends EntityUnitTestBase {
 
     // Regression tests for #2136409.
     $query = $this->buildSearch();
-    $query->addCondition($this->getFieldId('category'), NULL);
+    $query->addCondition('category', NULL);
     $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 1, 'NULL filter returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'NULL filter returned correct result.');
 
     $query = $this->buildSearch();
-    $query->addCondition($this->getFieldId('category'), NULL, '<>');
+    $query->addCondition('category', NULL, '<>');
     $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
     $this->assertEqual($results->getResultCount(), 4, 'NOT NULL filter returned correct number of results.');
@@ -708,13 +707,13 @@ class BackendTest extends EntityUnitTestBase {
     // Regression tests for #1658964.
     $query = $this->buildSearch();
     $facets['type'] = array(
-      'field' => $this->getFieldId('type'),
+      'field' => 'type',
       'limit' => 0,
       'min_count' => 0,
       'missing' => TRUE,
     );
     $query->setOption('search_api_facets', $facets);
-    $query->addCondition($this->getFieldId('type'), 'article');
+    $query->addCondition('type', 'article');
     $query->range(0, 0);
     $results = $query->execute();
     $expected = array(
@@ -730,13 +729,13 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch();
     $facets = array();
     $facets['body'] = array(
-      'field' => $this->getFieldId('body'),
+      'field' => 'body',
       'limit' => 0,
       'min_count' => 1,
       'missing' => FALSE,
     );
     $query->setOption('search_api_facets', $facets);
-    $query->addCondition($this->getFieldId('id'), 5, '<>');
+    $query->addCondition('id', 5, '<>');
     $query->range(0, 0);
     $results = $query->execute();
     $expected = array(
@@ -757,7 +756,7 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch('test foo');
     $facets = array();
     $facets['type'] = array(
-      'field' => $this->getFieldId('type'),
+      'field' => 'type',
       'limit' => 0,
       'min_count' => 1,
       'missing' => TRUE,
@@ -804,7 +803,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $results = $this->buildSearch()->addCondition($this->getFieldId('keywords'), 'grape', '<>')->execute();
+    $results = $this->buildSearch()->addCondition('keywords', 'grape', '<>')->execute();
     $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
     $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 3)), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
@@ -864,9 +863,7 @@ class BackendTest extends EntityUnitTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
     $index->resetCaches();
-    $fields = $index->getFields(FALSE);
-    $price_field = $fields[$this->getFieldId('prices')];
-    $price_field->setType('decimal')->setIndexed(TRUE, TRUE);
+    $this->addField($index, 'prices', 'decimal');
     $success = $index->save();
     $this->assertTrue($success, 'The index field settings were successfully changed.');
 
@@ -910,7 +907,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertEqual($count, 1, 'Indexing an item with an empty value for a non string field worked.');
 
     // Regression test for #2471509.
-    $index->getFields(FALSE)[$this->getFieldId('body')]->setIndexed(TRUE, TRUE);
+    $this->addField($index, 'body');
     $index->save();
     $this->indexItems($this->indexId);
 
@@ -927,8 +924,8 @@ class BackendTest extends EntityUnitTestBase {
 
     // Regression test for #2616268.
     $index = $this->getIndex();
-    $index->getFields()[$this->getFieldId('body')]->setType('string', TRUE);
-    $index->save();
+    $field = $index->getField('body')->setType('string');
+    $index->addField($field)->save();
     $count = $this->indexItems($this->indexId);
     $this->assertEqual($count, 8, 'Switching type from text to string worked.');
 
@@ -940,7 +937,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $index->getFields()[$this->getFieldId('body')]->setIndexed(FALSE, TRUE);
+    $index->removeField('body');
     $index->save();
   }
 
@@ -1041,6 +1038,29 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function getIndex() {
     return Index::load($this->indexId);
+  }
+
+  /**
+   * Adds a field to a search index.
+   *
+   * The index will not be saved automatically.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The search index.
+   * @param string $property_name
+   *   The property's name.
+   * @param string $type
+   *   (optional) The field type.
+   */
+  protected function addField(IndexInterface $index, $property_name, $type = 'text') {
+    $field_info = array(
+      'label' => $property_name,
+      'type' => $type,
+      'datasource_id' => 'entity:entity_test',
+      'property_path' => $property_name,
+    );
+    $field = Utility::createField($index, $property_name, $field_info);
+    $index->addField($field);
   }
 
 }

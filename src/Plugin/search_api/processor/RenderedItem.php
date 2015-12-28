@@ -13,9 +13,9 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Session\UserSession;
+use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
-use Drupal\search_api\Property\BasicProperty;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,6 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Rendered item"),
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed."),
  *   stages = {
+ *     "pre_index_save" = -10,
  *     "preprocess_index" = -30
  *   }
  * )
@@ -225,8 +226,14 @@ class RenderedItem extends ProcessorPluginBase {
       'label' => $this->t('Rendered HTML output'),
       'description' => $this->t('The complete HTML which would be displayed when viewing the item'),
     );
-    $properties['rendered_item'] = BasicProperty::createFromDefinition($definition)
-      ->setIndexedLocked();
+    $properties['rendered_item'] = new DataDefinition($definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preIndexSave() {
+    $this->ensureField(NULL, 'rendered_item');
   }
 
   /**
@@ -246,30 +253,28 @@ class RenderedItem extends ProcessorPluginBase {
     // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
-      if (!($field = $item->getField('rendered_item'))) {
-        continue;
-      }
-
-      $datasource_id = $item->getDatasourceId();
-      $datasource = $item->getDatasource();
-      $bundle = $datasource->getItemBundle($item->getOriginalObject());
-      // When no view mode has been set for the bundle, or it has been set to
-      // "Don't include the rendered item", skip this item.
-      if (empty($this->configuration['view_mode'][$datasource_id][$bundle])) {
-        // If it was really not set, also notify the user through the log.
-        if (!isset($this->configuration['view_mode'][$datasource_id][$bundle])) {
-          ++$unset_view_modes;
+      foreach ($this->filterForPropertyPath($item->getFields(), 'rendered_item') as $field) {
+        $datasource_id = $item->getDatasourceId();
+        $datasource = $item->getDatasource();
+        $bundle = $datasource->getItemBundle($item->getOriginalObject());
+        // When no view mode has been set for the bundle, or it has been set to
+        // "Don't include the rendered item", skip this item.
+        if (empty($this->configuration['view_mode'][$datasource_id][$bundle])) {
+          // If it was really not set, also notify the user through the log.
+          if (!isset($this->configuration['view_mode'][$datasource_id][$bundle])) {
+            ++$unset_view_modes;
+          }
+          continue;
         }
-        continue;
-      }
-      else {
-        $view_mode = (string) $this->configuration['view_mode'][$datasource_id][$bundle];
-      }
+        else {
+          $view_mode = (string) $this->configuration['view_mode'][$datasource_id][$bundle];
+        }
 
-      $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
-      $value = (string) $this->getRenderer()->renderPlain($build);
-      if ($value) {
-        $field->addValue($value);
+        $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
+        $value = (string) $this->getRenderer()->renderPlain($build);
+        if ($value) {
+          $field->addValue($value);
+        }
       }
     }
 

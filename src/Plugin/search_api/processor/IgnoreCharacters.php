@@ -63,7 +63,7 @@ class IgnoreCharacters extends FieldsProcessorPluginBase {
     $form['ignorable'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Strip by regular expression'),
-      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href=":url">PCRE regular expression</a>.', array(':url' => Url::fromUri('http://php.net/manual/en/reference.pcre.pattern.syntax.php')->toString())),
+      '#description' => $this->t('Specify characters which should be removed from fulltext fields and search strings, as a <a href=":url">PCRE regular expression</a>.', array(':url' => Url::fromUri('http://php.net/manual/reference.pcre.pattern.syntax.php')->toString())),
       '#default_value' => $this->configuration['ignorable'],
       '#maxlength' => 1000,
     );

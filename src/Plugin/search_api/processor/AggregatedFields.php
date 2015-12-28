@@ -8,9 +8,9 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
-use Drupal\search_api\Property\BasicProperty;
 use Drupal\search_api\Utility;
 
 /**
@@ -19,6 +19,7 @@ use Drupal\search_api\Utility;
  *   label = @Translation("Aggregated fields"),
  *   description = @Translation("Add customized aggregations of existing fields to the index."),
  *   stages = {
+ *     "pre_index_save" = -10,
  *     "preprocess_index" = -25
  *   }
  * )
@@ -48,18 +49,15 @@ class AggregatedFields extends ProcessorPluginBase {
     $this->buildFieldsForm($form, $form_state);
 
     $form['actions']['#type'] = 'actions';
-    $form['actions'] = array(
-      '#type' => 'actions',
-      'add' => array(
-        '#type' => 'submit',
-        '#value' => $this->t('Add new Field'),
-        '#submit' => array(array($this, 'submitAjaxFieldButton')),
-        '#limit_validation_errors' => array(),
-        '#name' => 'add_aggregation_field',
-        '#ajax' => array(
-          'callback' => array($this, 'buildAjaxAddFieldButton'),
-          'wrapper' => 'search-api-alter-add-aggregation-field-settings',
-        ),
+    $form['actions']['add'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Add new Field'),
+      '#submit' => array(array($this, 'submitAjaxFieldButton')),
+      '#limit_validation_errors' => array(),
+      '#name' => 'add_aggregation_field',
+      '#ajax' => array(
+        'callback' => array($this, 'buildAjaxAddFieldButton'),
+        'wrapper' => 'search-api-alter-add-aggregation-field-settings',
       ),
     );
 
@@ -104,22 +102,25 @@ class AggregatedFields extends ProcessorPluginBase {
     $type_descriptions = $this->getTypeDescriptions();
     $types = $this->getTypes();
 
-    // Get the available fields for this index.
-    $fields = $this->index->getFields(FALSE);
-    $field_options = array();
-    $field_properties = array();
-
-    // Annotate them so we can show them cleanly in the UI.
-    // @todo Use option groups to group fields by datasource?
-    /** @var \Drupal\search_api\Item\FieldInterface[] $fields */
-    foreach ($fields as $field_id => $field) {
-      $field_options[$field_id] = $field->getPrefixedLabel();
-      $field_properties[$field_id] = array(
-        '#attributes' => array('title' => $field_id),
-        '#description' => $field->getDescription(),
+    // Get the available properties for this index.
+    $field_options = array(
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Contained fields'),
+      '#options' => array(),
+      '#attributes' => array('class' => array('search-api-checkboxes-list')),
+      '#required' => TRUE,
+    );
+    $datasource_labels = $this->getDatasourceLabelPrefixes();
+    $properties = $this->getAvailableProperties();
+    ksort($properties);
+    foreach ($properties as $combined_id => $property) {
+      list($datasource_id, $name) = Utility::splitCombinedId($combined_id);
+      $field_options['#options'][$combined_id] = $datasource_labels[$datasource_id] . $property->getLabel();
+      $field_options[$combined_id] = array(
+        '#attributes' => array('title' => $this->t('Machine name: @name', array('@name' => $name))),
+        '#description' => $property->getDescription(),
       );
     }
-    ksort($field_options);
 
     $form['fields'] = array(
       '#type' => 'container',
@@ -157,14 +158,8 @@ class AggregatedFields extends ProcessorPluginBase {
       }
 
       // @todo Order checked fields first in list?
-      $form['fields'][$field_id]['fields'] = array_merge($field_properties, array(
-        '#type' => 'checkboxes',
-        '#title' => $this->t('Contained fields'),
-        '#options' => $field_options,
-        '#default_value' => $field['fields'],
-        '#attributes' => array('class' => array('search-api-checkboxes-list')),
-        '#required' => TRUE,
-      ));
+      $form['fields'][$field_id]['fields'] = $field_options;
+      $form['fields'][$field_id]['fields']['#default_value'] = $field['fields'];
 
       $form['fields'][$field_id]['actions'] = array(
         '#type' => 'actions',
@@ -249,6 +244,56 @@ class AggregatedFields extends ProcessorPluginBase {
   }
 
   /**
+   * Retrieves label prefixes for this index's datasources.
+   *
+   * @return string[]
+   *   An associative array mapping datasource IDs (and an empty string for
+   *   datasource-independent properties) to their label prefixes.
+   */
+  protected function getDatasourceLabelPrefixes() {
+    $prefixes = array(
+      NULL => $this->t('General') . ' » ',
+    );
+
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      $prefixes[$datasource_id] = $datasource->label() . ' » ';
+    }
+
+    return $prefixes;
+  }
+
+  /**
+   * Retrieve all properties available on the index.
+   *
+   * The properties will be keyed by combined ID, which is a combination of the
+   * datasource ID and the property path. This is used internally in this class
+   * to easily identify any property on the index.
+   *
+   * @param bool $alter
+   *   (optional) Whether to pass the property definitions to the index's
+   *   enabled processors for altering before returning them. Must be set to
+   *   FALSE when called from within alterProperties(), for obvious reasons.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
+   *   All the properties available on the index, keyed by combined ID.
+   *
+   * @see \Drupal\search_api\Utility::createCombinedId()
+   */
+  protected function getAvailableProperties($alter = TRUE) {
+    $properties = array();
+
+    $datasource_ids = $this->index->getDatasourceIds();
+    $datasource_ids[] = NULL;
+    foreach ($datasource_ids as $datasource_id) {
+      foreach ($this->index->getPropertyDefinitions($datasource_id, $alter) as $property_path => $property) {
+        $properties[Utility::createCombinedId($datasource_id, $property_path)] = $property;
+      }
+    }
+
+    return $properties;
+  }
+
+  /**
    * Form submission handler for this processor form's AJAX buttons.
    */
   public static function submitAjaxFieldButton(array $form, FormStateInterface $form_state) {
@@ -303,87 +348,113 @@ class AggregatedFields extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function preIndexSave() {
+    foreach ($this->configuration['fields'] as $field_id => $field_definition) {
+      $this->ensureField(NULL, $field_id);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preprocessIndexItems(array &$items) {
-    if (!$items) {
+    if (!$items || empty($this->configuration['fields'])) {
       return;
     }
-    if (isset($this->configuration['fields'])) {
-      /** @var \Drupal\search_api\Item\ItemInterface[] $items */
-      foreach ($items as $item) {
-        foreach ($this->configuration['fields'] as $aggregated_field_id => $aggregated_field) {
-          if ($aggregated_field['label']) {
-            if (!$item->getField($aggregated_field_id, FALSE)) {
-              continue;
-            }
-            // Extract the selected fields to aggregate from the settings.
-            $required_fields = array();
-            // @todo Don't do this once for every item, compute fields per
-            //   datasource right away.
-            foreach ($aggregated_field['fields'] as $field_id_to_aggregate) {
-              // Only include valid and selected fields to aggregate.
-              if (!isset($required_fields[$field_id_to_aggregate]) && !empty($field_id_to_aggregate)) {
-                // Make sure we only get fields from the datasource of the
-                // current item.
-                list($datasource_id) = Utility::splitCombinedId($field_id_to_aggregate);
-                if (!$datasource_id || $datasource_id == $item->getDatasourceId()) {
-                  $required_fields[$field_id_to_aggregate] = $field_id_to_aggregate;
-                }
-              }
-            }
 
-            // Get all the available field values.
-            $given_fields = array();
-            foreach ($required_fields as $required_field_id) {
-              $field = $item->getField($required_field_id);
-              if ($field && $field->getValues()) {
-                $given_fields[$required_field_id] = $field;
-                unset($required_fields[$required_field_id]);
-              }
-            }
+    $label_not_empty = function (array $field_definition) {
+      return !empty($field_definition['label']);
+    };
+    $aggregated_fields = array_filter($this->configuration['fields'], $label_not_empty);
+    if (!$aggregated_fields) {
+      return;
+    }
 
-            $missing_fields = array();
-            // Get all the missing field values.
-            foreach ($required_fields as $required_field_id) {
-              $field = Utility::createField($this->index, $required_field_id);
-              $missing_fields[$field->getPropertyPath()] = $field;
-            }
-            // Get the value from the original objects in to the fields
-            if ($missing_fields) {
-              Utility::extractFields($item->getOriginalObject(), $missing_fields);
-            }
+    $required_properties_by_datasource = array_fill_keys($this->index->getDatasourceIds(), array());
+    $required_properties_by_datasource[NULL] = array();
+    foreach ($aggregated_fields as $field_definition) {
+      foreach ($field_definition['fields'] as $combined_id) {
+        list($datasource_id, $property_path) = Utility::splitCombinedId($combined_id);
+        $required_properties_by_datasource[$datasource_id][$property_path] = $combined_id;
+      }
+    }
 
-            $fields = array_merge($given_fields, $missing_fields);
-
-            $values = array();
-            /** @var \Drupal\search_api\Item\FieldInterface[] $fields */
-            foreach ($fields as $field) {
-              $values = array_merge($values, $field->getValues());
+    /** @var \Drupal\search_api\Item\ItemInterface[] $items */
+    foreach ($items as $item) {
+      // Extract the required properties.
+      $property_values = array();
+      /** @var \Drupal\search_api\Item\FieldInterface[] $missing_fields */
+      $missing_fields = array();
+      foreach (array(NULL, $item->getDatasourceId()) as $datasource_id) {
+        foreach ($required_properties_by_datasource[$datasource_id] as $property_path => $combined_id) {
+          // If a field with the right property path is already set on the item,
+          // use it. This might actually make problems in case the values have
+          // already been processed in some way, or use a data type that
+          // transformed their original value – but on the other hand, it's
+          // (currently – see #2575003) the only way to include computed
+          // (processor-added) properties here, so it seems like a fair
+          // trade-off.
+          foreach ($this->filterForPropertyPath($item->getFields(FALSE), $property_path) as $field) {
+            if ($field->getDatasourceId() === $datasource_id) {
+              $property_values[$combined_id] = $field->getValues();
+              continue 2;
             }
+          }
 
-            switch ($aggregated_field['type']) {
-              case 'concat':
-                $values = array(implode("\n\n", $values));
-                break;
-              case 'sum':
-                $values = array(array_sum($values));
-                break;
-              case 'count':
-                $values = array(count($values));
-                break;
-              case 'max':
-                $values = array(max($values));
-                break;
-              case 'min':
-                $values = array(min($values));
-                break;
-              case 'first':
-                if ($values) {
-                  $values = array(reset($values));
-                }
-                break;
+          // If the field is not already on the item, we need to extract it. We
+          // set our own combined ID as the field identifier as kind of a hack,
+          // to easily be able to add the field values to $property_values
+          // afterwards.
+          if ($datasource_id) {
+            $missing_fields[$property_path] = Utility::createField($this->index, $combined_id);
+          }
+          else {
+            // Extracting properties without a datasource is pointless.
+            $property_values[$combined_id] = array();
+          }
+        }
+      }
+      if ($missing_fields) {
+        Utility::extractFields($item->getOriginalObject(), $missing_fields);
+        foreach ($missing_fields as $field) {
+          $property_values[$field->getFieldIdentifier()] = $field->getValues();
+        }
+      }
+
+      foreach ($this->configuration['fields'] as $aggregated_field_id => $aggregated_field) {
+        $values = array();
+        foreach ($aggregated_field['fields'] as $combined_id) {
+          if (!empty($property_values[$combined_id])) {
+            $values = array_merge($values, $property_values[$combined_id]);
+          }
+        }
+
+        switch ($aggregated_field['type']) {
+          case 'concat':
+            $values = array(implode("\n\n", $values));
+            break;
+          case 'sum':
+            $values = array(array_sum($values));
+            break;
+          case 'count':
+            $values = array(count($values));
+            break;
+          case 'max':
+            $values = array(max($values));
+            break;
+          case 'min':
+            $values = array(min($values));
+            break;
+          case 'first':
+            if ($values) {
+              $values = array(reset($values));
             }
+            break;
+        }
 
-            $item->getField($aggregated_field_id)->setValues($values);
+        if ($values) {
+          foreach ($this->filterForPropertyPath($item->getFields(), $aggregated_field_id) as $field) {
+            $field->setValues($values);
           }
         }
       }
@@ -397,17 +468,19 @@ class AggregatedFields extends ProcessorPluginBase {
     if ($datasource) {
       return;
     }
+
     $types = $this->getTypes('type');
-    if (isset($this->configuration['fields'])) {
-      $index_fields = $this->index->getFields(FALSE);
-      foreach ($this->configuration['fields'] as $field_id => $field) {
+    if (!empty($this->configuration['fields'])) {
+      // Collect all available properties, keyed by combined ID.
+      $available_properties = $this->getAvailableProperties(FALSE);
+      $datasource_label_prefixes = $this->getDatasourceLabelPrefixes();
+      foreach ($this->configuration['fields'] as $aggregated_field_id => $field_definition) {
         $definition = array(
-          'label' => $field['label'],
-          'description' => $this->fieldDescription($field, $index_fields),
-          'type' => $types[$field['type']],
+          'label' => $field_definition['label'],
+          'description' => $this->fieldDescription($field_definition, $available_properties, $datasource_label_prefixes),
+          'type' => $types[$field_definition['type']],
         );
-        $properties[$field_id] = BasicProperty::createFromDefinition($definition)
-          ->setIndexedLocked();
+        $properties[$aggregated_field_id] = new DataDefinition($definition);
       }
     }
   }
@@ -415,21 +488,27 @@ class AggregatedFields extends ProcessorPluginBase {
   /**
    * Creates a description for an aggregated field.
    *
-   * @param array $field
+   * @param array $field_definition
    *   The settings of the aggregated field.
-   * @param \Drupal\search_api\Item\FieldInterface[] $index_fields
-   *   The index's fields.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   All available properties on the index, keyed by combined ID.
+   * @param string[] $datasource_label_prefixes
+   *   The label prefixes for all datasources.
    *
    * @return string
    *   A description for the given aggregated field.
    */
-  protected function fieldDescription(array $field, array $index_fields) {
+  protected function fieldDescription(array $field_definition, array $properties, array $datasource_label_prefixes) {
     $fields = array();
-    foreach ($field['fields'] as $f) {
-      $fields[] = isset($index_fields[$f]) ? $index_fields[$f]->getPrefixedLabel() : $f;
+    foreach ($field_definition['fields'] as $combined_id) {
+      list($datasource_id, $property_path) = Utility::splitCombinedId($combined_id);
+      $label = $property_path;
+      if (isset($properties[$combined_id])) {
+        $label = $properties[$combined_id]->getLabel();
+      }
+      $fields[] = $datasource_label_prefixes[$datasource_id] . $label;
     }
-    $type = $this->getTypes();
-    $type = $type[$field['type']];
+    $type = $this->getTypes()[$field_definition['type']];
     return $this->t('A @type aggregation of the following fields: @fields.', array('@type' => $type, '@fields' => implode(', ', $fields)));
   }
 

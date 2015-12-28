@@ -23,7 +23,7 @@ class ServerStorageUnitTest extends KernelTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('search_api', 'search_api_test_backend');
+  public static $modules = array('search_api', 'search_api_test_backend', 'user', 'system');
 
   /**
    * The search server storage.
@@ -37,6 +37,8 @@ class ServerStorageUnitTest extends KernelTestBase {
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->installSchema('system', 'key_value_expire');
 
     $this->installSchema('search_api', array('search_api_task'));
     $this->storage = $this->container->get('entity_type.manager')->getStorage('search_api_server');

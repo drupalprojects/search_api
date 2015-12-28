@@ -14,6 +14,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Query\ConditionGroupInterface;
+use Drupal\search_api\Utility;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
@@ -86,11 +87,14 @@ class SearchApiQuery extends QueryPluginBase {
   protected $abort = FALSE;
 
   /**
-   * The names of all fields whose value is required by a handler.
+   * The properties that should be retrieved from result items.
+   *
+   * The properties are represented by their combined property paths as the
+   * array keys, to more easily keep them unique.
    *
    * @var array
    */
-  protected $fields = array();
+  protected $retrievedProperties = array();
 
   /**
    * The query's conditions representing the different Views filter groups.
@@ -134,7 +138,7 @@ class SearchApiQuery extends QueryPluginBase {
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     try {
       parent::init($view, $display, $options);
-      $this->fields = array();
+      $this->retrievedProperties = array();
       $this->index = self::getIndexFromTable($view->storage->get('base_table'));
       if (!$this->index) {
         $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
@@ -152,15 +156,15 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
-   * Adds a field to be retrieved.
+   * Adds a property to be retrieved.
    *
-   * @param string $field
-   *   The identifier of the field to add.
+   * @param string $combined_property_path
+   *   The combined property path of the property that should be retrieved.
    *
    * @return $this
    */
-  public function addField($field) {
-    $this->fields[$field] = TRUE;
+  public function addField($combined_property_path) {
+    $this->retrievedProperties[$combined_property_path] = TRUE;
     return $this;
   }
 
@@ -198,7 +202,7 @@ class SearchApiQuery extends QueryPluginBase {
       $form['entity_access'] = array(
         '#type' => 'checkbox',
         '#title' => $this->t('Additional access checks on result entities'),
-        '#description' => $this->t("Execute an access check for all result entities. This prevents users from seeing inappropriate content when the index contains stale data, or doesn't provide access checks. However, result counts, paging and other things won't work correctly if results are eliminated in this way, so only use this as a last ressort (and in addition to other checks, if possible)."),
+        '#description' => $this->t("Execute an access check for all result entities. This prevents users from seeing inappropriate content when the index contains stale data, or doesn't provide access checks. However, result counts, paging and other things won't work correctly if results are eliminated in this way, so only use this as a last resort (and in addition to other checks, if possible)."),
         '#default_value' => $this->options['entity_access'],
       );
     }
@@ -375,8 +379,8 @@ class SearchApiQuery extends QueryPluginBase {
       // Store the results.
       if (!$skip_result_count) {
         $view->pager->total_items = $view->total_rows = $results->getResultCount();
-        if (!empty($this->pager->options['offset'])) {
-          $this->pager->total_items -= $this->pager->options['offset'];
+        if (!empty($view->pager->options['offset'])) {
+          $view->pager->total_items -= $view->pager->options['offset'];
         }
         $view->pager->updatePageInfo();
       }
@@ -448,7 +452,7 @@ class SearchApiQuery extends QueryPluginBase {
       }
     }
 
-    // First off, we try to gather as much field values as possible without
+    // First off, we try to gather as much property values as possible without
     // loading any items.
     foreach ($results as $item_id => $result) {
       $datasource_id = $result->getDatasourceId();
@@ -459,25 +463,23 @@ class SearchApiQuery extends QueryPluginBase {
 
       // Include the loaded item for this result row, if present, or the item
       // ID.
-      $values['_item'] = $result->getOriginalObject(FALSE);
-      if (!$values['_item']) {
-        $values['_item'] = $item_id;
-      }
+      $values['_item'] = $result->getOriginalObject(FALSE) ?: $item_id;
 
       $values['search_api_relevance'] = $result->getScore();
       $values['search_api_excerpt'] = $result->getExcerpt() ?: '';
 
       // Gather any fields from the search results.
-      foreach ($result->getFields(FALSE) as $field_id => $field) {
+      foreach ($result->getFields(FALSE) as $field) {
         if ($field->getValues()) {
-          $values[$field_id] = $field->getValues();
+          $combined_id = Utility::createCombinedId($field->getDatasourceId(), $field->getPropertyPath());
+          $values[$combined_id] = $field->getValues();
         }
       }
 
       // Check whether we need to extract any properties from the result item.
-      $missing_fields = array_diff_key($this->fields, $values);
+      $missing_fields = array_diff_key($this->retrievedProperties, $values);
       if ($missing_fields) {
-        $missing[$item_id] = $missing_fields;
+        $missing[$item_id] = array_keys($missing_fields);
         if (!is_object($values['_item'])) {
           $item_ids[] = $item_id;
         }
@@ -498,13 +500,18 @@ class SearchApiQuery extends QueryPluginBase {
     }
 
     foreach ($missing as $item_id => $missing_fields) {
-      foreach ($missing_fields as $field_id) {
-        // @todo This will only extract the indexed fields, but all of them. We
-        //   should instead use Utility::extractFields() directly.
-        $field = $results[$item_id]->getField($field_id);
-        if ($field) {
-          $rows[$item_id]->$field_id = $field->getValues();
+      /** @var \Drupal\search_api\Item\FieldInterface[] $fields_to_extract */
+      $fields_to_extract = array();
+      foreach ($missing_fields as $combined_id) {
+        list($datasource_id, $property_path) = Utility::splitCombinedId($combined_id);
+        if ($datasource_id == $results[$item_id]->getDatasourceId()) {
+          $fields_to_extract[$property_path] = Utility::createField($this->index, $combined_id);
         }
+      }
+      Utility::extractFields($results[$item_id]->getOriginalObject(), $fields_to_extract);
+      foreach ($fields_to_extract as $field) {
+        $combined_id = $field->getFieldIdentifier();
+        $rows[$item_id]->$combined_id = $field->getValues();
       }
     }
 
@@ -665,7 +672,7 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function addConditionGroup(ConditionGroupInterface $condition_group, $group = NULL) {
     if (!$this->shouldAbort()) {
-      $this->filters[$group]['filters'][] = $condition_group;
+      $this->conditions[$group]['filters'][] = $condition_group;
     }
     return $this;
   }
@@ -696,7 +703,7 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function addCondition($field, $value, $operator = '=', $group = NULL) {
     if (!$this->shouldAbort()) {
-      $this->filters[$group]['conditions'][] = array($field, $value, $operator);
+      $this->conditions[$group]['conditions'][] = array($field, $value, $operator);
     }
     return $this;
   }

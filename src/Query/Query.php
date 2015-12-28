@@ -160,8 +160,8 @@ class Query implements QueryInterface {
     );
     $modes['terms'] = array(
       'name' => $this->t('Multiple terms'),
-      'description' => $this->t('The query is interpreted as multiple keywords seperated by spaces. ' .
-          'Keywords containing spaces may be "quoted". Quoted keywords must still be seperated by spaces.'),
+      'description' => $this->t('The query is interpreted as multiple keywords separated by spaces. ' .
+          'Keywords containing spaces may be "quoted". Quoted keywords must still be separated by spaces.'),
     );
     // @todo Add fourth mode for complicated expressions, e.g.: »"vanilla ice" OR (love NOT hate)«
     return $modes;

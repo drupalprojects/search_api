@@ -25,7 +25,7 @@ use Drupal\search_api\Utility;
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
-  $header = array(t('Field'), t('Machine name'), t('Indexed'), t('Type'), t('Boost'));
+  $header = array(t('Field'), t('Machine name'), t('Type'), t('Boost'), t('Remove'));
 
   $rows = array();
   if (!empty($form['fields'])) {
@@ -49,9 +49,13 @@ function theme_search_api_admin_fields_table($variables) {
   }
 
   $note = isset($form['note']) ? $form['note'] : '';
-  $additional = isset($form['additional']) ? $form['additional'] : FALSE;
-  unset($form['note'], $form['submit'], $form['additional']);
-  $output = drupal_render_children($form);
+  unset($form['note'], $form['submit']);
+  $output = '';
+  foreach (Element::children($form) as $key) {
+    if (!empty($form[$key])) {
+      $output .= render($form[$key]);
+    }
+  }
 
   $build = array(
     '#theme' => 'table',
@@ -61,11 +65,36 @@ function theme_search_api_admin_fields_table($variables) {
 
   $output .= render($build);
   $output .= render($note);
-  if ($additional) {
-    $output .= render($additional);
-  }
 
   return $output;
+}
+
+/**
+ * Returns HTML for a list of form items.
+ *
+ * Wrapper around the "item_list" theme which uses the child elements as the
+ * list items instead of the "#items" key.
+ *
+ * @param array $variables
+ *   An associative array containing a single value, "element", containing the
+ *   element to be rendered.
+ *
+ * @return string
+ *   The rendered HTML for the list.
+ *
+ * @ingroup themeable
+ */
+function theme_search_api_form_item_list(array $variables) {
+  $element = $variables['element'];
+
+  $build = array(
+    '#theme' => 'item_list',
+  );
+  foreach (Element::children($element) as $key) {
+    $build['#items'][$key] = $element[$key];
+  }
+
+  return render($build);
 }
 
 /**

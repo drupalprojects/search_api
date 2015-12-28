@@ -32,6 +32,11 @@ interface ProcessorInterface extends IndexPluginInterface {
   /**
    * Processing stage: preprocess index.
    */
+  const STAGE_PRE_INDEX_SAVE = 'pre_index_save';
+
+  /**
+   * Processing stage: preprocess index.
+   */
   const STAGE_PREPROCESS_INDEX = 'preprocess_index';
 
   /**
@@ -66,12 +71,10 @@ interface ProcessorInterface extends IndexPluginInterface {
    * Checks whether this processor implements a particular stage.
    *
    * @param string $stage_identifier
-   *   The stage to check: self::STAGE_PREPROCESS_INDEX,
-   *   self::STAGE_PREPROCESS_QUERY
-   *   or self::STAGE_POSTPROCESS_QUERY.
+   *   The stage to check: one of the self::STAGE_* constants.
    *
    * @return bool
-   *   TRUE if the processor runs on a particular stage; FALSE otherwise.
+   *   TRUE if the processor runs on this particular stage; FALSE otherwise.
    */
   public function supportsStage($stage_identifier);
 
@@ -119,6 +122,14 @@ interface ProcessorInterface extends IndexPluginInterface {
    *   datasource-independent properties should be added (or modified).
    */
   public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL);
+
+  /**
+   * Preprocesses the search index entity before it is saved.
+   *
+   * This can, e.g., be used to make sure fields needed by this processor are
+   * enabled on the index.
+   */
+  public function preIndexSave();
 
   /**
    * Preprocesses search items for indexing.

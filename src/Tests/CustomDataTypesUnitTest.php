@@ -79,12 +79,12 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
    * Tests custom data types integration.
    */
   public function testCustomDataTypes() {
-    $original_value = $this->entities[1]->get('name')->value;
-    $original_type = $this->index->getFields()['entity:entity_test/name']->getType();
+    $original_value = $this->entities[1]->get('name')->getValue()[0]['value'];
+    $original_type = $this->index->getField('name')->getType();
 
     $item = $this->index->loadItem('entity:entity_test/1:en');
     $item = Utility::createItemFromObject($this->index, $item, 'entity:entity_test/1:en');
-    $name_field = $item->getField('entity:entity_test/name');
+    $name_field = $item->getField('name');
 
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
@@ -95,8 +95,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     // Reset the fields on the item and change to the supported data type.
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
-    $this->index->getFields()['entity:entity_test/name']->setType('search_api_test_data_type');
-    $name_field = $item->getField('entity:entity_test/name');
+    $this->index->getField('name')->setType('search_api_test_data_type');
+    $name_field = $item->getField('name');
 
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
@@ -107,8 +107,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     // Reset the fields on the item and change to the non-supported data type.
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
-    $this->index->getFields()['entity:entity_test/name']->setType('search_api_unsupported_test_data_type');
-    $name_field = $item->getField('entity:entity_test/name');
+    $this->index->getField('name')->setType('search_api_unsupported_test_data_type');
+    $name_field = $item->getField('name');
 
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
@@ -119,8 +119,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     // Reset the fields on the item and change to the data altering data type.
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
-    $this->index->getFields()['entity:entity_test/name']->setType('search_api_altering_test_data_type');
-    $name_field = $item->getField('entity:entity_test/name');
+    $this->index->getField('name')->setType('search_api_altering_test_data_type');
+    $name_field = $item->getField('name');
 
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();

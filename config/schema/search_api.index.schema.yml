@@ -28,18 +28,30 @@ search_api.index.*:
             type: mapping
             label: field
             mapping:
+              label:
+                type: string
+                label: 'A label for the field'
+              datasource_id:
+                type: string
+                label: 'The datasource ID of the field'
+              property_path:
+                type: string
+                label: 'The property path of the field'
               type:
                 type: string
-                label: 'Type of field'
+                label: 'The data type of the field'
               boost:
                 type: float
-                label: 'Boost'
-        additional fields:
-          type: sequence
-          label: 'Included additional fields'
-          sequence:
-            type: string
-            label: 'Additional field'
+                label: 'The boost of the field'
+              indexed_locked:
+                type: boolean
+                label: 'Whether the field is locked or can be removed'
+              type_locked:
+                type: boolean
+                label: 'Whether the field''s data type is locked or can be changed'
+              hidden:
+                type: boolean
+                label: 'Whether the field should appear in the UI'
         cron_limit:
           type: integer
           label: 'Cron batch size'

@@ -11,7 +11,6 @@ use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\search_api\processor\AddURL;
 use Drupal\search_api\Tests\Processor\TestItemsTrait;
-use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -86,12 +85,11 @@ class AddURLTest extends UnitTestCase {
       ->getMock();
 
     $body_value = array('Some text value');
-    $body_field_id = Utility::createCombinedId('entity:node', 'body');
     $fields = array(
       'search_api_url' => array(
         'type' => 'string'
       ),
-      $body_field_id => array(
+      'entity:node/body' => array(
         'type' => 'text',
         'values' => $body_value,
       ),
@@ -106,7 +104,7 @@ class AddURLTest extends UnitTestCase {
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field.');
 
     // Check that no other fields were changed.
-    $field = $items[$this->itemIds[0]]->getField($body_field_id);
+    $field = $items[$this->itemIds[0]]->getField('body');
     $this->assertEquals($body_value, $field->getValues(), 'Body field was not changed.');
 
     // Check the second item to be sure that all are processed.

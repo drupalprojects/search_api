@@ -23,7 +23,7 @@ class IndexStorageUnitTest extends KernelTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('search_api');
+  public static $modules = array('search_api', 'user', 'system');
 
   /**
    * The search index storage.
@@ -37,6 +37,8 @@ class IndexStorageUnitTest extends KernelTestBase {
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->installSchema('system', 'key_value_expire');
 
     $this->storage = $this->container->get('entity_type.manager')->getStorage('search_api_index');
   }

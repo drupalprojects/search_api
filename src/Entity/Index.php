@@ -9,22 +9,19 @@ namespace Drupal\search_api\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
-use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
-use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
-use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\Item\GenericFieldInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
-use Drupal\search_api\Property\PropertyInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Utility;
+use Drupal\user\TempStoreException;
 use Drupal\views\Views;
 
 /**
@@ -40,6 +37,8 @@ use Drupal\views\Views;
  *       "default" = "Drupal\search_api\Form\IndexForm",
  *       "edit" = "Drupal\search_api\Form\IndexForm",
  *       "fields" = "Drupal\search_api\Form\IndexFieldsForm",
+ *       "add_fields" = "Drupal\search_api\Form\IndexAddFieldsForm",
+ *       "break_lock" = "Drupal\search_api\Form\IndexBreakLockForm",
  *       "processors" = "Drupal\search_api\Form\IndexProcessorsForm",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm",
@@ -72,6 +71,8 @@ use Drupal\views\Views;
  *     "add-form" = "/admin/config/search/search-api/add-index",
  *     "edit-form" = "/admin/config/search/search-api/index/{search_api_index}/edit",
  *     "fields" = "/admin/config/search/search-api/index/{search_api_index}/fields",
+ *     "add-fields" = "/admin/config/search/search-api/index/{search_api_index}/fields/add",
+ *     "break-lock-form" = "/admin/config/search/search-api/index/{search_api_index}/fields/break-lock",
  *     "processors" = "/admin/config/search/search-api/index/{search_api_index}/processors",
  *     "delete-form" = "/admin/config/search/search-api/index/{search_api_index}/delete",
  *     "disable" = "/admin/config/search/search-api/index/{search_api_index}/disable",
@@ -190,56 +191,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $properties = array();
 
   /**
-   * Cached fields data.
+   * Cached return values for several of the class's methods.
    *
-   * The array contains two elements: 0 for all fields, 1 for indexed fields.
-   * The elements under these keys are arrays with keys "fields" and "additional
-   * fields", corresponding to return values for getFields() and
-   * getAdditionalFields(), respectively.
-   *
-   * @var \Drupal\search_api\Item\GenericFieldInterface[][][]|null
-   *
-   * @see computeFields()
-   * @see getFields()
-   * @see getFieldsByDatasource()
-   * @see getAdditionalFields()
-   * @see getAdditionalFieldsByDatasource()
+   * @var array
    */
-  protected $fields;
-
-  /**
-   * Cached fields data, grouped by datasource and indexed state.
-   *
-   * The array is three-dimensional, with the first two keys corresponding to
-   * the parameters of a getFieldsByDatasource() call and the last one being the
-   * field ID.
-   *
-   * @var \Drupal\search_api\Item\FieldInterface[][][]|null
-   *
-   * @see getFieldsByDatasource()
-   */
-  protected $datasourceFields;
-
-  /**
-   * Cached additional fields data, grouped by datasource.
-   *
-   * The array is two-dimensional, with the first key corresponding to the
-   * datasource ID and the second key being a field ID.
-   *
-   * @var \Drupal\search_api\Item\FieldInterface[][]|null
-   *
-   * @see getAdditionalFieldsByDatasource()
-   */
-  protected $datasourceAdditionalFields;
-
-  /**
-   * Cached information about fulltext fields in the index.
-   *
-   * @var string[][]|null
-   *
-   * @see getFulltextFields()
-   */
-  protected $fulltextFields;
+  protected $cache = array();
 
   /**
    * Cached information about the processors available for this index.
@@ -249,16 +205,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @see loadProcessors()
    */
   protected $processors;
-
-  /**
-   * List of types that failed to map to a Search API type.
-   *
-   * The unknown types are the keys and map to arrays of fields that were
-   * ignored because they are of this type.
-   *
-   * @var string[][]
-   */
-  protected $unmappedFields = array();
 
   /**
    * Whether reindexing has been triggered for this index in this page request.
@@ -280,6 +226,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->options += array(
       'cron_limit' => \Drupal::config('search_api.settings')->get('default_cron_limit'),
       'index_directly' => TRUE,
+      'fields' => array(),
+      'processors' => array(),
     );
   }
 
@@ -307,8 +255,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCacheId($type = 'fields') {
-    return 'search_api_index:' . $this->id() . ':' . $type;
+  public function getCacheId($sub_id) {
+    return 'search_api_index:' . $this->id() . ':' . $sub_id;
   }
 
   /**
@@ -330,6 +278,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function setOption($name, $option) {
     $this->options[$name] = $option;
+    // If the fields are changed, reset the static fields cache.
+    if ($name == 'fields') {
+      $this->cache = array();
+    }
     return $this;
   }
 
@@ -587,332 +539,131 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFields($only_indexed = TRUE) {
-    $this->computeFields();
-    $only_indexed = $only_indexed ? 1 : 0;
-    return $this->fields[$only_indexed]['fields'];
-  }
-
-  /**
-   * Populates the $fields property with information about the index's fields.
-   *
-   * Used by getFields(), getFieldsByDatasource(), getAdditionalFields() and
-   * getAdditionalFieldsByDatasource().
-   */
-  protected function computeFields() {
-    // First, try the static cache and the persistent cache bin.
-    // @todo Since labels and descriptions are translated, we probably need to
-    //   cache per language?
-    $cid = $this->getCacheId();
-    if (empty($this->fields)) {
-      if ($cached = \Drupal::cache()->get($cid)) {
-        $this->fields = $cached->data;
-        if ($this->fields) {
-          $this->updateFieldsIndex($this->fields);
-        }
-      }
+  public function addField(FieldInterface $field) {
+    $field_id = $field->getFieldIdentifier();
+    if (Utility::isFieldIdReserved($field_id)) {
+      $args['%field_id'] = $field_id;
+      throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
     }
 
-    // If not cached, fetch the list of fields and their properties.
-    if (empty($this->fields)) {
-      $this->fields = array(
-        0 => array(
-          'fields' => array(),
-          'additional fields' => array(),
-        ),
-        1 => array(
-          'fields' => array(),
-        ),
-      );
-      // Remember the fields for which we couldn't find a mapping.
-      $this->unmappedFields = array();
-      foreach (array_merge(array(NULL), $this->datasources) as $datasource_id) {
-        try {
-          $this->convertPropertyDefinitionsToFields($this->getPropertyDefinitions($datasource_id), $datasource_id);
-        }
-        catch (SearchApiException $e) {
-          $variables['%index'] = $this->label();
-          watchdog_exception('search_api', $e, '%type while retrieving fields for index %index: @message in %function (line %line of %file).', $variables);
-        }
-      }
-      if ($this->unmappedFields) {
-        $vars['@fields'] = array();
-        foreach ($this->unmappedFields as $type => $fields) {
-          $vars['@fields'][] = implode(', ', $fields) . ' (' . new FormattableMarkup('type @type', array('@type' => $type)) . ')';
-        }
-        $vars['@fields'] = implode('; ', $vars['@fields']);
-        $vars['%index'] = $this->label();
-        \Drupal::logger('search_api')->warning('Warning while retrieving available fields for index %index: could not find a type mapping for the following fields: @fields.', $vars);
-      }
-      \Drupal::cache()->set($cid, $this->fields, Cache::PERMANENT, $this->getCacheTags());
-    }
-  }
-
-  /**
-   * Sets this object as the index for all fields contained in the given array.
-   *
-   * This is important when loading fields from the cache, because their index
-   * objects might then point to another instance of this index.
-   *
-   * @param array $fields
-   *   An array containing various values, some of which might be
-   *   \Drupal\search_api\Item\GenericFieldInterface objects and some of which
-   *   might be nested arrays containing such objects.
-   */
-  protected function updateFieldsIndex(array $fields) {
-    foreach ($fields as $value) {
-      if (is_array($value)) {
-        $this->updateFieldsIndex($value);
-      }
-      elseif ($value instanceof GenericFieldInterface) {
-        $value->setIndex($this);
-      }
-    }
-  }
-
-  /**
-   * Converts an array of property definitions into Search API field objects.
-   *
-   * Stores the resulting values in $this->fields, to be returned by subsequent
-   * getFields() calls.
-   *
-   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
-   *   An array of properties on some complex data object.
-   * @param string|null $datasource_id
-   *   (optional) The ID of the datasource to which these properties belong.
-   * @param string $prefix
-   *   Internal use only. A prefix to use for the generated field names in this
-   *   method.
-   * @param string $label_prefix
-   *   Internal use only. A prefix to use for the generated field labels in this
-   *   method.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if $datasource_id is not valid datasource for this index.
-   */
-  protected function convertPropertyDefinitionsToFields(array $properties, $datasource_id = NULL, $prefix = '', $label_prefix = '') {
-    $type_mapping = Utility::getFieldTypeMapping();
-    $field_options = isset($this->options['fields']) ? $this->options['fields'] : array();
-    $enabled_additional_fields = isset($this->options['additional fields']) ? $this->options['additional fields'] : array();
-
-    // All field identifiers should start with the datasource ID.
-    if (!$prefix && $datasource_id) {
-      $prefix = $datasource_id . self::DATASOURCE_ID_SEPARATOR;
-    }
-    $datasource_label = $datasource_id ? $this->getDatasource($datasource_id)->label() . ' » ' : '';
-
-    // Loop over all properties and handle them accordingly.
-    $recurse = array();
-    foreach ($properties as $property_path => $property) {
-      $original_property = $property;
-      if ($property instanceof PropertyInterface) {
-        $property = $property->getWrappedProperty();
-      }
-      $key = "$prefix$property_path";
-      $label = $label_prefix . $property->getLabel();
-      $description = $property->getDescription();
-      while ($property instanceof ListDataDefinitionInterface) {
-        $property = $property->getItemDefinition();
-      }
-      while ($property instanceof DataReferenceDefinitionInterface) {
-        $property = $property->getTargetDefinition();
-      }
-      if ($property instanceof ComplexDataDefinitionInterface) {
-        $main_property = $property->getMainPropertyName();
-        $nested_properties = $property->getPropertyDefinitions();
-
-        // Don't add the additional 'entity' property for entity reference
-        // fields which don't target a content entity type.
-        $referenced_entity_type_label = NULL;
-        if ($property instanceof FieldItemDataDefinition && in_array($property->getDataType(), array('field_item:entity_reference', 'field_item:image', 'field_item:file'))) {
-          $entity_type = $this->entityTypeManager()->getDefinition($property->getSetting('target_type'));
-          if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
-            unset($nested_properties['entity']);
-          }
-          else {
-            $referenced_entity_type_label = $entity_type->getLabel();
-          }
-        }
-
-        $additional = count($nested_properties) > 1;
-        if (!empty($enabled_additional_fields[$key]) && $nested_properties) {
-          // We allow the main property to be indexed directly, so we don't
-          // have to add it again for the nested fields.
-          if ($main_property) {
-            unset($nested_properties[$main_property]);
-          }
-          if ($nested_properties) {
-            $additional = TRUE;
-            $recurse[] = array($nested_properties, $datasource_id, "$key:", "$label » ");
-          }
-        }
-
-        if ($additional) {
-          $additional_field = Utility::createAdditionalField($this, $key);
-          $additional_field->setLabel("$label [$key]");
-          $additional_field->setDescription($description);
-          $additional_field->setEnabled(!empty($enabled_additional_fields[$key]));
-          $additional_field->setLocked(FALSE);
-          if ($original_property instanceof PropertyInterface) {
-            $additional_field->setHidden($original_property->isHidden());
-          }
-          $this->fields[0]['additional fields'][$key] = $additional_field;
-          if ($additional_field->isEnabled()) {
-            while ($pos = strrpos($property_path, ':')) {
-              $property_path = substr($property_path, 0, $pos);
-              /** @var \Drupal\search_api\Item\AdditionalFieldInterface $additional_field */
-              $additional_field = $this->fields[0]['additional fields'][$property_path];
-              $additional_field->setEnabled(TRUE);
-              $additional_field->setLocked();
-            }
-          }
-        }
-        // If the complex data type has a main property, we can index that
-        // directly here. Otherwise, we don't add it and continue with the next
-        // property.
-        if (!$main_property) {
-          continue;
-        }
-        $parent_type = $property->getDataType();
-        $property = $property->getPropertyDefinition($main_property);
-        if (!$property) {
-          continue;
-        }
-
-        // If there are additional properties, add the label for the main
-        // property to make it clear what it refers to.
-        if ($additional) {
-          $nested_label = $property->getLabel();
-          if ($referenced_entity_type_label) {
-            $nested_label = str_replace('@label', $referenced_entity_type_label, $nested_label);
-          }
-
-          $label .= ' » ' . $nested_label;
-        }
-      }
-
-      $type = $property->getDataType();
-      // Try to see if there's a mapping for a parent.child data type.
-      if (isset($parent_type) && isset($type_mapping[$parent_type . '.' . $type])) {
-        $field_type = $type_mapping[$parent_type . '.' . $type];
-      }
-      elseif (!empty($type_mapping[$type])) {
-        $field_type = $type_mapping[$type];
-      }
-      else {
-        // Failed to map this type, skip.
-        if (!isset($type_mapping[$type])) {
-          $this->unmappedFields[$type][$key] = $key;
-        }
-        continue;
-      }
-
-      $field = Utility::createField($this, $key);
-      $field->setType($field_type);
-      $field->setLabel($label);
-      $field->setLabelPrefix($datasource_label);
-      $field->setDescription($description);
-      $field->setIndexed(FALSE);
-      // To make it possible to lock fields that are, technically, nested, use
-      // the original $property for this check.
-      if ($original_property instanceof PropertyInterface) {
-        $field->setIndexedLocked($original_property->isIndexedLocked());
-        $field->setTypeLocked($original_property->isTypeLocked());
-        $field->setHidden($original_property->isHidden());
-      }
-      $this->fields[0]['fields'][$key] = $field;
-      if (isset($field_options[$key]) || $field->isIndexedLocked()) {
-        $field->setIndexed(TRUE);
-        if (isset($field_options[$key])) {
-          $field->setType($field_options[$key]['type']);
-          if (isset($field_options[$key]['boost'])) {
-            $field->setBoost($field_options[$key]['boost']);
-          }
-        }
-        $this->fields[1]['fields'][$key] = $field;
-      }
-    }
-    foreach ($recurse as $arguments) {
-      call_user_func_array(array($this, 'convertPropertyDefinitionsToFields'), $arguments);
+    // @todo If we have a single field object per field on the index, we'd just
+    //   need the first two checks – and that would also (correctly) prevent
+    //   renaming a field to an existing, different machine name.
+    $old_field = $this->getField($field_id);
+    $would_overwrite = $old_field
+      && $old_field != $field
+      && ($old_field->getDatasourceId() != $field->getDatasourceId()
+        || $old_field->getPropertyPath() != $field->getPropertyPath());
+    if ($would_overwrite) {
+      $args['%field_id'] = $field_id;
+      throw new SearchApiException(new FormattableMarkup('Cannot add field with machine name %field_id: machine name is already taken.', $args));
     }
 
-    // Order unindexed fields alphabetically.
-    $sort_by_label = function(GenericFieldInterface $field1, GenericFieldInterface $field2) {
-      return strnatcasecmp($field1->getLabel(), $field2->getLabel());
-    };
-    uasort($this->fields[0]['fields'], $sort_by_label);
-    uasort($this->fields[0]['additional fields'], $sort_by_label);
+    $this->options['fields'][$field_id] = $field->getSettings();
+
+    $this->resetCaches();
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFieldsByDatasource($datasource_id, $only_indexed = TRUE) {
-    $only_indexed = $only_indexed ? 1 : 0;
-    if (!isset($this->datasourceFields)) {
-      $this->computeFields();
-      $this->datasourceFields = array_fill_keys($this->datasources, array(array(), array()));
-      $this->datasourceFields[NULL] = array(array(), array());
-      /** @var \Drupal\search_api\Item\FieldInterface $field */
-      foreach ($this->fields[0]['fields'] as $field_id => $field) {
-        $this->datasourceFields[$field->getDatasourceId()][0][$field_id] = $field;
-        if ($field->isIndexed()) {
-          $this->datasourceFields[$field->getDatasourceId()][1][$field_id] = $field;
-        }
-      }
+  public function renameField($old_field_id, $new_field_id) {
+    if (isset($this->options['fields'][$old_field_id])) {
+      $args['%field_id'] = $old_field_id;
+      throw new SearchApiException(new FormattableMarkup('Could not rename field with machine name %field_id: no such field.', $args));
     }
-    return $this->datasourceFields[$datasource_id][$only_indexed];
+    if (Utility::isFieldIdReserved($new_field_id)) {
+      $args['%field_id'] = $new_field_id;
+      throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
+    }
+    if (isset($this->options['fields'][$new_field_id])) {
+      $args['%field_id'] = $new_field_id;
+      throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
+    }
+
+    $this->options['fields'][$new_field_id] = $this->options['fields'][$old_field_id];
+    unset($this->options['fields'][$old_field_id]);
+
+    $this->resetCaches();
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAdditionalFields() {
-    $this->computeFields();
-    return $this->fields[0]['additional fields'];
+  public function removeField($field_id) {
+    $field = $this->getField($field_id);
+    if (!$field) {
+      return $this;
+    }
+    if ($field->isIndexedLocked()) {
+      $args['%field_id'] = $field_id;
+      throw new SearchApiException(new FormattableMarkup('Cannot remove field with machine name %field_id: field is locked.', $args));
+    }
+
+    unset($this->options['fields'][$field_id]);
+
+    $this->resetCaches();
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAdditionalFieldsByDatasource($datasource_id) {
-    if (!isset($this->datasourceAdditionalFields)) {
-      $this->computeFields();
-      $this->datasourceAdditionalFields = array_fill_keys($this->datasources, array());
-      $this->datasourceAdditionalFields[NULL] = array();
-      /** @var \Drupal\search_api\Item\FieldInterface $field */
-      foreach ($this->fields[0]['additional fields'] as $field_id => $field) {
-        $this->datasourceAdditionalFields[$field->getDatasourceId()][$field_id] = $field;
+  public function getFields() {
+    $fields = $this->getCache(__FUNCTION__, FALSE);
+    if (!$fields) {
+      $fields = array();
+      foreach ($this->getOption('fields', array()) as $key => $field_info) {
+        $fields[$key] = Utility::createField($this, $key, $field_info);
       }
     }
-    return $this->datasourceAdditionalFields[$datasource_id];
+    $this->setCache(__FUNCTION__, $fields, FALSE);
+
+    return $fields;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFulltextFields($only_indexed = TRUE) {
-    $i = $only_indexed ? 1 : 0;
-    if (!isset($this->fulltextFields[$i])) {
-      $this->fulltextFields[$i] = array();
-      if ($only_indexed) {
-        if (isset($this->options['fields'])) {
-          foreach ($this->options['fields'] as $key => $field) {
-            if (Utility::isTextType($field['type'])) {
-              $this->fulltextFields[$i][] = $key;
-            }
-          }
-        }
+  public function getField($field_id) {
+    $fields = $this->getFields();
+    return isset($fields[$field_id]) ? $fields[$field_id] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldsByDatasource($datasource_id) {
+    $datasource_fields = $this->getCache(__FUNCTION__);
+    if (!$datasource_fields) {
+      $datasource_fields = array_fill_keys($this->datasources, array());
+      $datasource_fields[NULL] = array();
+      foreach ($this->getFields() as $field_id => $field) {
+        $datasource_fields[$field->getDatasourceId()][$field_id] = $field;
       }
-      else {
-        foreach ($this->getFields(FALSE) as $key => $field) {
-          if (Utility::isTextType($field->getType())) {
-            $this->fulltextFields[$i][] = $key;
-          }
-        }
-      }
+      $this->setCache(__FUNCTION__, $datasource_fields);
     }
-    return $this->fulltextFields[$i];
+
+    return $datasource_fields[$datasource_id];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFulltextFields() {
+    $fulltext_fields = $this->getCache(__FUNCTION__);
+    if (!$fulltext_fields) {
+      $fulltext_fields = array();
+      foreach ($this->getOption('fields', array()) as $key => $field_info) {
+        if (Utility::isTextType($field_info['type'])) {
+          $fulltext_fields[] = $key;
+        }
+      }
+      $this->setCache(__FUNCTION__, $fulltext_fields);
+    }
+    return $fulltext_fields;
   }
 
   /**
@@ -920,22 +671,24 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
     $alter = $alter ? 1 : 0;
-    if (!isset($this->properties[$datasource_id][$alter])) {
+    $properties = $this->getCache(__FUNCTION__);
+    if (!isset($properties[$datasource_id][$alter])) {
       if (isset($datasource_id)) {
         $datasource = $this->getDatasource($datasource_id);
-        $this->properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
+        $properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
       }
       else {
         $datasource = NULL;
-        $this->properties[$datasource_id][$alter] = array();
+        $properties[$datasource_id][$alter] = array();
       }
       if ($alter) {
         foreach ($this->getProcessors() as $processor) {
-          $processor->alterPropertyDefinitions($this->properties[$datasource_id][$alter], $datasource);
+          $processor->alterPropertyDefinitions($properties[$datasource_id][$alter], $datasource);
         }
       }
+      $this->setCache(__FUNCTION__, $properties);
     }
-    return $this->properties[$datasource_id][$alter];
+    return $properties[$datasource_id][$alter];
   }
 
   /**
@@ -1168,20 +921,95 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
+   * Retrieves data from the static and/or stored cache.
+   *
+   * @param string $method
+   *   The name of the method for which data is requested. Used to construct the
+   *   cache ID.
+   * @param bool $static_only
+   *   (optional) If TRUE, only consult the static cache for this page request,
+   *   don't attempt to load the value from the stored cache.
+   *
+   * @return mixed|null
+   *   The cached data, or NULL if it could not be found.
+   */
+  protected function getCache($method, $static_only = TRUE) {
+    if (isset($this->cache[$method])) {
+      return $this->cache[$method];
+    }
+
+    if (!$static_only) {
+      $cid = $this->getCacheId($method);
+      if ($cached = \Drupal::cache()->get($cid)) {
+        if (is_array($cached->data)) {
+          $this->updateFieldsIndex($cached->data);
+        }
+        $this->cache[$method] = $cached->data;
+        return $this->cache[$method];
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Sets data in the static and/or stored cache.
+   *
+   * @param string $method
+   *   The name of the method for which cached data should be set. Used to
+   *   construct the cache ID.
+   * @param mixed $value
+   *   The value to set for the cache.
+   * @param bool $static_only
+   *   (optional) If TRUE, only set the value in the static cache for this page
+   *   request, not in the stored cache.
+   *
+   * @return $this
+   */
+  protected function setCache($method, $value, $static_only = TRUE) {
+    $this->cache[$method] = $value;
+    if (!$static_only) {
+      $cid = $this->getCacheId($method);
+      \Drupal::cache()
+        ->set($cid, $value, Cache::PERMANENT, $this->getCacheTags());
+    }
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function resetCaches($include_stored = TRUE) {
     $this->datasourcePlugins = NULL;
     $this->trackerPlugin = NULL;
     $this->serverInstance = NULL;
-    $this->fields = NULL;
-    $this->datasourceFields = NULL;
-    $this->fulltextFields = NULL;
     $this->processors = NULL;
     $this->properties = NULL;
-    $this->datasourceAdditionalFields = NULL;
+    $this->cache = array();
     if ($include_stored) {
       Cache::invalidateTags($this->getCacheTags());
+    }
+  }
+
+  /**
+   * Sets this object as the index for all fields contained in the given array.
+   *
+   * This is important when loading fields from the cache, because their index
+   * objects might point to another instance of this index.
+   *
+   * @param array $fields
+   *   An array containing various values, some of which might be
+   *   \Drupal\search_api\Item\FieldInterface objects and some of which might be
+   *   nested arrays containing such objects.
+   */
+  protected function updateFieldsIndex(array $fields) {
+    foreach ($fields as $value) {
+      if (is_array($value)) {
+        $this->updateFieldsIndex($value);
+      }
+      elseif ($value instanceof FieldInterface) {
+        $value->setIndex($this);
+      }
     }
   }
 
@@ -1201,25 +1029,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    // Stop enabling of indexes when the server is disabled.
+    // Prevent enabling of indexes when the server is disabled.
     if ($this->status() && !$this->isServerEnabled()) {
       $this->disable();
     }
 
-    $this->applyLockedConfiguration();
-  }
+    // Remove all "locked" and "hidden" flags from all fields of the index. If
+    // they are still valid, they should be re-added by the processors.
+    foreach ($this->options['fields'] as $field_id => $field_settings) {
+      unset($this->options['fields'][$field_id]['indexed_locked']);
+      unset($this->options['fields'][$field_id]['type_locked']);
+      unset($this->options['fields'][$field_id]['hidden']);
+    }
 
-  /**
-   * Makes sure that locked processors and fields are actually enabled/indexed.
-   *
-   * @return bool
-   *   TRUE if any changes were made to the index as a result of this operation;
-   *   FALSE otherwise.
-   */
-  public function applyLockedConfiguration() {
-    $change = FALSE;
-    // Obviously, we should first check for locked processors, because they
-    // might add new locked properties.
+    // We first have to check for locked processors, otherwise their
+    // preIndexSave() methods might not be called in the next step.
     foreach ($this->getProcessors(FALSE) as $processor_id => $processor) {
       if ($processor->isLocked() && !isset($this->options['processors'][$processor_id])) {
         $this->options['processors'][$processor_id] = array(
@@ -1227,32 +1051,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
           'weights' => array(),
           'settings' => array(),
         );
-        $change = TRUE;
       }
     }
-    if ($change) {
-      $this->resetCaches(FALSE);
+
+    // Reset the cache so the used processors and fields will be up-to-date.
+    $this->resetCaches();
+
+    // Call the preIndexSave() method of all applicable processors.
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PRE_INDEX_SAVE) as $processor) {
+      $processor->preIndexSave();
     }
-    $datasource_ids = array_merge(array(NULL), $this->getDatasourceIds());
-    foreach ($datasource_ids as $datasource_id) {
-      foreach ($this->getPropertyDefinitions($datasource_id) as $key => $property) {
-        if ($property instanceof PropertyInterface && $property->isIndexedLocked()) {
-          $settings = $property->getFieldSettings();
-          // Don't overwrite settings that aren't locked (like the boost).
-          if (isset($this->options['fields'][$key])) {
-            $settings += $this->options['fields'][$key];
-          }
-          if (empty($settings['type']) || $property->isTypeLocked()) {
-            $mapping = Utility::getFieldTypeMapping();
-            $type = $property->getDataType();
-            $settings['type'] = !empty($mapping[$type]) ? $mapping[$type] : 'string';
-          }
-          $this->options['fields'][$key] = $settings;
-          $change = TRUE;
-        }
-      }
-    }
-    return $change;
   }
 
   /**
@@ -1446,6 +1254,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
+
     /** @var \Drupal\search_api\IndexInterface[] $entities */
     foreach ($entities as $index) {
       if ($index->hasValidTracker()) {
@@ -1468,6 +1277,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Remove this line when https://www.drupal.org/node/2370365 gets fixed.
       Cache::invalidateTags(array('extension:views'));
       \Drupal::cache('discovery')->delete('views:wizard');
+    }
+
+    /** @var \Drupal\user\SharedTempStore $temp_store */
+    $temp_store = \Drupal::service('user.shared_tempstore')->get('search_api_index');
+    foreach ($entities as $entity) {
+      try {
+        $temp_store->delete($entity->id());
+      }
+      catch (TempStoreException $e) {
+        // Can't really be helped, I guess. But is also very unlikely to happen.
+        // Ignore it.
+      }
     }
   }
 
@@ -1537,12 +1358,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($properties['datasourcePlugins']);
     unset($properties['trackerPlugin']);
     unset($properties['serverInstance']);
-    unset($properties['fields']);
-    unset($properties['datasourceFields']);
-    unset($properties['fulltextFields']);
     unset($properties['processors']);
     unset($properties['properties']);
-    unset($properties['datasourceAdditionalFields']);
+    unset($properties['cache']);
     return array_keys($properties);
   }
 

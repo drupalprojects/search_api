@@ -11,7 +11,6 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility;
 use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 
 /**

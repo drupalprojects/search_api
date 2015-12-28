@@ -34,7 +34,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  * @endcode
  *
- * Search API comes with a couple of default datatypes. These have an extra
+ * Search API comes with a couple of default data types. These have an extra
  * "default" property in the annotation. It is not allowed for custom data type
  * plugins to set this property.
  *

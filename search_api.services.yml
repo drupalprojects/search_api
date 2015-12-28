@@ -1,4 +1,11 @@
 services:
+  paramconverter.search_api:
+    class: Drupal\search_api\ParamConverter\SearchApiConverter
+    arguments: ['@entity.manager', '@user.shared_tempstore', '@current_user']
+    tags:
+      - { name: paramconverter, priority: 10 }
+    lazy: true
+
   plugin.manager.search_api.backend:
     class: Drupal\search_api\Backend\BackendPluginManager
     parent: default_plugin_manager

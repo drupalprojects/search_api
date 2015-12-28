@@ -585,7 +585,7 @@ class IndexForm extends EntityForm {
    * Redirects to the index's "Fields" config form.
    */
   public function redirectToFieldsForm(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirectUrl($this->getEntity()->urlInfo('fields'));
+    $form_state->setRedirectUrl($this->entity->toUrl('add-fields'));
   }
 
 }

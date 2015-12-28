@@ -97,19 +97,6 @@ trait ExampleContentTrait {
   }
 
   /**
-   * Returns the internal field ID for the given entity field name.
-   *
-   * @param string $field_name
-   *   The field name.
-   *
-   * @return string
-   *   The internal field ID.
-   */
-  protected function getFieldId($field_name) {
-    return Utility::createCombinedId('entity:entity_test', $field_name);
-  }
-
-  /**
    * Returns the item IDs for the given entity IDs.
    *
    * @param array $entity_ids

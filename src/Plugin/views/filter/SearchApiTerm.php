@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\taxonomy\Entity\Vocabulary;
 

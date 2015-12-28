@@ -76,8 +76,8 @@ function search_api_test_hooks_search_api_data_type_info_alter(array &$data_type
  * Implements hook_search_api_field_type_mapping_alter.
  */
 function search_api_test_hooks_search_api_field_type_mapping_alter(array &$mapping) {
-  $mapping['datetime_iso8601'] = NULL;
-  $mapping['timestamp'] = NULL;
+  $mapping['datetime_iso8601'] = FALSE;
+  $mapping['timestamp'] = FALSE;
 }
 
 /**

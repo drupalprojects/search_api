@@ -44,17 +44,13 @@ trait TestItemsTrait {
    * @param \Drupal\search_api\Item\FieldInterface $field
    *   (optional) A variable, passed by reference, into which the created field
    *   will be saved.
-   * @param string|null $field_id
-   *   (optional) The field ID to set for the field. Defaults to
-   *   "entity:node/field_test".
+   * @param string $field_id
+   *   (optional) The field ID to set for the field.
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing a single item with the specified field.
    */
-  public function createSingleFieldItem(IndexInterface $index, $field_type, $field_value, FieldInterface &$field = NULL, $field_id = NULL) {
-    if (!isset($field_id)) {
-      $field_id = Utility::createCombinedId('entity:node', 'field_test');
-    }
+  public function createSingleFieldItem(IndexInterface $index, $field_type, $field_value, FieldInterface &$field = NULL, $field_id = 'field_test') {
     $this->itemIds[0] = $item_id = Utility::createCombinedId('entity:node', '1:en');
     $item = Utility::createItem($index, $item_id);
     $field = Utility::createField($index, $field_id);
@@ -74,24 +70,18 @@ trait TestItemsTrait {
    * @param int $count
    *   The number of items to create.
    * @param array[] $fields
-   *   The fields to create on the items, with keys being field IDs and values
-   *   being arrays with the following information:
-   *   - type: The type to set for the field.
-   *   - values: (optional) The values to set for the field.
+   *   The fields to create on the items, with keys being combined property
+   *   paths and values being arrays with properties to set on the field.
    * @param \Drupal\Core\TypedData\ComplexDataInterface|null $object
    *   (optional) The object to set on each item as the "original object".
    * @param array|null $datasource_ids
    *   (optional) An array of datasource IDs to use for the items, in that order
-   *   (starting again from the front if necessary). Defaults to using
-   *   "entity:node" for all items.
+   *   (starting again from the front if necessary).
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing the requested test items.
    */
-  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL, array $datasource_ids = NULL) {
-    if (!isset($datasource_ids)) {
-      $datasource_ids = array('entity:node');
-    }
+  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL, array $datasource_ids = array('entity:node')) {
     $datasource_count = count($datasource_ids);
     $items = array();
     for ($i = 0; $i < $count; ++$i) {
@@ -101,17 +91,14 @@ trait TestItemsTrait {
       if (isset($object)) {
         $item->setOriginalObject($object);
       }
-      foreach ($fields as $field_id => $field_info) {
+      foreach ($fields as $combined_property_path => $field_info) {
+        list($field_info['datasource_id'], $field_info['property_path']) = Utility::splitCombinedId($combined_property_path);
         // Only add fields of the right datasource.
-        list($field_datasource_id) = Utility::splitCombinedId($field_id);
-        if (isset($field_datasource_id) && $field_datasource_id != $datasource_id) {
+        if (isset($field_info['datasource_id']) && $field_info['datasource_id'] != $datasource_id) {
           continue;
         }
-        $field = Utility::createField($index, $field_id)
-          ->setType($field_info['type']);
-        if (isset($field_info['values'])) {
-          $field->setValues($field_info['values']);
-        }
+        $field_id = Utility::getNewFieldId($index, $field_info['property_path']);
+        $field = Utility::createField($index, $field_id, $field_info);
         $item->setField($field_id, $field);
       }
       $item->setFieldsExtracted(TRUE);
@@ -124,6 +111,7 @@ trait TestItemsTrait {
    * Adds mock data type plugin manager and results cache services to \Drupal.
    */
   protected function setUpDataTypePlugin() {
+    /** @var \Drupal\Tests\UnitTestCase|\Drupal\search_api\Tests\Processor\TestItemsTrait $this */
     $data_type_plugin = $this->getMockBuilder('Drupal\search_api\DataType\DataTypePluginManager')
       ->disableOriginalConstructor()
       ->getMock();

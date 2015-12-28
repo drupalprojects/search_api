@@ -7,16 +7,19 @@
 
 namespace Drupal\search_api;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\Core\TypedData\DataDefinitionInterface;
+use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
+use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Item\AdditionalField;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
@@ -269,6 +272,81 @@ class Utility {
   }
 
   /**
+   * Retrieves a nested property from a list of properties.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   The base properties, keyed by property name.
+   * @param string $property_path
+   *   The property path of the property to retrieve.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface|null
+   *   The requested property, or NULL if it couldn't be found.
+   */
+  public static function retrieveNestedProperty(array $properties, $property_path) {
+    $pos = strpos($property_path, ':');
+    if ($pos === FALSE) {
+      return isset($properties[$property_path]) ? $properties[$property_path] : NULL;
+    }
+
+    $key = substr($property_path, 0, $pos);
+    $property_path = substr($property_path, $pos + 1);
+    if (!isset($properties[$key])) {
+      return NULL;
+    }
+
+    $property = static::getInnerProperty($properties[$key]);
+    if (!$property instanceof ComplexDataDefinitionInterface) {
+      return NULL;
+    }
+
+    return static::retrieveNestedProperty($property->getPropertyDefinitions(), $property_path);
+  }
+
+  /**
+   * Retrieves the inner property definition of a compound property definition.
+   *
+   * This will retrieve the list item type from a list data definition or the
+   * definition of the referenced data from a reference data definition.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $property
+   *   The original property definition.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface
+   *   The inner property definition.
+   */
+  public static function getInnerProperty($property) {
+    while ($property instanceof ListDataDefinitionInterface) {
+      $property = $property->getItemDefinition();
+    }
+    while ($property instanceof DataReferenceDefinitionInterface) {
+      $property = $property->getTargetDefinition();
+    }
+    return $property;
+  }
+
+  /**
+   * Determines whether a field ID is reserved for special use.
+   *
+   * This is the case for the "magic" pseudo-fields documented in
+   * \Drupal\search_api\Query\QueryInterface for use in queries, like
+   * "search_api_id".
+   *
+   * @param string $field_id
+   *   The field ID.
+   *
+   * @return bool
+   *   TRUE if the field ID is reserved, FALSE if it can be used normally.
+   */
+  public static function isFieldIdReserved($field_id) {
+    $reserved_ids = array_flip(array(
+      'search_api_id',
+      'search_api_datasource',
+      'search_api_relevance',
+    ));
+    return isset($reserved_ids[$field_id]);
+  }
+
+  /**
    * Processes all pending index tasks inside a batch run.
    *
    * @param array $context
@@ -415,28 +493,110 @@ class Utility {
    *   The index to which this field should be attached.
    * @param string $field_identifier
    *   The field identifier.
+   * @param array $field_info
+   *   (optional) An array with further configuration for the field.
    *
    * @return \Drupal\search_api\Item\FieldInterface
-   *   An object containing information about the field on the given index.
+   *   A new field object.
    */
-  public static function createField(IndexInterface $index, $field_identifier) {
-    return new Field($index, $field_identifier);
+  public static function createField(IndexInterface $index, $field_identifier, $field_info = array()) {
+    $field = new Field($index, $field_identifier);
+
+    foreach ($field_info as $key => $value) {
+      // Unfortunately, the $delimiters parameter for ucwords() wasn't
+      // introduced until PHP 5.5.16 and thus cannot be depended upon.
+      $method = str_replace('_', ' ', $key);
+      $method = ucwords($method);
+      $method = 'set' . str_replace(' ', '', $method);
+      if (method_exists($field, $method)) {
+        $field->$method($value);
+      }
+    }
+
+    return $field;
   }
 
   /**
-   * Creates a new field object wrapping an additional field of the given index.
+   * Creates a new field on an index based on a property.
+   *
+   * Will find and set a new unique field identifier for the field on the index.
    *
    * @param \Drupal\search_api\IndexInterface $index
-   *   The index to which this field should be attached.
-   * @param string $field_identifier
-   *   The field identifier.
+   *   The search index.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $property
+   *   The data definition of the property.
+   * @param string|null $datasource_id
+   *   The ID of the index's datasource this property belongs to, or NULL if it
+   *   is a datasource-independent property.
+   * @param string $property_path
+   *   The property's property path within the property structure of the
+   *   datasource.
+   * @param string|null $field_id
+   *   (optional) The identifier to use for the field. If not set, a new unique
+   *   field identifier on the index will be chosen automatically.
+   * @param string|null $type
+   *   (optional) The type to set for the field, or NULL to determine a default
+   *   type automatically.
    *
-   * @return \Drupal\search_api\Item\AdditionalFieldInterface
-   *   An object containing information about the additional field on the given
-   *   index.
+   * @return \Drupal\search_api\Item\FieldInterface
+   *   A new field object for the index, based on the given property.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if no type was given and no default could be determined.
    */
-  public static function createAdditionalField(IndexInterface $index, $field_identifier) {
-    return new AdditionalField($index, $field_identifier);
+  public static function createFieldFromProperty(IndexInterface $index, DataDefinitionInterface $property, $datasource_id, $property_path, $field_id = NULL, $type = NULL) {
+    if (!isset($field_id)) {
+      $field_id = static::getNewFieldId($index, $property_path);
+    }
+
+    if (!isset($type)) {
+      $type_mapping = static::getFieldTypeMapping();
+      $property_type = $property->getDataType();
+      if (isset($type_mapping[$property_type])) {
+        $type = $type_mapping[$property_type];
+      }
+      else {
+        $args['%property'] = $property->getLabel();
+        $args['%property_path'] = $property_path;
+        $args['%type'] = $property_type;
+        $message = new FormattableMarkup('No default data type mapping could be found for property %property (%property_path) of type %type.', $args);
+        throw new SearchApiException($message);
+      }
+    }
+
+    $field_info = array(
+      'label' => $property->getLabel(),
+      'datasource_id' => $datasource_id,
+      'property_path' => $property_path,
+      'type' => $type,
+    );
+    return self::createField($index, $field_id, $field_info);
+  }
+
+  /**
+   * Finds a new unique field identifier on the given index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The search index.
+   * @param string $property_path
+   *   The property path on which the field identifier should be based. Only the
+   *   last component of the property path will be considered.
+   *
+   * @return string
+   *   A new unique field identifier on the given index.
+   */
+  public static function getNewFieldId(IndexInterface $index, $property_path) {
+    $field_id = $suggested_id = $property_path;
+    if ($pos = strrpos($property_path, ':')) {
+      $field_id = $suggested_id = substr($property_path, $pos + 1);
+    }
+
+    $i = 0;
+    while ($index->getField($field_id)) {
+      $field_id = $suggested_id . '_' . ++$i;
+    }
+
+    return $field_id;
   }
 
   /**
@@ -494,18 +654,18 @@ class Utility {
   /**
    * Creates a combined ID from a raw ID and an optional datasource prefix.
    *
-   * This can be used to created an internal item ID or field identifier from a
-   * datasource ID and a datasource-specific raw item ID or property path.
+   * This can be used to created an internal item ID from a datasource ID and a
+   * datasource-specific raw item ID, or a combined property path from a
+   * datasource ID and a property path to identify properties index-wide.
    *
    * @param string|null $datasource_id
-   *   The ID of the datasource to which the item or field belongs. Or NULL, if
-   *   the returned ID should be that for a datasource-independent field.
+   *   The ID of the datasource to which the item belongs. Or NULL to return the
+   *   raw ID unchanged (option included for compatibility purposes).
    * @param string $raw_id
-   *   The datasource-specific raw item ID or property path of the item or
-   *   field.
+   *   The datasource-specific raw item ID of the item (or property).
    *
    * @return string
-   *   The combined ID, with optional datasource prefix separated by
+   *   The combined ID, with the datasource prefix separated by
    *   \Drupal\search_api\IndexInterface::DATASOURCE_ID_SEPARATOR.
    */
   public static function createCombinedId($datasource_id, $raw_id) {
@@ -518,7 +678,7 @@ class Utility {
   /**
    * Splits an internal ID into its two parts.
    *
-   * Both internal item IDs and internal field identifiers are prefixed with the
+   * Both internal item IDs and combined property paths are prefixed with the
    * corresponding datasource ID. This method will split these IDs up again into
    * their two parts.
    *
@@ -530,8 +690,8 @@ class Utility {
    * @return array
    *   A numeric array, containing the datasource ID in element 0 and the raw
    *   item ID or property path in element 1. In the case of
-   *   datasource-independent fields (i.e., when there is no prefix), element 0
-   *   will be NULL.
+   *   datasource-independent properties (i.e., when there is no prefix),
+   *   element 0 will be NULL.
    */
   public static function splitCombinedId($combined_id) {
     $pos = strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR);

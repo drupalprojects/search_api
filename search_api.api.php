@@ -87,13 +87,13 @@ function hook_search_api_data_type_info_alter(array &$data_type_definitions) {
  *
  * @param array $mapping
  *   An array mapping all known (and supported) Drupal data types to their
- *   corresponding Search API data types. Empty values mean that fields of
+ *   corresponding Search API data types. A value of FALSE means that fields of
  *   that type should be ignored by the Search API.
  *
  * @see \Drupal\search_api\Utility::getFieldTypeMapping()
  */
 function hook_search_api_field_type_mapping_alter(array &$mapping) {
-  $mapping['duration_iso8601'] = NULL;
+  $mapping['duration_iso8601'] = FALSE;
   $mapping['my_new_type'] = 'string';
 }
 

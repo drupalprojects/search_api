@@ -41,7 +41,7 @@ interface BackendSpecificInterface {
    *
    * This can implement a specific call to test if the backend is available for
    * reading. For SOLR or elasticsearch this would be a "ping" to the server to
-   * test if it's online. If this is a db-backend that is running on a seperate
+   * test if it's online. If this is a db-backend that is running on a separate
    * server, this can also be a ping. When it's a db-backend that runs in the
    * same database as the drupal installation; just returning TRUE is enough.
    *

@@ -238,7 +238,7 @@ class ContentAccessTest extends ProcessorTestBase {
    *
    * @param ResultSetInterface $result
    *   The search results.
-   * @param int[][] $ids
+   * @param int[][] $expected
    *   The expected entity IDs, grouped by entity type and with their indexes in
    *   this object's respective array properties as the values.
    */

@@ -178,8 +178,8 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function getFields($extract = TRUE) {
-    $data_type_fallback_mapping = Utility::getDataTypeFallbackMapping($this->index);
     if ($extract && !$this->fieldsExtracted) {
+      $data_type_fallback_mapping = Utility::getDataTypeFallbackMapping($this->index);
       foreach (array(NULL, $this->getDatasourceId()) as $datasource_id) {
         $fields_by_property_path = array();
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $field_id => $field) {

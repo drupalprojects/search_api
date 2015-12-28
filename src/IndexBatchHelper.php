@@ -196,7 +196,7 @@ class IndexBatchHelper {
     if ($success) {
       // Display the number of items indexed.
       if (!empty($results['indexed'])) {
-        // Buid the indexed message.
+        // Build the indexed message.
         $indexed_message = static::formatPlural($results['indexed'], 'Successfully indexed 1 item.', 'Successfully indexed @count items.');
         // Notify user about indexed items.
         drupal_set_message($indexed_message);

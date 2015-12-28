@@ -46,7 +46,7 @@ options:
       settings:
         fields:
           - rendered_item
-          - 'entity:node/title'
+          - title
     language:
       processor_id: language
       weights:
@@ -76,7 +76,7 @@ options:
       settings:
         fields:
           - rendered_item
-          - 'entity:node/title'
+          - title
         stopwords:
           - a
           - an
@@ -121,7 +121,7 @@ options:
       settings:
         fields:
           - rendered_item
-          - 'entity:node/title'
+          - title
         spaces: ''
         overlap_cjk: 1
         minimum_word_size: '3'
@@ -133,38 +133,74 @@ options:
       settings:
         fields:
           - rendered_item
-          - 'entity:node/title'
+          - title
   fields:
     search_api_language:
+      label: 'Item language'
       type: string
-    'entity:node/title':
+      property_path: search_api_language
+      index_locked: true
+      type_locked: true
+    title:
+      label: Title
       type: text
+      datasource_id: 'entity:node'
+      property_path: title
       boost: 8
     rendered_item:
+      label: 'Rendered item'
       type: text
-    'entity:node/created':
+      property_path: rendered_item
+    created:
+      label: 'Authored on'
       type: date
-    'entity:node/changed':
+      datasource_id: 'entity:node'
+      property_path: created
+    changed:
+      label: Changed
       type: date
-    'entity:node/status':
+      datasource_id: 'entity:node'
+      property_path: changed
+    status:
+      label: 'Publishing status'
       type: boolean
-    'entity:node/sticky':
+      datasource_id: 'entity:node'
+      property_path: status
+      index_locked: true
+      type_locked: true
+    sticky:
+      label: 'Sticky at top of lists'
       type: boolean
-    'entity:node/field_tags:entity:name':
+      datasource_id: 'entity:node'
+      property_path: sticky
+    field_tags:
+      label: Tags
       type: string
-    'entity:node/uid:entity:name':
+      datasource_id: 'entity:node'
+      property_path: 'field_tags:entity:name'
+    author:
+      label: 'Author name'
       type: string
-    'entity:node/uid':
+      datasource_id: 'entity:node'
+      property_path: 'uid:entity:name'
+    uid:
+      label: 'Author ID'
       type: integer
+      datasource_id: 'entity:node'
+      property_path: uid
+      index_locked: true
+      type_locked: true
     search_api_node_grants:
+      label: 'Node access information'
       type: string
-    'entity:node/type':
+      property_path: search_api_node_grants
+      index_locked: true
+      type_locked: true
+      hidden: true
+    type:
       type: string
-  'additional fields':
-    'entity:node/field_tags': 'entity:node/field_tags'
-    'entity:node/field_tags:entity': 'entity:node/field_tags:entity'
-    'entity:node/uid': 'entity:node/uid'
-    'entity:node/uid:entity': 'entity:node/uid:entity'
+      datasource_id: 'entity:node'
+      property_path: type
 datasources:
   - 'entity:node'
 datasource_configs:

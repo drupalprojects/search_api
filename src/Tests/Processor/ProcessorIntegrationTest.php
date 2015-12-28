@@ -246,7 +246,13 @@ class ProcessorIntegrationTest extends WebTestBase {
    * Tests the UI for the "URL field" processor.
    */
   public function checkUrlFieldIntegration() {
-    $this->enableProcessor('add_url');
+    $index = $this->loadIndex();
+    $processors = $index->getOption('processors', array());
+    $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor is enabled by default.');
+    unset($processors['add_url']);
+    $index->setOption('processors', $processors)->save();
+    $processors = $this->loadIndex()->getProcessors();
+    $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor cannot be disabled.');
   }
 
   /**

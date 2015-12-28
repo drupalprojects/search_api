@@ -7,9 +7,9 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
-use Drupal\search_api\Property\BasicProperty;
 
 /**
  * @SearchApiProcessor(
@@ -18,7 +18,9 @@ use Drupal\search_api\Property\BasicProperty;
  *   description = @Translation("Adds the item's URL to the indexed data."),
  *   stages = {
  *     "preprocess_index" = -30
- *   }
+ *   },
+ *   locked = true,
+ *   hidden = true
  * )
  */
 class AddURL extends ProcessorPluginBase {
@@ -35,8 +37,7 @@ class AddURL extends ProcessorPluginBase {
       'description' => $this->t('A URI where the item can be accessed'),
       'type' => 'string',
     );
-    $properties['search_api_url'] = BasicProperty::createFromDefinition($definition)
-      ->setIndexedLocked();
+    $properties['search_api_url'] = new DataDefinition($definition);
   }
 
   /**
@@ -47,10 +48,9 @@ class AddURL extends ProcessorPluginBase {
     // http://youtrack.jetbrains.com/issue/WI-23586
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $item) {
-      // Only run if the field is enabled for the index.
-      if ($field = $item->getField('search_api_url')) {
-        $url = $item->getDatasource()->getItemUrl($item->getOriginalObject());
-        if ($url) {
+      $url = $item->getDatasource()->getItemUrl($item->getOriginalObject());
+      if ($url) {
+        foreach ($this->filterForPropertyPath($item->getFields(), 'search_api_url') as $field) {
           $field->addValue($url->toString());
         }
       }

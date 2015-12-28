@@ -78,6 +78,8 @@ class HooksTest extends WebTestBase {
     $this->assertText('Peace/Dolphin dance');
     // The implementation of hook_search_api_field_type_mapping_alter has
     // removed all dates, so we can't see any timestamp anymore in the page.
+    $url_options['query']['datasource'] = 'entity:node';
+    $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
     $this->assertNoText('timestamp');
 
     $this->drupalGet('search-api-test-fulltext');

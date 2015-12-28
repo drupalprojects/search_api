@@ -8,6 +8,7 @@
 namespace Drupal\search_api;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 
@@ -50,13 +51,14 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Gets the cache ID prefix used for this index's caches.
    *
-   * @param string $type
-   *   The type of cache. Currently only "fields" is used.
+   * @param string $sub_id
+   *   An ID for the particular cache within the index that should be
+   *   identified.
    *
    * @return string
    *   The cache ID (prefix) for this index's caches.
    */
-  public function getCacheId($type = 'fields');
+  public function getCacheId($sub_id);
 
   /**
    * Retrieves an option.
@@ -87,8 +89,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *     \Drupal\search_api\Utility::getDefaultDataTypes().
    *   - boost: (optional) A boost value for terms found in this field during
    *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
-   * - additional fields: An associative array with keys and values being the
-   *   field identifiers of related entities whose fields should be displayed.
    * - processors: An array of all processors available for the index. The keys
    *   are the processor identifiers, the values are arrays containing the
    *   settings for that processor. The inner structure looks like this:
@@ -309,71 +309,97 @@ interface IndexInterface extends ConfigEntityInterface {
   public function postprocessSearchResults(ResultSetInterface $results);
 
   /**
-   * Returns a list of all known fields of this index.
+   * Adds a field to this index.
    *
-   * @param bool $only_indexed
-   *   (optional) If set to FALSE, all available fields will be returned.
-   *   Otherwise, this method will only return the indexed fields.
+   * If the field is already present (with the same datasource and property
+   * path) its settings will be updated.
    *
-   * @return \Drupal\search_api\Item\FieldInterface[]
-   *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
-   *   this index, keyed by field identifier.
+   * @param \Drupal\search_api\Item\FieldInterface $field
+   *   The field to add, or update.
+   *
+   * @return $this
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if the field could not be added, either because a different field
+   *   with the same field ID would be overwritten, or because the field
+   *   identifier is one of the pseudo-fields that can be used in search
+   *   queries.
    */
-  public function getFields($only_indexed = TRUE);
+  public function addField(FieldInterface $field);
 
   /**
-   * Returns a list of all known fields of a specific datasource.
+   * Changes the field ID of a field.
+   *
+   * @param string $old_field_id
+   *   The old ID of the field.
+   * @param string $new_field_id
+   *   The new ID of the field.
+   *
+   * @return $this
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if no field with the old ID exists, or because the new ID is
+   *   already taken, or because the new field ID is one of the pseudo-fields
+   *   that can be used in search queries.
+   */
+  public function renameField($old_field_id, $new_field_id);
+
+  /**
+   * Removes a field from the index.
+   *
+   * If the field doesn't exist, the call will fail silently.
+   *
+   * @param string $field_id
+   *   The ID of the field to remove.
+   *
+   * @return $this
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if the field is locked.
+   */
+  public function removeField($field_id);
+
+  /**
+   * Returns a list of all indexed fields of this index.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface[]
+   *   An array of all indexed fields for this index, keyed by field identifier.
+   */
+  public function getFields();
+
+  /**
+   * Returns a field from this index.
+   *
+   * @param string $field_id
+   *   The field identifier.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface|null
+   *   The field with the given field identifier, or NULL if there is no such
+   *   field.
+   */
+  public function getField($field_id);
+
+  /**
+   * Returns a list of all indexed fields of a specific datasource.
    *
    * @param string|null $datasource_id
    *   The ID of the datasource whose fields should be retrieved, or NULL to
    *   retrieve all datasource-independent fields.
-   * @param bool $only_indexed
-   *   (optional) If set to FALSE, all available fields will be returned.
-   *   Otherwise, this method will only return the indexed fields.
    *
    * @return \Drupal\search_api\Item\FieldInterface[]
-   *   An array of all known (or indexed, if $only_indexed is TRUE) fields for
-   *   the given datasource, keyed by field identifier.
+   *   An array of all indexed fields for the given datasource, keyed by field
+   *   identifier.
    */
-  public function getFieldsByDatasource($datasource_id, $only_indexed = TRUE);
-
-  /**
-   * Retrieves a list of complex fields on this index.
-   *
-   * The related properties of these fields can be added to the index.
-   *
-   * @return \Drupal\search_api\Item\AdditionalFieldInterface[]
-   *   The additional fields available for the index, keyed by field IDs.
-   */
-  public function getAdditionalFields();
-
-  /**
-   * Retrieves a list of complex fields from a specific datasource.
-   *
-   * The related properties of these fields can be added to the index.
-   *
-   * @param string|null $datasource_id
-   *   The ID of the datasource whose additional fields should be retrieved, or
-   *   NULL to retrieve all datasource-independent additional fields.
-   *
-   * @return \Drupal\search_api\Item\AdditionalFieldInterface[]
-   *   The additional fields available for the datasource, keyed by field IDs.
-   */
-  public function getAdditionalFieldsByDatasource($datasource_id);
+  public function getFieldsByDatasource($datasource_id);
 
   /**
    * Retrieves all of this index's fulltext fields.
    *
-   * @param bool $only_indexed
-   *   (optional) If set to FALSE, all available fulltext fields will be
-   *   returned. Otherwise, this method will only return the indexed fulltext
-   *   fields.
-   *
    * @return string[]
-   *   An array containing the field identifiers of all (or all indexed)
-   *   fulltext fields available for this index.
+   *   An array containing the field identifiers of all indexed fulltext fields
+   *   available for this index.
    */
-  public function getFulltextFields($only_indexed = TRUE);
+  public function getFulltextFields();
 
   /**
    * Retrieves the properties of one of this index's datasources.

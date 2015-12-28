@@ -93,11 +93,17 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     ));
     $this->index->setServer($this->server);
     $this->index->setOption('fields', array(
-      'entity:comment/subject' => array(
+      'subject' => array(
+        'label' => 'Subject',
         'type' => 'text',
+        'datasource_id' => 'entity:comment',
+        'property_path' => 'subject',
       ),
-      'entity:node/title' => array(
+      'title' => array(
+        'label' => 'Title',
         'type' => 'text',
+        'datasource_id' => 'entity:node',
+        'property_path' => 'title',
       ),
     ));
     if ($processor) {
