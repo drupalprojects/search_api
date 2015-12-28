@@ -190,10 +190,11 @@ class SearchApiRow extends RowPluginBase {
       $bundles_info = $datasource->getBundles();
       foreach ($bundles as $bundle => $view_mode) {
         $view_modes = $datasource->getViewModes($bundle);
+        $label = isset($view_modes[$view_mode]) ? $view_modes[$view_mode] : $this->t('Hidden');
         $args = array(
           '@bundle' => $bundles_info[$bundle],
           '@datasource' => $datasource->label(),
-          '@view_mode' => $view_modes[$view_mode],
+          '@view_mode' => $label,
         );
         $summary[] = $this->t('@datasource/@bundle: @view_mode', $args);
       }
