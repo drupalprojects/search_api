@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -122,6 +123,9 @@ class SearchApiQuery extends QueryPluginBase {
    *   The requested search index, or NULL if it could not be found and loaded.
    */
   public static function getIndexFromTable($table, EntityTypeManagerInterface $entity_type_manager = NULL) {
+    // @todo Instead use Views::viewsData() – injected, too – to load the base
+    //   table definition and use the "index" (or maybe rename to
+    //   "search_api_index") field from there.
     if (substr($table, 0, 17) == 'search_api_index_') {
       $index_id = substr($table, 17);
       if ($entity_type_manager) {
@@ -267,7 +271,7 @@ class SearchApiQuery extends QueryPluginBase {
     }
 
     // Setup the nested filter structure for this query.
-    if (!empty($this->filters)) {
+    if (!empty($this->conditions)) {
       // If the different groups are combined with the OR operator, we have to
       // add a new OR filter to the query to which the filters for the groups
       // will be added.
@@ -279,8 +283,8 @@ class SearchApiQuery extends QueryPluginBase {
         $base = $this->query;
       }
       // Add a nested filter for each filter group, with its set conjunction.
-      foreach ($this->filters as $group_id => $group) {
-        if (!empty($group['conditions']) || !empty($group['filters'])) {
+      foreach ($this->conditions as $group_id => $group) {
+        if (!empty($group['conditions']) || !empty($group['condition_groups'])) {
           $group += array('type' => 'AND');
           // For filters without a group, we want to always add them directly to
           // the query.
@@ -291,8 +295,8 @@ class SearchApiQuery extends QueryPluginBase {
               $conditions->addCondition($field, $value, $operator);
             }
           }
-          if (!empty($group['filters'])) {
-            foreach ($group['filters'] as $nested_conditions) {
+          if (!empty($group['condition_groups'])) {
+            foreach ($group['condition_groups'] as $nested_conditions) {
               $conditions->addConditionGroup($nested_conditions);
             }
           }
@@ -672,7 +676,12 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function addConditionGroup(ConditionGroupInterface $condition_group, $group = NULL) {
     if (!$this->shouldAbort()) {
-      $this->conditions[$group]['filters'][] = $condition_group;
+      // Ensure all variants of 0 are actually 0. Thus '', 0 and NULL are all
+      // the default group.
+      if (empty($group)) {
+        $group = 0;
+      }
+      $this->conditions[$group]['condition_groups'][] = $condition_group;
     }
     return $this;
   }
@@ -703,9 +712,156 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function addCondition($field, $value, $operator = '=', $group = NULL) {
     if (!$this->shouldAbort()) {
+      // Ensure all variants of 0 are actually 0. Thus '', 0 and NULL are all
+      // the default group.
+      if (empty($group)) {
+        $group = 0;
+      }
       $this->conditions[$group]['conditions'][] = array($field, $value, $operator);
     }
     return $this;
+  }
+
+  /**
+   * Adds a simple condition to the query.
+   *
+   * This replicates the interface of Views' default SQL backend to simplify
+   * the Views integration of the Search API. If you are writing Search
+   * API-specific Views code, you should better use the filter() or condition()
+   * methods.
+   *
+   * @param int $group
+   *   The condition group to add these to; groups are used to create AND/OR
+   *   sections. Groups cannot be nested. Use 0 as the default group.
+   *   If the group does not yet exist it will be created as an AND group.
+   * @param string|\Drupal\Core\Database\Query\ConditionInterface|\Drupal\search_api\Query\ConditionGroupInterface $field
+   *   The ID of the field to check; or a filter object to add to the query; or,
+   *   for compatibility purposes, a database condition object to transform into
+   *   a search filter object and add to the query. If a field ID is passed and
+   *   starts with a period (.), it will be stripped.
+   * @param mixed $value
+   *   (optional) The value the field should have (or be related to by the
+   *   operator). Or NULL if an object is passed as $field.
+   * @param string|null $operator
+   *   (optional) The operator to use for checking the constraint. The following
+   *   operators are supported for primitive types: "=", "<>", "<", "<=", ">=",
+   *   ">". They have the same semantics as the corresponding SQL operators.
+   *   If $field is a fulltext field, $operator can only be "=" or "<>", which
+   *   are in this case interpreted as "contains" or "doesn't contain",
+   *   respectively.
+   *   If $value is NULL, $operator also can only be "=" or "<>", meaning the
+   *   field must have no or some value, respectively.
+   *   To stay compatible with Views, "!=" is supported as an alias for "<>".
+   *   If an object is passed as $field, $operator should be NULL.
+   *
+   * @return $this
+   *
+   * @see \Drupal\views\Plugin\views\query\Sql::addWhere()
+   * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::filter()
+   * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::condition()
+   */
+  public function addWhere($group, $field, $value = NULL, $operator = NULL) {
+    if ($this->shouldAbort()) {
+      return $this;
+    }
+
+    // Ensure all variants of 0 are actually 0. Thus '', 0 and NULL are all the
+    // default group.
+    if (empty($group)) {
+      $group = 0;
+    }
+
+    if (is_object($field)) {
+      if ($field instanceof ConditionInterface) {
+        $field = $this->transformDbCondition($field);
+      }
+      if ($field instanceof ConditionGroupInterface) {
+        $this->conditions[$group]['condition_groups'][] = $field;
+      }
+      elseif (!$this->shouldAbort()) {
+        // We only need to abort  if that wasn't done by transformDbCondition()
+        // already.
+        $this->abort('Unexpected condition passed to addWhere().');
+      }
+    }
+    else {
+      $this->conditions[$group]['conditions'][] = array($this->sanitizeFieldId($field), $value, $this->sanitizeOperator($operator));
+    }
+
+    return $this;
+  }
+
+  /**
+   * Transforms a database condition to an equivalent search filter.
+   *
+   * @param \Drupal\Core\Database\Query\ConditionInterface $db_condition
+   *   The condition to transform.
+   *
+   * @return \Drupal\search_api\Query\ConditionGroupInterface|null
+   *   A search filter equivalent to $condition, or NULL if the transformation
+   *   failed.
+   */
+  protected function transformDbCondition(ConditionInterface $db_condition) {
+    $conditions = $db_condition->conditions();
+    $filter = $this->query->createConditionGroup($conditions['#conjunction']);
+    unset($conditions['#conjunction']);
+    foreach ($conditions as $condition) {
+      if ($condition['operator'] === NULL) {
+        $this->abort('Trying to include a raw SQL condition in a Search API query.');
+        return NULL;
+      }
+      if ($condition['field'] instanceof ConditionInterface) {
+        $nested_filter = $this->transformDbCondition($condition['field']);
+        if ($nested_filter) {
+          $filter->addConditionGroup($nested_filter);
+        }
+        else {
+          return NULL;
+        }
+      }
+      else {
+        $filter->addCondition($this->sanitizeFieldId($condition['field']), $condition['value'], $this->sanitizeOperator($condition['operator']));
+      }
+    }
+    return $filter;
+  }
+
+  /**
+   * Adapts a field ID for use in a Search API query.
+   *
+   * This method will remove a leading period (.), if present. This is done
+   * because in the SQL Views query plugin field IDs are always prefixed with a
+   * table alias (in our case always empty) followed by a period.
+   *
+   * @param string $field_id
+   *   The field ID to adapt for use in the Search API.
+   *
+   * @return string
+   *   The sanitized field ID.
+   */
+  protected function sanitizeFieldId($field_id) {
+    if ($field_id && $field_id[0] === '.') {
+      $field_id = substr($field_id, 1);
+    }
+    return $field_id;
+  }
+
+  /**
+   * Adapts an operator for use in a Search API query.
+   *
+   * This method maps Views' "!=" to the "<>" Search API uses.
+   *
+   * @param string $operator
+   *   The operator to adapt for use in the Search API.
+   *
+   * @return string
+   *   The sanitized operator.
+   */
+  protected function sanitizeOperator($operator) {
+    if ($operator === '!=') {
+      $operator = '<>';
+    }
+    return $operator;
   }
 
   /**

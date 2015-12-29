@@ -12,7 +12,7 @@ use Drupal\views\Plugin\views\sort\SortPluginBase;
 /**
  * Provides a sort plugin for Search API views.
  *
- * @ViewsSort("search_api_sort")
+ * @ViewsSort("search_api")
  */
 class SearchApiSort extends SortPluginBase {
 

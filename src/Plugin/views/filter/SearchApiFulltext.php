@@ -11,6 +11,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Entity\Index;
+use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
 /**
  * Defines a filter for adding a fulltext search to the view.
@@ -19,24 +20,26 @@ use Drupal\search_api\Entity\Index;
  *
  * @ViewsFilter("search_api_fulltext")
  */
-class SearchApiFulltext extends SearchApiFilterText {
+class SearchApiFulltext extends FilterPluginBase {
+
+  use SearchApiFilterTrait;
 
   /**
    * {@inheritdoc}
    */
   public function showOperatorForm(&$form, FormStateInterface $form_state) {
-    $this->operatorForm($form, $form_state);
+    parent::showOperatorForm($form, $form_state);
     $form['operator']['#description'] = $this->t('This operator only applies when using "Search keys" as the "Use as" setting.');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function operatorOptions() {
+  public function operatorOptions($which = 'title') {
     return array(
-      'AND' => $this->t('Contains all of these words'),
-      'OR' => $this->t('Contains any of these words'),
-      'NOT' => $this->t('Contains none of these words'),
+      'and' => $this->t('Contains all of these words'),
+      'or' => $this->t('Contains any of these words'),
+      'not' => $this->t('Contains none of these words'),
     );
   }
 
@@ -46,7 +49,7 @@ class SearchApiFulltext extends SearchApiFilterText {
   public function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['operator']['default'] = 'AND';
+    $options['operator']['default'] = 'and';
 
     $options['min_length']['default'] = '';
     $options['fields']['default'] = array();
@@ -94,6 +97,20 @@ class SearchApiFulltext extends SearchApiFilterText {
   /**
    * {@inheritdoc}
    */
+  protected function valueForm(&$form, FormStateInterface $form_state) {
+    parent::valueForm($form, $form_state);
+
+    $form['value'] = array(
+      '#type' => 'textfield',
+      '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
+      '#size' => 30,
+      '#default_value' => $this->value,
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateExposed(&$form, FormStateInterface $form_state) {
     // Only validate exposed input.
     if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
@@ -106,7 +123,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     }
 
     $identifier = $this->options['expose']['identifier'];
-    $input = &$form_state->getValues()[$identifier];
+    $input = &$form_state->getValue($identifier, '');
 
     if ($this->options['is_grouped'] && isset($this->options['group_info']['group_items'][$input])) {
       $this->operator = $this->options['group_info']['group_items'][$input]['operator'];
@@ -147,34 +164,35 @@ class SearchApiFulltext extends SearchApiFilterText {
     }
     $fields = $this->options['fields'];
     $fields = $fields ? $fields : array_keys($this->getFulltextFields());
+    $query = $this->getQuery();
 
     // If something already specifically set different fields, we silently fall
     // back to mere filtering.
-    $old = $this->query->getFulltextFields();
-    $conditions = $old && (array_diff($old, $fields) || array_diff($fields, $old));
+    $old = $query->getFulltextFields();
+    $use_conditions = $old && (array_diff($old, $fields) || array_diff($fields, $old));
 
-    if ($conditions) {
-      $conditions = $this->query->createConditionGroup('OR');
-      $op = $this->operator === 'NOT' ? '<>' : '=';
+    if ($use_conditions) {
+      $conditions = $query->createConditionGroup('OR');
+      $op = $this->operator === 'not' ? '<>' : '=';
       foreach ($fields as $field) {
         $conditions->addCondition($field, $this->value, $op);
       }
-      $this->query->addConditionGroup($conditions);
+      $query->addConditionGroup($conditions);
       return;
     }
 
     // If the operator was set to OR or NOT, set OR as the conjunction. (It is
     // also set for NOT since otherwise it would be "not all of these words".)
-    if ($this->operator != 'AND') {
-      $this->query->setOption('conjunction', 'OR');
+    if ($this->operator != 'and') {
+      $query->setOption('conjunction', 'OR');
     }
 
-    $this->query->setFulltextFields($fields);
-    $old = $this->query->getKeys();
-    $old_original = $this->query->getOriginalKeys();
-    $this->query->keys($this->value);
-    if ($this->operator == 'NOT') {
-      $keys = &$this->query->getKeys();
+    $query->setFulltextFields($fields);
+    $old = $query->getKeys();
+    $old_original = $query->getOriginalKeys();
+    $query->keys($this->value);
+    if ($this->operator == 'not') {
+      $keys = &$query->getKeys();
       if (is_array($keys)) {
         $keys['#negation'] = TRUE;
       }
@@ -186,7 +204,7 @@ class SearchApiFulltext extends SearchApiFilterText {
     // If there were fulltext keys set, we take care to combine them in a
     // meaningful way (especially with negated keys).
     if ($old) {
-      $keys = &$this->query->getKeys();
+      $keys = &$query->getKeys();
       // Array-valued keys are combined.
       if (is_array($keys)) {
         // If the old keys weren't parsed into an array, we instead have to
@@ -218,7 +236,7 @@ class SearchApiFulltext extends SearchApiFilterText {
       // update the originalKeys property.
       elseif (is_scalar($old_original)) {
         $combined_keys = "($old_original) ($keys)";
-        $this->query->keys($combined_keys);
+        $query->keys($combined_keys);
         $keys = $combined_keys;
       }
     }
@@ -233,6 +251,7 @@ class SearchApiFulltext extends SearchApiFilterText {
    */
   protected function getFulltextFields() {
     $fields = array();
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load(substr($this->table, 17));
 
     $fields_info = $index->getFields();

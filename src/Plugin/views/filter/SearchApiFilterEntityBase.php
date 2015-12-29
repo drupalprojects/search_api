@@ -13,7 +13,14 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Provides a base class for filters on entity-typed fields.
  */
-abstract class SearchApiFilterEntityBase extends SearchApiFilter {
+abstract class SearchApiFilterEntityBase extends SearchApiFilterString {
+
+  /**
+   * Where the $query object will reside:
+   *
+   * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
+   */
+  public $query = NULL;
 
   /**
    * If exposed form input was successfully validated, the entered entity IDs.

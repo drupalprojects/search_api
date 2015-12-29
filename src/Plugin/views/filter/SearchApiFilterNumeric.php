@@ -2,21 +2,21 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterDate.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterNumeric.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
 
-use Drupal\views\Plugin\views\filter\Date;
+use Drupal\views\Plugin\views\filter\NumericFilter;
 
 /**
- * Defines a filter for filtering on dates.
+ * Defines a filter for filtering on numeric values.
  *
  * @ingroup views_filter_handlers
  *
- * @ViewsFilter("search_api_date")
+ * @ViewsFilter("search_api_numeric")
  */
-class SearchApiFilterDate extends Date {
+class SearchApiFilterNumeric extends NumericFilter {
 
   use SearchApiFilterTrait;
 
@@ -29,6 +29,13 @@ class SearchApiFilterDate extends Date {
     //   the Search API.
     unset($operators['between'], $operators['not between'], $operators['regular_expression']);
     return $operators;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function opEmpty($field) {
+    $this->getQuery()->addCondition($this->realField, NULL, $this->operator == 'empty' ? '=' : '<>', $this->options['group']);
   }
 
 }

@@ -64,64 +64,6 @@ display:
               'page': default
             datasource:
               'entity:entity_test': default
-      fields:
-        search_api_id:
-          table: search_api_index_database_search_index
-          field: search_api_id
-          id: search_api_id
-          plugin_id: numeric
-          relationship: none
-          group_type: group
-          admin_label: ''
-          label: 'Entity ID'
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          set_precision: false
-          precision: 0
-          decimal: .
-          separator: ','
-          format_plural: false
-          format_plural_string: "1\x03@count"
-          prefix: ''
-          suffix: ''
       filters:
         search_api_fulltext:
           id: search_api_fulltext
@@ -136,9 +78,9 @@ display:
           exposed: true
           expose:
             operator_id: search_api_fulltext_op
-            label: 'Fulltext search'
+            label: ''
             description: ''
-            use_operator: false
+            use_operator: true
             operator: search_api_fulltext_op
             identifier: search_api_fulltext
             required: false
@@ -160,9 +102,59 @@ display:
             default_group: All
             default_group_multiple: {  }
             group_items: {  }
-          min_length: 0
+          min_length: 3
           fields: {  }
           plugin_id: search_api_fulltext
+        id:
+          plugin_id: search_api_numeric
+          id: id
+          table: search_api_index_database_search_index
+          field: id
+          relationship: none
+          admin_label: ''
+          operator: '='
+          group: 1
+          exposed: true
+          expose:
+            operator_id: id_op
+            label: ''
+            description: ''
+            use_operator: true
+            operator: id_op
+            identifier: id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+          is_grouped: false
+        keywords:
+          plugin_id: search_api_string
+          id: keywords
+          table: search_api_index_database_search_index
+          field: keywords
+          relationship: none
+          admin_label: ''
+          operator: '='
+          group: 1
+          exposed: true
+          expose:
+            operator_id: keywords_op
+            label: ''
+            description: ''
+            use_operator: true
+            operator: keywords_op
+            identifier: keywords
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+          is_grouped: false
       sorts: {  }
       title: 'Fulltext test index'
       header:
@@ -173,7 +165,6 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
-          empty: false
           content: 'Displaying @total search results'
           plugin_id: result
       footer: {  }
@@ -189,7 +180,7 @@ display:
       path: search-api-test-fulltext
 label: 'Search API Test Fulltext search view'
 module: views
-id: search_api_test_views_fulltext
+id: search_api_test_view
 tag: ''
 langcode: en
 dependencies:

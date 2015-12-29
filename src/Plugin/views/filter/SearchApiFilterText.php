@@ -14,16 +14,20 @@ namespace Drupal\search_api\Plugin\views\filter;
  *
  * @ViewsFilter("search_api_text")
  */
-class SearchApiFilterText extends SearchApiFilter {
+class SearchApiFilterText extends SearchApiFilterString {
 
   /**
    * {@inheritdoc}
    */
-  public function operatorOptions() {
-    return array(
-      '=' => $this->t('contains'),
-      '<>' => $this->t("doesn't contain"),
-    );
+  public function operators() {
+    $operators = parent::operators();
+
+    $operators['=']['title'] = $this->t('contains');
+    $operators['!=']['title'] = $this->t("doesn't contain");
+
+    $operators = array_intersect_key($operators, array('=' => 1, '!=' => 1));
+
+    return $operators;
   }
 
 }

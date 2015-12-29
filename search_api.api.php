@@ -98,6 +98,34 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
 }
 
 /**
+ * Alter the mapping of Search API data types to their default Views handlers.
+ *
+ * @param array $mapping
+ *   An associative array with data types as the keys and Views field data
+ *   definitions as the values. In addition to all normally defined data types,
+ *   keys can also be "options" for any field with an options list, "entity" for
+ *   general entity-typed fields or "entity:ENTITY_TYPE" (with "ENTITY_TYPE"
+ *   being the machine name of an entity type) for entities of that type.
+ */
+function hook_search_api_views_handler_mapping_alter(array &$mapping) {
+  $mapping['entity:my_entity_type'] = array(
+    'argument' => array(
+      'id' => 'my_entity_type',
+    ),
+    'field' => array(
+      'id' => 'my_entity_type',
+    ),
+    'filter' => array(
+      'id' => 'my_entity_type',
+    ),
+    'sort' => array(
+      'id' => 'my_entity_type',
+    ),
+  );
+  $mapping['date']['filter']['id'] = 'my_date_filter';
+}
+
+/**
  * Allows you to log or alter the items that are indexed.
  *
  * Please be aware that generally preventing the indexing of certain items is
