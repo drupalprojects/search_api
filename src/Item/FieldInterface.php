@@ -219,13 +219,10 @@ interface FieldInterface extends \Traversable {
    *
    * @param string $type
    *   The data type of the field.
-   * @param bool $notify
-   *   (optional) Whether to notify the index of the change, i.e., set the field
-   *   type in the index accordingly.
    *
    * @return $this
    */
-  public function setType($type, $notify = FALSE);
+  public function setType($type);
 
   /**
    * Retrieves the value of this field.
