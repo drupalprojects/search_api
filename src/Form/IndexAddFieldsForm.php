@@ -365,6 +365,7 @@ class IndexAddFieldsForm extends EntityForm {
 
       $can_be_indexed = TRUE;
       $nested_properties = array();
+      $parent_child_type = NULL;
       if ($property instanceof ComplexDataDefinitionInterface) {
         $can_be_indexed = FALSE;
         $nested_properties = $property->getPropertyDefinitions();
@@ -389,10 +390,10 @@ class IndexAddFieldsForm extends EntityForm {
       }
 
       // Don't allow indexing of properties with unmapped types. Also, prefer
-      // a "parent/child" type mapping (taking into account the parent property
-      // for, e.g., text fields.
+      // a "parent.child" type mapping (taking into account the parent property
+      // for, e.g., text fields).
       $type = $property->getDataType();
-      if (isset($parent_child_type) && !empty($type_mapping[$parent_child_type])) {
+      if ($parent_child_type && !empty($type_mapping[$parent_child_type])) {
         $type = $parent_child_type;
       }
       elseif (empty($type_mapping[$type])) {
@@ -456,7 +457,7 @@ class IndexAddFieldsForm extends EntityForm {
           '#submit' => array('::addField', '::save'),
           '#property' => $property,
           '#prefixed_label' => $label_prefix . $label,
-          '#data_type' => $type,
+          '#data_type' => $type_mapping[$type],
         );
       }
 

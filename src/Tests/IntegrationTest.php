@@ -483,27 +483,12 @@ class IntegrationTest extends WebTestBase {
       $this->addField('entity:node', $property_path, $label);
     }
 
-    $edit = array(
-      'fields[title][type]' => 'text',
-      'fields[title][boost]' => '21.0',
-      'fields[revision_log][type]' => 'search_api_test_data_type',
-    );
-    $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
-    $this->assertText($this->t('The changes were successfully saved.'));
-
     $this->indexStorage->resetCache(array($this->indexId));
     /** @var $index \Drupal\search_api\IndexInterface */
     $index = $this->indexStorage->load($this->indexId);
     $fields = $index->getFields();
 
     $this->assertTrue(!empty($fields['nid']), 'nid field is indexed.');
-    if ($this->assertTrue(!empty($fields['title']), 'type field is indexed.')) {
-      $this->assertEqual($fields['title']->getType(), $edit['fields[title][type]'], 'title field type is text.');
-      $this->assertEqual($fields['title']->getBoost(), $edit['fields[title][boost]'], 'title field boost value is 21.');
-    }
-    if ($this->assertTrue(!empty($fields['revision_log']), 'revision_log field is indexed.')) {
-      $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test_data_type.');
-    }
 
     // The "Content access" processor correctly marked fields as locked.
     if ($this->assertTrue(!empty($fields['uid']), 'uid field is indexed.')) {
@@ -521,6 +506,26 @@ class IntegrationTest extends WebTestBase {
     // type mapping relationship works.
     if ($this->assertTrue(!empty($fields['body']), 'body field is indexed.')) {
       $this->assertEqual($fields['body']->getType(), 'text', 'Complex field mapping relationship works.');
+    }
+
+    $edit = array(
+      'fields[title][type]' => 'text',
+      'fields[title][boost]' => '21.0',
+      'fields[revision_log][type]' => 'search_api_test_data_type',
+    );
+    $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
+    $this->assertText($this->t('The changes were successfully saved.'));
+
+    $this->indexStorage->resetCache(array($this->indexId));
+    $index = $this->indexStorage->load($this->indexId);
+    $fields = $index->getFields();
+
+    if ($this->assertTrue(!empty($fields['title']), 'type field is indexed.')) {
+      $this->assertEqual($fields['title']->getType(), $edit['fields[title][type]'], 'title field type is text.');
+      $this->assertEqual($fields['title']->getBoost(), $edit['fields[title][boost]'], 'title field boost value is 21.');
+    }
+    if ($this->assertTrue(!empty($fields['revision_log']), 'revision_log field is indexed.')) {
+      $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test_data_type.');
     }
   }
 
