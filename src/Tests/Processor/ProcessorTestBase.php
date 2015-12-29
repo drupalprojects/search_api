@@ -92,7 +92,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'tracker' => 'default',
     ));
     $this->index->setServer($this->server);
-    $this->index->setOption('fields', array(
+    $this->index->setFieldSettings(array(
       'subject' => array(
         'label' => 'Subject',
         'type' => 'text',
@@ -107,7 +107,7 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       ),
     ));
     if ($processor) {
-      $this->index->setOption('processors', array(
+      $this->index->setProcessorSettings(array(
         $processor => array(
           'processor_id' => $processor,
           'weights' => array(),

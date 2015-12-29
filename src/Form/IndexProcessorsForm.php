@@ -112,7 +112,7 @@ class IndexProcessorsForm extends EntityForm {
       }
     }
 
-    $processor_settings = $this->entity->getOption('processors');
+    $processor_settings = $this->entity->getProcessorSettings();
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
@@ -279,10 +279,10 @@ class IndexProcessorsForm extends EntityForm {
 
     // Sort the processors so we won't have unnecessary changes.
     ksort($new_settings);
-    $settings_changed = $new_settings != $this->entity->getOption('processors', array());
+    $settings_changed = $new_settings != $this->entity->getProcessorSettings();
     $form_state->set('processors_changed', $settings_changed);
     if ($settings_changed) {
-      $this->entity->setOption('processors', $new_settings);
+      $this->entity->setProcessorSettings($new_settings);
     }
   }
 

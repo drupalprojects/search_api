@@ -277,6 +277,24 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getProcessorsByStage($stage, $only_enabled = TRUE);
 
   /**
+   * Retrieves this index's processor settings.
+   *
+   * @return array
+   *   An array of processors and their settings.
+   */
+  public function getProcessorSettings();
+
+  /**
+   * Sets this index's processor settings.
+   *
+   * @param array $processors
+   *   An array of processors and their settings.
+   *
+   * @return $this
+   */
+  public function setProcessorSettings(array $processors);
+
+  /**
    * Preprocesses data items for indexing.
    *
    * Lets all enabled processors for this index preprocess the indexed data.
@@ -400,6 +418,24 @@ interface IndexInterface extends ConfigEntityInterface {
    *   available for this index.
    */
   public function getFulltextFields();
+
+  /**
+   * Retrieves this index's field settings.
+   *
+   * @return array
+   *   An array of field settings.
+   */
+  public function getFieldSettings();
+
+  /**
+   * Sets this index's field settings.
+   *
+   * @param array $fields
+   *   An array of field settings.
+   *
+   * @return $this
+   */
+  public function setFieldSettings(array $fields);
 
   /**
    * Retrieves the properties of one of this index's datasources.

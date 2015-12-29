@@ -1283,7 +1283,7 @@ class Database extends BackendPluginBase {
               if (count($words) > 1 && max(array_map('strlen', $words)) <= 50) {
                 // Overlong token is due to bad tokenizing.
                 // Check for "Tokenizer" preprocessor on index.
-                if (empty($index->getOption('processors')['search_api_tokenizer']['status'])) {
+                if (empty($index->getProcessorSettings()['search_api_tokenizer']['status'])) {
                   $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. Otherwise, the backend class has to use its own, fixed tokenizing.');
                 }
                 else {

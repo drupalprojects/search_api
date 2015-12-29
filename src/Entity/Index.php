@@ -9,7 +9,6 @@ namespace Drupal\search_api\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -59,6 +58,8 @@ use Drupal\views\Views;
  *     "name",
  *     "description",
  *     "read_only",
+ *     "fields",
+ *     "processors",
  *     "options",
  *     "datasources",
  *     "datasource_configs",
@@ -109,6 +110,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var bool
    */
   protected $read_only = FALSE;
+
+  /**
+   * An array of field settings.
+   *
+   * @var array
+   */
+  protected $fields = array();
 
   /**
    * An array of options configuring this index.
@@ -198,13 +206,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $cache = array();
 
   /**
+   * The array of processor settings.
+   *
+   * @var array
+   *   An array containing processor settings.
+   */
+  protected $processors = array();
+
+  /**
    * Cached information about the processors available for this index.
    *
    * @var \Drupal\search_api\Processor\ProcessorInterface[]|null
    *
    * @see loadProcessors()
    */
-  protected $processors;
+  protected $processorPlugins;
 
   /**
    * Whether reindexing has been triggered for this index in this page request.
@@ -226,8 +242,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->options += array(
       'cron_limit' => \Drupal::config('search_api.settings')->get('default_cron_limit'),
       'index_directly' => TRUE,
-      'fields' => array(),
-      'processors' => array(),
     );
   }
 
@@ -437,7 +451,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Filter processors by status if required. Enabled processors are those
     // which have settings in the "processors" option.
     if ($only_enabled) {
-      $processors_settings = $this->getOption('processors', array());
+      $processors_settings = $this->getProcessorSettings();
       $processors = array_intersect_key($processors, $processors_settings);
     }
 
@@ -449,7 +463,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getProcessorsByStage($stage, $only_enabled = TRUE) {
     $processors = $this->loadProcessors();
-    $processor_settings = $this->getOption('processors', array());
+    $processor_settings = $this->getProcessorSettings();
     $processor_weights = array();
 
     // Get a list of all processors meeting the criteria (stage and, optionally,
@@ -482,13 +496,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The loaded processors, keyed by processor ID.
    */
   protected function loadProcessors() {
-    if (!isset($this->processors)) {
+    if (empty($this->processorPlugins)) {
       /** @var $processor_plugin_manager \Drupal\search_api\Processor\ProcessorPluginManager */
       $processor_plugin_manager = \Drupal::service('plugin.manager.search_api.processor');
-      $processor_settings = $this->getOption('processors', array());
+      $processor_settings = $this->getProcessorSettings();
 
       foreach ($processor_plugin_manager->getDefinitions() as $name => $processor_definition) {
-        if (class_exists($processor_definition['class']) && empty($this->processors[$name])) {
+        if (class_exists($processor_definition['class']) && empty($this->processorPlugins[$name])) {
           // Create our settings for this processor.
           $settings = empty($processor_settings[$name]['settings']) ? array() : $processor_settings[$name]['settings'];
           $settings['index'] = $this;
@@ -496,7 +510,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
           $processor = $processor_plugin_manager->createInstance($name, $settings);
           if ($processor->supportsIndex($this)) {
-            $this->processors[$name] = $processor;
+            $this->processorPlugins[$name] = $processor;
           }
         }
         elseif (!class_exists($processor_definition['class'])) {
@@ -505,7 +519,22 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
     }
 
+    return $this->processorPlugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessorSettings() {
     return $this->processors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProcessorSettings(array $processors) {
+    $this->processors = $processors;
+    return $this;
   }
 
   /**
@@ -559,7 +588,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(new FormattableMarkup('Cannot add field with machine name %field_id: machine name is already taken.', $args));
     }
 
-    $this->options['fields'][$field_id] = $field->getSettings();
+    $this->fields[$field_id] = $field->getSettings();
 
     $this->resetCaches();
     return $this;
@@ -569,7 +598,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function renameField($old_field_id, $new_field_id) {
-    if (isset($this->options['fields'][$old_field_id])) {
+    if (isset($this->fields[$old_field_id])) {
       $args['%field_id'] = $old_field_id;
       throw new SearchApiException(new FormattableMarkup('Could not rename field with machine name %field_id: no such field.', $args));
     }
@@ -577,13 +606,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $args['%field_id'] = $new_field_id;
       throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
     }
-    if (isset($this->options['fields'][$new_field_id])) {
+    if (isset($this->fields[$new_field_id])) {
       $args['%field_id'] = $new_field_id;
       throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
     }
 
-    $this->options['fields'][$new_field_id] = $this->options['fields'][$old_field_id];
-    unset($this->options['fields'][$old_field_id]);
+    $this->fields[$new_field_id] = $this->fields[$old_field_id];
+    unset($this->fields[$old_field_id]);
 
     $this->resetCaches();
     return $this;
@@ -602,7 +631,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException(new FormattableMarkup('Cannot remove field with machine name %field_id: field is locked.', $args));
     }
 
-    unset($this->options['fields'][$field_id]);
+    unset($this->fields[$field_id]);
 
     $this->resetCaches();
     return $this;
@@ -615,7 +644,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $fields = $this->getCache(__FUNCTION__, FALSE);
     if (!$fields) {
       $fields = array();
-      foreach ($this->getOption('fields', array()) as $key => $field_info) {
+      foreach ($this->getFieldSettings() as $key => $field_info) {
         $fields[$key] = Utility::createField($this, $key, $field_info);
       }
     }
@@ -656,7 +685,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $fulltext_fields = $this->getCache(__FUNCTION__);
     if (!$fulltext_fields) {
       $fulltext_fields = array();
-      foreach ($this->getOption('fields', array()) as $key => $field_info) {
+      foreach ($this->getFieldSettings() as $key => $field_info) {
         if (Utility::isTextType($field_info['type'])) {
           $fulltext_fields[] = $key;
         }
@@ -664,6 +693,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->setCache(__FUNCTION__, $fulltext_fields);
     }
     return $fulltext_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldSettings() {
+    return $this->fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFieldSettings(array $fields = array()) {
+    $this->fields = $fields;
+    return $this;
   }
 
   /**
@@ -759,7 +803,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->status) {
       throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
     }
-    if (empty($this->options['fields'])) {
+    if (empty($this->fields)) {
       throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
     }
 
@@ -983,7 +1027,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->datasourcePlugins = NULL;
     $this->trackerPlugin = NULL;
     $this->serverInstance = NULL;
-    $this->processors = NULL;
+    $this->processorPlugins = NULL;
     $this->properties = NULL;
     $this->cache = array();
     if ($include_stored) {
@@ -1036,17 +1080,17 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     // Remove all "locked" and "hidden" flags from all fields of the index. If
     // they are still valid, they should be re-added by the processors.
-    foreach ($this->options['fields'] as $field_id => $field_settings) {
-      unset($this->options['fields'][$field_id]['indexed_locked']);
-      unset($this->options['fields'][$field_id]['type_locked']);
-      unset($this->options['fields'][$field_id]['hidden']);
+    foreach ($this->fields as $field_id => $field_settings) {
+      unset($this->fields[$field_id]['indexed_locked']);
+      unset($this->fields[$field_id]['type_locked']);
+      unset($this->fields[$field_id]['hidden']);
     }
 
     // We first have to check for locked processors, otherwise their
     // preIndexSave() methods might not be called in the next step.
     foreach ($this->getProcessors(FALSE) as $processor_id => $processor) {
-      if ($processor->isLocked() && !isset($this->options['processors'][$processor_id])) {
-        $this->options['processors'][$processor_id] = array(
+      if ($processor->isLocked() && !isset($this->processors[$processor_id])) {
+        $this->processors[$processor_id] = array(
           'processor_id' => $processor_id,
           'weights' => array(),
           'settings' => array(),
@@ -1200,8 +1244,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The previous version of the index.
    */
   protected function reactToProcessorChanges(IndexInterface $original) {
-    $original_settings = $original->getOption('processors', array());
-    $new_settings = $this->getOption('processors', array());
+    $original_settings = $original->getProcessorSettings();
+    $new_settings = $this->getProcessorSettings();
 
     // Only actually do something when the processor settings are changed.
     if ($original_settings != $new_settings) {

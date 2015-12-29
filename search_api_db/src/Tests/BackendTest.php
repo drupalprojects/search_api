@@ -166,7 +166,7 @@ class BackendTest extends EntityUnitTestBase {
     $index->removeField('keywords');
     $index->save();
 
-    $index_fields = array_keys($index->getOption('fields', array()));
+    $index_fields = array_keys($index->getFields());
 
     $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
     $server_fields = array_keys($db_info['field_tables']);
@@ -189,13 +189,13 @@ class BackendTest extends EntityUnitTestBase {
     $property = 'body';
     $this->addField($index, $property);
 
-    $processors = $index->getOption('processors', array());
+    $processors = $index->getProcessorSettings();
     $processors['html_filter'] = array(
       'processor_id' => 'html_filter',
       'weights' => array(),
       'settings' => array(),
     );
-    $index->setOption('processors', $processors);
+    $index->setProcessorSettings($processors);
     $index->save();
   }
 
@@ -205,9 +205,9 @@ class BackendTest extends EntityUnitTestBase {
   protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
-    $processors = $index->getOption('processors');
+    $processors = $index->getProcessorSettings();
     unset($processors['html_filter']);
-    $index->setOption('processors', $processors);
+    $index->setProcessorSettings($processors);
     $index->removeField('body');
     $index->save();
   }

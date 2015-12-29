@@ -175,10 +175,10 @@ class ProcessorIntegrationTest extends WebTestBase {
    */
   public function checkLanguageIntegration() {
     $index = $this->loadIndex();
-    $processors = $index->getOption('processors', array());
+    $processors = $index->getProcessorSettings();
     $this->assertTrue(!empty($processors['language']), 'The "language" processor is enabled by default.');
     unset($processors['language']);
-    $index->setOption('processors', $processors)->save();
+    $index->setProcessorSettings($processors)->save();
     $processors = $this->loadIndex()->getProcessors();
     $this->assertTrue(!empty($processors['language']), 'The "language" processor cannot be disabled.');
   }
@@ -247,10 +247,10 @@ class ProcessorIntegrationTest extends WebTestBase {
    */
   public function checkUrlFieldIntegration() {
     $index = $this->loadIndex();
-    $processors = $index->getOption('processors', array());
+    $processors = $index->getProcessorSettings();
     $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor is enabled by default.');
     unset($processors['add_url']);
-    $index->setOption('processors', $processors)->save();
+    $index->setProcessorSettings($processors)->save();
     $processors = $this->loadIndex()->getProcessors();
     $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor cannot be disabled.');
   }

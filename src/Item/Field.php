@@ -432,7 +432,7 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function getBoost() {
     if (!isset($this->boost)) {
-      $fields = $this->index->getOption('fields', array());
+      $fields = $this->index->getFieldSettings();
       $this->boost = isset($fields[$this->fieldIdentifier]['boost']) ? (float) $fields[$this->fieldIdentifier]['boost'] : 1.0;
     }
     return $this->boost;

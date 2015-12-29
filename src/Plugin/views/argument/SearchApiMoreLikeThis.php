@@ -79,9 +79,7 @@ class SearchApiMoreLikeThis extends SearchApiArgument {
       }
       $fields = isset($this->options['fields']) ? $this->options['fields'] : array();
       if (!$fields) {
-        foreach ($this->query->getIndex()->getOption('fields', array()) as $key => $field) {
-          $fields[] = $key;
-        }
+        $fields = array_keys($this->query->getIndex()->getFields());
       }
       $mlt = array(
         'id' => $this->argument,
