@@ -1,4 +1,4 @@
-"search_api.datasource.plugin.entity:*":
+"plugin.plugin_configuration.search_api_datasource.entity:*":
   type: mapping
   label: 'Entity datasource configuration'
   mapping:

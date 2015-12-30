@@ -85,7 +85,7 @@ search_api.index.*:
       type: sequence
       label: 'Datasource plugin configurations'
       sequence:
-        type: search_api.datasource.plugin.[%key]
+        type: plugin.plugin_configuration.search_api_datasource.[%key]
         label: 'Datasource plugin configuration'
     tracker:
       type: string
