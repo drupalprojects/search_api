@@ -397,11 +397,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     // @todo This will, via Index::onDependencyRemoval(), remove all indexes
-    // from this server, triggering the server's removeIndex() method. This is,
-    // at best, wasted performance and could at worst lead to a bug if
-    // removeIndex() saves the server. We should try what happens when this is
-    // the case, whether there really is a bug, and try to fix it somehow (maybe
-    // clever detection of this case in removeIndex() or Index::postSave().
+    //   from this server, triggering the server's removeIndex() method. This
+    //   is, at best, wasted performance and could at worst lead to a bug if
+    //   removeIndex() saves the server. We should try what happens when this is
+    //   the case, whether there really is a bug, and try to fix it somehow
+    //   (maybe clever detection of this case in removeIndex() or
+    //   Index::postSave(). $server->isUninstalling() might help?
     parent::preDelete($storage, $entities);
 
     // Iterate through the servers, executing the backends' preDelete() methods
