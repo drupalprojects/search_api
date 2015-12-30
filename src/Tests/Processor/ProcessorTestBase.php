@@ -65,8 +65,10 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       ->getEditable('search_api.settings')
       ->set('tracking_page_size', 100)
       ->save();
+
     // Do not use a batch for tracking the initial items after creating an
-    // index. Without this, this test will fail when run through the GUI.
+    // index when running the tests via the GUI. Otherwise, it seems Drupal's
+    // Batch API gets confused and the test fails.
     \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
     $server_name = $this->randomMachineName();

@@ -27,23 +27,35 @@ class HooksTest extends WebTestBase {
   protected $indexId;
 
   /**
-   * Tests various operations via the Search API's admin UI.
+   * {@inheritdoc}
    */
-  public function testHooks() {
+  public function setUp() {
+    parent::setUp();
+
     // Create some nodes.
     $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 1'));
     $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 2'));
     $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 3'));
     $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 4'));
 
-    // Log in, so we can test all the things.
-    $this->drupalLogin($this->adminUser);
+    // Do not use a batch for tracking the initial items after creating an
+    // index when running the tests via the GUI. Otherwise, it seems Drupal's
+    // Batch API gets confused and the test fails.
+    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
     // Create an index and server to work with.
     $this->getTestServer();
     $index = $this->getTestIndex();
     $this->indexId = $index->id();
 
+    // Log in, so we can test all the things.
+    $this->drupalLogin($this->adminUser);
+  }
+
+  /**
+   * Tests various operations via the Search API's admin UI.
+   */
+  public function testHooks() {
     // hook_search_api_backend_info_alter was triggered.
     $this->drupalGet('admin/config/search/search-api/add-server');
     $this->assertText('Slims return');

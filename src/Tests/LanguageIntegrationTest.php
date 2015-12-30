@@ -30,20 +30,33 @@ class LanguageIntegrationTest extends WebTestBase {
   public static $modules = array('node', 'search_api', 'search_api_test_backend', 'language');
 
   /**
-   * Tests indexing with different language settings trough the UI.
+   * {@inheritdoc}
    */
-  public function testIndexSettings() {
-    $this->drupalLogin($this->adminUser);
+  public function setUp() {
+    parent::setUp();
 
     // Add extra languages.
     ConfigurableLanguage::createFromLangcode('nl')->save();
     ConfigurableLanguage::createFromLangcode('xx-lolspeak')->save();
 
-    // Create a test server and index.
+    // Do not use a batch for tracking the initial items after creating an
+    // index when running the tests via the GUI. Otherwise, it seems Drupal's
+    // Batch API gets confused and the test fails.
+    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+
+    // Create an index and server to work with.
     $this->getTestServer();
     $index = $this->getTestIndex();
     $this->indexId = $index->id();
 
+    // Log in, so we can test all the things.
+    $this->drupalLogin($this->adminUser);
+  }
+
+  /**
+   * Tests indexing with different language settings trough the UI.
+   */
+  public function testIndexSettings() {
     // Create 2 articles.
     $article1 = $this->drupalCreateNode(array('type' => 'article'));
     $article2 = $this->drupalCreateNode(array('type' => 'article'));

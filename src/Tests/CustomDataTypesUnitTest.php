@@ -53,7 +53,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $this->installSchema('user', array('users_data'));
 
     // Do not use a batch for tracking the initial items after creating an
-    // index. Without this, this test will fail when run through the GUI.
+    // index when running the tests via the GUI. Otherwise, it seems Drupal's
+    // Batch API gets confused and the test fails.
     \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
     $this->setUpExampleStructure();
