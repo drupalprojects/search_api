@@ -350,14 +350,6 @@ class ContentEntity extends DatasourcePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function load($id) {
-    $items = $this->loadMultiple(array($id));
-    return $items ? reset($items) : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function loadMultiple(array $ids) {
     $allowed_languages = $all_languages = $this->getLanguageManager()->getLanguages();
 

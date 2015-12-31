@@ -20,13 +20,6 @@ class HooksTest extends WebTestBase {
   public static $modules = array('node', 'search_api', 'search_api_test_backend', 'search_api_test_views', 'search_api_test_hooks');
 
   /**
-   * The id of the index.
-   *
-   * @var string
-   */
-  protected $indexId;
-
-  /**
    * {@inheritdoc}
    */
   public function setUp() {
@@ -45,8 +38,7 @@ class HooksTest extends WebTestBase {
 
     // Create an index and server to work with.
     $this->getTestServer();
-    $index = $this->getTestIndex();
-    $this->indexId = $index->id();
+    $this->getTestIndex();
 
     // Log in, so we can test all the things.
     $this->drupalLogin($this->adminUser);
@@ -101,23 +93,6 @@ class HooksTest extends WebTestBase {
     $this->assertText('Stepping into tomorrow');
     // hook_search_api_results_TAG_alter was triggered.
     $this->assertText('Llama');
-  }
-
-  /**
-   * Returns the system path for the test index.
-   *
-   * @param string|null $tab
-   *   (optional) If set, the path suffix for a specific index tab.
-   *
-   * @return string
-   *   A system path.
-   */
-  protected function getIndexPath($tab = NULL) {
-    $path = 'admin/config/search/search-api/index/' . $this->indexId;
-    if ($tab) {
-      $path .= "/$tab";
-    }
-    return $path;
   }
 
 }

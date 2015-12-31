@@ -315,4 +315,36 @@ class RenderedItem extends ProcessorPluginBase {
     return $this->dependencies;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    // All dependencies of this processor are entity view modes, so we go
+    // through our configuration and remove the settings for all datasources or
+    // bundles which were set to one of the removed view modes. This will always
+    // result in the removal of all those dependencies.
+    // The code is highly similar to calculateDependencies(), only that we
+    // remove the setting (if necessary) instead of adding a dependency.
+    $view_modes = $this->configuration['view_mode'];
+    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
+      if ($entity_type_id = $datasource->getEntityTypeId() && !empty($view_modes[$datasource_id])) {
+        foreach ($view_modes[$datasource_id] as $bundle => $view_mode_id) {
+          if ($view_mode_id) {
+            /** @var \Drupal\Core\Entity\EntityViewModeInterface $view_mode */
+            $view_mode = EntityViewMode::load($entity_type_id . '.' . $view_mode_id);
+            if ($view_mode) {
+              $dependency_key = $view_mode->getConfigDependencyKey();
+              $dependency_name = $view_mode->getConfigDependencyName();
+              if (!empty($dependencies[$dependency_key][$dependency_name])) {
+                unset($this->configuration['view_mode'][$datasource_id][$bundle]);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return TRUE;
+  }
+
 }

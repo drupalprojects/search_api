@@ -41,8 +41,44 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
   /**
    * {@inheritdoc}
    */
-  public function getBundles() {
+  public function getPropertyDefinitions() {
     return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function load($id) {
+    $items = $this->loadMultiple(array($id));
+    return $items ? reset($items) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadMultiple(array $ids) {
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemLabel(ComplexDataInterface $item) {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemBundle(ComplexDataInterface $item) {
+    return $this->getPluginId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemUrl(ComplexDataInterface $item) {
+    return NULL;
   }
 
   /**
@@ -50,6 +86,15 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    */
   public function getViewModes($bundle = NULL) {
     return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundles() {
+    return array(
+      $this->getPluginId() => $this->label(),
+    );
   }
 
   /**
@@ -68,6 +113,20 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
       $build[$key] = $this->viewItem($item, $view_mode, $langcode);
     }
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeId() {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getItemIds($page = NULL) {
+    return array();
   }
 
 }

@@ -28,13 +28,6 @@ class IntegrationTest extends WebTestBase {
   protected $serverId;
 
   /**
-   * The ID of the search index used for this test.
-   *
-   * @var string
-   */
-  protected $indexId;
-
-  /**
    * A storage instance for indexes.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
@@ -849,23 +842,6 @@ class IntegrationTest extends WebTestBase {
       $this->assertFalse($index->status(), 'The index associated with the server was disabled.');
       $this->assertNull($index->getServerId(), 'The index was removed from the server.');
     }
-  }
-
-  /**
-   * Returns the system path for the test index.
-   *
-   * @param string|null $tab
-   *   (optional) If set, the path suffix for a specific index tab.
-   *
-   * @return string
-   *   A system path.
-   */
-  protected function getIndexPath($tab = NULL) {
-    $path = 'admin/config/search/search-api/index/' . $this->indexId;
-    if ($tab) {
-      $path .= "/$tab";
-    }
-    return $path;
   }
 
   /**

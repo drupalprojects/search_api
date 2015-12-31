@@ -5,3 +5,6 @@ search_api.backend.plugin.search_api_test_backend:
     test:
       type: string
       label: Test configuration
+    dependencies:
+      type: config_dependencies
+      label: Dependencies

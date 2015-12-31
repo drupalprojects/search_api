@@ -174,6 +174,25 @@ class TestBackend extends BackendPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    return !empty($this->configuration['dependencies']) ? $this->configuration['dependencies'] : array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    $key = 'search_api_test_backend.dependencies.remove';
+    $remove = \Drupal::state()->get($key, FALSE);
+    if ($remove) {
+      unset($this->configuration['dependencies']);
+    }
+    return $remove;
+  }
+
+  /**
    * Throws an exception if set in the Drupal state for the given method.
    *
    * Also records (successful) calls to these methods.
@@ -194,4 +213,5 @@ class TestBackend extends BackendPluginBase {
     $methods_called[] = $method;
     $state->set($key, $methods_called);
   }
+
 }

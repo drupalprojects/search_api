@@ -32,6 +32,15 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
+  /**
+   * The permissions of the admin user.
+   *
+   * @var string[]
+  */
+  protected $adminUserPermissions = array(
+    'administer search_api',
+    'access administration pages'
+  );
 
   /**
    * A user without Search API admin permission.
@@ -55,13 +64,20 @@ abstract class WebTestBase extends SimpletestWebTestBase {
   protected $urlGenerator;
 
   /**
+   * The ID of the search index used for this test.
+   *
+   * @var string
+   */
+  protected $indexId;
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
 
     // Create the users used for the tests.
-    $this->adminUser = $this->drupalCreateUser(array('administer search_api', 'access administration pages'));
+    $this->adminUser = $this->drupalCreateUser($this->adminUserPermissions);
     $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
     $this->anonymousUser = $this->drupalCreateUser();
 
@@ -101,6 +117,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    */
   public function getTestServer($name = 'WebTest server', $id = 'webtest_server', $backend_id = 'search_api_test_backend', $backend_config = array(), $reset = FALSE) {
     if ($reset) {
+      /** @var \Drupal\search_api\ServerInterface $server */
       $server = Server::load($id);
       if ($server) {
         $server->delete();
@@ -140,6 +157,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    */
   public function getTestIndex($name = 'WebTest Index', $id = 'webtest_index', $server_id = 'webtest_server', $datasource_id = 'entity:node', $reset = FALSE) {
     if ($reset) {
+      /** @var \Drupal\search_api\IndexInterface $index */
       $index = Index::load($id);
       if ($index) {
         $index->delete();
@@ -154,9 +172,27 @@ abstract class WebTestBase extends SimpletestWebTestBase {
         'datasources' => array($datasource_id),
       ));
       $index->save();
+      $this->indexId = $index->id();
     }
 
     return $index;
+  }
+
+  /**
+   * Returns the system path for the test index.
+   *
+   * @param string|null $tab
+   *   (optional) If set, the path suffix for a specific index tab.
+   *
+   * @return string
+   *   A system path.
+   */
+  protected function getIndexPath($tab = NULL) {
+    $path = 'admin/config/search/search-api/index/' . $this->indexId;
+    if ($tab) {
+      $path .= "/$tab";
+    }
+    return $path;
   }
 
 }

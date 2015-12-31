@@ -10,7 +10,6 @@ namespace Drupal\search_api\Entity;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
@@ -1332,24 +1331,111 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function calculateDependencies() {
+    $dependencies = $this->getDependencyData();
+    $this->dependencies = array();
+
+    foreach ($dependencies as $type => $list) {
+      $this->dependencies[$type] = array_keys($list);
+    }
+
+    return $this;
+  }
+
+  /**
+   * Retrieves data about this index's dependencies.
+   *
+   * The return value is structured as follows:
+   *
+   * @code
+   * array(
+   *   'config' => array(
+   *     'CONFIG_DEPENDENCY_KEY' => array(
+   *       'always' => array(
+   *         'processors' => array(
+   *           'PROCESSOR_ID' => $processor,
+   *         ),
+   *         'datasources' => array(
+   *           'DATASOURCE_ID_1' => $datasource_1,
+   *           'DATASOURCE_ID_2' => $datasource_2,
+   *         ),
+   *       ),
+   *       'optional' => array(
+   *         'index' => array(
+   *           'INDEX_ID' => $index,
+   *         ),
+   *         'tracker' => array(
+   *           'TRACKER_ID' => $tracker,
+   *         ),
+   *       ),
+   *     ),
+   *   )
+   * )
+   * @endcode
+   *
+   * @return object[][][][][]
+   *   An associative array containing the index's dependencies. The array is
+   *   first keyed by the config dependency type ("module", "config", etc.) and
+   *   then by the names of the config dependencies of that type which the index
+   *   has. The values are associative arrays with up to two keys, "always" and
+   *   "optional", specifying whether the dependency is a hard one by the plugin
+   *   (or index) in question or potentially depending on the configuration. The
+   *   values on this level are arrays with keys "index", "tracker",
+   *   "datasources" and/or "processors" and values arrays of IDs mapped to
+   *   their entities/plugins.
+   */
+  protected function getDependencyData() {
+    $dependency_data = array();
+
+    // Since calculateDependencies() will work directly on the $dependencies
+    // property, we first save its original state and then restore it
+    // afterwards.
+    $original_dependencies = $this->dependencies;
     parent::calculateDependencies();
+    foreach ($this->dependencies as $dependency_type => $list) {
+      foreach ($list as $name) {
+        $dependency_data[$dependency_type][$name]['always']['index'][$this->id] = $this;
+      }
+    }
+    $this->dependencies = $original_dependencies;
 
-    // Add a dependency on the server, if there is one set.
+    // The server needs special treatment, since it is a dependency of the index
+    // itself, and not one of its plugins.
     if ($this->hasValidServer()) {
-      $this->addDependency('config', $this->getServer()->getConfigDependencyName());
-    }
-    // Add dependencies for all of the index's plugins.
-    if ($this->hasValidTracker()) {
-      $this->calculatePluginDependencies($this->getTracker());
-    }
-    foreach ($this->getProcessors() as $processor) {
-      $this->calculatePluginDependencies($processor);
-    }
-    foreach ($this->getDatasources() as $datasource) {
-      $this->calculatePluginDependencies($datasource);
+      $name = $this->getServer()->getConfigDependencyName();
+      $dependency_data['config'][$name]['optional']['index'][$this->id] = $this;
     }
 
-    return $this->dependencies;
+    // All other plugins can be treated uniformly.
+    $plugins = $this->getAllPlugins();
+
+    foreach ($plugins as $plugin_type => $type_plugins) {
+      foreach ($type_plugins as $plugin_id => $plugin) {
+        // Largely copied from
+        // \Drupal\Core\Plugin\PluginDependencyTrait::calculatePluginDependencies().
+        $definition = $plugin->getPluginDefinition();
+
+        // First, always depend on the module providing the plugin.
+        $dependency_data['module'][$definition['provider']]['always'][$plugin_type][$plugin_id] = $plugin;
+
+        // Plugins can declare additional dependencies in their definition.
+        if (isset($definition['config_dependencies'])) {
+          foreach ($definition['config_dependencies'] as $dependency_type => $list) {
+            foreach ($list as $name) {
+              $dependency_data[$dependency_type][$name]['always'][$plugin_type][$plugin_id] = $plugin;
+            }
+          }
+        }
+
+        // Finally, add the dynamically-calculated dependencies of the plugin.
+        foreach ($plugin->calculateDependencies() as $dependency_type => $list) {
+          foreach ($list as $name) {
+            $dependency_data[$dependency_type][$name]['optional'][$plugin_type][$plugin_id] = $plugin;
+          }
+        }
+      }
+    }
+
+    return $dependency_data;
   }
 
   /**
@@ -1358,18 +1444,133 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function onDependencyRemoval(array $dependencies) {
     $changed = parent::onDependencyRemoval($dependencies);
 
-    // @todo Also react sensibly when removing the dependency of a plugin or an
-    //   indexed field. See #2574633 and #2541206.
-    foreach ($dependencies['config'] as $entity) {
-      if ($entity instanceof EntityInterface && $entity->getEntityTypeId() == 'search_api_server') {
-        // Remove this index from the deleted server (thus disabling it).
-        $this->setServer(NULL);
-        $this->setStatus(FALSE);
-        $changed = TRUE;
+    $all_plugins = $this->getAllPlugins();
+    $dependency_data = $this->getDependencyData();
+    // Make sure our dependency data has the exact same keys as $dependencies,
+    // to simplify the subsequent code.
+    $dependencies = array_filter($dependencies);
+    $dependency_data = array_intersect_key($dependency_data, $dependencies);
+    $dependency_data += array_fill_keys(array_keys($dependencies), array());
+    $call_on_removal = array();
+
+    foreach ($dependencies as $dependency_type => $dependency_objects) {
+      $dependency_data[$dependency_type] = array_intersect_key($dependency_data[$dependency_type], $dependency_objects);
+      foreach ($dependency_data[$dependency_type] as $name => $dependency_sources) {
+        // We first remove all the "hard" dependencies.
+        if (!empty($dependency_sources['always'])) {
+          foreach ($dependency_sources['always'] as $plugin_type => $plugins) {
+            // We can hardly remove the index itself.
+            if ($plugin_type == 'index') {
+              continue;
+            }
+
+            $all_plugins[$plugin_type] = array_diff_key($all_plugins[$plugin_type], $plugins);
+            $changed = TRUE;
+          }
+        }
+
+        // Then, collect all the optional ones.
+        if (!empty($dependency_sources['optional'])) {
+          // However this plays out, it will lead to a change.
+          $changed = TRUE;
+
+          foreach ($dependency_sources['optional'] as $plugin_type => $plugins) {
+            // Deal with the index right away, since that dependency can only be
+            // the server.
+            if ($plugin_type == 'index') {
+              $this->setServer(NULL);
+              continue;
+            }
+
+            // Only include those plugins that have not already been removed.
+            $plugins = array_intersect_key($plugins, $all_plugins[$plugin_type]);
+
+            foreach ($plugins as $plugin_id => $plugin) {
+              $call_on_removal[$plugin_type][$plugin_id][$dependency_type][$name] = $dependency_objects[$name];
+            }
+          }
+        }
       }
     }
 
+    // Now for all plugins with optional dependencies (stored in
+    // $call_on_removal, mapped to their removed dependencies) call their
+    // onDependencyRemoval() methods.
+    $updated_config = array();
+    foreach ($call_on_removal as $plugin_type => $plugins) {
+      foreach ($plugins as $plugin_id => $plugin_dependencies) {
+        $removal_successful = $all_plugins[$plugin_type][$plugin_id]->onDependencyRemoval($plugin_dependencies);
+        // If the plugin was successfully changed to remove the dependency,
+        // remember the new configuration to later set it. Otherwise, remove the
+        // plugin from the index so the dependency still gets removed.
+        if ($removal_successful) {
+          $updated_config[$plugin_type][$plugin_id] = $all_plugins[$plugin_type][$plugin_id]->getConfiguration();
+        }
+        else {
+          unset($all_plugins[$plugin_type][$plugin_id]);
+        }
+      }
+    }
+
+    // The handling of how we translate plugin changes back to the index varies
+    // according to plugin type, unfortunately.
+    // First, remove plugins that need to be removed.
+    $this->processors = array_intersect_key($this->processors, $all_plugins['processors']);
+    $this->datasources = array_keys($all_plugins['datasources']);
+    $this->datasource_configs = array_intersect_key($this->datasource_configs, $all_plugins['datasources']);
+    // There always needs to be a tracker.
+    if (empty($all_plugins['tracker'])) {
+      $this->tracker = \Drupal::config('search_api.settings')->get('default_tracker');
+      $this->tracker_config = array();
+    }
+    // There also always needs to be a datasource, but here we have no easy way
+    // out – if we had to remove all datasources, the operation fails. Return
+    // FALSE to indicate this, which will cause the index to be deleted.
+    if (!$this->datasources) {
+      return FALSE;
+    }
+
+    // Then, update configuration as necessary.
+    foreach ($updated_config as $plugin_type => $plugin_configs) {
+      foreach ($plugin_configs as $plugin_id => $plugin_config) {
+        switch ($plugin_type) {
+          case 'processors':
+            $this->processors[$plugin_id]['settings'] = $plugin_config;
+            break;
+          case 'datasources':
+            $this->datasource_configs[$plugin_id] = $plugin_config;
+            break;
+          case 'tracker':
+            $this->tracker_config = $plugin_config;
+            break;
+        }
+      }
+    }
+
+    if ($changed) {
+      $this->resetCaches();
+    }
+
     return $changed;
+  }
+
+  /**
+   * Retrieves all the plugins contained in this index.
+   *
+   * @return \Drupal\search_api\Plugin\IndexPluginInterface[][]
+   *   All plugins contained in this index, keyed by their property on the index
+   *   and their plugin ID.
+   */
+  protected function getAllPlugins() {
+    $plugins = array();
+
+    if ($this->hasValidTracker()) {
+      $plugins['tracker'][$this->getTrackerId()] = $this->getTracker();
+    }
+    $plugins['processors'] = $this->getProcessors();
+    $plugins['datasources'] = $this->getDatasources();
+
+    return $plugins;
   }
 
   /**

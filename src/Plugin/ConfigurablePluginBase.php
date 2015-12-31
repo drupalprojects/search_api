@@ -100,8 +100,16 @@ abstract class ConfigurablePluginBase extends PluginBase implements Configurable
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    $this->addDependency('module', $this->getPluginDefinition()['provider']);
-    return $this->dependencies;
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    // By default, we're not reacting to anything and so we should leave
+    // everything as it was.
+    return FALSE;
   }
 
 }

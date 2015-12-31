@@ -441,11 +441,37 @@ class Server extends ConfigEntityBase implements ServerInterface {
     parent::calculateDependencies();
 
     // Add the backend's dependencies.
-    if ($this->hasValidBackend() && ($backend = $this->getBackend())) {
-      $this->addDependencies($backend->calculateDependencies());
+    if ($this->hasValidBackend()) {
+      $this->calculatePluginDependencies($this->getBackend());
     }
 
-    return $this->dependencies;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function onDependencyRemoval(array $dependencies) {
+    $changed = parent::onDependencyRemoval($dependencies);
+
+    if ($this->hasValidBackend()) {
+      $removed_backend_dependencies = array();
+      $backend = $this->getBackend();
+      foreach ($backend->calculateDependencies() as $dependency_type => $list) {
+        if (isset($dependencies[$dependency_type])) {
+          $removed_backend_dependencies[$dependency_type] = array_intersect_key($dependencies[$dependency_type], array_flip($list));
+        }
+      }
+      $removed_backend_dependencies = array_filter($removed_backend_dependencies);
+      if ($removed_backend_dependencies) {
+        if ($backend->onDependencyRemoval($removed_backend_dependencies)) {
+          $this->backend_config = $backend->getConfiguration();
+          $changed = TRUE;
+        }
+      }
+    }
+
+    return $changed;
   }
 
   /**

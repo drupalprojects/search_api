@@ -21,13 +21,6 @@ use Drupal\search_api\Tests\WebTestBase;
 class ProcessorIntegrationTest extends WebTestBase {
 
   /**
-   * The ID of the search index used by this test.
-   *
-   * @var string
-   */
-  protected $indexId;
-
-  /**
    * {@inheritdoc}
    */
   public function setUp() {
