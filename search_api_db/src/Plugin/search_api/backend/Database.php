@@ -169,16 +169,20 @@ class Database extends BackendPluginBase {
     $keyvalue_factory = $container->get('keyvalue');
     $backend->setKeyValueStore($keyvalue_factory->get(self::INDEXES_KEY_VALUE_STORE_ID));
 
-    /** @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $dbms_compatibility_handler */
-    $dbms_compatibility_handler = $container->get('search_api_db.database_compatibility');
-    // Make sure that we actually provide a handler for the right database,
-    // otherwise fall back to the generic handler.
-    if ($dbms_compatibility_handler->getDatabase() != $backend->getDatabase()) {
-      /** @var \Drupal\Component\Transliteration\TransliterationInterface $transliterator */
-      $transliterator = $container->get('transliteration');
-      $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $transliterator);
+    // For a new backend plugin, the database might not be set yet. In that case
+    // we of course also don't need a DBMS compatibility handler.
+    if ($backend->getDatabase()) {
+      /** @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $dbms_compatibility_handler */
+      $dbms_compatibility_handler = $container->get('search_api_db.database_compatibility');
+      // Make sure that we actually provide a handler for the right database,
+      // otherwise fall back to the generic handler.
+      if ($dbms_compatibility_handler->getDatabase() != $backend->getDatabase()) {
+        /** @var \Drupal\Component\Transliteration\TransliterationInterface $transliterator */
+        $transliterator = $container->get('transliteration');
+        $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $transliterator);
+      }
+      $backend->setDbmsCompatibilityHandler($dbms_compatibility_handler);
     }
-    $backend->setDbmsCompatibilityHandler($dbms_compatibility_handler);
 
     return $backend;
   }
