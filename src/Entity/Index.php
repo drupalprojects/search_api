@@ -1392,7 +1392,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($properties['datasourcePlugins']);
     unset($properties['trackerPlugin']);
     unset($properties['serverInstance']);
-    unset($properties['processors']);
+    unset($properties['processorPlugins']);
     unset($properties['cache']);
     return array_keys($properties);
   }
