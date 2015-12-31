@@ -190,15 +190,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $serverInstance;
 
   /**
-   * Cached properties for this index's datasources.
-   *
-   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][][]
-   *
-   * @see getPropertyDefinitions()
-   */
-  protected $properties = array();
-
-  /**
    * Cached return values for several of the class's methods.
    *
    * @var array
@@ -1028,7 +1019,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->trackerPlugin = NULL;
     $this->serverInstance = NULL;
     $this->processorPlugins = NULL;
-    $this->properties = NULL;
     $this->cache = array();
     if ($include_stored) {
       Cache::invalidateTags($this->getCacheTags());
@@ -1403,7 +1393,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($properties['trackerPlugin']);
     unset($properties['serverInstance']);
     unset($properties['processors']);
-    unset($properties['properties']);
     unset($properties['cache']);
     return array_keys($properties);
   }
