@@ -2,23 +2,24 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\LanguageIntegrationUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\LanguageKernelTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\entity_test\Entity\EntityTestMul;
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\system\Tests\Entity\EntityLanguageTestBase;
 
 /**
  * Tests translation handling of the content entity datasource.
  *
  * @group search_api
  */
-class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
+class LanguageKernelTest extends KernelTestBase {
 
   /**
    * The test entity type used in the test.
@@ -46,7 +47,21 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('search_api', 'search_api_test_backend');
+  public static $modules = array(
+    'search_api',
+    'search_api_test_backend',
+    'language',
+    'user',
+    'system',
+    'entity_test',
+  );
+
+  /**
+   * An array of langcodes.
+   *
+   * @var string[]
+   */
+  protected $langcodes;
 
   /**
    * {@inheritdoc}
@@ -54,7 +69,25 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
   public function setUp() {
     parent::setUp();
 
+    // Enable translation for the entity_test module.
+    \Drupal::state()->set('entity_test.translation', TRUE);
+
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
+    $this->installEntitySchema('entity_test_mul');
+
+    // Create the default languages.
+    $this->installConfig(array('language'));
+    $this->langcodes = array();
+    for ($i = 0; $i < 3; ++$i) {
+      /** @var \Drupal\language\Entity\ConfigurableLanguage $language */
+      $language = ConfigurableLanguage::create(array(
+        'id' => 'l' . $i,
+        'label' => 'language - ' . $i,
+        'weight' => $i,
+      ));
+      $this->langcodes[$i] = $language->getId();
+      $language->save();
+    }
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
@@ -89,22 +122,24 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
   public function testItemTranslations() {
     // Test retrieving language and translations when no translations are
     // available.
+    /** @var \Drupal\entity_test\Entity\EntityTestMul $entity_1 */
     $entity_1 = EntityTestMul::create(array(
       'id' => 1,
       'name' => 'test 1',
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_1->save();
-    $this->assertEqual($entity_1->language()->getId(), 'en', new FormattableMarkup('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEquals('en', $entity_1->language()->getId(), new FormattableMarkup('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), new FormattableMarkup('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
+    /** @var \Drupal\entity_test\Entity\EntityTestMul $entity_2 */
     $entity_2 = EntityTestMul::create(array(
       'id' => 2,
       'name' => 'test 2',
       'user_id' => $this->container->get('current_user')->id(),
     ));
     $entity_2->save();
-    $this->assertEqual($entity_2->language()->getId(), 'en', new FormattableMarkup('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEquals('en', $entity_2->language()->getId(), new FormattableMarkup('%entity_type: Entity language set to site default.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_2->getTranslationLanguages(FALSE), new FormattableMarkup('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
@@ -115,19 +150,19 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       '1:en',
       '2:en',
     );
-    $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
+    $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids.');
 
     // Test indexing the new entity.
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 0, 'The index is empty.');
-    $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items to be indexed.');
+    $this->assertEquals(0, $this->index->getTracker()->getIndexedItemsCount(), 'The index is empty.');
+    $this->assertEquals(2, $this->index->getTracker()->getTotalItemsCount(), 'There are two items to be indexed.');
     $this->index->indexItems();
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 2, 'Two items have been indexed.');
+    $this->assertEquals(2, $this->index->getTracker()->getIndexedItemsCount(), 'Two items have been indexed.');
 
     // Now, make the first entity language-specific by assigning a language.
     $default_langcode = $this->langcodes[0];
     $entity_1->get('langcode')->setValue($default_langcode);
     $entity_1->save();
-    $this->assertEqual($entity_1->language(), \Drupal::languageManager()->getLanguage($this->langcodes[0]), new FormattableMarkup('%entity_type: Entity language retrieved.', array('%entity_type' => $this->testEntityTypeId)));
+    $this->assertEquals(\Drupal::languageManager()->getLanguage($this->langcodes[0]), $entity_1->language(), new FormattableMarkup('%entity_type: Entity language retrieved.', array('%entity_type' => $this->testEntityTypeId)));
     $this->assertFalse($entity_1->getTranslationLanguages(FALSE), new FormattableMarkup('%entity_type: No translations are available', array('%entity_type' => $this->testEntityTypeId)));
 
     // Test that the datasource returns the correct item IDs.
@@ -137,11 +172,11 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       '1:' . $this->langcodes[0],
       '2:en',
     );
-    $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids.');
+    $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids.');
 
     // Test that the index needs to be updated.
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated item needs to be reindexed.');
-    $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 2, 'There are two items in total.');
+    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated item needs to be reindexed.');
+    $this->assertEquals(2, $this->index->getTracker()->getTotalItemsCount(), 'There are two items in total.');
 
     // Set two translations for the first entity and test that the datasource
     // returns three separate item IDs, one for each translation.
@@ -159,11 +194,11 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       '1:' . $this->langcodes[2],
       '2:en',
     );
-    $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
+    $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids for a translated entity.');
 
     // Test that the index needs to be updated.
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be reindexed.');
-    $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 4, 'There are four items in total.');
+    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
+    $this->assertEquals(4, $this->index->getTracker()->getTotalItemsCount(), 'There are four items in total.');
 
     // Delete one translation and test that the datasource returns only three
     // items.
@@ -177,13 +212,13 @@ class LanguageIntegrationUnitTest extends EntityLanguageTestBase {
       '1:' . $this->langcodes[1],
       '2:en',
     );
-    $this->assertEqual($datasource_item_ids, $expected, 'Datasource returns correct item ids for a translated entity.');
+    $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids for a translated entity.');
 
     // Test reindexing.
-    $this->assertEqual($this->index->getTracker()->getTotalItemsCount(), 3, 'There are three items in total.');
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 1, 'The updated items needs to be reindexed.');
+    $this->assertEquals(3, $this->index->getTracker()->getTotalItemsCount(), 'There are three items in total.');
+    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
     $this->index->indexItems();
-    $this->assertEqual($this->index->getTracker()->getIndexedItemsCount(), 3, 'Three items are indexed.');
+    $this->assertEquals(3, $this->index->getTracker()->getIndexedItemsCount(), 'Three items are indexed.');
   }
 
 }

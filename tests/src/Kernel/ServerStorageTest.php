@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\search_api\Kernel\ServerStorageUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\ServerStorageTest.
  */
 
 namespace Drupal\Tests\search_api\Kernel;
@@ -16,7 +16,7 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group search_api
  */
-class ServerStorageUnitTest extends KernelTestBase {
+class ServerStorageTest extends KernelTestBase {
 
   /**
    * Modules to enable for this test.

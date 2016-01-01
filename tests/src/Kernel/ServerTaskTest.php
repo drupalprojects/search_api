@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\search_api\Kernel\ServerTaskUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\ServerTaskTest.
  */
 
 namespace Drupal\Tests\search_api\Kernel;
@@ -18,7 +18,7 @@ use Drupal\search_api\SearchApiException;
  *
  * @group search_api
  */
-class ServerTaskUnitTest extends KernelTestBase {
+class ServerTaskTest extends KernelTestBase {
 
   /**
    * The test server.
@@ -46,7 +46,11 @@ class ServerTaskUnitTest extends KernelTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('user', 'search_api', 'search_api_test_backend');
+  public static $modules = array(
+    'user',
+    'search_api',
+    'search_api_test_backend',
+  );
 
   /**
    * The state service.

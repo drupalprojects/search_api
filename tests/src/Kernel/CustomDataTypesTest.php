@@ -2,24 +2,23 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\CustomDataTypesUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\CustomDataTypesTest.
  */
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Kernel;
 
+use Drupal\entity_test\Entity\EntityTest;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility;
-use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
  * Tests custom data types integration.
  *
  * @group search_api
  */
-class CustomDataTypesUnitTest extends EntityUnitTestBase {
-
-  use ExampleContentTrait;
+class CustomDataTypesTest extends KernelTestBase {
 
   /**
    * The search server used for testing.
@@ -40,7 +39,24 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('field', 'search_api', 'search_api_db', 'search_api_test_db', 'search_api_test_backend');
+  public static $modules = array(
+    'field',
+    'search_api',
+    'search_api_db',
+    'search_api_test_db',
+    'search_api_test_backend',
+    'user',
+    'system',
+    'entity_test',
+    'text',
+  );
+
+  /**
+   * An array of test entities.
+   *
+   * @var \Drupal\entity_test\Entity\EntityTest[]
+   */
+  protected $entities;
 
   /**
    * {@inheritdoc}
@@ -51,17 +67,32 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
+    $this->installEntitySchema('entity_test');
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
     // Batch API gets confused and the test fails.
     \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
-    $this->setUpExampleStructure();
-
     $this->installConfig(array('search_api_test_db'));
 
-    $this->insertExampleContent();
+    // Create test entities.
+    $this->entities[1] = EntityTest::create(array(
+      'name' => 'foo bar baz föö smile' . json_decode('"\u1F601"'),
+      'body' => 'test test case Case casE',
+      'type' => 'item',
+      'keywords' => array('Orange', 'orange', 'örange', 'Orange'),
+      'category' => 'item_category'
+    ));
+    $this->entities[2] = EntityTest::create(array(
+      'name' => 'foo bar baz föö smile',
+      'body' => 'test test case Case casE',
+      'type' => 'item',
+      'keywords' => array('strawberry', 'llama'),
+      'category' => 'item_category'
+    ));
+    $this->entities[1]->save();
+    $this->entities[2]->save();
 
     // Create a test server.
     $this->server = Server::create(array(
@@ -90,8 +121,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
 
-    $this->assertEqual($processed_value, $original_value, 'The processed value matches the original value');
-    $this->assertEqual($processed_type, $original_type, 'The processed type matches the original type.');
+    $this->assertEquals($original_value, $processed_value, 'The processed value matches the original value');
+    $this->assertEquals($original_type, $processed_type, 'The processed type matches the original type.');
 
     // Reset the fields on the item and change to the supported data type.
     $item->setFieldsExtracted(FALSE);
@@ -102,8 +133,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
 
-    $this->assertEqual($processed_value, $original_value, 'The processed value matches the original value');
-    $this->assertEqual($processed_type, 'search_api_test_data_type', 'The processed type matches the new type.');
+    $this->assertEquals($original_value, $processed_value, 'The processed value matches the original value');
+    $this->assertEquals('search_api_test_data_type', $processed_type, 'The processed type matches the new type.');
 
     // Reset the fields on the item and change to the non-supported data type.
     $item->setFieldsExtracted(FALSE);
@@ -114,8 +145,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
 
-    $this->assertEqual($processed_value, $original_value, 'The processed value matches the original value');
-    $this->assertEqual($processed_type, 'integer', 'The processed type matches the fallback type.');
+    $this->assertEquals($original_value, $processed_value, 'The processed value matches the original value');
+    $this->assertEquals('integer', $processed_type, 'The processed type matches the fallback type.');
 
     // Reset the fields on the item and change to the data altering data type.
     $item->setFieldsExtracted(FALSE);
@@ -126,8 +157,8 @@ class CustomDataTypesUnitTest extends EntityUnitTestBase {
     $processed_value = $name_field->getValues()[0];
     $processed_type = $name_field->getType();
 
-    $this->assertEqual($processed_value, strlen($original_value), 'The processed value matches the altered original value');
-    $this->assertEqual($processed_type, 'search_api_altering_test_data_type', 'The processed type matches the defined type.');
+    $this->assertEquals(strlen($original_value), $processed_value, 'The processed value matches the altered original value');
+    $this->assertEquals('search_api_altering_test_data_type', $processed_type, 'The processed type matches the defined type.');
   }
 
 }

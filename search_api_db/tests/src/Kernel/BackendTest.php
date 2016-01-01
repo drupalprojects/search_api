@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api_db\Tests\BackendTest.
+ * Contains \Drupal\Tests\search_api_db\Kernel\BackendTest.
  */
 
-namespace Drupal\search_api_db\Tests;
+namespace Drupal\Tests\search_api_db\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
@@ -13,6 +13,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
@@ -21,14 +22,13 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\search_api\Utility;
 use Drupal\search_api_db\Plugin\search_api\backend\Database as BackendDatabase;
-use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
 /**
  * Tests index and search capabilities using the Database search backend.
  *
  * @group search_api
  */
-class BackendTest extends EntityUnitTestBase {
+class BackendTest extends KernelTestBase {
 
   use ExampleContentTrait;
   use StringTranslationTrait;
@@ -38,7 +38,16 @@ class BackendTest extends EntityUnitTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('field', 'search_api', 'search_api_db', 'search_api_test_db');
+  public static $modules = array(
+    'field',
+    'search_api',
+    'search_api_db',
+    'search_api_test_db',
+    'user',
+    'system',
+    'entity_test',
+    'text',
+  );
 
   /**
    * A search server ID.
@@ -63,6 +72,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
+    $this->installEntitySchema('entity_test');
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
@@ -131,7 +141,7 @@ class BackendTest extends EntityUnitTestBase {
     );
     $actual_fields = array_keys($field_tables);
     sort($actual_fields);
-    $this->assertEqual($expected_fields, $actual_fields, 'All expected field tables were created.');
+    $this->assertEquals($expected_fields, $actual_fields, 'All expected field tables were created.');
 
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
     foreach ($field_tables as $field_table) {
@@ -147,8 +157,8 @@ class BackendTest extends EntityUnitTestBase {
     $index = $this->getIndex();
     $this->assertTrue((bool) $index, 'The index was successfully created.');
 
-    $this->assertEqual($index->getTracker()->getTotalItemsCount(), 5, 'Correct item count.');
-    $this->assertEqual($index->getTracker()->getIndexedItemsCount(), 0, 'All items still need to be indexed.');
+    $this->assertEquals(5, $index->getTracker()->getTotalItemsCount(), 'Correct item count.');
+    $this->assertEquals(0, $index->getTracker()->getIndexedItemsCount(), 'All items still need to be indexed.');
   }
 
   /**
@@ -174,7 +184,7 @@ class BackendTest extends EntityUnitTestBase {
 
     sort($index_fields);
     sort($server_fields);
-    $this->assertEqual($index_fields, $server_fields);
+    $this->assertEquals($index_fields, $server_fields);
 
     // Add the field back for the next assertions.
     $index->addField($field)->save();
@@ -250,8 +260,8 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function searchNoResults() {
     $results = $this->buildSearch('test')->execute();
-    $this->assertEqual($results->getResultCount(), 0, 'No search results returned without indexing.');
-    $this->assertEqual(array_keys($results->getResultItems()), array(), 'No search results returned without indexing.');
+    $this->assertEquals(0, $results->getResultCount(), 'No search results returned without indexing.');
+    $this->assertEquals(array(), array_keys($results->getResultItems()), 'No search results returned without indexing.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -261,27 +271,27 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function searchSuccess1() {
     $results = $this->buildSearch('test')->range(1, 2)->sort('id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Search for »test« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 3)), 'Search for »test« returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Search for »test« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 3)), array_keys($results->getResultItems()), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $ids = $this->getItemIds(array(2));
     $id = reset($ids);
-    if ($this->assertEqual(key($results->getResultItems()), $id)) {
-      $this->assertEqual($results->getResultItems()[$id]->getId(), $id);
-      $this->assertEqual($results->getResultItems()[$id]->getDatasourceId(), 'entity:entity_test');
+    if ($this->assertEquals($id, key($results->getResultItems()))) {
+      $this->assertEquals($id, $results->getResultItems()[$id]->getId());
+      $this->assertEquals('entity:entity_test', $results->getResultItems()[$id]->getDatasourceId());
     }
 
     $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'Search for »test foo« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'Search for »test foo« returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()),'Search for »test foo« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('foo', array('type,item'))->sort('id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Search for »foo« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2)), 'Search for »foo« returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Search for »foo« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2)), array_keys($results->getResultItems()), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -301,8 +311,8 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Complex search 1 returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(4)), 'Complex search 1 returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Complex search 1 returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Complex search 1 returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -325,7 +335,7 @@ class BackendTest extends EntityUnitTestBase {
     $query->setOption('search_api_facets', $facets);
     $query->range(0, 0);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
+    $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
@@ -333,7 +343,7 @@ class BackendTest extends EntityUnitTestBase {
     );
     $category_facets = $results->getExtraData('search_api_facets')['category'];
     usort($category_facets, array($this, 'facetCompare'));
-    $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
+    $this->assertEquals($expected, $category_facets, 'Correct OR facets were returned');
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR', array('facet:' . 'category'));
@@ -352,14 +362,14 @@ class BackendTest extends EntityUnitTestBase {
     $query->setOption('search_api_facets', $facets);
     $query->range(0, 0);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'OR facets query returned correct number of results.');
+    $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
     );
     $category_facets = $results->getExtraData('search_api_facets')['category'];
     usort($category_facets, array($this, 'facetCompare'));
-    $this->assertEqual($expected, $category_facets, 'Correct OR facets were returned');
+    $this->assertEquals($expected, $category_facets, 'Correct OR facets were returned');
   }
 
   /**
@@ -385,26 +395,26 @@ class BackendTest extends EntityUnitTestBase {
    */
   protected function searchSuccess2() {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Search for »test« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(4, 1)), 'Search for »test« returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(),'Search for »test« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4, 1)), array_keys($results->getResultItems()), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch(NULL, array('body,test foobar'))->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Search with multi-term fulltext filter returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Search with multi-term fulltext filter returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Search with multi-term fulltext filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Search with multi-term fulltext filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('test foo')->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Search for »test foo« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 1, 3)), 'Search for »test foo« returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 1, 3)), array_keys($results->getResultItems()), 'Search for »test foo« returned correct result.');
     $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('foo', array('type,item'))->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'Search for »foo« returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3)), 'Search for »foo« returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'Search for »foo« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3)), array_keys($results->getResultItems()), 'Search for »foo« returned correct result.');
     $this->assertIgnored($results, array('foo'), 'Short key was ignored.');
     $this->assertWarnings($results, array((string) $this->t('No valid search keys were present in the query.')), '"No valid keys" warning was displayed.');
 
@@ -424,8 +434,8 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Complex search 1 returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Complex search 1 returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Complex search 1 returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Complex search 1 returned correct result.');
     $this->assertIgnored($results, array('baz', 'bar'), 'Correct keys were ignored.');
     $this->assertWarnings($results);
 
@@ -445,14 +455,14 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Complex search 2 returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Complex search 2 returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Complex search 2 returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Complex search 2 returned correct result.');
     $this->assertIgnored($results, array('baz', 'bar'), 'Correct keys were ignored.');
     $this->assertWarnings($results);
 
     $results = $this->buildSearch(NULL, array('keywords,orange'))->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'Filter query 1 on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 5)), 'Filter query 1 on multi-valued field returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'Filter query 1 on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 5)), array_keys($results->getResultItems()), 'Filter query 1 on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -461,26 +471,26 @@ class BackendTest extends EntityUnitTestBase {
       'keywords,apple',
     );
     $results = $this->buildSearch(NULL, $conditions)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Filter query 2 on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2)), 'Filter query 2 on multi-valued field returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Filter query 2 on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2)), array_keys($results->getResultItems()), 'Filter query 2 on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', 'orange', '<>')->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Negated filter on multi-valued field returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Negated filter on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', NULL)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Query with NULL filter returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Query with NULL filter returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Query with NULL filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Query with NULL filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', NULL, '<>')->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Query with NOT NULL filter returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Query with NOT NULL filter returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Query with NOT NULL filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Query with NOT NULL filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -491,8 +501,8 @@ class BackendTest extends EntityUnitTestBase {
   protected function regressionTests() {
     // Regression tests for #2007872.
     $results = $this->buildSearch('test')->sort('id', QueryInterface::SORT_ASC)->sort('type', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Sorting on field with NULLs returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 3, 4)), 'Sorting on field with NULLs returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Sorting on field with NULLs returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Sorting on field with NULLs returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -503,8 +513,8 @@ class BackendTest extends EntityUnitTestBase {
     $query->addConditionGroup($conditions);
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'OR filter on field with NULLs returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4, 5)), 'OR filter on field with NULLs returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'OR filter on field with NULLs returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3, 4, 5)), array_keys($results->getResultItems()), 'OR filter on field with NULLs returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -516,8 +526,8 @@ class BackendTest extends EntityUnitTestBase {
     $query->addConditionGroup($conditions);
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'OR filter on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'OR filter on multi-valued field returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'OR filter on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'OR filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -532,8 +542,8 @@ class BackendTest extends EntityUnitTestBase {
     $query->addConditionGroup($conditions);
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'Multiple OR filters on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Multiple OR filters on multi-valued field returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'Multiple OR filters on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Multiple OR filters on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -550,8 +560,8 @@ class BackendTest extends EntityUnitTestBase {
     $query->addConditionGroup($conditions1);
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'Complex nested filters on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(2, 4, 5)), 'Complex nested filters on multi-valued field returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'Complex nested filters on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Complex nested filters on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -573,7 +583,7 @@ class BackendTest extends EntityUnitTestBase {
     );
     $type_facets = $results->getExtraData('search_api_facets')['category'];
     usort($type_facets, array($this, 'facetCompare'));
-    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
+    $this->assertEquals($expected, $type_facets, 'Correct facets were returned');
 
     $query = $this->buildSearch();
     $facets['category']['missing'] = FALSE;
@@ -586,7 +596,7 @@ class BackendTest extends EntityUnitTestBase {
     );
     $type_facets = $results->getExtraData('search_api_facets')['category'];
     usort($type_facets, array($this, 'facetCompare'));
-    $this->assertEqual($type_facets, $expected, 'Correct facets were returned');
+    $this->assertEquals($expected, $type_facets, 'Correct facets were returned');
 
     // Regression tests for #2111753.
     $keys = array(
@@ -597,15 +607,15 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch($keys, array(), array('name'));
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 3, 'OR keywords returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4)), 'OR keywords returned correct result.');
+    $this->assertEquals(3, $results->getResultCount(), 'OR keywords returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()), 'OR keywords returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $query = $this->buildSearch($keys, array(), array('name', 'body'));
     $query->range(0, 0);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 5, 'Multi-field OR keywords returned correct number of results.');
+    $this->assertEquals(5, $results->getResultCount(), 'Multi-field OR keywords returned correct number of results.');
     $this->assertFalse($results->getResultItems(), 'Multi-field OR keywords returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
@@ -623,8 +633,8 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch($keys, array(), array('name'));
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Nested OR keywords returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested OR keywords returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Nested OR keywords returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested OR keywords returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -644,8 +654,8 @@ class BackendTest extends EntityUnitTestBase {
     $query = $this->buildSearch($keys, array(), array('name', 'body'));
     $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'Nested multi-field OR keywords returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'Nested multi-field OR keywords returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'Nested multi-field OR keywords returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested multi-field OR keywords returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -657,8 +667,8 @@ class BackendTest extends EntityUnitTestBase {
       'bar',
     );
     $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Negated AND fulltext search returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Negated AND fulltext search returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Negated AND fulltext search returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Negated AND fulltext search returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -669,8 +679,8 @@ class BackendTest extends EntityUnitTestBase {
       'baz',
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Negated OR fulltext search returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'Negated OR fulltext search returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Negated OR fulltext search returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Negated OR fulltext search returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -685,8 +695,8 @@ class BackendTest extends EntityUnitTestBase {
       ),
     );
     $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Nested NOT AND fulltext search returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3, 4)), 'Nested NOT AND fulltext search returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Nested NOT AND fulltext search returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Nested NOT AND fulltext search returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -695,15 +705,15 @@ class BackendTest extends EntityUnitTestBase {
     $query->addCondition('category', NULL);
     $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'NULL filter returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(3)), 'NULL filter returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'NULL filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'NULL filter returned correct result.');
 
     $query = $this->buildSearch();
     $query->addCondition('category', NULL, '<>');
     $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 4, 'NOT NULL filter returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 2, 4, 5)), 'NOT NULL filter returned correct result.');
+    $this->assertEquals(4, $results->getResultCount(), 'NOT NULL filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'NOT NULL filter returned correct result.');
 
     // Regression tests for #1658964.
     $query = $this->buildSearch();
@@ -724,7 +734,7 @@ class BackendTest extends EntityUnitTestBase {
     );
     $facets = $results->getExtraData('search_api_facets', array())['type'];
     usort($facets, array($this, 'facetCompare'));
-    $this->assertEqual($facets, $expected, 'Correct facets were returned');
+    $this->assertEquals($expected, $facets, 'Correct facets were returned');
 
     // Regression tests for #2469547.
     $query = $this->buildSearch();
@@ -751,7 +761,7 @@ class BackendTest extends EntityUnitTestBase {
     // both occur once, so we have to manually sort the returned facets first.
     $facets = $results->getExtraData('search_api_facets', array())['body'];
     usort($facets, array($this, 'facetCompare'));
-    $this->assertEqual($facets, $expected, 'Correct facets were returned for a fulltext field.');
+    $this->assertEquals($expected, $facets, 'Correct facets were returned for a fulltext field.');
 
     // Regression tests for #1403916.
     $query = $this->buildSearch('test foo');
@@ -771,42 +781,42 @@ class BackendTest extends EntityUnitTestBase {
     );
     $facets = $results->getExtraData('search_api_facets', array())['type'];
     usort($facets, array($this, 'facetCompare'));
-    $this->assertEqual($facets, $expected, 'Correct facets were returned');
+    $this->assertEquals($expected, $facets, 'Correct facets were returned');
 
     // Regression tests for #2557291.
     $results = $this->buildSearch('case')->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Search for lowercase "case" returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for lowercase "case" returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Search for lowercase "case" returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for lowercase "case" returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('Case')->sort('search_api_id')->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Search for capitalized "Case" returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 3)), 'Search for capitalized "Case" returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Search for capitalized "Case" returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Search for capitalized "Case" returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('CASE')->execute();
-    $this->assertEqual($results->getResultCount(), 0, 'Search for non-existent uppercase version of "CASE" returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), array(), 'Search for non-existent uppercase version of "CASE" returned correct result.');
+    $this->assertEquals(0, $results->getResultCount(), 'Search for non-existent uppercase version of "CASE" returned correct number of results.');
+    $this->assertEquals(array(), array_keys($results->getResultItems()), 'Search for non-existent uppercase version of "CASE" returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('föö')->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Search for keywords with umlauts returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for keywords with umlauts returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch('smile' . json_decode('"\u1F601"'))->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Search for keywords with umlauts returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1)), 'Search for keywords with umlauts returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Search for keywords with umlauts returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Search for keywords with umlauts returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', 'grape', '<>')->execute();
-    $this->assertEqual($results->getResultCount(), 2, 'Negated filter on multi-valued field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(1, 3)), 'Negated filter on multi-valued field returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Negated filter on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -884,15 +894,15 @@ class BackendTest extends EntityUnitTestBase {
 
     $query = $this->buildSearch(NULL, array('prices,3.25'));
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Filter on decimal field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(6)), 'Filter on decimal field returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Filter on decimal field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'Filter on decimal field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $query = $this->buildSearch(NULL, array('prices,3.5'));
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Filter on decimal field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(6)), 'Filter on decimal field returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Filter on decimal field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'Filter on decimal field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -905,7 +915,7 @@ class BackendTest extends EntityUnitTestBase {
       ))->save();
 
     $count = $this->indexItems($this->indexId);
-    $this->assertEqual($count, 1, 'Indexing an item with an empty value for a non string field worked.');
+    $this->assertEquals(1, $count, 'Indexing an item with an empty value for a non string field worked.');
 
     // Regression test for #2471509.
     $this->addField($index, 'body');
@@ -921,20 +931,20 @@ class BackendTest extends EntityUnitTestBase {
         'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
       ))->save();
     $count = $this->indexItems($this->indexId);
-    $this->assertEqual($count, 1, 'Indexing an item with a word longer than 50 characters worked.');
+    $this->assertEquals(1, $count, 'Indexing an item with a word longer than 50 characters worked.');
 
     // Regression test for #2616268.
     $index = $this->getIndex();
     $field = $index->getField('body')->setType('string');
     $index->addField($field)->save();
     $count = $this->indexItems($this->indexId);
-    $this->assertEqual($count, 8, 'Switching type from text to string worked.');
+    $this->assertEquals(8, $count, 'Switching type from text to string worked.');
 
     // For a string field, 50 characters shouldn't be a problem.
     $query = $this->buildSearch(NULL, array('body,astringlongerthanfiftycharactersthatcantbestoredbythedbbackend'));
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 1, 'Filter on new string field returned correct number of results.');
-    $this->assertEqual(array_keys($results->getResultItems()), $this->getItemIds(array(8)), 'Filter on new string field returned correct result.');
+    $this->assertEquals(1, $results->getResultCount(), 'Filter on new string field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(8)), array_keys($results->getResultItems()), 'Filter on new string field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -957,7 +967,7 @@ class BackendTest extends EntityUnitTestBase {
     $server->deleteAllIndexItems($index);
     $query = $this->buildSearch();
     $results = $query->execute();
-    $this->assertEqual($results->getResultCount(), 0, 'Clearing the server worked correctly.');
+    $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
     $this->assertTrue(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were left in place.');
 
     // Remove first the index and then the server.
@@ -965,7 +975,7 @@ class BackendTest extends EntityUnitTestBase {
     $index->save();
 
     $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
-    $this->assertEqual($db_info, array(), 'The index was successfully removed from the server.');
+    $this->assertNull($db_info, 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
       $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
@@ -979,7 +989,7 @@ class BackendTest extends EntityUnitTestBase {
     $server->delete();
 
     $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
-    $this->assertEqual($db_info, array(), 'The index was successfully removed from the server.');
+    $this->assertNull($db_info, 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
       $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
@@ -990,7 +1000,7 @@ class BackendTest extends EntityUnitTestBase {
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully uninstalled.');
 
     $tables = \Drupal::database()->schema()->findTables('search_api_db_%');
-    $this->assertEqual($tables, [], 'All the tables of the the Database Search module have been removed.');
+    $this->assertEquals(array(), $tables, 'All the tables of the the Database Search module have been removed.');
   }
 
   /**
@@ -1004,7 +1014,7 @@ class BackendTest extends EntityUnitTestBase {
    *   (optional) The message to be displayed with the assertion.
    */
   protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
-    $this->assertEqual($results->getIgnoredSearchKeys(), $ignored, $message);
+    $this->assertEquals($ignored, $results->getIgnoredSearchKeys(), $message);
   }
 
   /**
@@ -1018,7 +1028,7 @@ class BackendTest extends EntityUnitTestBase {
    *   (optional) The message to be displayed with the assertion.
    */
   protected function assertWarnings(ResultSetInterface $results, array $warnings = array(), $message = 'No warnings were displayed.') {
-    $this->assertEqual($results->getWarnings(), $warnings, $message);
+    $this->assertEquals($warnings, $results->getWarnings(), $message);
   }
 
   /**

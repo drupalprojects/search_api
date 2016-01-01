@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\search_api\Kernel\IndexStorageUnitTest.
+ * Contains \Drupal\Tests\search_api\Kernel\IndexStorageTest.
  */
 
 namespace Drupal\Tests\search_api\Kernel;
@@ -16,7 +16,7 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group search_api
  */
-class IndexStorageUnitTest extends KernelTestBase {
+class IndexStorageTest extends KernelTestBase {
 
   /**
    * Modules to enable for this test.
