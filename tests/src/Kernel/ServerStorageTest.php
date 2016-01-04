@@ -63,8 +63,8 @@ class ServerStorageTest extends KernelTestBase {
    */
   public function serverCreate() {
     $serverData = array(
-      'id' => $this->randomMachineName(),
-      'name' => $this->randomString(),
+      'id' => 'test_server',
+      'name' => 'Test server',
       'backend' => 'search_api_test_backend',
     );
     $server = $this->storage->create($serverData);

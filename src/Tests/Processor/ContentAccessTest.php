@@ -199,7 +199,7 @@ class ContentAccessTest extends ProcessorTestBase {
         'datasource' => 'entity:comment',
         'item' => $comment->getTypedData(),
         'item_id' => $comment->id(),
-        'text' => $this->randomMachineName(),
+        'text' => 'Comment: ' . $comment->id(),
       );
     }
     $items = $this->generateItems($items);
@@ -221,7 +221,7 @@ class ContentAccessTest extends ProcessorTestBase {
         'datasource' => 'entity:comment',
         'item' => $comment->getTypedData(),
         'item_id' => $comment->id(),
-        'field_text' => $this->randomMachineName(),
+        'field_text' => 'Text: &' . $comment->id(),
       );
     }
     $items = $this->generateItems($items);

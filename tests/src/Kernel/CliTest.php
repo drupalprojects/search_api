@@ -51,8 +51,8 @@ class CliTest extends KernelTestBase {
 
     // Create a test server.
     $this->server = Server::create(array(
-      'name' => $this->randomString(),
-      'id' => $this->randomMachineName(),
+      'name' => 'Test server',
+      'id' => 'test',
       'status' => 1,
       'backend' => 'search_api_test_backend',
     ));
@@ -91,8 +91,8 @@ class CliTest extends KernelTestBase {
     // Create a test index.
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::create(array(
-      'name' => $this->randomString(),
-      'id' => $this->randomMachineName(),
+      'name' => 'Test index',
+      'id' => 'index',
       'status' => 1,
       'datasources' => array('entity:entity_test'),
       'tracker' => 'default',

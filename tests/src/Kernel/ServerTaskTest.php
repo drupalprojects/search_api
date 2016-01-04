@@ -79,8 +79,8 @@ class ServerTaskTest extends KernelTestBase {
 
     // Create a test server.
     $this->server = Server::create(array(
-      'name' => $this->randomString(),
-      'id' => $this->randomMachineName(),
+      'name' => 'Test Server',
+      'id' => 'test_server',
       'status' => 1,
       'backend' => 'search_api_test_backend',
     ));
@@ -88,8 +88,8 @@ class ServerTaskTest extends KernelTestBase {
 
     // Create a test index.
     $this->index = Index::create(array(
-      'name' => $this->randomString(),
-      'id' => $this->randomMachineName(),
+      'name' => 'Test index',
+      'id' => 'test_index',
       'status' => 1,
       'datasources' => array('entity:user'),
       'tracker' => 'default',

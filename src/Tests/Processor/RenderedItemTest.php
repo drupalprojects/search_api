@@ -31,13 +31,6 @@ class RenderedItemTest extends ProcessorTestBase {
   protected $nodes;
 
   /**
-   * Data for all nodes which are published.
-   *
-   * @var array
-   */
-  protected $nodeData;
-
-  /**
    * Modules to enable for this test.
    *
    * @var string[]
@@ -79,19 +72,25 @@ class RenderedItemTest extends ProcessorTestBase {
     $anonymous_user->save();
 
     // Default node values for all nodes we create below.
-    $this->nodeData = array(
+    $node_data = array(
       'status' => NODE_PUBLISHED,
       'type' => 'page',
-      'title' => $this->randomMachineName(8),
-      'body' => array('value' => $this->randomMachineName(32), 'summary' => $this->randomMachineName(16), 'format' => 'plain_text'),
+      'title' => '',
+      'body' => array('value' => '', 'summary' => '', 'format' => 'plain_text'),
       'uid' => $anonymous_user->id(),
     );
 
     // Create some test nodes with valid user on it for rendering a picture.
-    $this->nodes[0] = Node::create($this->nodeData);
-    $this->nodes[0]->save();
-    $this->nodes[1] = Node::create($this->nodeData);
+    $node_data['title'] = 'Title for node 1';
+    $node_data['body']['value'] = 'value for node 1';
+    $node_data['body']['summary'] = 'summary for node 1';
+    $this->nodes[1] = Node::create($node_data);
     $this->nodes[1]->save();
+    $node_data['title'] = 'Title for node 2';
+    $node_data['body']['value'] = 'value for node 2';
+    $node_data['body']['summary'] = 'summary for node 2';
+    $this->nodes[2] = Node::create($node_data);
+    $this->nodes[2]->save();
 
     // Set proper configuration for the tested processor.
     $config = $this->processor->getConfiguration();
@@ -125,7 +124,7 @@ class RenderedItemTest extends ProcessorTestBase {
         'datasource' => 'entity:node',
         'item' => $node->getTypedData(),
         'item_id' => $node->id(),
-        'text' => $this->randomMachineName(),
+        'text' => 'node text' . $node->id(),
       );
     }
     $items = $this->generateItems($items);
@@ -146,9 +145,9 @@ class RenderedItemTest extends ProcessorTestBase {
       // adding it to the output.
       $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $nid . ' rendered in view-mode "full".');
       $this->assertTrue(substr_count($values[0], 'field--name-title') > 0, 'Node item ' . $nid . ' has a rendered title field.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['title'] . '<') > 0, 'Node item ' . $nid . ' has a rendered title inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodes[$nid]->label() . '<') > 0, 'Node item ' . $nid . ' has a rendered title inside HTML-Tags.');
       $this->assertTrue(substr_count($values[0], '>Member for<') > 0, 'Node item ' . $nid . ' has rendered member information HTML-Tags.');
-      $this->assertTrue(substr_count($values[0], '>' . $this->nodeData['body']['value'] . '<') > 0, 'Node item ' . $nid . ' has rendered content inside HTML-Tags.');
+      $this->assertTrue(substr_count($values[0], '>' . $this->nodes[$nid]->get('body')->getValue()[0]['value'] . '<') > 0, 'Node item ' . $nid . ' has rendered content inside HTML-Tags.');
     }
   }
 
@@ -174,7 +173,7 @@ class RenderedItemTest extends ProcessorTestBase {
         'datasource' => 'entity:node',
         'item' => $node->getTypedData(),
         'item_id' => $node->id(),
-        'text' => $this->randomMachineName(),
+        'text' => 'text for ' . $node->id(),
       );
     }
     $items = $this->generateItems($items);

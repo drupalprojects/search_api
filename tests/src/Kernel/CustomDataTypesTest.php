@@ -96,8 +96,8 @@ class CustomDataTypesTest extends KernelTestBase {
 
     // Create a test server.
     $this->server = Server::create(array(
-      'name' => $this->randomString(),
-      'id' => $this->randomMachineName(),
+      'name' => 'Server test ~',
+      'id' => 'test',
       'status' => 1,
       'backend' => 'search_api_test_backend',
     ));

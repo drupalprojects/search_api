@@ -33,7 +33,7 @@ class TransliterationTest extends UnitTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
-    parent::setUp('transliteration');
+    parent::setUp();
 
     $this->index = $this->getMock('Drupal\search_api\IndexInterface');
 
@@ -78,7 +78,7 @@ class TransliterationTest extends UnitTestCase {
    * Tests that strings are affected.
    */
   public function testTransliterationWithString() {
-    $field_value = $this->getRandomGenerator()->string();
+    $field_value = 'test_string';
     /** @var \Drupal\search_api\Item\FieldInterface $field */
     $items = $this->createSingleFieldItem($this->index, 'string', $field_value, $field);
     $this->processor->preprocessIndexItems($items);

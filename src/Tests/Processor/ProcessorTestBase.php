@@ -71,10 +71,9 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     // Batch API gets confused and the test fails.
     \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
-    $server_name = $this->randomMachineName();
     $this->server = Server::create(array(
-      'id' => strtolower($server_name),
-      'name' => $server_name,
+      'id' => 'server',
+      'name' => 'Server & Name',
       'status' => TRUE,
       'backend' => 'search_api_db',
       'backend_config' => array(
@@ -84,13 +83,12 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
     ));
     $this->server->save();
 
-    $index_name = $this->randomMachineName();
     $this->index = Index::create(array(
-      'id' => strtolower($index_name),
-      'name' => $index_name,
+      'id' => 'index',
+      'name' => 'Index name',
       'status' => TRUE,
       'datasources' => array('entity:comment', 'entity:node'),
-      'server' => $server_name,
+      'server' => 'server',
       'tracker' => 'default',
     ));
     $this->index->setServer($this->server);

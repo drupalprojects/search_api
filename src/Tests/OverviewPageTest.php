@@ -66,8 +66,8 @@ class OverviewPageTest extends WebTestBase {
     // Test that an entity without bundles can be used as data source.
     // @todo Why is this here? This hasn't got anything to do with the overview.
     $edit = array(
-      'name' => $this->randomMachineName(),
-      'id' => Unicode::strtolower($this->randomMachineName()),
+      'name' => 'test Name',
+      'id' => 'test_name',
       'datasources[]' => 'entity:user',
     );
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));

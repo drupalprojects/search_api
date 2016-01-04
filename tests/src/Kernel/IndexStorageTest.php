@@ -62,8 +62,8 @@ class IndexStorageTest extends KernelTestBase {
    */
   public function indexCreate() {
     $indexData = array(
-      'id' => $this->randomMachineName(),
-      'name' => $this->randomString(),
+      'id' => 'test',
+      'name' => 'Index test name',
       'tracker' => 'default',
     );
 
