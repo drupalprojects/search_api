@@ -478,10 +478,10 @@ interface IndexInterface extends ConfigEntityInterface {
    *   of in a single, flat array.
    *
    * @return \Drupal\Core\TypedData\ComplexDataInterface[]
-   *   The loaded items. If $flat is TRUE, a single-dimensional array mapping
-   *   internal item IDs to the loaded items. Otherwise, an array mapping
-   *   datasource IDs to arrays of items (keyed by internal item ID) loaded for
-   *   that datasource.
+   *   The loaded items. If $group_by_datasource is FALSE, a single-dimensional
+   *   array mapping internal item IDs to the loaded items. Otherwise, an array
+   *   mapping datasource IDs to arrays of items (keyed by internal item ID)
+   *   loaded for that datasource.
    */
   // @todo Drop second parameter?
   public function loadItemsMultiple(array $item_ids, $group_by_datasource = FALSE);
