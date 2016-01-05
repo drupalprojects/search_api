@@ -45,8 +45,17 @@ class OverviewPageTest extends WebTestBase {
    * Tests the creation of a server and an index.
    */
   public function testServerAndIndexCreation() {
+    $server_name = 'WebTest Server';
+    $index_name = 'WebTest Index';
+
+    // Make sure the overview is empty.
+    $this->drupalGet($this->overviewPageUrl);
+
+    $this->assertNoText($server_name);
+    $this->assertNoText($index_name);
+
     // Test whether a newly created server appears on the overview page.
-    $server = $this->getTestServer();
+    $server = $this->getTestServer($server_name);
 
     $this->drupalGet($this->overviewPageUrl);
 
@@ -55,24 +64,13 @@ class OverviewPageTest extends WebTestBase {
     $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($server->getEntityTypeId() . '-' . $server->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Server is in proper table');
 
     // Test whether a newly created index appears on the overview page.
-    $index = $this->getTestIndex();
+    $index = $this->getTestIndex($index_name);
 
     $this->drupalGet($this->overviewPageUrl);
 
     $this->assertText($index->label(), 'Index present on overview page.');
     $this->assertRaw($index->get('description'), 'Index description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
-
-    // Test that an entity without bundles can be used as data source.
-    // @todo Why is this here? This hasn't got anything to do with the overview.
-    $edit = array(
-      'name' => 'test Name',
-      'id' => 'test_name',
-      'datasources[]' => 'entity:user',
-    );
-    $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));
-    $this->assertText($this->t('The index was successfully saved.'));
-    $this->assertText($edit['name']);
   }
 
   /**

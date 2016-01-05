@@ -127,7 +127,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
       $server = Server::create(array(
         'id' => $id,
         'name' => $name,
-        'description' => $name,
+        'description' => $name . ' description',
         'backend' => $backend_id,
         'backend_config' => $backend_config,
       ));
@@ -167,7 +167,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
       $index = Index::create(array(
         'id' => $id,
         'name' => $name,
-        'description' => $name,
+        'description' => $name . ' description',
         'server' => $server_id,
         'datasources' => array($datasource_id),
       ));

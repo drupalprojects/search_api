@@ -75,6 +75,7 @@ class IntegrationTest extends WebTestBase {
     $this->createServer();
     $this->checkServerAvailability();
     $this->createIndex();
+    $this->checkUserIndexCreation();
     $this->checkContentEntityTracking();
 
     $this->enableAllProcessors();
@@ -219,6 +220,22 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('admin/config/search/search-api');
     $this->assertHtmlEscaped($index_name);
     $this->assertHtmlEscaped($index_description);
+  }
+
+  /**
+   * Tests that an entity without bundles can be used as a data source.
+   */
+  protected function checkUserIndexCreation() {
+    $edit = array(
+      'name' => 'IndexName',
+      'id' => 'user_index',
+      'datasources[]' => 'entity:user',
+    );
+
+    $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));
+    $this->assertResponse(200);
+    $this->assertText($this->t('The index was successfully saved.'));
+    $this->assertText($edit['name']);
   }
 
   /**
