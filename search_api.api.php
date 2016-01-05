@@ -183,9 +183,8 @@ function hook_search_api_query_alter(\Drupal\search_api\Query\QueryInterface &$q
   $fields = $query->getIndex()->getFields();
   foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
     if ($datasource->getEntityTypeId() == 'node') {
-      $field = \Drupal\search_api\Utility::createCombinedId($datasource_id, 'nid');
-      if (isset($fields[$field])) {
-        $query->addCondition($field, 10, '<>');
+      if (isset($fields['nid'])) {
+        $query->addCondition('nid', 10, '<>');
       }
     }
   }
@@ -204,9 +203,8 @@ function hook_search_api_query_TAG_alter(\Drupal\search_api\Query\QueryInterface
   $fields = $query->getIndex()->getFields();
   foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
     if ($datasource->getEntityTypeId() == 'node') {
-      $field = \Drupal\search_api\Utility::createCombinedId($datasource_id, 'nid');
-      if (isset($fields[$field])) {
-        $query->addCondition($field, 10, '<>');
+      if (isset($fields['nid'])) {
+        $query->addCondition('nid', 10, '<>');
       }
     }
   }

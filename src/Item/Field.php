@@ -267,6 +267,13 @@ class Field implements \IteratorAggregate, FieldInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCombinedPropertyPath() {
+    return Utility::createCombinedId($this->getDatasourceId(), $this->getPropertyPath());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getLabel() {
     return $this->label;
   }

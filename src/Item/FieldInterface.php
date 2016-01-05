@@ -112,6 +112,20 @@ interface FieldInterface extends \Traversable {
   public function setPropertyPath($property_path);
 
   /**
+   * Retrieves the "combined" property path of the field.
+   *
+   * This consists of the datasource ID (if any) and the property path,
+   * separated by the "datasource separator" (also used in item IDs). It can be
+   * used to quickly get a unique identifier for a property on an index.
+   *
+   * @return string
+   *   The "combined" property path of the field.
+   *
+   * @see \Drupal\search_api\Utility::createCombinedId()
+   */
+  public function getCombinedPropertyPath();
+
+  /**
    * Retrieves this field's label.
    *
    * The field's label, contrary to the label returned by the field's data
