@@ -66,6 +66,7 @@ fields:
     type_locked: true
     hidden: true
   type:
+    label: 'Content type'
     type: string
     datasource_id: 'entity:node'
     property_path: type
