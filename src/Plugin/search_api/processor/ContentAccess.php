@@ -116,7 +116,9 @@ class ContentAccess extends ProcessorPluginBase {
       }
     }
 
-    $this->ensureField(NULL, 'search_api_node_grants', 'string');
+    $field = $this->ensureField(NULL, 'search_api_node_grants', 'string');
+    $field->setHidden();
+    $this->index->addField($field);
   }
 
   /**
