@@ -210,7 +210,7 @@ class IndexBatchHelper {
       }
       else {
         // Notify user about failure to index items.
-        drupal_set_message(static::t('Couldn\'t index items. Check the logs for details.'), 'error');
+        drupal_set_message(static::t("Couldn't index items. Check the logs for details."), 'error');
       }
     }
     else {
