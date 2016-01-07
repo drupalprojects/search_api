@@ -388,6 +388,55 @@ class DependencyRemovalTest extends KernelTestBase {
   }
 
   /**
+   * Tests whether module dependencies are handled correctly.
+   */
+  public function testModuleDependency() {
+    // Test with all types of plugins at once.
+    $this->index->set('datasources', array(
+      'entity:user',
+      'search_api_test_dependencies',
+    ));
+    $this->index->set('processors', array(
+      'search_api_test_dependencies' => array(
+        'processor_id' => 'search_api_test_dependencies',
+        'settings' => array(),
+      ),
+    ));
+    $this->index->set('tracker', 'search_api_test_dependencies');
+    $this->index->save();
+
+    // Check the dependencies were calculated correctly.
+    $dependencies = $this->index->getDependencies();
+    $this->assertContains('search_api_test_dependencies', $dependencies['module'], 'Module dependency correctly inserted');
+
+    // When the index resets the tracker, it needs to know the ID of the default
+    // tracker.
+    \Drupal::configFactory()->getEditable('search_api.settings')
+      ->set('default_tracker', 'default')
+      ->save();
+
+    // Disabling modules in Kernel tests normally doesn't trigger any kind of
+    // reaction, just removes it from the list of modules (e.g., to avoid
+    // calling of a hook). Therefore, we have to trigger that behavior
+    // ourselves.
+    \Drupal::getContainer()->get('config.manager')->uninstall('module', 'search_api_test_dependencies');
+
+    // Reload the index and check it's still there.
+    $this->reloadIndex();
+    $this->assertInstanceOf('Drupal\search_api\IndexInterface', $this->index, 'Index not removed');
+
+    // Make sure the dependency has been removed.
+    $dependencies = $this->index->getDependencies();
+    $dependencies += array('module' => array());
+    $this->assertNotContains('search_api_test_dependencies', $dependencies['module'], 'Module dependency removed from index');
+
+    // Make sure all the plugins have been removed.
+    $this->assertNotContains('search_api_test_dependencies', $this->index->getDatasources(), 'Datasource was removed');
+    $this->assertArrayNotHasKey('search_api_test_dependencies', $this->index->getProcessors(), 'Processor was removed');
+    $this->assertEquals('default', $this->index->getTrackerId(), 'Tracker was reset');
+  }
+
+  /**
    * Data provider for this class's test methods.
    *
    * @return array

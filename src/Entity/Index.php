@@ -1454,6 +1454,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $call_on_removal = array();
 
     foreach ($dependencies as $dependency_type => $dependency_objects) {
+      // Annoyingly, modules and theme dependencies come not keyed by dependency
+      // name here, while entities do. Flip the array for modules and themes to
+      // make the code simpler.
+      if (in_array($dependency_type, array('module', 'theme'))) {
+        $dependency_objects = array_flip($dependency_objects);
+      }
       $dependency_data[$dependency_type] = array_intersect_key($dependency_data[$dependency_type], $dependency_objects);
       foreach ($dependency_data[$dependency_type] as $name => $dependency_sources) {
         // We first remove all the "hard" dependencies.
