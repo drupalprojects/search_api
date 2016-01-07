@@ -95,9 +95,6 @@ interface FieldInterface extends \Traversable {
    *
    * @return string
    *   The property path.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if no property path was set before and it couldn't be loaded.
    */
   public function getPropertyPath();
 
@@ -235,6 +232,9 @@ interface FieldInterface extends \Traversable {
    *   The data type of the field.
    *
    * @return $this
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if the type of this field is locked.
    */
   public function setType($type);
 

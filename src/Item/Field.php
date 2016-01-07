@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -94,20 +95,6 @@ class Field implements \IteratorAggregate, FieldInterface {
   protected $labelPrefix;
 
   /**
-   * Whether this field should be hidden from the user.
-   *
-   * @var bool
-   */
-  protected $hidden;
-
-  /**
-   * The field's values.
-   *
-   * @var array
-   */
-  protected $values = array();
-
-  /**
    * The Search API data type of this field.
    *
    * @var string
@@ -115,25 +102,18 @@ class Field implements \IteratorAggregate, FieldInterface {
   protected $type;
 
   /**
-   * The original data type of this field.
-   *
-   * @var string
-   */
-  protected $originalType;
-
-  /**
-   * The state of this field in the index, whether indexed or not.
-   *
-   * @var bool
-   */
-  protected $indexed;
-
-  /**
    * The boost assigned to this field, if any.
    *
    * @var float
    */
   protected $boost;
+
+  /**
+   * Whether this field should be hidden from the user.
+   *
+   * @var bool
+   */
+  protected $hidden;
 
   /**
    * Whether this field should always be enabled/indexed.
@@ -148,6 +128,20 @@ class Field implements \IteratorAggregate, FieldInterface {
    * @var bool
    */
   protected $typeLocked;
+
+  /**
+   * The field's values.
+   *
+   * @var array
+   */
+  protected $values = array();
+
+  /**
+   * The original data type of this field.
+   *
+   * @var string
+   */
+  protected $originalType;
 
   /**
    * Constructs a Field object.
@@ -196,12 +190,6 @@ class Field implements \IteratorAggregate, FieldInterface {
       'datasource_id' => $this->getDatasourceId(),
       'property_path' => $this->getPropertyPath(),
       'type' => $this->getType(),
-      // @todo Check whether YAML/schema magic will add those anyways, or
-      //   whether them not being present is a problem.
-//      'boost' => $this->getBoost(),
-//      'indexed_locked' => $this->isIndexedLocked(),
-//      'type_locked' => $this->isTypeLocked(),
-//      'hidden' => $this->isHidden(),
     );
     if ($this->getBoost() != 1.0) {
       $settings['boost'] = $this->getBoost();
@@ -247,12 +235,6 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function getPropertyPath() {
-    if (!isset($this->propertyPath)) {
-      $fields = $this->getIndex()->getFields();
-      if (isset($fields[$this->getFieldIdentifier()]) && $fields[$this->getFieldIdentifier()] != $this) {
-        $this->propertyPath = $fields[$this->getFieldIdentifier()]->getPropertyPath();
-      }
-    }
     return $this->propertyPath;
   }
 
@@ -357,19 +339,45 @@ class Field implements \IteratorAggregate, FieldInterface {
   /**
    * {@inheritdoc}
    */
-  // @todo This currently only works for unnested fields, since
-  //   Index::getPropertyDefinitions() won't return any nested ones.
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {
-      $definitions = $this->index->getPropertyDefinitions($this->datasourceId);
-      if (!isset($definitions[$this->propertyPath])) {
-        $args['@field'] = $this->fieldIdentifier;
-        $args['%index'] = $this->index->label();
-        throw new SearchApiException(new FormattableMarkup('Could not retrieve data definition for field "@field" on index %index.', $args));
+      $definitions = $this->index->getPropertyDefinitions($this->getDatasourceId());
+      $definition = $this->getNestedDefinition($definitions, explode(':', $this->getPropertyPath()));
+      if (!$definition) {
+        $args['%field'] = $this->getLabel();
+        $args['%index'] = $this->getIndex()->label();
+        throw new SearchApiException(new FormattableMarkup('Could not retrieve data definition for field %field on index %index.', $args));
       }
-      $this->dataDefinition = $definitions[$this->propertyPath];
+      $this->dataDefinition = $definition;
     }
     return $this->dataDefinition;
+  }
+
+  /**
+   * Retrieves a nested property definition from an array of definitions.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
+   *   The given array of base definitions.
+   * @param string[] $keys
+   *   An array of keys to apply to the definitions to arrive at the one that
+   *   should be returned.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface|null
+   *   The requested property definition, or NULL if it could not be found.
+   */
+  protected function getNestedDefinition(array $properties, array $keys) {
+    $key = array_shift($keys);
+    if (!isset($properties[$key])) {
+      return NULL;
+    }
+    $property = Utility::getInnerProperty($properties[$key]);
+    if (!$keys) {
+      return $property;
+    }
+    if (!$property instanceof ComplexDataDefinitionInterface) {
+      return NULL;
+    }
+    return $this->getNestedDefinition($property->getPropertyDefinitions(), $keys);
   }
 
   /**
@@ -383,6 +391,11 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function setType($type) {
+    if ($type != $this->type && $this->isTypeLocked()) {
+      $args['%field'] = $this->getLabel();
+      $args['%index'] = $this->getIndex()->label();
+      throw new SearchApiException(new FormattableMarkup('Trying to change the type of field %field on index %index, which is locked.', $args));
+    }
     $this->type = $type;
     return $this;
   }
@@ -438,11 +451,7 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function getBoost() {
-    if (!isset($this->boost)) {
-      $fields = $this->index->getFieldSettings();
-      $this->boost = isset($fields[$this->fieldIdentifier]['boost']) ? (float) $fields[$this->fieldIdentifier]['boost'] : 1.0;
-    }
-    return $this->boost;
+    return isset($this->boost) ? $this->boost : 1.0;
   }
 
   /**
