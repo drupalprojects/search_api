@@ -18,13 +18,6 @@ use Drupal\search_api\Entity\Index;
 class LanguageIntegrationTest extends WebTestBase {
 
   /**
-   * The ID of the search index used for this test.
-   *
-   * @var string
-   */
-  protected $indexId;
-
-  /**
    * {@inheritdoc}
    */
   public static $modules = array('node', 'search_api', 'search_api_test_backend', 'language');
@@ -46,8 +39,7 @@ class LanguageIntegrationTest extends WebTestBase {
 
     // Create an index and server to work with.
     $this->getTestServer();
-    $index = $this->getTestIndex();
-    $this->indexId = $index->id();
+    $this->getTestIndex();
 
     // Log in, so we can test all the things.
     $this->drupalLogin($this->adminUser);
@@ -130,22 +122,4 @@ class LanguageIntegrationTest extends WebTestBase {
     $index = Index::load($this->indexId);
     return $index->getTracker()->getTotalItemsCount();
   }
-
-  /**
-   * Returns the system path for the test index.
-   *
-   * @param string|null $tab
-   *   (optional) If set, the path suffix for a specific index tab.
-   *
-   * @return string
-   *   A system path.
-   */
-  protected function getIndexPath($tab = NULL) {
-    $path = 'admin/config/search/search-api/index/' . $this->indexId;
-    if ($tab) {
-      $path .= "/$tab";
-    }
-    return $path;
-  }
-
 }
