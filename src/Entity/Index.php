@@ -1106,6 +1106,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     try {
       // Fake an original for inserts to make code cleaner.
       $original = $update ? $this->original : static::create(array('status' => FALSE));
+      $index_task_manager = \Drupal::getContainer()
+        ->get('search_api.index_task_manager');
 
       if ($this->status() && $original->status()) {
         // React on possible changes that would require re-indexing, etc.
@@ -1116,7 +1118,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
-          \Drupal::getContainer()->get('search_api.index_task_manager')->stopTracking($this);
+          $index_task_manager->stopTracking($this);
         }
         if ($original->isServerEnabled()) {
           $original->getServer()->removeIndex($this);
@@ -1125,11 +1127,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
       elseif ($this->status() && !$original->status()) {
         $this->getServer()->addIndex($this);
         if ($this->hasValidTracker()) {
-          \Drupal::getContainer()->get('search_api.index_task_manager')->startTracking($this);
+          $index_task_manager->startTracking($this);
         }
       }
 
-      $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       if (!$index_task_manager->isTrackingComplete($this)) {
         // Give tests and site admins the possibility to disable the use of a
         // batch for tracking items. Also, do not use a batch if running in the

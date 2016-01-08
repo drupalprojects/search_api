@@ -721,7 +721,7 @@ class ContentEntity extends DatasourcePluginBase {
     $select = \Drupal::entityQuery($this->getEntityTypeId());
     // If there are bundles to filter on, and they don't include all available
     // bundles, add the appropriate condition.
-    if ($bundles && $this->getEntityType()->hasKey('bundle')) {
+    if ($bundles && $this->hasBundles()) {
       if (count($bundles) != count($this->getEntityBundles())) {
         $select->condition($this->getEntityType()->getKey('bundle'), $bundles, 'IN');
       }
