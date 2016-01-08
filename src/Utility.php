@@ -99,6 +99,7 @@ class Utility {
           'uri',
           'filter_format',
           'duration_iso8601',
+          'field_item:path',
         ),
         'integer' => array(
           'integer',
