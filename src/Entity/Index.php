@@ -1168,6 +1168,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The previous version of the index.
    */
   protected function reactToServerSwitch(IndexInterface $original) {
+    // Asserts that the index was enabled before saving and will still be
+    // enabled afterwards. Otherwise, this method should not be called.
+    assert('$this->status() && $original->status()', '::reactToServerSwitch should only be called when the index is enabled');
+
     if ($this->getServerId() != $original->getServerId()) {
       if ($original->isServerEnabled()) {
         $original->getServer()->removeIndex($this);
@@ -1194,6 +1198,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The previous version of the index.
    */
   protected function reactToDatasourceSwitch(IndexInterface $original) {
+    // Asserts that the index was enabled before saving and will still be
+    // enabled afterwards. Otherwise, this method should not be called.
+    assert('$this->status() && $original->status()', '::reactToDatasourceSwitch should only be called when the index is enabled');
+
     $new_datasource_ids = $this->getDatasourceIds();
     $original_datasource_ids = $original->getDatasourceIds();
     if ($new_datasource_ids != $original_datasource_ids) {
@@ -1216,6 +1224,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   The previous version of the index.
    */
   protected function reactToTrackerSwitch(IndexInterface $original) {
+    // Asserts that the index was enabled before saving and will still be
+    // enabled afterwards. Otherwise, this method should not be called.
+    assert('$this->status() && $original->status()', '::reactToTrackerSwitch should only be called when the index is enabled');
+
     if ($this->tracker != $original->getTrackerId()) {
       $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       if ($original->hasValidTracker()) {
