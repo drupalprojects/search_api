@@ -284,15 +284,13 @@ class Utility {
    *   The requested property, or NULL if it couldn't be found.
    */
   public static function retrieveNestedProperty(array $properties, $property_path) {
-    $pos = strpos($property_path, ':');
-    if ($pos === FALSE) {
-      return isset($properties[$property_path]) ? $properties[$property_path] : NULL;
-    }
-
-    $key = substr($property_path, 0, $pos);
-    $property_path = substr($property_path, $pos + 1);
+    list($key, $nested_path) = static::splitPropertyPath($property_path, FALSE);
     if (!isset($properties[$key])) {
       return NULL;
+    }
+
+    if (!isset($nested_path)) {
+      return $properties[$key];
     }
 
     $property = static::getInnerProperty($properties[$key]);
@@ -300,7 +298,7 @@ class Utility {
       return NULL;
     }
 
-    return static::retrieveNestedProperty($property->getPropertyDefinitions(), $property_path);
+    return static::retrieveNestedProperty($property->getPropertyDefinitions(), $nested_path);
   }
 
   /**
@@ -323,6 +321,41 @@ class Utility {
       $property = $property->getTargetDefinition();
     }
     return $property;
+  }
+
+  /**
+   * Splits a property path into two parts along a path separator (:).
+   *
+   * The path is split into one part with a single property name, and one part
+   * with the complete rest of the property path (which might be empty).
+   * Depending on $separate_last the returned single property key will be the
+   * first (FALSE) or last (TRUE) property of the path.
+   *
+   * @param string $property_path
+   *   The property path to split.
+   * @param bool $separate_last
+   *   (optional) If FALSE, separate the first property of the path. By default,
+   *   the last property is separated from the rest.
+   * @param string $separator
+   *   (optional) The separator to use.
+   *
+   * @return string[]
+   *   An array with indexes 0 and 1, 0 containing the first part of the
+   *   property path and 1 the second. If $separate_last is FALSE, index 0 will
+   *   always contain a single property name (without any colons) and index 1
+   *   might be NULL. If $separate_last is TRUE it's the exact other way round.
+   */
+  public static function splitPropertyPath($property_path, $separate_last = TRUE, $separator = ':') {
+    $function = $separate_last ? 'strrpos' : 'strpos';
+    $pos = $function($property_path, $separator);
+    if ($pos !== FALSE) {
+      return array(
+        substr($property_path, 0, $pos),
+        substr($property_path, $pos + 1),
+      );
+    }
+
+    return $separate_last ? array(NULL, $property_path) : array($property_path, NULL);
   }
 
   /**
@@ -587,11 +620,9 @@ class Utility {
    *   A new unique field identifier on the given index.
    */
   public static function getNewFieldId(IndexInterface $index, $property_path) {
-    $field_id = $suggested_id = $property_path;
-    if ($pos = strrpos($property_path, ':')) {
-      $field_id = $suggested_id = substr($property_path, $pos + 1);
-    }
+    list(, $suggested_id) = static::splitPropertyPath($property_path);
 
+    $field_id = $suggested_id;
     $i = 0;
     while ($index->getField($field_id)) {
       $field_id = $suggested_id . '_' . ++$i;
@@ -695,11 +726,7 @@ class Utility {
    *   element 0 will be NULL.
    */
   public static function splitCombinedId($combined_id) {
-    $pos = strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR);
-    if ($pos === FALSE) {
-      return array(NULL, $combined_id);
-    }
-    return array(substr($combined_id, 0, $pos), substr($combined_id, $pos + 1));
+    return static::splitPropertyPath($combined_id, TRUE, IndexInterface::DATASOURCE_ID_SEPARATOR);
   }
 
 }
