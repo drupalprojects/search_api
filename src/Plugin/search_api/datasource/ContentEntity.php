@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -362,6 +363,9 @@ class ContentEntity extends DatasourcePluginBase {
         $allowed_languages = array_intersect_key($all_languages, $selected_languages);
       }
     }
+    // Always allow items with undefined language. (Can be the case when
+    // entities are created programmatically.)
+    $allowed_languages[LanguageInterface::LANGCODE_NOT_SPECIFIED] = TRUE;
 
     $entity_ids = array();
     foreach ($ids as $item_id) {

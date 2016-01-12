@@ -770,6 +770,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tracker = $this->getTracker();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items = $this->loadItemsMultiple($next_set);
+      if (count($items) != count($next_set)) {
+        $args['%index'] = $this->label();
+        $missing_ids = array_keys(array_diff_key(array_flip($next_set), $items));
+        $args['@items'] = '"' . implode('", "', $missing_ids) . '"';
+        \Drupal::logger('search_api')->warning('Could not load the following items for indexing on index %index: @items.', $args);
+      }
       if ($items) {
         try {
           return count($this->indexSpecificItems($items));
