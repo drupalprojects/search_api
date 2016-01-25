@@ -177,8 +177,8 @@ display:
     display_title: Page
     position: 1
     display_options:
-      path: search-api-test-fulltext
-label: 'Search API Test Fulltext search view'
+      path: search-api-test
+label: 'Search API Test search view'
 module: views
 id: search_api_test_view
 tag: ''

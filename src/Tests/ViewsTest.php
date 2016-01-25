@@ -158,7 +158,7 @@ class ViewsTest extends WebTestBase {
    *   (optional) A label for this search, to include in assert messages.
    */
   protected function checkResults(array $query, array $expected_results = NULL, $label = 'Search') {
-    $this->drupalGet('search-api-test-fulltext', array('query' => $query));
+    $this->drupalGet('search-api-test', array('query' => $query));
 
     if (isset($expected_results)) {
       $count = count($expected_results);
