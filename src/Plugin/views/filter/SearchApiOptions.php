@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterOptions.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiOptions.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -17,7 +17,7 @@ use Drupal\views\Plugin\views\filter\ManyToOne;
  *
  * @ViewsFilter("search_api_options")
  */
-class SearchApiFilterOptions extends ManyToOne {
+class SearchApiOptions extends ManyToOne {
 
   use SearchApiFilterTrait;
 

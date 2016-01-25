@@ -18,7 +18,7 @@ use Drupal\taxonomy\Entity\Term;
  * @ViewsArgument("search_api_taxonomy_term")
  */
 // @todo This seems to be only partially ported to D8.
-class SearchApiTaxonomyTerm extends SearchApiArgument {
+class SearchApiTaxonomyTerm extends SearchApiStandard {
 
   /**
    * {@inheritdoc}

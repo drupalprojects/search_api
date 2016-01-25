@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterBoolean.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiBoolean.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -16,7 +16,7 @@ use Drupal\views\Plugin\views\filter\BooleanOperator;
  *
  * @ViewsFilter("search_api_boolean")
  */
-class SearchApiFilterBoolean extends BooleanOperator {
+class SearchApiBoolean extends BooleanOperator {
 
   use SearchApiFilterTrait;
 

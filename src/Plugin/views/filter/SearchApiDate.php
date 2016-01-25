@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterDate.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiDate.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -16,7 +16,7 @@ use Drupal\views\Plugin\views\filter\Date;
  *
  * @ViewsFilter("search_api_date")
  */
-class SearchApiFilterDate extends Date {
+class SearchApiDate extends Date {
 
   use SearchApiFilterTrait;
 

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterEntityBase.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiEntityBase.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Provides a base class for filters on entity-typed fields.
  */
-abstract class SearchApiFilterEntityBase extends SearchApiFilterString {
+abstract class SearchApiEntityBase extends SearchApiString {
 
   /**
    * Where the $query object will reside:

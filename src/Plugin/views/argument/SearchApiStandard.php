@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\argument\SearchApiArgument.
+ * Contains \Drupal\search_api\Plugin\views\argument\SearchApiStandard.
  */
 
 namespace Drupal\search_api\Plugin\views\argument;
@@ -18,7 +18,7 @@ use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
  *
  * @ViewsArgument("search_api_argument")
  */
-class SearchApiArgument extends ArgumentPluginBase {
+class SearchApiStandard extends ArgumentPluginBase {
 
   /**
    * The Views query object used by this contextual filter.

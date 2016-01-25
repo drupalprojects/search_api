@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterNumeric.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiNumeric.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -16,7 +16,7 @@ use Drupal\views\Plugin\views\filter\NumericFilter;
  *
  * @ViewsFilter("search_api_numeric")
  */
-class SearchApiFilterNumeric extends NumericFilter {
+class SearchApiNumeric extends NumericFilter {
 
   use SearchApiFilterTrait;
 

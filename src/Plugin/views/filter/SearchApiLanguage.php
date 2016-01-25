@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @ViewsFilter("search_api_language")
  */
-class SearchApiLanguage extends SearchApiFilterOptions {
+class SearchApiLanguage extends SearchApiOptions {
 
   /**
    * The language manager.

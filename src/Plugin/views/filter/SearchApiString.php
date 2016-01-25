@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterString.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiString.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -19,6 +19,6 @@ namespace Drupal\search_api\Plugin\views\filter;
  *
  * @ViewsFilter("search_api_string")
  */
-class SearchApiFilterString extends SearchApiFilterNumeric {
+class SearchApiString extends SearchApiNumeric {
 
 }

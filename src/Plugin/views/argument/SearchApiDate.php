@@ -17,7 +17,7 @@ use Drupal\Component\Utility\Html;
  *
  * @ViewsArgument("search_api_date")
  */
-class SearchApiDate extends SearchApiArgument {
+class SearchApiDate extends SearchApiStandard {
 
   /**
    * {@inheritdoc}

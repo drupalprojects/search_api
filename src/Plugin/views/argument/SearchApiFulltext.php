@@ -18,7 +18,7 @@ use Drupal\search_api\Plugin\views\query\SearchApiQuery;
  *
  * @ViewsArgument("search_api_fulltext")
  */
-class SearchApiFulltext extends SearchApiArgument {
+class SearchApiFulltext extends SearchApiStandard {
 
   /**
    * {@inheritdoc}

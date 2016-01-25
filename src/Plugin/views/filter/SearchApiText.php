@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFilterText.
+ * Contains \Drupal\search_api\Plugin\views\filter\SearchApiText.
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
@@ -14,7 +14,7 @@ namespace Drupal\search_api\Plugin\views\filter;
  *
  * @ViewsFilter("search_api_text")
  */
-class SearchApiFilterText extends SearchApiFilterString {
+class SearchApiText extends SearchApiString {
 
   /**
    * {@inheritdoc}

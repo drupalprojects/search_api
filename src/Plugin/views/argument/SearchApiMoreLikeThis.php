@@ -18,7 +18,7 @@ use Drupal\search_api\SearchApiException;
  *
  * @ViewsArgument("search_api_more_like_this")
  */
-class SearchApiMoreLikeThis extends SearchApiArgument {
+class SearchApiMoreLikeThis extends SearchApiStandard {
 
   /**
    * {@inheritdoc}
