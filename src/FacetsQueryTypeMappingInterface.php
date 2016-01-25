@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\FacetApiQueryTypeMappingInterface.
+ * Contains \Drupal\search_api\FacetsQueryTypeMappingInterface.
  */
 
 namespace Drupal\search_api;
 
 /**
- * Defines a method for mapping Search API data types to Facet API query types.
+ * Defines a method for mapping Search API data types to Facets query types.
  */
-interface FacetApiQueryTypeMappingInterface {
+interface FacetsQueryTypeMappingInterface {
 
   /**
    * Alters the query types for a specified data type.
@@ -20,8 +20,8 @@ interface FacetApiQueryTypeMappingInterface {
    * features of that backend.
    *
    * @param array $mapping
-   *   An associative array mapping data type IDs to arrays of Facet API query
-   *   type plugin IDs compatible with that data type.
+   *   An associative array mapping data type IDs to arrays of Facets query type
+   *   plugin IDs compatible with that data type.
    */
   public function alterFacetQueryTypeMapping(array &$mapping);
 
