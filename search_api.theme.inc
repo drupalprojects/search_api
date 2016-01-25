@@ -229,8 +229,8 @@ function theme_search_api_index($variables) {
   // Get the index.
   /** @var $index \Drupal\search_api\IndexInterface */
   $index = $variables['index'];
-  $server = $index->hasValidServer() ? $index->getServer() : NULL;
-  $tracker = $index->hasValidTracker() ? $index->getTracker() : NULL;
+  $server = $index->hasValidServer() ? $index->getServerInstance() : NULL;
+  $tracker = $index->hasValidTracker() ? $index->getTrackerInstance() : NULL;
 
   $output = '';
 

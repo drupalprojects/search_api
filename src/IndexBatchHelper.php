@@ -137,7 +137,7 @@ class IndexBatchHelper {
     // Get the remaining item count. When no valid tracker is available then
     // the value will be set to zero which will cause the batch process to
     // stop.
-    $remaining_item_count = ($index->hasValidTracker() ? $index->getTracker()->getRemainingItemsCount() : 0);
+    $remaining_item_count = ($index->hasValidTracker() ? $index->getTrackerInstance()->getRemainingItemsCount() : 0);
 
     // Check if an explicit limit needs to be used.
     if ($context['sandbox']['limit'] > -1) {

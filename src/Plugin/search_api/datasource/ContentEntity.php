@@ -485,7 +485,7 @@ class ContentEntity extends DatasourcePluginBase {
   public function defaultConfiguration() {
     $default_configuration = array();
     if ($this->hasBundles() || $this->isTranslatable()) {
-      $default_configuration['default'] = 1;
+      $default_configuration['default'] = '1';
     }
 
     if ($this->hasBundles()) {
@@ -943,7 +943,7 @@ class ContentEntity extends DatasourcePluginBase {
     $entity_bundle = $entity->bundle();
 
     $index_names = \Drupal::entityQuery('search_api_index')
-      ->condition('datasources.*', $datasource_id)
+      ->condition('datasource_settings.*.plugin_id', $datasource_id)
       ->execute();
 
     if (!$index_names) {

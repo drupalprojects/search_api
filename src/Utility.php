@@ -154,7 +154,7 @@ class Utility {
     if (empty(static::$dataTypeFallbackMapping[$index_id])) {
       $server = NULL;
       try {
-        $server = $index->getServer();
+        $server = $index->getServerInstance();
       }
       catch (SearchApiException $e) {
         // If the server isn't available, just ignore it here and return all

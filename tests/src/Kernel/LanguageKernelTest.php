@@ -108,8 +108,18 @@ class LanguageKernelTest extends KernelTestBase {
       'name' => 'Test Index',
       'id' => 'test_index',
       'status' => 1,
-      'datasources' => array('entity:' . $this->testEntityTypeId),
-      'tracker' => 'default',
+      'datasource_settings' => array(
+        'entity:' . $this->testEntityTypeId => array(
+          'plugin_id' => 'entity:' . $this->testEntityTypeId,
+          'settings' => array(),
+        ),
+      ),
+      'tracker_settings' => array(
+        'default' => array(
+          'plugin_id' => 'default',
+          'settings' => array(),
+        )
+      ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
     ));
@@ -153,10 +163,10 @@ class LanguageKernelTest extends KernelTestBase {
     $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids.');
 
     // Test indexing the new entity.
-    $this->assertEquals(0, $this->index->getTracker()->getIndexedItemsCount(), 'The index is empty.');
-    $this->assertEquals(2, $this->index->getTracker()->getTotalItemsCount(), 'There are two items to be indexed.');
+    $this->assertEquals(0, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'The index is empty.');
+    $this->assertEquals(2, $this->index->getTrackerInstance()->getTotalItemsCount(), 'There are two items to be indexed.');
     $this->index->indexItems();
-    $this->assertEquals(2, $this->index->getTracker()->getIndexedItemsCount(), 'Two items have been indexed.');
+    $this->assertEquals(2, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'Two items have been indexed.');
 
     // Now, make the first entity language-specific by assigning a language.
     $default_langcode = $this->langcodes[0];
@@ -175,8 +185,8 @@ class LanguageKernelTest extends KernelTestBase {
     $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids.');
 
     // Test that the index needs to be updated.
-    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated item needs to be reindexed.');
-    $this->assertEquals(2, $this->index->getTracker()->getTotalItemsCount(), 'There are two items in total.');
+    $this->assertEquals(1, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'The updated item needs to be reindexed.');
+    $this->assertEquals(2, $this->index->getTrackerInstance()->getTotalItemsCount(), 'There are two items in total.');
 
     // Set two translations for the first entity and test that the datasource
     // returns three separate item IDs, one for each translation.
@@ -197,8 +207,8 @@ class LanguageKernelTest extends KernelTestBase {
     $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids for a translated entity.');
 
     // Test that the index needs to be updated.
-    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
-    $this->assertEquals(4, $this->index->getTracker()->getTotalItemsCount(), 'There are four items in total.');
+    $this->assertEquals(1, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
+    $this->assertEquals(4, $this->index->getTrackerInstance()->getTotalItemsCount(), 'There are four items in total.');
 
     // Delete one translation and test that the datasource returns only three
     // items.
@@ -215,10 +225,10 @@ class LanguageKernelTest extends KernelTestBase {
     $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids for a translated entity.');
 
     // Test reindexing.
-    $this->assertEquals(3, $this->index->getTracker()->getTotalItemsCount(), 'There are three items in total.');
-    $this->assertEquals(1, $this->index->getTracker()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
+    $this->assertEquals(3, $this->index->getTrackerInstance()->getTotalItemsCount(), 'There are three items in total.');
+    $this->assertEquals(1, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');
     $this->index->indexItems();
-    $this->assertEquals(3, $this->index->getTracker()->getIndexedItemsCount(), 'Three items are indexed.');
+    $this->assertEquals(3, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'Three items are indexed.');
   }
 
 }

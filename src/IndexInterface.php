@@ -8,9 +8,12 @@
 namespace Drupal\search_api;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Tracker\TrackerInterface;
 
 /**
  * Defines the interface for index entities.
@@ -125,6 +128,16 @@ interface IndexInterface extends ConfigEntityInterface {
   public function setOptions(array $options);
 
   /**
+   * Sets this index's datasource plugins.
+   *
+   * @param \Drupal\search_api\Datasource\DatasourceInterface[] $datasources
+   *   An array of datasources
+   *
+   * @return $this
+   */
+  public function setDatasources(array $datasources);
+
+  /**
    * Retrieves the IDs of all datasources enabled for this index.
    *
    * @return string[]
@@ -200,7 +213,17 @@ interface IndexInterface extends ConfigEntityInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if the tracker couldn't be instantiated.
    */
-  public function getTracker();
+  public function getTrackerInstance();
+
+  /**
+   * Sets the tracker the index uses.
+   *
+   * @param \Drupal\search_api\Tracker\TrackerInterface $tracker
+   *   The new tracker for the index.
+   *
+   * @return $this
+   */
+  public function setTracker(TrackerInterface $tracker);
 
   /**
    * Determines whether this index is lying on a valid server.
@@ -236,7 +259,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if the server couldn't be loaded.
    */
-  public function getServer();
+  public function getServerInstance();
 
   /**
    * Sets the server the index is attached to
@@ -277,22 +300,24 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getProcessorsByStage($stage, $only_enabled = TRUE);
 
   /**
-   * Retrieves this index's processor settings.
+   * Adds a processor to this index.
    *
-   * @return array
-   *   An array of processors and their settings.
-   */
-  public function getProcessorSettings();
-
-  /**
-   * Sets this index's processor settings.
-   *
-   * @param array $processors
-   *   An array of processors and their settings.
+   * @param \Drupal\search_api\Processor\ProcessorInterface $processor
+   *   The processor to be added.
    *
    * @return $this
    */
-  public function setProcessorSettings(array $processors);
+  public function addProcessor(ProcessorInterface $processor);
+
+  /**
+   * Removes a processor from this index.
+   *
+   * @param string $processor_id
+   *   The ID of the processor to remove.
+   *
+   * @return $this
+   */
+  public function removeProcessor($processor_id);
 
   /**
    * Preprocesses data items for indexing.
@@ -418,24 +443,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *   available for this index.
    */
   public function getFulltextFields();
-
-  /**
-   * Retrieves this index's field settings.
-   *
-   * @return array
-   *   An array of field settings.
-   */
-  public function getFieldSettings();
-
-  /**
-   * Sets this index's field settings.
-   *
-   * @param array $fields
-   *   An array of field settings.
-   *
-   * @return $this
-   */
-  public function setFieldSettings(array $fields);
 
   /**
    * Retrieves the properties of one of this index's datasources.
@@ -589,15 +596,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *   would have any effect (or if it is disabled).
    */
   public function isReindexing();
-
-  /**
-   * Resets the static and stored caches associated with this index.
-   *
-   * @param bool $include_stored
-   *   (optional) If set to FALSE, only the static caches will be cleared, the
-   *   stored cache will remain untouched.
-   */
-  public function resetCaches($include_stored = TRUE);
 
   /**
    * Creates a query object for this index.

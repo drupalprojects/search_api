@@ -65,7 +65,7 @@ class IndexStatusForm extends FormBase {
           'class' => array('container-inline'),
         ),
       );
-      $has_remaining_items = ($index->getTracker()->getRemainingItemsCount() > 0);
+      $has_remaining_items = ($index->getTrackerInstance()->getRemainingItemsCount() > 0);
       $all_value = $this->t('all', array(), array('context' => 'items to index'));
       $limit = array(
         '#type' => 'textfield',

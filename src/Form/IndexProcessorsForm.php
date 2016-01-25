@@ -96,8 +96,8 @@ class IndexProcessorsForm extends EntityForm {
       $processors_by_stage[$stage] = $this->entity->getProcessorsByStage($stage, FALSE);
     }
 
-    if ($this->entity->getServer()) {
-      $backend_discouraged_processors = $this->entity->getServer()
+    if ($this->entity->getServerInstance()) {
+      $backend_discouraged_processors = $this->entity->getServerInstance()
         ->getBackend()
         ->getDiscouragedProcessors();
 
@@ -112,7 +112,7 @@ class IndexProcessorsForm extends EntityForm {
       }
     }
 
-    $processor_settings = $this->entity->getProcessorSettings();
+    $enabled_processors = $this->entity->getProcessors();
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
@@ -132,7 +132,7 @@ class IndexProcessorsForm extends EntityForm {
       $form['status'][$processor_id] = array(
         '#type' => 'checkbox',
         '#title' => $processor->label(),
-        '#default_value' => $processor->isLocked() || !empty($processor_settings[$processor_id]),
+        '#default_value' => $processor->isLocked() || !empty($enabled_processors[$processor_id]),
         '#description' => $processor->getDescription(),
         '#attributes' => array(
           'class' => array(
@@ -171,9 +171,7 @@ class IndexProcessorsForm extends EntityForm {
     foreach ($processors_by_stage as $stage => $processors) {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
       foreach ($processors as $processor_id => $processor) {
-        $weight = isset($processor_settings[$processor_id]['weights'][$stage])
-          ? $processor_settings[$processor_id]['weights'][$stage]
-          : $processor->getDefaultWeight($stage);
+        $weight = $processor->getDefaultWeight($stage);
         if ($processor->isHidden()) {
           $form['processors'][$processor_id]['weights'][$stage] = array(
             '#type' => 'value',
@@ -252,9 +250,13 @@ class IndexProcessorsForm extends EntityForm {
     $values = $form_state->getValues();
     $new_settings = array();
 
+    $old_processors = $this->entity->getProcessors();
+    $old_configurations = array();
+    foreach ($old_processors as $id => $processor) {
+      $old_configurations[$id] = $processor->getConfiguration();
+    }
+
     // Store processor settings.
-    // @todo Go through all available processors, enable/disable with method on
-    //   processor plugin to allow reaction.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     $processors = $this->entity->getProcessors(FALSE);
     foreach ($processors as $processor_id => $processor) {
@@ -262,27 +264,34 @@ class IndexProcessorsForm extends EntityForm {
         continue;
       }
       $new_settings[$processor_id] = array(
-        'processor_id' => $processor_id,
-        'weights' => array(),
+        'plugin_id' => $processor_id,
         'settings' => array(),
       );
       $processor_values = $values['processors'][$processor_id];
-      if (!empty($processor_values['weights'])) {
-        $new_settings[$processor_id]['weights'] = $processor_values['weights'];
-      }
       if (isset($form['settings'][$processor_id])) {
         $processor_form_state = new SubFormState($form_state, array('processors', $processor_id, 'settings'));
         $processor->submitConfigurationForm($form['settings'][$processor_id], $processor_form_state);
         $new_settings[$processor_id]['settings'] = $processor->getConfiguration();
+        $new_settings[$processor_id]['settings'] += array('index' => $this->entity);
+      }
+      if (!empty($processor_values['weights'])) {
+        $new_settings[$processor_id]['settings']['weights'] = $processor_values['weights'];
       }
     }
 
-    // Sort the processors so we won't have unnecessary changes.
-    ksort($new_settings);
-    $settings_changed = $new_settings != $this->entity->getProcessorSettings();
-    $form_state->set('processors_changed', $settings_changed);
-    if ($settings_changed) {
-      $this->entity->setProcessorSettings($new_settings);
+    $new_configurations = array();
+    foreach ($new_settings as $plugin_id => $new_processor_settings) {
+      /** @var \Drupal\search_api\Processor\ProcessorInterface $new_processor */
+      $new_processor = $this->processorPluginManager->createInstance($plugin_id, $new_processor_settings['settings']);
+      if (isset($old_processors[$plugin_id])) {
+        $this->entity->removeProcessor($plugin_id);
+      }
+      $this->entity->addProcessor($new_processor);
+      $new_configurations[$plugin_id] = $new_processor->getConfiguration();
+    }
+
+    if ($old_configurations != $new_configurations) {
+      $form_state->set('processors_changed', TRUE);
     }
   }
 

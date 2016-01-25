@@ -17,7 +17,7 @@ search_api.index.*:
     read_only:
       type: boolean
       label: 'Read-only'
-    fields:
+    field_settings:
       type: sequence
       label: 'Indexed fields'
       sequence:
@@ -48,24 +48,18 @@ search_api.index.*:
           hidden:
             type: boolean
             label: 'Whether the field should appear in the UI'
-    processors:
+    processor_settings:
       type: sequence
       label: 'Processor settings'
       sequence:
         type: mapping
         label: 'A processor'
         mapping:
-          processor_id:
+          plugin_id:
             type: string
             label: 'The plugin ID of the processor'
-          weights:
-            type: sequence
-            label: 'The processor''s weights for the different processing stages'
-            sequence:
-              type: integer
-              label: 'The processor''s weight for this stage'
           settings:
-            type: plugin.plugin_configuration.search_api_processor.[%parent.processor_id]
+            type: plugin.plugin_configuration.search_api_processor.[%parent.plugin_id]
     options:
       type: mapping
       label: 'Options'
@@ -76,23 +70,30 @@ search_api.index.*:
         index_directly:
           type: boolean
           label: 'Index items immediately'
-    datasources:
+    datasource_settings:
       type: sequence
-      label: 'Datasource plugin IDs'
+      label: 'Datasource settings'
       sequence:
-        type: string
-    datasource_configs:
+        type: mapping
+        label: 'A datasource'
+        mapping:
+          plugin_id:
+            type: string
+            label: 'The plugin ID of the datasource config'
+          settings:
+            type: plugin.plugin_configuration.search_api_datasource.[%parent.plugin_id]
+    tracker_settings:
       type: sequence
-      label: 'Datasource plugin configurations'
+      label: 'Tracker settings'
       sequence:
-        type: plugin.plugin_configuration.search_api_datasource.[%key]
-        label: 'Datasource plugin configuration'
-    tracker:
-      type: string
-      label: 'Tracker plugin ID'
-    tracker_config:
-      label: 'Tracker config plugin'
-      type: plugin.plugin_configuration.search_api_tracker.[%parent.tracker]
+        type: mapping
+        label: 'A tracker'
+        mapping:
+          plugin_id:
+            type: string
+            label: 'The plugin ID of the tracker config'
+          settings:
+            type: plugin.plugin_configuration.search_api_tracker.[%parent.plugin_id]
     server:
       type: string
       label: 'Server ID'

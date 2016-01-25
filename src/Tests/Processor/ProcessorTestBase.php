@@ -9,6 +9,7 @@ namespace Drupal\search_api\Tests\Processor;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility;
 use Drupal\system\Tests\Entity\EntityUnitTestBase;
 
@@ -87,37 +88,46 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
       'id' => 'index',
       'name' => 'Index name',
       'status' => TRUE,
-      'datasources' => array('entity:comment', 'entity:node'),
-      'server' => 'server',
-      'tracker' => 'default',
-    ));
-    $this->index->setServer($this->server);
-    $this->index->setFieldSettings(array(
-      'subject' => array(
-        'label' => 'Subject',
-        'type' => 'text',
-        'datasource_id' => 'entity:comment',
-        'property_path' => 'subject',
-      ),
-      'title' => array(
-        'label' => 'Title',
-        'type' => 'text',
-        'datasource_id' => 'entity:node',
-        'property_path' => 'title',
-      ),
-    ));
-    if ($processor) {
-      $this->index->setProcessorSettings(array(
-        $processor => array(
-          'processor_id' => $processor,
-          'weights' => array(),
+      'datasource_settings' => array(
+        'entity:comment' => array(
+          'plugin_id' => 'entity:comment',
           'settings' => array(),
         ),
-      ));
+        'entity:node' => array(
+          'plugin_id' => 'entity:node',
+          'settings' => array(),
+        ),
+      ),
+      'server' => 'server',
+      'tracker_settings' => array(
+        'default' => array(
+          'plugin_id' => 'default',
+          'settings' => array(),
+        ),
+      ),
+    ));
+    $this->index->setServer($this->server);
 
+    $field_subject = new Field($this->index, 'subject');
+    $field_subject->setType('text');
+    $field_subject->setPropertyPath('subject');
+    $field_subject->setDatasourceId('entity:comment');
+    $field_subject->setLabel('Subject');
+
+    $field_title = new Field($this->index, 'title');
+    $field_title->setType('text');
+    $field_title->setPropertyPath('title');
+    $field_title->setDatasourceId('entity:node');
+    $field_title->setLabel('Title');
+
+    $this->index->addField($field_subject);
+    $this->index->addField($field_title);
+
+    if ($processor) {
       /** @var \Drupal\search_api\Processor\ProcessorPluginManager $plugin_manager */
       $plugin_manager = \Drupal::service('plugin.manager.search_api.processor');
       $this->processor = $plugin_manager->createInstance($processor, array('index' => $this->index));
+      $this->index->addProcessor($this->processor);
     }
     $this->index->save();
   }

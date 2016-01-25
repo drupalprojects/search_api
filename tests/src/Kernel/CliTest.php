@@ -94,18 +94,28 @@ class CliTest extends KernelTestBase {
       'name' => 'Test index',
       'id' => 'index',
       'status' => 1,
-      'datasources' => array('entity:entity_test'),
-      'tracker' => 'default',
+      'datasource_settings' => array(
+        'entity:entity_test' => array(
+          'plugin_id' => 'entity:entity_test',
+          'settings' => array(),
+        ),
+      ),
+      'tracker_settings' => array(
+        'default' => array(
+          'plugin_id' => 'default',
+          'settings' => array(),
+        ),
+      ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => TRUE),
     ));
     $index->save();
 
-    $total_items = $index->getTracker()->getTotalItemsCount();
-    $indexed_items = $index->getTracker()->getIndexedItemsCount();
+    $total_items = $index->getTrackerInstance()->getTotalItemsCount();
+    $indexed_items = $index->getTrackerInstance()->getIndexedItemsCount();
 
-    $this->assertEquals($total_items, 2, 'The 2 items are tracked.');
-    $this->assertEquals($indexed_items, 0, 'No items are indexed');
+    $this->assertEquals(2, $total_items,'The 2 items are tracked.');
+    $this->assertEquals(0, $indexed_items, 'No items are indexed');
 
     EntityTest::create(array(
       'name' => 'foo bar baz föö smile',
@@ -122,11 +132,11 @@ class CliTest extends KernelTestBase {
       'category' => 'item_category'
     ))->save();
 
-    $total_items = $index->getTracker()->getTotalItemsCount();
-    $indexed_items = $index->getTracker()->getIndexedItemsCount();
+    $total_items = $index->getTrackerInstance()->getTotalItemsCount();
+    $indexed_items = $index->getTrackerInstance()->getIndexedItemsCount();
 
-    $this->assertEquals($total_items, 4, 'All 4 items are tracked.');
-    $this->assertEquals($indexed_items, 2, '2 items are indexed');
+    $this->assertEquals(4, $total_items, 'All 4 items are tracked.');
+    $this->assertEquals(2, $indexed_items, '2 items are indexed');
   }
 
 }

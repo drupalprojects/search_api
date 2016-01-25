@@ -157,8 +157,11 @@ class BackendTest extends KernelTestBase {
     $index = $this->getIndex();
     $this->assertTrue((bool) $index, 'The index was successfully created.');
 
-    $this->assertEquals(5, $index->getTracker()->getTotalItemsCount(), 'Correct item count.');
-    $this->assertEquals(0, $index->getTracker()->getIndexedItemsCount(), 'All items still need to be indexed.');
+    $this->assertEquals(array("entity:entity_test"), $index->getDatasourceIds(), 'Datasources are set correctly.');
+    $this->assertEquals('default', $index->getTrackerId(), 'Tracker is set correctly.');
+
+    $this->assertEquals(5, $index->getTrackerInstance()->getTotalItemsCount(), 'Correct item count.');
+    $this->assertEquals(0, $index->getTrackerInstance()->getIndexedItemsCount(), 'All items still need to be indexed.');
   }
 
   /**
@@ -197,17 +200,14 @@ class BackendTest extends KernelTestBase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
 
-    $property = 'body';
-    $this->addField($index, $property);
+    $processor = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.processor')
+      ->createInstance('html_filter');
 
-    $processors = $index->getProcessorSettings();
-    $processors['html_filter'] = array(
-      'processor_id' => 'html_filter',
-      'weights' => array(),
-      'settings' => array(),
-    );
-    $index->setProcessorSettings($processors);
+    $index->addProcessor($processor);
     $index->save();
+
+    $this->assertArrayHasKey('html_filter', $index->getProcessors(), 'HTML filter processor is added.');
   }
 
   /**
@@ -216,11 +216,12 @@ class BackendTest extends KernelTestBase {
   protected function disableHtmlFilter() {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
-    $processors = $index->getProcessorSettings();
-    unset($processors['html_filter']);
-    $index->setProcessorSettings($processors);
     $index->removeField('body');
+    $index->removeProcessor('html_filter');
     $index->save();
+
+    $this->assertArrayNotHasKey('html_filter', $index->getProcessors(), 'HTML filter processor is removed.');
+    $this->assertArrayNotHasKey('body', $index->getFields(), 'Body field is removed.');
   }
 
   /**
@@ -873,7 +874,6 @@ class BackendTest extends KernelTestBase {
     // Regression test for #1916474.
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
-    $index->resetCaches();
     $this->addField($index, 'prices', 'decimal');
     $success = $index->save();
     $this->assertTrue($success, 'The index field settings were successfully changed.');
@@ -1072,6 +1072,7 @@ class BackendTest extends KernelTestBase {
     );
     $field = Utility::createField($index, $property_name, $field_info);
     $index->addField($field);
+    $index->save();
   }
 
 }

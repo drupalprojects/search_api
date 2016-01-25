@@ -249,8 +249,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getTracker() {
-    return $this->entity->getTracker();
+  public function getTrackerInstance() {
+    return $this->entity->getTrackerInstance();
   }
 
   /**
@@ -277,8 +277,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getServer() {
-    return $this->entity->getServer();
+  public function getServerInstance() {
+    return $this->entity->getServerInstance();
   }
 
   /**
@@ -426,13 +426,6 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
    */
   public function isReindexing() {
     return $this->entity->isReindexing();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function resetCaches($include_stored = TRUE) {
-    return $this->entity->resetCaches($include_stored);
   }
 
   /**

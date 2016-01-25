@@ -318,7 +318,7 @@ class Query implements QueryInterface {
     $this->preExecute();
 
     // Execute query.
-    $response = $this->index->getServer()->search($this);
+    $response = $this->index->getServerInstance()->search($this);
 
     // Postprocess the search results.
     $this->postExecute($response);

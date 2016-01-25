@@ -98,6 +98,55 @@ class IntegrationTest extends WebTestBase {
   }
 
   /**
+   * Tests what happens when an index has an integer as id/label.
+   *
+   * This needs to be in a separate test because we want to test the content
+   * tracking behavior as well as the fields / processors editing and adding
+   * without messing with the other index. This test also makes sure that the
+   * server also has an integer as id/label.
+   */
+  public function testIntegerIndex() {
+    $this->drupalLogin($this->adminUser);
+    $this->getTestServer(789, 456);
+
+    $this->drupalCreateNode(array('type' => 'article'));
+    $this->drupalCreateNode(array('type' => 'article'));
+
+    $this->drupalGet('admin/config/search/search-api/add-index');
+
+    $this->indexId = 123;
+    $edit = array(
+      'name' => $this->indexId,
+      'id' => $this->indexId,
+      'status' => 1,
+      'description' => 'test Index:: 123~',
+      'server' => 456,
+      'datasources[]' => array('entity:node'),
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertResponse(200);
+    $this->assertText($this->t('The index was successfully saved.'));
+    $this->assertText($this->t('Successfully tracked @count items for this index.', array('@count' => 2)));
+    $this->assertEqual(2, $this->countTrackedItems());
+
+    $this->enableAllProcessors();
+    $this->checkFieldLabels();
+
+    $this->addFieldsToIndex();
+    $this->removeFieldsFromIndex();
+
+    $this->configureFilter();
+    $this->configureFilterPage();
+    $this->checkProcessorChanges();
+    $this->changeProcessorFieldBoost();
+
+    $this->setReadOnly();
+    $this->disableEnableIndex();
+    $this->changeIndexDatasource();
+    $this->changeIndexServer();
+  }
+
+  /**
    * Tests creating a search server via the UI.
    */
   protected function createServer($server_id = '_test_server') {
@@ -382,7 +431,7 @@ class IntegrationTest extends WebTestBase {
    *   The number of tracked items in the test index.
    */
   protected function countTrackedItems() {
-    return $this->getIndex()->getTracker()->getTotalItemsCount();
+    return $this->getIndex()->getTrackerInstance()->getTotalItemsCount();
   }
 
   /**
@@ -392,7 +441,7 @@ class IntegrationTest extends WebTestBase {
    *   The number of unindexed items in the test index.
    */
   protected function countRemainingItems() {
-    return $this->getIndex()->getTracker()->getRemainingItemsCount();
+    return $this->getIndex()->getTrackerInstance()->getRemainingItemsCount();
   }
 
   /**
@@ -453,10 +502,6 @@ class IntegrationTest extends WebTestBase {
     $this->assertResponse(200);
     $this->drupalPostForm(NULL, $edit, $this->t('Save and continue'));
     $this->drupalPostForm(NULL, array(), $this->t('Save field settings'));
-
-    // @todo This should not be necessary, the field cache should be invalidated
-    //   automatically when available fields change. See #2637032.
-    $this->getIndex()->resetCaches();
 
     $url_options['query']['datasource'] = 'entity:node';
     $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
@@ -723,7 +768,7 @@ class IntegrationTest extends WebTestBase {
 
     $this->drupalPostForm($index_path, array(), $this->t('Index now'));
 
-    $remaining_after = $index->getTracker()->getRemainingItemsCount();
+    $remaining_after = $index->getTrackerInstance()->getRemainingItemsCount();
     $this->assertEqual(0, $remaining_after, 'Items were indexed after removing the "read only" flag.');
 
   }

@@ -262,7 +262,7 @@ class IndexForm extends EntityForm {
       '#title' => $this->t('Tracker'),
       '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes.'),
       '#options' => $this->getTrackerPluginManager()->getOptionsList(),
-      '#default_value' => $index->hasValidTracker() ? $index->getTracker()->getPluginId() : key($tracker_options),
+      '#default_value' => $index->hasValidTracker() ? $index->getTrackerInstance()->getPluginId() : key($tracker_options),
       '#required' => TRUE,
       '#disabled' => !$index->isNew(),
       '#ajax' => array(
@@ -313,7 +313,7 @@ class IndexForm extends EntityForm {
       '#description' => $this->t('Only enabled indexes can be used for indexing and searching. This setting will only take effect if the selected server is also enabled.'),
       '#default_value' => $index->status(),
       // Can't enable an index lying on a disabled server or no server at all.
-      '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServer()->status()),
+      '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServerInstance()->status()),
       // @todo This doesn't seem to work and should also hide for disabled
       //   servers. If that works, we can probably remove the last sentence of
       //   the description.
@@ -392,7 +392,7 @@ class IndexForm extends EntityForm {
    */
   public function buildTrackerConfigForm(array &$form, FormStateInterface $form_state, IndexInterface $index) {
     if ($index->hasValidTracker()) {
-      $tracker = $index->getTracker();
+      $tracker = $index->getTrackerInstance();
       // @todo Create, use and save SubFormState already here, not only in
       //   validate(). Also, use proper subset of $form for first parameter?
       if ($config_form = $tracker->buildConfigurationForm(array(), $form_state)) {
@@ -484,7 +484,7 @@ class IndexForm extends EntityForm {
     //   form structure).
     $tracker_id = $form_state->getValue('tracker', NULL);
     if ($this->originalEntity->getTrackerId() == $tracker_id) {
-      $tracker = $this->originalEntity->getTracker();
+      $tracker = $this->originalEntity->getTrackerInstance();
     }
     else {
       $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $this->originalEntity));
@@ -526,15 +526,16 @@ class IndexForm extends EntityForm {
     $datasources = $form_state->getValue('datasources', array());
     /** @var \Drupal\search_api\Datasource\DatasourceInterface[] $datasource_plugins */
     $datasource_plugins = $this->originalEntity->getDatasources(FALSE);
-    $datasource_configuration = array();
+    $datasource_settings = array();
     foreach ($datasources as $datasource_id) {
       $datasource = $datasource_plugins[$datasource_id];
       $datasource_form = (!empty($form['datasource_configs'][$datasource_id])) ? $form['datasource_configs'][$datasource_id] : array();
       $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
       $datasource->submitConfigurationForm($datasource_form, $datasource_form_state);
-      $datasource_configuration[$datasource_id] = $datasource->getConfiguration();
+
+      $datasource_settings[$datasource_id] = $datasource;
     }
-    $index->set('datasource_configs', $datasource_configuration);
+    $index->setDatasources($datasource_settings);
 
     // Call submitConfigurationForm() for the (possibly new) tracker.
     // @todo It seems if we change the tracker, we would validate/submit the old
@@ -544,7 +545,7 @@ class IndexForm extends EntityForm {
     //   form structure).
     $tracker_id = $form_state->getValue('tracker', NULL);
     if ($this->originalEntity->getTrackerId() == $tracker_id) {
-      $tracker = $this->originalEntity->getTracker();
+      $tracker = $this->originalEntity->getTrackerInstance();
     }
     else {
       $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $this->originalEntity));
@@ -552,7 +553,7 @@ class IndexForm extends EntityForm {
 
     $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
     $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
-    $index->set('tracker_config', $tracker->getConfiguration());
+    $index->setTracker($tracker);
   }
 
   /**

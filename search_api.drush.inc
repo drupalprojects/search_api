@@ -216,7 +216,7 @@ function drush_search_api_list() {
     $rows[] = array(
       $index->id(),
       $index->label(),
-      $index->getServerId() ? $index->getServer()->label() : $none,
+      $index->getServerId() ? $index->getServerInstance()->label() : $none,
       $types ? implode(', ', $types) : $none,
       $index->status() ? $enabled : $disabled,
       (int) $index->getOption('cron_limit'),
@@ -325,8 +325,8 @@ function drush_search_api_status($index_id = NULL) {
   );
 
   foreach ($indexes as $index) {
-    $indexed = $index->getTracker()->getIndexedItemsCount();
-    $total = $index->getTracker()->getTotalItemsCount();
+    $indexed = $index->getTrackerInstance()->getIndexedItemsCount();
+    $total = $index->getTrackerInstance()->getTotalItemsCount();
 
     $complete = '-';
     if ($total > 0) {
@@ -365,7 +365,7 @@ function drush_search_api_index($index_id = NULL, $limit = NULL, $batch_size = N
   }
 
   foreach ($indexes as $index) {
-    $tracker = $index->getTracker();
+    $tracker = $index->getTrackerInstance();
     $remaining = $tracker->getTotalItemsCount() - $tracker->getIndexedItemsCount();
 
     if (!$remaining) {

@@ -99,7 +99,7 @@ class IndexTaskManager implements IndexTaskManagerInterface {
             $item_ids[] = Utility::createCombinedId($datasource_id, $raw_id);
           }
           $added = count($item_ids);
-          $index->getTracker()->trackItemsInserted($item_ids);
+          $index->getTrackerInstance()->trackItemsInserted($item_ids);
         }
       }
     }
@@ -195,7 +195,7 @@ class IndexTaskManager implements IndexTaskManagerInterface {
     if (!isset($datasource_ids)) {
       $this->state->delete($this->getIndexStateKey($index));
       if ($valid_tracker) {
-        $index->getTracker()->trackAllItemsDeleted();
+        $index->getTrackerInstance()->trackAllItemsDeleted();
       }
       return;
     }
@@ -211,7 +211,7 @@ class IndexTaskManager implements IndexTaskManagerInterface {
     foreach ($datasource_ids as $datasource_id) {
       unset($index_state['pages'][$datasource_id]);
       if ($valid_tracker) {
-        $index->getTracker()->trackAllItemsDeleted($datasource_id);
+        $index->getTrackerInstance()->trackAllItemsDeleted($datasource_id);
       }
     }
 

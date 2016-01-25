@@ -32,7 +32,12 @@ class ProcessorIntegrationTest extends WebTestBase {
       'name' => 'Test index',
       'id' => $this->indexId,
       'status' => 1,
-      'datasources' => array('entity:node'),
+      'datasource_settings' => array(
+        'entity:node' => array(
+          'plugin_id' => 'entity:node',
+          'settings' => array(),
+        ),
+      ),
     ))->save();
   }
 
@@ -43,18 +48,92 @@ class ProcessorIntegrationTest extends WebTestBase {
    * avoid the overhead of having one test per processor.
    */
   public function testProcessorIntegration() {
+    // By default, the add_url and language processors are already enabled.
+    $enabled = array('language', 'add_url');
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkContentAccessIntegration();
+    $enabled[] = 'content_access';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkHighlightIntegration();
+    $enabled[] = 'highlight';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkHtmlFilterIntegration();
+    $enabled[] = 'html_filter';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkIgnoreCaseIntegration();
+    $enabled[] = 'ignorecase';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkIgnoreCharactersIntegration();
-    $this->checkLanguageIntegration();
+    $enabled[] = 'ignore_character';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkNodeStatusIntegration();
+    $enabled[] = 'node_status';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkRenderedItemIntegration();
+    $enabled[] = 'rendered_item';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkStopWordsIntegration();
+    $enabled[] = 'stopwords';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkTokenizerIntegration();
+    $enabled[] = 'tokenizer';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
     $this->checkTransliterationIntegration();
+    $enabled[] = 'transliteration';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+
+    // The 'language' and 'add_url' processors are are not available to be
+    // removed because they are locked processors.
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEqual($enabled, $actual_processors);
+    $this->checkLanguageIntegration();
+    $this->assertEqual($enabled, $actual_processors);
     $this->checkUrlFieldIntegration();
+    $this->assertEqual($enabled, $actual_processors);
   }
 
   /**
@@ -168,10 +247,11 @@ class ProcessorIntegrationTest extends WebTestBase {
    */
   public function checkLanguageIntegration() {
     $index = $this->loadIndex();
-    $processors = $index->getProcessorSettings();
+    $processors = $index->getProcessors();
     $this->assertTrue(!empty($processors['language']), 'The "language" processor is enabled by default.');
-    unset($processors['language']);
-    $index->setProcessorSettings($processors)->save();
+    $index->removeProcessor('language');
+    $index->save();
+
     $processors = $this->loadIndex()->getProcessors();
     $this->assertTrue(!empty($processors['language']), 'The "language" processor cannot be disabled.');
   }
@@ -240,10 +320,11 @@ class ProcessorIntegrationTest extends WebTestBase {
    */
   public function checkUrlFieldIntegration() {
     $index = $this->loadIndex();
-    $processors = $index->getProcessorSettings();
+    $processors = $index->getProcessors();
     $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor is enabled by default.');
-    unset($processors['add_url']);
-    $index->setProcessorSettings($processors)->save();
+    $index->removeProcessor('add_url');
+    $index->save();
+
     $processors = $this->loadIndex()->getProcessors();
     $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor cannot be disabled.');
   }

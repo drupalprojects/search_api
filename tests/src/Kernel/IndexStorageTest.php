@@ -40,7 +40,15 @@ class IndexStorageTest extends KernelTestBase {
 
     $this->installSchema('system', 'key_value_expire');
 
-    $this->storage = $this->container->get('entity_type.manager')->getStorage('search_api_index');
+    $this->storage = $this->container
+      ->get('entity_type.manager')
+      ->getStorage('search_api_index');
+
+    // Set the default tracker since that's needed when creating a bare index.
+    \Drupal::configFactory()
+      ->getEditable('search_api.settings')
+      ->set('default_tracker', 'default')
+      ->save();
   }
 
   /**
@@ -60,11 +68,10 @@ class IndexStorageTest extends KernelTestBase {
    * @return \Drupal\search_api\IndexInterface
    *  The newly created search index.
    */
-  public function indexCreate() {
+  protected function indexCreate() {
     $indexData = array(
       'id' => 'test',
-      'name' => 'Index test name',
-      'tracker' => 'default',
+      'name' => 'Index test name'
     );
 
     $index = $this->storage->create($indexData);
@@ -80,7 +87,7 @@ class IndexStorageTest extends KernelTestBase {
    * @param \Drupal\search_api\IndexInterface $index
    *   The index used for the test.
    */
-  public function indexLoad(IndexInterface $index) {
+  protected function indexLoad(IndexInterface $index) {
     $loaded_index = $this->storage->load($index->id());
     $this->assertSame($index->label(), $loaded_index->label());
   }
@@ -91,7 +98,7 @@ class IndexStorageTest extends KernelTestBase {
    * @param \Drupal\search_api\IndexInterface $index
    *   The index used for the test.
    */
-  public function indexDelete(IndexInterface $index) {
+  protected function indexDelete(IndexInterface $index) {
     $this->storage->delete(array($index));
     $loaded_index = $this->storage->load($index->id());
     $this->assertNull($loaded_index);

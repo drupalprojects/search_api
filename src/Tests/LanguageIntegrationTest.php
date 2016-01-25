@@ -120,6 +120,6 @@ class LanguageIntegrationTest extends WebTestBase {
   protected function countTrackedItems() {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
-    return $index->getTracker()->getTotalItemsCount();
+    return $index->getTrackerInstance()->getTotalItemsCount();
   }
 }

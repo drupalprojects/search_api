@@ -169,7 +169,12 @@ abstract class WebTestBase extends SimpletestWebTestBase {
         'name' => $name,
         'description' => $name . ' description',
         'server' => $server_id,
-        'datasources' => array($datasource_id),
+        'datasource_settings' => array(
+          $datasource_id => array(
+            'plugin_id' => $datasource_id,
+            'settings' => array()
+          )
+        ),
       ));
       $index->save();
       $this->indexId = $index->id();

@@ -109,7 +109,12 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[2]->save();
 
     // Also index users, to verify that they are unaffected by the processor.
-    $this->index->set('datasources', array('entity:comment', 'entity:node', 'entity:user'));
+    $manager = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.datasource');
+    $datasources['entity:comment'] = $manager->createInstance('entity:comment', array('index' => $this->index));
+    $datasources['entity:node'] = $manager->createInstance('entity:node', array('index' => $this->index));
+    $datasources['entity:user'] = $manager->createInstance('entity:user', array('index' => $this->index));
+    $this->index->setDatasources($datasources);
     $this->index->save();
 
     \Drupal::getContainer()->get('search_api.index_task_manager')->addItemsAll($this->index);
@@ -125,6 +130,8 @@ class ContentAccessTest extends ProcessorTestBase {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
     $this->index->reindex();
     $this->index->indexItems();
+    $this->assertEqual(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
+
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
 
@@ -138,6 +145,8 @@ class ContentAccessTest extends ProcessorTestBase {
     user_role_grant_permissions('anonymous', array('access comments'));
     $this->index->reindex();
     $this->index->indexItems();
+    $this->assertEqual(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
+
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
 
@@ -154,6 +163,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[3] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'foo', 'uid' => 2));
     $this->nodes[3]->save();
     $this->index->indexItems();
+    $this->assertEqual(7, $this->index->getTrackerInstance()->getIndexedItemsCount(), '7 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);

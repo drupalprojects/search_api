@@ -115,6 +115,35 @@ class RenderedItemTest extends ProcessorTestBase {
   }
 
   /**
+   * Tests that the processor is added correctly.
+   */
+  public function testAddProcessor() {
+    $processors = $this->index->getProcessors();
+    $this->assertTrue(
+      array_key_exists('rendered_item', $processors),
+      'Processor successfully added.'
+    );
+
+    $items = array();
+    foreach ($this->nodes as $node) {
+      $items[] = array(
+        'datasource' => 'entity:node',
+        'item' => $node->getTypedData(),
+        'item_id' => $node->id(),
+        'text' => 'node text' . $node->id(),
+      );
+    }
+    $items = $this->generateItems($items);
+
+    foreach ($items as $item) {
+      $this->assertTrue(
+        array_key_exists('rendered_item', $item->getFields()),
+        'Field successfully added.'
+      );
+    }
+  }
+
+  /**
    * Tests whether the rendered_item field is correctly filled by the processor.
    */
   public function testPreprocessIndexItems() {
