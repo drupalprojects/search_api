@@ -619,7 +619,10 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getItemUrl(ComplexDataInterface $item) {
     if ($item instanceof EntityAdapter) {
-      return $item->getValue()->urlInfo('canonical');
+      $entity = $item->getValue();
+      if ($entity->hasLinkTemplate('canonical')) {
+        return $entity->toUrl('canonical');
+      }
     }
     return NULL;
   }
