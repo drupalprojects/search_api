@@ -8,6 +8,7 @@
 namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Utility\Html;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\taxonomy\Entity\Term;
 
 /**
@@ -19,6 +20,8 @@ use Drupal\taxonomy\Entity\Term;
  */
 // @todo This seems to be only partially ported to D8.
 class SearchApiTaxonomyTerm extends SearchApiStandard {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

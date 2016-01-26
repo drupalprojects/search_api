@@ -11,6 +11,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 
 /**
@@ -22,6 +23,7 @@ use Drupal\views\Plugin\views\filter\FilterPluginBase;
  */
 class SearchApiFulltext extends FilterPluginBase {
 
+  use UncacheableDependencyTrait;
   use SearchApiFilterTrait;
 
   /**

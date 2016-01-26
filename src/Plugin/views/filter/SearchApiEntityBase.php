@@ -9,11 +9,14 @@ namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Tags;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\UncacheableDependencyTrait;
 
 /**
  * Provides a base class for filters on entity-typed fields.
  */
 abstract class SearchApiEntityBase extends SearchApiString {
+
+  use UncacheableDependencyTrait;
 
   /**
    * Where the $query object will reside:

@@ -7,6 +7,8 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\search_api\UncacheableDependencyTrait;
+
 /**
  * Provides filtering on the datasource.
  *
@@ -15,6 +17,8 @@ namespace Drupal\search_api\Plugin\views\filter;
  * @ViewsFilter("search_api_datasource")
  */
 class SearchApiDatasource extends SearchApiOptions {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

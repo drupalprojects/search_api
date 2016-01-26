@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\user\Plugin\views\filter\Name;
 
 /**
@@ -20,6 +21,7 @@ use Drupal\user\Plugin\views\filter\Name;
  */
 class SearchApiUser extends Name {
 
+  use UncacheableDependencyTrait;
   use SearchApiFilterTrait;
 
   /**

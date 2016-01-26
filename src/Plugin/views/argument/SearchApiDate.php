@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\search_api\UncacheableDependencyTrait;
 
 /**
  * Defines a contextual filter for conditions on date fields.
@@ -18,6 +19,8 @@ use Drupal\Component\Utility\Html;
  * @ViewsArgument("search_api_date")
  */
 class SearchApiDate extends SearchApiStandard {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

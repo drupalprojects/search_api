@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\search_api\Plugin\views\filter;
+use Drupal\search_api\UncacheableDependencyTrait;
 
 /**
  * Defines a filter for filtering on fulltext fields.
@@ -15,6 +16,8 @@ namespace Drupal\search_api\Plugin\views\filter;
  * @ViewsFilter("search_api_text")
  */
 class SearchApiText extends SearchApiString {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

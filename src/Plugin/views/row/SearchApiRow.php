@@ -14,6 +14,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\SearchApiException;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\row\RowPluginBase;
 use Drupal\views\ViewExecutable;
@@ -29,6 +30,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class SearchApiRow extends RowPluginBase {
+
+  use UncacheableDependencyTrait;
 
   /**
    * The search index.

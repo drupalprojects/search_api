@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 
 /**
@@ -19,6 +20,8 @@ use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
  * @ViewsArgument("search_api_argument")
  */
 class SearchApiStandard extends ArgumentPluginBase {
+
+  use UncacheableDependencyTrait;
 
   /**
    * The Views query object used by this contextual filter.

@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\views\argument;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
+use Drupal\search_api\UncacheableDependencyTrait;
 
 /**
  * Defines a contextual filter for doing fulltext searches.
@@ -19,6 +20,8 @@ use Drupal\search_api\Plugin\views\query\SearchApiQuery;
  * @ViewsArgument("search_api_fulltext")
  */
 class SearchApiFulltext extends SearchApiStandard {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

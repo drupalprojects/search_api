@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\filter\Date;
 
 /**
@@ -18,6 +19,7 @@ use Drupal\views\Plugin\views\filter\Date;
  */
 class SearchApiDate extends Date {
 
+  use UncacheableDependencyTrait;
   use SearchApiFilterTrait;
 
   /**

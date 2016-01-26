@@ -22,7 +22,6 @@ use Drupal\views\Plugin\views\cache\Time;
  *   help = @Translation("Cache Search API views. (Other methods probably won't work with search views.)")
  * )
  */
-// @todo Limit to Search API base tables.
 class SearchApiCache extends Time {
 
   /**
@@ -97,19 +96,17 @@ class SearchApiCache extends Time {
     if (!isset($this->resultsKey)) {
       $query = $this->getQuery()->getSearchApiQuery();
       $query->preExecute();
-      $user = \Drupal::currentUser();
-      $key_data = array(
-        'query' => $query,
-        'roles' => $user->getRoles(),
-        'super-user' => $user->id() == 1, // special caching for super user.
-        'langcode' => \Drupal::languageManager()->getCurrentLanguage()->getId(),
-        'base_url' => $GLOBALS['base_url'],
-      );
-      foreach (array('exposed_info', 'page', 'sort', 'order', 'items_per_page', 'offset') as $key) {
-        if ($this->view->getRequest()->query->has($key)) {
-          $key_data[$key] = $this->view->getRequest()->query->get($key);
-        }
-      }
+
+      $build_info = $this->view->build_info;
+
+      $key_data = ['build_info' => $build_info];
+
+      $display_handler_cache_contexts = $this->displayHandler
+        ->getCacheMetadata()
+        ->getCacheContexts();
+      $key_data += \Drupal::service('cache_contexts_manager')
+        ->convertTokensToKeys($display_handler_cache_contexts)
+        ->getKeys();
 
       $this->resultsKey = $this->view->storage->id() . ':' . $this->displayHandler->display['id'] . ':results:' . hash('sha256', serialize($key_data));
     }

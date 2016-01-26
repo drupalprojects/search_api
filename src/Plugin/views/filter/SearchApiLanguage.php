@@ -9,6 +9,7 @@ namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,6 +20,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ViewsFilter("search_api_language")
  */
 class SearchApiLanguage extends SearchApiOptions {
+
+  use UncacheableDependencyTrait;
 
   /**
    * The language manager.

@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Query\ConditionGroupInterface;
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\search_api\Utility;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
@@ -34,6 +35,8 @@ use Drupal\views\ViewExecutable;
 //   \Drupal\search_api\Query\QueryInterface here, but probably not really
 //   possible due to conflicts.
 class SearchApiQuery extends QueryPluginBase {
+
+  use UncacheableDependencyTrait;
 
   /**
    * Number of results to display.

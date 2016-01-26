@@ -7,6 +7,7 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
+use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 
@@ -18,6 +19,8 @@ use Drupal\views\ResultRow;
  * @ViewsField("search_api_excerpt")
  */
 class SearchApiExcerpt extends FieldPluginBase {
+
+  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}
