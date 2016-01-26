@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\ContentAccessTest.
+ * Contains \Drupal\Tests\search_api\Kernel\ProcessorContentAccessTest.
  */
 
-namespace Drupal\search_api\Tests\Processor;
+namespace Drupal\Tests\search_api\Kernel\Processor;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
@@ -30,13 +30,6 @@ class ContentAccessTest extends ProcessorTestBase {
   use CommentTestTrait;
 
   /**
-   * Stores the processor to be tested.
-   *
-   * @var \Drupal\search_api\Plugin\search_api\processor\ContentAccess
-   */
-  protected $processor;
-
-  /**
    * The nodes created for testing.
    *
    * @var \Drupal\node\Entity\Node[]
@@ -51,9 +44,9 @@ class ContentAccessTest extends ProcessorTestBase {
   protected $comments;
 
   /**
-   * Performs setup tasks before each individual test method is run.
+   * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp($processor = NULL) {
     parent::setUp('content_access');
 
     // The parent method already installs most needed node and comment schemas,
@@ -130,7 +123,7 @@ class ContentAccessTest extends ProcessorTestBase {
     user_role_grant_permissions('anonymous', array('access content', 'access comments'));
     $this->index->reindex();
     $this->index->indexItems();
-    $this->assertEqual(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
+    $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
@@ -145,7 +138,7 @@ class ContentAccessTest extends ProcessorTestBase {
     user_role_grant_permissions('anonymous', array('access comments'));
     $this->index->reindex();
     $this->index->indexItems();
-    $this->assertEqual(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
+    $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
     $result = $query->execute();
@@ -157,27 +150,36 @@ class ContentAccessTest extends ProcessorTestBase {
    * Tests searching for own unpublished content.
    */
   public function testQueryAccessOwn() {
-    // Create user that will be passed into the query.
-    $authenticated_user = $this->createUser(array('uid' => 2), array('access content', 'access comments', 'view own unpublished content'));
+    // Create the user that will be passed into the query.
+    $permissions = array(
+      'access content',
+      'access comments',
+      'view own unpublished content'
+    );
+    $authenticated_user = $this->createUser($permissions);
+    $uid = $authenticated_user->id();
 
-    $this->nodes[3] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'foo', 'uid' => 2));
+    $this->nodes[3] = Node::create(array('status' => NODE_NOT_PUBLISHED, 'type' => 'page', 'title' => 'foo', 'uid' => $uid));
     $this->nodes[3]->save();
     $this->index->indexItems();
-    $this->assertEqual(7, $this->index->getTrackerInstance()->getIndexedItemsCount(), '7 items indexed, as expected.');
+    $this->assertEquals(7, $this->index->getTrackerInstance()->getIndexedItemsCount(), '7 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertResults($result, array('user' => array(0, 2), 'node' => array(3)));
+    $this->assertResults($result, array('user' => array(0, $uid), 'node' => array(3)));
   }
 
   /**
    * Tests building the query when content is accessible based on node grants.
    */
   public function testQueryAccessWithNodeGrants() {
-    // Create user that will be passed into the query.
-    $authenticated_user = $this->createUser(array('uid' => 2), array('access content'));
+    // Create the user that will be passed into the query.
+    $permissions = array(
+      'access content',
+    );
+    $authenticated_user = $this->createUser($permissions);
 
     Database::getConnection()->insert('node_access')
       ->fields(array(
@@ -195,7 +197,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
-    $this->assertResults($result, array('user' => array(0, 2), 'node' => array(0)));
+    $this->assertResults($result, array('user' => array(0, $authenticated_user->id()), 'node' => array(0)));
   }
 
   /**
@@ -217,7 +219,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->processor->preprocessIndexItems($items);
 
     foreach ($items as $item) {
-      $this->assertEqual($item->getField('search_api_node_grants')->getValues(), array('node_access__all'));
+      $this->assertEquals(array('node_access__all'), $item->getField('search_api_node_grants')->getValues());
     }
   }
 
@@ -239,7 +241,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->processor->preprocessIndexItems($items);
 
     foreach ($items as $item) {
-      $this->assertEqual($item->getField('search_api_node_grants')->getValues(), array('node_access_search_api_test:0'));
+      $this->assertEquals(array('node_access_search_api_test:0'), $item->getField('search_api_node_grants')->getValues());
     }
   }
 
@@ -271,7 +273,33 @@ class ContentAccessTest extends ProcessorTestBase {
     }
     sort($ids);
 
-    $this->assertEqual($results, $ids);
+    $this->assertEquals($ids, $results);
+  }
+
+  /**
+   * Creates a new user account.
+   *
+   * @param string[] $permissions
+   *   The permissions to set for the user.
+   *
+   * @return \Drupal\user\UserInterface
+   *   The new user object.
+   */
+  protected function createUser($permissions) {
+    $role = Role::create(array('id' => 'role', 'name' => 'Role test'));
+    $role->save();
+    user_role_grant_permissions($role->id(), $permissions);
+
+    $values = array(
+      'uid' => 2,
+      'name' => 'Test',
+      'roles' => array($role->id()),
+    );
+    $authenticated_user = User::create($values);
+    $authenticated_user->enforceIsNew();
+    $authenticated_user->save();
+
+    return $authenticated_user;
   }
 
 }

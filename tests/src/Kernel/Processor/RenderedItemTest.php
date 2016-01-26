@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\RenderedItemTest.
+ * Contains Drupal\Tests\search_api\Kernel\Processor\RenderedItemTest.
  */
 
-namespace Drupal\search_api\Tests\Processor;
+namespace Drupal\Tests\search_api\Kernel\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\node\Entity\Node;
@@ -31,16 +31,23 @@ class RenderedItemTest extends ProcessorTestBase {
   protected $nodes;
 
   /**
-   * Modules to enable for this test.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
-  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment', 'system');
+  public static $modules = array(
+    'user',
+    'node',
+    'search_api',
+    'search_api_db',
+    'search_api_test_backend',
+    'comment',
+    'system',
+    'filter'
+  );
 
   /**
-   * Performs setup tasks before each individual test method is run.
+   * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp($processor = NULL) {
     parent::setUp('rendered_item');
 
     // Load configuration and needed schemas. (The necessary schemas for using
@@ -162,11 +169,11 @@ class RenderedItemTest extends ProcessorTestBase {
     foreach ($items as $key => $item) {
       list(, $nid) = Utility::splitCombinedId($key);
       $field = $item->getField('rendered_item');
-      $this->assertEqual($field->getType(), 'text', 'Node item ' . $nid . ' rendered value is identified as text.');
+      $this->assertEquals('text', $field->getType(), 'Node item ' . $nid . ' rendered value is identified as text.');
       $values = $field->getValues();
       // Test that the value is a string (not, e.g., a SafeString object).
       $this->assertTrue(is_string($values[0]), 'Node item ' . $nid . ' rendered value is a string.');
-      $this->assertEqual(1, count($values), 'Node item ' . $nid . ' rendered value is a single value.');
+      $this->assertEquals(1, count($values), 'Node item ' . $nid . ' rendered value is a single value.');
       // These tests rely on the template not changing. However, if we'd only
       // check whether the field values themselves are included, there could
       // easier be false positives. For example the title text was present even
@@ -227,12 +234,12 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->processor->alterPropertyDefinitions($properties, NULL);
     $this->assertTrue(array_key_exists('rendered_item', $properties), 'The Properties where modified with the "rendered_item".');
     $this->assertTrue(($properties['rendered_item'] instanceof DataDefinition), 'The "rendered_item" contains a valid DataDefinition instance.');
-    $this->assertEqual('text', $properties['rendered_item']->getDataType(), 'Correct DataType set in the DataDefinition.');
+    $this->assertEquals('text', $properties['rendered_item']->getDataType(), 'Correct DataType set in the DataDefinition.');
 
     // Check if the properties stay untouched if a datasource is given.
     $properties = array();
     $this->processor->alterPropertyDefinitions($properties, $this->index->getDatasource('entity:node'));
-    $this->assertEqual($properties, array(), '"render_item" property not added when data source is given.');
+    $this->assertEquals(array(),$properties, '"render_item" property not added when data source is given.');
   }
 
 }

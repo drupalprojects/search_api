@@ -2,28 +2,38 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\ProcessorTestBase.
+ * Contains \Drupal\Tests\search_api\Kernel\ProcessorProcessorTestBase.
  */
 
-namespace Drupal\search_api\Tests\Processor;
+namespace Drupal\Tests\search_api\Kernel\Processor;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility;
-use Drupal\system\Tests\Entity\EntityUnitTestBase;
+use Drupal\system\Entity\Action;
 
 /**
  * Provides a base class for Drupal unit tests for processors.
  */
-abstract class ProcessorTestBase extends EntityUnitTestBase {
+abstract class ProcessorTestBase extends KernelTestBase {
 
   /**
-   * Modules to enable for this test.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
-  public static $modules = array('user', 'node', 'search_api','search_api_db', 'search_api_test_backend', 'comment');
+  public static $modules = array(
+    'user',
+    'node',
+    'field',
+    'search_api',
+    'search_api_db',
+    'search_api_test_backend',
+    'comment',
+    'text',
+    'action',
+    'system',
+  );
 
   /**
    * The processor used for this test.
@@ -61,6 +71,16 @@ abstract class ProcessorTestBase extends EntityUnitTestBase {
 
     $this->installSchema('node', array('node_access'));
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
+    $this->installEntitySchema('user');
+    $this->installEntitySchema('node');
+    $this->installEntitySchema('comment');
+    $this->installConfig(array('field'));
+
+    Action::create([
+      'id' => 'foo',
+      'label' => 'Foobaz',
+      'plugin' => 'comment_publish_action',
+    ])->save();
 
     \Drupal::configFactory()
       ->getEditable('search_api.settings')
