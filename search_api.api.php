@@ -100,19 +100,21 @@ function hook_search_api_field_type_mapping_alter(array &$mapping) {
 /**
  * Alter the mapping of Search API data types to their default Views handlers.
  *
+ * Field handlers are not determined by these simplified (Search API) types, but
+ * by their actual property data types. For altering that mapping, see
+ * hook_search_api_views_field_handler_mapping_alter().
+ *
  * @param array $mapping
- *   An associative array with data types as the keys and Views field data
- *   definitions as the values. In addition to all normally defined data types,
- *   keys can also be "options" for any field with an options list, "entity" for
- *   general entity-typed fields or "entity:ENTITY_TYPE" (with "ENTITY_TYPE"
- *   being the machine name of an entity type) for entities of that type.
+ *   An associative array with data types as the keys and Views table data
+ *   definition items as the values. In addition to all normally defined Search
+ *   API data types, keys can also be "options" for any field with an options
+ *   list, "entity" for general entity-typed fields or "entity:ENTITY_TYPE"
+ *   (with "ENTITY_TYPE" being the machine name of an entity type) for entities
+ *   of that type.
  */
 function hook_search_api_views_handler_mapping_alter(array &$mapping) {
   $mapping['entity:my_entity_type'] = array(
     'argument' => array(
-      'id' => 'my_entity_type',
-    ),
-    'field' => array(
       'id' => 'my_entity_type',
     ),
     'filter' => array(
@@ -123,6 +125,37 @@ function hook_search_api_views_handler_mapping_alter(array &$mapping) {
     ),
   );
   $mapping['date']['filter']['id'] = 'my_date_filter';
+}
+
+/**
+ * Alter the mapping of property types to their default Views field handlers.
+ *
+ * This is used in the Search API Views integration to create Search
+ * API-specific field handlers for all properties of datasources and some entity
+ * types.
+ *
+ * In addition to the definition returned here, for Field API fields, the
+ * "field_name" will be set to the field's machine name.
+ *
+ * @param array $mapping
+ *   An associative array with property data types as the keys and Views field
+ *   handler definitions as the values (i.e., just the inner "field" portion of
+ *   Views data definition items). In some cases the value might also be NULL
+ *   instead, to indicate that properties of this type shouldn't have field
+ *   handlers. The data types in the keys might also contain asterisks (*) as
+ *   wildcard characters. Data types with wildcards will be matched only if no
+ *   specific type exists, and longer type patterns will be tried before shorter
+ *   ones. The "*" mapping therefore is the default if no other match could be
+ *   found.
+ */
+function hook_search_api_views_field_handler_mapping_alter(array &$mapping) {
+  $mapping['field_item:string_long'] = array(
+    'id' => 'example_field',
+  );
+  $mapping['example_property_type'] = array(
+    'id' => 'example_field',
+    'some_option' => 'foo',
+  );
 }
 
 /**

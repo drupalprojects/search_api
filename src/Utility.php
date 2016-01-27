@@ -26,6 +26,7 @@ use Drupal\search_api\Item\Item;
 use Drupal\search_api\Query\Query;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSet;
+use Symfony\Component\DependencyInjection\Container;
 
 /**
  * Contains utility methods for the Search API.
@@ -243,33 +244,53 @@ class Utility {
    *   The field into which to put the extracted data.
    */
   public static function extractField(TypedDataInterface $data, FieldInterface $field) {
-    if ($data->getDataDefinition()->isList()) {
-      foreach ($data as $piece) {
-        self::extractField($piece, $field);
-      }
-      return;
-    }
-    $value = $data->getValue();
-    $definition = $data->getDataDefinition();
-    if ($definition instanceof ComplexDataDefinitionInterface) {
-      $property = $definition->getMainPropertyName();
-      if (isset($value[$property])) {
-        $value = $value[$property];
-      }
-    }
-    elseif (is_array($value)) {
-      $value = reset($value);
-    }
+    $values = static::extractFieldValues($data);
 
     // If the data type of the field is a custom one, then the value can be
     // altered by the data type plugin.
     $data_type_manager = \Drupal::service('plugin.manager.search_api.data_type');
     if ($data_type_manager->hasDefinition($field->getType())) {
-      $value = $data_type_manager->createInstance($field->getType())->getValue($value);
+      /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type_plugin */
+      $data_type_plugin = $data_type_manager->createInstance($field->getType());
+      foreach ($values as $i => $value) {
+        $values[$i] = $data_type_plugin->getValue($value);
+      }
     }
 
-    $field->addValue($value);
-    $field->setOriginalType($definition->getDataType());
+    $field->setValues($values);
+    $field->setOriginalType($data->getDataDefinition()->getDataType());
+  }
+
+  /**
+   * Extracts field values from a typed data object.
+   *
+   * @param \Drupal\Core\TypedData\TypedDataInterface $data
+   *   The typed data object.
+   *
+   * @return array
+   *   An array of values.
+   */
+  public static function extractFieldValues(TypedDataInterface $data) {
+    if ($data->getDataDefinition()->isList()) {
+      $values = array();
+      foreach ($data as $piece) {
+        $values[] = self::extractFieldValues($piece);
+      }
+      return $values ? call_user_func_array('array_merge', $values) : array();
+    }
+
+    $value = $data->getValue();
+    $definition = $data->getDataDefinition();
+    if ($definition instanceof ComplexDataDefinitionInterface) {
+      $property = $definition->getMainPropertyName();
+      if (isset($value[$property])) {
+        return array($value[$property]);
+      }
+    }
+    elseif (is_array($value)) {
+      return array_values($value);
+    }
+    return array($value);
   }
 
   /**
@@ -537,11 +558,7 @@ class Utility {
     $field = new Field($index, $field_identifier);
 
     foreach ($field_info as $key => $value) {
-      // Unfortunately, the $delimiters parameter for ucwords() wasn't
-      // introduced until PHP 5.5.16 and thus cannot be depended upon.
-      $method = str_replace('_', ' ', $key);
-      $method = ucwords($method);
-      $method = 'set' . str_replace(' ', '', $method);
+      $method = 'set' . Container::camelize($key);
       if (method_exists($field, $method)) {
         $field->$method($value);
       }

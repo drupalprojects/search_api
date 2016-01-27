@@ -8,21 +8,14 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\search_api\Plugin\views\query\SearchApiQuery;
+use Drupal\search_api\Plugin\views\SearchApiHandlerTrait;
 
 /**
  * Provides a trait to use for Search API Views filters.
  */
 trait SearchApiFilterTrait {
 
-  /**
-   * Overrides the Views handlers' ensureMyTable() method.
-   *
-   * This is done since adding a table to a Search API query is neither
-   * necessary nor possible, but we still want to stay as compatible as possible
-   * to the default SQL query plugin.
-   */
-  public function ensureMyTable() {}
+  use SearchApiHandlerTrait;
 
   /**
    * Adds a form for entering the value or values for the filter.
@@ -40,21 +33,6 @@ trait SearchApiFilterTrait {
         unset($form['value']['min'], $form['value']['max']);
       }
     }
-  }
-
-  /**
-   * Returns the active search index.
-   *
-   * @return \Drupal\search_api\IndexInterface|null
-   *   The search index to use with this filter, or NULL if none could be
-   *   loaded.
-   */
-  protected function getIndex() {
-    if ($this->getQuery()) {
-      return $this->getQuery()->getIndex();
-    }
-    $base_table = $this->view->storage->get('base_table');
-    return SearchApiQuery::getIndexFromTable($base_table);
   }
 
   /**
@@ -77,16 +55,6 @@ trait SearchApiFilterTrait {
       $filter->addCondition($this->realField, $value, $operator);
     }
     $this->getQuery()->addConditionGroup($filter, $this->options['group']);
-  }
-
-  /**
-   * Retrieves the query plugin.
-   *
-   * @return \Drupal\search_api\Plugin\views\query\SearchApiQuery
-   *   The query plugin.
-   */
-  public function getQuery() {
-    return $this->query;
   }
 
 }

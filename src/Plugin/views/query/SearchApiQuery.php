@@ -10,6 +10,7 @@ namespace Drupal\search_api\Plugin\views\query;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Query\ConditionInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -17,10 +18,12 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\search_api\Utility;
+use Drupal\user\Entity\User;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a Views query class for searching on Search API indexes.
@@ -31,9 +34,6 @@ use Drupal\views\ViewExecutable;
  *   help = @Translation("The query will be generated and run using the Search API.")
  * )
  */
-// @todo Would be great to have a common interface with
-//   \Drupal\search_api\Query\QueryInterface here, but probably not really
-//   possible due to conflicts.
 class SearchApiQuery extends QueryPluginBase {
 
   use UncacheableDependencyTrait;
@@ -93,10 +93,10 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * The properties that should be retrieved from result items.
    *
-   * The properties are represented by their combined property paths as the
-   * array keys, to more easily keep them unique.
+   * The array is keyed by datasource ID (which might be NULL) and property
+   * path, the values are the associated combined property paths.
    *
-   * @var array
+   * @var string[][]
    */
   protected $retrievedProperties = array();
 
@@ -145,11 +145,12 @@ class SearchApiQuery extends QueryPluginBase {
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     try {
       parent::init($view, $display, $options);
-      $this->retrievedProperties = array();
-      $this->index = self::getIndexFromTable($view->storage->get('base_table'));
+      $this->index = static::getIndexFromTable($view->storage->get('base_table'));
       if (!$this->index) {
         $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
       }
+      $this->retrievedProperties = array_fill_keys($this->index->getDatasourceIds(), array());
+      $this->retrievedProperties[NULL] = array();
       $this->query = $this->index->query();
       $this->query->setParseMode($this->options['parse_mode']);
       $this->query->addTag('views');
@@ -165,14 +166,47 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Adds a property to be retrieved.
    *
+   * Currently doesn't serve any purpose, but might be added to the search query
+   * in the future to help backends that support returning fields determine
+   * which of the fields should actually be returned.
+   *
    * @param string $combined_property_path
    *   The combined property path of the property that should be retrieved.
    *
    * @return $this
    */
-  public function addField($combined_property_path) {
-    $this->retrievedProperties[$combined_property_path] = TRUE;
+  public function addRetrievedProperty($combined_property_path) {
+    list($datasource_id, $property_path) = Utility::splitCombinedId($combined_property_path);
+    $this->retrievedProperties[$datasource_id][$property_path] = $combined_property_path;
     return $this;
+  }
+
+  /**
+   * Adds a field to the table.
+   *
+   * This replicates the interface of Views' default SQL backend to simplify
+   * the Views integration of the Search API. If you are writing Search
+   * API-specific Views code, you should better use the addRetrievedProperty()
+   * method.
+   *
+   * @param string|null $table
+   *   Ignored.
+   * @param string $field
+   *   The combined property path of the property that should be retrieved.
+   * @param string $alias
+   *   (optional) Ignored.
+   * @param array $params
+   *   (optional) Ignored.
+   *
+   * @return string
+   *   The name that this field can be referred to as (always $field).
+   *
+   * @see \Drupal\views\Plugin\views\query\Sql::addField()
+   * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::addField()
+   */
+  public function addField($table, $field, $alias = '', $params = array()) {
+    $this->addRetrievedProperty($field);
+    return $field;
   }
 
   /**
@@ -180,10 +214,10 @@ class SearchApiQuery extends QueryPluginBase {
    */
   public function defineOptions() {
     return parent::defineOptions() + array(
-      'search_api_bypass_access' => array(
+      'bypass_access' => array(
         'default' => FALSE,
       ),
-      'entity_access' => array(
+      'skip_access' => array(
         'default' => FALSE,
       ),
       'parse_mode' => array(
@@ -198,20 +232,22 @@ class SearchApiQuery extends QueryPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['search_api_bypass_access'] = array(
+    $form['bypass_access'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Bypass access checks'),
-      '#description' => $this->t('If the underlying search index has access checks enabled, this option allows you to disable them for this view.'),
-      '#default_value' => $this->options['search_api_bypass_access'],
+      '#description' => $this->t('If the underlying search index has access checks enabled (e.g., through the "Content access" processor), this option allows you to disable them for this view. This will never disable any filters placed on this view.'),
+      '#default_value' => $this->options['bypass_access'],
     );
 
     if ($this->getEntityTypes(TRUE)) {
-      $form['entity_access'] = array(
+      $form['skip_access'] = array(
         '#type' => 'checkbox',
-        '#title' => $this->t('Additional access checks on result entities'),
-        '#description' => $this->t("Execute an access check for all result entities. This prevents users from seeing inappropriate content when the index contains stale data, or doesn't provide access checks. However, result counts, paging and other things won't work correctly if results are eliminated in this way, so only use this as a last resort (and in addition to other checks, if possible)."),
-        '#default_value' => $this->options['entity_access'],
+        '#title' => $this->t('Skip entity access checks'),
+        '#description' => $this->t("By default, an additional access check will be executed for each entity returned by the search query. However, since removing results this way will break paging and result counts, it is preferable to configure the view in a way that it will only return accessible results. If you are sure that only accessible results will be returned in the search, or if you want to show results to which the user normally wouldn't have access, you can enable this option to skip those additional access checks. This should be used with care."),
+        '#default_value' => $this->options['skip_access'],
+        '#weight' => -1,
       );
+      $form['bypass_access']['#states']['visible'][':input[name="query[options][skip_access]"]']['checked'] = TRUE;
     }
 
     // @todo Move this setting to the argument and filter plugins where it makes
@@ -321,7 +357,7 @@ class SearchApiQuery extends QueryPluginBase {
     }
 
     // Add the "search_api_bypass_access" option to the query, if desired.
-    if (!empty($this->options['search_api_bypass_access'])) {
+    if (!empty($this->options['bypass_access'])) {
       $this->query->setOption('search_api_bypass_access', TRUE);
     }
 
@@ -444,89 +480,67 @@ class SearchApiQuery extends QueryPluginBase {
    *   The executed view.
    */
   protected function addResults(array $results, ViewExecutable $view) {
-    /** @var \Drupal\views\ResultRow[] $rows */
-    $rows = array();
-    $missing = array();
+    // Views \Drupal\views\Plugin\views\style\StylePluginBase::renderFields()
+    // uses a numeric results index to key the rendered results.
+    // The ResultRow::index property is the key then used to retrieve these.
+    $count = 0;
 
-    if (!empty($this->configuration['entity_access'])) {
-      $items = $this->index->loadItemsMultiple(array_keys($results));
-      $results = array_intersect_key($results, $items);
-      /** @var \Drupal\Core\Entity\Plugin\DataType\EntityAdapter $item */
-      foreach ($items as $item_id => $item) {
-        if (!$item->getValue()->access('view')) {
-          unset($results[$item_id]);
+    // First, unless disabled, check access for all entities in the results.
+    if (!$this->options['skip_access'] && $this->getEntityTypes(TRUE)) {
+      $account = $this->getAccessAccount();
+      foreach ($results as $item_id => $result) {
+        $entity_type_id = $result->getDatasource()->getEntityTypeId();
+        if (!$entity_type_id) {
+          continue;
+        }
+        $entity = $result->getOriginalObject()->getValue();
+        if ($entity instanceof EntityInterface) {
+          if (!$entity->access('view', $account)) {
+            unset($results[$item_id]);
+          }
         }
       }
     }
 
-    // First off, we try to gather as much property values as possible without
-    // loading any items.
     foreach ($results as $item_id => $result) {
-      $datasource_id = $result->getDatasourceId();
-
-      // @todo Find a more elegant way of passing metadata here.
+      $values = array();
+      $values['_item'] = $result;
+      $object = $result->getOriginalObject(FALSE);
+      if ($object) {
+        $values['_object'] = $object;
+        $values['_relationship_objects'][NULL] = array($object);
+      }
       $values['search_api_id'] = $item_id;
-      $values['search_api_datasource'] = $datasource_id;
-
-      // Include the loaded item for this result row, if present, or the item
-      // ID.
-      $values['_item'] = $result->getOriginalObject(FALSE) ?: $item_id;
-
+      $values['search_api_datasource'] = $result->getDatasourceId();
       $values['search_api_relevance'] = $result->getScore();
       $values['search_api_excerpt'] = $result->getExcerpt() ?: '';
 
-      // Gather any fields from the search results.
-      foreach ($result->getFields(FALSE) as $field) {
+      // Gather any properties from the search results.
+      foreach ($result->getFields(FALSE) as $field_id => $field) {
         if ($field->getValues()) {
-          $combined_id = Utility::createCombinedId($field->getDatasourceId(), $field->getPropertyPath());
-          $values[$combined_id] = $field->getValues();
+          $values[$field->getCombinedPropertyPath()] = $field->getValues();
         }
       }
 
-      // Check whether we need to extract any properties from the result item.
-      $missing_fields = array_diff_key($this->retrievedProperties, $values);
-      if ($missing_fields) {
-        $missing[$item_id] = array_keys($missing_fields);
-        if (!is_object($values['_item'])) {
-          $item_ids[] = $item_id;
-        }
-      }
+      $values['index'] = $count++;
 
-      // Save the row values for adding them to the Views result afterwards.
-      // @todo Use a custom sub-class here to also pass the result item object,
-      //   or other information?
-      $rows[$item_id] = new ResultRow($values);
+      $view->result[] = new ResultRow($values);
     }
+  }
 
-    // Load items of those rows which haven't got all field values, yet.
-    if (!empty($item_ids)) {
-      foreach ($this->index->loadItemsMultiple($item_ids) as $item_id => $object) {
-        $results[$item_id]->setOriginalObject($object);
-        $rows[$item_id]->_item = $object;
-      }
+  /**
+   * Retrieves the account object to use for access checks for this query.
+   *
+   * @return \Drupal\Core\Session\AccountInterface|null
+   *   The account for which to check access to returned or displayed entities.
+   *   Or NULL to use the currently logged-in user.
+   */
+  public function getAccessAccount() {
+    $account = $this->getOption('search_api_access_account');
+    if ($account && is_scalar($account)) {
+      $account = User::load($account);
     }
-
-    foreach ($missing as $item_id => $missing_fields) {
-      /** @var \Drupal\search_api\Item\FieldInterface[] $fields_to_extract */
-      $fields_to_extract = array();
-      foreach ($missing_fields as $combined_id) {
-        list($datasource_id, $property_path) = Utility::splitCombinedId($combined_id);
-        if ($datasource_id == $results[$item_id]->getDatasourceId()) {
-          $fields_to_extract[$property_path] = Utility::createField($this->index, $combined_id);
-        }
-      }
-      Utility::extractFields($results[$item_id]->getOriginalObject(), $fields_to_extract);
-      foreach ($fields_to_extract as $field) {
-        $combined_id = $field->getFieldIdentifier();
-        $rows[$item_id]->$combined_id = $field->getValues();
-      }
-    }
-
-    // Finally, add all rows to the Views result set.
-    $view->result = array_values($rows);
-    array_walk($view->result, function (ResultRow $row, $index) {
-      $row->index = $index;
-    });
+    return $account;
   }
 
   /**
@@ -1122,6 +1136,7 @@ class SearchApiQuery extends QueryPluginBase {
    * concept of "tables", this method implementation does nothing. If you are
    * writing Search API-specific Views code, there is therefore no reason at all
    * to call this method.
+   * See https://www.drupal.org/node/2484565 for more information.
    *
    * @return string
    *   An empty string.

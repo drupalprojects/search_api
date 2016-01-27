@@ -61,7 +61,7 @@ class CacheabilityTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     // Verify that the search results are marked as uncacheable.
-    $this->drupalGet('search-api-test-fulltext');
+    $this->drupalGet('search-api-test');
     $this->assertResponse(200);
     $this->assertHeader('x-drupal-dynamic-cache', 'UNCACHEABLE');
     $this->assertTrue(strpos($this->drupalGetHeader('cache-control'), 'no-cache'));

@@ -25,7 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @ViewsRow(
  *   id = "search_api",
- *   title = @Translation("Rendered Search API item"),
+ *   title = @Translation("Rendered entity"),
  *   help = @Translation("Displays entity of the matching search API item"),
  * )
  */
@@ -121,7 +121,6 @@ class SearchApiRow extends RowPluginBase {
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     parent::init($view, $display, $options);
-
     $base_table = $view->storage->get('base_table');
     $this->index = SearchApiQuery::getIndexFromTable($base_table, $this->getEntityTypeManager());
     if (!$this->index) {
@@ -186,23 +185,22 @@ class SearchApiRow extends RowPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function summaryTitle() {
-    $summary = array();
-    foreach ($this->options['view_modes'] as $datasource_id => $bundles) {
-      $datasource = $this->index->getDatasource($datasource_id);
-      $bundles_info = $datasource->getBundles();
-      foreach ($bundles as $bundle => $view_mode) {
-        $view_modes = $datasource->getViewModes($bundle);
-        $label = isset($view_modes[$view_mode]) ? $view_modes[$view_mode] : $this->t('Hidden');
-        $args = array(
-          '@bundle' => $bundles_info[$bundle],
-          '@datasource' => $datasource->label(),
-          '@view_mode' => $label,
-        );
-        $summary[] = $this->t('@datasource/@bundle: @view_mode', $args);
+  public function preRender($result) {
+    // Load all result objects at once, before rendering.
+    $items_to_load = array();
+    foreach ($result as $i => $row) {
+      if (empty($row->_object)) {
+        $items_to_load[$i] = $row->search_api_id;
       }
     }
-    return $summary ? implode('; ', $summary) : $this->t('No settings');
+
+    $items = $this->index->loadItemsMultiple($items_to_load);
+    foreach ($items_to_load as $i => $item_id) {
+      if (isset($items[$item_id])) {
+        $result[$i]->_object = $items[$item_id];
+        $result[$i]->_item->setOriginalObject($items[$item_id]);
+      }
+    }
   }
 
   /**
@@ -211,7 +209,7 @@ class SearchApiRow extends RowPluginBase {
   public function render($row) {
     $datasource_id = $row->search_api_datasource;
 
-    if (!($row->_item instanceof ComplexDataInterface)) {
+    if (!($row->_object instanceof ComplexDataInterface)) {
       $context = array(
         '%item_id' => $row->search_api_id,
         '%view' => $this->view->storage->label(),
@@ -231,13 +229,13 @@ class SearchApiRow extends RowPluginBase {
     // Always use the default view mode if it was not set explicitly in the
     // options.
     $view_mode = 'default';
-    $bundle = $this->index->getDatasource($datasource_id)->getItemBundle($row->_item);
+    $bundle = $this->index->getDatasource($datasource_id)->getItemBundle($row->_object);
     if (isset($this->options['view_modes'][$datasource_id][$bundle])) {
       $view_mode = $this->options['view_modes'][$datasource_id][$bundle];
     }
 
     try {
-      return $this->index->getDatasource($datasource_id)->viewItem($row->_item, $view_mode);
+      return $this->index->getDatasource($datasource_id)->viewItem($row->_object, $view_mode);
     }
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
@@ -248,10 +246,6 @@ class SearchApiRow extends RowPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function query() {
-    parent::query();
-    // @todo Find a better way to ensure that the item is loaded.
-    $this->view->query->addField('_magic');
-  }
+  public function query() {}
 
 }

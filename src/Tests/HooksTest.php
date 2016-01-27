@@ -86,7 +86,7 @@ class HooksTest extends WebTestBase {
     $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
     $this->assertNoText('timestamp');
 
-    $this->drupalGet('search-api-test-fulltext');
+    $this->drupalGet('search-api-test');
     // hook_search_api_query_alter was triggered.
     $this->assertText('Funky blue note');
     // hook_search_api_results_alter was triggered.

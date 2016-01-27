@@ -227,7 +227,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
     foreach ($conditions as $key => &$condition) {
       if ($condition instanceof ConditionInterface) {
         $field = $condition->getField();
-        if ($this->testField($field, $fields[$field])) {
+        if (isset($fields[$field]) && $this->testField($field, $fields[$field])) {
           // We want to allow processors also to easily remove complete
           // conditions. However, we can't use empty() or the like, as that
           // would sort out filters for 0 or NULL. So we specifically check only

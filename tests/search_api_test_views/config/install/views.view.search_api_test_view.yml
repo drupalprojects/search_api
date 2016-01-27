@@ -19,8 +19,8 @@ display:
       query:
         type: search_api_query
         options:
-          search_api_bypass_access: false
-          entity_access: false
+          bypass_access: false
+          skip_access: true
           parse_mode: terms
       exposed_form:
         type: basic
@@ -59,11 +59,9 @@ display:
         type: search_api
         options:
           view_modes:
-            bundle:
-              'article': default
-              'page': default
-            datasource:
-              'entity:entity_test': default
+            'entity:entity_test':
+              article: default
+              page: default
       filters:
         search_api_fulltext:
           id: search_api_fulltext
@@ -78,7 +76,7 @@ display:
           exposed: true
           expose:
             operator_id: search_api_fulltext_op
-            label: ''
+            label: 'Fulltext search'
             description: ''
             use_operator: true
             operator: search_api_fulltext_op
@@ -155,7 +153,19 @@ display:
               anonymous: '0'
               administrator: '0'
           is_grouped: false
-      sorts: {  }
+      sorts:
+        search_api_id:
+          id: search_api_id
+          table: search_api_index_database_search_index
+          field: search_api_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          order: ASC
+          exposed: false
+          expose:
+            label: ''
+          plugin_id: search_api
       title: 'Fulltext test index'
       header:
         result:
