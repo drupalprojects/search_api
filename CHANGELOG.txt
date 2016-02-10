@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2629136 by drunken monkey, deranga: Fixed wrong facet counts in edge cases
+  for active OR facets.
 - #2569461 by kraynuk.m, drunken monkey: Fixed existing table in update #7118.
 - #2631276 by tauno: Fixed the MLT handler for multi-entity indexes.
 - #2576265 by drunken monkey: Fixed view trying to search on non-fulltext field.
