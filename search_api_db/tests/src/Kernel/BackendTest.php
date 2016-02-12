@@ -100,6 +100,10 @@ class BackendTest extends KernelTestBase {
     $this->searchSuccess1();
     $this->checkFacets();
     $this->regressionTests();
+
+    $this->editServerPartial();
+    $this->searchSuccessPartial();
+
     $this->editServer();
     $this->searchSuccess2();
     $this->clearIndex();
@@ -279,10 +283,9 @@ class BackendTest extends KernelTestBase {
 
     $ids = $this->getItemIds(array(2));
     $id = reset($ids);
-    if ($this->assertEquals($id, key($results->getResultItems()))) {
-      $this->assertEquals($id, $results->getResultItems()[$id]->getId());
-      $this->assertEquals('entity:entity_test', $results->getResultItems()[$id]->getDatasourceId());
-    }
+    $this->assertEquals($id, key($results->getResultItems()));
+    $this->assertEquals($id, $results->getResultItems()[$id]->getId());
+    $this->assertEquals('entity:entity_test', $results->getResultItems()[$id]->getDatasourceId());
 
     $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(3, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
@@ -314,6 +317,17 @@ class BackendTest extends KernelTestBase {
     $results = $this->buildSearch($keys)->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Complex search 1 returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Complex search 1 returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch()->sort('id');
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition('name', 'bar');
+    $conditions->addCondition('body', 'bar');
+    $query->addConditionGroup($conditions);
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Search with multi-field fulltext filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 5)), array_keys($results->getResultItems()), 'Search with multi-field fulltext filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
@@ -374,12 +388,67 @@ class BackendTest extends KernelTestBase {
   }
 
   /**
+   * Edits the server to enable partial matches.
+   *
+   * @param bool $enable
+   *   (optional) Whether partial matching should be enabled or disabled.
+   */
+  protected function editServerPartial($enable = TRUE) {
+    $server = $this->getServer();
+    $backend_config = $server->getBackendConfig();
+    $backend_config['partial_matches'] = $enable;
+    $server->setBackendConfig($backend_config);
+    $this->assertTrue((bool) $server->save(), 'The server was successfully edited.');
+    $this->resetEntityCache();
+  }
+
+  /**
+   * Tests whether partial searches work.
+   */
+  protected function searchSuccessPartial() {
+    $results = $this->buildSearch('foobaz')->range(0, 1)->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Partial search for »foobaz« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1)), array_keys($results->getResultItems()), 'Partial search for »foobaz« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('foo')
+      ->sort('search_api_relevance', QueryInterface::SORT_DESC)
+      ->sort('id')
+      ->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'Partial search for »foo« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 3, 5)), array_keys($results->getResultItems()), 'Partial search for »foo« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('foo', array('category,item_category'))
+      ->sort('id', QueryInterface::SORT_DESC)
+      ->execute();
+    $this->assertEquals(2, $results->getResultCount(), 'Partial search for »foo« with additional filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 1)), array_keys($results->getResultItems()), 'Partial search for »foo« with additional filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch()->sort('id');
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition('name', 'test');
+    $conditions->addCondition('body', 'test');
+    $query->addConditionGroup($conditions);
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Partial search with multi-field fulltext filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Partial search with multi-field fulltext filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+  }
+
+  /**
    * Edits the server to change the "Minimum word length" setting.
    */
   protected function editServer() {
     $server = $this->getServer();
     $backend_config = $server->getBackendConfig();
     $backend_config['min_chars'] = 4;
+    $backend_config['partial_matches'] = FALSE;
     $server->setBackendConfig($backend_config);
     $success = (bool) $server->save();
     $this->assertTrue($success, 'The server was successfully edited.');
@@ -387,8 +456,7 @@ class BackendTest extends KernelTestBase {
     $this->clearIndex();
     $this->indexItems($this->indexId);
 
-    // Reset the internal cache so the new values will be available.
-    \Drupal::entityTypeManager()->getStorage('search_api_index')->resetCache(array($this->indexId));
+    $this->resetEntityCache();
   }
 
   /**
@@ -398,6 +466,17 @@ class BackendTest extends KernelTestBase {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEquals(4, $results->getResultCount(),'Search for »test« returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(4, 1)), array_keys($results->getResultItems()), 'Search for »test« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch()->sort('id');
+    $conditions = $query->createConditionGroup('OR');
+    $conditions->addCondition('name', 'test');
+    $conditions->addCondition('body', 'test');
+    $query->addConditionGroup($conditions);
+    $results = $query->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Search with multi-field fulltext filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Search with multi-field fulltext filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -879,8 +958,8 @@ class BackendTest extends KernelTestBase {
     $this->assertTrue($success, 'The index field settings were successfully changed.');
 
     // Reset the static cache so the new values will be available.
-    \Drupal::entityTypeManager()->getStorage('search_api_server')->resetCache(array($this->serverId));
-    \Drupal::entityTypeManager()->getStorage('search_api_index')->resetCache(array($this->serverId));
+    $this->resetEntityCache('server');
+    $this->resetEntityCache();
 
     \Drupal::entityTypeManager()
       ->getStorage('entity_test')
@@ -1073,6 +1152,20 @@ class BackendTest extends KernelTestBase {
     $field = Utility::createField($index, $property_name, $field_info);
     $index->addField($field);
     $index->save();
+  }
+
+  /**
+   * Resets the entity cache for the specified entity.
+   *
+   * @param string $type
+   *   (optional) The type of entity whose cache should be reset. Either "index"
+   *   or "server".
+   */
+  protected function resetEntityCache($type = 'index') {
+    $entity_type_id = 'search_api_' . $type;
+    \Drupal::entityTypeManager()
+      ->getStorage($entity_type_id)
+      ->resetCache(array($this->{$type . 'Id'}));
   }
 
 }

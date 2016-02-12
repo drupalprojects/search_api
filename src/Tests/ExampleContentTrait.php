@@ -40,7 +40,7 @@ trait ExampleContentTrait {
     // To test Unicode compliance, include all kind of strange characters here.
     $smiley = json_decode('"\u1F601"');
     $this->entities[1] = $entity_test_storage->create(array(
-        'name' => 'foo bar baz föö smile' . $smiley,
+        'name' => 'foo bar baz foobaz föö smile' . $smiley,
         'body' => 'test test case Case casE',
         'type' => 'item',
         'keywords' => array('Orange', 'orange', 'örange', 'Orange', $smiley),
@@ -48,7 +48,7 @@ trait ExampleContentTrait {
       ));
     $this->entities[1]->save();
     $this->entities[2] = $entity_test_storage->create(array(
-        'name' => 'foo test',
+        'name' => 'foo test foobuz',
         'body' => 'bar test casE',
         'type' => 'item',
         'keywords' => array('orange', 'apple', 'grape'),

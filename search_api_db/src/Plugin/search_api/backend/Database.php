@@ -330,6 +330,7 @@ class Database extends BackendPluginBase {
     return array(
       'database' => NULL,
       'min_chars' => 1,
+      'partial_matches' => FALSE,
       'autocomplete' => array(
         'suggest_suffix' => TRUE,
         'suggest_words' => TRUE,
@@ -390,6 +391,13 @@ class Database extends BackendPluginBase {
       '#description' => $this->t('The minimum number of characters a word must consist of to be indexed'),
       '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
       '#default_value' => $this->configuration['min_chars'],
+    );
+
+    $form['partial_matches'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Search on parts of a word'),
+      '#description' => $this->t('Find keywords in parts of a word, too. (E.g., find results with "database" when searching for "base"). <strong>Caution:</strong> This can make searches much slower on large sites!'),
+      '#default_value' => $this->configuration['partial_matches'],
     );
 
     if ($this->getModuleHandler()->moduleExists('search_api_autocomplete')) {
@@ -1764,7 +1772,36 @@ class Database extends BackendPluginBase {
       else {
         $db_query->fields('t', array('item_id', 'score', 'word'));
       }
-      $db_query->condition('word', $words, 'IN');
+
+      if (empty($this->configuration['partial_matches'])) {
+        $db_query->condition('word', $words, 'IN');
+      }
+      else {
+        $db_or = new Condition('OR');
+        // GROUP BY all existing non-grouped, non-aggregated columns – except
+        // "word", which we remove since it will be useless to us in this case.
+        $columns = &$db_query->getFields();
+        unset($columns['word']);
+        foreach (array_keys($columns) as $column) {
+          $db_query->groupBy($column);
+        }
+
+        foreach ($words as $i => $word) {
+          $db_or->condition('t.word', '%' . $this->database->escapeLike($word) . '%', 'LIKE');
+
+          // Add an expression for each keyword that shows whether the indexed
+          // word matches that particular keyword. That way we don't return a
+          // result multiple times if a single indexed word (partially) matches
+          // multiple keywords. We also remember the column name so we can
+          // afterwards verify that each word matched at least once.
+          $alias = 'w' . $i;
+          $alias = $db_query->addExpression("t.word LIKE '%" . $this->database->escapeLike($word) . "%'", $alias);
+          $db_query->groupBy($alias);
+          $word_hits[] = $alias;
+        }
+        $db_query->condition($db_or);
+      }
+
       $db_query->condition('field_name', array_map(array(__CLASS__, 'getTextFieldName'), array_keys($fields)), 'IN');
     }
 
@@ -1876,7 +1913,6 @@ class Database extends BackendPluginBase {
     $db_condition = new Condition($conditions->getConjunction());
     $db_info = $this->getIndexDbInfo($index);
 
-    $empty = TRUE;
     // Store whether a JOIN already occurred for a field, so we don't JOIN
     // repeatedly for OR filters.
     $first_join = array();
@@ -1886,12 +1922,10 @@ class Database extends BackendPluginBase {
       if ($condition instanceof ConditionGroupInterface) {
         $sub_condition = $this->createDbCondition($condition, $fields, $db_query, $index);
         if ($sub_condition) {
-          $empty = FALSE;
           $db_condition->condition($sub_condition);
         }
       }
       else {
-        $empty = FALSE;
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
@@ -1930,19 +1964,14 @@ class Database extends BackendPluginBase {
         }
         if (Utility::isTextType($field_info['type'])) {
           $keys = $this->prepareKeys($value);
+          if (!isset($keys)) {
+            continue;
+          }
           $query = $this->createKeysQuery($keys, array($field => $field_info), $fields, $index);
-          // We don't need the score, so we remove it. The score might either be
-          // an expression or a field.
-          $query_expressions = &$query->getExpressions();
-          if ($query_expressions) {
-            $query_expressions = array();
-          }
-          else {
-            $query_fields = &$query->getFields();
-            unset($query_fields['score']);
-            unset($query_fields);
-          }
-          unset($query_expressions);
+          // We only want the item IDs, so we use the keys query as a nested
+          // query.
+          $query = $this->database->select($query, 't')
+            ->fields('t', array('item_id'));
           $db_condition->condition('t.item_id', $query, $not_equals ? 'NOT IN' : 'IN');
         }
         else {
@@ -1967,7 +1996,7 @@ class Database extends BackendPluginBase {
         }
       }
     }
-    return $empty ? NULL : $db_condition;
+    return $db_condition->count() ? $db_condition : NULL;
   }
 
   /**
@@ -2138,6 +2167,12 @@ class Database extends BackendPluginBase {
     }
     $expressions = &$db_query->getExpressions();
     $expressions = array();
+
+    // If there's a GROUP BY for item_id, we leave that, all others need to be
+    // discarded.
+    $group_by = &$db_query->getGroupBy();
+    $group_by = array_intersect_key($group_by, array('t.item_id' => TRUE));
+
     $db_query->distinct();
     if (!$db_query->preExecute()) {
       return FALSE;
