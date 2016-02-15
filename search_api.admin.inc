@@ -1949,6 +1949,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   );
 
   if ($additional) {
+    asort($additional);
     reset($additional);
     $form['additional'] = array(
       '#type' => 'fieldset',

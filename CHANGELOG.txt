@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2639200 by joachim: Added sorting to "related fields" select box.
 - #2638740 by joachim, drunken monkey: Added a link to the index to the
   "re-indexing necessary" message.
 - #2629136 by drunken monkey, deranga: Fixed wrong facet counts in edge cases
