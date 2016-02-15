@@ -19,6 +19,7 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\search_api\Utility;
 use Drupal\search_api_db\Plugin\search_api\backend\Database as BackendDatabase;
@@ -579,6 +580,25 @@ class BackendTest extends KernelTestBase {
    * Executes regression tests for issues that were already fixed.
    */
   protected function regressionTests() {
+    /** @var \Drupal\search_api\ServerInterface $second_server */
+    $second_server = Server::create(array(
+      'id' => 'test2',
+      'backend' => 'search_api_db',
+      'backend_config' => array(
+        'database' => 'default:default',
+      ),
+    ));
+    $second_server->save();
+    $query = $this->buildSearch();
+    try {
+      $second_server->search($query);
+      $this->fail('Could execute a query for an index on a different server.');
+    }
+    catch (SearchApiException $e) {
+      $this->assertTrue(TRUE, 'Executing a query for an index on a different server throws an exception.');
+    }
+    $second_server->delete();
+
     // Regression tests for #2007872.
     $results = $this->buildSearch('test')->sort('id', QueryInterface::SORT_ASC)->sort('type', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(4, $results->getResultCount(), 'Sorting on field with NULLs returned correct number of results.');

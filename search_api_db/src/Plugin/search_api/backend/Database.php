@@ -294,7 +294,7 @@ class Database extends BackendPluginBase {
    *   The key-value store.
    */
   public function getKeyValueStore() {
-    return $this->keyValueStore ? : \Drupal::keyValue(self::INDEXES_KEY_VALUE_STORE_ID);
+    return $this->keyValueStore ?: \Drupal::keyValue(self::INDEXES_KEY_VALUE_STORE_ID);
   }
 
   /**
@@ -496,7 +496,12 @@ class Database extends BackendPluginBase {
   public function preDelete() {
     $schema = $this->database->schema();
 
-    foreach ($this->getKeyValueStore()->getAll() as $db_info) {
+    $key_value_store = $this->getKeyValueStore();
+    foreach ($key_value_store->getAll() as $index_id => $db_info) {
+      if ($db_info['server'] != $this->server->id()) {
+        continue;
+      }
+
       // Delete the regular field tables.
       foreach ($db_info['field_tables'] as $field) {
         if ($schema->tableExists($field['table'])) {
@@ -508,8 +513,9 @@ class Database extends BackendPluginBase {
       if ($schema->tableExists($db_info['index_table'])) {
         $schema->dropTable($db_info['index_table']);
       }
+
+      $key_value_store->delete($index_id);
     }
-    $this->getKeyValueStore()->deleteAll();
   }
 
   /**
@@ -522,6 +528,7 @@ class Database extends BackendPluginBase {
       $this->createFieldTable(NULL, array('table' => $index_table), 'index');
 
       $db_info = array();
+      $db_info['server'] = $this->server->id();
       $db_info['field_tables'] = array();
       $db_info['index_table'] = $index_table;
       $this->getKeyValueStore()->set($index->id(), $db_info);
@@ -2345,16 +2352,20 @@ class Database extends BackendPluginBase {
   }
 
   /**
-   * Retrieve the database info for the given index, or some data from it.
+   * Retrieves the database info for the given index.
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The search index.
    *
-   * @return array|string
-   *   The requested data from the key-value store.
+   * @return array
+   *   The index data from the key-value store.
    */
   protected function getIndexDbInfo(IndexInterface $index) {
-    return $this->getKeyValueStore()->get($index->id(), array());
+    $db_info = $this->getKeyValueStore()->get($index->id(), array());
+    if ($db_info['server'] != $this->server->id()) {
+      return array();
+    }
+    return $db_info;
   }
 
   /**
