@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2638740 by joachim, drunken monkey: Added a link to the index to the
+  "re-indexing necessary" message.
 - #2629136 by drunken monkey, deranga: Fixed wrong facet counts in edge cases
   for active OR facets.
 - #2569461 by kraynuk.m, drunken monkey: Fixed existing table in update #7118.

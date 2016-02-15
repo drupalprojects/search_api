@@ -2150,6 +2150,7 @@ function theme_search_api_admin_fields_table($variables) {
 function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   $index = $form_state['index'];
   $options = isset($index->options) ? $index->options : array();
+  $index_path = 'admin/config/search/search_api/index/' . $index->machine_name;
   if ($form_state['values']['op'] == t('Save changes')) {
     $fields = $form_state['values']['fields'];
     $default_types = search_api_default_field_types();
@@ -2179,18 +2180,18 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
     $ret = $index->update(array('options' => $options));
 
     if ($ret) {
-      drupal_set_message(t('The indexed fields were successfully changed. ' .
-          'The index was cleared and will have to be re-indexed with the new settings.'));
+      $vars = array('@url' => $index_path);
+      drupal_set_message(t('The indexed fields were successfully changed. The index was cleared and will have to be <a href="@url">re-indexed</a> with the new settings.', $vars));
     }
     else {
       drupal_set_message(t('No values were changed.'));
     }
     if (isset($index->options['data_alter_callbacks']) || isset($index->options['processors'])) {
-      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
+      $form_state['redirect'] = $index_path . '/fields';
     }
     else {
       drupal_set_message(t('Please set up the indexing workflow.'));
-      $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/workflow';
+      $form_state['redirect'] = $index_path . '/workflow';
     }
     return;
   }
@@ -2205,7 +2206,7 @@ function search_api_admin_index_fields_submit(array $form, array &$form_state) {
   else {
     drupal_set_message(t('No values were changed.'));
   }
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/fields';
+  $form_state['redirect'] = $index_path . '/fields';
 }
 
 /**
