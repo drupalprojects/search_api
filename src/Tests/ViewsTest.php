@@ -229,7 +229,7 @@ class ViewsTest extends WebTestBase {
     $this->assertText($this->t('Relevance'));
     $this->assertText($this->t('The relevance of this search result with respect to the query'));
     $this->assertText($this->t('Language code'));
-    $this->assertText($this->t('The language code of the test entity.'));
+    $this->assertText($this->t('The user language code.'));
     $this->assertText($this->t('(No description available)'));
     $this->assertNoText($this->t('Error: missing help'));
 

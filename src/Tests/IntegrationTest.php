@@ -529,7 +529,7 @@ class IntegrationTest extends WebTestBase {
    */
   protected function addFieldsToIndex() {
     $fields = array(
-      'nid' => $this->t('Node ID'),
+      'nid' => $this->t('ID'),
       'title' => $this->t('Title'),
       'body' => $this->t('Body'),
       'revision_log' => $this->t('Revision log message'),
