@@ -417,6 +417,7 @@ class IndexForm extends EntityForm {
    * Takes care of changes in the selected datasources.
    */
   public function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
+    $form_state->setValue('id', NULL);
     $form_state->setRebuild();
   }
 
@@ -433,6 +434,7 @@ class IndexForm extends EntityForm {
    * Takes care of changes in the selected tracker plugin.
    */
   public function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
+    $form_state->setValue('id', NULL);
     $form_state->setRebuild();
   }
 

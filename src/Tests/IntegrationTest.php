@@ -75,6 +75,7 @@ class IntegrationTest extends WebTestBase {
     $this->createServer();
     $this->checkServerAvailability();
     $this->createIndex();
+    $this->createIndexDuplicate();
     $this->checkUserIndexCreation();
     $this->checkContentEntityTracking();
 
@@ -269,6 +270,38 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('admin/config/search/search-api');
     $this->assertHtmlEscaped($index_name);
     $this->assertHtmlEscaped($index_description);
+  }
+
+  /**
+   * Tests creating a search index with an existing machine name.
+   */
+  protected function createIndexDuplicate() {
+    $index_add_page = 'admin/config/search/search-api/add-index';
+    $this->drupalGet($index_add_page);
+    $this->indexId = 'test_index';
+
+    $edit = array(
+      'name' => $this->indexId,
+      'id' => $this->indexId,
+      'server' => $this->serverId,
+      'datasources[]' => array('entity:node'),
+    );
+
+    // Try to submit an index with a duplicate machine name.
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
+
+    // Try to submit an index with a duplicate machine name after form
+    // rebuilding via datasource submit.
+    $this->drupalPostForm(NULL, $edit, array('path' => $index_add_page, 'triggering_element' => array('datasourcepluginids_configure' => t('Configure'))));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
+
+    // Try to submit an index with a duplicate machine name after form
+    // rebuilding via datasource submit using AJAX.
+    $this->drupalPostAjaxForm(NULL, $edit, array('datasourcepluginids_configure' => t('Configure')));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
   }
 
   /**
