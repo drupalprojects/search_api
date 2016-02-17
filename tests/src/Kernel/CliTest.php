@@ -46,7 +46,6 @@ class CliTest extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
-    $this->installSchema('system', 'queue');
     $this->installEntitySchema('entity_test');
 
     // Create a test server.
