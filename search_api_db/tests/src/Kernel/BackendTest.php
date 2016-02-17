@@ -370,9 +370,9 @@ class BackendTest extends KernelTestBase {
       'operator' => 'or',
     );
     $query->setOption('search_api_facets', $facets);
-    $query->range(0, 0);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4, 5)), array_keys($results->getResultItems()));
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
@@ -397,9 +397,9 @@ class BackendTest extends KernelTestBase {
       'operator' => 'or',
     );
     $query->setOption('search_api_facets', $facets);
-    $query->range(0, 0);
     $results = $query->execute();
     $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4, 5)), array_keys($results->getResultItems()));
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
