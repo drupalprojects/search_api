@@ -1120,6 +1120,12 @@ class Database extends BackendPluginBase {
           continue;
         }
 
+        // If the field contains more than one value, we remember that the field
+        // can be multi-valued.
+        if (count($values) > 1) {
+          $db_info['field_tables'][$field_id]['multi-valued'] = TRUE;
+        }
+
         if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
           // Remember the text table the first time we encounter it.
           if (!isset($text_table)) {
@@ -1219,6 +1225,10 @@ class Database extends BackendPluginBase {
         }
         $query->execute();
       }
+
+      // In case any new fields were detected as multi-valued, we re-save the
+      // index's DB info.
+      $this->getKeyValueStore()->set($index->id(), $db_info);
     }
     catch (\Exception $e) {
       $transaction->rollback();
@@ -1395,9 +1405,12 @@ class Database extends BackendPluginBase {
     try {
       $db_info = $this->getIndexDbInfo($index);
 
-      foreach ($db_info['field_tables'] as $field) {
+      foreach ($db_info['field_tables'] as $field_id => $field) {
         $this->database->truncate($field['table'])->execute();
+        unset($db_info['field_tables'][$field_id]['multi-valued']);
       }
+      $this->getKeyValueStore()->set($index->id(), $db_info);
+
       $this->database->truncate($db_info['index_table'])->execute();
     }
     catch (\Exception $e) {
@@ -1423,6 +1436,16 @@ class Database extends BackendPluginBase {
     $db_query = $this->createDbQuery($query, $fields);
 
     $results = Utility::createSearchResultSet($query);
+
+    if (method_exists($query, 'preExecute')) {
+      $query->preExecute();
+    }
+    $dpm = (string) $db_query;
+    $quoted = array();
+    foreach ((array) $db_query->arguments() as $key => $val) {
+      $quoted[$key] = is_null($val) ? 'NULL' : $this->database->quote($val);
+    }
+    $results->setExtraData('db query', strtr($dpm, $quoted));
 
     $skip_count = $query->getOption('skip result count');
     if (!$skip_count) {
@@ -1959,14 +1982,19 @@ class Database extends BackendPluginBase {
         $field_info = $fields[$field];
         // For NULL values, we can just use the single-values table, since we
         // only need to know if there's any value at all for that field.
-        if ($value === NULL) {
+        if ($value === NULL || empty($field_info['multi-valued'])) {
           if (empty($tables[NULL])) {
             $table = array('table' => $db_info['index_table']);
             $tables[NULL] = $this->getTableAlias($table, $db_query);
           }
           $column = $tables[NULL] . '.' . $field_info['column'];
-          $method = $not_equals ? 'isNotNull' : 'isNull';
-          $db_condition->$method($column);
+          if ($value === NULL) {
+            $method = $not_equals ? 'isNotNull' : 'isNull';
+            $db_condition->$method($column);
+          }
+          else {
+            $db_condition->condition($column, $value, $operator);
+          }
           continue;
         }
         if (Utility::isTextType($field_info['type'])) {

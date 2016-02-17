@@ -98,6 +98,7 @@ class BackendTest extends KernelTestBase {
     $this->updateIndex();
     $this->searchNoResults();
     $this->indexItems($this->indexId);
+    $this->checkMultiValuedInfo();
     $this->searchSuccess1();
     $this->checkFacets();
     $this->regressionTests();
@@ -131,7 +132,7 @@ class BackendTest extends KernelTestBase {
    * Tests that all tables and all columns have been created.
    */
   protected function checkServerTables() {
-    $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
+    $db_info = $this->getIndexDbInfo();
     $normalized_storage_table = $db_info['index_table'];
     $field_tables = $db_info['field_tables'];
 
@@ -187,7 +188,7 @@ class BackendTest extends KernelTestBase {
 
     $index_fields = array_keys($index->getFields());
 
-    $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
+    $db_info = $this->getIndexDbInfo();
     $server_fields = array_keys($db_info['field_tables']);
 
     sort($index_fields);
@@ -270,6 +271,26 @@ class BackendTest extends KernelTestBase {
     $this->assertEquals(array(), array_keys($results->getResultItems()), 'No search results returned without indexing.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+  }
+
+  /**
+   * Verifies that the stored information about multi-valued fields is correct.
+   */
+  protected function checkMultiValuedInfo() {
+    $db_info = $this->getIndexDbInfo();
+    $field_info = $db_info['field_tables'];
+
+    $fields = array('name', 'body', 'type', 'keywords', 'category');
+    $multi_valued = array('name', 'body', 'keywords');
+    foreach ($fields as $field_id) {
+      $this->assertArrayHasKey($field_id, $field_info, "Field info saved for field $field_id.");
+      if (in_array($field_id, $multi_valued)) {
+        $this->assertFalse(empty($field_info[$field_id]['multi-valued']), "Field $field_id is stored as multi-value.");
+      }
+      else {
+        $this->assertTrue(empty($field_info[$field_id]['multi-valued']), "Field $field_id is not stored as multi-value.");
+      }
+    }
   }
 
   /**
@@ -1055,7 +1076,7 @@ class BackendTest extends KernelTestBase {
    * Tests whether removing the configuration again works as it should.
    */
   protected function checkModuleUninstall() {
-    $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
+    $db_info = $this->getIndexDbInfo();
     $normalized_storage_table = $db_info['index_table'];
     $field_tables = $db_info['field_tables'];
 
@@ -1073,7 +1094,7 @@ class BackendTest extends KernelTestBase {
     $index->setServer();
     $index->save();
 
-    $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
+    $db_info = $this->getIndexDbInfo();
     $this->assertNull($db_info, 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
@@ -1087,7 +1108,7 @@ class BackendTest extends KernelTestBase {
     $index->save();
     $server->delete();
 
-    $db_info = \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)->get($this->indexId);
+    $db_info = $this->getIndexDbInfo();
     $this->assertNull($db_info, 'The index was successfully removed from the server.');
     $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
@@ -1186,6 +1207,17 @@ class BackendTest extends KernelTestBase {
     \Drupal::entityTypeManager()
       ->getStorage($entity_type_id)
       ->resetCache(array($this->{$type . 'Id'}));
+  }
+
+  /**
+   * Retrieves the database information for the test index.
+   *
+   * @return array
+   *   The database information stored by the backend for the test index.
+   */
+  protected function getIndexDbInfo() {
+    return \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)
+      ->get($this->indexId);
   }
 
 }
