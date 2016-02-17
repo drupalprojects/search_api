@@ -23,6 +23,7 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -113,6 +114,50 @@ class SearchApiQuery extends QueryPluginBase {
    * @var string
    */
   public $group_operator = 'AND';
+
+  /**
+   * The logger to use for log messages.
+   *
+   * @var \Psr\Log\LoggerInterface|null
+   */
+  protected $logger;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var static $plugin */
+    $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    /** @var \Psr\Log\LoggerInterface $logger */
+    $logger = $container->get('logger.factory')->get('search_api');
+    $plugin->setLogger($logger);
+
+    return $plugin;
+  }
+
+  /**
+   * Retrieves the logger to use for log messages.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   The logger to use.
+   */
+  public function getLogger() {
+    return $this->logger ?: \Drupal::logger('search_api');
+  }
+
+  /**
+   * Sets the logger to use for log messages.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The new logger.
+   *
+   * @return $this
+   */
+  public function setLogger(LoggerInterface $logger) {
+    $this->logger = $logger;
+    return $this;
+  }
 
   /**
    * Loads the search index belonging to the given Views base table.
@@ -905,6 +950,52 @@ class SearchApiQuery extends QueryPluginBase {
       $this->query->sort($field, $order);
     }
     return $this;
+  }
+
+  /**
+   * Adds an ORDER BY clause to the query.
+   *
+   * This replicates the interface of Views' default SQL backend to simplify
+   * the Views integration of the Search API. If you are writing Search
+   * API-specific Views code, you should better use the sort() method directly.
+   *
+   * Currently, only random sorting (by passing "rand" as the table) is
+   * supported (for backends that support it), all other calls are silently
+   * ignored.
+   *
+   * @param string|null $table
+   *   The table this field is part of. If a formula, enter NULL. If you want to
+   *   order the results randomly, use "rand" as table and nothing else.
+   * @param string|null $field
+   *   (optional) The field or formula to sort on. If already a field, enter
+   *   NULL and put in the alias.
+   * @param string $order
+   *   (optional) Either ASC or DESC.
+   * @param string $alias
+   *   (optional) The alias to add the field as. In SQL, all fields in the order
+   *   by must also be in the SELECT portion. If an $alias isn't specified one
+   *   will be generated for from the $field; however, if the $field is a
+   *   formula, this alias will likely fail.
+   * @param array $params
+   *   (optional) Any parameters that should be passed through to the addField()
+   *   call.
+   *
+   * @see \Drupal\views\Plugin\views\query\Sql::addOrderBy()
+   */
+  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = array()) {
+    $server = $this->getIndex()->getServerInstance();
+    if ($table == 'rand') {
+      if ($server->supportsFeature('search_api_random_sort')) {
+        $this->sort('search_api_random', $order);
+        if ($params) {
+          $this->setOption('search_api_random_sort', $params);
+        }
+      }
+      else {
+        $variables['%server'] = $server->label();
+        $this->getLogger()->warning('Tried to sort results randomly on server %server which does not support random sorting.', $variables);
+      }
+    }
   }
 
   /**
