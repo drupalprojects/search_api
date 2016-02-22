@@ -1437,16 +1437,6 @@ class Database extends BackendPluginBase {
 
     $results = Utility::createSearchResultSet($query);
 
-    if (method_exists($query, 'preExecute')) {
-      $query->preExecute();
-    }
-    $dpm = (string) $db_query;
-    $quoted = array();
-    foreach ((array) $db_query->arguments() as $key => $val) {
-      $quoted[$key] = is_null($val) ? 'NULL' : $this->database->quote($val);
-    }
-    $results->setExtraData('db query', strtr($dpm, $quoted));
-
     $skip_count = $query->getOption('skip result count');
     if (!$skip_count) {
       $count_query = $db_query->countQuery();
