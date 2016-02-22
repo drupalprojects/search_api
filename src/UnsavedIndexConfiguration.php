@@ -602,7 +602,7 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
    * {@inheritdoc}
    */
   public function urlInfo($rel = 'canonical', array $options = array()) {
-    return $this->entity->urlInfo($rel, $options);
+    return $this->entity->toUrl($rel, $options);
   }
 
   /**
@@ -616,14 +616,14 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
    * {@inheritdoc}
    */
   public function url($rel = 'canonical', $options = array()) {
-    return $this->entity->url($rel, $options);
+    return $this->entity->toUrl($rel, $options)->toString();
   }
 
   /**
    * {@inheritdoc}
    */
   public function link($text = NULL, $rel = 'canonical', array $options = array()) {
-    return $this->entity->link($text, $rel, $options);
+    return $this->entity->toLink($text, $rel, $options)->toString();
   }
 
   /**

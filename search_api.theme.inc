@@ -141,11 +141,11 @@ function theme_search_api_server($variables) {
   // Check if the server is enabled.
   if ($server->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $server->url('disable')));
+    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $server->toUrl('disable')->toString()));
   }
   else {
     $class = 'warning';
-    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $server->url('enable')));
+    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $server->toUrl('enable')->toString()));
   }
   // Append the row and reset variables.
   $label = t('Status');
@@ -177,7 +177,7 @@ function theme_search_api_server($variables) {
   foreach ($server->getIndexes() as $index) {
     $indexes['#links'][] = array(
       'title' => $index->label(),
-      'url' => $index->urlInfo('canonical'),
+      'url' => $index->toUrl('canonical')->toString(),
     );
   }
   // Check if the indexes variable contains links.
@@ -259,12 +259,12 @@ function theme_search_api_index($variables) {
   // Check if the index is enabled.
   if ($index->status()) {
     $class = 'ok';
-    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $index->url('disable')));
+    $info = t('enabled (<a href=":url">disable</a>)', array(':url' => $index->toUrl('disable')->toString()));
   }
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $class = 'warning';
-    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $index->url('enable')));
+    $info = t('disabled (<a href=":url">enable</a>)', array(':url' => $index->toUrl('enable')->toString()));
   }
   else {
     $class = 'warning';
@@ -306,7 +306,7 @@ function theme_search_api_index($variables) {
   // Check if a server is available.
   if ($server) {
     $label = t('Server');
-    $info = $server->link(NULL, 'canonical');
+    $info = $server->toLink(NULL, 'canonical')->toString();
     $rows[] = Utility::deepCopy($row);
   }
   elseif ($index->getServerId()) {

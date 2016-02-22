@@ -8,7 +8,6 @@
 namespace Drupal\search_api\Plugin\views;
 
 use Drupal\search_api\Plugin\views\field\SearchApiEntityField;
-use Drupal\search_api\Utility;
 use Drupal\views\Entity\Render\EntityFieldRenderer as ViewsEntityFieldRenderer;
 use Drupal\views\Plugin\views\field\FieldHandlerInterface;
 

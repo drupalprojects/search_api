@@ -14,6 +14,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database as CoreDatabase;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
@@ -107,6 +108,13 @@ class Database extends BackendPluginBase {
    * @var \Drupal\Component\Transliteration\TransliterationInterface
    */
   protected $transliterator;
+
+  /**
+   * The date formatter.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface|null
+   */
+  protected $dateFormatter;
 
   /**
    * The keywords ignored during the current search query.
@@ -307,6 +315,29 @@ class Database extends BackendPluginBase {
    */
   public function setKeyValueStore(KeyValueStoreInterface $keyValueStore) {
     $this->keyValueStore = $keyValueStore;
+    return $this;
+  }
+
+  /**
+   * Retrieves the date formatter.
+   *
+   * @return \Drupal\Core\Datetime\DateFormatterInterface
+   *   The date formatter.
+   */
+  public function getDateFormatter() {
+    return $this->dateFormatter ?: \Drupal::service('date.formatter');
+  }
+
+  /**
+   * Sets the date formatter.
+   *
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The new date formatter.
+   *
+   * @return $this
+   */
+  public function setDateFormatter(DateFormatterInterface $date_formatter) {
+    $this->dateFormatter = $date_formatter;
     return $this;
   }
 
@@ -1283,7 +1314,7 @@ class Database extends BackendPluginBase {
       case 'text':
         // For dates, splitting the timestamp makes no sense.
         if ($original_type == 'date') {
-          $value = format_date($value, 'custom', 'Y y F M n m j d l D');
+          $value = $this->getDateFormatter()->format($value, 'custom', 'Y y F M n m j d l D');
         }
         $ret = array();
         foreach (preg_split('/[^\p{L}\p{N}]+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {

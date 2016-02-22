@@ -8,7 +8,6 @@
 namespace Drupal\search_api;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
