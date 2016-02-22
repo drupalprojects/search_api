@@ -73,9 +73,11 @@ class IntegrationTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     $this->createServer();
+    $this->editServer();
     $this->checkServerAvailability();
     $this->createIndex();
     $this->createIndexDuplicate();
+    $this->editIndex();
     $this->checkUserIndexCreation();
     $this->checkContentEntityTracking();
 
@@ -199,6 +201,17 @@ class IntegrationTest extends WebTestBase {
   }
 
   /**
+   * Tests editing a search server via the UI.
+   */
+  protected function editServer() {
+    $this->drupalGet('admin/config/search/search-api/server/' . $this->serverId . '/edit');
+
+    // Check if it possible to change machine name.
+    $elements = $this->xpath('//form[@id="search-api-server-edit-form"]/div[contains(@class, "form-item-id")]/input[@disabled]');
+    $this->assertEqual(count($elements), 1, 'Machine name cannot be changed.');
+  }
+
+  /**
    * Tests creating a search index via the UI.
    */
   protected function createIndex() {
@@ -302,6 +315,17 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostAjaxForm(NULL, $edit, array('datasourcepluginids_configure' => t('Configure')));
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
+  }
+
+  /**
+   * Tests editing a search index via the UI.
+   */
+  protected function editIndex() {
+    $this->drupalGet('admin/config/search/search-api/index/' . $this->indexId . '/edit');
+
+    // Check if it possible to change machine name.
+    $elements = $this->xpath('//form[@id="search-api-index-edit-form"]/div[contains(@class, "form-item-id")]/input[@disabled]');
+    $this->assertEqual(count($elements), 1, 'Machine name cannot be changed.');
   }
 
   /**

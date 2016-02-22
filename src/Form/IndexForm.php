@@ -195,6 +195,7 @@ class IndexForm extends EntityForm {
         'exists' => array($this->getIndexStorage(), 'load'),
         'source' => array('name'),
       ),
+      '#disabled' => !$index->isNew(),
     );
 
     // If the user changed the datasources or the tracker, notify them that they
