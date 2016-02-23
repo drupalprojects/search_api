@@ -73,10 +73,10 @@ class IntegrationTest extends WebTestBase {
     $this->drupalLogin($this->adminUser);
 
     $this->createServer();
-    $this->editServer();
     $this->checkServerAvailability();
     $this->createIndex();
     $this->createIndexDuplicate();
+    $this->editServer();
     $this->editIndex();
     $this->checkUserIndexCreation();
     $this->checkContentEntityTracking();
@@ -93,7 +93,6 @@ class IntegrationTest extends WebTestBase {
     $this->changeProcessorFieldBoost();
 
     $this->setReadOnly();
-    $this->editServer();
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
@@ -202,17 +201,6 @@ class IntegrationTest extends WebTestBase {
   }
 
   /**
-   * Tests editing a search server via the UI.
-   */
-  protected function editServer() {
-    $this->drupalGet('admin/config/search/search-api/server/' . $this->serverId . '/edit');
-
-    // Check if it possible to change machine name.
-    $elements = $this->xpath('//form[@id="search-api-server-edit-form"]/div[contains(@class, "form-item-id")]/input[@disabled]');
-    $this->assertEqual(count($elements), 1, 'Machine name cannot be changed.');
-  }
-
-  /**
    * Tests creating a search index via the UI.
    */
   protected function createIndex() {
@@ -316,6 +304,38 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostAjaxForm(NULL, $edit, array('datasourcepluginids_configure' => t('Configure')));
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
+  }
+
+  /**
+   * Tests whether editing a server works correctly.
+   */
+  protected function editServer() {
+    $path = 'admin/config/search/search-api/server/' . $this->serverId . '/edit';
+    $this->drupalGet($path);
+
+    // Check if it possible to change machine name.
+    $elements = $this->xpath('//form[@id="search-api-server-edit-form"]/div[contains(@class, "form-item-id")]/input[@disabled]');
+    $this->assertEqual(count($elements), 1, 'Machine name cannot be changed.');
+
+    $tracked_items_before = $this->countTrackedItems();
+
+    $edit = array(
+      'name' => 'Test server',
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+
+    /** @var $index \Drupal\search_api\IndexInterface */
+    $index = $this->indexStorage->load($this->indexId);
+    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
+    $this->assertEqual(0, $remaining, 'Index was not scheduled for re-indexing when saving its server.');
+
+    \Drupal::state()->set('search_api_test_backend.return.postUpdate', TRUE);
+    $this->drupalPostForm($path, $edit, $this->t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
+    $this->assertEqual($tracked_items, $remaining, 'Backend could trigger re-indexing upon save.');
+    $this->assertEqual($tracked_items_before, $tracked_items, 'Items are still tracked after re-indexing was triggered.');
   }
 
   /**
@@ -828,32 +848,6 @@ class IntegrationTest extends WebTestBase {
 
     $remaining_after = $index->getTrackerInstance()->getRemainingItemsCount();
     $this->assertEqual(0, $remaining_after, 'Items were indexed after removing the "read only" flag.');
-  }
-
-  /**
-   * Tests whether editing a server works correctly.
-   */
-  protected function editServer() {
-    $tracked_items_before = $this->countTrackedItems();
-
-    $path = 'admin/config/search/search-api/server/' . $this->serverId . '/edit';
-    $edit = array(
-      'name' => 'Test server',
-    );
-    $this->drupalPostForm($path, $edit, $this->t('Save'));
-
-    /** @var $index \Drupal\search_api\IndexInterface */
-    $index = $this->indexStorage->load($this->indexId);
-    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
-    $this->assertEqual(0, $remaining, 'Index was not scheduled for re-indexing when saving its server.');
-
-    \Drupal::state()->set('search_api_test_backend.return.postUpdate', TRUE);
-    $this->drupalPostForm($path, $edit, $this->t('Save'));
-
-    $tracked_items = $this->countTrackedItems();
-    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
-    $this->assertEqual($tracked_items, $remaining, 'Backend could trigger re-indexing upon save.');
-    $this->assertEqual($tracked_items_before, $tracked_items, 'Items are still tracked after re-indexing was triggered.');
   }
 
   /**
