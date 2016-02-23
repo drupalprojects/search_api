@@ -369,8 +369,15 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
+    // The rest of the code only applies to updates.
+    if (!isset($this->original)) {
+      return;
+    }
+
+    $this->getBackend()->preUpdate();
+
     // If the server is being disabled, also disable all its indexes.
-    if (!$this->status() && isset($this->original) && $this->original->status()) {
+    if (!$this->status() && $this->original->status()) {
       foreach ($this->getIndexes(array('status' => TRUE)) as $index) {
         /** @var \Drupal\search_api\IndexInterface $index */
         $index->setStatus(FALSE)->save();
@@ -384,7 +391,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     if ($this->hasValidBackend()) {
       if ($update) {
-        $this->getBackend()->postUpdate();
+        $reindexing_necessary = $this->getBackend()->postUpdate();
+        if ($reindexing_necessary) {
+          foreach ($this->getIndexes() as $index) {
+            $index->reindex();
+          }
+        }
       }
       else {
         $this->getBackend()->postInsert();

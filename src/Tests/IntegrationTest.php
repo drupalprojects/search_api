@@ -93,6 +93,7 @@ class IntegrationTest extends WebTestBase {
     $this->changeProcessorFieldBoost();
 
     $this->setReadOnly();
+    $this->editServer();
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
@@ -354,12 +355,12 @@ class IntegrationTest extends WebTestBase {
     $this->assertResponse(200);
     $this->assertRaw($this->t('Enabled'));
 
-    \Drupal::state()->set('search_api_test_backend.available', FALSE);
+    \Drupal::state()->set('search_api_test_backend.return.isAvailable', FALSE);
     $this->drupalGet('admin/config/search/search-api');
     $this->assertResponse(200);
     $this->assertRaw($this->t('Unavailable'));
 
-    \Drupal::state()->set('search_api_test_backend.available', TRUE);
+    \Drupal::state()->set('search_api_test_backend.return.isAvailable', TRUE);
   }
 
   /**
@@ -827,7 +828,32 @@ class IntegrationTest extends WebTestBase {
 
     $remaining_after = $index->getTrackerInstance()->getRemainingItemsCount();
     $this->assertEqual(0, $remaining_after, 'Items were indexed after removing the "read only" flag.');
+  }
 
+  /**
+   * Tests whether editing a server works correctly.
+   */
+  protected function editServer() {
+    $tracked_items_before = $this->countTrackedItems();
+
+    $path = 'admin/config/search/search-api/server/' . $this->serverId . '/edit';
+    $edit = array(
+      'name' => 'Test server',
+    );
+    $this->drupalPostForm($path, $edit, $this->t('Save'));
+
+    /** @var $index \Drupal\search_api\IndexInterface */
+    $index = $this->indexStorage->load($this->indexId);
+    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
+    $this->assertEqual(0, $remaining, 'Index was not scheduled for re-indexing when saving its server.');
+
+    \Drupal::state()->set('search_api_test_backend.return.postUpdate', TRUE);
+    $this->drupalPostForm($path, $edit, $this->t('Save'));
+
+    $tracked_items = $this->countTrackedItems();
+    $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
+    $this->assertEqual($tracked_items, $remaining, 'Backend could trigger re-indexing upon save.');
+    $this->assertEqual($tracked_items_before, $tracked_items, 'Items are still tracked after re-indexing was triggered.');
   }
 
   /**

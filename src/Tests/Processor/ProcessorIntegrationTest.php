@@ -158,7 +158,7 @@ class ProcessorIntegrationTest extends WebTestBase {
       'backend_config' => array(),
     ));
     $server->save();
-    $key = 'search_api_test_backend.discouraged_processors';
+    $key = 'search_api_test_backend.return.getDiscouragedProcessors';
     $processors = array('highlight', 'ignore_character', 'tokenizer', 'stopwords');
     \Drupal::state()->set($key, $processors);
 

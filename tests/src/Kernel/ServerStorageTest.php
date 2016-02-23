@@ -47,7 +47,7 @@ class ServerStorageTest extends KernelTestBase {
   /**
    * Tests all CRUD operations as a queue of operations.
    */
-  public function testIndexCRUD() {
+  public function testServerCRUD() {
     $this->assertTrue($this->storage instanceof ConfigEntityStorage, 'The Search API Server storage controller is loaded.');
 
     $server = $this->serverCreate();
@@ -72,6 +72,11 @@ class ServerStorageTest extends KernelTestBase {
     $this->assertTrue($server instanceof ServerInterface, 'The newly created entity is a Search API Server.');
     $server->save();
 
+    $key = 'search_api_test_backend.methods_called.' . $server->id();
+    $methods_called = \Drupal::state()->get($key, array());
+    $this->assertNotContains('preUpdate', $methods_called, 'Backend::preUpdate() not called for initial save.');
+    $this->assertNotContains('postUpdate', $methods_called, 'Backend::postUpdate() not called for initial save.');
+
     return $server;
   }
 
@@ -84,6 +89,28 @@ class ServerStorageTest extends KernelTestBase {
   public function serverLoad(ServerInterface $server) {
     $loaded_server = $this->storage->load($server->id());
     $this->assertSame($server->label(), $loaded_server->label());
+
+    $this->storage->resetCache();
+    $loaded_server = $this->storage->load($server->id());
+    $this->assertSame($server->label(), $loaded_server->label());
+  }
+
+  /**
+   * Tests whether updating a server works correctly.
+   *
+   * @param \Drupal\search_api\ServerInterface $server
+   *   The server used for this test.
+   */
+  public function serverUpdate(ServerInterface $server) {
+    $server->set('name', $server->label() . ' - edited');
+    $server->save();
+
+    $key = 'search_api_test_backend.methods_called.' . $server->id();
+    $methods_called = \Drupal::state()->get($key, array());
+    $this->assertContains('preUpdate', $methods_called, 'Backend::preUpdate() called for update.');
+    $this->assertContains('postUpdate', $methods_called, 'Backend::postUpdate() called for update.');
+
+    $this->serverLoad($server);
   }
 
   /**

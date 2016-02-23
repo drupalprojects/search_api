@@ -135,7 +135,7 @@ class DependencyRemovalTest extends KernelTestBase {
     // Set our magic state key to let the test plugin know whether the
     // dependency should be removed or not. See
     // \Drupal\search_api_test_backend\Plugin\search_api\backend\TestBackend::onDependencyRemoval().
-    $key = 'search_api_test_backend.dependencies.remove';
+    $key = 'search_api_test_backend.return.onDependencyRemoval';
     \Drupal::state()->set($key, $remove_dependency);
 
     // Delete the backend's dependency.
