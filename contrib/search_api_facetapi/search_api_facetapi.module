@@ -340,13 +340,13 @@ function search_api_facetapi_facet_map_callback(array $values, array $options = 
     $lower = isset($map[$range['lower']]) ? $map[$range['lower']] : $range['lower'];
     $upper = isset($map[$range['upper']]) ? $map[$range['upper']] : $range['upper'];
     if ($lower == '*' && $upper == '*') {
-      $map[$value] =  t('any');
+      $map[$value] = t('any');
     }
     elseif ($lower == '*') {
-      $map[$value] = "< $upper";
+      $map[$value] = "≤ $upper";
     }
     elseif ($upper == '*') {
-      $map[$value] = "> $lower";
+      $map[$value] = "≥ $lower";
     }
     else {
       $map[$value] = "$lower – $upper";
