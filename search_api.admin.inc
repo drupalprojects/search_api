@@ -1806,7 +1806,7 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
   // An array of option arrays for types, keyed by nesting level.
   $types = array(0 => search_api_field_types());
   $entity_types = entity_get_info();
-  $boosts = drupal_map_assoc(array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
+  $boosts = drupal_map_assoc(array('0.0', '0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0'));
 
   $fulltext_types = array(0 => array('text'));
   // Add all custom data types with fallback "text" to fulltext types as well.

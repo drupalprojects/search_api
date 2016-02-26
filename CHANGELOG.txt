@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2667872 by Les Lim: Added "0" to field boost options.
 - #2654328 by drunken monkey, donquixote: Fixed use of "<" and ">" for open
   facet ranges.
 - #2639200 by joachim: Added sorting to "related fields" select box.
