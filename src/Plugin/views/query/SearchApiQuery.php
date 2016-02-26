@@ -470,7 +470,6 @@ class SearchApiQuery extends QueryPluginBase {
         if (!empty($view->pager->options['offset'])) {
           $view->pager->total_items -= $view->pager->options['offset'];
         }
-        $view->pager->updatePageInfo();
       }
       $view->result = array();
       if ($results->getResultItems()) {
@@ -480,6 +479,7 @@ class SearchApiQuery extends QueryPluginBase {
 
       // Trigger pager postExecute().
       $view->pager->postExecute($view->result);
+      $view->pager->updatePageInfo();
     }
     catch (\Exception $e) {
       $this->abort($e->getMessage());
