@@ -328,6 +328,9 @@ function theme_search_api_index($variables) {
       // @todo Add a cleaner way for doing this (i.e., skipping preprocessing).
       $query = $index->query();
       $query->range(0, 0);
+      // Tag this special query to allow backend plugins to treat this query
+      // differently if required.
+      $query->addTag('server_index_status');
       $label = t('Server index status');
       try {
         $response = $server->search($query);
