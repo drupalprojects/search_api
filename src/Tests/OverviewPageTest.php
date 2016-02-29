@@ -41,6 +41,21 @@ class OverviewPageTest extends WebTestBase {
   }
 
   /**
+   * Tests that the overview has the correct permissions set.
+   */
+  public function testOverviewPermissions() {
+    $this->drupalGet('admin/config');
+    $this->assertText('Search API', 'Search API menu link is displayed.');
+
+    $this->drupalGet($this->overviewPageUrl);
+    $this->assertResponse(200, 'Admin user can access the overview page.');
+
+    $this->drupalLogin($this->unauthorizedUser);
+    $this->drupalGet($this->overviewPageUrl);
+    $this->assertResponse(403, "User without permissions doesn't have access to the overview page.");
+  }
+
+  /**
    * Tests the creation of a server and an index.
    */
   public function testServerAndIndexCreation() {
