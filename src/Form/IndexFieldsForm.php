@@ -253,7 +253,7 @@ class IndexFieldsForm extends EntityForm {
       }
     }
 
-    $boost_values = array('0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
+    $boost_values = array('0.0', '0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
     $boosts = array_combine($boost_values, $boost_values);
 
     $build = array(
