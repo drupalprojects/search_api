@@ -1700,7 +1700,12 @@ class Database extends BackendPluginBase {
       $words = preg_split('/[^\p{L}\p{N}]+/u', $processed_keys, -1, PREG_SPLIT_NO_EMPTY);
       if (count($words) > 1) {
         $processed_keys = $this->splitKeys($words);
-        $processed_keys['#conjunction'] = 'AND';
+        if ($processed_keys) {
+          $processed_keys['#conjunction'] = 'AND';
+        }
+        else {
+          $processed_keys = NULL;
+        }
       }
       return $processed_keys;
     }

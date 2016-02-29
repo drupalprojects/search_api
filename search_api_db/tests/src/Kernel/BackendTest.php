@@ -977,6 +977,17 @@ class BackendTest extends KernelTestBase {
     $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Negated filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+
+    // Regression tests for #2511860.
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'ab xy');
+    $results = $query->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on short words do not change the result.');
+
+    $query = $this->buildSearch();
+    $query->addCondition('body', 'ab ab');
+    $results = $query->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'Fulltext filters on duplicate short words do not change the result.');
   }
 
   /**
