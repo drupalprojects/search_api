@@ -1783,6 +1783,8 @@ class Database extends BackendPluginBase {
     $db_query = NULL;
     $mul_words = FALSE;
     $neg_nested = $neg && $conj == 'AND';
+    $match_parts = !empty($this->configuration['partial_matches']);
+    $keyword_hits = array();
 
     foreach ($keys as $i => $key) {
       if (!Element::child($i)) {
@@ -1803,14 +1805,15 @@ class Database extends BackendPluginBase {
         $negated[] = $key;
       }
     }
-    $subs = count($words) + count($nested);
+    $word_count = count($words);
+    $subs = $word_count + count($nested);
     $not_nested = ($subs <= 1 && count($fields) == 1) || ($neg && $conj == 'OR' && !$negated);
 
     if ($words) {
       // All text fields in the index share a table. Get name from the first.
       $field = reset($fields);
       $db_query = $this->database->select($field['table'], 't');
-      $mul_words = count($words) > 1;
+      $mul_words = ($word_count > 1);
       if ($neg_nested) {
         $db_query->fields('t', array('item_id', 'word'));
       }
@@ -1824,7 +1827,7 @@ class Database extends BackendPluginBase {
         $db_query->fields('t', array('item_id', 'score', 'word'));
       }
 
-      if (empty($this->configuration['partial_matches'])) {
+      if (!$match_parts) {
         $db_query->condition('word', $words, 'IN');
       }
       else {
@@ -1848,7 +1851,14 @@ class Database extends BackendPluginBase {
           $alias = 'w' . $i;
           $alias = $db_query->addExpression("t.word LIKE '%" . $this->database->escapeLike($word) . "%'", $alias);
           $db_query->groupBy($alias);
-          $word_hits[] = $alias;
+          $keyword_hits[] = $alias;
+        }
+        // Also add expressions for any nested queries.
+        for ($i = $word_count; $i < $subs; ++$i) {
+          $alias = 'w' . $i;
+          $alias = $db_query->addExpression('0', $alias);
+          $db_query->groupBy($alias);
+          $keyword_hits[] = $alias;
         }
         $db_query->condition($db_or);
       }
@@ -1858,12 +1868,21 @@ class Database extends BackendPluginBase {
 
     if ($nested) {
       $word = '';
-      foreach ($nested as $k) {
+      foreach ($nested as $i => $k) {
         $query = $this->createKeysQuery($k, $fields, $all_fields, $index);
         if (!$neg) {
-          $word .= ' ';
-          $var = ':word' . strlen($word);
-          $query->addExpression($var, 'word', array($var => $word));
+          if (!$match_parts) {
+            $word .= ' ';
+            $var = ':word' . strlen($word);
+            $query->addExpression($var, 'word', array($var => $word));
+          }
+          else {
+            $i += $word_count;
+            for ($j = 0; $j < $subs; ++$j) {
+              $alias = isset($keyword_hits[$j]) ? $keyword_hits[$j] : "w$j";
+              $keyword_hits[$j] = $query->addExpression($i == $j ? '1' : '0', $alias);
+            }
+          }
         }
         if (!isset($db_query)) {
           $db_query = $query;
@@ -1889,11 +1908,18 @@ class Database extends BackendPluginBase {
         if (!$db_query->getGroupBy()) {
           $db_query->groupBy('t.item_id');
         }
-        if ($mul_words) {
-          $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
+        if (!$match_parts) {
+          if ($mul_words) {
+            $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
+          }
+          else {
+            $db_query->having('COUNT(t.word) >= ' . $var, array($var => $subs));
+          }
         }
         else {
-          $db_query->having('COUNT(t.word) >= ' . $var, array($var => $subs));
+          foreach ($keyword_hits as $alias) {
+            $db_query->having("SUM($alias) >= 1");
+          }
         }
       }
     }

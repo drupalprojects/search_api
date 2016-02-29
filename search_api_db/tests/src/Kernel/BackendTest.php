@@ -237,15 +237,15 @@ class BackendTest extends KernelTestBase {
    *
    * @param string|array|null $keys
    *   (optional) The search keys to set, if any.
-   * @param array $conditions
+   * @param string[] $conditions
    *   (optional) Conditions to set on the query, in the format "field,value".
-   * @param array $fields
+   * @param string[]|null $fields
    *   (optional) Fulltext fields to search for the keys.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   A search query on the test index.
    */
-  protected function buildSearch($keys = NULL, array $conditions = array(), array $fields = array()) {
+  protected function buildSearch($keys = NULL, array $conditions = array(), array $fields = NULL) {
     $query = $this->getIndex()->query();
     if ($keys) {
       $query->keys($keys);
@@ -440,6 +440,43 @@ class BackendTest extends KernelTestBase {
       ->execute();
     $this->assertEquals(5, $results->getResultCount(), 'Partial search for »foo« returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(1, 2, 4, 3, 5)), array_keys($results->getResultItems()), 'Partial search for »foo« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('foo tes')->sort('id')->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Partial search for »foo tes« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Partial search for »foo tes« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('oob est')->sort('id')->execute();
+    $this->assertEquals(3, $results->getResultCount(), 'Partial search for »oob est« returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3)), array_keys($results->getResultItems()), 'Partial search for »oob est« returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('foo nonexistent')->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Partial search for »foo nonexistent« returned correct number of results.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch('bar nonexistent')->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Partial search for »foo nonexistent« returned correct number of results.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $keys = array(
+      '#conjunction' => 'AND',
+      'oob',
+      array(
+        '#conjunction' => 'OR',
+        'est',
+        'nonexistent',
+      )
+    );
+    $results = $this->buildSearch($keys)->sort('id')->execute();
+    $this->assertEquals(3, $results->getResultCount(), 'Partial search for complex keys returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3)), array_keys($results->getResultItems()), 'Partial search for complex keys returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
