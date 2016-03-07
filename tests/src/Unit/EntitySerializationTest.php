@@ -43,7 +43,6 @@ class EntitySerializationTest extends UnitTestCase {
     $index_values = Yaml::decode(file_get_contents($path));
     $index = new Index($index_values, 'search_api_index');
 
-    /** @var \Drupal\search_api\IndexInterface $serialized */
     $serialized = unserialize(serialize($index));
 
     $this->assertNotEmpty($serialized);
@@ -59,7 +58,6 @@ class EntitySerializationTest extends UnitTestCase {
     $values = Yaml::decode(file_get_contents($path));
     $server = new Server($values, 'search_api_server');
 
-    /** @var \Drupal\search_api\ServerInterface $serialized */
     $serialized = unserialize(serialize($server));
 
     $this->assertNotEmpty($serialized);
