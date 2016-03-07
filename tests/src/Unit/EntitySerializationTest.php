@@ -10,6 +10,7 @@ namespace Drupal\Tests\search_api\Unit;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Entity\Server;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -48,4 +49,21 @@ class EntitySerializationTest extends UnitTestCase {
     $this->assertNotEmpty($serialized);
     $this->assertEquals($index, $serialized);
   }
+
+  /**
+   * Tests that serialization of server entities doesn't lead to data loss.
+   */
+  public function testServerSerialization() {
+    // As our test server, just use the one from the DB Defaults module.
+    $path = __DIR__ . '/../../../search_api_db/search_api_db_defaults/config/optional/search_api.server.default_server.yml';
+    $values = Yaml::decode(file_get_contents($path));
+    $server = new Server($values, 'search_api_server');
+
+    /** @var \Drupal\search_api\ServerInterface $serialized */
+    $serialized = unserialize(serialize($server));
+
+    $this->assertNotEmpty($serialized);
+    $this->assertEquals($server, $serialized);
+  }
+
 }
