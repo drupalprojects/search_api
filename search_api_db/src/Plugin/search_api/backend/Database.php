@@ -2442,7 +2442,7 @@ class Database extends BackendPluginBase {
    */
   protected function getIndexDbInfo(IndexInterface $index) {
     $db_info = $this->getKeyValueStore()->get($index->id(), array());
-    if ($db_info['server'] != $this->server->id()) {
+    if ($db_info && $db_info['server'] != $this->server->id()) {
       return array();
     }
     return $db_info;
