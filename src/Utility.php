@@ -337,7 +337,7 @@ class Utility {
    * @return \Drupal\Core\TypedData\DataDefinitionInterface
    *   The inner property definition.
    */
-  public static function getInnerProperty($property) {
+  public static function getInnerProperty(DataDefinitionInterface $property) {
     while ($property instanceof ListDataDefinitionInterface) {
       $property = $property->getItemDefinition();
     }
