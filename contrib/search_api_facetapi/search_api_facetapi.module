@@ -541,7 +541,9 @@ function search_api_facetapi_map_date(array $values, array $options = array()) {
     // Otherwise, parse the timestamp from the known format and format it as a
     // label.
     $format = search_api_facetapi_date_get_granularity_format($granularity);
-    $date = DateTime::createFromFormat($format, $value);
+    // Use the "!" modifier to make the date parsing independent of the current
+    // date/time. (See #2678856.)
+    $date = DateTime::createFromFormat('!' . $format, $value);
     if (!$date) {
       continue;
     }
