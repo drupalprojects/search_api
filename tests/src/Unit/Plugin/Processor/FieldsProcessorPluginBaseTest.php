@@ -8,7 +8,6 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Query\Condition;
-use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 

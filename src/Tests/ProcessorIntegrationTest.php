@@ -2,14 +2,13 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\ProcessorIntegrationTest.
+ * Contains \Drupal\search_api\Tests\ProcessorIntegrationTest.
  */
 
-namespace Drupal\search_api\Tests\Processor;
+namespace Drupal\search_api\Tests;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Tests\WebTestBase;
 
 /**
  * Tests the admin UI for processors.

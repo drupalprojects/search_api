@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\search_api\Tests\Processor\TestItemsTrait.
+ * Contains \Drupal\Tests\search_api\Unit\Plugin\Processor\TestItemsTrait.
  */
 
-namespace Drupal\search_api\Tests\Processor;
+namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\TypedData\ComplexDataInterface;

@@ -10,7 +10,6 @@ namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\Plugin\search_api\processor\AddURL;
-use Drupal\search_api\Tests\Processor\TestItemsTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
