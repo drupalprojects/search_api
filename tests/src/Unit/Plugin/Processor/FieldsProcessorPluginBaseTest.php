@@ -365,13 +365,18 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   /**
    * Returns an array with one test item suitable for this test case.
    *
-   * @param string[] $types
-   *   (optional) The types of fields to create.
+   * @param string[]|null $types
+   *   (optional) The types of fields to create. Defaults to using "text",
+   *   "string", "integer" and "float".
    *
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing one item.
    */
-  protected function getTestItem($types = array('text', 'string', 'integer', 'float')) {
+  protected function getTestItem($types = NULL) {
+    if ($types === NULL) {
+      $types = array('text', 'string', 'integer', 'float');
+    }
+
     $fields = array();
     foreach ($types as $type) {
       $field_id = "{$type}_field";

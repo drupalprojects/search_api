@@ -86,7 +86,7 @@ class AddURLTest extends UnitTestCase {
     $body_value = array('Some text value');
     $fields = array(
       'search_api_url' => array(
-        'type' => 'string'
+        'type' => 'string',
       ),
       'entity:node/body' => array(
         'type' => 'text',
@@ -139,4 +139,5 @@ class AddURLTest extends UnitTestCase {
     $this->processor->alterPropertyDefinitions($properties, $datasource);
     $this->assertEmpty($properties, 'Datasource-specific properties did not get changed.');
   }
+
 }

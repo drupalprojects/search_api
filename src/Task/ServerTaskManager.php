@@ -50,9 +50,16 @@ class ServerTaskManager implements ServerTaskManagerInterface {
    */
   public function execute(ServerInterface $server = NULL) {
     $select = $this->database->select('search_api_task', 't');
+    $tasks = array(
+      'addIndex',
+      'updateIndex',
+      'removeIndex',
+      'deleteItems',
+      'deleteAllIndexItems',
+    );
     $select->fields('t')
       // Only retrieve tasks we can handle.
-      ->condition('t.type', array('addIndex', 'updateIndex', 'removeIndex', 'deleteItems', 'deleteAllIndexItems'), 'IN');
+      ->condition('t.type', $tasks, 'IN');
     if ($server) {
       if (!$server->status()) {
         return FALSE;

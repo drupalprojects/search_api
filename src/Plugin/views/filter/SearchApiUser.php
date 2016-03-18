@@ -27,7 +27,7 @@ class SearchApiUser extends Name {
   /**
    * {@inheritdoc}
    */
-  function operators() {
+  public function operators() {
     return array(
       'or' => array(
         'title' => $this->t('Is one of'),

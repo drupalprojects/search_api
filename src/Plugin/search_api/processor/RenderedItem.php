@@ -20,6 +20,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Adds an additional field containing the rendered item.
+ *
  * @SearchApiProcessor(
  *   id = "rendered_item",
  *   label = @Translation("Rendered item"),

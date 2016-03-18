@@ -12,6 +12,8 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
+ * Adds the item's URL to the indexed data.
+ *
  * @SearchApiProcessor(
  *   id = "add_url",
  *   label = @Translation("URL field"),

@@ -126,10 +126,10 @@ class IndexListBuilder extends ConfigEntityListBuilder {
         ),
         'title' => array(
           'data' => array(
-              '#type' => 'link',
-              '#title' => $entity->label(),
-              '#suffix' => '<div>' . $entity->get('description') . '</div>',
-            ) + $entity->toUrl('canonical')->toRenderArray(),
+            '#type' => 'link',
+            '#title' => $entity->label(),
+            '#suffix' => '<div>' . $entity->get('description') . '</div>',
+          ) + $entity->toUrl('canonical')->toRenderArray(),
           'class' => array('search-api-title'),
         ),
         'status' => array(

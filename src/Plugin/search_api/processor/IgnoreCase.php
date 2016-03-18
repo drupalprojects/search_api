@@ -11,6 +11,8 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
+ * Makes searches case-insensitive on selected fields.
+ *
  * @SearchApiProcessor(
  *   id = "ignorecase",
  *   label = @Translation("Ignore case"),

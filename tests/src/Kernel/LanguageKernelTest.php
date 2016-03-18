@@ -118,7 +118,7 @@ class LanguageKernelTest extends KernelTestBase {
         'default' => array(
           'plugin_id' => 'default',
           'settings' => array(),
-        )
+        ),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),

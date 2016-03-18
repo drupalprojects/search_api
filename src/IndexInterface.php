@@ -261,7 +261,7 @@ interface IndexInterface extends ConfigEntityInterface {
   public function getServerInstance();
 
   /**
-   * Sets the server the index is attached to
+   * Sets the server the index is attached to.
    *
    * @param \Drupal\search_api\ServerInterface|null $server
    *   The server to move this index to, or NULL.

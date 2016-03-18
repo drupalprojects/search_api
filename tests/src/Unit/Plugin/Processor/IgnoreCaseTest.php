@@ -55,7 +55,7 @@ class IgnoreCaseTest extends UnitTestCase {
       array('Foo bar', 'foo bar'),
       array('foo Bar', 'foo bar'),
       array('Foo Bar', 'foo bar'),
-      array('Foo bar BaZ, ÄÖÜÀÁ<>»«.', 'foo bar baz, äöüàá<>»«.')
+      array('Foo bar BaZ, ÄÖÜÀÁ<>»«.', 'foo bar baz, äöüàá<>»«.'),
     );
   }
 

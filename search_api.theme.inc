@@ -25,7 +25,13 @@ use Drupal\search_api\Utility;
  */
 function theme_search_api_admin_fields_table($variables) {
   $form = $variables['element'];
-  $header = array(t('Field'), t('Machine name'), t('Type'), t('Boost'), t('Remove'));
+  $header = array(
+    t('Field'),
+    t('Machine name'),
+    t('Type'),
+    t('Boost'),
+    t('Remove'),
+  );
 
   $rows = array();
   if (!empty($form['fields'])) {

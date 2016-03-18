@@ -97,7 +97,7 @@ class Condition implements ConditionInterface {
   /**
    * Implements the magic __toString() method to simplify debugging.
    */
-  function __toString() {
+  public function __toString() {
     return "{$this->field} {$this->operator} " . str_replace("\n", "\n    ", var_export($this->value, TRUE));
   }
 

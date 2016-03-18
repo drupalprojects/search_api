@@ -207,7 +207,6 @@ class IntegrationTest extends WebTestBase {
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Data sources'))));
 
-
     $edit = array(
       'name' => $index_name,
       'id' => $this->indexId,
@@ -539,7 +538,7 @@ class IntegrationTest extends WebTestBase {
       'administer search_api',
       'access administration pages',
       'administer content types',
-      'administer node fields'
+      'administer node fields',
     );
     $this->drupalLogin($this->createUser($permissions));
 
@@ -548,7 +547,7 @@ class IntegrationTest extends WebTestBase {
     // Add a new content type with funky chars.
     $edit = array(
       'name' => $content_type_name,
-      'type' => '_content_'
+      'type' => '_content_',
     );
     $this->drupalGet('admin/structure/types/add');
     $this->assertResponse(200);
@@ -560,7 +559,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'new_storage_type' => 'string',
       'label' => $field_name,
-      'field_name' => '_field_'
+      'field_name' => '_field_',
     );
     $this->drupalGet('admin/structure/types/manage/_content_/fields/add-field');
     $this->assertResponse(200);

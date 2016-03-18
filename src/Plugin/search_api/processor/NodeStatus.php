@@ -12,6 +12,8 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
+ * Excludes unpublished nodes from node indexes.
+ *
  * @SearchApiProcessor(
  *   id = "node_status",
  *   label = @Translation("Node status"),

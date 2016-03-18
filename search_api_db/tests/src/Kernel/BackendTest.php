@@ -311,7 +311,7 @@ class BackendTest extends KernelTestBase {
 
     $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(3, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()),'Search for »test foo« returned correct result.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()), 'Search for »test foo« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
@@ -472,7 +472,7 @@ class BackendTest extends KernelTestBase {
         '#conjunction' => 'OR',
         'est',
         'nonexistent',
-      )
+      ),
     );
     $results = $this->buildSearch($keys)->sort('id')->execute();
     $this->assertEquals(3, $results->getResultCount(), 'Partial search for complex keys returned correct number of results.');
@@ -523,7 +523,7 @@ class BackendTest extends KernelTestBase {
    */
   protected function searchSuccess2() {
     $results = $this->buildSearch('test')->range(1, 2)->execute();
-    $this->assertEquals(4, $results->getResultCount(),'Search for »test« returned correct number of results.');
+    $this->assertEquals(4, $results->getResultCount(), 'Search for »test« returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(4, 1)), array_keys($results->getResultItems()), 'Search for »test« returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);

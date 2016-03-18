@@ -377,7 +377,7 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
-   * Tests whether highlighting works with a changed excerpt length
+   * Tests whether highlighting works with a changed excerpt length.
    */
   public function testPostprocessSearchResultsWithChangedExcerptLength() {
     $this->processor->setConfiguration(array('excerpt_length' => 64));
@@ -514,7 +514,7 @@ class HighlightTest extends UnitTestCase {
       'entity:node/body' => array(
         'type' => 'text',
         'values' => array(
-          'This foo text bar will get baz riddled with &lt;strong&gt; tags.'
+          'This foo text bar will get baz riddled with &lt;strong&gt; tags.',
         ),
       ),
     );

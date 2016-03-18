@@ -63,14 +63,14 @@ class DependencyRemovalTest extends KernelTestBase {
       'tracker_settings' => array(
         'default' => array(
           'plugin_id' => 'default',
-          'settings' => array()
-        )
+          'settings' => array(),
+        ),
       ),
       'datasource_settings' => array(
         'entity:user' => array(
           'plugin_id' => 'entity:user',
           'settings' => array(),
-        )
+        ),
       ),
     ));
 
@@ -191,8 +191,11 @@ class DependencyRemovalTest extends KernelTestBase {
     $datasources['entity:user'] = $manager->createInstance('entity:user', array('index' => $this->index));
     $datasources['search_api_test_dependencies'] = $manager->createInstance(
       'search_api_test_dependencies',
-      array($dependency_key => array($dependency_name),
-        'index' => $this->index));
+      array(
+        $dependency_key => array($dependency_name),
+        'index' => $this->index,
+      )
+    );
     $this->index->setDatasources($datasources);
 
     $this->index->save();

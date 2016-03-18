@@ -14,6 +14,8 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility;
 
 /**
+ * Allows you to define stopwords which will be ignored in searches.
+ *
  * @SearchApiProcessor(
  *   id = "stopwords",
  *   label = @Translation("Stopwords"),
@@ -66,7 +68,6 @@ class Stopwords extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
 

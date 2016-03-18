@@ -61,7 +61,7 @@ class StopwordsTest extends UnitTestCase {
         '',
         array('or'),
       ),
-       array(
+      array(
         'orb',
         'orb',
         array('or'),
@@ -109,7 +109,8 @@ class StopwordsTest extends UnitTestCase {
     $keys = array('#conjunction' => 'AND', 'foo', 'bar', 'bar foo');
     $query->keys($keys);
 
-    $this->processor->setConfiguration(array('stopwords' => array('foobar', 'bar', 'barfoo')));
+    $configuration = array('stopwords' => array('foobar', 'bar', 'barfoo'));
+    $this->processor->setConfiguration($configuration);
     $this->processor->preprocessSearchQuery($query);
     unset($keys[1]);
     $this->assertEquals($keys, $query->getKeys());

@@ -1110,7 +1110,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tracker_id => array(
         'plugin_id' => $tracker_id,
         'settings' => $tracker->getConfiguration(),
-      )
+      ),
     );
 
     // Write the active datasources to the settings array.
@@ -1228,7 +1228,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->reindex();
     }
     elseif ($this->isServerEnabled()) {
-      // Tell the server the index configuration got updated
+      // Tell the server the index configuration got updated.
       $this->getServerInstance()->updateIndex($this);
     }
   }
@@ -1589,7 +1589,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $default_tracker_id => array(
           'plugin_id' => $default_tracker_id,
           'settings' => array(),
-        )
+        ),
       );
       // Reset $trackerInstance so it will get newly loaded from our reset
       // settings when required.
@@ -1610,12 +1610,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
           case 'processors':
             $this->processor_settings[$plugin_id]['settings'] = $plugin_config;
             break;
+
           case 'datasources':
             $this->datasource_settings[$plugin_id]['settings'] = $plugin_config;
             break;
+
           case 'tracker':
             $this->tracker_settings[$plugin_id]['settings'] = $plugin_config;
             break;
+
         }
       }
     }

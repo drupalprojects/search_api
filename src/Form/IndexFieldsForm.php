@@ -183,8 +183,8 @@ class IndexFieldsForm extends EntityForm {
             'class' => array(
               'index-locked',
               'messages',
-              'messages--warning'
-            )
+              'messages--warning',
+            ),
           ),
           '#children' => $this->t('This index is being edited by user @user, and is therefore locked from editing by others. This lock is @age old. Click here to <a href=":url">break this lock</a>.', $lock_message_substitutions),
           '#weight' => -10,
@@ -197,8 +197,8 @@ class IndexFieldsForm extends EntityForm {
             'class' => array(
               'index-changed',
               'messages',
-              'messages--warning'
-            )
+              'messages--warning',
+            ),
           ),
           '#children' => $this->t('You have unsaved changes.'),
           '#weight' => -10,
@@ -212,8 +212,10 @@ class IndexFieldsForm extends EntityForm {
 
     $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>Whether detailed field types are supported depends on the type of server this index resides on. In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>');
     if ($index->hasValidServer()) {
-      $form['description']['#markup'] .= '<p>' . $this->t('Check the <a href=":server-url">' . "server's</a> backend class description for details.",
-          array(':server-url' => $index->getServerInstance()->toUrl('canonical')->toString())) . '</p>';
+      $arguments = array(
+        ':server-url' => $index->getServerInstance()->toUrl('canonical')->toString(),
+      );
+      $form['description']['#markup'] .= $this->t('<p>Check the <a href=":server-url">server\'s</a> backend class description for details.</p>', $arguments);
     }
 
     if ($fields = $index->getFieldsByDatasource(NULL)) {
@@ -253,7 +255,21 @@ class IndexFieldsForm extends EntityForm {
       }
     }
 
-    $boost_values = array('0.0', '0.1', '0.2', '0.3', '0.5', '0.8', '1.0', '2.0', '3.0', '5.0', '8.0', '13.0', '21.0');
+    $boost_values = array(
+      '0.0',
+      '0.1',
+      '0.2',
+      '0.3',
+      '0.5',
+      '0.8',
+      '1.0',
+      '2.0',
+      '3.0',
+      '5.0',
+      '8.0',
+      '13.0',
+      '21.0',
+    );
     $boosts = array_combine($boost_values, $boost_values);
 
     $build = array(

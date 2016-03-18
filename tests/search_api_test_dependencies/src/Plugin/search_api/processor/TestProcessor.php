@@ -10,6 +10,8 @@ namespace Drupal\search_api_test_dependencies\Plugin\search_api\processor;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
+ * Provides a processor with dependencies, for the dependency removal tests.
+ *
  * @SearchApiProcessor(
  *   id = "search_api_test_dependencies",
  *   label = @Translation("Dependency test processor"),

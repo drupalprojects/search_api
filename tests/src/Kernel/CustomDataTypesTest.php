@@ -82,14 +82,14 @@ class CustomDataTypesTest extends KernelTestBase {
       'body' => 'test test case Case casE',
       'type' => 'item',
       'keywords' => array('Orange', 'orange', 'örange', 'Orange'),
-      'category' => 'item_category'
+      'category' => 'item_category',
     ));
     $this->entities[2] = EntityTest::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
       'type' => 'item',
       'keywords' => array('strawberry', 'llama'),
-      'category' => 'item_category'
+      'category' => 'item_category',
     ));
     $this->entities[1]->save();
     $this->entities[2]->save();

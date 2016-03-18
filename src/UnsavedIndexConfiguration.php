@@ -951,4 +951,5 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   public function removeField($field_id) {
     // @todo Implement removeField() method.
   }
+
 }

@@ -64,7 +64,6 @@ class LocalActionsWebTest extends LocalActionTest {
    */
   public function getSearchAPIPageRoutes() {
     return array(
-      // search_api.overview
       array('/admin/config/search/search-api'),
     );
   }

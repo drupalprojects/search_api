@@ -32,7 +32,7 @@ class SearchApiRelationship extends RelationshipPluginBase {
    * {@inheritdoc}
    */
   public function query() {
-   $this->alias = $this->field;
+    $this->alias = $this->field;
   }
 
   /**

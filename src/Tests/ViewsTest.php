@@ -54,8 +54,16 @@ class ViewsTest extends WebTestBase {
   public function testView() {
     $this->checkResults(array(), array_keys($this->entities), 'Unfiltered search');
 
-    $this->checkResults(array('search_api_fulltext' => 'foobar'), array(3), 'Search for a single word');
-    $this->checkResults(array('search_api_fulltext' => 'foo test'), array(1, 2, 4), 'Search for multiple words');
+    $this->checkResults(
+      array('search_api_fulltext' => 'foobar'),
+      array(3),
+      'Search for a single word'
+    );
+    $this->checkResults(
+      array('search_api_fulltext' => 'foo test'),
+      array(1, 2, 4),
+      'Search for multiple words'
+    );
     $query = array(
       'search_api_fulltext' => 'foo test',
       'search_api_fulltext_op' => 'or',

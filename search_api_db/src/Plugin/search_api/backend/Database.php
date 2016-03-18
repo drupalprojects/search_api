@@ -22,6 +22,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Backend\BackendPluginBase;
+use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
@@ -35,6 +36,8 @@ use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Indexes items in a database.
+ *
  * @SearchApiBackend(
  *   id = "search_api_db",
  *   label = @Translation("Database"),
@@ -211,7 +214,7 @@ class Database extends BackendPluginBase {
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
    */
   public function getModuleHandler() {
-    return $this->moduleHandler ? : \Drupal::moduleHandler();
+    return $this->moduleHandler ?: \Drupal::moduleHandler();
   }
 
   /**
@@ -233,7 +236,7 @@ class Database extends BackendPluginBase {
    * @return \Drupal\Core\Config\ConfigFactoryInterface
    */
   public function getConfigFactory() {
-    return $this->configFactory ? : \Drupal::configFactory();
+    return $this->configFactory ?: \Drupal::configFactory();
   }
 
   /**
@@ -267,7 +270,7 @@ class Database extends BackendPluginBase {
    *
    * @return $this
    */
-  public function setDataTypePluginManager($data_type_plugin_manager) {
+  public function setDataTypePluginManager(DataTypePluginManager $data_type_plugin_manager) {
     $this->dataTypePluginManager = $data_type_plugin_manager;
     return $this;
   }
@@ -420,7 +423,10 @@ class Database extends BackendPluginBase {
       '#type' => 'select',
       '#title' => $this->t('Minimum word length'),
       '#description' => $this->t('The minimum number of characters a word must consist of to be indexed'),
-      '#options' => array_combine(array(1, 2, 3, 4, 5, 6), array(1, 2, 3, 4, 5, 6)),
+      '#options' => array_combine(
+        array(1, 2, 3, 4, 5, 6),
+        array(1, 2, 3, 4, 5, 6)
+      ),
       '#default_value' => $this->configuration['min_chars'],
     );
 
@@ -569,8 +575,8 @@ class Database extends BackendPluginBase {
         return;
       }
     }
-      // The database operations might throw PDO or other exceptions, so we catch
-      // them all and re-wrap them appropriately.
+    // The database operations might throw PDO or other exceptions, so we catch
+    // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -735,8 +741,8 @@ class Database extends BackendPluginBase {
     //
     // In SQLite, indexes and tables can't have the same name, which is
     // the case for Search API DB. We have following situation:
-    //  - a table named search_api_db_default_index_search_api_language
-    //  - a table named search_api_db_default_index
+    // - a table named search_api_db_default_index_search_api_language
+    // - a table named search_api_db_default_index
     //
     // The last table has an index on the search_api_language column,
     // which results in an index with the same as the first table, which
@@ -791,13 +797,16 @@ class Database extends BackendPluginBase {
       case 'string':
       case 'uri':
         return array('type' => 'varchar', 'length' => 255);
+
       case 'integer':
       case 'duration':
       case 'date':
         // 'datetime' sucks. Therefore, we just store the timestamp.
         return array('type' => 'int', 'size' => 'big');
+
       case 'decimal':
         return array('type' => 'float');
+
       case 'boolean':
         return array('type' => 'int', 'size' => 'tiny');
 
@@ -1045,8 +1054,8 @@ class Database extends BackendPluginBase {
 
       $this->getKeyValueStore()->delete($index->id());
     }
-      // The database operations might throw PDO or other exceptions, so we catch
-      // them all and re-wrap them appropriately.
+    // The database operations might throw PDO or other exceptions, so we catch
+    // them all and re-wrap them appropriately.
     catch (\Exception $e) {
       throw new SearchApiException($e->getMessage(), $e->getCode(), $e);
     }
@@ -1329,7 +1338,7 @@ class Database extends BackendPluginBase {
             );
           }
         }
-        // This used to fall through the tokenized case
+        // This used to fall through the tokenized case.
         return $ret;
 
       case 'tokenized_text':
@@ -1566,9 +1575,9 @@ class Database extends BackendPluginBase {
 
     // Only filter by fulltext keys if there are any real keys present.
     if ($keys && (!is_array($keys) || count($keys) > 2 || (!isset($keys['#negation']) && count($keys) > 1))) {
-      // Special case: if the outermost $keys array has "#negation" set, we can't
-      // handle it like other negated subkeys. To avoid additional complexity
-      // later, we just wrap $keys so it becomes a subkey.
+      // Special case: if the outermost $keys array has "#negation" set, we
+      // can't handle it like other negated subkeys. To avoid additional
+      // complexity later, we just wrap $keys so it becomes a subkey.
       if (!empty($keys['#negation'])) {
         $keys = array(
           '#conjunction' => 'AND',
@@ -2067,7 +2076,7 @@ class Database extends BackendPluginBase {
             $tables[$field] = $this->getTableAlias($field_info, $db_query, $new_join);
             $first_join[$field] = TRUE;
           }
-          $column = $tables[$field] . '.' . 'value';
+          $column = $tables[$field] . '.value';
           if ($not_equals) {
             // The situation is more complicated for multi-valued fields, since
             // we must make sure that results are excluded if ANY of the field's
@@ -2168,7 +2177,7 @@ class Database extends BackendPluginBase {
       $alias = $this->getTableAlias($field, $select, TRUE, $facet['missing'] ? 'leftJoin' : 'innerJoin');
       $select->addField($alias, $is_text_type ? 'word' : 'value', 'value');
       if ($is_text_type) {
-        $select->condition("$alias.field_name", $this->getTextFieldName($facet['field']));
+        $select->condition($alias . '.field_name', $this->getTextFieldName($facet['field']));
       }
       if (!$facet['missing'] && !$is_text_type) {
         $select->isNotNull($alias . '.' . 'value');
@@ -2266,9 +2275,9 @@ class Database extends BackendPluginBase {
     }
     $args = $db_query->getArguments();
     try {
-      $result = $this->database->queryTemporary((string)$db_query, $args);
+      $result = $this->database->queryTemporary((string) $db_query, $args);
     }
-    catch(\PDOException $e) {
+    catch (\PDOException $e) {
       watchdog_exception('search_api', $e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
       return FALSE;
     }
@@ -2337,8 +2346,8 @@ class Database extends BackendPluginBase {
         $query->keys($user_input);
       }
       // To avoid suggesting incomplete words, we have to temporarily disable
-      // the "partial_matches" option. (There should be no way we'll save the
-      // server during the createDbQuery() call, so this should be safe.)
+      // the "partial_matches" option. There should be no way we'll save the
+      // server during the createDbQuery() call, so this should be safe.
       $options = $this->options;
       $this->options['partial_matches'] = FALSE;
       $db_query = $this->createDbQuery($query, $fields);

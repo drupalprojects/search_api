@@ -15,6 +15,8 @@ use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
 
 /**
+ * Filters out users based on their role.
+ *
  * @SearchApiProcessor(
  *   id = "role_filter",
  *   label = @Translation("Role filter"),

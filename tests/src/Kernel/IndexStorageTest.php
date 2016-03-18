@@ -66,15 +66,15 @@ class IndexStorageTest extends KernelTestBase {
    * Tests whether creating an index works correctly.
    *
    * @return \Drupal\search_api\IndexInterface
-   *  The newly created search index.
+   *   The newly created search index.
    */
   protected function indexCreate() {
-    $indexData = array(
+    $index_data = array(
       'id' => 'test',
-      'name' => 'Index test name'
+      'name' => 'Index test name',
     );
 
-    $index = $this->storage->create($indexData);
+    $index = $this->storage->create($index_data);
     $this->assertTrue($index instanceof IndexInterface, 'The newly created entity is a search index.');
     $index->save();
 

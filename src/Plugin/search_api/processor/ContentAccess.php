@@ -24,6 +24,8 @@ use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
+ * Adds content access checks for nodes and comments.
+ *
  * @SearchApiProcessor(
  *   id = "content_access",
  *   label = @Translation("Content access"),
@@ -261,7 +263,7 @@ class ContentAccess extends ProcessorPluginBase {
     //     [grants view access to one of the user's gid/realm combinations]
     //   )
     // If there are no "other" datasources, we don't need the nested OR,
-    // however, and can add the "ADD"
+    // however, and can add the "ADD".
     // @todo Add a filter tag, once they are implemented.
     if ($unaffected_datasources) {
       $outer_conditions = $query->createConditionGroup('OR', array('content_access'));

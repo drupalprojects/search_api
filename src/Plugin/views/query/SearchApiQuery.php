@@ -16,6 +16,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Query\ConditionGroupInterface;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\search_api\Utility;
 use Drupal\user\Entity\User;
@@ -113,7 +115,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @var string
    */
-  public $group_operator = 'AND';
+  protected $groupOperator = 'AND';
 
   /**
    * The logger to use for log messages.
@@ -359,7 +361,7 @@ class SearchApiQuery extends QueryPluginBase {
       // If the different groups are combined with the OR operator, we have to
       // add a new OR filter to the query to which the filters for the groups
       // will be added.
-      if ($this->group_operator === 'OR') {
+      if ($this->groupOperator === 'OR') {
         $base = $this->query->createConditionGroup('OR');
         $this->query->addConditionGroup($base);
       }
@@ -454,8 +456,8 @@ class SearchApiQuery extends QueryPluginBase {
       if (!$this->limit && $this->limit !== '0') {
         $this->limit = NULL;
       }
-      // Set the range. (We always set this, as there might even be an offset if
-      // all items are shown.)
+      // Set the range. We always set this, as there might be an offset even if
+      // all items are shown.
       $this->query->range($this->offset, $this->limit);
 
       $start = microtime(TRUE);
@@ -611,7 +613,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @return $this
    */
-  public function setSearchApiQuery($query) {
+  public function setSearchApiQuery(QueryInterface $query) {
     $this->query = $query;
     return $this;
   }
@@ -639,7 +641,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @return $this
    */
-  public function setSearchApiResults($search_api_results) {
+  public function setSearchApiResults(ResultSetInterface $search_api_results) {
     $this->searchApiResults = $search_api_results;
     return $this;
   }
@@ -779,7 +781,8 @@ class SearchApiQuery extends QueryPluginBase {
       if (empty($group)) {
         $group = 0;
       }
-      $this->conditions[$group]['conditions'][] = array($field, $value, $operator);
+      $condition = array($field, $value, $operator);
+      $this->conditions[$group]['conditions'][] = $condition;
     }
     return $this;
   }
@@ -847,7 +850,12 @@ class SearchApiQuery extends QueryPluginBase {
       }
     }
     else {
-      $this->conditions[$group]['conditions'][] = array($this->sanitizeFieldId($field), $value, $this->sanitizeOperator($operator));
+      $condition = array(
+        $this->sanitizeFieldId($field),
+        $value,
+        $this->sanitizeOperator($operator),
+      );
+      $this->conditions[$group]['conditions'][] = $condition;
     }
 
     return $this;
@@ -1216,7 +1224,7 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   //
-  // Methods from Views' SQL query plugin (to simplify integration)
+  // Methods from Views' SQL query plugin, to simplify integration.
   //
 
   /**

@@ -158,7 +158,12 @@ class ProcessorIntegrationTest extends WebTestBase {
     ));
     $server->save();
     $key = 'search_api_test_backend.return.getDiscouragedProcessors';
-    $processors = array('highlight', 'ignore_character', 'tokenizer', 'stopwords');
+    $processors = array(
+      'highlight',
+      'ignore_character',
+      'tokenizer',
+      'stopwords',
+    );
     \Drupal::state()->set($key, $processors);
 
     // Use the newly created server.
@@ -210,7 +215,7 @@ class ProcessorIntegrationTest extends WebTestBase {
       'processors[html_filter][settings][fields][search_api_language]' => FALSE,
       'processors[html_filter][settings][title]' => FALSE,
       'processors[html_filter][settings][alt]' => FALSE,
-      'processors[html_filter][settings][tags]' => 'h1: 10'
+      'processors[html_filter][settings][tags]' => 'h1: 10',
     );
     $this->editSettingsForm($edit, 'html_filter');
   }

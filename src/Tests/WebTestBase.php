@@ -24,7 +24,11 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('node', 'search_api', 'search_api_test_backend');
+  public static $modules = array(
+    'node',
+    'search_api',
+    'search_api_test_backend',
+  );
 
   /**
    * An admin user used for this test.
@@ -32,14 +36,15 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
+
   /**
    * The permissions of the admin user.
    *
    * @var string[]
-  */
+   */
   protected $adminUserPermissions = array(
     'administer search_api',
-    'access administration pages'
+    'access administration pages',
   );
 
   /**
@@ -172,8 +177,8 @@ abstract class WebTestBase extends SimpletestWebTestBase {
         'datasource_settings' => array(
           $datasource_id => array(
             'plugin_id' => $datasource_id,
-            'settings' => array()
-          )
+            'settings' => array(),
+          ),
         ),
       ));
       $index->save();

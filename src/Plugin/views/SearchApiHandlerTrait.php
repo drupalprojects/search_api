@@ -60,7 +60,8 @@ trait SearchApiHandlerTrait {
    * Retrieves the query plugin.
    *
    * @return \Drupal\search_api\Plugin\views\query\SearchApiQuery|null
-   *   The query plugin, or NULL if there is no query or it is no Search API query.
+   *   The query plugin, or NULL if there is no query or it is no Search API
+   *   query.
    */
   public function getQuery() {
     if (empty($this->query) || !($this->query instanceof SearchApiQuery)) {

@@ -12,6 +12,8 @@ use Drupal\Core\Url;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
+ * Configure types of characters which should be ignored for searches.
+ *
  * @SearchApiProcessor(
  *   id = "ignore_character",
  *   label = @Translation("Ignore characters"),

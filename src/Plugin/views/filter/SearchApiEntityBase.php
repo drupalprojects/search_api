@@ -19,7 +19,7 @@ abstract class SearchApiEntityBase extends SearchApiString {
   use UncacheableDependencyTrait;
 
   /**
-   * Where the $query object will reside:
+   * The query plugin for the current view.
    *
    * @var \Drupal\search_api\Plugin\views\query\SearchApiQuery
    */

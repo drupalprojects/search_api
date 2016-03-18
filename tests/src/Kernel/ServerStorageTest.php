@@ -23,7 +23,12 @@ class ServerStorageTest extends KernelTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('search_api', 'search_api_test_backend', 'user', 'system');
+  public static $modules = array(
+    'search_api',
+    'search_api_test_backend',
+    'user',
+    'system',
+  );
 
   /**
    * The search server storage.
@@ -62,12 +67,12 @@ class ServerStorageTest extends KernelTestBase {
    *   The newly created search server.
    */
   public function serverCreate() {
-    $serverData = array(
+    $server_data = array(
       'id' => 'test_server',
       'name' => 'Test server',
       'backend' => 'search_api_test_backend',
     );
-    $server = $this->storage->create($serverData);
+    $server = $this->storage->create($server_data);
 
     $this->assertTrue($server instanceof ServerInterface, 'The newly created entity is a Search API Server.');
     $server->save();

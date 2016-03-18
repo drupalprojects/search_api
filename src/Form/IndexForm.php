@@ -163,7 +163,8 @@ class IndexForm extends EntityForm {
       $form['#title'] = $this->t('Add search index');
     }
     else {
-    $form['#title'] = $this->t('Edit search index %label', array('%label' => $index->label()));
+      $arguments = array('%label' => $index->label());
+      $form['#title'] = $this->t('Edit search index %label', $arguments);
     }
 
     $this->buildEntityForm($form, $form_state, $index);
@@ -320,7 +321,7 @@ class IndexForm extends EntityForm {
       //   the description.
       '#states' => array(
         'invisible' => array(
-          ':input[name="server"]' => array('value' => '')
+          ':input[name="server"]' => array('value' => ''),
         ),
       ),
     );

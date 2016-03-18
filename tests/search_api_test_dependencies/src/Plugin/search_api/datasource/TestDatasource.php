@@ -11,6 +11,8 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 
 /**
+ * Provides a datasource with dependencies, for the dependency removal tests.
+ *
  * @SearchApiDatasource(
  *   id = "search_api_test_dependencies",
  *   label = @Translation("Dependency test datasource"),

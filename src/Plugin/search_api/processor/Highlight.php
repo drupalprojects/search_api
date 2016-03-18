@@ -18,6 +18,8 @@ use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility;
 
 /**
+ * Adds a highlighted excerpt to results and highlights returned fields.
+ *
  * @SearchApiProcessor(
  *   id = "highlight",
  *   label = @Translation("Highlight"),
@@ -515,7 +517,7 @@ class Highlight extends ProcessorPluginBase {
    *   (optional) Whether the text can contain HTML tags or not. In the former
    *   case, text inside tags (i.e., tag names and attributes) won't be
    *   highlighted.
-
+   *
    * @return string
    *   The given text with all occurrences of search keywords highlighted.
    */

@@ -14,6 +14,8 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility;
 
 /**
+ * Splits text into individual words for searching.
+ *
  * @SearchApiProcessor(
  *   id = "tokenizer",
  *   label = @Translation("Tokenizer"),
@@ -73,7 +75,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Simple CJK handling'),
       '#default_value' => $this->configuration['overlap_cjk'],
-      '#description' => $this->t('Whether to apply a simple Chinese/Japanese/Korean tokenizer based on overlapping sequences. Does not affect other languages.')
+      '#description' => $this->t('Whether to apply a simple Chinese/Japanese/Korean tokenizer based on overlapping sequences. Does not affect other languages.'),
     );
 
     $form['minimum_word_size'] = array(
@@ -82,7 +84,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
       '#default_value' => $this->configuration['minimum_word_size'],
       '#min' => 1,
       '#max' => 1000,
-      '#description' => $this->t('The number of characters a word has to be to be indexed. A lower setting means better search result ranking, but also a larger database. Each search query must contain at least one keyword that is this size (or longer).')
+      '#description' => $this->t('The number of characters a word has to be to be indexed. A lower setting means better search result ranking, but also a larger database. Each search query must contain at least one keyword that is this size (or longer).'),
     );
 
     return $form;
@@ -108,9 +110,10 @@ class Tokenizer extends FieldsProcessorPluginBase {
   }
 
   /**
-   * Matches all 'N' Unicode character classes (numbers)
+   * Matches all 'N' Unicode character classes (numbers).
    *
    * @return string
+   *   A string of Unicode characters to use in the regular expression.
    */
   protected function getPregClassNumbers() {
     return '\x{30}-\x{39}\x{b2}\x{b3}\x{b9}\x{bc}-\x{be}\x{660}-\x{669}\x{6f0}-\x{6f9}' .
@@ -125,9 +128,10 @@ class Tokenizer extends FieldsProcessorPluginBase {
   }
 
   /**
-   * Matches all 'P' Unicode character classes (punctuation)
+   * Matches all 'P' Unicode character classes (punctuation).
    *
    * @return string
+   *   A string of Unicode characters to use in the regular expression.
    */
   protected function getPregClassPunctuation() {
     return '\x{21}-\x{23}\x{25}-\x{2a}\x{2c}-\x{2f}\x{3a}\x{3b}\x{3f}\x{40}\x{5b}-\x{5d}' .
@@ -163,6 +167,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * @see search_expand_cjk() (Core Search of Drupal 8)
    *
    * @return string
+   *   A string of Unicode characters to use in the regular expression.
    */
   protected function getPregClassCJK() {
     return '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
@@ -214,11 +219,11 @@ class Tokenizer extends FieldsProcessorPluginBase {
     // only by punctuation characters to be one piece. This also means that
     // searching for e.g. '20/03/1984' also returns results with '20-03-1984'
     // in them.
-    // Readable regexp: ([number]+)[punctuation]+(?=[number])
+    // Readable regular expression: "([number]+)[punctuation]+(?=[number])".
     $text = preg_replace('/([' . $this->getPregClassNumbers() . ']+)[' . $this->getPregClassPunctuation() . ']+(?=[' . $this->getPregClassNumbers() . '])/u', '\1', $text);
 
     // Multiple dot and dash groups are word boundaries and replaced with space.
-    // No need to use the unicode modifier here because 0-127 ASCII characters
+    // No need to use the Unicode modifier here because 0-127 ASCII characters
     // can't match higher UTF-8 characters as the leftmost bit of those are 1.
     $text = preg_replace('/[.-]{2,}/', ' ', $text);
 

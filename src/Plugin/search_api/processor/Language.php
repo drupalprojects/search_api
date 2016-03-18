@@ -15,6 +15,8 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 
 /**
+ * Adds the item language to indexed items.
+ *
  * @SearchApiProcessor(
  *   id = "language",
  *   label = @Translation("Language"),
