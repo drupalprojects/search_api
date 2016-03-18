@@ -468,7 +468,7 @@ class Highlight extends ProcessorPluginBase {
     $working_from = $working_to = NULL;
     foreach ($ranges as $this_from => $this_to) {
       $max_end = max($max_end, $this_to);
-      if (is_null($working_from)) {
+      if ($working_from === NULL) {
         // This is the first time through this loop: initialize.
         $working_from = $this_from;
         $working_to = $this_to;

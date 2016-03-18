@@ -388,7 +388,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getDatasources($only_enabled = TRUE) {
-    if ($only_enabled && !is_null($this->datasourceInstances)) {
+    if ($only_enabled && $this->datasourceInstances !== NULL) {
       return $this->datasourceInstances;
     }
 
@@ -529,7 +529,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return $this->loadProcessors();
     }
 
-    if (!is_null($this->processorInstances)) {
+    if ($this->processorInstances !== NULL) {
       return $this->processorInstances;
     }
 
@@ -581,7 +581,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function addProcessor(ProcessorInterface $processor) {
     // Make sure the processorInstances are loaded before trying to add a plugin
     // to them.
-    if (is_null($this->processorInstances)) {
+    if ($this->processorInstances === NULL) {
       $this->getProcessors();
     }
     $this->processorInstances[$processor->getPluginId()] = $processor;
@@ -595,7 +595,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function removeProcessor($processor_id) {
     // Make sure the processorInstances are loaded before trying to remove a
     // plugin from them.
-    if (is_null($this->processorInstances)) {
+    if ($this->processorInstances === NULL) {
       $this->getProcessors();
     }
     unset($this->processorInstances[$processor_id]);
@@ -731,7 +731,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function getFields() {
     // ::$fieldInstances is already filled with fields, so keep on using those.
-    if (!is_null($this->fieldInstances)) {
+    if ($this->fieldInstances !== NULL) {
       return $this->fieldInstances;
     }
 
