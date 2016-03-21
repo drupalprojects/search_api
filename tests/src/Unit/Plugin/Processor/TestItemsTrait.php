@@ -111,7 +111,7 @@ trait TestItemsTrait {
    * Adds mock data type plugin manager and results cache services to \Drupal.
    */
   protected function setUpDataTypePlugin() {
-    /** @var \Drupal\Tests\UnitTestCase|\Drupal\search_api\Tests\Processor\TestItemsTrait $this */
+    /** @var \Drupal\Tests\UnitTestCase|\Drupal\Tests\search_api\Unit\Plugin\Processor\TestItemsTrait $this */
     $data_type_plugin = $this->getMockBuilder('Drupal\search_api\DataType\DataTypePluginManager')
       ->disableOriginalConstructor()
       ->getMock();
