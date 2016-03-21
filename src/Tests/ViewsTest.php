@@ -10,6 +10,7 @@ namespace Drupal\search_api\Tests;
 use Drupal\Component\Utility\Html;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility;
+use Drupal\views\Entity\View;
 
 /**
  * Tests the Views integration of the Search API.
@@ -262,6 +263,13 @@ class ViewsTest extends WebTestBase {
       $this->submitFieldsForm();
     }
 
+    $this->clickLink($this->t('Add filter criteria'));
+    $edit = array(
+      'name[search_api_index_database_search_index.name]' => 'search_api_index_database_search_index.name',
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Add and configure filter criteria'));
+    $this->submitPluginForm(array());
+
     // Save the view.
     $this->drupalPostForm(NULL, array(), $this->t('Save'));
     $this->assertResponse(200);
@@ -340,6 +348,16 @@ class ViewsTest extends WebTestBase {
         break;
     }
 
+    $this->submitPluginForm($edit);
+  }
+
+  /**
+   * Submits a Views plugin's configuration form.
+   *
+   * @param array $edit
+   *   The values to set in the form.
+   */
+  protected function submitPluginForm(array $edit) {
     $button_label = $this->t('Apply');
     $buttons = $this->xpath('//input[starts-with(@value, :label)]', array(':label' => $button_label));
     if ($buttons) {
