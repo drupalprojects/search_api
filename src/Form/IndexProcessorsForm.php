@@ -271,6 +271,9 @@ class IndexProcessorsForm extends EntityForm {
     $processors = $this->entity->getProcessors(FALSE);
     foreach ($processors as $processor_id => $processor) {
       if (empty($values['status'][$processor_id])) {
+        if (isset($old_processors[$processor_id])) {
+          $this->entity->removeProcessor($processor_id);
+        }
         continue;
       }
       $new_settings[$processor_id] = array(
@@ -294,9 +297,6 @@ class IndexProcessorsForm extends EntityForm {
     foreach ($new_settings as $plugin_id => $new_processor_settings) {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $new_processor */
       $new_processor = $this->processorPluginManager->createInstance($plugin_id, $new_processor_settings['settings']);
-      if (isset($old_processors[$plugin_id])) {
-        $this->entity->removeProcessor($plugin_id);
-      }
       $this->entity->addProcessor($new_processor);
       $new_configurations[$plugin_id] = $new_processor->getConfiguration();
     }

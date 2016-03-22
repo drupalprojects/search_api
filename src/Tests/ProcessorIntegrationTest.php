@@ -126,12 +126,18 @@ class ProcessorIntegrationTest extends WebTestBase {
 
     // The 'language' and 'add_url' processors are are not available to be
     // removed because they are locked processors.
+    $this->checkLanguageIntegration();
+    $this->checkUrlFieldIntegration();
+
+    // Check whether disabling processors also works correctly.
+    $this->loadProcessorsTab();
+    $edit = array(
+      'status[stopwords]' => FALSE,
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $enabled = array_values(array_diff($enabled, array('stopwords')));
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
-    $this->assertEqual($enabled, $actual_processors);
-    $this->checkLanguageIntegration();
-    $this->assertEqual($enabled, $actual_processors);
-    $this->checkUrlFieldIntegration();
     $this->assertEqual($enabled, $actual_processors);
   }
 
