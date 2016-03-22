@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\search_api\processor\IgnoreCase.
- */
-
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Component\Utility\Unicode;

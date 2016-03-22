@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Task\IndexTaskManagerInterface.
- */
-
 namespace Drupal\search_api\Task;
 
 use Drupal\search_api\IndexInterface;

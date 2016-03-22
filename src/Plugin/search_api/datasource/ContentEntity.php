@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\search_api\datasource\ContentEntity.
- */
-
 namespace Drupal\search_api\Plugin\search_api\datasource;
 
 use Drupal\Component\Utility\Html;

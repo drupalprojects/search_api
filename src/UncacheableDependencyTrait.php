@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\UncacheableDependencyTrait.
- */
-
 namespace Drupal\search_api;
 
 /**

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Task\ServerTaskManager.
- */
-
 namespace Drupal\search_api\Task;
 
 use Drupal\Core\Database\Connection;

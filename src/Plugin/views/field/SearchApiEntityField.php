@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api\Plugin\views\field\SearchApiEntityField.
- */
-
 namespace Drupal\search_api\Plugin\views\field;
 
 use Drupal\Core\Form\FormHelper;

@@ -512,7 +512,7 @@ function search_api_drush_get_indexes($index_id = NULL) {
  *
  * @param \Drupal\search_api\IndexInterface $index
  *   The index to be enabled.
- * @param boolean $enable
+ * @param bool $enable
  *   (optional) TRUE to enable, FALSE to disable the index.
  */
 function search_api_drush_set_index_state(IndexInterface $index, $enable = TRUE) {

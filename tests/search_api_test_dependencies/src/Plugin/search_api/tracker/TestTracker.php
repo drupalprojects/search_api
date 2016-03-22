@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_test_dependencies\Plugin\search_api\tracker\TestTracker.
- */
-
 namespace Drupal\search_api_test_dependencies\Plugin\search_api\tracker;
 
 use Drupal\search_api\Plugin\search_api\tracker\Basic as BasicTracker;

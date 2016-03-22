@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\search_api\processor\ContentAccess.
- */
-
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\comment\CommentInterface;
@@ -153,8 +148,8 @@ class ContentAccess extends ProcessorPluginBase {
       foreach ($this->filterForPropertyPath($item->getFields(), 'search_api_node_grants') as $field) {
         // Collect grant information for the node.
         if (!$node->access('view', $anonymous_user)) {
-          // If anonymous user has no permission we collect all grants with their
-          // realms in the item.
+          // If anonymous user has no permission we collect all grants with
+          // their realms in the item.
           $result = Database::getConnection()
             ->query('SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1', array(':nid' => $node->id()));
           foreach ($result as $grant) {
@@ -162,8 +157,8 @@ class ContentAccess extends ProcessorPluginBase {
           }
         }
         else {
-          // Add the generic pseudo view grant if we are not using node access or
-          // the node is viewable by anonymous users.
+          // Add the generic pseudo view grant if we are not using node access
+          // or the node is viewable by anonymous users.
           $field->addValue('node_access__all');
         }
       }

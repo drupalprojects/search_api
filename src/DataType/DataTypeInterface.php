@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\DataType\DataTypeInterface.
- */
-
 namespace Drupal\search_api\DataType;
 
 use Drupal\Component\Plugin\DerivativeInspectionInterface;

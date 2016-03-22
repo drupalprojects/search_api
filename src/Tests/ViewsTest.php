@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Tests\ViewsTest.
- */
-
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Html;

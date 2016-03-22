@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Kernel\DependencyRemovalTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;

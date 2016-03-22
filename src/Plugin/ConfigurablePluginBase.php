@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\ConfigurablePluginBase.
- */
-
 namespace Drupal\search_api\Plugin;
 
 use Drupal\Core\Entity\DependencyTrait;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\search_api\processor\Language.
- */
-
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;

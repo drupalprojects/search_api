@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\IndexListBuilder.
- */
-
 namespace Drupal\search_api;
 
 use Drupal\Component\Utility\Html;

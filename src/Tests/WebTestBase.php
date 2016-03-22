@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Tests\WebTestBase.
- */
-
 namespace Drupal\search_api\Tests;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;

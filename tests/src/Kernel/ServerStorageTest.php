@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Kernel\ServerStorageTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
@@ -52,7 +47,7 @@ class ServerStorageTest extends KernelTestBase {
   /**
    * Tests all CRUD operations as a queue of operations.
    */
-  public function testServerCRUD() {
+  public function testServerCrud() {
     $this->assertTrue($this->storage instanceof ConfigEntityStorage, 'The Search API Server storage controller is loaded.');
 
     $server = $this->serverCreate();

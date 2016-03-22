@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_test_dependencies\Plugin\search_api\processor\TestProcessor.
- */
-
 namespace Drupal\search_api_test_dependencies\Plugin\search_api\processor;
 
 use Drupal\search_api\Processor\ProcessorPluginBase;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Query\Query.
- */
-
 namespace Drupal\search_api\Query;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -324,7 +319,6 @@ class Query implements QueryInterface {
     // Store search for later retrieval for facets, etc.
     // @todo Figure out how to store the executed searches for the request.
     // search_api_current_search(NULL, $this, $response);
-
     return $response;
   }
 
@@ -473,7 +467,7 @@ class Query implements QueryInterface {
       $ret .= 'Sorting: ' . implode(', ', $sorts) . "\n";
     }
     // @todo Fix for entities contained in options (which might kill
-    //    var_export() due to circular references).
+    //   var_export() due to circular references).
     $ret .= 'Options: ' . str_replace("\n", "\n  ", var_export($this->options, TRUE)) . "\n";
     return $ret;
   }

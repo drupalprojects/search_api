@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\SearchApiException.
- */
-
 namespace Drupal\search_api;
 
 /**

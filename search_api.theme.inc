@@ -346,7 +346,7 @@ function theme_search_api_index($variables) {
         // Build the server index status info.
         $info = \Drupal::translation()->formatPlural($count, 'There is 1 item indexed on the server for this index. (<a href=":url">More information</a>)', 'There are @count items indexed on the server for this index. (<a href=":url">More information</a>)', $vars);
       }
-      catch(SearchApiException $e) {
+      catch (SearchApiException $e) {
         $info = t('Error while checking server index status: @message', array('@message' => $e->getMessage()));
         $class = 'error';
       }

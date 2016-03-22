@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Kernel\ProcessorContentAccessTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel\Processor;
 
 use Drupal\comment\Entity\Comment;

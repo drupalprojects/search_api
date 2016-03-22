@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Form\SubFormState.
- */
-
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\NestedArray;

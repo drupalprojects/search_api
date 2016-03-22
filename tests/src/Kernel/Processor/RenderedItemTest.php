@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\Tests\search_api\Kernel\Processor\RenderedItemTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel\Processor;
 
 use Drupal\Core\TypedData\DataDefinition;

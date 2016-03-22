@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\views\filter\SearchApiFulltext.
- */
-
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;

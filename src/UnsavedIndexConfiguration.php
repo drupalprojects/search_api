@@ -1,9 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api\UnsavedIndexConfiguration.
- */
 
 namespace Drupal\search_api;
 

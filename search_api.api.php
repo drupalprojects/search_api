@@ -278,7 +278,7 @@ function hook_search_api_results_TAG_alter(\Drupal\search_api\Query\ResultSetInt
  *
  * @param \Drupal\search_api\IndexInterface $index
  *   The index scheduled for reindexing.
- * @param $clear
+ * @param bool $clear
  *   Boolean indicating whether the index was also cleared.
  */
 function hook_search_api_index_reindex(\Drupal\search_api\IndexInterface $index, $clear = FALSE) {

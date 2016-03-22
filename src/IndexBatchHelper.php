@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\IndexBatchHelper.
- */
-
 namespace Drupal\search_api;
 
 use Drupal\Component\Render\FormattableMarkup;

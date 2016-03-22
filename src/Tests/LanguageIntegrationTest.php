@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Tests\LanguageIntegrationTest.
- */
-
 namespace Drupal\search_api\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;

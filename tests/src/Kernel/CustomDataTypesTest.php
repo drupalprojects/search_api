@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Kernel\CustomDataTypesTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\entity_test\Entity\EntityTest;

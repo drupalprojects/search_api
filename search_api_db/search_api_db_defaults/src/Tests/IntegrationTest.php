@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_db_defaults\Tests\IntegrationTest.
- */
-
 namespace Drupal\search_api_db_defaults\Tests;
 
 use Drupal\comment\Tests\CommentTestTrait;

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_test_backend\Plugin\search_api\backend\TestBackend.
- */
-
 namespace Drupal\search_api_test_backend\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;

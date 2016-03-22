@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api\Form\IndexAddFieldsForm.
- */
-
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -98,7 +93,7 @@ class IndexAddFieldsForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function getBaseFormID() {
+  public function getBaseFormId() {
     return NULL;
   }
 

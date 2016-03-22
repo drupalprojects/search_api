@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api_db\Plugin\search_api\backend\Database.
- */
-
 namespace Drupal\search_api_db\Plugin\search_api\backend;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -212,6 +207,7 @@ class Database extends BackendPluginBase {
    * Returns the module handler to use for this plugin.
    *
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
+   *   The module handler.
    */
   public function getModuleHandler() {
     return $this->moduleHandler ?: \Drupal::moduleHandler();
@@ -234,6 +230,7 @@ class Database extends BackendPluginBase {
    * Returns the config factory to use for this plugin.
    *
    * @return \Drupal\Core\Config\ConfigFactoryInterface
+   *   The config factory.
    */
   public function getConfigFactory() {
     return $this->configFactory ?: \Drupal::configFactory();
@@ -311,13 +308,13 @@ class Database extends BackendPluginBase {
   /**
    * Sets the key-value store to use.
    *
-   * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface $keyValueStore
+   * @param \Drupal\Core\KeyValueStore\KeyValueStoreInterface $key_value_store
    *   The key-value store.
    *
    * @return $this
    */
-  public function setKeyValueStore(KeyValueStoreInterface $keyValueStore) {
-    $this->keyValueStore = $keyValueStore;
+  public function setKeyValueStore(KeyValueStoreInterface $key_value_store) {
+    $this->keyValueStore = $key_value_store;
     return $this;
   }
 
@@ -390,8 +387,7 @@ class Database extends BackendPluginBase {
         $form['database'] = array(
           '#type' => 'select',
           '#title' => $this->t('Database'),
-          '#description' => $this->t('Select the database key and target to use for storing indexing information in. ' .
-              'Cannot be changed after creation.'),
+          '#description' => $this->t('Select the database key and target to use for storing indexing information in. Cannot be changed after creation.'),
           '#options' => $options,
           '#default_value' => 'default:default',
           '#required' => TRUE,
@@ -755,7 +751,7 @@ class Database extends BackendPluginBase {
     // solution in the original core issue).
     //
     // @todo: Remove when #2625664 lands in Core. See #2625722 for a patch that
-    //   implements this.
+    // implements this.
     try {
       $this->database->schema()->addIndex($db['table'], '_' . $column, $index_spec, $table_spec);
     }
@@ -2180,7 +2176,7 @@ class Database extends BackendPluginBase {
         $select->condition($alias . '.field_name', $this->getTextFieldName($facet['field']));
       }
       if (!$facet['missing'] && !$is_text_type) {
-        $select->isNotNull($alias . '.' . 'value');
+        $select->isNotNull($alias . '.value');
       }
       $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
       $select->groupBy('value');

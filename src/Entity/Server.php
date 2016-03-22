@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Entity\Server.
- */
-
 namespace Drupal\search_api\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;

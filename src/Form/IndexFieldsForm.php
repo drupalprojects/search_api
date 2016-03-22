@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Form\IndexFieldsForm.
- */
-
 namespace Drupal\search_api\Form;
 
 use Drupal\Component\Utility\Html;
@@ -76,7 +71,7 @@ class IndexFieldsForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function getBaseFormID() {
+  public function getBaseFormId() {
     return NULL;
   }
 

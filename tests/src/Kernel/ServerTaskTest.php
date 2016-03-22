@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Kernel\ServerTaskTest.
- */
-
 namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;

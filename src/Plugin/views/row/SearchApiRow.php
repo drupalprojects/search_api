@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\views\row\SearchApiRow.
- */
-
 namespace Drupal\search_api\Plugin\views\row;
 
 use Drupal\Component\Render\FormattableMarkup;

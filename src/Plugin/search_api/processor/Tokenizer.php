@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Plugin\search_api\processor\Tokenizer.
- */
-
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Component\Utility\Unicode;
@@ -169,7 +164,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * @return string
    *   A string of Unicode characters to use in the regular expression.
    */
-  protected function getPregClassCJK() {
+  protected function getPregClassCjk() {
     return '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
         '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
         '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
@@ -211,7 +206,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
   protected function simplifyText($text) {
     // Optionally apply simple CJK handling to the text.
     if ($this->configuration['overlap_cjk']) {
-      $text = preg_replace_callback('/[' . $this->getPregClassCJK() . ']+/u', array($this, 'expandCjk'), $text);
+      $text = preg_replace_callback('/[' . $this->getPregClassCjk() . ']+/u', array($this, 'expandCjk'), $text);
     }
 
     // To improve searching for numerical data such as dates, IP addresses or

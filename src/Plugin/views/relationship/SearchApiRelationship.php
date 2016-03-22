@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Plugin\views\relationship\SearchApiRelationship.
- */
-
 namespace Drupal\search_api\Plugin\views\relationship;
 
 use Drupal\Core\Form\FormStateInterface;

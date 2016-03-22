@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\search_api\Tests\HooksTest.
- */
-
 namespace Drupal\search_api\Tests;
 
 /**

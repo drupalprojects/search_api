@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\search_api\Unit\EntitySerializationTest.
- */
-
 namespace Drupal\Tests\search_api\Unit;
 
 use Drupal\Component\Serialization\Yaml;

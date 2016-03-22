@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\search_api\Plugin\views\EntityFieldRenderer.
- */
-
 namespace Drupal\search_api\Plugin\views;
 
 use Drupal\search_api\Plugin\views\field\SearchApiEntityField;
