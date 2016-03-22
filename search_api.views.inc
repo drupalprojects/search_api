@@ -290,6 +290,15 @@ function _search_api_views_handler_mapping() {
           'id' => 'search_api',
         ),
       ),
+      'entity:node_type' => array(
+        'filter' => array(
+          'id' => 'search_api_options',
+          'options callback' => 'node_type_get_names',
+        ),
+        'sort' => array(
+          'id' => 'search_api',
+        ),
+      ),
     );
 
     $alter_id = 'search_api_views_handler_mapping';
