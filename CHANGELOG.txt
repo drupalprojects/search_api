@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2693425 by jojyja: Fixed a typo in search_api.info.
 
 Search API 1.17 (2016-03-14):
 -----------------------------
