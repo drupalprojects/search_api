@@ -240,7 +240,6 @@ class RenderedItem extends ProcessorPluginBase {
     // Change the current user to our dummy implementation to ensure we are
     // using the configured roles.
     $original_user = $this->currentUser->getAccount();
-    // @todo Why not just use \Drupal\Core\Session\UserSession directly here?
     $this->currentUser->setAccount(new UserSession(array('roles' => $this->configuration['roles'])));
 
     // Count of items that don't have a view mode.
@@ -296,7 +295,7 @@ class RenderedItem extends ProcessorPluginBase {
 
     $view_modes = $this->configuration['view_mode'];
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
-      if ($entity_type_id = $datasource->getEntityTypeId() && !empty($view_modes[$datasource_id])) {
+      if (($entity_type_id = $datasource->getEntityTypeId()) && !empty($view_modes[$datasource_id])) {
         foreach ($view_modes[$datasource_id] as $view_mode) {
           if ($view_mode) {
             /** @var \Drupal\Core\Entity\EntityViewModeInterface $view_mode_entity */

@@ -291,6 +291,7 @@ class IndexProcessorsForm extends EntityForm {
     $new_configurations = array();
     foreach ($new_settings as $plugin_id => $new_processor_settings) {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $new_processor */
+      $new_processor_settings['settings']['index'] = $this->entity;
       $new_processor = $this->processorPluginManager->createInstance($plugin_id, $new_processor_settings['settings']);
       $this->entity->addProcessor($new_processor);
       $new_configurations[$plugin_id] = $new_processor->getConfiguration();

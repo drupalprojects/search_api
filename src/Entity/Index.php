@@ -530,10 +530,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     $processors = $this->loadProcessors();
 
-    // Filter the processors by status.
+    // Filter the processors to only include those that are enabled (or locked).
     // We should only reach this point in the code once, at the first call after
     // the index is loaded.
-    $this->processorInstances = array_intersect_key($processors, $this->processor_settings);
+    $this->processorInstances = array();
+    foreach ($processors as $processor_id => $processor) {
+      if (isset($this->processor_settings[$processor_id]) || $processor->isLocked()) {
+        $this->processorInstances[$processor_id] = $processor;
+      }
+    }
 
     return $this->processorInstances;
   }
@@ -542,14 +547,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getProcessorsByStage($stage, $only_enabled = TRUE) {
-    $processors = $this->loadProcessors();
-    $processor_settings = $this->processor_settings;
-    $processor_weights = array();
-
     // Get a list of all processors meeting the criteria (stage and, optionally,
     // enabled) along with their effective weights (user-set or default).
+    $processors = $this->getProcessors($only_enabled);
+    $processor_weights = array();
     foreach ($processors as $name => $processor) {
-      if ($processor->supportsStage($stage) && !($only_enabled && empty($processor_settings[$name]))) {
+      if ($processor->supportsStage($stage)) {
         if (!empty($processor_settings[$name]['settings']['weights'][$stage])) {
           $processor_weights[$name] = $processor_settings[$name]['settings']['weights'][$stage];
         }
@@ -612,7 +615,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $processor_settings = $this->processor_settings;
 
     foreach ($processor_plugin_manager->getDefinitions() as $name => $processor_definition) {
-      if (class_exists($processor_definition['class']) && empty($processor_instances[$name])) {
+      if (isset($this->processorInstances[$name])) {
+        $processor_instances[$name] = $this->processorInstances[$name];
+      }
+      elseif (class_exists($processor_definition['class'])) {
         // Create our settings for this processor.
         $settings = empty($processor_settings[$name]['settings']) ? array() : $processor_settings[$name]['settings'];
         $settings['index'] = $this;
@@ -1073,50 +1079,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->disable();
     }
 
-    // We first have to check for locked processors, otherwise their
-    // preIndexSave() methods might not be called in the next step.
-    $this->processor_settings = array();
-    foreach ($this->getProcessors(FALSE) as $processor_id => $processor) {
-      if ($processor->isLocked() && !isset($this->processor_settings[$processor_id])) {
-        $this->processor_settings[$processor_id] = array(
-          'plugin_id' => $processor_id,
-          'settings' => array(),
-        );
-      }
-    }
-
-    foreach ($this->getProcessors() as $processor_id => $processor) {
-      $this->processor_settings[$processor_id] = array(
-        'plugin_id' => $processor_id,
-        'settings' => $processor->getConfiguration(),
-      );
-    }
-
-    // Reset the canonical representation of the processors by running
-    // ::getProcessors() again here after resetting them back to NULL. This is
-    // only needed when creating a new Index.
-    $this->processorInstances = NULL;
-    $this->getProcessors();
-
-    // Add tracker settings.
-    $tracker = $this->getTrackerInstance();
-    $tracker_id = $tracker->getPluginId();
-    $this->tracker_settings = array(
-      $tracker_id => array(
-        'plugin_id' => $tracker_id,
-        'settings' => $tracker->getConfiguration(),
-      ),
-    );
-
-    // Write the active datasources to the settings array.
-    $this->datasource_settings = array();
-    foreach ($this->getDatasources() as $plugin_id => $datasource) {
-      $this->datasource_settings[$plugin_id] = array(
-        'plugin_id' => $plugin_id,
-        'settings' => $datasource->getConfiguration(),
-      );
-    }
-
     // Remove all "locked" and "hidden" flags from all fields of the index. If
     // they are still valid, they should be re-added by the processors.
     foreach ($this->getFields() as $field_id => $field) {
@@ -1130,9 +1092,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $processor->preIndexSave();
     }
 
+    // Write the field settings to the settings property.
     $this->field_settings = array();
     foreach ($this->getFields() as $field_id => $field) {
       $this->field_settings[$field_id] = $field->getSettings();
+    }
+
+    // Write the enabled processors to the settings property.
+    $processors = $this->getProcessors();
+    $this->processor_settings = array();
+    foreach ($processors as $processor_id => $processor) {
+      $this->processor_settings[$processor_id] = array(
+        'plugin_id' => $processor_id,
+        'settings' => $processor->getConfiguration(),
+      );
+    }
+
+    // Write the tracker configuration to the settings property.
+    $tracker = $this->getTrackerInstance();
+    $tracker_id = $tracker->getPluginId();
+    $this->tracker_settings = array(
+      $tracker_id => array(
+        'plugin_id' => $tracker_id,
+        'settings' => $tracker->getConfiguration(),
+      ),
+    );
+
+    // Write the enabled datasources to the settings array.
+    $this->datasource_settings = array();
+    foreach ($this->getDatasources() as $plugin_id => $datasource) {
+      $this->datasource_settings[$plugin_id] = array(
+        'plugin_id' => $plugin_id,
+        'settings' => $datasource->getConfiguration(),
+      );
     }
   }
 

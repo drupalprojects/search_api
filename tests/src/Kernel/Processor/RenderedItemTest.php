@@ -97,12 +97,16 @@ class RenderedItemTest extends ProcessorTestBase {
     // Set proper configuration for the tested processor.
     $config = $this->processor->getConfiguration();
     $config['view_mode'] = array(
-      'entity:node' => [
+      'entity:node' => array(
         'page' => 'full',
         'article' => 'teaser',
-      ],
-      'entity:user' => 'compact',
-      'entity:comment' => 'teaser',
+      ),
+      'entity:user' => array(
+        'user' => 'compact',
+      ),
+      'entity:comment' => array(
+        'comment' => 'teaser',
+      ),
     );
     $config['roles'] = array($role->id());
     $this->processor->setConfiguration($config);
