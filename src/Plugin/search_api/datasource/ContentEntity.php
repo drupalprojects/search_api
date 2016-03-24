@@ -597,7 +597,6 @@ class ContentEntity extends DatasourcePluginBase {
     return NULL;
   }
 
-
   /**
    * {@inheritdoc}
    */

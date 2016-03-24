@@ -123,7 +123,6 @@ interface DatasourceInterface extends IndexPluginInterface {
    */
   public function getViewModes($bundle = NULL);
 
-
   /**
    * Retrieves the bundles associated to this datasource.
    *

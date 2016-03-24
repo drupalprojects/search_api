@@ -1245,7 +1245,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
   }
 
-
   /**
    * Checks whether the index switched tracker plugin and reacts accordingly.
    *

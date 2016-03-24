@@ -5,7 +5,6 @@ namespace Drupal\search_api\Tests;
 use Drupal\Component\Utility\Html;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility;
-use Drupal\views\Entity\View;
 
 /**
  * Tests the Views integration of the Search API.

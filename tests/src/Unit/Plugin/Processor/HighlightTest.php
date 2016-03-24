@@ -37,7 +37,6 @@ class HighlightTest extends UnitTestCase {
     $this->processor->setStringTranslation($translation);
   }
 
-
   /**
    * Tests postprocessing with an empty result set.
    */
@@ -62,7 +61,6 @@ class HighlightTest extends UnitTestCase {
     $output = $results->getExtraData('highlighted_fields');
     $this->assertEmpty($output, 'No highlighting data added to result set.');
   }
-
 
   /**
    * Tests postprocessing on a query without keywords.
@@ -639,7 +637,6 @@ class HighlightTest extends UnitTestCase {
     $this->assertEquals($excerpt1, $items[$this->itemIds[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
     $this->assertEquals($excerpt2, $items[$this->itemIds[1]]->getExcerpt(), 'Correct excerpt created for second item.');
   }
-
 
   /**
    * Returns a long text to use for highlighting tests.

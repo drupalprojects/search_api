@@ -85,7 +85,6 @@ class IgnoreCharacters extends FieldsProcessorPluginBase {
     return $form;
   }
 
-
   /**
    * {@inheritdoc}
    */

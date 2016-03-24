@@ -260,6 +260,7 @@ class Query implements QueryInterface {
     }
     return $this;
   }
+
   /**
    * {@inheritdoc}
    */
@@ -301,7 +302,6 @@ class Query implements QueryInterface {
     $this->options['limit'] = $limit;
     return $this;
   }
-
 
   /**
    * {@inheritdoc}
