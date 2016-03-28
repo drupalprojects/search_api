@@ -11,6 +11,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\UnsavedConfigurationInterface;
+use Drupal\search_api\Utility;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -205,7 +206,7 @@ class IndexFieldsForm extends EntityForm {
     $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
     $form['#tree'] = TRUE;
 
-    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>Whether detailed field types are supported depends on the type of server this index resides on. In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>');
+    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
     if ($index->hasValidServer()) {
       $arguments = array(
         ':server-url' => $index->getServerInstance()->toUrl('canonical')->toString(),
@@ -224,6 +225,28 @@ class IndexFieldsForm extends EntityForm {
       $form[$datasource_id]['#title'] = $datasource->label();
     }
 
+    // Build the data type table.
+    $instances = $this->dataTypePluginManager->getInstances();
+    $fallback_mapping = Utility::getDataTypeFallbackMapping($index);
+
+    $data_types = array();
+    foreach($instances as $name => $type) {
+      $data_types[$name] = [
+        'label' => $type->label(),
+        'fallback' => $type->getFallbackType(),
+      ];
+    }
+
+    $form['data_type_explanation'] = array(
+      '#type' => 'details',
+      '#id' => 'search-api-data-types-table',
+      '#title' => $this->t('Data types'),
+      '#description' => $this->t("The data types which can be used for indexing fields in this index. Whether a type is supported depends on the backend of the index's server. If a type is not supported, the fallback type that will be used instead is shown, too."),
+      '#theme' => 'search_api_admin_data_type_table',
+      '#data_types' => $data_types,
+      '#fallback_mapping' => $fallback_mapping,
+    );
+
     $form['actions'] = $this->actionsElement($form, $form_state);
 
     return $form;
@@ -241,6 +264,18 @@ class IndexFieldsForm extends EntityForm {
   protected function buildFieldsTable(array $fields) {
     $data_type_plugin_manager = $this->getDataTypePluginManager();
     $types = $data_type_plugin_manager->getInstancesOptions();
+    $fallback_types = Utility::getDataTypeFallbackMapping($this->entity);
+
+    // If one of the unsupported types is actually used by the index, show a
+    // warning.
+    if ($fallback_types) {
+      foreach ($fields as $field) {
+        if (isset($fallback_types[$field->getType()])) {
+          drupal_set_message($this->t("Some of the used data types aren't supported by the server's backend. See the <a href=\":url\">data types table</a> to find out which types are supported.", array(':url' => '#search-api-data-types-table')), 'warning');
+          break;
+        }
+      }
+    }
 
     $fulltext_types = array('text');
     // Add all data types with fallback "text" to fulltext types as well.

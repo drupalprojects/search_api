@@ -76,6 +76,68 @@ function theme_search_api_admin_fields_table($variables) {
 }
 
 /**
+ * Returns HTML for the data type overview table.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - data_types: An array of data types.
+ *   - fallback_mapping: array of fallback data types for unsupported data
+ *     types.
+ *
+ * @return string
+ *   The rendered HTML for a fields form table.
+ *
+ * @ingroup themeable
+ */
+function theme_search_api_admin_data_type_table(array $variables) {
+  $data_types = $variables['data_types'];
+  $fallback_mapping = $variables['fallback_mapping'];
+  $header = array(t('Data Type'), t('Supported'));
+  // Only show the column with fallback types if there is actually an
+  // unsupported type listed.
+  if ($fallback_mapping) {
+    $header[] = t('Fallback data type');
+  }
+
+  $rows = array();
+  $yes = t('Yes');
+  $yes_img = 'core/misc/icons/73b355/check.svg';
+  $no = t('No');
+  $no_img = 'core/misc/icons/e32700/error.svg';
+  foreach ($data_types as $data_type_id => $data_type) {
+    $has_fallback = isset($fallback_mapping[$data_type_id]);
+    $supported_label = $has_fallback ? $no : $yes;
+    $supported_icon = array(
+      '#theme' => 'image',
+      '#uri' => $has_fallback ? $no_img : $yes_img,
+      '#width' => 18,
+      '#height' => 18,
+      '#alt' => $supported_label,
+      '#title' => $supported_label,
+    );
+
+    $row = array(
+      $data_type['label'],
+      array('data' => $supported_icon),
+    );
+
+    if ($fallback_mapping) {
+      $row[] = $has_fallback ? $data_types[$data_type['fallback']]['label'] : '';
+    }
+
+    $rows[] = $row;
+  }
+
+  $build = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+
+  return render($build);
+}
+
+/**
  * Returns HTML for a list of form items.
  *
  * Wrapper around the "item_list" theme which uses the child elements as the

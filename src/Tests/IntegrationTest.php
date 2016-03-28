@@ -66,6 +66,7 @@ class IntegrationTest extends WebTestBase {
     $this->checkFieldLabels();
 
     $this->addFieldsToIndex();
+    $this->checkDataTypesTable();
     $this->removeFieldsFromIndex();
 
     $this->configureFilter();
@@ -639,6 +640,32 @@ class IntegrationTest extends WebTestBase {
     }
     if ($this->assertTrue(!empty($fields['revision_log']), 'revision_log field is indexed.')) {
       $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test_data_type.');
+    }
+  }
+
+  /**
+   * Tests if the data types table is available and contains correct values.
+   */
+  protected function checkDataTypesTable() {
+    $this->drupalGet($this->getIndexPath('fields'));
+    $rows = $this->xpath('//*[@id="search-api-data-types-table"]/*/table/tbody/tr');
+    $this->assertTrue(is_array($rows) && !empty($rows), 'Found a datatype listing.');
+
+    /** @var \SimpleXMLElement $row */
+    foreach ($rows as $row) {
+      $label = (string) $row->td[0];
+      $icon = basename($row->td[1]->img['src']);
+      $fallback = (string) $row->td[2];
+
+      // Make sure we display the right icon and fallback column.
+      if (strpos($label, 'Unsupported') === 0) {
+        $this->assertEqual($icon, 'error.svg', 'An error icon is shown for unsupported data types.');
+        $this->assertNotEqual($fallback, '', 'The fallback data type label is not empty for unsupported data types.');
+      }
+      else {
+        $this->assertEqual($icon, 'check.svg', 'A check icon is shown for supported data types.');
+        $this->assertEqual($fallback, '', 'The fallback data type label is empty for supported data types.');
+      }
     }
   }
 
