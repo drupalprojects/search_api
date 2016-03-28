@@ -73,7 +73,6 @@ class IndexImportTest extends KernelTestBase {
     $active = $this->container->get('config.storage');
     $this->copyConfig($active, $sync);
 
-
     // Make changes to the configuration in "sync" so there actually is
     // something to import.
     $expected_stopwords = array('a', 'an', 'and', 'are', 'as');
@@ -112,4 +111,5 @@ class IndexImportTest extends KernelTestBase {
     $actual_stopwords = $processors_config['stopwords'];
     $this->assertEquals($expected_stopwords, $actual_stopwords, 'Processor config was correctly set during import');
   }
+
 }

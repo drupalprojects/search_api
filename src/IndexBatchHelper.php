@@ -111,7 +111,7 @@ class IndexBatchHelper {
    *   The maximum number of items to index per batch pass.
    * @param int $limit
    *   The maximum number of items to index in total, or -1 to index all items.
-   * @param array|\ArrayAccess $context.
+   * @param array|\ArrayAccess $context
    *   The current batch context, as defined in the
    *   @link batch Batch operations @endlink documentation.
    */

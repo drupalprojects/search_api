@@ -48,7 +48,6 @@ function hook_search_api_datasource_info_alter(array &$infos) {
   $infos['entity:node']['label'] = t('Node');
 }
 
-
 /**
  * Alter the available processors.
  *
