@@ -812,7 +812,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function loadItemsMultiple(array $item_ids, $group_by_datasource = FALSE) {
+  public function loadItemsMultiple(array $item_ids) {
     $items_by_datasource = array();
     foreach ($item_ids as $item_id) {
       list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
@@ -823,12 +823,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       try {
         foreach ($this->getDatasource($datasource_id)->loadMultiple($raw_ids) as $raw_id => $item) {
           $id = Utility::createCombinedId($datasource_id, $raw_id);
-          if ($group_by_datasource) {
-            $items[$datasource_id][$id] = $item;
-          }
-          else {
-            $items[$id] = $item;
-          }
+          $items[$id] = $item;
         }
       }
       catch (SearchApiException $e) {

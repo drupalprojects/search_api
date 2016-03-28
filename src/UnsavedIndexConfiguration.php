@@ -364,8 +364,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function loadItemsMultiple(array $item_ids, $group_by_datasource = FALSE) {
-    return $this->entity->loadItemsMultiple($item_ids, $group_by_datasource);
+  public function loadItemsMultiple(array $item_ids) {
+    return $this->entity->loadItemsMultiple($item_ids);
   }
 
   /**
