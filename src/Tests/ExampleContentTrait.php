@@ -62,6 +62,7 @@ trait ExampleContentTrait {
       'type' => 'article',
       'keywords' => array('apple', 'strawberry', 'grape'),
       'category' => 'article_category',
+      'width' => '1.0',
     ));
     $this->entities[4]->save();
     $this->entities[5] = $entity_test_storage->create(array(
@@ -70,6 +71,7 @@ trait ExampleContentTrait {
       'type' => 'article',
       'keywords' => array('orange', 'strawberry', 'grape', 'banana'),
       'category' => 'article_category',
+      'width' => '2.0',
     ));
     $this->entities[5]->save();
     $count = \Drupal::entityQuery('entity_test')->count()->execute() - $count;

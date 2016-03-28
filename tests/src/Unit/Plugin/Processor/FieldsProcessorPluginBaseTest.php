@@ -298,6 +298,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   public function testProcessConditions() {
     $query = Utility::createQuery($this->index);
     $query->addCondition('text_field', 'foo');
+    $query->addCondition('text_field', array('foo', 'bar'), 'IN');
     $query->addCondition('string_field', NULL, '<>');
     $query->addCondition('integer_field', 'bar');
 
@@ -305,6 +306,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $expected = array(
       new Condition('text_field', '*foo'),
+      new Condition('text_field', array('*foo', '*bar'), 'IN'),
       new Condition('string_field', 'undefined', '<>'),
       new Condition('integer_field', 'bar'),
     );
@@ -318,6 +320,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $query = Utility::createQuery($this->index);
     $conditions = $query->createConditionGroup();
     $conditions->addCondition('text_field', 'foo');
+    $conditions->addCondition('text_field', array('foo', 'bar'), 'IN');
     $conditions->addCondition('string_field', NULL, '<>');
     $conditions->addCondition('integer_field', 'bar');
     $query->addConditionGroup($conditions);
@@ -326,6 +329,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
 
     $expected = array(
       new Condition('text_field', '*foo'),
+      new Condition('text_field', array('*foo', '*bar'), 'IN'),
       new Condition('string_field', 'undefined', '<>'),
       new Condition('integer_field', 'bar'),
     );
@@ -353,6 +357,43 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $expected = array(
       new Condition('string_field', NULL, '<>'),
       new Condition('integer_field', 'bar'),
+    );
+    $this->assertEquals($expected, array_merge($query->getConditionGroup()->getConditions()), 'Conditions were preprocessed correctly.');
+  }
+
+  /**
+   * Tests whether overriding processConditionValue() works correctly.
+   */
+  public function testProcessConditionValueArrayHandling() {
+    $override = function (&$value) {
+      $length = strlen($value);
+      if ($length == 2) {
+        $value = '';
+      }
+      elseif ($length == 3) {
+        $value .= '*';
+      }
+    };
+    $this->processor->setMethodOverride('process', $override);
+
+    $query = Utility::createQuery($this->index);
+    $query->addCondition('text_field', array('a', 'b'), 'NOT IN');
+    $query->addCondition('text_field', array('a', 'bo'), 'IN');
+    $query->addCondition('text_field', array('ab', 'bo'), 'NOT IN');
+    $query->addCondition('text_field', array('a', 'bo'), 'BETWEEN');
+    $query->addCondition('text_field', array('ab', 'bo'), 'BETWEEN');
+    $query->addCondition('text_field', array('a', 'bar'), 'IN');
+    $query->addCondition('text_field', array('abo', 'baz'), 'BETWEEN');
+
+    $this->processor->preprocessSearchQuery($query);
+
+    $expected = array(
+      new Condition('text_field', array('a', 'b'), 'NOT IN'),
+      new Condition('text_field', array('a'), 'IN'),
+      new Condition('text_field', array('a', 'bo'), 'BETWEEN'),
+      new Condition('text_field', array('ab', 'bo'), 'BETWEEN'),
+      new Condition('text_field', array('a', 'bar*'), 'IN'),
+      new Condition('text_field', array('abo*', 'baz*'), 'BETWEEN'),
     );
     $this->assertEquals($expected, array_merge($query->getConditionGroup()->getConditions()), 'Conditions were preprocessed correctly.');
   }

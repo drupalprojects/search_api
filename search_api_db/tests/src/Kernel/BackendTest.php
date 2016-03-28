@@ -139,9 +139,11 @@ class BackendTest extends KernelTestBase {
       'name',
       'search_api_language',
       'type',
+      'width',
     );
     $actual_fields = array_keys($field_tables);
     sort($actual_fields);
+    sort($expected_fields);
     $this->assertEquals($expected_fields, $actual_fields, 'All expected field tables were created.');
 
     $this->assertTrue(\Drupal::database()->schema()->tableExists($normalized_storage_table), 'Normalized storage table exists');
@@ -275,7 +277,7 @@ class BackendTest extends KernelTestBase {
     $db_info = $this->getIndexDbInfo();
     $field_info = $db_info['field_tables'];
 
-    $fields = array('name', 'body', 'type', 'keywords', 'category');
+    $fields = array('name', 'body', 'type', 'keywords', 'category', 'width');
     $multi_valued = array('name', 'body', 'keywords');
     foreach ($fields as $field_id) {
       $this->assertArrayHasKey($field_id, $field_info, "Field info saved for field $field_id.");
@@ -345,6 +347,24 @@ class BackendTest extends KernelTestBase {
     $results = $query->execute();
     $this->assertEquals(4, $results->getResultCount(), 'Search with multi-field fulltext filter returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(1, 2, 3, 5)), array_keys($results->getResultItems()), 'Search with multi-field fulltext filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'IN')->execute();
+    $this->assertEquals(3, $results->getResultCount(), 'Query with IN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'NOT IN')->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Query with NOT IN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Query with NOT IN filter field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()->addCondition('width', array('0.9', '1.5'), 'BETWEEN')->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Query with BETWEEN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with BETWEEN filter field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
