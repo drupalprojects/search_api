@@ -386,7 +386,7 @@ function _search_api_views_data_special_fields(array &$table) {
   $table[$excerpt_field]['title'] = t('Excerpt');
   $table[$excerpt_field]['help'] = t('The search result excerpted to show found search terms');
   $table[$excerpt_field]['field']['id'] = 'search_api';
-  $table[$excerpt_field]['field']['html'] = TRUE;
+  $table[$excerpt_field]['field']['filter_type'] = 'xss';
   if ($excerpt_field != 'search_api_excerpt') {
     $table[$excerpt_field]['real field'] = 'search_api_excerpt';
   }
