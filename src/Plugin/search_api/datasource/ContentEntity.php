@@ -543,7 +543,6 @@ class ContentEntity extends DatasourcePluginBase {
   protected function getEntityBundleOptions() {
     $options = array();
     if (($bundles = $this->getEntityBundles())) {
-      unset($bundles[$this->getEntityTypeId()]);
       foreach ($bundles as $bundle => $bundle_info) {
         $options[$bundle] = Html::escape($bundle_info['label']);
       }
