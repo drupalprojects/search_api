@@ -10,6 +10,7 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "integer",
  *   label = @Translation("Integer"),
+ *   description = @Translation("Contains integer values."),
  *   default = "true"
  * )
  */

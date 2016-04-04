@@ -233,6 +233,7 @@ class IndexFieldsForm extends EntityForm {
     foreach($instances as $name => $type) {
       $data_types[$name] = [
         'label' => $type->label(),
+        'description' => $type->getDescription(),
         'fallback' => $type->getFallbackType(),
       ];
     }

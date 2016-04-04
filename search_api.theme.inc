@@ -80,7 +80,11 @@ function theme_search_api_admin_fields_table($variables) {
  *
  * @param array $variables
  *   An associative array containing:
- *   - data_types: An array of data types.
+ *   - data_types: An associative array of data types, keyed by data type ID and
+ *     containing associative arrays with information about the data type:
+ *     - label: The (translated) human-readable label for the data type.
+ *     - description: The (translated) description of the data type.
+ *     - fallback: The type ID of the fallback type.
  *   - fallback_mapping: array of fallback data types for unsupported data
  *     types.
  *
@@ -92,7 +96,11 @@ function theme_search_api_admin_fields_table($variables) {
 function theme_search_api_admin_data_type_table(array $variables) {
   $data_types = $variables['data_types'];
   $fallback_mapping = $variables['fallback_mapping'];
-  $header = array(t('Data Type'), t('Supported'));
+  $header = array(
+    t('Data Type'),
+    t('Description'),
+    t('Supported'),
+  );
   // Only show the column with fallback types if there is actually an
   // unsupported type listed.
   if ($fallback_mapping) {
@@ -118,6 +126,7 @@ function theme_search_api_admin_data_type_table(array $variables) {
 
     $row = array(
       $data_type['label'],
+      $data_type['description'],
       array('data' => $supported_icon),
     );
 

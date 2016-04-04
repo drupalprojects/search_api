@@ -10,6 +10,7 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * @SearchApiDataType(
  *   id = "date",
  *   label = @Translation("Date"),
+ *   description = @Translation("Represents points in time."),
  *   default = "true"
  * )
  */

@@ -670,8 +670,8 @@ class IntegrationTest extends WebTestBase {
     /** @var \SimpleXMLElement $row */
     foreach ($rows as $row) {
       $label = (string) $row->td[0];
-      $icon = basename($row->td[1]->img['src']);
-      $fallback = (string) $row->td[2];
+      $icon = basename($row->td[2]->img['src']);
+      $fallback = (string) $row->td[3];
 
       // Make sure we display the right icon and fallback column.
       if (strpos($label, 'Unsupported') === 0) {
