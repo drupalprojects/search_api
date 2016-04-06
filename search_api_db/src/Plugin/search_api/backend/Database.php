@@ -1997,14 +1997,13 @@ class Database extends BackendPluginBase {
    *   Thrown if an unknown field was used in the filter.
    */
   protected function createDbCondition(ConditionGroupInterface $conditions, array $fields, SelectInterface $db_query, IndexInterface $index) {
-    $db_condition = new Condition($conditions->getConjunction());
+    $conjunction = $conditions->getConjunction();
+    $db_condition = new Condition($conjunction);
     $db_info = $this->getIndexDbInfo($index);
 
-    // Store whether a JOIN already occurred for a field, so we don't JOIN
-    // repeatedly for OR filters.
-    $first_join = array();
     // Store the table aliases for the fields in this condition group.
     $tables = array();
+    $wildcard_count = 0;
     foreach ($conditions->getConditions() as $condition) {
       if ($condition instanceof ConditionGroupInterface) {
         $sub_condition = $this->createDbCondition($condition, $fields, $db_query, $index);
@@ -2016,7 +2015,7 @@ class Database extends BackendPluginBase {
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
-        $not_equals = $operator == '<>' || $operator == '!=';
+        $not_equals = in_array($operator, array('<>', '!=', 'NOT IN'));
 
         // We don't index the datasource explicitly, so this needs a bit of
         // magic.
@@ -2052,9 +2051,8 @@ class Database extends BackendPluginBase {
           else {
             $db_condition->condition($column, $value, $operator);
           }
-          continue;
         }
-        if (Utility::isTextType($field_info['type'])) {
+        elseif (Utility::isTextType($field_info['type'])) {
           $keys = $this->prepareKeys($value);
           if (!isset($keys)) {
             continue;
@@ -2066,25 +2064,28 @@ class Database extends BackendPluginBase {
             ->fields('t', array('item_id'));
           $db_condition->condition('t.item_id', $query, $not_equals ? 'NOT IN' : 'IN');
         }
+        elseif ($not_equals) {
+          // The situation is more complicated for negative conditions on
+          // multi-valued fields, since we must make sure that results are
+          // excluded if ANY of the field's values equals the one(s) given in
+          // this condition. Probably the most performant way to do this is to
+          // do a LEFT JOIN with a positive filter on the excluded values in the
+          // ON clause and then make sure we have no value for the field.
+          $wildcard = ':values_' . ++$wildcard_count . '[]';
+          $arguments = array($wildcard => (array) $value);
+          $additional_on = "%alias.value IN ($wildcard)";
+          $alias = $this->getTableAlias($field_info, $db_query, TRUE, 'leftJoin', $additional_on, $arguments);
+          $db_condition->isNull($alias . '.value');
+        }
         else {
-          $new_join = ($conditions->getConjunction() == 'AND' || empty($first_join[$field]));
-          if ($new_join || empty($tables[$field])) {
-            $tables[$field] = $this->getTableAlias($field_info, $db_query, $new_join);
-            $first_join[$field] = TRUE;
+          // We need to join the table if it hasn't been joined (for this
+          // condition group) before, or if we have "AND" as the active
+          // conjunction.
+          if ($conjunction == 'AND' || empty($tables[$field])) {
+            $tables[$field] = $this->getTableAlias($field_info, $db_query, TRUE);
           }
           $column = $tables[$field] . '.value';
-          if ($not_equals) {
-            // The situation is more complicated for multi-valued fields, since
-            // we must make sure that results are excluded if ANY of the field's
-            // values equals the one given in this condition.
-            $query = $this->database->select($field_info['table'], 't')
-              ->fields('t', array('item_id'))
-              ->condition('value', $value);
-            $db_condition->condition('t.item_id', $query, 'NOT IN');
-          }
-          else {
-            $db_condition->condition($column, $value, $operator);
-          }
+          $db_condition->condition($column, $value, $operator);
         }
       }
     }
@@ -2105,11 +2106,16 @@ class Database extends BackendPluginBase {
    * @param string $join
    *   (optional) The join method to use. Must be a method of the $db_query.
    *   Normally, "join", "innerJoin", "leftJoin" and "rightJoin" are supported.
+   * @param string|null $additional_on
+   *   (optional) If given, an SQL string with additional conditions for the ON
+   *   clause of the join.
+   * @param array $on_arguments
+   *   (optional) Additional arguments for the ON clause.
    *
    * @return string
    *   The alias for the field's table.
    */
-  protected function getTableAlias(array $field, SelectInterface $db_query, $new_join = FALSE, $join = 'leftJoin') {
+  protected function getTableAlias(array $field, SelectInterface $db_query, $new_join = FALSE, $join = 'leftJoin', $additional_on = NULL, array $on_arguments = array()) {
     if (!$new_join) {
       foreach ($db_query->getTables() as $alias => $info) {
         $table = $info['table'];
@@ -2118,7 +2124,11 @@ class Database extends BackendPluginBase {
         }
       }
     }
-    return $db_query->$join($field['table'], 't', 't.item_id = %alias.item_id');
+    $condition = 't.item_id = %alias.item_id';
+    if ($additional_on) {
+      $condition .= ' AND ' . $additional_on;
+    }
+    return $db_query->$join($field['table'], 't', $condition, $on_arguments);
   }
 
   /**

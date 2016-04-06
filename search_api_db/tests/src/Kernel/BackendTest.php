@@ -357,8 +357,8 @@ class BackendTest extends KernelTestBase {
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'NOT IN')->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Query with NOT IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Query with NOT IN filter field returned correct result.');
+    $this->assertEquals(2, $results->getResultCount(), 'Query with NOT IN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Query with NOT IN filter field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
