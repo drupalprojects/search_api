@@ -1544,7 +1544,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
               // system.
               /** @var \Drupal\search_api\Item\FieldInterface $field */
               foreach ($plugins as $field_id => $field) {
-                // In case the field is locked, enable it before removing.
+                // In case the field is locked, unlock it before removing.
                 if ($field->isIndexedLocked()) {
                   $field->setIndexedLocked(FALSE);
                 }
