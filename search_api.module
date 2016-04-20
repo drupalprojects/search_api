@@ -2104,7 +2104,7 @@ function _search_api_query_add_node_access($account, SearchApiQueryInterface $qu
   }
 
   // If the user cannot access content/comments at all, return no results.
-  if (!user_access('access content', $account) || ($is_comment && !user_access('access content', $account))) {
+  if (!user_access('access content', $account) || ($is_comment && !user_access('access comments', $account))) {
     // Simple hack for returning no results.
     $query->condition('status', 0);
     $query->condition('status', 1);
