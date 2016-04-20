@@ -924,6 +924,36 @@ function search_api_entity_delete($entity, $type) {
 }
 
 /**
+ * Implements hook_node_access_records_alter().
+ *
+ * Marks the node as "changed" in indexes that use the "Node access" data
+ * alteration. Also marks the node's comments as changed in indexes that use the
+ * "Comment access" data alteration.
+ */
+function search_api_node_access_records_alter(&$grants, $node) {
+  foreach (search_api_index_load_multiple(FALSE) as $index) {
+    $item_ids = array();
+    if (!empty($index->options['data_alter_callbacks']['search_api_alter_node_access']['status'])) {
+      $item_id = $index->datasource()->getItemId($node);
+      $item_ids = array($item_id);
+    }
+    elseif (!empty($index->options['data_alter_callbacks']['search_api_alter_comment_access']['status'])) {
+      if (!isset($comments)) {
+        $comments = comment_load_multiple(FALSE, array('nid' => $node->nid));
+      }
+      foreach ($comments as $comment) {
+        $item_ids[] = $index->datasource()->getItemId($comment);
+      }
+    }
+
+    if ($item_ids) {
+      $indexes = array($index->machine_name => $index);
+      search_api_track_item_change_for_indexes($index->item_type, $item_ids, $indexes);
+    }
+  }
+}
+
+/**
  * Implements hook_field_attach_rename_bundle().
  *
  * This is implemented on behalf of the SearchApiEntityDataSourceController
@@ -1189,6 +1219,20 @@ function search_api_track_item_change($type, array $item_ids) {
   if (!$indexes) {
     return;
   }
+  search_api_track_item_change_for_indexes($type, $item_ids, $indexes);
+}
+
+/**
+ * Marks the items with the specified IDs as "dirty" for the given indexes.
+ *
+ * @param string $type
+ *   The item type of the items.
+ * @param array $item_ids
+ *   The item IDs.
+ * @param SearchApiIndex[] $indexes
+ *   The indexes for which to mark the items as "dirty".
+ */
+function search_api_track_item_change_for_indexes($type, array $item_ids, $indexes) {
   try {
     $returned_indexes = search_api_get_datasource_controller($type)->trackItemChange($item_ids, $indexes);
     if (isset($returned_indexes)) {
@@ -1210,7 +1254,6 @@ function search_api_track_item_change($type, array $item_ids) {
   catch (SearchApiException $e) {
     $vars['%item_type'] = $type;
     watchdog_exception('search_api', $e, '%type while updating items of type %item_type: !message in %function (line %line of %file).', $vars);
-    return;
   }
 }
 
