@@ -586,7 +586,7 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function getItemId(ComplexDataInterface $item) {
     if ($item instanceof EntityAdapter) {
-      return $item->getValue()->id() . ':' . $item->getValue()->language();
+      return $item->getValue()->id() . ':' . $item->getValue()->language()->getId();
     }
     return NULL;
   }
