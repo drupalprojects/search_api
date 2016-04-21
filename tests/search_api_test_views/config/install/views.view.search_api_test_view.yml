@@ -180,7 +180,26 @@ display:
       footer: {  }
       empty: {  }
       relationships: {  }
-      arguments: {  }
+      arguments:
+        search_api_datasource:
+          plugin_id: search_api
+          id: search_api_datasource
+          table: search_api_index_database_search_index
+          field: search_api_datasource
+          break_phrase: true
+        type:
+          plugin_id: search_api
+          id: type
+          table: search_api_index_database_search_index
+          field: type
+          break_phrase: false
+          not: true
+        keywords:
+          plugin_id: search_api
+          id: keywords
+          table: search_api_index_database_search_index
+          field: keywords
+          break_phrase: true
   page_1:
     display_plugin: page
     id: page_1

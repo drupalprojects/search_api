@@ -2028,8 +2028,23 @@ class Database extends BackendPluginBase {
             $tables[NULL] = $this->getTableAlias($table, $db_query);
           }
           $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
-          $prefix = Utility::createCombinedId($value, '');
-          $db_condition->condition($tables[NULL] . '.item_id', $this->database->escapeLike($prefix) . '%', $operator);
+          if (is_array($value) && count($value) == 1) {
+            $value = reset($value);
+          }
+          $column = $tables[NULL] . '.item_id';
+          if (is_scalar($value)) {
+            $prefix = Utility::createCombinedId($value, '');
+            $db_condition->condition($column, $this->database->escapeLike($prefix) . '%', $operator);
+          }
+          elseif ($value) {
+            $nested_condition = new Condition($not_equals ? 'AND' : 'OR');
+            $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
+            foreach ($value as $datasource_id) {
+              $prefix = Utility::createCombinedId($datasource_id, '');
+              $nested_condition->condition($column, $this->database->escapeLike($prefix) . '%', $operator);
+            }
+            $db_condition->condition($nested_condition);
+          }
           continue;
         }
         if (!isset($fields[$field])) {

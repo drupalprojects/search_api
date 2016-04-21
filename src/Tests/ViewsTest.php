@@ -135,7 +135,8 @@ class ViewsTest extends WebTestBase {
     $query = array(
       'keywords_op' => 'empty',
     );
-    $this->checkResults($query, array(3), 'Search with Keywords "empty" filter');
+    $label = 'Search with Keywords "empty" filter';
+    $this->checkResults($query, array(3), $label, 'all/all/all');
     $query = array(
       'keywords_op' => 'not empty',
     );
@@ -148,6 +149,26 @@ class ViewsTest extends WebTestBase {
       'keywords_op' => 'not empty',
     );
     $this->checkResults($query, array(4), 'Search with multiple filters');
+
+    // Test contextual filters. Configured contextual filters are:
+    // 1: datasource
+    // 2: type (not = true)
+    // 3: keywords (break_phrase = true)
+    $this->checkResults(array(), array(4, 5), 'Search with arguments', 'entity:entity_test/item/grape');
+
+    // "Type" doesn't have "break_phrase" enabled, so the second argument won't
+    // have any effect.
+    $this->checkResults(array(), array(2, 4, 5), 'Search with arguments', 'all/item+article/strawberry+apple');
+
+    $this->checkResults(array(), array(), 'Search with unknown datasource argument', 'entity:foobar/all/all');
+
+    $query = array(
+      'id[value]' => 2,
+      'id_op' => '!=',
+      'keywords[value]' => 'radish',
+      'keywords_op' => '>=',
+    );
+    $this->checkResults($query, array(1, 5), 'Search with arguments and filters', 'entity:entity_test/all/orange');
   }
 
   /**
@@ -160,9 +181,11 @@ class ViewsTest extends WebTestBase {
    *   results.
    * @param string $label
    *   (optional) A label for this search, to include in assert messages.
+   * @param string $arguments
+   *   (optional) A string to append to the search path.
    */
-  protected function checkResults(array $query, array $expected_results = NULL, $label = 'Search') {
-    $this->drupalGet('search-api-test', array('query' => $query));
+  protected function checkResults(array $query, array $expected_results = NULL, $label = 'Search', $arguments = '') {
+    $this->drupalGet('search-api-test/' . $arguments, array('query' => $query));
 
     if (isset($expected_results)) {
       $count = count($expected_results);

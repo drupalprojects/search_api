@@ -219,6 +219,9 @@ function _search_api_views_handler_mapping() {
   if (!isset($mapping)) {
     $mapping = array(
       'boolean' => array(
+        'argument' => array(
+          'id' => 'search_api',
+        ),
         'filter' => array(
           'id' => 'search_api_boolean',
         ),
@@ -235,6 +238,10 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'decimal' => array(
+        'argument' => array(
+          'id' => 'search_api',
+          'filter' => 'floatval',
+        ),
         'filter' => array(
           'id' => 'search_api_numeric',
         ),
@@ -243,6 +250,10 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'integer' => array(
+        'argument' => array(
+          'id' => 'search_api',
+          'filter' => 'intval',
+        ),
         'filter' => array(
           'id' => 'search_api_numeric',
         ),
@@ -251,6 +262,9 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'string' => array(
+        'argument' => array(
+          'id' => 'search_api',
+        ),
         'filter' => array(
           'id' => 'search_api_string',
         ),
@@ -275,6 +289,10 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'entity:taxonomy_term' => array(
+        'argument' => array(
+          'id' => 'search_api_taxonomy_term',
+          'filter' => 'intval',
+        ),
         'filter' => array(
           'id' => 'search_api_term',
         ),
@@ -362,6 +380,8 @@ function _search_api_views_data_special_fields(array &$table) {
   $datasource_field = _search_api_views_find_field_alias('search_api_datasource', $table);
   $table[$datasource_field]['title'] = t('Datasource');
   $table[$datasource_field]['help'] = t("The data source ID");
+  $table[$datasource_field]['argument']['id'] = 'search_api';
+  $table[$datasource_field]['argument']['disable_break_phrase'] = TRUE;
   $table[$datasource_field]['field']['id'] = 'standard';
   $table[$datasource_field]['filter']['id'] = 'search_api_datasource';
   $table[$datasource_field]['sort']['id'] = 'search_api';
