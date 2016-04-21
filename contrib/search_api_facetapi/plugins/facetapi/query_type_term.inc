@@ -171,10 +171,11 @@ class SearchApiFacetapiTerm extends FacetapiQueryType implements FacetapiQueryTy
     // initActiveFilters) so that we can retrieve it here and get the correct
     // current search for this facet.
     $search_ids = drupal_static('search_api_facetapi_active_facets', array());
-    if (empty($search_ids[$facet['name']]) || !search_api_current_search($search_ids[$facet['name']])) {
+    $facet_key = $facet['name'] . '@' . $this->adapter->getSearcher();
+    if (empty($search_ids[$facet_key]) || !search_api_current_search($search_ids[$facet_key])) {
       return array();
     }
-    $search_id = $search_ids[$facet['name']];
+    $search_id = $search_ids[$facet_key];
     list(, $results) = search_api_current_search($search_id);
     $build = array();
 

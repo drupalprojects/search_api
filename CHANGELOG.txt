@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2700011 by drunken monkey: Fixed compatibility issues of facets from
+  different indexes.
 - #2665970 by andrei.colesnic, drunken monkey: Added "Limit list to selected
   items" exposed option support for Views taxonomy term filters.
 - #2703675 by drunken monkey, heykarthikwithu: Fixed accidental assumption that
