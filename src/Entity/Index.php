@@ -24,6 +24,12 @@ use Drupal\views\Views;
  * @ConfigEntityType(
  *   id = "search_api_index",
  *   label = @Translation("Search index"),
+ *   label_singular = @Translation("search index"),
+ *   label_plural = @Translation("search indexes"),
+ *   label_count = @PluralTranslation(
+ *     singular = "@count search index",
+ *     plural = "@count search indexes",
+ *   ),
  *   handlers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
  *     "list_builder" = "Drupal\search_api\IndexListBuilder",
@@ -37,7 +43,7 @@ use Drupal\views\Views;
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
  *       "disable" = "Drupal\search_api\Form\IndexDisableConfirmForm",
  *       "reindex" = "Drupal\search_api\Form\IndexReindexConfirmForm",
- *       "clear" = "Drupal\search_api\Form\IndexClearConfirmForm"
+ *       "clear" = "Drupal\search_api\Form\IndexClearConfirmForm",
  *     },
  *   },
  *   admin_permission = "administer search_api",
@@ -46,7 +52,7 @@ use Drupal\views\Views;
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
- *     "status" = "status"
+ *     "status" = "status",
  *   },
  *   config_export = {
  *     "id",

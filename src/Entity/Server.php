@@ -16,6 +16,12 @@ use Drupal\search_api\ServerInterface;
  * @ConfigEntityType(
  *   id = "search_api_server",
  *   label = @Translation("Search server"),
+ *   label_singular = @Translation("search server"),
+ *   label_plural = @Translation("search servers"),
+ *   label_count = @PluralTranslation(
+ *     singular = "@count search server",
+ *     plural = "@count search servers",
+ *   ),
  *   handlers = {
  *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
  *     "form" = {
@@ -23,7 +29,7 @@ use Drupal\search_api\ServerInterface;
  *       "edit" = "Drupal\search_api\Form\ServerForm",
  *       "delete" = "Drupal\search_api\Form\ServerDeleteConfirmForm",
  *       "disable" = "Drupal\search_api\Form\ServerDisableConfirmForm",
- *       "clear" = "Drupal\search_api\Form\ServerClearConfirmForm"
+ *       "clear" = "Drupal\search_api\Form\ServerClearConfirmForm",
  *     },
  *   },
  *   admin_permission = "administer search_api",
@@ -32,7 +38,7 @@ use Drupal\search_api\ServerInterface;
  *     "id" = "id",
  *     "label" = "name",
  *     "uuid" = "uuid",
- *     "status" = "status"
+ *     "status" = "status",
  *   },
  *   config_export = {
  *     "id",
