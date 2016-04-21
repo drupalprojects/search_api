@@ -1,5 +1,9 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+
+Search API 1.18 (2016-04-20):
+-----------------------------
+- Various security fixes – see https://www.drupal.org/node/2710063.
 - #2693425 by jojyja: Fixed a typo in search_api.info.
 
 Search API 1.17 (2016-03-14):
