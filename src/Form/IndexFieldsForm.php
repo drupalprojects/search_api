@@ -230,7 +230,7 @@ class IndexFieldsForm extends EntityForm {
     $fallback_mapping = Utility::getDataTypeFallbackMapping($index);
 
     $data_types = array();
-    foreach($instances as $name => $type) {
+    foreach ($instances as $name => $type) {
       $data_types[$name] = [
         'label' => $type->label(),
         'description' => $type->getDescription(),
