@@ -120,7 +120,7 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
         );
       }
       $text = substr($text, $pos + 1);
-      if (!preg_match('#^(/?)([-:_a-zA-Z]+)#', $text, $m)) {
+      if (!preg_match('#^(/?)([:_a-zA-Z][-:_a-zA-Z0-9.]*)#', $text, $m)) {
         continue;
       }
       $text = substr($text, strpos($text, '>') + 1);
