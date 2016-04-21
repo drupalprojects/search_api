@@ -101,7 +101,7 @@ class SearchApiHtmlFilter extends SearchApiAbstractProcessor {
       $value = $this->parseText($text);
     }
     else {
-      $value = strip_tags($text);
+      $value = html_entity_decode(strip_tags($text));
       // Remove any multiple or leading/trailing spaces we might have introduced.
       $value = preg_replace('/\s\s+/', ' ', trim($value));
     }
