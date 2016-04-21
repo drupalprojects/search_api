@@ -663,7 +663,9 @@ function _search_api_views_get_field_handler_mapping() {
     $plain_mapping['field_item:text_long'] = $text_mapping;
     $plain_mapping['field_item:text_with_summary'] = $text_mapping;
 
-    $numeric_mapping = array('id' => 'search_api_numeric');
+    $numeric_mapping = array(
+      'id' => 'search_api_numeric',
+    );
     $plain_mapping['field_item:integer'] = $numeric_mapping;
     $plain_mapping['field_item:list_integer'] = $numeric_mapping;
     $plain_mapping['integer'] = $numeric_mapping;
@@ -679,17 +681,23 @@ function _search_api_views_get_field_handler_mapping() {
     $plain_mapping['decimal'] = $float_mapping;
     $plain_mapping['float'] = $float_mapping;
 
-    $date_mapping = array('id' => 'search_api_date');
+    $date_mapping = array(
+      'id' => 'search_api_date',
+    );
     $plain_mapping['field_item:created'] = $date_mapping;
     $plain_mapping['field_item:changed'] = $date_mapping;
     $plain_mapping['datetime_iso8601'] = $date_mapping;
     $plain_mapping['timestamp'] = $date_mapping;
 
-    $bool_mapping = array('id' => 'search_api_boolean');
+    $bool_mapping = array(
+      'id' => 'search_api_boolean',
+    );
     $plain_mapping['boolean'] = $bool_mapping;
     $plain_mapping['field_item:boolean'] = $bool_mapping;
 
-    $ref_mapping = array('id' => 'search_api_entity');
+    $ref_mapping = array(
+      'id' => 'search_api_entity',
+    );
     $plain_mapping['field_item:entity_reference'] = $ref_mapping;
     $plain_mapping['field_item:comment'] = $ref_mapping;
 
