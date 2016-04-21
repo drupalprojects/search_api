@@ -27,6 +27,7 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
 
     $options['type'] = array('default' => !empty($this->definition['vocabulary']) ? 'textfield' : 'select');
     $options['hierarchy'] = array('default' => 0);
+    $options['expose']['contains']['reduce'] = array('default' => FALSE);
     $options['error_message'] = array('default' => TRUE, 'bool' => TRUE);
 
     return $options;
@@ -232,6 +233,14 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
   /**
    * {@inheritdoc}
    */
+  public function expose_options() {
+    parent::expose_options();
+    $this->options['expose']['reduce'] = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function validate_entity_strings(array &$form, array $values) {
     if (empty($values)) {
       return array();
@@ -282,15 +291,23 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
    */
   public function expose_form(&$form, &$form_state) {
     parent::expose_form($form, $form_state);
-    if ($this->options['type'] != 'select') {
-      unset($form['expose']['reduce']);
+
+    if ($this->options['type'] == 'select') {
+      $form['expose']['reduce'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Limit list to selected items'),
+        '#description' => t('If checked, the only items presented to the user will be the ones selected here.'),
+        '#default_value' => $this->options['expose']['reduce'],
+      );
     }
-    $form['error_message'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Display error message'),
-      '#description' => t('Display an error message if one of the entered terms could not be found.'),
-      '#default_value' => !empty($this->options['error_message']),
-    );
+    else {
+      $form['error_message'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Display error message'),
+        '#description' => t('Display an error message if one of the entered terms could not be found.'),
+        '#default_value' => $this->options['error_message'],
+      );
+    }
   }
 
   /**

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2665970 by andrei.colesnic, drunken monkey: Added "Limit list to selected
+  items" exposed option support for Views taxonomy term filters.
 - #2703675 by drunken monkey, heykarthikwithu: Fixed accidental assumption that
   all facets are taxonomy terms.
 - #2419853 by drunken monkey: Fixed HTML filter leaves escaped entities in
