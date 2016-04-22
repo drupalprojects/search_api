@@ -213,15 +213,30 @@ class ViewsTest extends WebTestBase {
    * Test Views admin UI and field handlers.
    */
   public function testViewsAdmin() {
-    $admin_user = $this->drupalCreateUser(array(
+    // For viewing the user name and roles of the user associated with test
+    // entities, the logged-in user needs to have the permission to administer
+    // both users and permissions.
+    $permissions = array(
       'administer search_api',
       'access administration pages',
       'administer views',
-    ));
-    $this->drupalLogin($admin_user);
+      'administer users',
+      'administer permissions',
+    );
+    $this->drupalLogin($this->drupalCreateUser($permissions));
 
     $this->drupalGet('admin/structure/views/view/search_api_test_view');
     $this->assertResponse(200);
+
+    // Set the user IDs associated with our test entities.
+    $users[$this->adminUser->id()] = $this->adminUser;
+    $users[$this->unauthorizedUser->id()] = $this->unauthorizedUser;
+    $users[$this->anonymousUser->id()] = $this->anonymousUser;
+    $this->entities[1]->setOwnerId($this->adminUser->id())->save();
+    $this->entities[2]->setOwnerId($this->adminUser->id())->save();
+    $this->entities[3]->setOwnerId($this->unauthorizedUser->id())->save();
+    $this->entities[4]->setOwnerId($this->unauthorizedUser->id())->save();
+    $this->entities[5]->setOwnerId($this->anonymousUser->id())->save();
 
     // Switch to "Fields" row style.
     $this->clickLink($this->t('Rendered entity'));
@@ -268,6 +283,8 @@ class ViewsTest extends WebTestBase {
       'search_api_index_database_search_index.category',
       'search_api_index_database_search_index.keywords',
       'search_api_datasource_database_search_index_entity_entity_test.user_id',
+      'search_api_entity_user.name',
+      'search_api_entity_user.roles',
     );
     $edit = array();
     foreach ($fields as $field) {
@@ -276,7 +293,24 @@ class ViewsTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Add and configure fields'));
     $this->assertResponse(200);
 
+    // @todo For some strange reason, the "roles" field form is not included
+    //   automatically in the series of field forms shown to us by Views. Deal
+    //   with this graciously (since it's not really our fault, I hope), but it
+    //   would be great to have this working normally.
+    $get_field_id = function ($key) {
+      return Utility::splitPropertyPath($key, TRUE, '.')[1];
+    };
+    $fields = array_map($get_field_id, $fields);
+    $fields = array_combine($fields, $fields);
     for ($i = 0; $i < count($fields); ++$i) {
+      $field = $this->submitFieldsForm();
+      if (!$field) {
+        break;
+      }
+      unset($fields[$field]);
+    }
+    foreach ($fields as $field) {
+      $this->drupalGet('admin/structure/views/nojs/handler/search_api_test_view/page_1/field/' . $field);
       $this->submitFieldsForm();
     }
 
@@ -302,12 +336,21 @@ class ViewsTest extends WebTestBase {
         'body',
         'category',
         'keywords',
-        // @todo This currently doesn't work correctly in the test environment.
-//        'user_id',
+        'user_id',
+        'user_id:name',
+        'user_id:roles',
       );
       foreach ($fields as $field) {
+        $field_entity = $entity;
+        while (strpos($field, ':')) {
+          list($direct_property, $field) = Utility::splitPropertyPath($field, FALSE);
+          if (empty($field_entity->{$direct_property}[0]->entity)) {
+            continue 2;
+          }
+          $field_entity = $field_entity->{$direct_property}[0]->entity;
+        }
         if ($field != 'search_api_datasource') {
-          $data = Utility::extractFieldValues($entity->get($field));
+          $data = Utility::extractFieldValues($field_entity->get($field));
           if (!$data) {
             $data = array('[EMPTY]');
           }
@@ -324,10 +367,17 @@ class ViewsTest extends WebTestBase {
 
   /**
    * Submits the field handler config form currently displayed.
+   *
+   * @return string|null
+   *   The field ID of the field whose form was submitted. Or NULL if the
+   *   current page is no field form.
    */
   protected function submitFieldsForm() {
     $url_parts = explode('/', $this->getUrl());
     $field = array_pop($url_parts);
+    if (array_pop($url_parts) != 'field') {
+      return NULL;
+    }
 
     $edit['options[fallback_options][multi_separator]'] = '|';
     $edit['options[alter][alter_text]'] = TRUE;
@@ -363,9 +413,19 @@ class ViewsTest extends WebTestBase {
         $edit['options[field_rendering]'] = FALSE;
         $edit['options[fallback_options][display_methods][user][display_method]'] = 'id';
         break;
+
+      case 'name':
+        break;
+
+      case 'roles':
+        $edit['options[field_rendering]'] = FALSE;
+        $edit['options[fallback_options][display_methods][user_role][display_method]'] = 'id';
+        break;
     }
 
     $this->submitPluginForm($edit);
+
+    return $field;
   }
 
   /**
