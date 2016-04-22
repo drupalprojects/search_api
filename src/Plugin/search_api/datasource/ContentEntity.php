@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -582,11 +581,26 @@ class ContentEntity extends DatasourcePluginBase {
   }
 
   /**
+   * Retrieves the entity from a search item.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this datasource's type.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The entity object represented by that item, or NULL if none could be
+   *   found.
+   */
+  protected function getEntity(ComplexDataInterface $item) {
+    $value = $item->getValue();
+    return $value instanceof EntityInterface ? $value : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
-    if ($item instanceof EntityAdapter) {
-      return $item->getValue()->id() . ':' . $item->getValue()->language()->getId();
+    if ($entity = $this->getEntity($item)) {
+      return $entity->id() . ':' . $entity->language()->getId();
     }
     return NULL;
   }
@@ -595,8 +609,8 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemLabel(ComplexDataInterface $item) {
-    if ($item instanceof EntityAdapter) {
-      return $item->getValue()->label();
+    if ($entity = $this->getEntity($item)) {
+      return $entity->label();
     }
     return NULL;
   }
@@ -605,8 +619,8 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemBundle(ComplexDataInterface $item) {
-    if ($item instanceof EntityAdapter) {
-      return $item->getValue()->bundle();
+    if ($entity = $this->getEntity($item)) {
+      return $entity->bundle();
     }
     return NULL;
   }
@@ -615,8 +629,7 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function getItemUrl(ComplexDataInterface $item) {
-    if ($item instanceof EntityAdapter) {
-      $entity = $item->getValue();
+    if ($entity = $this->getEntity($item)) {
       if ($entity->hasLinkTemplate('canonical')) {
         return $entity->toUrl('canonical');
       }
@@ -795,8 +808,7 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function viewItem(ComplexDataInterface $item, $view_mode, $langcode = NULL) {
     try {
-      if ($item instanceof EntityAdapter) {
-        $entity = $item->getValue();
+      if ($entity = $this->getEntity($item)) {
         $langcode = $langcode ?: $entity->language()->getId();
         return $this->getEntityTypeManager()->getViewBuilder($this->getEntityTypeId())->view($entity, $view_mode, $langcode);
       }
@@ -820,8 +832,8 @@ class ContentEntity extends DatasourcePluginBase {
       if (isset($langcode)) {
         $entities = array();
         foreach ($items as $i => $item) {
-          if ($item instanceof EntityAdapter) {
-            $entities[$i] = $item->getValue();
+          if ($entity = $this->getEntity($item)) {
+            $entities[$i] = $entity;
           }
         }
         if ($entities) {
