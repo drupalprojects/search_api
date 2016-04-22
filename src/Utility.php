@@ -174,11 +174,14 @@ class Utility {
   /**
    * Extracts specific field values from a complex data object.
    *
+   * The values will be set directly on the given field objects, nothing is
+   * returned.
+   *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item
    *   The item from which fields should be extracted.
-   * @param \Drupal\search_api\Item\FieldInterface[] $fields
-   *   The field objects into which data should be extracted, keyed by their
-   *   property paths on $item.
+   * @param \Drupal\search_api\Item\FieldInterface[][] $fields
+   *   An associative array, keyed by property paths, mapped to field objects
+   *   with that property path.
    */
   public static function extractFields(ComplexDataInterface $item, array $fields) {
     // Figure out which fields are directly on the item and which need to be
@@ -197,7 +200,10 @@ class Utility {
     // Extract the direct fields.
     foreach ($direct_fields as $key) {
       try {
-        self::extractField($item->get($key), $fields[$key]);
+        $data = $item->get($key);
+        foreach ($fields[$key] as $field) {
+          self::extractField($data, $field);
+        }
       }
       catch (\InvalidArgumentException $e) {
         // This can happen with properties added by processors.
@@ -219,7 +225,9 @@ class Utility {
         }
         elseif ($item_nested instanceof ListInterface && !$item_nested->isEmpty()) {
           foreach ($item_nested as $list_item) {
-            self::extractFields($list_item, $fields_nested);
+            if ($list_item instanceof ComplexDataInterface && !$list_item->isEmpty()) {
+              self::extractFields($list_item, $fields_nested);
+            }
           }
         }
       }

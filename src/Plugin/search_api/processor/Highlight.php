@@ -253,7 +253,7 @@ class Highlight extends ProcessorPluginBase {
           $items[$item_id][$field_id] = $result_item->getField($field_id, FALSE);
         }
         elseif ($load) {
-          $needs_extraction[$item_id][$field->getPropertyPath()] = clone $field;
+          $needs_extraction[$item_id][$field->getPropertyPath()][] = clone $field;
         }
       }
     }
@@ -278,10 +278,12 @@ class Highlight extends ProcessorPluginBase {
     foreach ($needs_extraction as $item_id => $fields) {
       try {
         Utility::extractFields($result_items[$item_id]->getOriginalObject(), $fields);
-        foreach ($fields as $field) {
-          $field_id = $field->getFieldIdentifier();
-          $result_items[$item_id]->setField($field_id, $field);
-          $items[$item_id][$field_id] = $field;
+        foreach ($fields as $property_fields) {
+          foreach ($property_fields as $field) {
+            $field_id = $field->getFieldIdentifier();
+            $result_items[$item_id]->setField($field_id, $field);
+            $items[$item_id][$field_id] = $field;
+          }
         }
       }
       catch (SearchApiException $e) {

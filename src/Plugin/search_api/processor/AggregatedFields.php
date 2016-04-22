@@ -383,7 +383,7 @@ class AggregatedFields extends ProcessorPluginBase {
     foreach ($items as $item) {
       // Extract the required properties.
       $property_values = array();
-      /** @var \Drupal\search_api\Item\FieldInterface[] $missing_fields */
+      /** @var \Drupal\search_api\Item\FieldInterface[][] $missing_fields */
       $missing_fields = array();
       foreach (array(NULL, $item->getDatasourceId()) as $datasource_id) {
         foreach ($required_properties_by_datasource[$datasource_id] as $property_path => $combined_id) {
@@ -406,7 +406,7 @@ class AggregatedFields extends ProcessorPluginBase {
           // to easily be able to add the field values to $property_values
           // afterwards.
           if ($datasource_id) {
-            $missing_fields[$property_path] = Utility::createField($this->index, $combined_id);
+            $missing_fields[$property_path][] = Utility::createField($this->index, $combined_id);
           }
           else {
             // Extracting properties without a datasource is pointless.
@@ -416,8 +416,10 @@ class AggregatedFields extends ProcessorPluginBase {
       }
       if ($missing_fields) {
         Utility::extractFields($item->getOriginalObject(), $missing_fields);
-        foreach ($missing_fields as $field) {
-          $property_values[$field->getFieldIdentifier()] = $field->getValues();
+        foreach ($missing_fields as $property_fields) {
+          foreach ($property_fields as $field) {
+            $property_values[$field->getFieldIdentifier()] = $field->getValues();
+          }
         }
       }
 

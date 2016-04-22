@@ -189,7 +189,7 @@ class Item implements \IteratorAggregate, ItemInterface {
               $this->fields[$field_id]->setType($data_type_fallback_mapping[$field_data_type]);
             }
 
-            $fields_by_property_path[$field->getPropertyPath()] = $this->fields[$field_id];
+            $fields_by_property_path[$field->getPropertyPath()][] = $this->fields[$field_id];
           }
         }
         if ($datasource_id && $fields_by_property_path) {
