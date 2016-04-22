@@ -166,6 +166,10 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
               $bundle_column = 'vid';
               $bundles = db_query('SELECT vid FROM {taxonomy_vocabulary} WHERE machine_name IN (:bundles)', array(':bundles' => $bundles))->fetchCol();
             }
+            elseif ($this->entityType == 'flagging') {
+              $bundle_column = 'fid';
+              $bundles = db_query('SELECT fid FROM {flag} WHERE name IN (:bundles)', array(':bundles' => $bundles))->fetchCol();
+            }
             elseif ($this->entityType == 'comment') {
               // Comments are significantly more complicated, since they don't
               // store their bundle explicitly in their database table. Instead,

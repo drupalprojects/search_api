@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2707039 by alan-ps: Fixed indexes of flag entities with "bundles" setting.
 - #2700879 by drunken monkey: Fixed breadcrumbs on index tabs.
 - #1889940 by cspurk, Yaron Tal: Fixed "HTML filter" processor to recognize all
   valid HTML tags.
