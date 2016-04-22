@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2700879 by drunken monkey: Fixed breadcrumbs on index tabs.
 - #1889940 by cspurk, Yaron Tal: Fixed "HTML filter" processor to recognize all
   valid HTML tags.
 - #2700011 by drunken monkey: Fixed compatibility issues of facets from

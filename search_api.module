@@ -2466,6 +2466,13 @@ function search_api_server_url(SearchApiServer $server) {
 }
 
 /**
+ * Title callback for viewing or editing a server or index.
+ */
+function search_api_admin_item_title($object) {
+  return $object->name;
+}
+
+/**
  * Title callback for determining which title should be displayed for the
  * "delete" local task.
  *
