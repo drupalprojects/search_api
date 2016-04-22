@@ -21,7 +21,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
    *
    * @var int
    */
-  protected $resultCount;
+  protected $resultCount = 0;
 
   /**
    * The result items.

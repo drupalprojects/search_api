@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Utility;
 
 /**
  * Provides a standard implementation for a Search API query.
@@ -82,6 +83,13 @@ class Query implements QueryInterface {
    * @var array
    */
   protected $sorts = array();
+
+  /**
+   * Information about whether the query has been aborted or not.
+   *
+   * @var \Drupal\Component\Render\MarkupInterface|string|true|null
+   */
+  protected $aborted;
 
   /**
    * Options configuring this query.
@@ -306,9 +314,41 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
+  public function abort($error_message = NULL) {
+    $this->aborted = isset($error_message) ? $error_message : TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function wasAborted() {
+    return $this->aborted !== NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAbortMessage() {
+    return is_bool($this->aborted) ? $this->aborted : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function execute() {
+    // Check for aborted status both before and after calling preExecute().
+    $response = $this->getAbortResults();
+    if ($response) {
+      return $response;
+    }
+
     // Prepare the query for execution by the server.
     $this->preExecute();
+
+    $response = $this->getAbortResults();
+    if ($response) {
+      return $response;
+    }
 
     // Execute query.
     $response = $this->index->getServerInstance()->search($this);
@@ -316,9 +356,21 @@ class Query implements QueryInterface {
     // Postprocess the search results.
     $this->postExecute($response);
 
-    // Store search for later retrieval for facets, etc.
-    // @todo Figure out how to store the executed searches for the request.
-    // search_api_current_search(NULL, $this, $response);
+    return $response;
+  }
+
+  /**
+   * Creates and returns an empty result set if the query was aborted.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface|null
+   *   An empty result set if the query was aborted, NULL otherwise.
+   */
+  protected function getAbortResults() {
+    if (!$this->wasAborted()) {
+      return NULL;
+    }
+    $response = Utility::createSearchResultSet($this);
+    $this->postExecute($response);
     return $response;
   }
 

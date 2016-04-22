@@ -146,6 +146,37 @@ interface QueryInterface extends ConditionSetInterface {
   public function range($offset = NULL, $limit = NULL);
 
   /**
+   * Aborts this query.
+   *
+   * This will mean that, while the query object otherwise acts normally, it
+   * won't be passed to the server and won't return any results.
+   *
+   * @param \Drupal\Component\Render\MarkupInterface|string|null $error_message
+   *   (optional) A translated error message explaining the reason why the
+   *   query was aborted.
+   *
+   * @return $this
+   */
+  public function abort($error_message = NULL);
+
+  /**
+   * Determines whether this query was aborted.
+   *
+   * @return bool
+   *   TRUE if the query was aborted, FALSE otherwise.
+   */
+  public function wasAborted();
+
+  /**
+   * Retrieves the error message explaining why this query was aborted, if any.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string|null
+   *   An error message, if set, or NULL if none was set. Please be aware that
+   *   a NULL message does not have to mean that the query was not aborted.
+   */
+  public function getAbortMessage();
+
+  /**
    * Executes this search query.
    *
    * @return \Drupal\search_api\Query\ResultSetInterface

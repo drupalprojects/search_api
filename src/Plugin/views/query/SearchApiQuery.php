@@ -491,7 +491,7 @@ class SearchApiQuery extends QueryPluginBase {
    * Used by handlers to flag a fatal error which shouldn't be displayed but
    * still lead to the view returning empty and the search not being executed.
    *
-   * @param string|null $msg
+   * @param \Drupal\Component\Render\MarkupInterface|string|null $msg
    *   Optionally, a translated, unescaped error message to display.
    */
   public function abort($msg = NULL) {
@@ -499,6 +499,9 @@ class SearchApiQuery extends QueryPluginBase {
       $this->errors[] = $msg;
     }
     $this->abort = TRUE;
+    if (isset($this->query)) {
+      $this->query->abort($msg);
+    }
   }
 
   /**

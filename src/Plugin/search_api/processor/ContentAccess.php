@@ -258,8 +258,7 @@ class ContentAccess extends ProcessorPluginBase {
     //     [grants view access to one of the user's gid/realm combinations]
     //   )
     // If there are no "other" datasources, we don't need the nested OR,
-    // however, and can add the "ADD".
-    // @todo Add a filter tag, once they are implemented.
+    // however, and can add the inner conditions directly to the query.
     if ($unaffected_datasources) {
       $outer_conditions = $query->createConditionGroup('OR', array('content_access'));
       $query->addConditionGroup($outer_conditions);
@@ -287,10 +286,7 @@ class ContentAccess extends ProcessorPluginBase {
       // remove all results of node or comment datasources. Otherwise, we should
       // not return any results at all.
       if (!$unaffected_datasources) {
-        // @todo More elegant way to return no results?
-        // @todo Now that field IDs can be picked freely, this can theoretically
-        //   even fail! Needs to be fixed!
-        $query->addCondition('search_api_language', '');
+        $query->abort($this->t('You have no access to any results in this search.'));
       }
       return;
     }
