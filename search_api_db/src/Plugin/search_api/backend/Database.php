@@ -1176,7 +1176,7 @@ class Database extends BackendPluginBase {
 
             // Store the first 30 characters of the string as the denormalized
             // value.
-            if (strlen($denormalized_value) < 30) {
+            if (Unicode::strlen($denormalized_value) < 30) {
               $denormalized_value .= $word . ' ';
             }
 
@@ -1208,7 +1208,7 @@ class Database extends BackendPluginBase {
               $unique_tokens[$word_base_form]['score'] += $score;
             }
           }
-          $denormalized_values[$column] = Unicode::truncateBytes(trim($denormalized_value), 30);
+          $denormalized_values[$column] = Unicode::substr(trim($denormalized_value), 0, 30);
           if ($unique_tokens) {
             $field_name = self::getTextFieldName($field_id);
             $boost = $field_info['boost'];
@@ -1324,9 +1324,9 @@ class Database extends BackendPluginBase {
         $ret = array();
         foreach (preg_split('/[^\p{L}\p{N}]+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
           if ($v) {
-            if (strlen($v) > 50) {
+            if (Unicode::strlen($v) > 50) {
               $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length. Ensure you are using a tokenizer preprocessor.', array('%word' => $v));
-              $v = Unicode::truncateBytes($v, 50);
+              $v = Unicode::substr($v, 0, 50);
             }
             $ret[] = array(
               'value' => $v,
@@ -1343,9 +1343,9 @@ class Database extends BackendPluginBase {
             // Check for over-long tokens.
             $score = $v['score'];
             $v = $v['value'];
-            if (strlen($v) > 50) {
+            if (Unicode::strlen($v) > 50) {
               $words = preg_split('/[^\p{L}\p{N}]+/u', $v, -1, PREG_SPLIT_NO_EMPTY);
-              if (count($words) > 1 && max(array_map('strlen', $words)) <= 50) {
+              if (count($words) > 1 && max(array_map('Drupal\Component\Utility\Unicode::strlen', $words)) <= 50) {
                 // Overlong token is due to bad tokenizing.
                 // Check for "Tokenizer" preprocessor on index.
                 if (empty($index->getProcessors()['tokenizer'])) {
@@ -1358,9 +1358,9 @@ class Database extends BackendPluginBase {
 
               $tokens = array();
               foreach ($words as $word) {
-                if (strlen($word) > 50) {
+                if (Unicode::strlen($word) > 50) {
                   $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.', array('%word' => $word));
-                  $word = Unicode::truncateBytes($word, 50);
+                  $word = Unicode::substr($word, 0, 50);
                 }
                 $tokens[] = array(
                   'value' => $word,
@@ -1382,8 +1382,8 @@ class Database extends BackendPluginBase {
         if ($original_type == 'date') {
           return date('c', $value);
         }
-        if (strlen($value) > 255) {
-          $value = Unicode::truncateBytes($value, 255);
+        if (Unicode::strlen($value) > 255) {
+          $value = Unicode::substr($value, 0, 255);
           $this->getLogger()->warning('An overlong value (more than 255 characters) was encountered while indexing: %value.<br />Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.', array('%value' => $value));
         }
         return $value;

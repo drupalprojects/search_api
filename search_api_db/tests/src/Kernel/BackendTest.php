@@ -1105,33 +1105,89 @@ class BackendTest extends KernelTestBase {
     $index->save();
     $this->indexItems($this->indexId);
 
+    $overlong_word = 'astringlongerthanfiftycharactersthatcantbeindexedasfulltext';
     \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->create(array(
         'id' => 8,
         'name' => 'Article with long body',
         'type' => 'article',
-        'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
+        'body' => $overlong_word,
       ))->save();
     $count = $this->indexItems($this->indexId);
     $this->assertEquals(1, $count, 'Indexing an item with a word longer than 50 characters worked.');
 
     // Regression test for #2616268.
     $index = $this->getIndex();
-    $field = $index->getField('body')->setType('string');
-    $index->addField($field)->save();
-    $count = $this->indexItems($this->indexId);
+    $index->getField('body')->setType('string');
+    $index->save();
+    $count = $index->indexItems();
     $this->assertEquals(8, $count, 'Switching type from text to string worked.');
 
     // For a string field, 50 characters shouldn't be a problem.
-    $query = $this->buildSearch(NULL, array('body,astringlongerthanfiftycharactersthatcantbestoredbythedbbackend'));
+    $query = $this->buildSearch(NULL, array("body,$overlong_word"));
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Filter on new string field returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(8)), array_keys($results->getResultItems()), 'Filter on new string field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
-    $index->removeField('body');
+    $index->getField('body')->setType('text');
+    $index->save();
+
+    // Regression test for #2616804.
+    // The word has 28 Unicode characters but 56 bytes. Verify that it is still
+    // indexed correctly.
+    $mb_word = 'äöüßáŧæøðđŋħĸµäöüßáŧæøðđŋħĸµ';
+    // We put the word 8 times into the body so we can also verify that the 255
+    // character limit for strings counts characters, not bytes.
+    $mb_body = implode(' ', array_fill(0, 8, $mb_word));
+    \Drupal::entityTypeManager()
+      ->getStorage('entity_test')
+      ->create(array(
+        'id' => 9,
+        'name' => 'Test item 9',
+        'type' => 'item',
+        'body' => $mb_body,
+      ))->save();
+    $count = $this->indexItems($this->indexId);
+    $this->assertEquals(9, $count, 'Indexing an item with a word with 28 multi-byte characters worked.');
+
+    $query = $this->buildSearch($mb_word);
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for word with 28 multi-byte characters returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(9)), array_keys($results->getResultItems()), 'Search for word with 28 multi-byte characters returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch($mb_word . 'ä');
+    $results = $query->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Search for unknown word with 29 multi-byte characters returned no results.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    // Test the same body when indexed as a string (255 characters limit should
+    // not be reached).
+    $index = $this->getIndex();
+    $index->getField('body')->setType('string');
+    $index->save();
+    $count = $index->indexItems();
+    $this->assertEquals(9, $count, 'Switching type from text to string worked.');
+
+    $query = $this->buildSearch(NULL, array("body,$mb_body"));
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Search for body with 231 multi-byte characters returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(9)), array_keys($results->getResultItems()), 'Search for body with 231 multi-byte characters returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch(NULL, array("body,{$mb_body}ä"));
+    $results = $query->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Search for unknown body with 232 multi-byte characters returned no results.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $index->getField('body')->setType('text');
     $index->save();
   }
 
