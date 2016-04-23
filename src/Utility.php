@@ -106,6 +106,7 @@ class Utility {
           'float',
         ),
         'date' => array(
+          'date',
           'datetime_iso8601',
           'timestamp',
         ),
