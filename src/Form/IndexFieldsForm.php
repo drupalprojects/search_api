@@ -308,6 +308,13 @@ class IndexFieldsForm extends EntityForm {
       '#open' => TRUE,
       '#theme' => 'search_api_admin_fields_table',
       '#parents' => array(),
+      '#header' => array(
+        t('Field'),
+        t('Machine name'),
+        t('Type'),
+        t('Boost'),
+        t('Remove'),
+      ),
     );
 
     foreach ($fields as $key => $field) {
