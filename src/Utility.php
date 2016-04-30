@@ -750,7 +750,10 @@ class Utility {
    *   element 0 will be NULL.
    */
   public static function splitCombinedId($combined_id) {
-    return static::splitPropertyPath($combined_id, TRUE, IndexInterface::DATASOURCE_ID_SEPARATOR);
+    if (strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
+      return explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $combined_id, 2);
+    }
+    return array(NULL, $combined_id);
   }
 
 }

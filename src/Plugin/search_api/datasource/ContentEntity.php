@@ -367,7 +367,14 @@ class ContentEntity extends DatasourcePluginBase {
 
     $entity_ids = array();
     foreach ($ids as $item_id) {
-      list($entity_id, $langcode) = explode(':', $item_id, 2);
+      $pos = strrpos($item_id, ':');
+      // This can only happen if someone passes an invalid ID, since we always
+      // include a language code. Still, no harm in guarding against bad input.
+      if ($pos === FALSE) {
+        continue;
+      }
+      $entity_id = substr($item_id, 0, $pos);
+      $langcode = substr($item_id, $pos + 1);
       if (isset($allowed_languages[$langcode])) {
         $entity_ids[$entity_id][$item_id] = $langcode;
       }
