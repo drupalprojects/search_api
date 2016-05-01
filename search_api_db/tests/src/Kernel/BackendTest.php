@@ -352,19 +352,19 @@ class BackendTest extends KernelTestBase {
 
     $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'IN')->execute();
     $this->assertEquals(3, $results->getResultCount(), 'Query with IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter field returned correct result.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'NOT IN')->execute();
     $this->assertEquals(2, $results->getResultCount(), 'Query with NOT IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Query with NOT IN filter field returned correct result.');
+    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Query with NOT IN filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()->addCondition('width', array('0.9', '1.5'), 'BETWEEN')->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Query with BETWEEN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with BETWEEN filter field returned correct result.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with BETWEEN filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
