@@ -29,34 +29,28 @@ trait ExampleContentTrait {
    * Creates several test entities.
    */
   protected function insertExampleContent() {
-    $count = \Drupal::entityQuery('entity_test')->count()->execute();
-
-    $entity_test_storage = \Drupal::entityTypeManager()->getStorage('entity_test');
     // To test Unicode compliance, include all kind of strange characters here.
     $smiley = json_decode('"\u1F601"');
-    $this->entities[1] = $entity_test_storage->create(array(
+    $this->addTestEntity(1, array(
       'name' => 'foo bar baz foobaz föö smile' . $smiley,
       'body' => 'test test case Case casE',
       'type' => 'item',
       'keywords' => array('Orange', 'orange', 'örange', 'Orange', $smiley),
       'category' => 'item_category',
     ));
-    $this->entities[1]->save();
-    $this->entities[2] = $entity_test_storage->create(array(
+    $this->addTestEntity(2, array(
       'name' => 'foo test foobuz',
       'body' => 'bar test casE',
       'type' => 'item',
       'keywords' => array('orange', 'apple', 'grape'),
       'category' => 'item_category',
     ));
-    $this->entities[2]->save();
-    $this->entities[3] = $entity_test_storage->create(array(
+    $this->addTestEntity(3, array(
       'name' => 'bar',
       'body' => 'test foobar Case',
       'type' => 'item',
     ));
-    $this->entities[3]->save();
-    $this->entities[4] = $entity_test_storage->create(array(
+    $this->addTestEntity(4, array(
       'name' => 'foo baz',
       'body' => 'test test test',
       'type' => 'article',
@@ -64,8 +58,7 @@ trait ExampleContentTrait {
       'category' => 'article_category',
       'width' => '1.0',
     ));
-    $this->entities[4]->save();
-    $this->entities[5] = $entity_test_storage->create(array(
+    $this->addTestEntity(5, array(
       'name' => 'bar baz',
       'body' => 'foo',
       'type' => 'article',
@@ -73,9 +66,27 @@ trait ExampleContentTrait {
       'category' => 'article_category',
       'width' => '2.0',
     ));
-    $this->entities[5]->save();
-    $count = \Drupal::entityQuery('entity_test')->count()->execute() - $count;
+    $count = \Drupal::entityQuery('entity_test')->count()->execute();
     $this->assertEqual($count, 5, "$count items inserted.");
+  }
+
+  /**
+   * Creates and saves a test entity with the given values.
+   *
+   * @param int $id
+   *   The entity's ID.
+   * @param array $values
+   *   The entity's property values.
+   *
+   * @return \Drupal\entity_test\Entity\EntityTest
+   *   The created entity.
+   */
+  protected function addTestEntity($id, array $values) {
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_test');
+    $values['id'] = $id;
+    $this->entities[$id] = $storage->create($values);
+    $this->entities[$id]->save();
+    return $this->entities[$id];
   }
 
   /**

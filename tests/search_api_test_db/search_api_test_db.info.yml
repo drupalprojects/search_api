@@ -4,6 +4,6 @@ description: 'Provides a setup for testing Database Search.'
 package: 'Search API'
 dependencies:
   - search_api:search_api_db
-  - drupal:entity_test
+  - search_api:search_api_test_example_content
 core: 8.x
 hidden: true
