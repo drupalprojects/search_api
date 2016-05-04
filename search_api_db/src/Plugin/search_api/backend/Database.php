@@ -1859,7 +1859,8 @@ class Database extends BackendPluginBase {
           // multiple keywords. We also remember the column name so we can
           // afterwards verify that each word matched at least once.
           $alias = 'w' . $i;
-          $alias = $db_query->addExpression("t.word LIKE '%" . $this->database->escapeLike($word) . "%'", $alias);
+          $like = '%' . $this->database->escapeLike($word) . '%';
+          $alias = $db_query->addExpression("CASE WHEN t.word LIKE :like_$alias THEN 1 ELSE 0 END", $alias, array(":like_$alias" => $like));
           $db_query->groupBy($alias);
           $keyword_hits[] = $alias;
         }

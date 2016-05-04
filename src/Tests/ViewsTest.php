@@ -122,11 +122,22 @@ class ViewsTest extends WebTestBase {
 //      'keywords_op' => 'between',
 //    );
 //    $this->checkResults($query, array(2, 4, 5), 'Search with Keywords "in between" filter');
+    // For the keywords filters with comparison operators, exclude entity 1
+    // since that contains all the uppercase and special characters weirdness.
     $query = array(
-      'keywords[value]' => 'radish',
+      'id[value]' => 1,
+      'id_op' => '!=',
+      'keywords[value]' => 'melon',
       'keywords_op' => '>=',
     );
-    $this->checkResults($query, array(1, 4, 5), 'Search with Keywords "greater than or equal" filter');
+    $this->checkResults($query, array(2, 4, 5), 'Search with Keywords "greater than or equal" filter');
+    $query = array(
+      'id[value]' => 1,
+      'id_op' => '!=',
+      'keywords[value]' => 'banana',
+      'keywords_op' => '<',
+    );
+    $this->checkResults($query, array(2, 4), 'Search with Keywords "less than" filter');
     $query = array(
       'keywords[value]' => 'orange',
       'keywords_op' => '!=',
@@ -163,12 +174,12 @@ class ViewsTest extends WebTestBase {
     $this->checkResults(array(), array(), 'Search with unknown datasource argument', 'entity:foobar/all/all');
 
     $query = array(
-      'id[value]' => 2,
+      'id[value]' => 1,
       'id_op' => '!=',
-      'keywords[value]' => 'radish',
+      'keywords[value]' => 'melon',
       'keywords_op' => '>=',
     );
-    $this->checkResults($query, array(1, 5), 'Search with arguments and filters', 'entity:entity_test/all/orange');
+    $this->checkResults($query, array(2, 5), 'Search with arguments and filters', 'entity:entity_test/all/orange');
   }
 
   /**
