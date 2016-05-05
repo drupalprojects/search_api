@@ -128,6 +128,31 @@ display:
               anonymous: '0'
               administrator: '0'
           is_grouped: false
+        created:
+          plugin_id: search_api_date
+          id: created
+          table: search_api_index_database_search_index
+          field: created
+          relationship: none
+          admin_label: ''
+          operator: '='
+          group: 1
+          exposed: true
+          expose:
+            operator_id: created_op
+            label: ''
+            description: ''
+            use_operator: true
+            operator: created_op
+            identifier: created
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+          is_grouped: false
         keywords:
           plugin_id: search_api_string
           id: keywords

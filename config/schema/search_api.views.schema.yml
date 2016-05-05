@@ -165,8 +165,8 @@ views.filter.search_api_datasource:
   type: views.filter.search_api_options
   label: 'Search API datasource'
 
-views.filter.search_api_date:
-  type: views.filter.date
+views.filter_value.search_api_date:
+  type: views.filter_value.date
   label: 'Search API date'
 
 views.filter.search_api_fulltext:

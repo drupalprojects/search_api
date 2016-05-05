@@ -74,6 +74,7 @@ class BackendTest extends BackendTestBase {
     $expected_fields = array(
       'body',
       'category',
+      'created',
       'id',
       'keywords',
       'name',

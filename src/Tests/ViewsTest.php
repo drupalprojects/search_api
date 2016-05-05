@@ -114,6 +114,26 @@ class ViewsTest extends WebTestBase {
     );
     $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with ID "not empty" filter');
 
+    $yesterday = strtotime('-1DAY');
+    $query = array(
+      'created[value]' => date('Y-m-d', $yesterday),
+      'created_op' => '>',
+    );
+    $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "Created after" filter');
+    $query = array(
+      'created[value]' => date('Y-m-d', $yesterday),
+      'created_op' => '<',
+    );
+    $this->checkResults($query, array(), 'Search with "Created before" filter');
+    $query = array(
+      'created_op' => 'empty',
+    );
+    $this->checkResults($query, array(), 'Search with "empty creation date" filter');
+    $query = array(
+      'created_op' => 'not empty',
+    );
+    $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "not empty creation date" filter');
+
     $this->checkResults(array('keywords[value]' => 'apple'), array(2, 4), 'Search with Keywords filter');
     // @todo Enable "between" again. See #2624870.
 //    $query = array(
