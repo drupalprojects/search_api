@@ -200,19 +200,6 @@ class IndexForm extends EntityForm {
       '#disabled' => !$index->isNew(),
     );
 
-    // If the user changed the datasources or the tracker, notify them that they
-    // need to be configured.
-    // @todo Only do that if the datasources/tracker have configuration forms.
-    //   (Same in \Drupal\search_api\Form\ServerForm.)
-    $values = $form_state->getValues();
-    if (!empty($values['datasources'])) {
-      drupal_set_message($this->t('Please configure the used datasources.'), 'warning');
-    }
-
-    if (!empty($values['tracker'])) {
-      drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
-    }
-
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
     $datasource_options = array();
@@ -385,6 +372,7 @@ class IndexForm extends EntityForm {
       $datasources = array_intersect_key($all_datasources, array_flip($selected_datasources));
     }
 
+    $show_message = FALSE;
     foreach ($datasources as $datasource_id => $datasource) {
       // Get the "sub-form state" and appropriate form part to send to
       // buildConfigurationForm().
@@ -396,7 +384,14 @@ class IndexForm extends EntityForm {
         $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew();
 
         $form['datasource_configs'][$datasource_id] += $config_form;
+        $show_message = TRUE;
       }
+    }
+
+    // If the user changed the datasources and there is at least one datasource
+    // config form, show a message telling the user to configure it.
+    if ($selected_datasources && $show_message) {
+      drupal_set_message($this->t('Please configure the used datasources.'), 'warning');
     }
   }
 
@@ -428,6 +423,7 @@ class IndexForm extends EntityForm {
     if (empty($tracker)) {
       return;
     }
+
     // Get the "sub-form state" and appropriate form part to send to
     // buildConfigurationForm().
     $tracker_form = !empty($form['tracker_config']) ? $form['tracker_config'] : array();
@@ -439,6 +435,12 @@ class IndexForm extends EntityForm {
       $form['tracker_config']['#open'] = $index->isNew();
 
       $form['tracker_config'] += $config_form;
+
+      // If the user changed the tracker and the new one has a config form, show
+      // a message telling the user to configure it.
+      if ($selected_tracker) {
+        drupal_set_message($this->t('Please configure the used tracker.'), 'warning');
+      }
     }
   }
 
