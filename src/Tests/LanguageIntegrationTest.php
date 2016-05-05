@@ -81,7 +81,10 @@ class LanguageIntegrationTest extends WebTestBase {
     $this->assertText($this->t('Successfully indexed 5 items'));
 
     // Change the datasource to disallow indexing of dutch.
-    $form_values = array('datasource_configs[entity:node][languages][nl]' => 1);
+    $form_values = array(
+      'datasource_configs[entity:node][languages][default]' => 1,
+      'datasource_configs[entity:node][languages][selected][nl]' => 1
+    );
     $this->drupalGet($this->getIndexPath('edit'));
     $this->drupalPostForm(NULL, $form_values, $this->t('Save'));
     $this->assertResponse(200);
@@ -95,9 +98,10 @@ class LanguageIntegrationTest extends WebTestBase {
 
     // Change the datasource to only allow indexing of dutch.
     $form_values = array(
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => 1,
-      'datasource_configs[entity:node][languages][nl]' => 1,
+      'datasource_configs[entity:node][languages][default]' => 0,
+      'datasource_configs[entity:node][languages][selected][nl]' => 1,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => 1
     );
     $this->drupalGet($this->getIndexPath('edit'));
     $this->drupalPostForm(NULL, $form_values, $this->t('Save'));

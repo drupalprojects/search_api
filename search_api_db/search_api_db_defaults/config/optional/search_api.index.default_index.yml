@@ -199,11 +199,7 @@ options:
 datasource_settings:
   'entity:node':
     plugin_id: 'entity:node'
-    settings:
-      default: '1'
-      bundles:
-        article: '0'
-        page: '0'
+    settings: {  }
 tracker_settings:
   'default':
     plugin_id: default

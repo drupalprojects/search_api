@@ -306,7 +306,7 @@ class SubFormState implements FormStateInterface {
    * {@inheritdoc}
    */
   public function setValue($key, $value) {
-    $this->values[$key] = $value;
+    NestedArray::setValue($this->getValues(), (array) $key, $value, TRUE);
     return $this;
   }
 

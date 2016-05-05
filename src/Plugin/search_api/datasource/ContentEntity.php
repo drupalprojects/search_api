@@ -353,8 +353,8 @@ class ContentEntity extends DatasourcePluginBase {
     $allowed_languages = $all_languages = $this->getLanguageManager()->getLanguages();
 
     if ($this->isTranslatable()) {
-      $selected_languages = array_flip($this->configuration['languages']);
-      if ($this->configuration['default']) {
+      $selected_languages = array_flip($this->configuration['languages']['selected']);
+      if ($this->configuration['languages']['default']) {
         $allowed_languages = array_diff_key($all_languages, $selected_languages);
       }
       else {
@@ -421,64 +421,33 @@ class ContentEntity extends DatasourcePluginBase {
       return;
     }
 
-    // Including "$old_config != $new_config" for this "if" would make sense –
-    // however, since 0 == 'article', that leads to wrong results. "!==", on the
-    // other hand, is too restrictive, since it also checks order. Therefore,
-    // this can only be added once we prepare the "bundles" setting to be just a
-    // list of the checked ones.
-    if ($this->hasBundles()) {
+    if ($this->hasBundles() && $old_config != $new_config) {
+      $old_bundles = array_flip($old_config['bundles']['selected']);
+      $new_bundles = array_flip($new_config['bundles']['selected']);
+
       // First, check if the "default" setting changed and invert the set
       // bundles for the old config, so the following comparison makes sense.
-      // @todo If the available bundles changed in between, this will still
-      //   produce wrong results. Also, we should definitely only store a
-      //   numerically-indexed array of the selected bundles, not the
-      //   "checkboxes" raw format. This will, very likely, also resolve that
-      //   issue. See #2471535.
-      if ($old_config['default'] != $new_config['default']) {
-        foreach ($old_config['bundles'] as $bundle_key => $bundle) {
-          if ($bundle_key == $bundle) {
-            $old_config['bundles'][$bundle_key] = 0;
-          }
-          else {
-            $old_config['bundles'][$bundle_key] = $bundle_key;
-          }
-        }
+      if ($old_config['bundles']['default'] != $new_config['bundles']['default']) {
+        $old_bundles = array_diff_key($this->getBundles(), $old_bundles);
       }
 
       // Now, go through all the bundles and start/stop tracking for them
       // accordingly.
-      $bundles_start = array();
-      $bundles_stop = array();
-      if ($diff = array_diff_assoc($new_config['bundles'], $old_config['bundles'])) {
-        foreach ($diff as $bundle_key => $bundle) {
-          if ($new_config['default'] == 0) {
-            if ($bundle_key === $bundle) {
-              $bundles_start[$bundle_key] = $bundle;
-            }
-            else {
-              $bundles_stop[$bundle_key] = $bundle;
-            }
-          }
-          else {
-            if ($bundle_key === $bundle) {
-              $bundles_stop[$bundle_key] = $bundle;
-            }
-            else {
-              $bundles_start[$bundle_key] = $bundle;
-            }
-          }
-        }
-        // @todo Make this use a batch instead, like when enabling a datasource.
-        //   See #2574611.
-        if (!empty($bundles_start)) {
-          if ($entity_ids = $this->getBundleItemIds(array_keys($bundles_start))) {
-            $this->getIndex()->trackItemsInserted($this->getPluginId(), $entity_ids);
-          }
-        }
-        if (!empty($bundles_stop)) {
-          if ($entity_ids = $this->getBundleItemIds(array_keys($bundles_stop))) {
-            $this->getIndex()->trackItemsDeleted($this->getPluginId(), $entity_ids);
-          }
+      $newly_selected = array_diff_key($new_bundles, $old_bundles);
+      $newly_unselected = array_diff_key($old_bundles, $new_bundles);
+      if ($new_config['bundles']['default']) {
+        $actions['trackItemsDeleted'] = $newly_selected;
+        $actions['trackItemsInserted'] = $newly_unselected;
+      }
+      else {
+        $actions['trackItemsDeleted'] = $newly_unselected;
+        $actions['trackItemsInserted'] = $newly_selected;
+      }
+
+      $actions = array_filter($actions);
+      foreach ($actions as $action => $bundles) {
+        if ($entity_ids = $this->getBundleItemIds(array_keys($bundles))) {
+          $this->getIndex()->$action($this->getPluginId(), $entity_ids);
         }
       }
     }
@@ -489,16 +458,19 @@ class ContentEntity extends DatasourcePluginBase {
    */
   public function defaultConfiguration() {
     $default_configuration = array();
-    if ($this->hasBundles() || $this->isTranslatable()) {
-      $default_configuration['default'] = '1';
-    }
 
     if ($this->hasBundles()) {
-      $default_configuration['bundles'] = array();
+      $default_configuration['bundles'] = array(
+        'default' => TRUE,
+        'selected' => array(),
+      );
     }
 
     if ($this->isTranslatable()) {
-      $default_configuration['languages'] = array();
+      $default_configuration['languages'] = array(
+        'default' => TRUE,
+        'selected' => array(),
+      );
     }
 
     return $default_configuration;
@@ -508,25 +480,27 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    if ($this->hasBundles() || $this->isTranslatable()) {
-      $form['default'] = array(
+    if ($this->hasBundles()) {
+      $bundles = $this->getEntityBundleOptions();
+      $form['bundles'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Bundles'),
+        '#open' => TRUE
+      );
+      $form['bundles']['default'] = array(
         '#type' => 'radios',
-        '#title' => $this->t('What should be indexed?'),
+        '#title' => $this->t('Which bundles should be indexed?'),
         '#options' => array(
           1 => $this->t('All except those selected'),
           0 => $this->t('None except those selected'),
         ),
-        '#default_value' => $this->configuration['default'],
+        '#default_value' => (int) $this->configuration['bundles']['default'],
       );
-    }
-
-    if ($this->hasBundles()) {
-      $bundles = $this->getEntityBundleOptions();
-      $form['bundles'] = array(
+      $form['bundles']['selected'] = array(
         '#type' => 'checkboxes',
         '#title' => $this->t('Bundles'),
         '#options' => $bundles,
-        '#default_value' => $this->configuration['bundles'],
+        '#default_value' => $this->configuration['bundles']['selected'],
         '#size' => min(4, count($bundles)),
         '#multiple' => TRUE,
       );
@@ -534,10 +508,24 @@ class ContentEntity extends DatasourcePluginBase {
 
     if ($this->isTranslatable()) {
       $form['languages'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Languages'),
+        '#open' => TRUE
+      );
+      $form['languages']['default'] = array(
+        '#type' => 'radios',
+        '#title' => $this->t('Which languages should be indexed?'),
+        '#options' => array(
+          1 => $this->t('All except those selected'),
+          0 => $this->t('None except those selected'),
+        ),
+        '#default_value' => (int) $this->configuration['languages']['default'],
+      );
+      $form['languages']['selected'] = array(
         '#type' => 'checkboxes',
         '#title' => $this->t('Languages'),
         '#options' => $this->getTranslationOptions(),
-        '#default_value' => array_combine($this->configuration['languages'], $this->configuration['languages']),
+        '#default_value' => $this->configuration['languages']['selected'],
         '#multiple' => TRUE,
       );
     }
@@ -580,9 +568,15 @@ class ContentEntity extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $languages = $form_state->getValue('languages', array());
-    $languages = array_keys(array_filter($languages));
-    $form_state->setValue('languages', $languages);
+    // Filter out empty checkboxes.
+    foreach (array('bundles', 'languages') as $key) {
+      if ($form_state->hasValue($key)) {
+        $parents = array($key, 'selected');
+        $value = $form_state->getValue($parents, array());
+        $value = array_keys(array_filter($value));
+        $form_state->setValue($parents, $value);
+      }
+    }
 
     parent::submitConfigurationForm($form, $form_state);
   }
@@ -659,8 +653,8 @@ class ContentEntity extends DatasourcePluginBase {
 
     // Add bundle information in the description.
     if ($this->hasBundles()) {
-      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_filter($this->configuration['bundles'])));
-      if ($this->configuration['default']) {
+      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_flip($this->configuration['bundles']['selected'])));
+      if ($this->configuration['bundles']['default']) {
         $summary .= $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
       }
       else {
@@ -673,8 +667,8 @@ class ContentEntity extends DatasourcePluginBase {
       if ($summary) {
         $summary .= '; ';
       }
-      $languages = array_intersect_key($this->getTranslationOptions(), array_flip($this->configuration['languages']));
-      if ($this->configuration['default']) {
+      $languages = array_intersect_key($this->getTranslationOptions(), array_flip($this->configuration['languages']['selected']));
+      if ($this->configuration['languages']['default']) {
         $summary .= $this->t('Excluded languages: @languages', array('@languages' => implode(', ', $languages)));
       }
       else {
@@ -789,8 +783,8 @@ class ContentEntity extends DatasourcePluginBase {
     // Otherwise, return all the selected bundles.
     $bundles = array();
     $entity_bundles = $this->getEntityBundles();
-    $selected_bundles = array_filter($configuration['bundles']);
-    $function = $configuration['default'] ? 'array_diff_key' : 'array_intersect_key';
+    $selected_bundles = array_flip($configuration['bundles']['selected']);
+    $function = $configuration['bundles']['default'] ? 'array_diff_key' : 'array_intersect_key';
     $entity_bundles = $function($entity_bundles, $selected_bundles);
     foreach ($entity_bundles as $bundle_id => $bundle_info) {
       $bundles[$bundle_id] = isset($bundle_info['label']) ? $bundle_info['label'] : $bundle_id;
@@ -1049,8 +1043,8 @@ class ContentEntity extends DatasourcePluginBase {
       foreach ($indexes as $index_id => $index) {
         try {
           $config = $index->getDatasource($datasource_id)->getConfiguration();
-          $default = !empty($config['default']);
-          $bundle_set = !empty($config['bundles'][$entity_bundle]);
+          $default = !empty($config['bundles']['default']);
+          $bundle_set = in_array($entity_bundle, $config['bundles']['selected']);
           if ($default == $bundle_set) {
             unset($indexes[$index_id]);
           }

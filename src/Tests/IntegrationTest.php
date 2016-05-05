@@ -347,6 +347,7 @@ class IntegrationTest extends WebTestBase {
     $edit['tracker_config[foo]'] = 'foobar';
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertResponse(200);
+    $this->assertText($this->t('The index was successfully saved.'));
 
     // Verify that everything was changed correctly.
     $index = $this->getIndex(TRUE);
@@ -359,6 +360,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array('tracker' => 'default');
     $this->drupalPostForm($edit_path, $edit, $this->t('Save'));
     $this->assertResponse(200);
+    $this->assertText($this->t('The index was successfully saved.'));
   }
 
   /**
@@ -419,11 +421,12 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet($settings_path);
     $edit = array(
       'status' => FALSE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => FALSE,
-      'datasource_configs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][selected][page]' => FALSE,
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, 'No items are tracked.');
@@ -433,11 +436,12 @@ class IntegrationTest extends WebTestBase {
 
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => TRUE,
-      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][selected][page]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, 'Three items are tracked.');
@@ -446,11 +450,12 @@ class IntegrationTest extends WebTestBase {
     // items from the tracking table.
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => FALSE,
-      'datasource_configs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][selected][page]' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, 'No items are tracked.');
@@ -459,11 +464,12 @@ class IntegrationTest extends WebTestBase {
     // re-add the two articles to the tracking table.
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => TRUE,
-      'datasource_configs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][selected][page]' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, 'Two items are tracked.');
@@ -472,11 +478,12 @@ class IntegrationTest extends WebTestBase {
     // result in only the page being present in the tracking table.
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => FALSE,
-      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][selected][page]' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 1, 'One item is tracked.');
@@ -485,11 +492,12 @@ class IntegrationTest extends WebTestBase {
     // change the tracking table, which should still only contain the page.
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 1,
-      'datasource_configs[entity:node][bundles][article]' => TRUE,
-      'datasource_configs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][bundles][default]' => 1,
+      'datasource_configs[entity:node][bundles][selected][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][selected][page]' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 1, 'One item is tracked.');
@@ -498,11 +506,12 @@ class IntegrationTest extends WebTestBase {
     // should result in only the articles being tracked.
     $edit = array(
       'status' => TRUE,
-      'datasource_configs[entity:node][default]' => 1,
-      'datasource_configs[entity:node][bundles][article]' => FALSE,
-      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][bundles][default]' => 1,
+      'datasource_configs[entity:node][bundles][selected][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][selected][page]' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, 'Two items are tracked.');
@@ -595,11 +604,12 @@ class IntegrationTest extends WebTestBase {
     $this->assertHtmlEscaped($field_name);
 
     $edit = array(
-      'datasource_configs[entity:node][default]' => 1,
+      'datasource_configs[entity:node][bundles][default]' => 1,
     );
     $this->drupalGet($this->getIndexPath('edit'));
     $this->assertHtmlEscaped($content_type_name);
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $this->drupalGet($this->getIndexPath('processors'));
     $this->assertHtmlEscaped($content_type_name);
@@ -944,11 +954,12 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'status' => TRUE,
       'read_only' => TRUE,
-      'datasource_configs[entity:node][default]' => 0,
-      'datasource_configs[entity:node][bundles][article]' => TRUE,
-      'datasource_configs[entity:node][bundles][page]' => TRUE,
+      'datasource_configs[entity:node][bundles][default]' => 0,
+      'datasource_configs[entity:node][bundles][selected][article]' => TRUE,
+      'datasource_configs[entity:node][bundles][selected][page]' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $index = $this->getIndex(TRUE);
     $remaining_before = $this->countRemainingItems();
@@ -966,11 +977,12 @@ class IntegrationTest extends WebTestBase {
     // Disable "read only" and verify indexing now works again.
     $edit = array(
       'read_only' => FALSE,
-      'datasource_configs[entity:node][default]' => TRUE,
-      'datasource_configs[entity:node][bundles][article]' => FALSE,
-      'datasource_configs[entity:node][bundles][page]' => FALSE,
+      'datasource_configs[entity:node][bundles][default]' => 1,
+      'datasource_configs[entity:node][bundles][selected][article]' => FALSE,
+      'datasource_configs[entity:node][bundles][selected][page]' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $this->drupalPostForm($index_path, array(), $this->t('Index now'));
 
@@ -993,6 +1005,7 @@ class IntegrationTest extends WebTestBase {
       'status' => FALSE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual(0, $tracked_items, 'No items are tracked after disabling the index.');
@@ -1006,6 +1019,7 @@ class IntegrationTest extends WebTestBase {
       'status' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual(2, $tracked_items, 'After enabling the index, 2 items are tracked.');
@@ -1031,6 +1045,7 @@ class IntegrationTest extends WebTestBase {
       'datasources[]' => array('entity:user', 'entity:node'),
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, $user_count + $node_count, 'Correct number of items tracked after enabling the "User" datasource.');
@@ -1040,6 +1055,7 @@ class IntegrationTest extends WebTestBase {
       'datasources[]' => array('entity:node'),
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, $node_count, 'Correct number of items tracked after disabling the "User" datasource.');
@@ -1073,6 +1089,7 @@ class IntegrationTest extends WebTestBase {
       'server' => $this->serverId,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('The index was successfully saved.'));
 
     // After saving the new index, we should have called reindex.
     $remaining_items = $this->countRemainingItems();
