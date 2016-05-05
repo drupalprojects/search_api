@@ -938,7 +938,7 @@ class ContentEntity extends DatasourcePluginBase {
     }
 
     if (isset($nested_path) && $property instanceof ComplexDataDefinitionInterface) {
-      $nested_dependencies = $this->getPropertyPathDependencies($nested_path, $property->getPropertyDefinitions());
+      $nested_dependencies = $this->getPropertyPathDependencies($nested_path, Utility::getNestedProperties($property));
       foreach ($nested_dependencies as $type => $names) {
         $dependencies += array($type => array());
         $dependencies[$type] += $names;

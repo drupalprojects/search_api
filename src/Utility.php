@@ -5,6 +5,7 @@ namespace Drupal\search_api;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
@@ -301,6 +302,33 @@ class Utility {
   }
 
   /**
+   * Retrieves a list of nested properties from a complex property.
+   *
+   * Takes care of including bundle-specific properties for entity reference
+   * properties.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataDefinitionInterface $property
+   *   The base definition.
+   *
+   * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
+   *   The nested properties, keyed by property name.
+   */
+  public static function getNestedProperties(ComplexDataDefinitionInterface $property) {
+    $nested_properties = $property->getPropertyDefinitions();
+    if ($property instanceof EntityDataDefinitionInterface) {
+      $container = \Drupal::getContainer();
+      $bundles = $container->get('entity_type.bundle.info')
+        ->getBundleInfo($property->getEntityTypeId());
+      $field_manager = $container->get('entity_field.manager');
+      foreach ($bundles as $bundle => $bundle_label) {
+        $bundle_properties = $field_manager->getFieldDefinitions($property->getEntityTypeId(), $bundle);
+        $nested_properties += $bundle_properties;
+      }
+    }
+    return $nested_properties;
+  }
+
+  /**
    * Retrieves a nested property from a list of properties.
    *
    * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
@@ -317,16 +345,16 @@ class Utility {
       return NULL;
     }
 
+    $property = static::getInnerProperty($properties[$key]);
     if (!isset($nested_path)) {
-      return $properties[$key];
+      return $property;
     }
 
-    $property = static::getInnerProperty($properties[$key]);
     if (!$property instanceof ComplexDataDefinitionInterface) {
       return NULL;
     }
 
-    return static::retrieveNestedProperty($property->getPropertyDefinitions(), $nested_path);
+    return static::retrieveNestedProperty(static::getNestedProperties($property), $nested_path);
   }
 
   /**

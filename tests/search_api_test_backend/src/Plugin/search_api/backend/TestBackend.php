@@ -90,6 +90,18 @@ class TestBackend extends BackendPluginBase {
    */
   public function indexItems(IndexInterface $index, array $items) {
     $this->checkError(__FUNCTION__);
+
+    $state = \Drupal::state();
+    $key = 'search_api_test_backend.indexed.' . $index->id();
+    $indexed_values = $state->get($key, array());
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $id => $item) {
+      foreach ($item->getFields() as $field_id => $field) {
+        $indexed_values[$id][$field_id] = $field->getValues();
+      }
+    }
+    $state->set($key, $indexed_values);
+
     return array_keys($items);
   }
 

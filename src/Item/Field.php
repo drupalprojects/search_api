@@ -3,7 +3,6 @@
 namespace Drupal\search_api\Item;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -347,7 +346,7 @@ class Field implements \IteratorAggregate, FieldInterface {
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {
       $definitions = $this->index->getPropertyDefinitions($this->getDatasourceId());
-      $definition = $this->getNestedDefinition($definitions, explode(':', $this->getPropertyPath()));
+      $definition = Utility::retrieveNestedProperty($definitions, $this->getPropertyPath());
       if (!$definition) {
         $args['%field'] = $this->getLabel();
         $args['%index'] = $this->getIndex()->label();
@@ -356,33 +355,6 @@ class Field implements \IteratorAggregate, FieldInterface {
       $this->dataDefinition = $definition;
     }
     return $this->dataDefinition;
-  }
-
-  /**
-   * Retrieves a nested property definition from an array of definitions.
-   *
-   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
-   *   The given array of base definitions.
-   * @param string[] $keys
-   *   An array of keys to apply to the definitions to arrive at the one that
-   *   should be returned.
-   *
-   * @return \Drupal\Core\TypedData\DataDefinitionInterface|null
-   *   The requested property definition, or NULL if it could not be found.
-   */
-  protected function getNestedDefinition(array $properties, array $keys) {
-    $key = array_shift($keys);
-    if (!isset($properties[$key])) {
-      return NULL;
-    }
-    $property = Utility::getInnerProperty($properties[$key]);
-    if (!$keys) {
-      return $property;
-    }
-    if (!$property instanceof ComplexDataDefinitionInterface) {
-      return NULL;
-    }
-    return $this->getNestedDefinition($property->getPropertyDefinitions(), $keys);
   }
 
   /**

@@ -363,7 +363,7 @@ class IndexAddFieldsForm extends EntityForm {
       $parent_child_type = NULL;
       if ($property instanceof ComplexDataDefinitionInterface) {
         $can_be_indexed = FALSE;
-        $nested_properties = $property->getPropertyDefinitions();
+        $nested_properties = Utility::getNestedProperties($property);
         $main_property = $property->getMainPropertyName();
         if ($main_property && isset($nested_properties[$main_property])) {
           $parent_child_type = $property->getDataType() . '.';

@@ -52,6 +52,8 @@ class IntegrationTest extends WebTestBase {
       'administer search_api',
       'access administration pages',
       'administer nodes',
+      'bypass node access',
+      'administer content types',
       'administer node fields',
     ));
     $this->drupalLogin($this->adminUser);
@@ -76,6 +78,7 @@ class IntegrationTest extends WebTestBase {
     $this->addFieldsToIndex();
     $this->checkDataTypesTable();
     $this->removeFieldsFromIndex();
+    $this->checkReferenceFieldsNonBaseFields();
 
     $this->configureFilter();
     $this->configureFilterPage();
@@ -99,7 +102,6 @@ class IntegrationTest extends WebTestBase {
    * server also has an integer as id/label.
    */
   public function testIntegerIndex() {
-    $this->drupalLogin($this->adminUser);
     $this->getTestServer(789, 456);
 
     $this->drupalCreateNode(array('type' => 'article'));
@@ -559,14 +561,6 @@ class IntegrationTest extends WebTestBase {
    * Tests that field labels are always properly escaped.
    */
   protected function checkFieldLabels() {
-    $permissions = array(
-      'administer search_api',
-      'access administration pages',
-      'administer content types',
-      'administer node fields',
-    );
-    $this->drupalLogin($this->createUser($permissions));
-
     $content_type_name = '&%@Content()_=';
 
     // Add a new content type with funky chars.
@@ -709,15 +703,20 @@ class IntegrationTest extends WebTestBase {
   protected function addField($datasource_id, $property_path, $label = NULL) {
     $path = $this->getIndexPath('fields/add');
     $url_options = array('query' => array('datasource' => $datasource_id));
-    if ($this->getUrl() === $this->buildUrl($path, $url_options)) {
-      $path = NULL;
+    list($parent_path) = Utility::splitPropertyPath($property_path);
+    if ($parent_path) {
+      $url_options['query']['property_path'] = $parent_path;
+    }
+    if ($this->getUrl() !== $this->buildUrl($path, $url_options)) {
+      $this->drupalGet($path, $url_options);
     }
 
     // Unfortunately it doesn't seem possible to specify the clicked button by
     // anything other than label, so we have to pass it as extra POST data.
     $combined_property_path = Utility::createCombinedId($datasource_id, $property_path);
+    $this->assertRaw('name="' . $combined_property_path . '"');
     $post = '&' . $this->serializePostValues(array($combined_property_path => $this->t('Add')));
-    $this->drupalPostForm($path, array(), NULL, $url_options, array(), NULL, $post);
+    $this->drupalPostForm(NULL, array(), NULL, array(), array(), NULL, $post);
     if ($label) {
       $args['%label'] = $label;
       $this->assertRaw($this->t('Field %label was added to the index.', $args));
@@ -816,6 +815,31 @@ class IntegrationTest extends WebTestBase {
     $index = $this->getIndex(TRUE);
     $fields = $index->getFields();
     $this->assertTrue(!isset($fields['body']), 'The body field has been removed from the index.');
+  }
+
+  /**
+   * Tests if non-base fields of referenced entities can be added.
+   */
+  protected function checkReferenceFieldsNonBaseFields() {
+    // Add a entity_reference field.
+    $field_label = 'reference_field';
+    $edit = array(
+      'new_storage_type' => 'entity_reference',
+      'label' => $field_label,
+      'field_name' => '_reference_field_',
+    );
+    $this->drupalPostForm('admin/structure/types/manage/article/fields/add-field', $edit, $this->t('Save and continue'));
+    $this->drupalPostForm(NULL, array('cardinality' => -1), $this->t('Save field settings'));
+
+    $node_label = $this->getIndex()->getDatasource('entity:node')->label();
+    $field_label = "$field_label » $node_label » $field_label";
+    $this->addField('entity:node', 'field__reference_field_:entity:field__reference_field_', $field_label);
+
+    $this->drupalGet('node/2/edit');
+    $edit = array('field__reference_field_[0][target_id]' => 'Something (2)');
+    $this->drupalPostForm('node/2/edit', $edit, $this->t('Save and keep published'));
+    $indexed_values = \Drupal::state()->get("search_api_test_backend.indexed.{$this->indexId}", array());
+    $this->assertEqual(array(2), $indexed_values['entity:node/2:en']['field__reference_field_'], 'Correct value indexed for nested non-base field.');
   }
 
   /**
