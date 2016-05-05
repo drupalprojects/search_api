@@ -184,7 +184,7 @@ views.filter.search_api_fulltext:
         label: Field name
 
 views.filter.search_api_language:
-  type: views.filter.search_api_options
+  type: views.filter.language
   label: 'Search API language'
 
 views.filter.search_api_numeric:

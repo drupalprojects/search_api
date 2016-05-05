@@ -136,7 +136,7 @@ class ViewsTest extends WebTestBase {
     $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "not empty creation date" filter');
 
     $this->checkResults(array('keywords[value]' => 'apple'), array(2, 4), 'Search with Keywords filter');
-    // @todo Enable "between" again. See #2624870.
+    // @todo Enable "between" again. See #2695627.
 //    $query = array(
 //      'keywords[min]' => 'aardvark',
 //      'keywords[max]' => 'calypso',
@@ -173,6 +173,26 @@ class ViewsTest extends WebTestBase {
       'keywords_op' => 'not empty',
     );
     $this->checkResults($query, array(1, 2, 4, 5), 'Search with Keywords "not empty" filter');
+
+    $query = array(
+      'language' => array('***LANGUAGE_language_content***'),
+    );
+    $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "Page content language" filter');
+    $query = array(
+      'language' => array('en'),
+    );
+    $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "English" language filter');
+    $query = array(
+      'language' => array('und'),
+    );
+    $this->checkResults($query, array(), 'Search with "Not specified" language filter');
+    $query = array(
+      'language' => array(
+        '***LANGUAGE_language_interface***',
+        'zxx',
+      ),
+    );
+    $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with multiple languages filter');
 
     $query = array(
       'search_api_fulltext' => 'foo to test',
@@ -304,7 +324,7 @@ class ViewsTest extends WebTestBase {
     $this->assertText($this->t('Authored on'));
     $this->assertText($this->t('Body (indexed field)'));
     $this->assertText($this->t('Index Test index'));
-    $this->assertText($this->t('Entity ID'));
+    $this->assertText($this->t('Item ID'));
     $this->assertText($this->t('Excerpt'));
     $this->assertText($this->t('The search result excerpted to show found search terms'));
     $this->assertText($this->t('Relevance'));

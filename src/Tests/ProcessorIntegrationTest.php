@@ -42,8 +42,8 @@ class ProcessorIntegrationTest extends WebTestBase {
    * avoid the overhead of having one test per processor.
    */
   public function testProcessorIntegration() {
-    // By default, the add_url and language processors are already enabled.
-    $enabled = array('language', 'add_url');
+    // The add_url processor is always enabled.
+    $enabled = array('add_url');
     sort($enabled);
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
@@ -119,9 +119,8 @@ class ProcessorIntegrationTest extends WebTestBase {
     sort($actual_processors);
     $this->assertEqual($enabled, $actual_processors);
 
-    // The 'language' and 'add_url' processors are are not available to be
-    // removed because they are locked processors.
-    $this->checkLanguageIntegration();
+    // The 'add_url' processor is not available to be removed because it's
+    // locked.
     $this->checkUrlFieldIntegration();
 
     // Check whether disabling processors also works correctly.
@@ -192,73 +191,70 @@ class ProcessorIntegrationTest extends WebTestBase {
    * Tests the UI for the "Highlight" processor.
    */
   public function checkHighlightIntegration() {
-    $this->enableProcessor('highlight');
-
-    $edit = array(
-      'processors[highlight][settings][highlight]' => 'never',
-      'processors[highlight][settings][excerpt]' => FALSE,
-      'processors[highlight][settings][excerpt_length]' => 128,
-      'processors[highlight][settings][prefix]' => '<em>',
-      'processors[highlight][settings][suffix]' => '</em>',
+    $configuration = array(
+      'highlight' => 'never',
+      'excerpt' => FALSE,
+      'excerpt_length' => 128,
+      'prefix' => '<em>',
+      'suffix' => '</em>',
     );
-    $this->editSettingsForm($edit, 'highlight');
+    $this->editSettingsForm($configuration, 'highlight');
   }
 
   /**
    * Tests the UI for the "HTML filter" processor.
    */
   public function checkHtmlFilterIntegration() {
-    // Enable the "HTML filter" processor in the same request as setting the
-    // settings, since we otherwise run into a weird bug only present in the
-    // testing environment regarding the YAML in the "tags" setting.
-    $edit = array(
-      'status[html_filter]' => 1,
-      'processors[html_filter][settings][fields][search_api_language]' => FALSE,
-      'processors[html_filter][settings][title]' => FALSE,
-      'processors[html_filter][settings][alt]' => FALSE,
-      'processors[html_filter][settings][tags]' => 'h1: 10',
+    $configuration = $form_values = array(
+      'title' => FALSE,
+      'alt' => FALSE,
+      'tags' => array(
+        'h1' => 10,
+      ),
     );
-    $this->editSettingsForm($edit, 'html_filter');
+    $form_values['tags'] = 'h1: 10';
+    $this->editSettingsForm($configuration, 'html_filter', $form_values);
   }
 
   /**
    * Tests the UI for the "Ignore case" processor.
    */
   public function checkIgnoreCaseIntegration() {
-    $this->enableProcessor('ignorecase');
-
-    $edit = array(
-      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
-    );
-    $this->editSettingsForm($edit, 'ignorecase');
+    $this->editSettingsForm(array(), 'ignorecase');
   }
 
   /**
    * Tests the UI for the "Ignore characters" processor.
    */
   public function checkIgnoreCharactersIntegration() {
-    $this->enableProcessor('ignore_character');
-
-    $edit = array(
-      'processors[ignore_character][settings][fields][search_api_language]' => FALSE,
-      'processors[ignore_character][settings][ignorable]' => '[¿¡!?,.]',
-      'processors[ignore_character][settings][strip][character_sets][Cc]' => TRUE,
+    $configuration = $form_values = array(
+      'ignorable' => '[¿¡!?,.]',
+      'strip' => array(
+        'character_sets' => array(
+          'Pc' => 'Pc',
+          'Pd' => 'Pd',
+          'Pe' => 'Pe',
+          'Pf' => 'Pf',
+          'Pi' => 'Pi',
+          'Po' => 'Po',
+          'Ps' => 'Ps',
+          'Cc' => 'Cc',
+          'Cf' => FALSE,
+          'Co' => FALSE,
+          'Mc' => FALSE,
+          'Me' => FALSE,
+          'Mn' => FALSE,
+          'Sc' => FALSE,
+          'Sk' => FALSE,
+          'Sm' => FALSE,
+          'So' => FALSE,
+          'Zl' => FALSE,
+          'Zp' => FALSE,
+          'Zs' => FALSE,
+        ),
+      ),
     );
-    $this->editSettingsForm($edit, 'ignore_character');
-  }
-
-  /**
-   * Tests the UI for the "Language" processor.
-   */
-  public function checkLanguageIntegration() {
-    $index = $this->loadIndex();
-    $processors = $index->getProcessors();
-    $this->assertTrue(!empty($processors['language']), 'The "language" processor is enabled by default.');
-    $index->removeProcessor('language');
-    $index->save();
-
-    $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(!empty($processors['language']), 'The "language" processor cannot be disabled.');
+    $this->editSettingsForm($configuration, 'ignore_character', $form_values);
   }
 
   /**
@@ -272,52 +268,51 @@ class ProcessorIntegrationTest extends WebTestBase {
    * Tests the UI for the "Rendered item" processor.
    */
   public function checkRenderedItemIntegration() {
-    $this->enableProcessor('rendered_item');
-
-    $edit = array(
-      'processors[rendered_item][settings][roles][]' => 'authenticated',
-      'processors[rendered_item][settings][view_mode][entity:node][page]' => 'default',
-      'processors[rendered_item][settings][view_mode][entity:node][article]' => 'default',
+    $configuration = $form_values = array(
+      'roles' => array(
+        'authenticated' => 'authenticated',
+      ),
+      'view_mode' => array(
+        'entity:node' => array(
+          'page' => 'default',
+          'article' => 'default',
+        ),
+      ),
     );
-    $this->editSettingsForm($edit, 'rendered_item');
+    $form_values['roles'] = array('authenticated');
+    $this->editSettingsForm($configuration, 'rendered_item', $form_values);
   }
 
   /**
    * Tests the UI for the "Stopwords" processor.
    */
   public function checkStopWordsIntegration() {
-    $this->enableProcessor('stopwords');
-
-    $edit = array(
-      'processors[stopwords][settings][stopwords]' => 'the',
+    $configuration = array(
+      'stopwords' => array('the'),
     );
-    $this->editSettingsForm($edit, 'stopwords');
+    $form_values = array(
+      'stopwords' => 'the',
+    );
+    $this->editSettingsForm($configuration, 'stopwords', $form_values);
   }
 
   /**
    * Tests the UI for the "Tokenizer" processor.
    */
   public function checkTokenizerIntegration() {
-    $this->enableProcessor('tokenizer');
-
-    $edit = array(
-      'processors[tokenizer][settings][spaces]' => '',
-      'processors[tokenizer][settings][overlap_cjk]' => FALSE,
-      'processors[tokenizer][settings][minimum_word_size]' => 2,
+    $configuration = array(
+      'spaces' => '',
+      'overlap_cjk' => FALSE,
+      'minimum_word_size' => 2,
     );
-    $this->editSettingsForm($edit, 'tokenizer');
+    $this->editSettingsForm($configuration, 'tokenizer');
   }
 
   /**
    * Tests the UI for the "Transliteration" processor.
    */
   public function checkTransliterationIntegration() {
-    $this->enableProcessor('transliteration');
-
-    $edit = array(
-      'processors[transliteration][settings][fields][search_api_language]' => FALSE,
-    );
-    $this->editSettingsForm($edit, 'transliteration');
+    $this->editSettingsForm(array(), 'transliteration');
   }
 
   /**
@@ -352,29 +347,78 @@ class ProcessorIntegrationTest extends WebTestBase {
   }
 
   /**
-   * Edits a processor's settings.
+   * Enables a processor with a given configuration.
    *
-   * @param array $edit
-   *   The settings to set for the processor.
+   * @param array $configuration
+   *   The configuration to set for the processor.
    * @param string $processor_id
-   *   The ID of the processor whose settings are edited.
+   *   The ID of the processor to edit.
+   * @param array|null $form_values
+   *   (optional) The processor configuration to set, as it appears in the form.
+   *   Only relevant if the processor does some processing on the form values
+   *   before storing them, like parsing YAML or cleaning up checkboxes values.
+   *   Defaults to using $configuration as-is.
+   * @param bool $enable
+   *   (optional) If TRUE, explicitly enable the processor. If FALSE, it should
+   *   already be enabled.
    */
-  protected function editSettingsForm($edit, $processor_id) {
+  protected function editSettingsForm(array $configuration, $processor_id, array $form_values = NULL, $enable = TRUE) {
+    if (!isset($form_values)) {
+      $form_values = $configuration;
+    }
+
     $this->loadProcessorsTab();
 
+    $edit = $this->getFormValues($form_values, "processors[$processor_id][settings]");
+    if ($enable) {
+      $edit["status[$processor_id]"] = 1;
+    }
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
     $processors = $this->loadIndex()->getProcessors();
-    // @todo Actually test something here. Idea: pass in a $configuration array,
-    //   convert to POST format in here automatically and then check if the
-    //   processor's configuration matches.
-    if (isset($processors[$processor_id])) {
-      $configuration = $processors[$processor_id]->getConfiguration();
-      $this->assertTrue(empty($configuration['fields']['search_api_language']));
+    $processor_present = !empty($processors[$processor_id]);
+    $this->assertTrue($processor_present, "Successfully enabled the '$processor_id' processor.'");
+    if ($processor_present) {
+      $actual_configuration = $processors[$processor_id]->getConfiguration();
+      unset($actual_configuration['fields'], $actual_configuration['weights']);
+      $configuration += $processors[$processor_id]->defaultConfiguration();
+      $this->assertEqual($configuration, $actual_configuration, "Processor configuration for processor '$processor_id' was set correctly.");
     }
-    else {
-      $this->fail($processor_id . ' settings not applied.');
+  }
+
+  /**
+   * Converts a configuration array into an array of form values.
+   *
+   * @param array $configuration
+   *   The configuration to convert.
+   * @param string $prefix
+   *   The common prefix for all form values.
+   *
+   * @return string[]
+   *   An array of form values ready for submission.
+   */
+  protected function getFormValues(array $configuration, $prefix) {
+    $edit = array();
+
+    foreach ($configuration as $key => $value) {
+      $key = $prefix . "[$key]";
+      if (is_array($value)) {
+        // Handling of numerically indexed and associative arrays needs to be
+        // different.
+        if ($value == array_values($value)) {
+          $key .= '[]';
+          $edit[$key] = $value;
+        }
+        else {
+          $edit += $this->getFormValues($value, $key);
+        }
+      }
+      else {
+        $edit[$key] = $value;
+      }
     }
+
+    return $edit;
   }
 
   /**

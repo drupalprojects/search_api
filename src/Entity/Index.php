@@ -876,9 +876,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->status) {
       throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
     }
-    if (empty($this->getFields())) {
-      throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (no fields selected)", array('%index' => $this->label())));
-    }
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
     $items = array();

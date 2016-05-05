@@ -178,6 +178,31 @@ display:
               anonymous: '0'
               administrator: '0'
           is_grouped: false
+        search_api_language:
+          plugin_id: search_api_language
+          id: search_api_language
+          table: search_api_index_database_search_index
+          field: search_api_language
+          relationship: none
+          admin_label: ''
+          operator: 'in'
+          group: 1
+          exposed: true
+          expose:
+            operator_id: language_op
+            label: ''
+            description: ''
+            use_operator: true
+            operator: language_op
+            identifier: language
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              administrator: '0'
+          is_grouped: false
       sorts:
         search_api_id:
           id: search_api_id

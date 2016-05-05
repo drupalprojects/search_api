@@ -3,12 +3,6 @@ name: 'Default content index'
 description: 'Default content index created by the Database Search Defaults module'
 read_only: false
 field_settings:
-  search_api_language:
-    label: 'Item language'
-    type: string
-    property_path: search_api_language
-    index_locked: true
-    type_locked: true
   title:
     label: Title
     type: text

@@ -99,6 +99,17 @@ interface DatasourceInterface extends IndexPluginInterface {
   public function getItemBundle(ComplexDataInterface $item);
 
   /**
+   * Retrieves the item's language.
+   *
+   * @param \Drupal\Core\TypedData\ComplexDataInterface $item
+   *   An item of this datasource's type.
+   *
+   * @return string
+   *   The language code of this item.
+   */
+  public function getItemLanguage(ComplexDataInterface $item);
+
+  /**
    * Retrieves a URL at which the item can be viewed on the web.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface $item

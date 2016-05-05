@@ -431,6 +431,7 @@ class Utility {
     $reserved_ids = array_flip(array(
       'search_api_id',
       'search_api_datasource',
+      'search_api_language',
       'search_api_relevance',
     ));
     return isset($reserved_ids[$field_id]);

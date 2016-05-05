@@ -78,6 +78,7 @@ class BackendTest extends BackendTestBase {
       'id',
       'keywords',
       'name',
+      'search_api_datasource',
       'search_api_language',
       'type',
       'width',
@@ -111,6 +112,9 @@ class BackendTest extends BackendTestBase {
     $index->save();
 
     $index_fields = array_keys($index->getFields());
+    // Include the two "magic" fields we're indexing with the DB backend.
+    $index_fields[] = 'search_api_datasource';
+    $index_fields[] = 'search_api_language';
 
     $db_info = $this->getIndexDbInfo();
     $server_fields = array_keys($db_info['field_tables']);

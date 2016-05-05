@@ -8,6 +8,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Utility;
 
 /**
  * Tests translation handling of the content entity datasource.
@@ -200,6 +201,20 @@ class LanguageKernelTest extends KernelTestBase {
       '2:en',
     );
     $this->assertEquals($expected, $datasource_item_ids, 'Datasource returns correct item ids for a translated entity.');
+
+    // Test whether all items report the correct language.
+    foreach ($datasource->loadMultiple($datasource_item_ids) as $id => $object) {
+      list(, $langcode) = explode(':', $id, 2);
+      $item = Utility::createItemFromObject($this->index, $object, NULL, $datasource);
+      $this->assertEquals($langcode, $item->getLanguage(), "Item with ID '$id' has the correct language set.");
+    }
+
+    // Tests that a query with an empty array of languages will return an empty
+    // result set, without going through the server. (Our test backend wouldn't
+    // care about languages.)
+    $results = $this->index->query()->setLanguages(array())->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Query with empty languages list returned correct number of results.');
+    $this->assertEquals(array(), $results->getResultItems(), 'Query with empty languages list returned correct result.');
 
     // Test that the index needs to be updated.
     $this->assertEquals(1, $this->index->getTrackerInstance()->getIndexedItemsCount(), 'The updated items needs to be reindexed.');

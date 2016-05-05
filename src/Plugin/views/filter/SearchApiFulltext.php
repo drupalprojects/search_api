@@ -154,8 +154,6 @@ class SearchApiFulltext extends FilterPluginBase {
       $this->value = $this->value ? reset($this->value) : '';
     }
     // Catch empty strings entered by the user, but not "0".
-    // @todo Is this needed? It seems Views doesn't call filters with empty
-    //   values by default anyways.
     if ($this->value === '') {
       return;
     }

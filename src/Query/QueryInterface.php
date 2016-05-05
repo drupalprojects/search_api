@@ -72,6 +72,26 @@ interface QueryInterface extends ConditionSetInterface {
   public function setParseMode($parse_mode);
 
   /**
+   * Retrieves the languages that will be searched by this query.
+   *
+   * @return string[]|null
+   *   The language codes of languages that will be searched by this query, or
+   *   NULL if there shouldn't be any restriction on the language.
+   */
+  public function getLanguages();
+
+  /**
+   * Sets the languages that should be searched by this query.
+   *
+   * @param string[]|null $languages
+   *   The language codes to search for, or NULL to not restrict the query to
+   *   specific languages.
+   *
+   * @return $this
+   */
+  public function setLanguages(array $languages = NULL);
+
+  /**
    * Creates a new condition group to use with this query object.
    *
    * @param string $conjunction

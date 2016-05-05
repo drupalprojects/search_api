@@ -313,6 +313,44 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with BETWEEN filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+
+    $results = $this->buildSearch()
+      ->setLanguages(array('und', 'en'))
+      ->addCondition('keywords', array('grape', 'apple'), 'IN')
+      ->execute();
+    $this->assertEquals(3, $results->getResultCount(), 'Query with IN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch();
+    $conditions = $query->createConditionGroup('OR')
+      ->addCondition('search_api_language', 'und')
+      ->addCondition('width', array('0.9', '1.5'), 'BETWEEN');
+    $query->addConditionGroup($conditions);
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_language', array('und', 'en'), 'IN')
+      ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
+      ->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language "IN" filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_language', array('und', 'de'), 'NOT IN')
+      ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
+      ->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language "NOT IN" filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
   }
 
   /**

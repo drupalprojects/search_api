@@ -21,6 +21,13 @@ class Item implements \IteratorAggregate, ItemInterface {
   protected $index;
 
   /**
+   * The ID of this item.
+   *
+   * @var string
+   */
+  protected $itemId;
+
+  /**
    * The complex data item this Search API item is based on.
    *
    * @var \Drupal\Core\TypedData\ComplexDataInterface
@@ -40,6 +47,13 @@ class Item implements \IteratorAggregate, ItemInterface {
    * @var \Drupal\search_api\Datasource\DatasourceInterface
    */
   protected $datasource;
+
+  /**
+   * The language code of this item.
+   *
+   * @var string
+   */
+  protected $language;
 
   /**
    * The extracted fields of this item.
@@ -96,7 +110,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function __construct(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
     $this->index = $index;
-    $this->id = $id;
+    $this->itemId = $id;
     if ($datasource) {
       $this->datasource = $datasource;
       $this->datasourceId = $datasource->getPluginId();
@@ -108,7 +122,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function getDatasourceId() {
     if (!isset($this->datasourceId)) {
-      list($this->datasourceId) = Utility::splitCombinedId($this->id);
+      list($this->datasourceId) = Utility::splitCombinedId($this->itemId);
     }
     return $this->datasourceId;
   }
@@ -133,8 +147,26 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
+  public function getLanguage() {
+    if (!isset($this->language)) {
+      $this->language = $this->getDatasource()->getItemLanguage($this->getOriginalObject());
+    }
+    return $this->language;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLanguage($language) {
+    $this->language = $language;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getId() {
-    return $this->id;
+    return $this->itemId;
   }
 
   /**
@@ -142,9 +174,9 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function getOriginalObject($load = TRUE) {
     if (!isset($this->originalObject) && $load) {
-      $this->originalObject = $this->index->loadItem($this->id);
+      $this->originalObject = $this->index->loadItem($this->itemId);
       if (!$this->originalObject) {
-        throw new SearchApiException('Failed to load original object ' . $this->id);
+        throw new SearchApiException('Failed to load original object ' . $this->itemId);
       }
     }
     return $this->originalObject;

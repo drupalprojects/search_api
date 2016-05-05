@@ -353,12 +353,6 @@ function _search_api_views_handler_adjustments($type, FieldInterface $field, arr
       }
     }
   }
-
-  // Special case for our own language field.
-  if ($field->getCombinedPropertyPath() === 'search_api_language') {
-    $definitions['filter']['id'] = 'search_api_language';
-    $definitions['filter']['allow empty'] = FALSE;
-  }
 }
 
 /**
@@ -369,9 +363,9 @@ function _search_api_views_handler_adjustments($type, FieldInterface $field, arr
  */
 function _search_api_views_data_special_fields(array &$table) {
   $id_field = _search_api_views_find_field_alias('search_api_id', $table);
-  $table[$id_field]['title'] = t('Entity ID');
-  $table[$id_field]['help'] = t("The entity's ID");
-  $table[$id_field]['field']['id'] = 'numeric';
+  $table[$id_field]['title'] = t('Item ID');
+  $table[$id_field]['help'] = t("The item's internal (Search API-specific) ID");
+  $table[$id_field]['field']['id'] = 'standard';
   $table[$id_field]['sort']['id'] = 'search_api';
   if ($id_field != 'search_api_id') {
     $table[$id_field]['real field'] = 'search_api_id';
@@ -387,6 +381,17 @@ function _search_api_views_data_special_fields(array &$table) {
   $table[$datasource_field]['sort']['id'] = 'search_api';
   if ($datasource_field != 'search_api_datasource') {
     $table[$datasource_field]['real field'] = 'search_api_datasource';
+  }
+
+  $language_field = _search_api_views_find_field_alias('search_api_language', $table);
+  $table[$language_field]['title'] = t('Item language');
+  $table[$language_field]['help'] = t("The item's language");
+  $table[$language_field]['field']['id'] = 'language';
+  $table[$language_field]['filter']['id'] = 'search_api_language';
+  $table[$language_field]['filter']['allow empty'] = FALSE;
+  $table[$language_field]['sort']['id'] = 'search_api';
+  if ($language_field != 'search_api_language') {
+    $table[$language_field]['real field'] = 'search_api_language';
   }
 
   $relevance_field = _search_api_views_find_field_alias('search_api_relevance', $table);

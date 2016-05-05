@@ -737,12 +737,11 @@ class Database extends BackendPluginBase {
     //
     // In SQLite, indexes and tables can't have the same name, which is
     // the case for Search API DB. We have following situation:
-    // - a table named search_api_db_default_index_search_api_language
+    // - a table named search_api_db_default_index_title
     // - a table named search_api_db_default_index
     //
-    // The last table has an index on the search_api_language column,
-    // which results in an index with the same as the first table, which
-    // conflicts in SQLite.
+    // The last table has an index on the title column, which results in an
+    // index with the same as the first table, which conflicts in SQLite.
     //
     // The core issue addressing this (https://www.drupal.org/node/1008128) was
     // closed as it fixed the PostgresSQL part. The SQLite fix is added in
@@ -829,6 +828,7 @@ class Database extends BackendPluginBase {
       $db_info = $this->getIndexDbInfo($index);
       $fields = &$db_info['field_tables'];
       $new_fields = $index->getFields();
+      $new_fields += $this->getSpecialFields($index);
 
       $reindex = FALSE;
       $cleared = FALSE;
@@ -991,6 +991,35 @@ class Database extends BackendPluginBase {
   }
 
   /**
+   * Creates dummy field objects for the "magic" fields present for every index.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index for which to create the field. (Needed since field objects
+   *   always need an index set.)
+   * @param \Drupal\search_api\Item\ItemInterface|null $item
+   *   (optional) If given, an item whose data should be set as the fields'
+   *   values.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface[]
+   *   An array of field objects for all "magic" fields, keyed by field IDs.
+   */
+  protected function getSpecialFields(IndexInterface $index, ItemInterface $item = NULL) {
+    $field_info = array(
+      'type' => 'string',
+      'original type' => 'string',
+    );
+    $fields['search_api_datasource'] = Utility::createField($index, 'search_api_datasource', $field_info);
+    $fields['search_api_language'] = Utility::createField($index, 'search_api_language', $field_info);
+
+    if ($item) {
+      $fields['search_api_datasource']->setValues(array($item->getDatasourceId()));
+      $fields['search_api_language']->setValues(array($item->getLanguage()));
+    }
+
+    return $fields;
+  }
+
+  /**
    * Drops a field's table and its column from the denormalized table.
    *
    * @param string $name
@@ -1110,7 +1139,9 @@ class Database extends BackendPluginBase {
 
       $denormalized_values = array();
       $text_inserts = array();
-      foreach ($item->getFields() as $field_id => $field) {
+      $item_fields = $item->getFields();
+      $item_fields += $this->getSpecialFields($index, $item);
+      foreach ($item_fields as $field_id => $field) {
         // Sometimes index changes are not triggering the update hooks
         // correctly. Therefore, to avoid DB errors, we re-check the tables
         // here before indexing.
@@ -1618,6 +1649,7 @@ class Database extends BackendPluginBase {
     }
 
     $condition_group = $query->getConditionGroup();
+    $this->addLanguageConditions($condition_group, $query);
     if ($condition_group->getConditions()) {
       $condition = $this->createDbCondition($condition_group, $fields, $db_query, $query->getIndex());
       if ($condition) {
@@ -1978,6 +2010,23 @@ class Database extends BackendPluginBase {
   }
 
   /**
+   * Adds item language conditions to the condition group, if applicable.
+   *
+   * @param \Drupal\search_api\Query\ConditionGroupInterface $condition_group
+   *   The condition group on which to set conditions.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query to inspect for language settings.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
+   */
+  protected function addLanguageConditions(ConditionGroupInterface $condition_group, QueryInterface $query) {
+    $languages = $query->getLanguages();
+    if ($languages !== NULL) {
+      $condition_group->addCondition('search_api_language', $languages, 'IN');
+    }
+  }
+
+  /**
    * Creates a database query condition for a given search filter.
    *
    * Used as a helper method in createDbQuery().
@@ -2018,36 +2067,6 @@ class Database extends BackendPluginBase {
         $value = $condition->getValue();
         $not_equals = in_array($operator, array('<>', '!=', 'NOT IN'));
 
-        // We don't index the datasource explicitly, so this needs a bit of
-        // magic.
-        // @todo Index the datasource explicitly so this doesn't need magic.
-        if ($field === 'search_api_datasource') {
-          if (empty($tables[NULL])) {
-            $table = array(
-              'table' => $db_info['index_table'],
-            );
-            $tables[NULL] = $this->getTableAlias($table, $db_query);
-          }
-          $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
-          if (is_array($value) && count($value) == 1) {
-            $value = reset($value);
-          }
-          $column = $tables[NULL] . '.item_id';
-          if (is_scalar($value)) {
-            $prefix = Utility::createCombinedId($value, '');
-            $db_condition->condition($column, $this->database->escapeLike($prefix) . '%', $operator);
-          }
-          elseif ($value) {
-            $nested_condition = new Condition($not_equals ? 'AND' : 'OR');
-            $operator = $not_equals ? 'NOT LIKE' : 'LIKE';
-            foreach ($value as $datasource_id) {
-              $prefix = Utility::createCombinedId($datasource_id, '');
-              $nested_condition->condition($column, $this->database->escapeLike($prefix) . '%', $operator);
-            }
-            $db_condition->condition($nested_condition);
-          }
-          continue;
-        }
         if (!isset($fields[$field])) {
           throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $field)));
         }

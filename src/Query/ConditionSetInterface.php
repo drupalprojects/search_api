@@ -11,8 +11,13 @@ interface ConditionSetInterface {
    * Adds a new ($field $operator $value) condition.
    *
    * @param string $field
-   *   The field to filter on, e.g. "title". The special field
-   *   "search_api_datasource" can be used to filter by datasource ID.
+   *   The ID of the field to filter on, e.g. "title". The special fields
+   *   "search_api_datasource" (filter by datasource ID) and
+   *   "search_api_language" (filter by language code) can be used in addition
+   *   to all indexed fields on the index. However, for filtering on language
+   *   code, using \Drupal\search_api\Query\QueryInterface::setLanguages() is
+   *   the preferred method, unless a complex condition containing the language
+   *   code is required.
    * @param mixed $value
    *   The value the field should have (or be related to by the operator). If
    *   $operator is "IN" or "NOT IN", $value has to be an array of values. If

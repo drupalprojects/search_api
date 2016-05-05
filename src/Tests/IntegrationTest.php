@@ -848,7 +848,6 @@ class IntegrationTest extends WebTestBase {
   protected function configureFilter() {
     $edit = array(
       'status[ignorecase]' => 1,
-      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
       'processors[ignorecase][settings][fields][title]' => 'title',
     );
     $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
@@ -856,7 +855,13 @@ class IntegrationTest extends WebTestBase {
     $processors = $index->getProcessors();
     if (isset($processors['ignorecase'])) {
       $configuration = $processors['ignorecase']->getConfiguration();
-      $this->assertTrue(empty($configuration['fields']['search_api_language']), 'Language field disabled for ignore case filter.');
+      unset($configuration['weights']);
+      $expected = array(
+        'fields' => array(
+          'title',
+        ),
+      );
+      $this->assertEqual($expected, $configuration, 'Title field enabled for ignore case filter.');
     }
     else {
       $this->fail('"Ignore case" processor not enabled.');
@@ -879,7 +884,6 @@ class IntegrationTest extends WebTestBase {
   protected function checkProcessorChanges() {
     $edit = array(
       'status[ignorecase]' => 1,
-      'processors[ignorecase][settings][fields][search_api_language]' => FALSE,
       'processors[ignorecase][settings][fields][title]' => 'title',
     );
     // Enable just the ignore case processor, just to have a clean default state
