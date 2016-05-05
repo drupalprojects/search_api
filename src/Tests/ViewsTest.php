@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility;
 
@@ -200,6 +201,14 @@ class ViewsTest extends WebTestBase {
       'keywords_op' => '>=',
     );
     $this->checkResults($query, array(2, 5), 'Search with arguments and filters', 'entity:entity_test/all/orange');
+
+    // Make sure there was a display plugin created for this view.
+    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')->getInstances();
+    $display_id = 'views_page:search_api_test_view__page_1';
+    $this->assertEqual(array($display_id), array_keys($displays), 'A display plugin was created for the test view.');
+    $view_url = Url::fromUserInput('/search-api-test')->toString();
+    $this->assertEqual($view_url, $displays[$display_id]->getPath()->toString(), 'Display returns the correct path.');
+    $this->assertEqual('database_search_index', $displays[$display_id]->getIndex()->id(), 'Display returns the correct search index.');
   }
 
   /**

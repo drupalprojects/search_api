@@ -199,6 +199,15 @@ class SearchApiQuery extends QueryPluginBase {
       $this->query->addTag('views_' . $view->id());
       $this->query->setOption('search_api_view', $view);
 
+      // We only provide a display plugin for Views page displays.
+      // @todo figure out how to allow new displays for other views display
+      //   types to be added. Do we need a hook for this?
+      if ($display->getPluginId() == 'page') {
+        // Load the Search API display and attach it to the query.
+        $display_plugin_manager = \Drupal::service('plugin.manager.search_api.display');
+        $search_api_display = $display_plugin_manager->createInstance('views_page:' . $view->id() . '__' . $view->current_display);
+        $this->query->setOption('search_api_display', $search_api_display);
+      }
     }
     catch (\Exception $e) {
       $this->abort($e->getMessage());

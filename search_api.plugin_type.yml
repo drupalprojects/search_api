@@ -8,6 +8,11 @@ search_api_data_type:
   plugin_manager_service_id: plugin.manager.search_api.data_type
   plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
 
+search_api_display:
+  label: Search API display
+  plugin_manager_service_id: plugin.manager.search_api.display
+  plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
+
 search_api_processor:
   label: Search API processor
   plugin_manager_service_id: plugin.manager.search_api.processor
