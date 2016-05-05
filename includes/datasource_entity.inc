@@ -186,14 +186,17 @@ class SearchApiEntityDataSourceController extends SearchApiAbstractDataSourceCon
                 $bundles = db_query('SELECT nid FROM {node} WHERE type IN (:bundles)', array(':bundles' => $node_types))->fetchCol();
               }
               else {
-                return;
+                continue;
               }
             }
             else {
               $this->startTrackingFallback(array($index->machine_name => $index));
+              continue;
             }
           }
-          $query->condition($bundle_column, $bundles);
+          if ($bundles) {
+            $query->condition($bundle_column, $bundles);
+          }
         }
 
         // INSERT ... SELECT ...
