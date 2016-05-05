@@ -146,10 +146,9 @@ class EntityStringIdTest extends KernelTestBase {
    */
   public function entityStringIdList() {
     return array(
-      // String ID that conforms to normal machine name standards.
-      array('short_string_id'),
-      // String ID that is not a valid machine name.
-      array('http://drupal.org'),
+      'Normal machine name' => array('short_string_id'),
+      'URL ID (with special characters)' => array('http://drupal.org'),
+      'Long ID' => array(str_repeat('a', 100)),
     );
   }
 }

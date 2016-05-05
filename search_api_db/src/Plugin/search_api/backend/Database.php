@@ -692,7 +692,7 @@ class Database extends BackendPluginBase {
         'fields' => array(
           'item_id' => array(
             'type' => 'varchar',
-            'length' => 50,
+            'length' => 150,
             'description' => 'The primary identifier of the item',
             'not null' => TRUE,
           ),
@@ -944,7 +944,7 @@ class Database extends BackendPluginBase {
           'fields' => array(
             'item_id' => array(
               'type' => 'varchar',
-              'length' => 50,
+              'length' => 150,
               'description' => 'The primary identifier of the item',
               'not null' => TRUE,
             ),
