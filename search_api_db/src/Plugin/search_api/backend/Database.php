@@ -991,35 +991,6 @@ class Database extends BackendPluginBase {
   }
 
   /**
-   * Creates dummy field objects for the "magic" fields present for every index.
-   *
-   * @param \Drupal\search_api\IndexInterface $index
-   *   The index for which to create the field. (Needed since field objects
-   *   always need an index set.)
-   * @param \Drupal\search_api\Item\ItemInterface|null $item
-   *   (optional) If given, an item whose data should be set as the fields'
-   *   values.
-   *
-   * @return \Drupal\search_api\Item\FieldInterface[]
-   *   An array of field objects for all "magic" fields, keyed by field IDs.
-   */
-  protected function getSpecialFields(IndexInterface $index, ItemInterface $item = NULL) {
-    $field_info = array(
-      'type' => 'string',
-      'original type' => 'string',
-    );
-    $fields['search_api_datasource'] = Utility::createField($index, 'search_api_datasource', $field_info);
-    $fields['search_api_language'] = Utility::createField($index, 'search_api_language', $field_info);
-
-    if ($item) {
-      $fields['search_api_datasource']->setValues(array($item->getDatasourceId()));
-      $fields['search_api_language']->setValues(array($item->getLanguage()));
-    }
-
-    return $fields;
-  }
-
-  /**
    * Drops a field's table and its column from the denormalized table.
    *
    * @param string $name
