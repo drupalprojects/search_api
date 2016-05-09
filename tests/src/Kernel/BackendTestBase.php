@@ -455,6 +455,7 @@ abstract class BackendTestBase extends KernelTestBase {
    * Regression tests for same content multiple times in the search result.
    *
    * Error was caused by multiple terms for filter.
+   *
    * @see https://www.drupal.org/node/1863672
    */
   protected function regressionTest1863672() {
@@ -547,7 +548,7 @@ abstract class BackendTestBase extends KernelTestBase {
   /**
    * Regression tests for searching for multiple words using "OR" condition.
    *
-   * @see https://www.drupal.org/node/2111753.
+   * @see https://www.drupal.org/node/2111753
    */
   protected function regressionTest2111753() {
     $keys = array(
@@ -883,10 +884,10 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->indexItems($this->indexId);
 
     $this->addTestEntity(8, array(
-        'name' => 'Article with long body',
-        'type' => 'article',
-        'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
-      ));
+      'name' => 'Article with long body',
+      'type' => 'article',
+      'body' => 'astringlongerthanfiftycharactersthatcantbestoredbythedbbackend',
+    ));
     $count = $this->indexItems($this->indexId);
     $this->assertEquals(1, $count, 'Indexing an item with a word longer than 50 characters worked.');
 
@@ -911,7 +912,7 @@ abstract class BackendTestBase extends KernelTestBase {
   /**
    * Regression tests for multibyte characters exceeding 50 byte.
    *
-   * https://www.drupal.org/node/2616804
+   * @see https://www.drupal.org/node/2616804
    */
   protected function regressionTests2616804() {
     // The word has 28 Unicode characters but 56 bytes. Verify that it is still
@@ -921,10 +922,10 @@ abstract class BackendTestBase extends KernelTestBase {
     // character limit for strings counts characters, not bytes.
     $mb_body = implode(' ', array_fill(0, 8, $mb_word));
     $this->addTestEntity(9, array(
-        'name' => 'Test item 9',
-        'type' => 'item',
-        'body' => $mb_body,
-      ));
+      'name' => 'Test item 9',
+      'type' => 'item',
+      'body' => $mb_body,
+    ));
     $entity_count = count($this->entities);
     $count = $this->indexItems($this->indexId);
     $this->assertEquals($entity_count, $count, 'Indexing an item with a word with 28 multi-byte characters worked.');

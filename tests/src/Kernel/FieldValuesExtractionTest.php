@@ -92,8 +92,13 @@ class FieldValuesExtractionTest extends KernelTestBase {
     $fields = array(
       'type' => array(Utility::createField($this->index, 'type')),
       'name' => array(Utility::createField($this->index, 'name')),
-      'links:entity:name' => array(Utility::createField($this->index, 'links'), Utility::createField($this->index, 'links_1')),
-      'links:entity:links:entity:name' => array(Utility::createField($this->index, 'links_links')),
+      'links:entity:name' => array(
+        Utility::createField($this->index, 'links'),
+        Utility::createField($this->index, 'links_1'),
+      ),
+      'links:entity:links:entity:name' => array(
+        Utility::createField($this->index, 'links_links'),
+      ),
     );
     Utility::extractFields($object, $fields);
 

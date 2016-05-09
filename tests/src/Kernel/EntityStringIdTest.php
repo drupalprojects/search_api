@@ -65,7 +65,7 @@ class EntityStringIdTest extends KernelTestBase {
 
     $this->installSchema('search_api', array(
       'search_api_item',
-      'search_api_task'
+      'search_api_task',
     ));
     $this->installEntitySchema('entity_test_string_id');
 
@@ -98,7 +98,7 @@ class EntityStringIdTest extends KernelTestBase {
         'default' => array(
           'plugin_id' => 'default',
           'settings' => array(),
-        )
+        ),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
@@ -151,4 +151,5 @@ class EntityStringIdTest extends KernelTestBase {
       'Long ID' => array(str_repeat('a', 100)),
     );
   }
+
 }
