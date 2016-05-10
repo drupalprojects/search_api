@@ -2036,7 +2036,8 @@ class Database extends BackendPluginBase {
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
-        $not_equals = in_array($operator, array('<>', '!=', 'NOT IN'));
+        $not_equals = in_array($operator, array('<>', '!=', 'NOT IN', 'NOT BETWEEN'));
+        $not_between = $operator == 'NOT BETWEEN';
 
         if (!isset($fields[$field])) {
           throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $field)));
@@ -2053,6 +2054,13 @@ class Database extends BackendPluginBase {
           if ($value === NULL) {
             $method = $not_equals ? 'isNotNull' : 'isNull';
             $db_condition->$method($column);
+          }
+          elseif ($not_between) {
+            $nested_condition = new Condition('OR');
+            $nested_condition->condition($column, $value[0], '<');
+            $nested_condition->condition($column, $value[1], '>');
+            $nested_condition->isNull($column);
+            $db_condition->condition($nested_condition);
           }
           else {
             $db_condition->condition($column, $value, $operator);
@@ -2077,9 +2085,17 @@ class Database extends BackendPluginBase {
           // this condition. Probably the most performant way to do this is to
           // do a LEFT JOIN with a positive filter on the excluded values in the
           // ON clause and then make sure we have no value for the field.
-          $wildcard = ':values_' . ++$wildcard_count . '[]';
-          $arguments = array($wildcard => (array) $value);
-          $additional_on = "%alias.value IN ($wildcard)";
+          if ($not_between) {
+            $wildcard1 = ':values_' . ++$wildcard_count;
+            $wildcard2 = ':values_' . ++$wildcard_count;
+            $arguments = array_combine(array($wildcard1, $wildcard2), $value);
+            $additional_on = "%alias.value BETWEEN $wildcard1 AND $wildcard2";
+          }
+          else {
+            $wildcard = ':values_' . ++$wildcard_count . '[]';
+            $arguments = array($wildcard => (array) $value);
+            $additional_on = "%alias.value IN ($wildcard)";
+          }
           $alias = $this->getTableAlias($field_info, $db_query, TRUE, 'leftJoin', $additional_on, $arguments);
           $db_condition->isNull($alias . '.value');
         }

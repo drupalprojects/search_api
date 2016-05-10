@@ -381,7 +381,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $query->addCondition('text_field', array('a', 'bo'), 'IN');
     $query->addCondition('text_field', array('ab', 'bo'), 'NOT IN');
     $query->addCondition('text_field', array('a', 'bo'), 'BETWEEN');
-    $query->addCondition('text_field', array('ab', 'bo'), 'BETWEEN');
+    $query->addCondition('text_field', array('ab', 'bo'), 'NOT BETWEEN');
     $query->addCondition('text_field', array('a', 'bar'), 'IN');
     $query->addCondition('text_field', array('abo', 'baz'), 'BETWEEN');
 
@@ -391,7 +391,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
       new Condition('text_field', array('a', 'b'), 'NOT IN'),
       new Condition('text_field', array('a'), 'IN'),
       new Condition('text_field', array('a', 'bo'), 'BETWEEN'),
-      new Condition('text_field', array('ab', 'bo'), 'BETWEEN'),
+      new Condition('text_field', array('ab', 'bo'), 'NOT BETWEEN'),
       new Condition('text_field', array('a', 'bar*'), 'IN'),
       new Condition('text_field', array('abo*', 'baz*'), 'BETWEEN'),
     );

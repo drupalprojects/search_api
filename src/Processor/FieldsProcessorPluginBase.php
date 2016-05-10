@@ -232,16 +232,17 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
           $empty_string = $value === '';
           $this->processConditionValue($value);
 
-          // The BETWEEN operator deserves special attention, as it seems
-          // unlikely that it makes sense to completely remove it. Processors
+          // The (NOT) BETWEEN operators deserve special attention, as it seems
+          // unlikely that it makes sense to completely remove them. Processors
           // that remove values are normally indicating that this value can't be
-          // in the index – but that's irrelevant for BETWEEN conditions, as any
-          // value between the two bounds could still be included. We therefore
-          // never remove a BETWEEN condition and also ignore it when one of the
-          // two values got removed. (Note that this check will also catch empty
-          // strings.) Processors who need different behavior have to override
-          // this method.
-          if (($condition->getOperator() == 'BETWEEN') && count($value) < 2) {
+          // in the index – but that's irrelevant for (NOT) BETWEEN conditions,
+          // as any value between the two bounds could still be included. We
+          // therefore never remove a (NOT) BETWEEN condition and also ignore it
+          // when one of the two values got removed. (Note that this check will
+          // also catch empty strings.) Processors who need different behavior
+          // have to override this method.
+          $between_operator = in_array($condition->getOperator(), array('BETWEEN', 'NOT BETWEEN'));
+          if ($between_operator && count($value) < 2) {
             continue;
           }
 

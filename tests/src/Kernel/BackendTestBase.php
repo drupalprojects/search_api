@@ -315,6 +315,15 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->assertWarnings($results);
 
     $results = $this->buildSearch()
+      ->addCondition('width', array('0.9', '1.5'), 'NOT BETWEEN')
+      ->sort('id')
+      ->execute();
+    $this->assertEquals(4, $results->getResultCount(), 'Query with NOT BETWEEN filter returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 5)), array_keys($results->getResultItems()), 'Query with NOT BETWEEN filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()
       ->setLanguages(array('und', 'en'))
       ->addCondition('keywords', array('grape', 'apple'), 'IN')
       ->execute();
@@ -854,6 +863,24 @@ abstract class BackendTestBase extends KernelTestBase {
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Filter on decimal field returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'Filter on decimal field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    // Use the "prices" field, since we've added it now, to also check for
+    // proper handling of (NOT) BETWEEN for multi-valued fields.
+    $query = $this->buildSearch()
+      ->addCondition('prices', array(3.6, 3.8), 'BETWEEN');
+    $results = $query->execute();
+    $this->assertEquals(1, $results->getResultCount(), 'BETWEEN filter on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'BETWEEN filter on multi-valued field returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $query = $this->buildSearch()
+      ->addCondition('prices', array(3.6, 3.8), 'NOT BETWEEN');
+    $results = $query->execute();
+    $this->assertEquals(5, $results->getResultCount(), 'NOT BETWEEN filter on multi-valued field returned correct number of results.');
+    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4, 5)), array_keys($results->getResultItems()), 'NOT BETWEEN filter on multi-valued field returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
   }
