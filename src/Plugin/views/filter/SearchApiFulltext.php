@@ -33,10 +33,42 @@ class SearchApiFulltext extends FilterPluginBase {
    * {@inheritdoc}
    */
   public function operatorOptions($which = 'title') {
+    $options = array();
+    foreach ($this->operators() as $id => $info) {
+      $options[$id] = $info[$which];
+    }
+
+    return $options;
+  }
+
+  /**
+   * Returns information about the available operators for this filter.
+   *
+   * @return array[]
+   *   An associative array mapping operator identifiers to their information.
+   *   The operator information itself is an associative array with the
+   *   following keys:
+   *   - title: The translated title for the operator.
+   *   - short: The translated short title for the operator.
+   *   - values: The number of values the operator requires as input.
+   */
+  public function operators() {
     return array(
-      'and' => $this->t('Contains all of these words'),
-      'or' => $this->t('Contains any of these words'),
-      'not' => $this->t('Contains none of these words'),
+      'and' => array(
+        'title' => $this->t('Contains all of these words'),
+        'short' => $this->t('and'),
+        'values' => 1,
+      ),
+      'or' => array(
+        'title' => $this->t('Contains any of these words'),
+        'short' => $this->t('or'),
+        'values' => 1,
+      ),
+      'not' => array(
+        'title' => $this->t('Contains none of these words'),
+        'short' => $this->t('not'),
+        'values' => 1,
+      ),
     );
   }
 
