@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the Search API module.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Link;
 use Drupal\search_api\Entity\Server;
 use Drupal\Core\Url;
 
@@ -121,6 +123,7 @@ function search_api_requirements($phase) {
       );
     }
 
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
     $servers = Server::loadMultiple();
     $unavailable_servers = array();
     foreach ($servers as $server) {
@@ -140,6 +143,31 @@ function search_api_requirements($phase) {
           ),
           'severity' => REQUIREMENT_ERROR
         )
+      );
+    }
+
+    $pending_tasks = \Drupal::getContainer()
+      ->get('search_api.server_task_manager')
+      ->getCount();
+    if ($pending_tasks) {
+      $args['@link'] = '';
+      $url = Url::fromRoute('entity.search_api_server.execute_tasks');
+      if ($url->access()) {
+        $link = new Link(t('Execute now'), $url);
+        $link = $link->toString();
+        $args['@link'] = $link;
+        $args['@link'] = new FormattableMarkup(' (@link)', $args);
+      }
+
+      $requirements['search_api_pending_tasks'] = array(
+        'title' => t('Search API'),
+        'value' => \Drupal::translation()->formatPlural(
+          $pending_tasks,
+          'There is @count pending task for a Search API server. @link',
+          'There are @count pending tasks for Search API servers. @link',
+          $args
+        ),
+        'severity' => REQUIREMENT_WARNING,
       );
     }
 

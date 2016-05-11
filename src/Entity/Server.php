@@ -210,7 +210,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $server_task_manager->delete(NULL, $this, $index);
 
     try {
-      $this->getBackend()->addIndex($index);
+      if ($server_task_manager->execute($this)) {
+        $this->getBackend()->addIndex($index);
+        return;
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -253,7 +256,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $server_task_manager->delete(NULL, $this, $index);
 
     try {
-      $this->getBackend()->removeIndex($index);
+      if ($server_task_manager->execute($this)) {
+        $this->getBackend()->removeIndex($index);
+        return;
+      }
     }
     catch (SearchApiException $e) {
       $vars = array(
@@ -318,6 +324,15 @@ class Server extends ConfigEntityBase implements ServerInterface {
     }
 
     $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
+
+    // Remove all other delete operations for this index from the server tasks –
+    // no point in executing those when we want to delete all items anyways.
+    $types = array(
+      'deleteItems',
+      'deleteAllIndexItems',
+    );
+    $server_task_manager->delete(NULL, $this, $index, $types);
+
     try {
       if ($server_task_manager->execute($this)) {
         $this->getBackend()->deleteAllIndexItems($index);
@@ -361,7 +376,14 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $message = new FormattableMarkup('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
       throw new SearchApiException($message, 0, $e);
     }
-    return $this;
+
+    $types = array(
+      'deleteItems',
+      'deleteAllIndexItems',
+    );
+    \Drupal::getContainer()
+      ->get('search_api.server_task_manager')
+      ->delete(NULL, $this, NULL, $types);
   }
 
   /**

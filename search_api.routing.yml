@@ -6,6 +6,15 @@ search_api.overview:
   requirements:
     _permission: 'administer search_api'
 
+entity.search_api_server.execute_tasks:
+  path: '/admin/config/search/search-api/execute-tasks'
+  defaults:
+    _controller: '\Drupal\search_api\Controller\ServerController::executeTasks'
+    _title: 'Execute pending server tasks'
+  requirements:
+    _permission: 'administer search_api'
+    _search_api_tasks: 'TRUE'
+
 entity.search_api_server.add_form:
   path: '/admin/config/search/search-api/add-server'
   defaults:

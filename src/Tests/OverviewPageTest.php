@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\block\Entity\Block;
 use Drupal\Component\Utility\Html;
 use Drupal\search_api\ServerInterface;
 
@@ -57,6 +58,19 @@ class OverviewPageTest extends WebTestBase {
     $server_name = 'WebTest Server';
     $index_name = 'WebTest Index';
 
+    $success = $this->container->get('module_installer')->install(array('block'), TRUE);
+    $this->assertTrue($success, 'Block module enabled.');
+
+    // Enable the "Local actions" block so we can verify which local actions are
+    // displayed.
+    Block::create(array(
+      'id' => 'classy_local_actions',
+      'theme' => 'classy',
+      'weight' => -20,
+      'plugin' => 'local_actions_block',
+      'region' => 'content',
+    ))->save();
+
     // Make sure the overview is empty.
     $this->drupalGet($this->overviewPageUrl);
 
@@ -80,6 +94,19 @@ class OverviewPageTest extends WebTestBase {
     $this->assertText($index->label(), 'Index present on overview page.');
     $this->assertRaw($index->get('description'), 'Index description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
+    $this->assertNoLink($this->t('Execute pending tasks'), 'No pending server tasks to execute.');
+
+    // Tests that the "Execute pending tasks" local action is correctly
+    // displayed when there are pending tasks.
+    \Drupal::getContainer()
+      ->get('search_api.server_task_manager')
+      ->add($server, 'deleteItems', $index, array(''));
+    // Due to an (apparent) Core bug we need to clear the cache, otherwise the
+    // "local actions" block gets displayed from cache (without the link). See
+    // #2722237.
+    \Drupal::cache('render')->invalidateAll();
+    $this->drupalGet($this->overviewPageUrl);
+    $this->assertLink($this->t('Execute pending tasks'), 0, '"Execute pending tasks" link displayed.');
   }
 
   /**

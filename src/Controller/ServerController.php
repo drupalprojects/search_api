@@ -4,13 +4,57 @@ namespace Drupal\search_api\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Url;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api\Task\ServerTaskManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides block routines for search server-specific routes.
  */
 class ServerController extends ControllerBase {
 
+  /**
+   * The server task manager.
+   *
+   * @var \Drupal\search_api\Task\ServerTaskManagerInterface|null
+   */
+  protected $serverTaskManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var static $controller */
+    $controller = parent::create($container);
+
+    $controller->setServerTaskManager($container->get('search_api.server_task_manager'));
+
+    return $controller;
+  }
+
+  /**
+   * Retrieves the server task manager.
+   *
+   * @return \Drupal\search_api\Task\ServerTaskManagerInterface
+   *   The server task manager.
+   */
+  public function getServerTaskManager() {
+    return $this->serverTaskManager ?: \Drupal::service('search_api.server_task_manager');
+  }
+
+  /**
+   * Sets the server task manager.
+   *
+   * @param \Drupal\search_api\Task\ServerTaskManagerInterface $server_task_manager
+   *   The new server task manager.
+   *
+   * @return $this
+   */
+  public function setServerTaskManager(ServerTaskManagerInterface $server_task_manager) {
+    $this->serverTaskManager = $server_task_manager;
+    return $this;
+  }
   /**
    * Displays information about a search server.
    *
@@ -70,6 +114,14 @@ class ServerController extends ControllerBase {
     // Redirect to the server's "View" page.
     $url = $search_api_server->toUrl('canonical');
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
+  }
+
+  /**
+   * Executes all pending tasks of any (enabled) servers.
+   */
+  public function executeTasks() {
+    $this->getServerTaskManager()->setExecuteBatch();
+    return batch_process(Url::fromRoute('search_api.overview'));
   }
 
 }

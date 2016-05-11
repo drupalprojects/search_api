@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -104,6 +105,9 @@ class ServerTaskTest extends KernelTestBase {
     $this->index->save();
 
     $this->serverTaskManager = $this->container->get('search_api.server_task_manager');
+
+    // Reset the list of called backend methods.
+    $this->getCalledBackendMethods();
   }
 
   /**
@@ -118,11 +122,11 @@ class ServerTaskTest extends KernelTestBase {
     // Set exception for addIndex() and reset the list of successful backend
     // method calls.
     $this->state->set('search_api_test_backend.exception.addIndex', TRUE);
-    $this->getCalledServerMethods();
+    $this->getCalledBackendMethods();
 
     // Try to add the index.
     $this->server->addIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'addIndex correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'addIndex correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'addIndex';
@@ -134,7 +138,7 @@ class ServerTaskTest extends KernelTestBase {
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
       $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
@@ -150,21 +154,19 @@ class ServerTaskTest extends KernelTestBase {
     $this->state->set('search_api_test_backend.exception.addIndex', FALSE);
     search_api_cron();
     $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
-    $this->assertEquals(array('addIndex', 'updateIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
+    $this->assertEquals(array('addIndex', 'updateIndex'), $this->getCalledBackendMethods(), 'Right methods were called during task execution.');
   }
 
   /**
    * Tests task system integration for the server's updateIndex() method.
    */
   public function testUpdateIndex() {
-    // Set exception for updateIndex() and reset the list of successful backend
-    // method calls.
+    // Set exception for updateIndex().
     $this->state->set('search_api_test_backend.exception.updateIndex', TRUE);
-    $this->getCalledServerMethods();
 
     // Try to update the index.
     $this->server->updateIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'updateIndex correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'updateIndex';
@@ -176,7 +178,7 @@ class ServerTaskTest extends KernelTestBase {
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->deleteAllIndexItems($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteAllIndexItems was not executed.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'deleteAllIndexItems was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
       $this->assertTrue(TRUE, "Second task ('deleteAllIndexItems') was added.");
@@ -198,24 +200,22 @@ class ServerTaskTest extends KernelTestBase {
       'indexItems',
     );
     $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
-    $this->assertEquals($expected_methods, $this->getCalledServerMethods(), 'Right methods were called during task execution.');
+    $this->assertEquals($expected_methods, $this->getCalledBackendMethods(), 'Right methods were called during task execution.');
   }
 
   /**
    * Tests task system integration for the server's removeIndex() method.
    */
   public function testRemoveIndex() {
-    // Set exception for updateIndex() and removeIndex(), and reset the list of
-    // successful backend method calls.
+    // Set exception for updateIndex() and removeIndex().
     $this->state->set('search_api_test_backend.exception.updateIndex', TRUE);
     $this->state->set('search_api_test_backend.exception.removeIndex', TRUE);
-    $this->getCalledServerMethods();
 
     // First try to update the index and fail. Then try to remove it and check
     // that the tasks were set correctly.
     $this->server->updateIndex($this->index);
     $this->server->removeIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex and removeIndex correctly threw exceptions.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'updateIndex and removeIndex correctly threw exceptions.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'removeIndex';
@@ -235,7 +235,7 @@ class ServerTaskTest extends KernelTestBase {
       $expected_message = new FormattableMarkup('Could not index items on index %index because pending server tasks could not be executed.', $args);
       $this->assertEquals($expected_message, $e->getMessage(), 'Pending server tasks prevented indexing of items.');
     }
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'indexItems was not executed.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'indexItems was not executed.');
     $tasks = $this->getServerTasks();
     $this->assertEquals(1, count($tasks), 'No task added for indexItems.');
 
@@ -244,21 +244,19 @@ class ServerTaskTest extends KernelTestBase {
     $this->state->set("search_api_test_backend.exception.removeIndex", FALSE);
     search_api_cron();
     $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
-    $this->assertEquals(array('removeIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
+    $this->assertEquals(array('removeIndex'), $this->getCalledBackendMethods(), 'Right methods were called during task execution.');
   }
 
   /**
    * Tests task system integration for the server's deleteItems() method.
    */
   public function testDeleteItems() {
-    // Set exception for deleteItems() and reset the list of successful
-    // backend method calls.
+    // Set exception for deleteItems().
     $this->state->set('search_api_test_backend.exception.deleteItems', TRUE);
-    $this->getCalledServerMethods();
 
     // Try to update the index.
     $this->server->deleteItems($this->index, array());
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteItems correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'deleteItems correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'deleteItems';
@@ -270,7 +268,7 @@ class ServerTaskTest extends KernelTestBase {
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
       $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
@@ -286,21 +284,19 @@ class ServerTaskTest extends KernelTestBase {
     $this->state->set('search_api_test_backend.exception.deleteItems', FALSE);
     search_api_cron();
     $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
-    $this->assertEquals(array('deleteItems', 'updateIndex'), $this->getCalledServerMethods(), 'Right methods were called during task execution.');
+    $this->assertEquals(array('deleteItems', 'updateIndex'), $this->getCalledBackendMethods(), 'Right methods were called during task execution.');
   }
 
   /**
    * Tests task system integration for the deleteAllIndexItems() method.
    */
   public function testDeleteAllIndexItems() {
-    // Set exception for deleteAllIndexItems() and reset the list of successful
-    // backend method calls.
+    // Set exception for deleteAllIndexItems().
     $this->state->set('search_api_test_backend.exception.deleteAllIndexItems', TRUE);
-    $this->getCalledServerMethods();
 
     // Try to update the index.
     $this->server->deleteAllIndexItems($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'deleteAllIndexItems correctly threw an exception.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'deleteAllIndexItems correctly threw an exception.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 1) {
       $task_created = $tasks[0]->type === 'deleteAllIndexItems';
@@ -312,7 +308,7 @@ class ServerTaskTest extends KernelTestBase {
 
     // Check whether other task-system-integrated methods now fail, too.
     $this->server->updateIndex($this->index);
-    $this->assertEquals(array(), $this->getCalledServerMethods(), 'updateIndex was not executed.');
+    $this->assertEquals(array(), $this->getCalledBackendMethods(), 'updateIndex was not executed.');
     $tasks = $this->getServerTasks();
     if (count($tasks) == 2) {
       $this->assertTrue(TRUE, "Second task ('updateIndex') was added.");
@@ -334,7 +330,106 @@ class ServerTaskTest extends KernelTestBase {
       'indexItems',
     );
     $this->assertEquals(array(), $this->getServerTasks(), 'Server tasks were correctly executed.');
-    $this->assertEquals($expected_methods, $this->getCalledServerMethods(), 'Right methods were called during task execution.');
+    $this->assertEquals($expected_methods, $this->getCalledBackendMethods(), 'Right methods were called during task execution.');
+  }
+
+  /**
+   * Verifies that no more than 100 items will be executed at once.
+   */
+  public function testTaskCountLimit() {
+    // Create 100 tasks.
+    for ($i = 0; $i < 101; ++$i) {
+      $this->serverTaskManager->add($this->server, 'deleteItems', $this->index, array(''));
+    }
+
+    // Verify that a new operation cannot be executed.
+    $this->server->updateIndex($this->index);
+
+    $methods = $this->getCalledBackendMethods();
+    $this->assertCount(100, $methods, '100 pending tasks were executed upon new operation.');
+    $filter = function ($method) { return $method != 'deleteItems'; };
+    $this->assertEmpty(array_filter($methods, $filter), 'The new operation was not executed.');
+    $this->assertEquals(2, $this->serverTaskManager->getCount($this->server), 'A task was created for the new operation.');
+  }
+
+  /**
+   * Tests the correct automatic removal of tasks upon certain operations.
+   */
+  public function testAutomaticTaskRemoval() {
+    // Create a second server and index and add tasks for them.
+    $server2 = Server::create(array(
+      'name' => 'Test Server 2',
+      'id' => 'test_server_2',
+      'status' => 1,
+      'backend' => 'search_api_test_backend',
+    ));
+    $server2->save();
+    $this->serverTaskManager->add($server2, 'removeIndex', $this->index);
+
+    $index_values = $this->index->toArray();
+    unset($index_values['uuid']);
+    $index_values['id'] = 'test_index_2';
+    $index2 = Index::create($index_values);
+    $index2->save();
+    // Reset the called backend methods.
+    $this->getCalledBackendMethods();
+
+    // Verify that adding an index ignores all tasks related to that index.
+    $this->addTasks($index2);
+    $this->server->addIndex($this->index);
+    $this->assertEquals(array('addIndex', 'addIndex'), $this->getCalledBackendMethods(), 'Re-adding an index ignored all its tasks.');
+    $this->assertEquals(0, $this->serverTaskManager->getCount($this->server), 'No pending tasks for server.');
+    $this->assertEquals(1, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
+
+    // Verify that removing an index ignores all tasks related to that index.
+    $this->addTasks($index2);
+    $this->server->removeIndex($this->index);
+    $this->assertEquals(array('addIndex', 'removeIndex'), $this->getCalledBackendMethods(), 'Removing an index ignored all its tasks.');
+    $this->assertEquals(0, $this->serverTaskManager->getCount($this->server), 'No pending tasks for server.');
+    $this->assertEquals(1, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
+
+    // Verify that deleting all of an index's items ignores all other deletion
+    // tasks related to that index.
+    $this->addTasks($index2);
+    $this->server->deleteAllIndexItems($this->index);
+    $this->assertEquals(array('addIndex', 'removeIndex', 'addIndex', 'updateIndex', 'deleteAllIndexItems'), $this->getCalledBackendMethods(), 'Deleting all items of an index ignored all its deletion tasks.');
+    $this->assertEquals(0, $this->serverTaskManager->getCount($this->server), 'No pending tasks for server.');
+    $this->assertEquals(1, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
+
+    // Verify that removing all items from the server automatically removes all
+    // item deletion tasks as well.
+    $this->addTasks($index2);
+    $this->server->deleteAllItems();
+    // deleteAllIndexItems() is called twice – once for each index.
+    $this->assertEquals(array('deleteAllIndexItems', 'deleteAllIndexItems'), $this->getCalledBackendMethods(), "Deleting all items from a server didn't execute any tasks.");
+    $this->assertEquals(4, $this->serverTaskManager->getCount($this->server), 'Deleting all items from a server removed all its item deletion tasks.');
+    $this->assertEquals(5, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
+
+    // Verify that deleting a server also deletes all of its tasks.
+    $this->addTasks($index2);
+    $this->state->set('search_api_test_backend.exception.addIndex', TRUE);
+    $this->state->set('search_api_test_backend.exception.updateIndex', TRUE);
+    $this->state->set('search_api_test_backend.exception.removeIndex', TRUE);
+    $this->state->set('search_api_test_backend.exception.deleteItems', TRUE);
+    $this->state->set('search_api_test_backend.exception.deleteAllIndexItems', TRUE);
+    $this->server->delete();
+    $this->assertEquals(0, $this->serverTaskManager->getCount($this->server), 'Upon server deletion, all of its tasks were deleted, too.');
+    $this->assertEquals(1, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
+  }
+
+  /**
+   * Adds one task of each type for this test's server.
+   *
+   * @param \Drupal\search_api\IndexInterface $second_index
+   *   A second index, for which one additional "addIndex" task is created.
+   */
+  protected function addTasks(IndexInterface $second_index) {
+    $this->serverTaskManager->add($this->server, 'addIndex', $second_index);
+    $this->serverTaskManager->add($this->server, 'removeIndex', $this->index);
+    $this->serverTaskManager->add($this->server, 'addIndex', $this->index);
+    $this->serverTaskManager->add($this->server, 'updateIndex', $this->index);
+    $this->serverTaskManager->add($this->server, 'deleteItems', $this->index, array());
+    $this->serverTaskManager->add($this->server, 'deleteAllIndexItems', $this->index);
   }
 
   /**
@@ -347,7 +442,7 @@ class ServerTaskTest extends KernelTestBase {
    * @return string[]
    *   The methods called on the test server since the last reset.
    */
-  protected function getCalledServerMethods($reset = TRUE) {
+  protected function getCalledBackendMethods($reset = TRUE) {
     $key = 'search_api_test_backend.methods_called.' . $this->server->id();
     $methods_called = $this->state->get($key, array());
     if ($reset) {
