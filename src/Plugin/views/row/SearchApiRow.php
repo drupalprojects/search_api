@@ -23,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   title = @Translation("Rendered entity"),
  *   help = @Translation("Displays entity of the matching search API item"),
  * )
+ *
+ * @see search_api_views_plugins_row_alter()
  */
 class SearchApiRow extends RowPluginBase {
 
