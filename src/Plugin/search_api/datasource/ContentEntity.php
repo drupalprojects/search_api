@@ -746,7 +746,6 @@ class ContentEntity extends DatasourcePluginBase {
     }
     if (isset($page)) {
       $page_size = $this->getConfigValue('tracking_page_size');
-      assert('$page_size', 'Tracking page size is not set.');
       $select->range($page * $page_size, $page_size);
     }
     $entity_ids = $select->execute();
