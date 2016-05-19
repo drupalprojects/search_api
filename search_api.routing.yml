@@ -117,7 +117,7 @@ entity.search_api_index.fields:
     search_api_index:
       view:
         tempstore: TRUE
-        type: entity:search_api_index
+        type: 'entity:search_api_index'
   defaults:
     _entity_form: 'search_api_index.fields'
   requirements:
@@ -129,7 +129,7 @@ entity.search_api_index.add_fields:
     search_api_index:
       view:
         tempstore: TRUE
-        type: entity:search_api_index
+        type: 'entity:search_api_index'
   defaults:
     _entity_form: 'search_api_index.add_fields'
   requirements:
@@ -141,7 +141,7 @@ entity.search_api_index.remove_field:
     search_api_index:
       view:
         tempstore: TRUE
-        type: entity:search_api_index
+        type: 'entity:search_api_index'
   defaults:
     _controller: 'Drupal\search_api\Controller\IndexController::removeField'
   requirements:
