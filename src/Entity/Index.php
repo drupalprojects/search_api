@@ -559,8 +559,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $processor_weights = array();
     foreach ($processors as $name => $processor) {
       if ($processor->supportsStage($stage)) {
-        if (!empty($processor_settings[$name]['settings']['weights'][$stage])) {
-          $processor_weights[$name] = $processor_settings[$name]['settings']['weights'][$stage];
+        $processor_settings = $processor->getConfiguration();
+        if (isset($processor_settings['weights'][$stage])) {
+          $processor_weights[$name] = $processor_settings['weights'][$stage];
         }
         else {
           $processor_weights[$name] = $processor->getDefaultWeight($stage);
