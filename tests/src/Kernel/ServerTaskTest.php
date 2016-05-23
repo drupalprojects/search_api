@@ -73,6 +73,12 @@ class ServerTaskTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
 
+    // Set tracking page size so tracking will work properly.
+    \Drupal::configFactory()
+      ->getEditable('search_api.settings')
+      ->set('tracking_page_size', 100)
+      ->save();
+
     // Create a test server.
     $this->server = Server::create(array(
       'name' => 'Test Server',

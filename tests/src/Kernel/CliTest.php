@@ -58,9 +58,12 @@ class CliTest extends KernelTestBase {
       ->getEditable('search_api.settings')
       ->set('tracking_page_size', 100)
       ->save();
+
     // Disable the use of batches for item tracking to simulate a CLI
     // environment.
-    \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+    if (php_sapi_name() != 'cli') {
+      \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
+    }
   }
 
   /**
