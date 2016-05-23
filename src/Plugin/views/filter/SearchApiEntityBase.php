@@ -60,17 +60,45 @@ abstract class SearchApiEntityBase extends SearchApiString {
   /**
    * {@inheritdoc}
    */
-  public function operatorOptions() {
+  function operators() {
     $operators = array(
-      '=' => $this->isMultiValued() ? $this->t('Is one of') : $this->t('Is'),
-      'all of' => $this->t('Is all of'),
-      '<>' => $this->isMultiValued() ? $this->t('Is not one of') : $this->t('Is not'),
-      'empty' => $this->t('Is empty'),
-      'not empty' => $this->t('Is not empty'),
+      '=' => array(
+        'title' => $this->isMultiValued() ? $this->t('Is one of') : $this->t('Is'),
+        'short' => $this->t('any'),
+        'values' => 1,
+      ),
+      'all of' => array(
+        'title' => $this->t('Is all of'),
+        'short' => $this->t('all'),
+        'values' => 1,
+      ),
+      '<>' => array(
+        'title' => $this->isMultiValued() ? $this->t('Is not one of') : $this->t('Is not'),
+        'short' => $this->t('not'),
+        'values' => 1,
+      ),
     );
+
     if (!$this->isMultiValued()) {
       unset($operators['all of']);
     }
+
+    // If the definition allows for the empty operators, add them.
+    if (!empty($this->definition['allow empty'])) {
+      $operators += array(
+        'empty' => array(
+          'title' => $this->t('Is empty (NULL)'),
+          'short' => $this->t('empty'),
+          'values' => 0,
+        ),
+        'not empty' => array(
+          'title' => $this->t('Is not empty (NOT NULL)'),
+          'short' => $this->t('not empty'),
+          'values' => 0,
+        ),
+      );
+    }
+
     return $operators;
   }
 
