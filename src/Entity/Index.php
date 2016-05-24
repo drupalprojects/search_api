@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -377,9 +376,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $datasources = $this->getDatasources();
 
     if (empty($datasources[$datasource_id])) {
-      $args['@datasource'] = $datasource_id;
-      $args['%index'] = $this->label();
-      throw new SearchApiException(new FormattableMarkup('The datasource with ID "@datasource" could not be retrieved for index %index.', $args));
+      $index_label = $this->label();
+      throw new SearchApiException("The datasource with ID '$datasource_id' could not be retrieved for index '$index_label'.");
     }
 
     return $datasources[$datasource_id];
@@ -460,9 +458,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
 
       if (!($this->trackerInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($tracker_id, $configuration))) {
-        $args['@tracker'] = $tracker_id;
-        $args['%index'] = $this->label();
-        throw new SearchApiException(new FormattableMarkup('The tracker with ID "@tracker" could not be retrieved for index %index.', $args));
+        $index_label = $this->label();
+        throw new SearchApiException("The tracker with ID '$tracker_id' could not be retrieved for index '$index_label'.");
       }
     }
 
@@ -505,9 +502,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->serverInstance && $this->server) {
       $this->serverInstance = Server::load($this->server);
       if (!$this->serverInstance) {
-        $args['@server'] = $this->server;
-        $args['%index'] = $this->label();
-        throw new SearchApiException(new FormattableMarkup('The server with ID "@server" could not be retrieved for index %index.', $args));
+        $index_label = $this->label();
+        throw new SearchApiException("The server with ID '$this->server' could not be retrieved for index '$index_label'.");
       }
     }
 
@@ -678,14 +674,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function addField(FieldInterface $field) {
     $field_id = $field->getFieldIdentifier();
     if (Utility::isFieldIdReserved($field_id)) {
-      $args['%field_id'] = $field_id;
-      throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
+      throw new SearchApiException("'$field_id' is a reserved value and cannot be used as the machine name of a normal field.");
     }
 
     $old_field = $this->getField($field_id);
     if ($old_field && $old_field != $field) {
-      $args['%field_id'] = $field_id;
-      throw new SearchApiException(new FormattableMarkup('Cannot add field with machine name %field_id: machine name is already taken.', $args));
+      throw new SearchApiException("Cannot add field with machine name '$field_id': machine name is already taken.");
     }
 
     $this->fieldInstances[$field_id] = $field;
@@ -698,16 +692,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function renameField($old_field_id, $new_field_id) {
     if (!isset($this->getFields()[$old_field_id])) {
-      $args['%field_id'] = $old_field_id;
-      throw new SearchApiException(new FormattableMarkup('Could not rename field with machine name %field_id: no such field.', $args));
+      throw new SearchApiException("Could not rename field with machine name '$old_field_id': no such field.");
     }
     if (Utility::isFieldIdReserved($new_field_id)) {
-      $args['%field_id'] = $new_field_id;
-      throw new SearchApiException(new FormattableMarkup('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args));
+      throw new SearchApiException("'$new_field_id' is a reserved value and cannot be used as the machine name of a normal field.");
     }
     if (isset($this->getFields()[$new_field_id])) {
-      $args['%field_id'] = $new_field_id;
-      throw new SearchApiException(new FormattableMarkup("%field_id already exists and can't be used as a new field id.", $args));
+      throw new SearchApiException("'$new_field_id' already exists and can't be used as a new field id.");
     }
 
     $this->fieldInstances[$new_field_id] = $this->fieldInstances[$old_field_id];
@@ -725,8 +716,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return $this;
     }
     if ($field->isIndexedLocked()) {
-      $args['%field_id'] = $field_id;
-      throw new SearchApiException(new FormattableMarkup('Cannot remove field with machine name %field_id: field is locked.', $args));
+      throw new SearchApiException("Cannot remove field with machine name '$field_id': field is locked.");
     }
 
     unset($this->fieldInstances[$field_id]);
@@ -875,7 +865,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return array();
     }
     if (!$this->status) {
-      throw new SearchApiException(new FormattableMarkup("Couldn't index values on index %index (index is disabled)", array('%index' => $this->label())));
+      $index_label = $this->label();
+      throw new SearchApiException("Couldn't index values on index '$index_label' (index is disabled)");
     }
 
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */

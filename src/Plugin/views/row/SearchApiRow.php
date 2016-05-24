@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -121,7 +120,8 @@ class SearchApiRow extends RowPluginBase {
     $base_table = $view->storage->get('base_table');
     $this->index = SearchApiQuery::getIndexFromTable($base_table, $this->getEntityTypeManager());
     if (!$this->index) {
-      throw new \InvalidArgumentException(new FormattableMarkup('View %view is not based on Search API but tries to use its row plugin.', array('%view' => $view->storage->label())));
+      $view_label = $view->storage->label();
+      throw new \InvalidArgumentException("View '$view_label' is not based on Search API but tries to use its row plugin.");
     }
   }
 

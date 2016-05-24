@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -137,7 +136,8 @@ class Query implements QueryInterface {
    */
   public function __construct(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array()) {
     if (!$index->status()) {
-      throw new SearchApiException(new FormattableMarkup("Can't search on index %index which is disabled.", array('%index' => $index->label())));
+      $index_label = $index->label();
+      throw new SearchApiException("Can't search on index '$index_label' which is disabled.");
     }
     $this->index = $index;
     $this->resultsCache = $results_cache;

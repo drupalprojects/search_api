@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Item;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -348,9 +347,9 @@ class Field implements \IteratorAggregate, FieldInterface {
       $definitions = $this->index->getPropertyDefinitions($this->getDatasourceId());
       $definition = Utility::retrieveNestedProperty($definitions, $this->getPropertyPath());
       if (!$definition) {
-        $args['%field'] = $this->getLabel();
-        $args['%index'] = $this->getIndex()->label();
-        throw new SearchApiException(new FormattableMarkup('Could not retrieve data definition for field %field on index %index.', $args));
+        $field_label = $this->getLabel();
+        $index_label = $this->getIndex()->label();
+        throw new SearchApiException("Could not retrieve data definition for field '$field_label' on index '$index_label'.");
       }
       $this->dataDefinition = $definition;
     }
@@ -369,9 +368,9 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function setType($type) {
     if ($type != $this->type && $this->isTypeLocked()) {
-      $args['%field'] = $this->getLabel();
-      $args['%index'] = $this->getIndex()->label();
-      throw new SearchApiException(new FormattableMarkup('Trying to change the type of field %field on index %index, which is locked.', $args));
+      $field_label = $this->getLabel();
+      $index_label = $this->getIndex()->label();
+      throw new SearchApiException("Trying to change the type of field '$field_label' on index '$index_label', which is locked.");
     }
     $this->type = $type;
     return $this;

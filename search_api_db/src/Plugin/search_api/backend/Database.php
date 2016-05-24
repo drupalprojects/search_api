@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_db\Plugin\search_api\backend;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -806,7 +805,7 @@ class Database extends BackendPluginBase {
         return array('type' => 'int', 'size' => 'tiny');
 
       default:
-        throw new SearchApiException(new FormattableMarkup('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException("Unknown field type '$type'.");
     }
   }
 
@@ -1062,7 +1061,8 @@ class Database extends BackendPluginBase {
    */
   public function indexItems(IndexInterface $index, array $items) {
     if (!$this->getIndexDbInfo($index)) {
-      throw new SearchApiException(new FormattableMarkup('No field settings for index with id @id.', array('@id' => $index->id())));
+      $index_id = $index->id();
+      throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
     $indexed = array();
     foreach ($items as $id => $item) {
@@ -1405,7 +1405,7 @@ class Database extends BackendPluginBase {
         return strtotime($value);
 
       default:
-        throw new SearchApiException(new FormattableMarkup('Unknown field type @type. Database search module might be out of sync with Search API.', array('@type' => $type)));
+        throw new SearchApiException("Unknown field type '$type'.");
     }
   }
 
@@ -1467,7 +1467,8 @@ class Database extends BackendPluginBase {
     $db_info = $this->getIndexDbInfo($index);
 
     if (!isset($db_info['field_tables'])) {
-      throw new SearchApiException(new FormattableMarkup('Unknown index @id.', array('@id' => $index->id())));
+      $index_id = $index->id();
+      throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
     $fields = $this->getFieldInfo($index);
 
@@ -1511,7 +1512,7 @@ class Database extends BackendPluginBase {
           }
 
           if (!isset($fields[$field_name])) {
-            throw new SearchApiException(new FormattableMarkup('Trying to sort on unknown field @field.', array('@field' => $field_name)));
+            throw new SearchApiException("Trying to sort on unknown field '$field_name'.");
           }
           $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
           $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
@@ -1588,12 +1589,12 @@ class Database extends BackendPluginBase {
         $fulltext_field_information = array();
         foreach ($fulltext_fields as $name) {
           if (!isset($fields[$name])) {
-            throw new SearchApiException(new FormattableMarkup('Unknown field @field specified as search target.', array('@field' => $name)));
+            throw new SearchApiException("Unknown field '$name' specified as search target.");
           }
           if (!Utility::isTextType($fields[$name]['type'])) {
             $types = $this->getDataTypePluginManager()->getInstances();
             $type = $types[$fields[$name]['type']]->label();
-            throw new SearchApiException(new FormattableMarkup('Cannot perform fulltext search on field @field of type @type.', array('@field' => $name, '@type' => $type)));
+            throw new SearchApiException("Cannot perform fulltext search on field '$name' of type '$type'.");
           }
           $fulltext_field_information[$name] = $fields[$name];
         }
@@ -2040,7 +2041,7 @@ class Database extends BackendPluginBase {
         $not_between = $operator == 'NOT BETWEEN';
 
         if (!isset($fields[$field])) {
-          throw new SearchApiException(new FormattableMarkup('Unknown field in filter clause: @field.', array('@field' => $field)));
+          throw new SearchApiException("Unknown field in filter clause: '$field'.");
         }
         $field_info = $fields[$field];
         // For NULL values, we can just use the single-values table, since we
@@ -2330,7 +2331,8 @@ class Database extends BackendPluginBase {
     $index = $query->getIndex();
     $db_info = $this->getIndexDbInfo($index);
     if (empty($db_info['field_tables'])) {
-      throw new SearchApiException(new FormattableMarkup('Unknown index @id.', array('@id' => $index->id())));
+      $index_id = $index->id();
+      throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
     $fields = $this->getFieldInfo($index);
 

@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Entity;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api\IndexInterface;
@@ -132,9 +131,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $config = $this->backend_config;
       $config['server'] = $this;
       if (!($this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
-        $args['@backend'] = $this->getBackendId();
-        $args['%server'] = $this->label();
-        throw new SearchApiException(new FormattableMarkup('The backend with ID "@backend" could not be retrieved for server %server.', $args));
+        $backend_id = $this->getBackendId();
+        $label = $this->label();
+        throw new SearchApiException("The backend with ID '$backend_id' could not be retrieved for server '$label'.");
       }
     }
     return $this->backendPlugin;
@@ -279,8 +278,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if ($server_task_manager->execute($this)) {
       return $this->getBackend()->indexItems($index, $items);
     }
-    $args['%index'] = $index->label();
-    throw new SearchApiException(new FormattableMarkup('Could not index items on index %index because pending server tasks could not be executed.', $args));
+    $index_label = $index->label();
+    throw new SearchApiException("Could not index items on index '$index_label' because pending server tasks could not be executed.");
   }
 
   /**
@@ -369,12 +368,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
       }
     }
     if (!empty($e)) {
-      $args = array(
-        '%server' => $this->label(),
-        '@indexes' => implode(', ', $failed),
-      );
-      $message = new FormattableMarkup('Deleting all items from server %server failed for the following (write-enabled) indexes: @indexes.', $args);
-      throw new SearchApiException($message, 0, $e);
+      $server_name = $this->label();
+      $failed = implode(', ', $failed);
+      throw new SearchApiException("Deleting all items from server '$server_name' failed for the following (write-enabled) indexes: $failed.", 0, $e);
     }
 
     $types = array(

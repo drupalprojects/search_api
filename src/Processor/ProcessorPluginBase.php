@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Processor;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\IndexPluginBase;
@@ -118,10 +117,9 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
     if (!$field) {
       $property = Utility::retrieveNestedProperty($this->index->getPropertyDefinitions($datasource_id), $property_path);
       if (!$property) {
-        $args['%property'] = Utility::createCombinedId($datasource_id, $property_path);
-        $args['%processor'] = $this->label();
-        $message = new FormattableMarkup('Could not find property %property which is required by the %processor processor.', $args);
-        throw new SearchApiException($message);
+        $property_id = Utility::createCombinedId($datasource_id, $property_path);
+        $processor_label = $this->label();
+        throw new SearchApiException("Could not find property '$property_id' which is required by the '$processor_label' processor.");
       }
       $field = Utility::createFieldFromProperty($this->index, $property, $datasource_id, $property_path, NULL, $type);
     }

@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\search_api\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -237,8 +236,8 @@ class ServerTaskTest extends KernelTestBase {
       $this->fail('Pending server tasks did not prevent indexing of items.');
     }
     catch (SearchApiException $e) {
-      $args['%index'] = $this->index->label();
-      $expected_message = new FormattableMarkup('Could not index items on index %index because pending server tasks could not be executed.', $args);
+      $label = $this->index->label();
+      $expected_message = "Could not index items on index '$label' because pending server tasks could not be executed.";
       $this->assertEquals($expected_message, $e->getMessage(), 'Pending server tasks prevented indexing of items.');
     }
     $this->assertEquals(array(), $this->getCalledBackendMethods(), 'indexItems was not executed.');

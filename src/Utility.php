@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
@@ -643,11 +642,8 @@ class Utility {
         $type = $type_mapping[$property_type];
       }
       else {
-        $args['%property'] = $property->getLabel();
-        $args['%property_path'] = $property_path;
-        $args['%type'] = $property_type;
-        $message = new FormattableMarkup('No default data type mapping could be found for property %property (%property_path) of type %type.', $args);
-        throw new SearchApiException($message);
+        $property_name = $property->getLabel();
+        throw new SearchApiException("No default data type mapping could be found for property '$property_name' ($property_path) of type '$property_type'.");
       }
     }
 
