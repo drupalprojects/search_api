@@ -518,6 +518,45 @@ interface IndexInterface extends ConfigEntityInterface {
   public function indexSpecificItems(array $search_objects);
 
   /**
+   * Determines whether the index is currently in "batch tracking" mode.
+   *
+   * @return boolean
+   *   Whether the index is currently in "batch tracking" mode.
+   */
+  public function isBatchTracking();
+
+  /**
+   * Puts the index into "batch tracking" mode.
+   *
+   * This mode should be used when adding batches of items to the index's
+   * tracking tables, or when marking them as updated. This will prevent the
+   * index from immediately trying to index all of these items, even if its
+   * "index_directly" option is set.
+   *
+   * @return $this
+   *
+   * @see \Drupal\search_api\IndexInterface::trackItemsInserted()
+   * @see \Drupal\search_api\IndexInterface::trackItemsUpdated()
+   */
+  public function startBatchTracking();
+
+  /**
+   * Stop the latest initialized "batch tracking" mode for the index.
+   *
+   * Note that the index might remain in "batch tracking" mode if
+   * startBatchTracking() was called multiple times. You have to take care to
+   * always call the two methods the same number of times.
+   *
+   * @return $this
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if the index wasn't in "batch tracking" mode before.
+   *
+   * @see \Drupal\search_api\IndexInterface::startBatchTracking
+   */
+  public function stopBatchTracking();
+
+  /**
    * Adds items from a specific datasource to the index.
    *
    * Note that this method receives datasource-specific item IDs as the

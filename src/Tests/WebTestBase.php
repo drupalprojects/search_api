@@ -200,4 +200,13 @@ abstract class WebTestBase extends SimpletestWebTestBase {
     return $path;
   }
 
+  /**
+   * Executes all pending Search API tasks.
+   */
+  protected function executeTasks() {
+    $task_manager = \Drupal::getContainer()->get('search_api.task_manager');
+    $task_manager->executeAllTasks();
+    $this->assertEqual(0, $task_manager->getTasksCount(), 'No more pending tasks.');
+  }
+
 }

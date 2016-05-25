@@ -270,6 +270,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $hasReindexed = FALSE;
 
   /**
+   * The number of currently active "batch tracking" modes.
+   *
+   * @var int
+   */
+  protected $batchTracking = 0;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
@@ -924,6 +931,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function isBatchTracking() {
+    return (bool) $this->batchTracking;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function startBatchTracking() {
+    $this->batchTracking++;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function stopBatchTracking() {
+    if (!$this->batchTracking) {
+      throw new SearchApiException('Trying to leave "batch tracking" mode on index "' . $this->label() . '" which was not entered first.');
+    }
+    $this->batchTracking--;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function trackItemsInserted($datasource_id, array $ids) {
     $this->trackItemsInsertedOrUpdated($datasource_id, $ids, __FUNCTION__);
   }
@@ -950,13 +983,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    *   "trackItemsUpdated".
    */
   protected function trackItemsInsertedOrUpdated($datasource_id, array $ids, $tracker_method) {
-    if ($this->hasValidTracker() && $this->status() && \Drupal::getContainer()->get('search_api.index_task_manager')->isTrackingComplete($this)) {
+    if ($this->hasValidTracker() && $this->status()) {
       $item_ids = array();
       foreach ($ids as $id) {
         $item_ids[] = Utility::createCombinedId($datasource_id, $id);
       }
       $this->getTrackerInstance()->$tracker_method($item_ids);
-      if (!$this->isReadOnly() && $this->getOption('index_directly')) {
+      if (!$this->isReadOnly() && $this->getOption('index_directly') && !$this->batchTracking) {
         try {
           $items = $this->loadItemsMultiple($item_ids);
           if ($items) {

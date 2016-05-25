@@ -44,10 +44,6 @@ class ContentAccessTest extends ProcessorTestBase {
   public function setUp($processor = NULL) {
     parent::setUp('content_access');
 
-    // The parent method already installs most needed node and comment schemas,
-    // but here we also need the comment statistics.
-    $this->installSchema('comment', array('comment_entity_statistics'));
-
     // Create a node type for testing.
     $type = NodeType::create(array('type' => 'page', 'name' => 'page'));
     $type->save();
@@ -298,7 +294,7 @@ class ContentAccessTest extends ProcessorTestBase {
   /**
    * Asserts that the search results contain the expected IDs.
    *
-   * @param ResultSetInterface $result
+   * @param \Drupal\search_api\Query\ResultSetInterface $result
    *   The search results.
    * @param int[][] $expected
    *   The expected entity IDs, grouped by entity type and with their indexes in

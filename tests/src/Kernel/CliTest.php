@@ -73,14 +73,14 @@ class CliTest extends KernelTestBase {
     EntityTest::create(array(
       'name' => 'foo bar baz föö smile' . json_decode('"\u1F601"'),
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test',
       'keywords' => array('Orange', 'orange', 'örange', 'Orange'),
       'category' => 'item_category',
     ))->save();
     EntityTest::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test',
       'keywords' => array('strawberry', 'llama'),
       'category' => 'item_category',
     ))->save();

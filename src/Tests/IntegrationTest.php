@@ -121,7 +121,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertResponse(200);
     $this->assertText($this->t('The index was successfully saved.'));
-    $this->assertText($this->t('Successfully tracked @count items for this index.', array('@count' => 2)));
+    $this->assertText($this->t('Successfully executed @count pending task.', array('@count' => 1)));
     $this->assertEqual(2, $this->countTrackedItems());
 
     $this->enableAllProcessors();
@@ -1056,6 +1056,8 @@ class IntegrationTest extends WebTestBase {
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $this->assertText($this->t('The index was successfully saved.'));
+
+    $this->executeTasks();
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, $node_count, 'Correct number of items tracked after disabling the "User" datasource.');

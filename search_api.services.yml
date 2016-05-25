@@ -36,9 +36,17 @@ services:
     class: Drupal\search_api\Tracker\TrackerPluginManager
     parent: default_plugin_manager
 
+  search_api.datasource_task_manager:
+    class: Drupal\search_api\Plugin\search_api\datasource\ContentEntityTaskManager
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
   search_api.index_task_manager:
     class: Drupal\search_api\Task\IndexTaskManager
-    arguments: ['@state', '@entity_type.manager']
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
 
   search_api.results_static_cache:
     class: Drupal\search_api\Query\ResultsCache
@@ -46,6 +54,10 @@ services:
 
   search_api.server_task_manager:
     class: Drupal\search_api\Task\ServerTaskManager
-    arguments: ['@database', '@entity_type.manager']
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
     tags:
-      - { name: backend_overridable }
+      - { name: event_subscriber }
+
+  search_api.task_manager:
+    class: Drupal\search_api\Task\TaskManager
+    arguments: ['@entity_type.manager', '@event_dispatcher', '@string_translation']

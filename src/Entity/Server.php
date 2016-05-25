@@ -206,7 +206,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     // When freshly adding an index to a server, it doesn't make any sense to
     // execute possible other tasks for that server/index combination.
     // (removeIndex() is implicit when adding an index which was already added.)
-    $server_task_manager->delete(NULL, $this, $index);
+    $server_task_manager->delete($this, $index);
 
     try {
       if ($server_task_manager->execute($this)) {
@@ -220,8 +220,11 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%index' => $index->label(),
       );
       watchdog_exception('search_api', $e, '%type while adding index %index to server %server: @message in %function (line %line of %file).', $vars);
-      $server_task_manager->add($this, __FUNCTION__, $index);
     }
+
+    $task_manager = \Drupal::getContainer()
+      ->get('search_api.task_manager');
+    $task_manager->addTask(__FUNCTION__, $this, $index);
   }
 
   /**
@@ -242,7 +245,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
       );
       watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: @message in %function (line %line of %file).', $vars);
     }
-    $server_task_manager->add($this, __FUNCTION__, $index, isset($index->original) ? $index->original : NULL);
+
+    $task_manager = \Drupal::getContainer()
+      ->get('search_api.task_manager');
+    $task_manager->addTask(__FUNCTION__, $this, $index, isset($index->original) ? $index->original : NULL);
   }
 
   /**
@@ -252,7 +258,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
     // When removing an index from a server, it doesn't make any sense anymore
     // to delete items from it, or react to other changes.
-    $server_task_manager->delete(NULL, $this, $index);
+    $server_task_manager->delete($this, $index);
 
     try {
       if ($server_task_manager->execute($this)) {
@@ -266,8 +272,16 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%index' => is_object($index) ? $index->label() : $index,
       );
       watchdog_exception('search_api', $e, '%type while removing index %index from server %server: @message in %function (line %line of %file).', $vars);
-      $server_task_manager->add($this, __FUNCTION__, $index);
     }
+
+    $task_manager = \Drupal::getContainer()
+      ->get('search_api.task_manager');
+    $data = NULL;
+    if (!is_object($index)) {
+      $data = $index;
+      $index = NULL;
+    }
+    $task_manager->addTask(__FUNCTION__, $this, $index, $data);
   }
 
   /**
@@ -307,7 +321,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
       );
       watchdog_exception('search_api', $e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
     }
-    $server_task_manager->add($this, __FUNCTION__, $index, $item_ids);
+
+    $task_manager = \Drupal::getContainer()
+      ->get('search_api.task_manager');
+    $task_manager->addTask(__FUNCTION__, $this, $index, $item_ids);
   }
 
   /**
@@ -330,7 +347,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       'deleteItems',
       'deleteAllIndexItems',
     );
-    $server_task_manager->delete(NULL, $this, $index, $types);
+    $server_task_manager->delete($this, $index, $types);
 
     try {
       if ($server_task_manager->execute($this)) {
@@ -345,7 +362,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
       );
       watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: @message in %function (line %line of %file).', $vars);
     }
-    $server_task_manager->add($this, __FUNCTION__, $index);
+
+    $task_manager = \Drupal::getContainer()
+      ->get('search_api.task_manager');
+    $task_manager->addTask(__FUNCTION__, $this, $index);
   }
 
   /**
@@ -379,7 +399,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     );
     \Drupal::getContainer()
       ->get('search_api.server_task_manager')
-      ->delete(NULL, $this, NULL, $types);
+      ->delete($this, NULL, $types);
   }
 
   /**
@@ -450,7 +470,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       if ($server->hasValidBackend()) {
         $server->getBackend()->preDelete();
       }
-      \Drupal::getContainer()->get('search_api.server_task_manager')->delete(NULL, $server);
+      \Drupal::getContainer()->get('search_api.server_task_manager')->delete($server);
     }
   }
 

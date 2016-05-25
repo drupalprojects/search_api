@@ -55,6 +55,13 @@ class ServerTaskTest extends KernelTestBase {
   protected $state;
 
   /**
+   * The task manager to use for the tests.
+   *
+   * @var \Drupal\search_api\Task\TaskManagerInterface
+   */
+  protected $taskManager;
+
+  /**
    * The server task manager to use for the tests.
    *
    * @var \Drupal\search_api\Task\ServerTaskManagerInterface
@@ -109,6 +116,7 @@ class ServerTaskTest extends KernelTestBase {
     ));
     $this->index->save();
 
+    $this->taskManager = $this->container->get('search_api.task_manager');
     $this->serverTaskManager = $this->container->get('search_api.server_task_manager');
 
     // Reset the list of called backend methods.
@@ -344,7 +352,7 @@ class ServerTaskTest extends KernelTestBase {
   public function testTaskCountLimit() {
     // Create 100 tasks.
     for ($i = 0; $i < 101; ++$i) {
-      $this->serverTaskManager->add($this->server, 'deleteItems', $this->index, array(''));
+      $this->taskManager->addTask('deleteItems', $this->server, $this->index, array(''));
     }
 
     // Verify that a new operation cannot be executed.
@@ -369,7 +377,7 @@ class ServerTaskTest extends KernelTestBase {
       'backend' => 'search_api_test_backend',
     ));
     $server2->save();
-    $this->serverTaskManager->add($server2, 'removeIndex', $this->index);
+    $this->taskManager->addTask('removeIndex', $server2, $this->index);
 
     $index_values = $this->index->toArray();
     unset($index_values['uuid']);
@@ -429,12 +437,12 @@ class ServerTaskTest extends KernelTestBase {
    *   A second index, for which one additional "addIndex" task is created.
    */
   protected function addTasks(IndexInterface $second_index) {
-    $this->serverTaskManager->add($this->server, 'addIndex', $second_index);
-    $this->serverTaskManager->add($this->server, 'removeIndex', $this->index);
-    $this->serverTaskManager->add($this->server, 'addIndex', $this->index);
-    $this->serverTaskManager->add($this->server, 'updateIndex', $this->index);
-    $this->serverTaskManager->add($this->server, 'deleteItems', $this->index, array());
-    $this->serverTaskManager->add($this->server, 'deleteAllIndexItems', $this->index);
+    $this->taskManager->addTask('addIndex', $this->server, $second_index);
+    $this->taskManager->addTask('removeIndex', $this->server, $this->index);
+    $this->taskManager->addTask('addIndex', $this->server, $this->index);
+    $this->taskManager->addTask('updateIndex', $this->server, $this->index);
+    $this->taskManager->addTask('deleteItems', $this->server, $this->index, array());
+    $this->taskManager->addTask('deleteAllIndexItems', $this->server, $this->index);
   }
 
   /**

@@ -443,6 +443,9 @@ class Utility {
    *   The current batch context.
    * @param \Drupal\Core\Config\ConfigImporter $config_importer
    *   The config importer.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if any error occurred while tracking items.
    */
   public static function processIndexTasks(array &$context, ConfigImporter $config_importer) {
     $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
@@ -470,11 +473,15 @@ class Utility {
       }
     }
 
-    $index_id = array_shift($context['sandbox']['indexes']);
-    $index = Index::load($index_id);
-    $added = $index_task_manager->addItemsOnce($index);
-    if ($added !== NULL) {
-      array_unshift($context['sandbox']['indexes'], $index_id);
+    try {
+      $index_id = array_shift($context['sandbox']['indexes']);
+      $index = Index::load($index_id);
+      if (!($index_task_manager->addItemsOnce($index))) {
+        array_unshift($context['sandbox']['indexes'], $index_id);
+      }
+    }
+    catch (SearchApiException $e) {
+      watchdog_exception('search_api', $e);
     }
 
     if (empty($context['sandbox']['indexes'])) {

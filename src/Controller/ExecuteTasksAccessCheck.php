@@ -34,6 +34,8 @@ class ExecuteTasksAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access() {
+    // @todo Once #2722237 is fixed, see whether this can't just use the
+    //   "search_api_task_list" cache tag instead.
     if ($this->serverTasksManager->getCount()) {
       return AccessResult::allowed()->setCacheMaxAge(0);
     }

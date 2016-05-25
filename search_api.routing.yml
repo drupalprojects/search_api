@@ -6,11 +6,11 @@ search_api.overview:
   requirements:
     _permission: 'administer search_api'
 
-entity.search_api_server.execute_tasks:
+search_api.execute_tasks:
   path: '/admin/config/search/search-api/execute-tasks'
   defaults:
-    _controller: '\Drupal\search_api\Controller\ServerController::executeTasks'
-    _title: 'Execute pending server tasks'
+    _controller: '\Drupal\search_api\Controller\TaskController::executeTasks'
+    _title: 'Execute pending tasks'
   requirements:
     _permission: 'administer search_api'
     _search_api_tasks: 'TRUE'

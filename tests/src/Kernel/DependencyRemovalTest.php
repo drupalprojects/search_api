@@ -48,11 +48,7 @@ class DependencyRemovalTest extends KernelTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installSchema('system', 'key_value_expire');
-
-    // The server tasks manager is needed when removing a server.
-    $mock = $this->getMock('Drupal\search_api\Task\ServerTaskManagerInterface');
-    $this->container->set('search_api.server_task_manager', $mock);
+    $this->installSchema('search_api', 'search_api_task');
 
     // Create the index object, but don't save it yet since we want to change
     // its settings anyways in every test.

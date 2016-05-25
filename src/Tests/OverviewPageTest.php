@@ -96,19 +96,19 @@ class OverviewPageTest extends WebTestBase {
     $this->assertText($index->label(), 'Index present on overview page.');
     $this->assertRaw($index->get('description'), 'Index description is present');
     $this->assertFieldByXPath('//tr[contains(@class,"' . Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id()) . '") and contains(@class, "search-api-list-enabled")]', NULL, 'Index is in proper table');
-    $this->assertNoLink($this->t('Execute pending tasks'), 'No pending server tasks to execute.');
+    $this->assertNoLink($this->t('Execute pending tasks'), 'No pending tasks to execute.');
 
     // Tests that the "Execute pending tasks" local action is correctly
     // displayed when there are pending tasks.
     \Drupal::getContainer()
-      ->get('search_api.server_task_manager')
-      ->add($server, 'deleteItems', $index, array(''));
+      ->get('search_api.task_manager')
+      ->addTask('deleteItems', $server, $index, array(''));
     // Due to an (apparent) Core bug we need to clear the cache, otherwise the
     // "local actions" block gets displayed from cache (without the link). See
     // #2722237.
     \Drupal::cache('render')->invalidateAll();
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertLink($this->t('Execute pending tasks'), 0, '"Execute pending tasks" link displayed.');
+    $this->assertLink($this->t('Execute pending tasks'), 0);
   }
 
   /**

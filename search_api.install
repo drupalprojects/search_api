@@ -61,17 +61,17 @@ function search_api_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'server_id' => array(
-        'description' => 'The ID of the server for which this task should be executed',
-        'type' => 'varchar',
-        'length' => 50,
-        'not null' => TRUE,
-      ),
       'type' => array(
         'description' => 'A keyword identifying the type of task that should be executed',
         'type' => 'varchar',
         'length' => 50,
         'not null' => TRUE,
+      ),
+      'server_id' => array(
+        'description' => 'The ID of the server for which this task should be executed',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => FALSE,
       ),
       'index_id' => array(
         'description' => 'The ID of the index to which this task pertains, if applicable for this type',
@@ -147,11 +147,11 @@ function search_api_requirements($phase) {
     }
 
     $pending_tasks = \Drupal::getContainer()
-      ->get('search_api.server_task_manager')
-      ->getCount();
+      ->get('search_api.task_manager')
+      ->getTasksCount();
     if ($pending_tasks) {
       $args['@link'] = '';
-      $url = Url::fromRoute('entity.search_api_server.execute_tasks');
+      $url = Url::fromRoute('search_api.execute_tasks');
       if ($url->access()) {
         $link = new Link(t('Execute now'), $url);
         $link = $link->toString();
@@ -163,8 +163,8 @@ function search_api_requirements($phase) {
         'title' => t('Search API'),
         'value' => \Drupal::translation()->formatPlural(
           $pending_tasks,
-          'There is @count pending task for a Search API server. @link',
-          'There are @count pending tasks for Search API servers. @link',
+          'There is @count pending Search API task. @link',
+          'There are @count pending Search API tasks. @link',
           $args
         ),
         'severity' => REQUIREMENT_WARNING,

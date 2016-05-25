@@ -69,6 +69,7 @@ abstract class ProcessorTestBase extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('comment');
+    $this->installSchema('comment', array('comment_entity_statistics'));
     $this->installConfig(array('field'));
 
     Action::create([
