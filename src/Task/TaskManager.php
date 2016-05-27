@@ -97,7 +97,7 @@ class TaskManager implements TaskManagerInterface {
   protected function getTasksQuery(array $conditions = array()) {
     $query = $this->getTaskStorage()->getQuery();
     foreach ($conditions as $property => $values) {
-      $query->condition($property, (array) $values, 'IN');
+      $query->condition($property, $values, is_array($values) ? 'IN' : '=');
     }
     $query->sort('id');
     return $query;
