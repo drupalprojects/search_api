@@ -33,7 +33,7 @@ class RenderedItemTest extends ProcessorTestBase {
     'node',
     'search_api',
     'search_api_db',
-    'search_api_test_backend',
+    'search_api_test',
     'comment',
     'system',
     'filter',

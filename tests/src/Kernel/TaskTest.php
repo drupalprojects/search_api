@@ -37,7 +37,7 @@ class TaskTest extends KernelTestBase {
   public static $modules = array(
     'user',
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
     'search_api_test_tasks',
   );
 
@@ -71,7 +71,7 @@ class TaskTest extends KernelTestBase {
       'name' => 'Test Server',
       'id' => 'test_server',
       'status' => 1,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     ));
     $this->server->save();
 

@@ -11,7 +11,7 @@ use Drupal\node\NodeInterface;
 /**
  * Implement hook_node_grants().
  */
-function search_api_test_backend_node_grants(AccountInterface $account, $op) {
+function search_api_test_node_grants(AccountInterface $account, $op) {
   $grants['search_api_test'] = array($account->id());
   return $grants;
 }
@@ -19,7 +19,7 @@ function search_api_test_backend_node_grants(AccountInterface $account, $op) {
 /**
  * Implement hook_node_access_records().
  */
-function search_api_test_backend_node_access_records(NodeInterface $node) {
+function search_api_test_node_access_records(NodeInterface $node) {
   $grants[] = array(
     'realm' => 'search_api_test',
     'gid' => $node->getOwnerId(),

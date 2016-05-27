@@ -28,7 +28,7 @@ class CliTest extends KernelTestBase {
    */
   public static $modules = array(
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
     'user',
     'system',
     'entity_test',
@@ -48,7 +48,7 @@ class CliTest extends KernelTestBase {
       'name' => 'Test server',
       'id' => 'test',
       'status' => 1,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     ));
     $this->server->save();
 

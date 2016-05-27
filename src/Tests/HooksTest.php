@@ -15,7 +15,7 @@ class HooksTest extends WebTestBase {
   public static $modules = array(
     'node',
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
     'search_api_test_views',
     'search_api_test_hooks',
   );

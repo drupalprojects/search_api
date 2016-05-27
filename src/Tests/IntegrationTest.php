@@ -6,7 +6,8 @@ use Drupal\Component\Utility\Html;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
-use Drupal\search_api_test_backend\Plugin\search_api\tracker\Test;
+use Drupal\search_api_test\Plugin\search_api\tracker\TestTracker;
+use Drupal\search_api_test\PluginTestTrait;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
@@ -14,6 +15,8 @@ use Drupal\search_api_test_backend\Plugin\search_api\tracker\Test;
  * @group search_api
  */
 class IntegrationTest extends WebTestBase {
+
+  use PluginTestTrait;
 
   /**
    * The ID of the search server used for this test.
@@ -35,7 +38,7 @@ class IntegrationTest extends WebTestBase {
   public static $modules = array(
     'node',
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
     'field_ui',
     'link',
     'image',
@@ -159,7 +162,7 @@ class IntegrationTest extends WebTestBase {
       'name' => '',
       'status' => 1,
       'description' => 'A server used for testing.',
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     );
 
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
@@ -169,7 +172,7 @@ class IntegrationTest extends WebTestBase {
       'name' => $server_name,
       'status' => 1,
       'description' => $server_description,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $this->assertText($this->t('@name field is required.', array('@name' => $this->t('Machine-readable name'))));
@@ -179,7 +182,7 @@ class IntegrationTest extends WebTestBase {
       'id' => $this->serverId,
       'status' => 1,
       'description' => $server_description,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
@@ -320,7 +323,7 @@ class IntegrationTest extends WebTestBase {
     $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
     $this->assertEqual(0, $remaining, 'Index was not scheduled for re-indexing when saving its server.');
 
-    \Drupal::state()->set('search_api_test_backend.return.postUpdate', TRUE);
+    $this->setReturnValue('backend', 'postUpdate', TRUE);
     $this->drupalPostForm($path, $edit, $this->t('Save'));
 
     $tracked_items = $this->countTrackedItems();
@@ -342,7 +345,7 @@ class IntegrationTest extends WebTestBase {
     $this->assertEqual(count($elements), 1, 'Machine name cannot be changed.');
 
     // Test the AJAX functionality for configuring the tracker.
-    $edit = array('tracker' => 'search_api_test_backend');
+    $edit = array('tracker' => 'search_api_test');
     $this->drupalPostAjaxForm(NULL, $edit, 'tracker_configure');
     $edit['tracker_config[foo]'] = 'foobar';
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
@@ -352,8 +355,12 @@ class IntegrationTest extends WebTestBase {
     // Verify that everything was changed correctly.
     $index = $this->getIndex(TRUE);
     $tracker = $index->getTrackerInstance();
-    $this->assertTrue($tracker instanceof Test, 'Tracker was successfully switched.');
-    $this->assertEqual($tracker->getConfiguration(), array('foo' => 'foobar'), 'Tracker config was successfully saved.');
+    $this->assertTrue($tracker instanceof TestTracker, 'Tracker was successfully switched.');
+    $configuration = array(
+      'foo' => 'foobar',
+      'dependencies' => array(),
+    );
+    $this->assertEqual($tracker->getConfiguration(), $configuration, 'Tracker config was successfully saved.');
     $this->assertEqual($this->countTrackedItems(), $tracked_items, 'Items are still correctly tracked.');
 
     // Revert back to the default tracker for the rest of the test.
@@ -389,12 +396,12 @@ class IntegrationTest extends WebTestBase {
     $this->assertResponse(200);
     $this->assertRaw($this->t('Enabled'));
 
-    \Drupal::state()->set('search_api_test_backend.return.isAvailable', FALSE);
+    $this->setReturnValue('backend', 'isAvailable', FALSE);
     $this->drupalGet('admin/config/search/search-api');
     $this->assertResponse(200);
     $this->assertRaw($this->t('Unavailable'));
 
-    \Drupal::state()->set('search_api_test_backend.return.isAvailable', TRUE);
+    $this->setReturnValue('backend', 'isAvailable', TRUE);
   }
 
   /**
@@ -656,7 +663,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'fields[title][type]' => 'text',
       'fields[title][boost]' => '21.0',
-      'fields[revision_log][type]' => 'search_api_test_data_type',
+      'fields[revision_log][type]' => 'search_api_test',
     );
     $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
     $this->assertText($this->t('The changes were successfully saved.'));
@@ -669,7 +676,7 @@ class IntegrationTest extends WebTestBase {
       $this->assertEqual($fields['title']->getBoost(), $edit['fields[title][boost]'], 'title field boost value is 21.');
     }
     if ($this->assertTrue(!empty($fields['revision_log']), 'revision_log field is indexed.')) {
-      $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test_data_type.');
+      $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test.');
     }
   }
 
@@ -848,7 +855,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('node/2/edit');
     $edit = array('field__reference_field_[0][target_id]' => 'Something (2)');
     $this->drupalPostForm('node/2/edit', $edit, $this->t('Save and keep published'));
-    $indexed_values = \Drupal::state()->get("search_api_test_backend.indexed.{$this->indexId}", array());
+    $indexed_values = \Drupal::state()->get("search_api_test.indexed.{$this->indexId}", array());
     $this->assertEqual(array(2), $indexed_values['entity:node/2:en']['field__reference_field_'], 'Correct value indexed for nested non-base field.');
   }
 

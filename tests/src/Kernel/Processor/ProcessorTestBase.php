@@ -23,7 +23,7 @@ abstract class ProcessorTestBase extends KernelTestBase {
     'field',
     'search_api',
     'search_api_db',
-    'search_api_test_backend',
+    'search_api_test',
     'comment',
     'text',
     'action',

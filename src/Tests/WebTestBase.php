@@ -22,7 +22,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
   public static $modules = array(
     'node',
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
   );
 
   /**
@@ -115,7 +115,7 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    * @return \Drupal\search_api\ServerInterface
    *   A search server.
    */
-  public function getTestServer($name = 'WebTest server', $id = 'webtest_server', $backend_id = 'search_api_test_backend', $backend_config = array(), $reset = FALSE) {
+  public function getTestServer($name = 'WebTest server', $id = 'webtest_server', $backend_id = 'search_api_test', $backend_config = array(), $reset = FALSE) {
     if ($reset) {
       /** @var \Drupal\search_api\ServerInterface $server */
       $server = Server::load($id);

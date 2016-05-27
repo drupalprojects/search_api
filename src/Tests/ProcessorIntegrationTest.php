@@ -4,6 +4,7 @@ namespace Drupal\search_api\Tests;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api_test\PluginTestTrait;
 
 /**
  * Tests the admin UI for processors.
@@ -13,6 +14,8 @@ use Drupal\search_api\Entity\Server;
 // @todo Move this whole class into a single IntegrationTest check*() method?
 // @todo Add tests for the "Aggregated fields" and "Role filter" processors.
 class ProcessorIntegrationTest extends WebTestBase {
+
+  use PluginTestTrait;
 
   /**
    * {@inheritdoc}
@@ -148,23 +151,22 @@ class ProcessorIntegrationTest extends WebTestBase {
     $this->assertText($this->t('Tokenizer'));
     $this->assertText($this->t('Stopwords'));
 
-    // Create a new server with the "search_api_test_backend" backend.
+    // Create a new server with the "search_api_test" backend.
     $server = Server::create(array(
       'id' => 'webtest_server',
       'name' => 'WebTest server',
       'description' => 'WebTest server',
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
       'backend_config' => array(),
     ));
     $server->save();
-    $key = 'search_api_test_backend.return.getDiscouragedProcessors';
     $processors = array(
       'highlight',
       'ignore_character',
       'tokenizer',
       'stopwords',
     );
-    \Drupal::state()->set($key, $processors);
+    $this->setReturnValue('backend', 'getDiscouragedProcessors', $processors);
 
     // Use the newly created server.
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';

@@ -39,7 +39,7 @@ class CustomDataTypesTest extends KernelTestBase {
     'search_api',
     'search_api_db',
     'search_api_test_db',
-    'search_api_test_backend',
+    'search_api_test',
     'user',
     'system',
     'entity_test',
@@ -102,7 +102,7 @@ class CustomDataTypesTest extends KernelTestBase {
       'name' => 'Server test ~',
       'id' => 'test',
       'status' => 1,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     ));
     $this->server->save();
 
@@ -133,7 +133,7 @@ class CustomDataTypesTest extends KernelTestBase {
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
     $field = $this->index->getField('name')
-      ->setType('search_api_test_data_type')
+      ->setType('search_api_test')
       ->setLabel("Test");
     $this->index->addField($field);
 
@@ -142,14 +142,14 @@ class CustomDataTypesTest extends KernelTestBase {
     $processed_type = $name_field->getType();
 
     $this->assertEquals($original_value, $processed_value, 'The processed value matches the original value');
-    $this->assertEquals('search_api_test_data_type', $processed_type, 'The processed type matches the new type.');
+    $this->assertEquals('search_api_test', $processed_type, 'The processed type matches the new type.');
     $this->assertEquals('Test', $name_field->getLabel(), 'The label is correctly set.');
 
     // Reset the fields on the item and change to the non-supported data type.
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
     $field = $this->index->getField('name')
-      ->setType('search_api_unsupported_test_data_type');
+      ->setType('search_api_test_unsupported');
     $this->index->addField($field);
     $name_field = $item->getField('name');
 
@@ -163,7 +163,7 @@ class CustomDataTypesTest extends KernelTestBase {
     $item->setFieldsExtracted(FALSE);
     $item->setFields(array());
     $field = $this->index->getField('name')
-      ->setType('search_api_altering_test_data_type');
+      ->setType('search_api_test_altering');
     $this->index->addField($field);
     $name_field = $item->getField('name');
 
@@ -171,7 +171,7 @@ class CustomDataTypesTest extends KernelTestBase {
     $processed_type = $name_field->getType();
 
     $this->assertEquals(strlen($original_value), $processed_value, 'The processed value matches the altered original value');
-    $this->assertEquals('search_api_altering_test_data_type', $processed_type, 'The processed type matches the defined type.');
+    $this->assertEquals('search_api_test_altering', $processed_type, 'The processed type matches the defined type.');
   }
 
 }

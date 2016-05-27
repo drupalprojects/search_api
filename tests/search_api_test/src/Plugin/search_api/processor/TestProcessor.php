@@ -1,18 +1,21 @@
 <?php
 
-namespace Drupal\search_api_test_dependencies\Plugin\search_api\processor;
+namespace Drupal\search_api_test\Plugin\search_api\processor;
 
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api_test\TestPluginTrait;
 
 /**
  * Provides a processor with dependencies, for the dependency removal tests.
  *
  * @SearchApiProcessor(
- *   id = "search_api_test_dependencies",
+ *   id = "search_api_test",
  *   label = @Translation("Dependency test processor"),
  * )
  */
 class TestProcessor extends ProcessorPluginBase {
+
+  use TestPluginTrait;
 
   /**
    * {@inheritdoc}
@@ -25,8 +28,7 @@ class TestProcessor extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function onDependencyRemoval(array $dependencies) {
-    $remove = \Drupal::state()
-      ->get('search_api_test_dependencies.processor.remove', FALSE);
+    $remove = $this->getReturnValue(__FUNCTION__, FALSE);
     if ($remove) {
       $this->configuration = array();
     }

@@ -485,7 +485,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->server !== NULL && Server::load($this->server) !== NULL;
+    return $this->server !== NULL && ($this->serverInstance || Server::load($this->server) !== NULL);
   }
 
   /**
@@ -817,23 +817,54 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function loadItemsMultiple(array $item_ids) {
+    // Group the requested items by datasource. This will also later be used to
+    // determine whether all items were loaded successfully.
     $items_by_datasource = array();
     foreach ($item_ids as $item_id) {
       list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
-      $items_by_datasource[$datasource_id][$item_id] = $raw_id;
+      $items_by_datasource[$datasource_id][$raw_id] = $item_id;
     }
+
+    // Load the items from the datasources and keep track of which were
+    // successfully retrieved.
     $items = array();
     foreach ($items_by_datasource as $datasource_id => $raw_ids) {
       try {
-        foreach ($this->getDatasource($datasource_id)->loadMultiple($raw_ids) as $raw_id => $item) {
-          $id = Utility::createCombinedId($datasource_id, $raw_id);
+        $datasource = $this->getDatasource($datasource_id);
+        $datasource_items = $datasource->loadMultiple(array_keys($raw_ids));
+        foreach ($datasource_items as $raw_id => $item) {
+          $id = $raw_ids[$raw_id];
           $items[$id] = $item;
+          // Remember that we successfully loaded this item.
+          unset($items_by_datasource[$datasource_id][$raw_id]);
         }
       }
       catch (SearchApiException $e) {
         watchdog_exception('search_api', $e);
+        // If the complete datasource could not be loaded, don't report all its
+        // individual requested items as missing.
+        unset($items_by_datasource[$datasource_id]);
       }
     }
+
+    // Check whether there are requested items that couldn't be loaded.
+    $items_by_datasource = array_filter($items_by_datasource);
+    if ($items_by_datasource) {
+      // Extract the second-level values of the two-dimensional array (i.e., the
+      // combined item IDs) and log a warning reporting their absence.
+      $missing_ids = array_reduce(array_map('array_values', $items_by_datasource), 'array_merge', array());
+      $args['%index'] = $this->label();
+      $args['@items'] = '"' . implode('", "', $missing_ids) . '"';
+      \Drupal::logger('search_api')
+        ->warning('Could not load the following items on index %index: @items.', $args);
+      // Also remove those items from tracking so we don't keep trying to load
+      // them.
+      foreach ($items_by_datasource as $datasource_id => $raw_ids) {
+        $this->trackItemsDeleted($datasource_id, array_keys($raw_ids));
+      }
+    }
+
+    // Return the loaded items.
     return $items;
   }
 
@@ -845,12 +876,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tracker = $this->getTrackerInstance();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
       $items = $this->loadItemsMultiple($next_set);
-      if (count($items) != count($next_set)) {
-        $args['%index'] = $this->label();
-        $missing_ids = array_keys(array_diff_key(array_flip($next_set), $items));
-        $args['@items'] = '"' . implode('", "', $missing_ids) . '"';
-        \Drupal::logger('search_api')->warning('Could not load the following items for indexing on index %index: @items.', $args);
-      }
       if ($items) {
         try {
           return count($this->indexSpecificItems($items));

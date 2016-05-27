@@ -45,7 +45,7 @@ class LanguageKernelTest extends KernelTestBase {
    */
   public static $modules = array(
     'search_api',
-    'search_api_test_backend',
+    'search_api_test',
     'language',
     'user',
     'system',
@@ -103,7 +103,7 @@ class LanguageKernelTest extends KernelTestBase {
       'name' => 'Test Server',
       'id' => 'test_server',
       'status' => 1,
-      'backend' => 'search_api_test_backend',
+      'backend' => 'search_api_test',
     ));
     $this->server->save();
 

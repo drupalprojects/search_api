@@ -352,7 +352,6 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
     $entities = $this->getEntityStorage()->loadMultiple(array_keys($entity_ids));
-    $missing = array();
     $items = array();
     foreach ($entity_ids as $entity_id => $langcodes) {
       foreach ($langcodes as $item_id => $langcode) {
@@ -362,17 +361,9 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
         if (!empty($entities[$entity_id]) && $entities[$entity_id]->hasTranslation($langcode)) {
           $items[$item_id] = $entities[$entity_id]->getTranslation($langcode)->getTypedData();
         }
-        else {
-          $missing[] = $item_id;
-        }
       }
     }
-    // If we were unable to load some of the items, mark them as deleted.
-    // @todo The index should be responsible for this, not individual
-    //   datasources. See #2574589.
-    if ($missing) {
-      $this->getIndex()->trackItemsDeleted($this->getPluginId(), array_keys($missing));
-    }
+
     return $items;
   }
 

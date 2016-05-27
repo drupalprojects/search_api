@@ -1,25 +1,35 @@
 <?php
 
-namespace Drupal\search_api_test_dependencies\Plugin\search_api\datasource;
+namespace Drupal\search_api_test\Plugin\search_api\datasource;
 
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
+use Drupal\search_api_test\TestPluginTrait;
 
 /**
- * Provides a datasource with dependencies, for the dependency removal tests.
+ * Provides a datasource for testing purposes.
  *
  * @SearchApiDatasource(
- *   id = "search_api_test_dependencies",
- *   label = @Translation("Dependency test datasource"),
+ *   id = "search_api_test",
+ *   label = @Translation("Test datasource"),
  * )
  */
 class TestDatasource extends DatasourcePluginBase {
+
+  use TestPluginTrait;
 
   /**
    * {@inheritdoc}
    */
   public function getItemId(ComplexDataInterface $item) {
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadMultiple(array $ids) {
+    return $this->getReturnValue(__FUNCTION__, array());
   }
 
   /**
@@ -33,8 +43,7 @@ class TestDatasource extends DatasourcePluginBase {
    * {@inheritdoc}
    */
   public function onDependencyRemoval(array $dependencies) {
-    $remove = \Drupal::state()
-      ->get('search_api_test_dependencies.datasource.remove', FALSE);
+    $remove = $this->getReturnValue(__FUNCTION__, FALSE);
     if ($remove) {
       $this->configuration = array();
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api_test_backend\Plugin\search_api\data_type;
+namespace Drupal\search_api_test\Plugin\search_api\data_type;
 
 use Drupal\search_api\DataType\DataTypePluginBase;
 
@@ -8,7 +8,7 @@ use Drupal\search_api\DataType\DataTypePluginBase;
  * Provides a dummy data type for testing purposes.
  *
  * @SearchApiDataType(
- *   id = "search_api_altering_test_data_type",
+ *   id = "search_api_test_altering",
  *   label = @Translation("Altering test data type"),
  *   description = @Translation("Altering dummy data type implementation")
  * )

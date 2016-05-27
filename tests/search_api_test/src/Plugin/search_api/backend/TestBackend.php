@@ -1,24 +1,28 @@
 <?php
 
-namespace Drupal\search_api_test_backend\Plugin\search_api\backend;
+namespace Drupal\search_api_test\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Backend\BackendPluginBase;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility;
+use Drupal\search_api_test\TestPluginTrait;
 
 /**
  * Provides a dummy backend for testing purposes.
  *
  * @SearchApiBackend(
- *   id = "search_api_test_backend",
+ *   id = "search_api_test",
  *   label = @Translation("Test backend"),
  *   description = @Translation("Dummy backend implementation")
  * )
  */
 class TestBackend extends BackendPluginBase {
+
+  use TestPluginTrait {
+    checkError as traitCheckError;
+  }
 
   /**
    * {@inheritdoc}
@@ -63,7 +67,7 @@ class TestBackend extends BackendPluginBase {
    * {@inheritdoc}
    */
   public function supportsDataType($type) {
-    return $type == 'search_api_test_data_type' || $type == 'search_api_altering_test_data_type';
+    return $type == 'search_api_test' || $type == 'search_api_test_altering';
   }
 
   /**
@@ -92,7 +96,7 @@ class TestBackend extends BackendPluginBase {
     $this->checkError(__FUNCTION__);
 
     $state = \Drupal::state();
-    $key = 'search_api_test_backend.indexed.' . $index->id();
+    $key = 'search_api_test.indexed.' . $index->id();
     $indexed_values = $state->get($key, array());
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $id => $item) {
@@ -214,41 +218,11 @@ class TestBackend extends BackendPluginBase {
   }
 
   /**
-   * Throws an exception if set in the Drupal state for the given method.
-   *
-   * Also records (successful) calls to these methods.
-   *
-   * @param string $method
-   *   The method on this object from which this method was called.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if state "search_api_test_backend.exception.$method" is TRUE.
+   * {@inheritdoc}
    */
   protected function checkError($method) {
-    $state = \Drupal::state();
-    if ($state->get("search_api_test_backend.exception.$method")) {
-      throw new SearchApiException($method);
-    }
-    $key = 'search_api_test_backend.methods_called.' . $this->server->id();
-    $methods_called = $state->get($key, array());
-    $methods_called[] = $method;
-    $state->set($key, $methods_called);
-  }
-
-  /**
-   * Retrieves the value to return for a certain method.
-   *
-   * @param string $method
-   *   The name of the called method.
-   * @param mixed $default
-   *   (optional) The default return value.
-   *
-   * @return mixed
-   *   The value to return from the method.
-   */
-  protected function getReturnValue($method, $default = NULL) {
-    $key = "search_api_test_backend.return.$method";
-    return \Drupal::state()->get($key, $default);
+    $this->traitCheckError($method);
+    $this->logMethodCall($method);
   }
 
 }
