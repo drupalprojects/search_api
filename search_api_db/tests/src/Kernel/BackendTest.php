@@ -472,7 +472,21 @@ class BackendTest extends BackendTestBase {
     $query = $this->buildSearch();
     $results = $query->execute();
     $this->assertEquals(0, $results->getResultCount(), 'Clearing the server worked correctly.');
-    $this->assertTrue(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were left in place.');
+    $schema = Database::getConnection()->schema();
+    $table_exists = $schema->tableExists($normalized_storage_table);
+    $this->assertTrue($table_exists, 'The index tables were left in place.');
+
+    // See whether disabling the index correctly removes all of its tables.
+    $index->disable()->save();
+    $db_info = $this->getIndexDbInfo();
+    $this->assertNull($db_info, 'The index was successfully removed from the server.');
+    $table_exists = $schema->tableExists($normalized_storage_table);
+    $this->assertFalse($table_exists, 'The index tables were deleted.');
+    foreach ($field_tables as $field_table) {
+      $table_exists = $schema->tableExists($field_table['table']);
+      $this->assertFalse($table_exists, "Field table {$field_table['table']} was successfully deleted.");
+    }
+    $index->enable()->save();
 
     // Remove first the index and then the server.
     $index->setServer();
@@ -480,30 +494,33 @@ class BackendTest extends BackendTestBase {
 
     $db_info = $this->getIndexDbInfo();
     $this->assertNull($db_info, 'The index was successfully removed from the server.');
-    $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
+    $table_exists = $schema->tableExists($normalized_storage_table);
+    $this->assertFalse($table_exists, 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
-      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
+      $table_exists = $schema->tableExists($field_table['table']);
+      $this->assertFalse($table_exists, "Field table {$field_table['table']} was successfully deleted.");
     }
 
     // Re-add the index to see if the associated tables are also properly
     // removed when the server is deleted.
-
     $index->setServer($server);
     $index->save();
     $server->delete();
 
     $db_info = $this->getIndexDbInfo();
     $this->assertNull($db_info, 'The index was successfully removed from the server.');
-    $this->assertFalse(Database::getConnection()->schema()->tableExists($normalized_storage_table), 'The index tables were deleted.');
+    $table_exists = $schema->tableExists($normalized_storage_table);
+    $this->assertFalse($table_exists, 'The index tables were deleted.');
     foreach ($field_tables as $field_table) {
-      $this->assertFalse(\Drupal::database()->schema()->tableExists($field_table['table']), new FormattableMarkup('Field table %table exists', array('%table' => $field_table['table'])));
+      $table_exists = $schema->tableExists($field_table['table']);
+      $this->assertFalse($table_exists, "Field table {$field_table['table']} was successfully deleted.");
     }
 
     // Uninstall the module.
     \Drupal::service('module_installer')->uninstall(array('search_api_db'), FALSE);
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully uninstalled.');
 
-    $tables = \Drupal::database()->schema()->findTables('search_api_db_%');
+    $tables = $schema->findTables('search_api_db_%');
     $this->assertEquals(array(), $tables, 'All the tables of the the Database Search module have been removed.');
   }
 

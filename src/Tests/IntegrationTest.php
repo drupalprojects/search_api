@@ -855,7 +855,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('node/2/edit');
     $edit = array('field__reference_field_[0][target_id]' => 'Something (2)');
     $this->drupalPostForm('node/2/edit', $edit, $this->t('Save and keep published'));
-    $indexed_values = \Drupal::state()->get("search_api_test.indexed.{$this->indexId}", array());
+    $indexed_values = \Drupal::state()->get("search_api_test.backend.indexed.{$this->indexId}", array());
     $this->assertEqual(array(2), $indexed_values['entity:node/2:en']['field__reference_field_'], 'Correct value indexed for nested non-base field.');
   }
 

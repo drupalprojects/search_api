@@ -330,7 +330,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteAllIndexItems(IndexInterface $index) {
+  public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL) {
     if ($index->isReadOnly()) {
       $vars = array(
         '%index' => $index->label(),
@@ -341,17 +341,19 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     $server_task_manager = \Drupal::getContainer()->get('search_api.server_task_manager');
 
-    // Remove all other delete operations for this index from the server tasks –
-    // no point in executing those when we want to delete all items anyways.
-    $types = array(
-      'deleteItems',
-      'deleteAllIndexItems',
-    );
-    $server_task_manager->delete($this, $index, $types);
+    if (!$datasource_id) {
+      // If we're deleting all items of the index, there's no point in keeping
+      // any other "delete items" tasks.
+      $types = array(
+        'deleteItems',
+        'deleteAllIndexItems',
+      );
+      $server_task_manager->delete($this, $index, $types);
+    }
 
     try {
       if ($server_task_manager->execute($this)) {
-        $this->getBackend()->deleteAllIndexItems($index);
+        $this->getBackend()->deleteAllIndexItems($index, $datasource_id);
         return;
       }
     }
@@ -365,7 +367,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     $task_manager = \Drupal::getContainer()
       ->get('search_api.task_manager');
-    $task_manager->addTask(__FUNCTION__, $this, $index);
+    $task_manager->addTask(__FUNCTION__, $this, $index, $datasource_id);
   }
 
   /**

@@ -96,10 +96,11 @@ class TestBackend extends BackendPluginBase {
     $this->checkError(__FUNCTION__);
 
     $state = \Drupal::state();
-    $key = 'search_api_test.indexed.' . $index->id();
+    $key = 'search_api_test.backend.indexed.' . $index->id();
     $indexed_values = $state->get($key, array());
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $id => $item) {
+      $indexed_values[$id] = array();
       foreach ($item->getFields() as $field_id => $field) {
         $indexed_values[$id][$field_id] = $field->getValues();
       }
@@ -136,13 +137,38 @@ class TestBackend extends BackendPluginBase {
    */
   public function deleteItems(IndexInterface $index, array $item_ids) {
     $this->checkError(__FUNCTION__);
+
+    $state = \Drupal::state();
+    $key = 'search_api_test.backend.indexed.' . $index->id();
+    $indexed_values = $state->get($key, array());
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($item_ids as $item_id) {
+      unset($indexed_values[$item_id]);
+    }
+    $state->set($key, $indexed_values);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteAllIndexItems(IndexInterface $index) {
+  public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL) {
     $this->checkError(__FUNCTION__);
+
+    $key = 'search_api_test.backend.indexed.' . $index->id();
+    if (!$datasource_id) {
+      \Drupal::state()->delete($key);
+      return;
+    }
+
+    $indexed = \Drupal::state()->get($key, array());
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach (array_keys($indexed) as $item_id) {
+      list($item_datasource_id) = Utility::splitCombinedId($item_id);
+      if ($item_datasource_id == $datasource_id) {
+        unset($indexed[$item_id]);
+      }
+    }
+    \Drupal::state()->set($key, $indexed);
   }
 
   /**

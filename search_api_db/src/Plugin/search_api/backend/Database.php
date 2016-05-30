@@ -1439,17 +1439,37 @@ class Database extends BackendPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function deleteAllIndexItems(IndexInterface $index) {
+  public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL) {
     try {
       $db_info = $this->getIndexDbInfo($index);
+      $datasource_field = $db_info['field_tables']['search_api_datasource']['column'];
 
       foreach ($db_info['field_tables'] as $field_id => $field) {
-        $this->database->truncate($field['table'])->execute();
-        unset($db_info['field_tables'][$field_id]['multi-valued']);
+        if (!$datasource_id) {
+          $this->database->truncate($field['table'])->execute();
+          unset($db_info['field_tables'][$field_id]['multi-valued']);
+        }
+        else {
+          if (!isset($query)) {
+            $query = $this->database->select($db_info['index_table'], 't')
+              ->fields('t', array('item_id'))
+              ->condition($datasource_field, $datasource_id);
+          }
+          $this->database->delete($field['table'])
+            ->condition('item_id', clone $query, 'IN')
+            ->execute();
+        }
       }
-      $this->getKeyValueStore()->set($index->id(), $db_info);
 
-      $this->database->truncate($db_info['index_table'])->execute();
+      if (!$datasource_id) {
+        $this->getKeyValueStore()->set($index->id(), $db_info);
+        $this->database->truncate($db_info['index_table'])->execute();
+      }
+      else {
+        $this->database->delete($db_info['index_table'])
+          ->condition($datasource_field, $datasource_id)
+          ->execute();
+      }
     }
     catch (\Exception $e) {
       // The database operations might throw PDO or other exceptions, so we

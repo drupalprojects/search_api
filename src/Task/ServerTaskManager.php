@@ -168,7 +168,7 @@ class ServerTaskManager implements ServerTaskManagerInterface, EventSubscriberIn
 
       case 'deleteAllIndexItems':
         if ($index && !$index->isReadOnly()) {
-          $server->getBackend()->deleteAllIndexItems($index);
+          $server->getBackend()->deleteAllIndexItems($index, $data);
         }
         return TRUE;
     }

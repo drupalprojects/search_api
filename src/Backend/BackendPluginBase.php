@@ -155,7 +155,13 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * {@inheritdoc}
    */
-  public function removeIndex($index) {}
+  public function removeIndex($index) {
+    // Only delete the index's data if the index isn't read-only. (If only the
+    // ID is given, we assume the index was read-only, to be on the safe side.)
+    if ($index instanceof IndexInterface && !$index->isReadOnly()) {
+      $this->deleteAllIndexItems($index);
+    }
+  }
 
   /**
    * {@inheritdoc}

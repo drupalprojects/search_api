@@ -359,6 +359,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function setDatasources(array $datasources = NULL) {
     $this->datasourceInstances = $datasources;
+    return $this;
   }
 
   /**
@@ -485,7 +486,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function hasValidServer() {
-    return $this->server !== NULL && ($this->serverInstance || Server::load($this->server) !== NULL);
+    return $this->serverInstance
+        || ($this->server !== NULL && Server::load($this->server));
   }
 
   /**
@@ -523,6 +525,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function setServer(ServerInterface $server = NULL) {
     $this->serverInstance = $server;
     $this->server = $server ? $server->id() : NULL;
+    return $this;
   }
 
   /**
@@ -1032,15 +1035,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function trackItemsDeleted($datasource_id, array $ids) {
-    if ($this->hasValidTracker() && $this->status()) {
-      $item_ids = array();
-      foreach ($ids as $id) {
-        $item_ids[] = Utility::createCombinedId($datasource_id, $id);
-      }
+    if (!$this->status()) {
+      return;
+    }
+
+    $item_ids = array();
+    foreach ($ids as $id) {
+      $item_ids[] = Utility::createCombinedId($datasource_id, $id);
+    }
+    if ($this->hasValidTracker()) {
       $this->getTrackerInstance()->trackItemsDeleted($item_ids);
-      if (!$this->isReadOnly() && $this->isServerEnabled()) {
-        $this->getServerInstance()->deleteItems($this, $item_ids);
-      }
+    }
+    if (!$this->isReadOnly() && $this->hasValidServer()) {
+      $this->getServerInstance()->deleteItems($this, $item_ids);
     }
   }
 
@@ -1205,10 +1212,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       elseif (!$this->status() && $original->status()) {
         if ($this->hasValidTracker()) {
-          $index_task_manager->stopTracking($this);
+          $index_task_manager->stopTracking($original);
         }
         if ($original->isServerEnabled()) {
-          $original->getServerInstance()->removeIndex($this);
+          $original->getServerInstance()->removeIndex($original);
         }
       }
       elseif ($this->status() && !$original->status()) {
@@ -1260,16 +1267,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
     assert('$this->status() && $original->status()', '::reactToServerSwitch should only be called when the index is enabled');
 
     if ($this->getServerId() != $original->getServerId()) {
-      if ($original->isServerEnabled()) {
+      if ($original->hasValidServer()) {
         $original->getServerInstance()->removeIndex($this);
       }
-      if ($this->isServerEnabled()) {
+      if ($this->hasValidServer()) {
         $this->getServerInstance()->addIndex($this);
       }
       // When the server changes we also need to trigger a reindex.
       $this->reindex();
     }
-    elseif ($this->isServerEnabled()) {
+    elseif ($this->hasValidServer()) {
       // Tell the server the index configuration got updated.
       $this->getServerInstance()->updateIndex($this);
     }
@@ -1296,6 +1303,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $removed = array_diff($original_datasource_ids, $new_datasource_ids);
       $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
       $index_task_manager->stopTracking($this, $removed);
+      if ($this->hasValidServer()) {
+        /** @var \Drupal\search_api\ServerInterface $server */
+        $server = $this->getServerInstance();
+        foreach ($removed as $datasource_id) {
+          $server->deleteAllIndexItems($this, $datasource_id);
+        }
+      }
       $index_task_manager->startTracking($this, $added);
     }
   }
@@ -1315,9 +1329,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     assert('$this->status() && $original->status()', '::reactToTrackerSwitch should only be called when the index is enabled');
 
     if ($this->getTrackerId() != $original->getTrackerId()) {
-      $index_task_manager = \Drupal::getContainer()->get('search_api.index_task_manager');
+      $index_task_manager = \Drupal::getContainer()
+        ->get('search_api.index_task_manager');
       if ($original->hasValidTracker()) {
-        $index_task_manager->stopTracking($this);
+        $index_task_manager->stopTracking($original);
       }
       if ($this->hasValidTracker()) {
         $index_task_manager->startTracking($this);
@@ -1381,13 +1396,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
 
+    $index_task_manager = \Drupal::getContainer()
+      ->get('search_api.index_task_manager');
     /** @var \Drupal\search_api\IndexInterface[] $entities */
     foreach ($entities as $index) {
-      if ($index->hasValidTracker()) {
-        $index->getTrackerInstance()->trackAllItemsDeleted();
-      }
-      if ($index->hasValidServer()) {
-        $index->getServerInstance()->removeIndex($index);
+      if ($index->status()) {
+        $index_task_manager->stopTracking($index);
+        if ($index->hasValidServer()) {
+          $index->getServerInstance()->removeIndex($index);
+        }
       }
     }
   }

@@ -61,7 +61,7 @@ trait PluginTestTrait {
   }
 
   /**
-   * Retrieves the methods called on a given plugin.
+   * Retrieves the arguments of a certain method called on the given plugin.
    *
    * @param string $plugin_type
    *   The "short" plugin type.
@@ -73,7 +73,7 @@ trait PluginTestTrait {
    */
   protected function getMethodArguments($plugin_type, $method) {
     $key = "search_api_test.$plugin_type.method_arguments.$method";
-    return \Drupal::state()->get($key, array());
+    return \Drupal::state()->get($key);
   }
 
 }

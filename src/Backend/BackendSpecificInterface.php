@@ -177,11 +177,14 @@ interface BackendSpecificInterface {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The index for which items should be deleted.
+   * @param string|null $datasource_id
+   *   (optional) If given, only delete items from the datasource with the
+   *   given ID.
    *
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an error occurred while trying to delete indexed items.
    */
-  public function deleteAllIndexItems(IndexInterface $index);
+  public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL);
 
   /**
    * Executes a search on this server.

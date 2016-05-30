@@ -260,6 +260,8 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @param \Drupal\search_api\ServerInterface|null $server
    *   The server to move this index to, or NULL.
+   *
+   * @return $this
    */
   public function setServer(ServerInterface $server = NULL);
 
