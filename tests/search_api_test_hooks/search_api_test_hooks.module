@@ -23,7 +23,7 @@ function search_api_test_hooks_search_api_datasource_info_alter(array &$infos) {
  * Implements hook_search_api_processor_info_alter.
  */
 function search_api_test_hooks_search_api_processor_info_alter(array &$processors) {
-  $processors['rendered_item']['label'] = 'Mystic bounce';
+  $processors['content_access']['label'] = 'Mystic bounce';
 }
 
 /**

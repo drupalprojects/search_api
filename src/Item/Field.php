@@ -4,6 +4,7 @@ namespace Drupal\search_api\Item;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
 
@@ -123,6 +124,13 @@ class Field implements \IteratorAggregate, FieldInterface {
   protected $typeLocked;
 
   /**
+   * The field's configuration.
+   *
+   * @var array
+   */
+  protected $configuration = array();
+
+  /**
    * This field's dependencies, if any.
    *
    * @var string[][]
@@ -203,6 +211,9 @@ class Field implements \IteratorAggregate, FieldInterface {
     if ($this->isHidden()) {
       $settings['hidden'] = TRUE;
     }
+    if ($this->getConfiguration()) {
+      $settings['configuration'] = $this->getConfiguration();
+    }
     if ($this->getDependencies()) {
       $settings['dependencies'] = $this->getDependencies();
     }
@@ -277,7 +288,13 @@ class Field implements \IteratorAggregate, FieldInterface {
   public function getDescription() {
     if (!isset($this->description)) {
       try {
-        $this->description = $this->getDataDefinition()->getDescription();
+        $property = $this->getDataDefinition();
+        if ($property instanceof ConfigurablePropertyInterface) {
+          $this->description = $property->getFieldDescription($this);
+        }
+        else {
+          $this->description = $property->getDescription();
+        }
         $this->description = $this->description ?: FALSE;
       }
       catch (SearchApiException $e) {
@@ -465,6 +482,21 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function setTypeLocked($type_locked = TRUE) {
     $this->typeLocked = $type_locked;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $this->configuration = $configuration;
     return $this;
   }
 

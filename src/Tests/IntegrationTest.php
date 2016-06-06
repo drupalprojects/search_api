@@ -3,6 +3,10 @@
 namespace Drupal\search_api\Tests;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
@@ -557,14 +561,12 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet($this->getIndexPath('processors'));
 
     $edit = array(
-      'status[aggregated_field]' => 1,
       'status[content_access]' => 1,
       'status[highlight]' => 1,
       'status[html_filter]' => 1,
       'status[ignorecase]' => 1,
       'status[ignore_character]' => 1,
       'status[node_status]' => 1,
-      'status[rendered_item]' => 1,
       'status[stopwords]' => 1,
       'status[tokenizer]' => 1,
       'status[transliteration]' => 1,
@@ -588,18 +590,19 @@ class IntegrationTest extends WebTestBase {
     $this->assertResponse(200);
     $this->drupalPostForm(NULL, $edit, $this->t('Save and manage fields'));
 
-    $field_name = '^6%{[*>.<"field';
-
     // Add a field to that content type with funky chars.
-    $edit = array(
-      'new_storage_type' => 'string',
+    $field_name = '^6%{[*>.<"field';
+    FieldStorageConfig::create(array(
+      'field_name' => 'field__field_',
+      'type' => 'string',
+      'entity_type' => 'node',
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field__field_',
+      'entity_type' => 'node',
+      'bundle' => '_content_',
       'label' => $field_name,
-      'field_name' => '_field_',
-    );
-    $this->drupalGet('admin/structure/types/manage/_content_/fields/add-field');
-    $this->assertResponse(200);
-    $this->drupalPostForm(NULL, $edit, $this->t('Save and continue'));
-    $this->drupalPostForm(NULL, array(), $this->t('Save field settings'));
+    ))->save();
 
     $url_options['query']['datasource'] = 'entity:node';
     $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
@@ -618,9 +621,8 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertText($this->t('The index was successfully saved.'));
 
-    $this->drupalGet($this->getIndexPath('processors'));
+    $this->addField(NULL, 'rendered_item');
     $this->assertHtmlEscaped($content_type_name);
-    $this->assertHtmlEscaped($field_name);
   }
 
   /**
@@ -744,33 +746,37 @@ class IntegrationTest extends WebTestBase {
    * Tests field dependencies.
    */
   protected function addFieldsWithDependenciesToIndex() {
-    // Add a new field.
-    $edit = array(
-      'new_storage_type' => 'link',
+    // Add a new link field.
+    FieldStorageConfig::create(array(
+      'field_name' => 'field_link',
+      'type' => 'link',
+      'entity_type' => 'node',
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field_link',
+      'entity_type' => 'node',
+      'bundle' => 'article',
       'label' => 'Link',
-      'field_name' => 'link',
-    );
-    $this->drupalPostForm('admin/structure/types/manage/article/fields/add-field', $edit, t('Save and continue'));
-    $this->drupalPostForm(NULL, array(), t('Save field settings'));
-    $this->drupalPostForm(NULL, array(), t('Save settings'));
+    ))->save();
 
-    // Add an image field.
-    $edit = array(
-      'new_storage_type' => 'image',
+    // Add a new image field, for both articles and basic pages.
+    FieldStorageConfig::create(array(
+      'field_name' => 'field_image',
+      'type' => 'image',
+      'entity_type' => 'node',
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field_image',
+      'entity_type' => 'node',
+      'bundle' => 'article',
       'label' => 'Image',
-      'field_name' => 'image',
-    );
-    $this->drupalPostForm('admin/structure/types/manage/article/fields/add-field', $edit, t('Save and continue'));
-    $this->drupalPostForm(NULL, array(), t('Save field settings'));
-    $this->drupalPostForm(NULL, array(), t('Save settings'));
-
-    // Add the image field to the "Basic page" content type, too.
-    $edit = array(
-      'existing_storage_name' => 'field_image',
-      'existing_storage_label' => 'Image',
-    );
-    $this->drupalPostForm('admin/structure/types/manage/page/fields/add-field', $edit, t('Save and continue'));
-    $this->drupalPostForm(NULL, array(), t('Save settings'));
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field_image',
+      'entity_type' => 'node',
+      'bundle' => 'page',
+      'label' => 'Image',
+    ))->save();
 
     $fields = array(
       'field_link' => $this->t('Link'),
@@ -838,15 +844,32 @@ class IntegrationTest extends WebTestBase {
    * Tests if non-base fields of referenced entities can be added.
    */
   protected function checkReferenceFieldsNonBaseFields() {
-    // Add a entity_reference field.
+    // Add a new entity_reference field.
     $field_label = 'reference_field';
-    $edit = array(
-      'new_storage_type' => 'entity_reference',
+    FieldStorageConfig::create(array(
+      'field_name' => 'field__reference_field_',
+      'type' => 'entity_reference',
+      'entity_type' => 'node',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'target_type' => 'node',
+          ),
+        ),
+      ),
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field__reference_field_',
+      'entity_type' => 'node',
+      'bundle' => 'article',
       'label' => $field_label,
-      'field_name' => '_reference_field_',
-    );
-    $this->drupalPostForm('admin/structure/types/manage/article/fields/add-field', $edit, $this->t('Save and continue'));
-    $this->drupalPostForm(NULL, array('cardinality' => -1), $this->t('Save field settings'));
+    ))->save();
+    EntityFormDisplay::load('node.article.default')
+      ->setComponent('field__reference_field_', array(
+        'type' => 'entity_reference_autocomplete',
+      ))
+      ->save();
 
     $node_label = $this->getIndex()->getDatasource('entity:node')->label();
     $field_label = "$field_label » $node_label » $field_label";
@@ -866,6 +889,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'status[ignorecase]' => 1,
       'processors[ignorecase][settings][fields][title]' => 'title',
+      'processors[ignorecase][settings][fields][field__field_]' => FALSE,
     );
     $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
     $index = $this->getIndex(TRUE);

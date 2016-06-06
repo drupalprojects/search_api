@@ -13,6 +13,13 @@ field_settings:
     label: 'Rendered item'
     type: text
     property_path: rendered_item
+    configuration:
+      roles:
+        anonymous: anonymous
+      view_mode:
+        'entity:node':
+          article: search_index
+          page: search_index
   created:
     label: 'Authored on'
     type: date
@@ -65,6 +72,16 @@ field_settings:
     datasource_id: 'entity:node'
     property_path: type
 processor_settings:
+  add_url:
+    plugin_id: add_url
+    settings:
+      weights:
+        preprocess_index: -30
+  aggregated_field:
+    plugin_id: aggregated_field
+    settings:
+      weights:
+        add_properties: 20
   content_access:
     plugin_id: content_access
     settings:
@@ -106,11 +123,6 @@ processor_settings:
       fields:
         - rendered_item
         - title
-  language:
-    plugin_id: language
-    settings:
-      weights:
-        preprocess_index: -50
   node_status:
     plugin_id: node_status
     settings:
@@ -120,13 +132,8 @@ processor_settings:
     plugin_id: rendered_item
     settings:
       weights:
-        preprocess_index: -8
-      roles:
-        anonymous: anonymous
-      view_mode:
-        'entity:node':
-          article: search_index
-          page: search_index
+        add_properties: 0
+        pre_index_save: -10
   stopwords:
     plugin_id: stopwords
     settings:

@@ -4,6 +4,7 @@ namespace Drupal\search_api\Processor;
 
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\IndexPluginInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -23,6 +24,11 @@ use Drupal\search_api\Query\ResultSetInterface;
  * @see plugin_api
  */
 interface ProcessorInterface extends IndexPluginInterface {
+
+  /**
+   * Processing stage: add properties.
+   */
+  const STAGE_ADD_PROPERTIES = 'add_properties';
 
   /**
    * Processing stage: preprocess index.
@@ -108,15 +114,24 @@ interface ProcessorInterface extends IndexPluginInterface {
   public function isHidden();
 
   /**
-   * Alters the given datasource's property definitions.
+   * Retrieves the properties this processor defines for the given datasource.
    *
-   * @param \Drupal\Core\TypedData\DataDefinitionInterface[] $properties
-   *   An array of property definitions for this datasource.
    * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
    *   (optional) The datasource this set of properties belongs to. If NULL, the
    *   datasource-independent properties should be added (or modified).
+   *
+   * @return \Drupal\search_api\Processor\ProcessorPropertyInterface[]
+   *   An array of property definitions for that datasource.
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL);
+  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL);
+
+  /**
+   * Adds the values of properties defined by this processor to the item.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface $item
+   *   The item whose field values should be added.
+   */
+  public function addFieldValues(ItemInterface $item);
 
   /**
    * Preprocesses the search index entity before it is saved.

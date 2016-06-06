@@ -106,8 +106,14 @@ class CustomDataTypesTest extends KernelTestBase {
     ));
     $this->server->save();
 
+    // Set the server (determines the supported data types) and remove all
+    // non-base fields from the index (since their config isn't installed).
     $this->index = Index::load('database_search_index');
-    $this->index->setServer($this->server);
+    $this->index->setServer($this->server)
+      ->removeField('body')
+      ->removeField('keywords')
+      ->removeField('category')
+      ->removeField('width');
   }
 
   /**

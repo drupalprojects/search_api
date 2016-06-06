@@ -18,6 +18,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Query\Query;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSet;
@@ -660,6 +661,9 @@ class Utility {
       'property_path' => $property_path,
       'type' => $type,
     );
+    if ($property instanceof ConfigurablePropertyInterface) {
+      $field_info['configuration'] = $property->defaultConfiguration();
+    }
     return self::createField($index, $field_id, $field_info);
   }
 

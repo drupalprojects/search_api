@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\UnsavedConfigurationInterface;
 use Drupal\search_api\Utility;
 use Drupal\user\SharedTempStoreFactory;
@@ -313,7 +314,10 @@ class IndexFieldsForm extends EntityForm {
         t('Machine name'),
         t('Type'),
         t('Boost'),
-        t('Remove'),
+        array(
+          'data' => t('Operations'),
+          'colspan' => 2,
+        ),
       ),
     );
 
@@ -348,12 +352,23 @@ class IndexFieldsForm extends EntityForm {
         $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
       }
 
-      $build['fields'][$key]['remove']['#markup'] = '';
-      if (!$field->isIndexedLocked()) {
-        $route_parameters = array(
-          'search_api_index' => $this->entity->id(),
-          'field_id' => $key,
+      $route_parameters = array(
+        'search_api_index' => $this->entity->id(),
+        'field_id' => $key,
+      );
+      // Provide some invisible markup as default, if a link is missing, so we
+      // don't break the table structure. (theme_search_api_admin_fields_table()
+      // does not add empty cells.)
+      $build['fields'][$key]['edit']['#markup'] = '<span></span>';
+      if ($field->getDataDefinition() instanceof ConfigurablePropertyInterface) {
+        $build['fields'][$key]['edit'] = array(
+          '#type' => 'link',
+          '#title' => $this->t('Edit'),
+          '#url' => Url::fromRoute('entity.search_api_index.field_config', $route_parameters),
         );
+      }
+      $build['fields'][$key]['remove']['#markup'] = '<span></span>';
+      if (!$field->isIndexedLocked()) {
         $build['fields'][$key]['remove'] = array(
           '#type' => 'link',
           '#title' => $this->t('Remove'),

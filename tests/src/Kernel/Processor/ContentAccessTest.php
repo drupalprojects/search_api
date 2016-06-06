@@ -6,6 +6,7 @@ use Drupal\comment\Entity\Comment;
 use Drupal\comment\Entity\CommentType;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Database\Database;
+use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -239,7 +240,10 @@ class ContentAccessTest extends ProcessorTestBase {
     }
     $items = $this->generateItems($items);
 
-    $this->processor->preprocessIndexItems($items);
+    // Add the processor's field values to the items.
+    foreach ($items as $item) {
+      $this->processor->addFieldValues($item);
+    }
 
     foreach ($items as $item) {
       $this->assertEquals(array('node_access__all'), $item->getField('search_api_node_grants')->getValues());
@@ -261,7 +265,10 @@ class ContentAccessTest extends ProcessorTestBase {
     }
     $items = $this->generateItems($items);
 
-    $this->processor->preprocessIndexItems($items);
+    // Add the processor's field values to the items.
+    foreach ($items as $item) {
+      $this->processor->addFieldValues($item);
+    }
 
     foreach ($items as $item) {
       $this->assertEquals(array('node_access_search_api_test:0'), $item->getField('search_api_node_grants')->getValues());
@@ -292,6 +299,21 @@ class ContentAccessTest extends ProcessorTestBase {
   }
 
   /**
+   * Tests whether the property is correctly added by the processor.
+   */
+  public function testAlterPropertyDefinitions() {
+    // Check for added properties when no datasource is given.
+    $properties = $this->processor->getPropertyDefinitions(NULL);
+    $this->assertTrue(array_key_exists('search_api_node_grants', $properties), 'The Properties where modified with the "search_api_node_grants".');
+    $this->assertTrue(($properties['search_api_node_grants'] instanceof DataDefinitionInterface), 'The "search_api_node_grants" key contains a valid DataDefinition instance.');
+    $this->assertEquals('string', $properties['search_api_node_grants']->getDataType(), 'Correct DataType set in the DataDefinition.');
+
+    // Verify that there are no properties if a datasource is given.
+    $properties = $this->processor->getPropertyDefinitions($this->index->getDatasource('entity:node'));
+    $this->assertEquals(array(), $properties, '"search_api_node_grants" property not added when data source is given.');
+  }
+
+  /**
    * Asserts that the search results contain the expected IDs.
    *
    * @param \Drupal\search_api\Query\ResultSetInterface $result
@@ -312,7 +334,9 @@ class ContentAccessTest extends ProcessorTestBase {
           $id = $i . ':en';
         }
         else {
-          $id = $this->{"{$entity_type}s"}[$i]->id() . ':en';
+          /** @var \Drupal\Core\Entity\EntityInterface $entity */
+          $entity = $this->{"{$entity_type}s"}[$i];
+          $id = $entity->id() . ':en';
         }
         $ids[] = Utility::createCombinedId($datasource_id, $id);
       }

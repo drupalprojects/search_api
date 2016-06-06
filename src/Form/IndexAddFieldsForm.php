@@ -14,6 +14,7 @@ use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\DataType\DataTypePluginManager;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\UnsavedConfigurationInterface;
 use Drupal\search_api\Utility;
 use Drupal\user\SharedTempStoreFactory;
@@ -508,6 +509,14 @@ class IndexAddFieldsForm extends EntityForm {
     $field = Utility::createFieldFromProperty($this->entity, $property, $datasource_id, $property_path, NULL, $button['#data_type']);
     $field->setLabel($button['#prefixed_label']);
     $this->entity->addField($field);
+
+    if ($property instanceof ConfigurablePropertyInterface) {
+      $parameters = array(
+        'search_api_index' => $this->entity->id(),
+        'field_id' => $field->getFieldIdentifier(),
+      );
+      $form_state->setRedirect('entity.search_api_index.field_config', $parameters);
+    }
 
     $args['%label'] = $field->getLabel();
     drupal_set_message($this->t('Field %label was added to the index.', $args));

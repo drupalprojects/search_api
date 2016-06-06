@@ -275,7 +275,6 @@ class IndexProcessorsForm extends EntityForm {
         'plugin_id' => $processor_id,
         'settings' => array(),
       );
-      $processor_values = $values['processors'][$processor_id];
       if (isset($form['settings'][$processor_id])) {
         $sub_keys = array('processors', $processor_id, 'settings');
         $processor_form_state = new SubFormState($form_state, $sub_keys);
@@ -283,8 +282,8 @@ class IndexProcessorsForm extends EntityForm {
         $new_settings[$processor_id]['settings'] = $processor->getConfiguration();
         $new_settings[$processor_id]['settings'] += array('index' => $this->entity);
       }
-      if (!empty($processor_values['weights'])) {
-        $new_settings[$processor_id]['settings']['weights'] = $processor_values['weights'];
+      if (!empty($values['processors'][$processor_id]['weights'])) {
+        $new_settings[$processor_id]['settings']['weights'] = $values['processors'][$processor_id]['weights'];
       }
     }
 

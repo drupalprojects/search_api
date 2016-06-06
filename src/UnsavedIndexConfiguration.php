@@ -350,8 +350,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    return $this->entity->getPropertyDefinitions($datasource_id, $alter);
+  public function getPropertyDefinitions($datasource_id) {
+    return $this->entity->getPropertyDefinitions($datasource_id);
   }
 
   /**

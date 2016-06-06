@@ -342,6 +342,24 @@ interface FieldInterface extends \Traversable {
   public function setTypeLocked($type_locked = TRUE);
 
   /**
+   * Gets this field's property-specific configuration.
+   *
+   * @return array
+   *   An array of this field's configuration.
+   */
+  public function getConfiguration();
+
+  /**
+   * Sets this field's property-specific configuration.
+   *
+   * @param array $configuration
+   *   An associative array containing the field's configuration.
+   *
+   * @return $this
+   */
+  public function setConfiguration(array $configuration);
+
+  /**
    * Retrieves the field's dependencies.
    *
    * @return string[][]

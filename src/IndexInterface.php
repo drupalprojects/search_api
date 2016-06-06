@@ -446,9 +446,6 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param string|null $datasource_id
    *   The ID of the datasource for which the properties should be retrieved. Or
    *   NULL to retrieve all datasource-independent properties.
-   * @param bool $alter
-   *   (optional) Whether to pass the property definitions to the index's
-   *   enabled processors for altering before returning them.
    *
    * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
    *   The properties belonging to the given datasource that are available in
@@ -458,7 +455,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   Thrown if the specified datasource isn't enabled for this index, or
    *   couldn't be loaded.
    */
-  public function getPropertyDefinitions($datasource_id, $alter = TRUE);
+  public function getPropertyDefinitions($datasource_id);
 
   /**
    * Loads a single search object of this index.

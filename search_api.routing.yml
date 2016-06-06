@@ -135,6 +135,19 @@ entity.search_api_index.add_fields:
   requirements:
     _entity_access: 'search_api_index.fields'
 
+entity.search_api_index.field_config:
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/{field_id}/edit'
+  options:
+    search_api_index:
+      view:
+        tempstore: TRUE
+        type: 'entity:search_api_index'
+  defaults:
+    _title: 'Edit field'
+    _entity_form: 'search_api_index.field_config'
+  requirements:
+    _entity_access: 'search_api_index.fields'
+
 entity.search_api_index.remove_field:
   path: '/admin/config/search/search-api/index/{search_api_index}/fields/{field_id}/remove'
   options:
@@ -154,7 +167,7 @@ entity.search_api_index.break_lock_form:
     _entity_form: 'search_api_index.break_lock'
     _title: 'Break lock'
   requirements:
-    _entity_access: search_api_index.break-lock
+    _entity_access: 'search_api_index.break-lock'
 
 entity.search_api_index.processors:
   path: '/admin/config/search/search-api/index/{search_api_index}/processors'

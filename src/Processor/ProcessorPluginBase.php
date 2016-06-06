@@ -4,6 +4,7 @@ namespace Drupal\search_api\Processor;
 
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\IndexPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -83,7 +84,14 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function alterPropertyDefinitions(array &$properties, DatasourceInterface $datasource = NULL) {}
+  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addFieldValues(ItemInterface $item) {}
 
   /**
    * {@inheritdoc}
@@ -122,13 +130,13 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
         throw new SearchApiException("Could not find property '$property_id' which is required by the '$processor_label' processor.");
       }
       $field = Utility::createFieldFromProperty($this->index, $property, $datasource_id, $property_path, NULL, $type);
+      $this->index->addField($field);
     }
 
     $field->setIndexedLocked();
     if (isset($type)) {
       $field->setTypeLocked();
     }
-    $this->index->addField($field);
     return $field;
   }
 

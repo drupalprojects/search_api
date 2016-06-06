@@ -37,6 +37,7 @@ use Drupal\views\Views;
  *       "edit" = "Drupal\search_api\Form\IndexForm",
  *       "fields" = "Drupal\search_api\Form\IndexFieldsForm",
  *       "add_fields" = "Drupal\search_api\Form\IndexAddFieldsForm",
+ *       "field_config" = "Drupal\search_api\Form\FieldConfigurationForm",
  *       "break_lock" = "Drupal\search_api\Form\IndexBreakLockForm",
  *       "processors" = "Drupal\search_api\Form\IndexProcessorsForm",
  *       "delete" = "Drupal\search_api\Form\IndexDeleteConfirmForm",
@@ -263,6 +264,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $processorInstances;
 
   /**
+   * Cached property definitions, keyed by datasource ID and property name.
+   *
+   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][]
+   */
+  protected $properties = array();
+
+  /**
    * Whether reindexing has been triggered for this index in this page request.
    *
    * @var bool
@@ -275,22 +283,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var int
    */
   protected $batchTracking = 0;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $values, $entity_type) {
-    parent::__construct($values, $entity_type);
-
-    // Merge in default options.
-    // @todo Use a dedicated method, like defaultConfiguration() for plugins?
-    //   And/or, better still, do this in postCreate() (and preSave()?) and not
-    //   on every load.
-    $this->options += array(
-      'cron_limit' => \Drupal::config('search_api.settings')->get('default_cron_limit'),
-      'index_directly' => TRUE,
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -597,6 +589,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
     $this->processorInstances[$processor->getPluginId()] = $processor;
 
+    if ($processor->supportsStage(ProcessorInterface::STAGE_ADD_PROPERTIES)) {
+      $this->properties = array();
+    }
+
     return $this;
   }
 
@@ -609,7 +605,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->processorInstances === NULL) {
       $this->getProcessors();
     }
-    unset($this->processorInstances[$processor_id]);
+
+    if (!empty($this->processorInstances[$processor_id])) {
+      $processor = $this->processorInstances[$processor_id];
+      if ($processor->supportsStage(ProcessorInterface::STAGE_ADD_PROPERTIES)) {
+        $this->properties = array();
+      }
+      unset($this->processorInstances[$processor_id]);
+    }
 
     return $this;
   }
@@ -790,22 +793,31 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions($datasource_id, $alter = TRUE) {
-    $alter = $alter ? 1 : 0;
-    if (isset($datasource_id)) {
-      $datasource = $this->getDatasource($datasource_id);
-      $properties[$datasource_id][$alter] = $datasource->getPropertyDefinitions();
-    }
-    else {
-      $datasource = NULL;
-      $properties[$datasource_id][$alter] = array();
-    }
-    if ($alter) {
-      foreach ($this->getProcessors() as $processor) {
-        $processor->alterPropertyDefinitions($properties[$datasource_id][$alter], $datasource);
+  public function getPropertyDefinitions($datasource_id) {
+    static $recursion = FALSE;
+
+    if (!isset($this->properties[$datasource_id])) {
+      if (isset($datasource_id)) {
+        $datasource = $this->getDatasource($datasource_id);
+        $this->properties[$datasource_id] = $datasource->getPropertyDefinitions();
+      }
+      else {
+        $datasource = NULL;
+        $this->properties[$datasource_id] = array();
+      }
+
+      // We have to take care that we don't end up in an infinite loop if any
+      // processor's properties depend on the available properties on the index.
+      if (!$recursion) {
+        $recursion = TRUE;
+        foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES) as $processor) {
+          $this->properties[$datasource_id] += $processor->getPropertyDefinitions($datasource);
+        }
+        $recursion = FALSE;
       }
     }
-    return $properties[$datasource_id][$alter];
+
+    return $this->properties[$datasource_id];
   }
 
   /**
@@ -1126,11 +1138,32 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function postCreate(EntityStorageInterface $storage) {
+    parent::postCreate($storage);
+
+    // Merge in default options.
+    $config = \Drupal::config('search_api.settings');
+    $this->options += array(
+      'cron_limit' => $config->get('default_cron_limit'),
+      'index_directly' => TRUE,
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     // Prevent enabling of indexes when the server is disabled.
     if ($this->status() && !$this->isServerEnabled()) {
       $this->disable();
     }
+
+    // Merge in default options.
+    $config = \Drupal::config('search_api.settings');
+    $this->options += array(
+      'cron_limit' => $config->get('default_cron_limit'),
+      'index_directly' => TRUE,
+    );
 
     // Remove all "locked" and "hidden" flags from all fields of the index. If
     // they are still valid, they should be re-added by the processors.

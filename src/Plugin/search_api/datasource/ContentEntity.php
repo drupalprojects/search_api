@@ -830,7 +830,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    $this->dependencies += parent::calculateDependencies();
+    $this->dependencies = parent::calculateDependencies();
 
     $this->addDependency('module', $this->getEntityType()->getProvider());
 
