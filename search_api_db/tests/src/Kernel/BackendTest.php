@@ -134,8 +134,21 @@ class BackendTest extends BackendTestBase {
     $db_info = $this->getIndexDbInfo();
     $field_info = $db_info['field_tables'];
 
-    $fields = array('name', 'body', 'type', 'keywords', 'category', 'width');
-    $multi_valued = array('name', 'body', 'keywords');
+    $fields = array(
+      'name',
+      'body',
+      'type',
+      'keywords',
+      'category',
+      'width',
+      'search_api_datasource',
+      'search_api_language',
+    );
+    $multi_valued = array(
+      'name',
+      'body',
+      'keywords',
+    );
     foreach ($fields as $field_id) {
       $this->assertArrayHasKey($field_id, $field_info, "Field info saved for field $field_id.");
       if (in_array($field_id, $multi_valued)) {
@@ -459,6 +472,24 @@ class BackendTest extends BackendTestBase {
   /**
    * {@inheritdoc}
    */
+  protected function checkIndexWithoutFields() {
+    $index = parent::checkIndexWithoutFields();
+
+    $expected = array(
+      'search_api_datasource',
+      'search_api_language',
+    );
+    $db_info = $this->getIndexDbInfo($index->id());
+    $info_fields = array_keys($db_info['field_tables']);
+    sort($info_fields);
+    $this->assertEquals($expected, $info_fields);
+
+    return $index;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function checkModuleUninstall() {
     $db_info = $this->getIndexDbInfo();
     $normalized_storage_table = $db_info['index_table'];
@@ -527,12 +558,17 @@ class BackendTest extends BackendTestBase {
   /**
    * Retrieves the database information for the test index.
    *
+   * @param string|null $index_id
+   *   (optional) The ID of the index whose database information should be
+   *   retrieved.
+   *
    * @return array
    *   The database information stored by the backend for the test index.
    */
-  protected function getIndexDbInfo() {
+  protected function getIndexDbInfo($index_id = NULL) {
+    $index_id = $index_id ?: $this->indexId;
     return \Drupal::keyValue(BackendDatabase::INDEXES_KEY_VALUE_STORE_ID)
-      ->get($this->indexId);
+      ->get($index_id);
   }
 
 }

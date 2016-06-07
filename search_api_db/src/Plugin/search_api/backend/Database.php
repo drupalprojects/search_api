@@ -564,11 +564,6 @@ class Database extends BackendPluginBase {
       $db_info['field_tables'] = array();
       $db_info['index_table'] = $index_table;
       $this->getKeyValueStore()->set($index->id(), $db_info);
-
-      // If there are no fields, we are done now.
-      if (!$index->getFields()) {
-        return;
-      }
     }
     // The database operations might throw PDO or other exceptions, so we catch
     // them all and re-wrap them appropriately.

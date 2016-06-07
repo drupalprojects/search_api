@@ -62,6 +62,12 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installConfig('search_api_test_example_content');
 
+    // Set the tracking page size so tracking will work properly.
+    \Drupal::configFactory()
+      ->getEditable('search_api.settings')
+      ->set('tracking_page_size', 100)
+      ->save();
+
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
     // Batch API gets confused and the test fails.
@@ -109,6 +115,8 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $this->searchNoResults();
     $this->regressionTests2();
+
+    $this->checkIndexWithoutFields();
 
     $this->checkModuleUninstall();
   }
@@ -1001,6 +1009,42 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $index->getField('body')->setType('text');
     $index->save();
+  }
+
+  /**
+   * Checks the correct handling of an index without fields.
+   *
+   * @return \Drupal\search_api\IndexInterface
+   *   The created test index.
+   */
+  protected function checkIndexWithoutFields() {
+    $index = Index::create(array(
+      'id' => 'test_index_2',
+      'name' => 'Test index 2',
+      'status' => TRUE,
+      'server' => $this->serverId,
+      'datasource_settings' => array(
+        'entity:entity_test' => array(
+          'plugin_id' => 'entity:entity_test',
+          'settings' => array(),
+        ),
+      ),
+      'tracker_settings' => array(
+        'default' => array(
+          'plugin_id' => 'default',
+          'settings' => array(),
+        ),
+      ),
+    ));
+    $index->save();
+
+    $indexed_count = $index->indexItems();
+    $this->assertEquals(count($this->entities), $indexed_count);
+
+    $search_count = $index->query()->execute()->getResultCount();
+    $this->assertEquals(count($this->entities), $search_count);
+
+    return $index;
   }
 
   /**
