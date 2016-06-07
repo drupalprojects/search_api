@@ -84,6 +84,7 @@ class ContentAccess extends ProcessorPluginBase {
     $this->database = $database;
     return $this;
   }
+
   /**
    * Retrieves the logger to use.
    *

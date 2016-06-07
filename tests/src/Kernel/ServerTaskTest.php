@@ -354,7 +354,9 @@ class ServerTaskTest extends KernelTestBase {
 
     $methods = $this->getCalledMethods('backend');
     $this->assertCount(100, $methods, '100 pending tasks were executed upon new operation.');
-    $filter = function ($method) { return $method != 'deleteItems'; };
+    $filter = function ($method) {
+      return $method != 'deleteItems';
+    };
     $this->assertEmpty(array_filter($methods, $filter), 'The new operation was not executed.');
     $this->assertEquals(2, $this->serverTaskManager->getCount($this->server), 'A task was created for the new operation.');
   }
@@ -399,7 +401,14 @@ class ServerTaskTest extends KernelTestBase {
     // tasks related to that index.
     $this->addTasks($index2);
     $this->server->deleteAllIndexItems($this->index);
-    $this->assertEquals(array('addIndex', 'removeIndex', 'addIndex', 'updateIndex', 'deleteAllIndexItems'), $this->getCalledMethods('backend'), 'Deleting all items of an index ignored all its deletion tasks.');
+    $called_methods = array(
+      'addIndex',
+      'removeIndex',
+      'addIndex',
+      'updateIndex',
+      'deleteAllIndexItems',
+    );
+    $this->assertEquals($called_methods, $this->getCalledMethods('backend'), 'Deleting all items of an index ignored all its deletion tasks.');
     $this->assertEquals(0, $this->serverTaskManager->getCount($this->server), 'No pending tasks for server.');
     $this->assertEquals(1, $this->serverTaskManager->getCount(), 'The tasks of other servers were not touched.');
 

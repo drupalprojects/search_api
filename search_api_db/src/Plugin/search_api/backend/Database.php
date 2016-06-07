@@ -2052,7 +2052,8 @@ class Database extends BackendPluginBase {
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
-        $not_equals = in_array($operator, array('<>', '!=', 'NOT IN', 'NOT BETWEEN'));
+        $not_equals_operators = array('<>', '!=', 'NOT IN', 'NOT BETWEEN');
+        $not_equals = in_array($operator, $not_equals_operators);
         $not_between = $operator == 'NOT BETWEEN';
 
         if (!isset($fields[$field])) {

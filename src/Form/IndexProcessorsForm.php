@@ -170,7 +170,7 @@ class IndexProcessorsForm extends EntityForm {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
       foreach ($processors as $processor_id => $processor) {
         $config = $processor->getConfiguration();
-        $weight = isset($config['weights'][$stage]) ? $config['weights'][$stage]  : $processor->getDefaultWeight($stage);
+        $weight = isset($config['weights'][$stage]) ? $config['weights'][$stage] : $processor->getDefaultWeight($stage);
         if ($processor->isHidden()) {
           $form['processors'][$processor_id]['weights'][$stage] = array(
             '#type' => 'value',

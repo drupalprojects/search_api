@@ -50,7 +50,7 @@ class ViewsPageDisplayDeriver extends DisplayDeriverBase {
 
               $label_arguments = array(
                 '%view_name' => $view->label(),
-                '%display_title' => $display_info['display_title']
+                '%display_title' => $display_info['display_title'],
               );
               $label = $this->t('View %view_name, display %display_title', $label_arguments);
 

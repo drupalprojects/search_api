@@ -14,7 +14,6 @@ use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Render\Element;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
@@ -399,7 +398,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
       $form['bundles'] = array(
         '#type' => 'details',
         '#title' => $this->t('Bundles'),
-        '#open' => TRUE
+        '#open' => TRUE,
       );
       $form['bundles']['default'] = array(
         '#type' => 'radios',
@@ -424,7 +423,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
       $form['languages'] = array(
         '#type' => 'details',
         '#title' => $this->t('Languages'),
-        '#open' => TRUE
+        '#open' => TRUE,
       );
       $form['languages']['default'] = array(
         '#type' => 'radios',

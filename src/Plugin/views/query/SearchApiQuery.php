@@ -674,7 +674,7 @@ class SearchApiQuery extends QueryPluginBase {
    *   The language codes of languages that will be searched by this query, or
    *   NULL if there shouldn't be any restriction on the language.
    *
-   *  @see \Drupal\search_api\Query\QueryInterface::getLanguages()
+   * @see \Drupal\search_api\Query\QueryInterface::getLanguages()
    */
   public function getLanguages() {
     if (!$this->shouldAbort()) {

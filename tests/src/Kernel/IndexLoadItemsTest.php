@@ -30,7 +30,7 @@ class IndexLoadItemsTest extends KernelTestBase {
     'search_api',
     'search_api_test',
     'user',
-    );
+  );
 
   /**
    * {@inheritdoc}

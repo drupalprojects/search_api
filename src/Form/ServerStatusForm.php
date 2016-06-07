@@ -54,6 +54,7 @@ class ServerStatusForm extends FormBase {
     $this->serverTaskManager = $server_task_manager;
     return $this;
   }
+
   /**
    * {@inheritdoc}
    */

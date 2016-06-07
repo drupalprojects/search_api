@@ -125,7 +125,7 @@ interface IndexInterface extends ConfigEntityInterface {
    * Sets this index's datasource plugins.
    *
    * @param \Drupal\search_api\Datasource\DatasourceInterface[] $datasources
-   *   An array of datasources
+   *   An array of datasources.
    *
    * @return $this
    */
@@ -519,7 +519,7 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Determines whether the index is currently in "batch tracking" mode.
    *
-   * @return boolean
+   * @return bool
    *   Whether the index is currently in "batch tracking" mode.
    */
   public function isBatchTracking();

@@ -1,5 +1,6 @@
 <?php
 
+// @codingStandardsIgnoreFile
 
 namespace Drupal\search_api;
 

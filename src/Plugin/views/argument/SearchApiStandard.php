@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
