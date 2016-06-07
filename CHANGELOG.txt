@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2720465 by drunken monkey: Fixed bundle filter's handling of entity types
+  with no bundles on multi-type indexes.
 - #2710893 by alan-ps, drunken monkey: Fixed creation of comment indexes when
   no nodes exist.
 - #2707039 by alan-ps: Fixed indexes of flag entities with "bundles" setting.
