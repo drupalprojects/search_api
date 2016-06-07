@@ -348,6 +348,13 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
+    $results = $this->buildSearch()
+      ->setLanguages(array('und'))
+      ->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Query with languages returned correct number of results.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR')
       ->addCondition('search_api_language', 'und')
@@ -356,6 +363,14 @@ abstract class BackendTestBase extends KernelTestBase {
     $results = $query->execute();
     $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language filter returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
+    $this->assertIgnored($results);
+    $this->assertWarnings($results);
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_language', 'und')
+      ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
+      ->execute();
+    $this->assertEquals(0, $results->getResultCount(), 'Query with search_api_language filter returned correct number of results.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
 
