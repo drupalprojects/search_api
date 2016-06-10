@@ -73,13 +73,13 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
     }
     else {
       if ($vocabulary && !empty($this->options['hierarchy'])) {
-        $tree = taxonomy_get_tree($vocabulary->vid);
+        $tree = taxonomy_get_tree($vocabulary->vid, 0, NULL, TRUE);
         $options = array();
 
         if ($tree) {
           foreach ($tree as $term) {
             $choice = new stdClass();
-            $choice->option = array($term->tid => str_repeat('-', $term->depth) . $term->name);
+            $choice->option = array($term->tid => str_repeat('-', $term->depth) . check_plain(entity_label('taxonomy_term', $term)));
             $options[] = $choice;
           }
         }
@@ -98,8 +98,15 @@ class SearchApiViewsHandlerFilterTaxonomyTerm extends SearchApiViewsHandlerFilte
           $query->condition('tv.machine_name', $vocabulary->machine_name);
         }
         $result = $query->execute();
+        $tids = array();
+
         foreach ($result as $term) {
-          $options[$term->tid] = $term->name;
+          $tids[] = $term->tid;
+        }
+        $terms = taxonomy_term_load_multiple($tids);
+
+        foreach ($terms as $term) {
+          $options[$term->tid] = check_plain(entity_label('taxonomy_term', $term));
         }
       }
 
