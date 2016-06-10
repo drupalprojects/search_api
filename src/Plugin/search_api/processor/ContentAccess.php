@@ -4,7 +4,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Logger\LoggerChannelInterface;
+use Psr\Log\LoggerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -45,7 +45,7 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * The logger to use for logging messages.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
+   * @var \Psr\Log\LoggerInterface|null
    */
   protected $logger;
 
@@ -88,7 +88,7 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * Retrieves the logger to use.
    *
-   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   * @return \Psr\Log\LoggerInterface
    *   The logger to use.
    */
   public function getLogger() {
@@ -98,10 +98,10 @@ class ContentAccess extends ProcessorPluginBase {
   /**
    * Sets the logger to use.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   The logger to use.
    */
-  public function setLogger(LoggerChannelInterface $logger) {
+  public function setLogger(LoggerInterface $logger) {
     $this->logger = $logger;
   }
 

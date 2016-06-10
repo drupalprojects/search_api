@@ -12,7 +12,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
+use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Backend\BackendPluginBase;
@@ -88,7 +88,7 @@ class Database extends BackendPluginBase {
   /**
    * The logger to use for logging messages.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
+   * @var \Psr\Log\LoggerInterface|null
    */
   protected $logger;
 
@@ -166,7 +166,7 @@ class Database extends BackendPluginBase {
     $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
     $backend->setDataTypePluginManager($data_type_plugin_manager);
 
-    /** @var \Drupal\Core\Logger\LoggerChannelInterface $logger */
+    /** @var \Psr\Log\LoggerInterface $logger */
     $logger = $container->get('logger.factory')->get('search_api_db');
     $backend->setLogger($logger);
 
@@ -274,7 +274,7 @@ class Database extends BackendPluginBase {
   /**
    * Retrieves the logger to use.
    *
-   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   * @return \Psr\Log\LoggerInterface
    *   The logger to use.
    */
   public function getLogger() {
@@ -284,12 +284,12 @@ class Database extends BackendPluginBase {
   /**
    * Sets the logger to use.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   The logger to use.
    *
    * @return $this
    */
-  public function setLogger(LoggerChannelInterface $logger) {
+  public function setLogger(LoggerInterface $logger) {
     $this->logger = $logger;
     return $this;
   }
