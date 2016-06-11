@@ -1511,6 +1511,7 @@ class Database extends BackendPluginBase {
 
       $sort = $query->getSorts();
       if ($sort) {
+        $db_fields = $db_query->getFields();
         foreach ($sort as $field_name => $order) {
           if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
             $msg = $this->t('Unknown sort order @order. Assuming "@default".', array('@order' => $order, '@default' => QueryInterface::SORT_ASC));
@@ -1539,6 +1540,13 @@ class Database extends BackendPluginBase {
           // GROUP BY.
           if ($db_query->getGroupBy()) {
             $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
+          }
+          // For SELECT DISTINCT queries in combination with an ORDER BY clause,
+          // MySQL 5.7 and higher require that the ORDER BY expressions are part
+          // of the field list. Ensure that all fields used for sorting are part
+          // of the select list.
+          if (empty($db_fields[$fields[$field_name]['column']])) {
+            $db_query->addField($alias, $fields[$field_name]['column']);
           }
         }
       }
