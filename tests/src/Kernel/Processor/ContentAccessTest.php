@@ -9,8 +9,8 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility;
+use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -24,6 +24,7 @@ use Drupal\user\Entity\User;
 class ContentAccessTest extends ProcessorTestBase {
 
   use CommentTestTrait;
+  use ResultsTrait;
 
   /**
    * The nodes created for testing.
@@ -311,39 +312,6 @@ class ContentAccessTest extends ProcessorTestBase {
     // Verify that there are no properties if a datasource is given.
     $properties = $this->processor->getPropertyDefinitions($this->index->getDatasource('entity:node'));
     $this->assertEquals(array(), $properties, '"search_api_node_grants" property not added when data source is given.');
-  }
-
-  /**
-   * Asserts that the search results contain the expected IDs.
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $result
-   *   The search results.
-   * @param int[][] $expected
-   *   The expected entity IDs, grouped by entity type and with their indexes in
-   *   this object's respective array properties as the values.
-   */
-  protected function assertResults(ResultSetInterface $result, array $expected) {
-    $results = array_keys($result->getResultItems());
-    sort($results);
-
-    $ids = array();
-    foreach ($expected as $entity_type => $items) {
-      $datasource_id = "entity:$entity_type";
-      foreach ($items as $i) {
-        if ($entity_type == 'user') {
-          $id = $i . ':en';
-        }
-        else {
-          /** @var \Drupal\Core\Entity\EntityInterface $entity */
-          $entity = $this->{"{$entity_type}s"}[$i];
-          $id = $entity->id() . ':en';
-        }
-        $ids[] = Utility::createCombinedId($datasource_id, $id);
-      }
-    }
-    sort($ids);
-
-    $this->assertEquals($ids, $results);
   }
 
   /**
