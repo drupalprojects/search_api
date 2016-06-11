@@ -935,7 +935,9 @@ function search_api_node_access_records_alter(&$grants, $node) {
     $item_ids = array();
     if (!empty($index->options['data_alter_callbacks']['search_api_alter_node_access']['status'])) {
       $item_id = $index->datasource()->getItemId($node);
-      $item_ids = array($item_id);
+      if ($item_id !== NULL) {
+        $item_ids = array($item_id);
+      }
     }
     elseif (!empty($index->options['data_alter_callbacks']['search_api_alter_comment_access']['status'])) {
       if (!isset($comments)) {
