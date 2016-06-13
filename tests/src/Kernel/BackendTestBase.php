@@ -1053,7 +1053,7 @@ abstract class BackendTestBase extends KernelTestBase {
     ));
     $index->save();
 
-    $indexed_count = $index->indexItems();
+    $indexed_count = $this->indexItems($index->id());
     $this->assertEquals(count($this->entities), $indexed_count);
 
     $search_count = $index->query()->execute()->getResultCount();
