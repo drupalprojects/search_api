@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2744189 by nikolabintev, drunken monkey: Fixed highlighting for single-word
+  fields.
 - #2744995 by John Cook, drunken monkey: Fixed search views without pager.
 - #2742053 by tunic: Fixed change notification on node access records change.
 - #2733447 by jsacksick: Fixed translatability of our Views taxonomy term
