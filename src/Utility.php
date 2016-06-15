@@ -63,7 +63,7 @@ class Utility {
    */
   // @todo Currently, this is useless, but later we could also check
   //   automatically for custom types that have one of the passed types as their
-  //   fallback.
+  //   fallback. See #2644502.
   public static function isTextType($type, array $text_types = array('text')) {
     return in_array($type, $text_types);
   }
