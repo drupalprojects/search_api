@@ -358,6 +358,7 @@ class IndexAddFieldsForm extends EntityForm {
 
       $label = $property->getLabel();
       $property = Utility::getInnerProperty($property);
+      $inner_property = $property;
 
       $can_be_indexed = TRUE;
       $nested_properties = array();
@@ -381,9 +382,9 @@ class IndexAddFieldsForm extends EntityForm {
           'field_item:image',
           'field_item:file',
         );
-        if ($property instanceof FieldItemDataDefinition && in_array($property->getDataType(), $allowed_properties)) {
+        if ($inner_property instanceof FieldItemDataDefinition && in_array($inner_property->getDataType(), $allowed_properties)) {
           $entity_type = $this->getEntityTypeManager()
-            ->getDefinition($property->getSetting('target_type'));
+            ->getDefinition($inner_property->getSetting('target_type'));
           if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
             unset($nested_properties['entity']);
           }

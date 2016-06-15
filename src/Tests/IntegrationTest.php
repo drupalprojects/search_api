@@ -644,6 +644,13 @@ class IntegrationTest extends WebTestBase {
 
     $this->assertTrue(!empty($fields['nid']), 'nid field is indexed.');
 
+    // Ensure that we aren't offered to index properties of the "Content type"
+    // property.
+    $path = $this->getIndexPath('fields/add');
+    $url_options = array('query' => array('datasource' => 'entity:node'));
+    $this->drupalGet($path, $url_options);
+    $this->assertNoRaw('property_path=type', 'Properties of the content type object cannot be indexed.');
+
     // The "Content access" processor correctly marked fields as locked.
     if ($this->assertTrue(!empty($fields['uid']), 'uid field is indexed.')) {
       $this->assertTrue($fields['uid']->isIndexedLocked(), 'uid field is locked.');
