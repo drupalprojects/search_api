@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2724687 by StefanPr, drunken monkey: Fixed failed sanitization of NULL field
+  values.
 - #2744189 by nikolabintev, drunken monkey: Fixed highlighting for single-word
   fields.
 - #2744995 by John Cook, drunken monkey: Fixed search views without pager.
