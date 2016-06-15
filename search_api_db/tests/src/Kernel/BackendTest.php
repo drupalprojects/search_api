@@ -13,6 +13,8 @@ use Drupal\Tests\search_api\Kernel\BackendTestBase;
 /**
  * Tests index and search capabilities using the Database search backend.
  *
+ * @see \Drupal\search_api_db\Plugin\search_api\backend\Database
+ *
  * @group search_api
  */
 class BackendTest extends BackendTestBase {
