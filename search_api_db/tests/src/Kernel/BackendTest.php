@@ -43,6 +43,15 @@ class BackendTest extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
+    //
+    \Drupal::database()->schema()->createTable('search_api_db_database_search_index', array(
+      'fields' => array(
+        'id' => array(
+          'type' => 'int',
+        ),
+      ),
+    ));
+
     $this->installConfig(array('search_api_test_db'));
   }
 
@@ -127,6 +136,14 @@ class BackendTest extends BackendTestBase {
 
     // Add the field back for the next assertions.
     $index->addField($field)->save();
+  }
+
+  /**
+   * Verifies that the generated table names are correct.
+   */
+  protected function checkTableNames() {
+    $this->assertEquals('search_api_db_database_search_index_1', $this->getIndexDbInfo()['index_table']);
+    $this->assertEquals('search_api_db_database_search_index_text', $this->getIndexDbInfo()['field_tables']['body']['table']);
   }
 
   /**
@@ -554,7 +571,10 @@ class BackendTest extends BackendTestBase {
     $this->assertFalse(\Drupal::moduleHandler()->moduleExists('search_api_db'), 'The Database Search module was successfully uninstalled.');
 
     $tables = $schema->findTables('search_api_db_%');
-    $this->assertEquals(array(), $tables, 'All the tables of the the Database Search module have been removed.');
+    $expected = array(
+      'search_api_db_database_search_index' => 'search_api_db_database_search_index',
+    );
+    $this->assertEquals($expected, $tables, 'All the tables of the the Database Search module have been removed.');
   }
 
   /**
