@@ -116,7 +116,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokenized_text'));
+    return Utility::isTextType($type);
   }
 
   /**

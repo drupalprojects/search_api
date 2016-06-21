@@ -18,6 +18,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Query\Query;
 use Drupal\search_api\Query\QueryInterface;
@@ -692,21 +693,18 @@ class Utility {
   }
 
   /**
-   * Creates a single token for the "tokenized_text" type.
+   * Creates a single text token.
    *
    * @param string $value
    *   The word or other token value.
    * @param float $score
    *   (optional) The token's score.
    *
-   * @return array
-   *   An array with appropriate "value" and "score" keys set.
+   * @return \Drupal\search_api\Plugin\search_api\data_type\value\TextTokenInterface
+   *   A text token object.
    */
   public static function createTextToken($value, $score = 1.0) {
-    return array(
-      'value' => $value,
-      'score' => (float) $score,
-    );
+    return new TextToken($value, (float) $score);
   }
 
   /**

@@ -98,7 +98,7 @@ abstract class DataTypePluginBase extends PluginBase implements DataTypeInterfac
    * {@inheritdoc}
    */
   public function getFallbackType() {
-    return !empty($this->pluginDefinition['fallback_type']) ? $this->pluginDefinition['fallback_type'] : 'text';
+    return !empty($this->pluginDefinition['fallback_type']) ? $this->pluginDefinition['fallback_type'] : 'string';
   }
 
   /**

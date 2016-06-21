@@ -5,6 +5,8 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Utility;
 
@@ -101,7 +103,20 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'tokenized_text'));
+    return Utility::isTextType($type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function processField(FieldInterface $field) {
+    parent::processField($field);
+
+    foreach ($field->getValues() as $value) {
+      if ($value instanceof TextValueInterface) {
+        $value->setProperty('tokenized');
+      }
+    }
   }
 
   /**
@@ -175,9 +190,8 @@ class Tokenizer extends FieldsProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function processFieldValue(&$value, &$type) {
+  protected function processFieldValue(&$value, $type) {
     $this->prepare();
-    $type = 'tokenized_text';
 
     $text = $this->simplifyText($value);
     // Split on spaces. The configured (or default) delimiters have been

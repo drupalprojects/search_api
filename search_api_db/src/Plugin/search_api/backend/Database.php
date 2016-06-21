@@ -12,6 +12,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Render\Element;
@@ -1138,7 +1139,7 @@ class Database extends BackendPluginBase {
         foreach ($field->getValues() as $field_value) {
           $converted_value = $this->convert($field_value, $type, $field->getOriginalType(), $index);
 
-          // Don't add NULL values to the return array. Also, adding an empty
+          // Don't add NULL values to the array of values. Also, adding an empty
           // array is, of course, a waste of time.
           if (isset($converted_value) && $converted_value !== array()) {
             $values = array_merge($values, is_array($converted_value) ? $converted_value : array($converted_value));
@@ -1159,7 +1160,7 @@ class Database extends BackendPluginBase {
           $db_info['field_tables'][$field_id]['multi-valued'] = TRUE;
         }
 
-        if (Utility::isTextType($type, array('text', 'tokenized_text'))) {
+        if (Utility::isTextType($type)) {
           // Remember the text table the first time we encounter it.
           if (!isset($text_table)) {
             $text_table = $table;
@@ -1167,9 +1168,10 @@ class Database extends BackendPluginBase {
 
           $unique_tokens = array();
           $denormalized_value = '';
+          /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextTokenInterface $token */
           foreach ($values as $token) {
-            $word = $token['value'];
-            $score = $token['score'];
+            $word = $token->getText();
+            $score = $token->getBoost();
 
             // Store the first 30 characters of the string as the denormalized
             // value.
@@ -1310,68 +1312,54 @@ class Database extends BackendPluginBase {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return Utility::isTextType($type, array('text', 'tokenized_text')) ? array() : NULL;
+      return Utility::isTextType($type) ? array() : NULL;
     }
     switch ($type) {
       case 'text':
-        // For dates, splitting the timestamp makes no sense.
-        if ($original_type == 'date') {
-          $value = $this->getDateFormatter()->format($value, 'custom', 'Y y F M n m j d l D');
-        }
-        $ret = array();
-        foreach (preg_split('/[^\p{L}\p{N}]+/u', $value, -1, PREG_SPLIT_NO_EMPTY) as $v) {
-          if ($v) {
-            if (Unicode::strlen($v) > 50) {
-              $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length. Ensure you are using a tokenizer preprocessor.', array('%word' => $v));
-              $v = Unicode::substr($v, 0, 50);
-            }
-            $ret[] = array(
-              'value' => $v,
-              'score' => 1,
-            );
+        /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
+        $tokens = $value->getTokens();
+        if ($tokens === NULL) {
+          $tokens = array();
+          $text = $value->getText();
+          // For dates, splitting the timestamp makes no sense.
+          if ($original_type == 'date') {
+            $text = $this->getDateFormatter()
+              ->format($text, 'custom', 'Y y F M n m j d l D');
           }
-        }
-        // This used to fall through the tokenized case.
-        return $ret;
-
-      case 'tokenized_text':
-        while (TRUE) {
-          foreach ($value as $i => $v) {
-            // Check for over-long tokens.
-            $score = $v['score'];
-            $v = $v['value'];
-            if (Unicode::strlen($v) > 50) {
-              $words = preg_split('/[^\p{L}\p{N}]+/u', $v, -1, PREG_SPLIT_NO_EMPTY);
-              if (count($words) > 1 && max(array_map('Drupal\Component\Utility\Unicode::strlen', $words)) <= 50) {
-                // Overlong token is due to bad tokenizing.
-                // Check for "Tokenizer" preprocessor on index.
-                if (empty($index->getProcessors()['tokenizer'])) {
-                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. It is recommended to enable the "Tokenizer" preprocessor for indexes using database servers. Otherwise, the backend class has to use its own, fixed tokenizing.');
-                }
-                else {
-                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing, due to bad tokenizing. Please check your settings for the "Tokenizer" preprocessor to ensure that data is tokenized correctly.');
-                }
+          foreach (static::splitIntoWords($text) as $word) {
+            if ($word) {
+              if (Unicode::strlen($word) > 50) {
+                $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', array('%word' => $word, '%index' => $index->label()));
+                $word = Unicode::substr($word, 0, 50);
               }
-
-              $tokens = array();
-              foreach ($words as $word) {
-                if (Unicode::strlen($word) > 50) {
-                  $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Database search servers currently cannot index such words correctly – the word was therefore trimmed to the allowed length.', array('%word' => $word));
-                  $word = Unicode::substr($word, 0, 50);
-                }
-                $tokens[] = array(
-                  'value' => $word,
-                  'score' => $score,
-                );
-              }
-              array_splice($value, $i, 1, $tokens);
-              // Restart the loop looking through all the tokens.
-              continue 2;
+              $tokens[] = new TextToken($word);
             }
           }
-          break;
         }
-        return $value;
+        else {
+          while (TRUE) {
+            foreach ($tokens as $i => $token) {
+              // Check for over-long tokens.
+              $score = $token->getBoost();
+              $word = $token->getText();
+              if (Unicode::strlen($word) > 50) {
+                $new_tokens = array();
+                foreach (static::splitIntoWords($word) as $word) {
+                  if (Unicode::strlen($word) > 50) {
+                    $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', array('%word' => $word, '%index' => $index->label()));
+                    $word = Unicode::substr($word, 0, 50);
+                  }
+                  $new_tokens[] = new TextToken($word, $score);
+                }
+                array_splice($tokens, $i, 1, $new_tokens);
+                // Restart the loop looking through all the tokens.
+                continue 2;
+              }
+            }
+            break;
+          }
+        }
+        return $tokens;
 
       case 'string':
       case 'uri':
@@ -1402,6 +1390,21 @@ class Database extends BackendPluginBase {
       default:
         throw new SearchApiException("Unknown field type '$type'.");
     }
+  }
+
+  /**
+   * Splits the given string into words.
+   *
+   * Word characters as seen by this method are only alphanumerics.
+   *
+   * @param string $text
+   *   The string to split.
+   *
+   * @return string[]
+   *   All groups of alphanumeric characters contained in the string.
+   */
+  protected static function splitIntoWords($text) {
+    return preg_split('/[^\p{L}\p{N}]+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
   }
 
   /**
@@ -1729,7 +1732,7 @@ class Database extends BackendPluginBase {
         $this->ignored[$keys] = 1;
         return NULL;
       }
-      $words = preg_split('/[^\p{L}\p{N}]+/u', $processed_keys, -1, PREG_SPLIT_NO_EMPTY);
+      $words = static::splitIntoWords($processed_keys);
       if (count($words) > 1) {
         $processed_keys = $this->splitKeys($words);
         if ($processed_keys) {
@@ -2389,7 +2392,7 @@ class Database extends BackendPluginBase {
 
     // Also collect all keywords already contained in the query so we don't
     // suggest them.
-    $keys = preg_split('/[^\p{L}\p{N}]+/u', $user_input, -1, PREG_SPLIT_NO_EMPTY);
+    $keys = static::splitIntoWords($user_input);
     $keys = array_combine($keys, $keys);
     if ($incomplete_key) {
       $keys[$incomplete_key] = $incomplete_key;

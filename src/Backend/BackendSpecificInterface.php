@@ -146,10 +146,6 @@ interface BackendSpecificInterface {
    *   The search index for which items should be indexed.
    * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array of items to be indexed, keyed by their item IDs.
-   *   The value of fields with the "tokenized_text" type is an array of tokens.
-   *   Each token is an array containing the following keys:
-   *   - value: The word that the token represents.
-   *   - score: A score for the importance of that word.
    *
    * @return string[]
    *   The IDs of all items that were successfully indexed.
