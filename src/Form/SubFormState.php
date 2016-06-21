@@ -513,8 +513,8 @@ class SubFormState implements FormStateInterface {
   /**
    * {@inheritdoc}
    */
-  // @todo What are groups? Is this the way to handle them in a sub-form?
   public function setGroups(array $groups) {
+    // @todo What are groups? Is this the way to handle them in a sub-form?
     $this->mainFormState->setGroups($groups);
     return $this;
   }

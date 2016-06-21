@@ -676,8 +676,9 @@ class Database extends BackendPluginBase {
    *   (optional) The type of table being created. Either "index" (for the
    *   denormalized table for an entire index) or "field" (for field-specific
    *   tables).
+   *
+   * @todo Write a test to ensure a field named "value" doesn't break this.
    */
-  // @todo Write a test to ensure a field named "value" doesn't break this.
   protected function createFieldTable(FieldInterface $field = NULL, $db, $type = 'field') {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {

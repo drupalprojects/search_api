@@ -5,6 +5,11 @@
  * Tests all the hooks defined by the Search API module.
  */
 
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility;
+
 /**
  * Implements hook_search_api_backend_info_alter.
  */
@@ -29,7 +34,7 @@ function search_api_test_hooks_search_api_processor_info_alter(array &$processor
 /**
  * Implements hook_search_api_index_items_alter.
  */
-function search_api_test_hooks_search_api_index_items_alter(\Drupal\search_api\IndexInterface $index, array &$items) {
+function search_api_test_hooks_search_api_index_items_alter(IndexInterface $index, array &$items) {
   unset($items['entity:node/1:en']);
   drupal_set_message('Stormy');
 }
@@ -37,14 +42,14 @@ function search_api_test_hooks_search_api_index_items_alter(\Drupal\search_api\I
 /**
  * Implements hook_search_api_items_indexed.
  */
-function search_api_test_hooks_search_api_items_indexed(\Drupal\search_api\IndexInterface $index, array $item_ids) {
+function search_api_test_hooks_search_api_items_indexed(IndexInterface $index, array $item_ids) {
   drupal_set_message('Please set me at ease');
 }
 
 /**
  * Implements hook_search_api_query_alter.
  */
-function search_api_test_hooks_search_api_query_alter(\Drupal\search_api\Query\QueryInterface &$query) {
+function search_api_test_hooks_search_api_query_alter(QueryInterface &$query) {
   drupal_set_message('Funky blue note');
   $query->addTag('andrew_hill');
 }
@@ -52,14 +57,14 @@ function search_api_test_hooks_search_api_query_alter(\Drupal\search_api\Query\Q
 /**
  * Implements hook_search_api_results_alter.
  */
-function search_api_test_hooks_search_api_results_alter(\Drupal\search_api\Query\ResultSetInterface &$results) {
+function search_api_test_hooks_search_api_results_alter(ResultSetInterface &$results) {
   drupal_set_message('Stepping into tomorrow');
 }
 
 /**
  * Implements hook_search_api_index_reindex.
  */
-function search_api_test_hooks_search_api_index_reindex(\Drupal\search_api\IndexInterface $index, $clear = FALSE) {
+function search_api_test_hooks_search_api_index_reindex(IndexInterface $index, $clear = FALSE) {
   drupal_set_message('Montara');
 }
 
@@ -83,12 +88,12 @@ function search_api_test_hooks_search_api_field_type_mapping_alter(array &$mappi
 /**
  * Implements hook_search_api_query_TAG_alter.
  */
-function search_api_test_hooks_search_api_query_andrew_hill_alter(\Drupal\search_api\Query\QueryInterface &$query) {
+function search_api_test_hooks_search_api_query_andrew_hill_alter(QueryInterface &$query) {
   // Exclude the node with ID 2 from the search results.
   $fields = $query->getIndex()->getFields();
   foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
     if ($datasource->getEntityTypeId() == 'node') {
-      $field = \Drupal\search_api\Utility::createCombinedId($datasource_id, 'nid');
+      $field = Utility::createCombinedId($datasource_id, 'nid');
       if (isset($fields[$field])) {
         $query->addCondition($field, 2, '<>');
       }
@@ -99,6 +104,7 @@ function search_api_test_hooks_search_api_query_andrew_hill_alter(\Drupal\search
 /**
  * Implements hook_search_api_results_TAG_alter.
  */
-function search_api_test_hooks_search_api_results_andrew_hill_alter(\Drupal\search_api\Query\ResultSetInterface &$results) {
+function search_api_test_hooks_search_api_results_andrew_hill_alter(
+  ResultSetInterface &$results) {
   drupal_set_message('Llama');
 }

@@ -335,9 +335,9 @@ class SearchApiQuery extends QueryPluginBase {
    *   containing entities to their entity types. Otherwise, TRUE if there is at
    *   least one such datasource.
    */
-  // @todo Might be useful enough to be moved to the Index class? Or maybe
-  //   Utility, to finally stop the growth of the Index class.
   public function getEntityTypes($return_bool = FALSE) {
+    // @todo Might be useful enough to be moved to the Index class? Or maybe
+    //   Utility, to finally stop the growth of the Index class.
     $types = array();
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
       if ($type = $datasource->getEntityTypeId()) {

@@ -174,10 +174,10 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * considered symbols. (See
    * http://www.unicode.org/Public/UNIDATA/extracted/DerivedGeneralCategory.txt)
    *
-   * @see search_expand_cjk() (Core Search of Drupal 8)
-   *
    * @return string
    *   A string of Unicode characters to use in the regular expression.
+   *
+   * @see search_expand_cjk()
    */
   protected function getPregClassCjk() {
     return '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .

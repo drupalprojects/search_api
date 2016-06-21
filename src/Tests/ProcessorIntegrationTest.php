@@ -10,10 +10,11 @@ use Drupal\search_api_test\PluginTestTrait;
 /**
  * Tests the admin UI for processors.
  *
+ * @todo Move this whole class into a single IntegrationTest check*() method?
+ * @todo Add tests for the "Aggregated fields" and "Role filter" processors.
+ *
  * @group search_api
  */
-// @todo Move this whole class into a single IntegrationTest check*() method?
-// @todo Add tests for the "Aggregated fields" and "Role filter" processors.
 class ProcessorIntegrationTest extends WebTestBase {
 
   use PluginTestTrait;

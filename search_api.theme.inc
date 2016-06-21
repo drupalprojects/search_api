@@ -291,9 +291,10 @@ function theme_search_api_server($variables) {
  *   The rendered HTML for a search index.
  *
  * @ingroup themeable
+ *
+ * @todo This executes a search in the theme layer, amongst other things. We
+ *   need to improve this.
  */
-// @todo This executes a search in the theme layer, amongst other things.
-//   Definitely not cool.
 function theme_search_api_index($variables) {
   // Get the index.
   /** @var $index \Drupal\search_api\IndexInterface */
