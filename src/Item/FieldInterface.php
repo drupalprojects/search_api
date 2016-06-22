@@ -246,7 +246,8 @@ interface FieldInterface extends \Traversable {
    * Sets the values of this field.
    *
    * @param array $values
-   *   The values of the field.
+   *   The values of the field. These already have to have been processed by the
+   *   data type plugin corresponding to this field's type.
    *
    * @return $this
    */
@@ -255,8 +256,11 @@ interface FieldInterface extends \Traversable {
   /**
    * Adds a value to this field.
    *
+   * Will take care of processing the value correctly with this field's data
+   * type plugin.
+   *
    * @param mixed $value
-   *   A value to add to this field.
+   *   A value to add to this field, not yet processed by the data type plugin.
    *
    * @return $this
    */

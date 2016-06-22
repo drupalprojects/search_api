@@ -10,6 +10,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 
 /**
  * Tests the "Rendered item" processor.
@@ -152,9 +153,13 @@ class RenderedItemTest extends ProcessorTestBase {
       list(, $nid) = Utility::splitCombinedId($key);
       $field = $item->getField('rendered_item');
       $this->assertEquals('text', $field->getType(), 'Node item ' . $nid . ' rendered value is identified as text.');
+      /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface[] $values */
       $values = $field->getValues();
-      // Test that the value is a string (not, e.g., a SafeString object).
-      $this->assertTrue(is_string($values[0]), 'Node item ' . $nid . ' rendered value is a string.');
+      // Test that the value is properly wrapped in a
+      // \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface
+      // object, which contains a string (not, e.g., some markup object).
+      $this->assertInstanceOf('Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface', $values[0], "Node item $nid rendered value is properly wrapped in a text value object.");
+      $this->assertInternalType('string', $values[0]->getText(), "Node item $nid rendered value is a string.");
       $this->assertEquals(1, count($values), 'Node item ' . $nid . ' rendered value is a single value.');
       // These tests rely on the template not changing. However, if we'd only
       // check whether the field values themselves are included, there could

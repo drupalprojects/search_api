@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
@@ -152,6 +153,13 @@ class Field implements \IteratorAggregate, FieldInterface {
   protected $originalType;
 
   /**
+   * The data type manager.
+   *
+   * @var \Drupal\search_api\DataType\DataTypePluginManager|null
+   */
+  protected $dataTypeManager;
+
+  /**
    * Constructs a Field object.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -162,6 +170,29 @@ class Field implements \IteratorAggregate, FieldInterface {
   public function __construct(IndexInterface $index, $field_identifier) {
     $this->index = $index;
     $this->fieldIdentifier = $field_identifier;
+  }
+
+  /**
+   * Retrieves the data type manager.
+   *
+   * @return \Drupal\search_api\DataType\DataTypePluginManager
+   *   The data type manager.
+   */
+  public function getDataTypeManager() {
+    return $this->dataTypeManager ?: \Drupal::service('plugin.manager.search_api.data_type');
+  }
+
+  /**
+   * Sets the data type manager.
+   *
+   * @param \Drupal\search_api\DataType\DataTypePluginManager $data_type_manager
+   *   The new data type manager.
+   *
+   * @return $this
+   */
+  public function setDataTypeManager(DataTypePluginManager $data_type_manager) {
+    $this->dataTypeManager = $data_type_manager;
+    return $this;
   }
 
   /**
@@ -412,6 +443,18 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function addValue($value) {
+    // If the data type of the field is a custom one, then the value can be
+    // altered by the data type plugin.
+    /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type_plugin */
+    $data_type_plugin = NULL;
+    $data_type_manager = $this->getDataTypeManager();
+    if ($data_type_manager->hasDefinition($this->getType())) {
+      $data_type_plugin = $data_type_manager->createInstance($this->getType());
+    }
+    if ($data_type_plugin) {
+      $value = $data_type_plugin->getValue($value);
+    }
+
     $this->values[] = $value;
     return $this;
   }
@@ -550,7 +593,11 @@ class Field implements \IteratorAggregate, FieldInterface {
     $this->indexId = $this->index->id();
     $properties = get_object_vars($this);
     // Don't serialize objects in properties or the field values.
-    unset($properties['index'], $properties['datasource'], $properties['dataDefinition'], $properties['values']);
+    unset($properties['index']);
+    unset($properties['datasource']);
+    unset($properties['dataDefinition']);
+    unset($properties['dataTypeManager']);
+    unset($properties['values']);
     return array_keys($properties);
   }
 

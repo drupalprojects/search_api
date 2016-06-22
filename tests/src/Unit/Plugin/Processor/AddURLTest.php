@@ -38,6 +38,8 @@ class AddURLTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    $this->setUpDataTypePlugin();
+
     // Create a mock for the URL to be returned.
     $url = $this->getMockBuilder('Drupal\Core\Url')
       ->disableOriginalConstructor()
