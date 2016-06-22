@@ -9,6 +9,7 @@ use Drupal\comment\Entity\Comment;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
@@ -24,7 +25,13 @@ use Drupal\search_api\Task\IndexTaskManager;
 function search_api_help($route_name) {
   switch ($route_name) {
     case 'search_api.overview':
-      return t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g., an Apache Solr server, the database, …). An index defines the indexed content (e.g., all content and all comments on "Article" posts).');
+      $message = t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g., an Apache Solr server, the database, …). An index defines the indexed content (e.g., all content and all comments on "Article" posts).');
+
+      $search_module_warning = _search_api_search_module_warning();
+      if ($search_module_warning) {
+        $message = "<p>$message</p><p>$search_module_warning</p>";
+      }
+      return $message;
   }
   return NULL;
 }
@@ -420,4 +427,23 @@ function search_api_search_api_index_update(IndexInterface $index) {
       }
     }
   }
+}
+
+/**
+ * Returns a warning message if the Core Search module is enabled.
+ *
+ * @return string|null
+ *   A warning message if needed, NULL otherwise.
+ *
+ * @see search_api_install()
+ * @see search_api_requirements()
+ */
+function _search_api_search_module_warning() {
+  if (Drupal::moduleHandler()->moduleExists('search')) {
+    $args = array(
+      ':url' => Url::fromRoute('system.modules_uninstall')->toString(),
+    );
+    return t('The default Drupal Search module is still enabled. If you are using Search API, you probably want to <a href=":url">uninstall</a> the Search module for performance reasons.', $args);
+  }
+  return NULL;
 }
