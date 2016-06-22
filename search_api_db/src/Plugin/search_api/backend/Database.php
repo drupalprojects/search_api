@@ -168,7 +168,7 @@ class Database extends BackendPluginBase {
     $backend->setDataTypePluginManager($data_type_plugin_manager);
 
     /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.factory')->get('search_api_db');
+    $logger = $container->get('logger.channel.search_api_db');
     $backend->setLogger($logger);
 
     /** @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface $keyvalue_factory */
@@ -279,7 +279,7 @@ class Database extends BackendPluginBase {
    *   The logger to use.
    */
   public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.factory')->get('search_api_db');
+    return $this->logger ?: \Drupal::service('logger.channel.search_api_db');
   }
 
   /**
@@ -2539,7 +2539,6 @@ class Database extends BackendPluginBase {
       list($key, $target) = explode(':', $this->configuration['database'], 2);
       $this->database = CoreDatabase::getConnection($target, $key);
     }
-    $this->logger = \Drupal::service('logger.factory')->get('search_api_db');
   }
 
 }

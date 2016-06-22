@@ -56,7 +56,7 @@ class ContentAccess extends ProcessorPluginBase {
     /** @var static $processor */
     $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    $processor->setLogger($container->get('logger.factory')->get('search_api'));
+    $processor->setLogger($container->get('logger.channel.search_api'));
     $processor->setDatabase($container->get('database'));
 
     return $processor;
@@ -92,7 +92,7 @@ class ContentAccess extends ProcessorPluginBase {
    *   The logger to use.
    */
   public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.factory')->get('search_api');
+    return $this->logger ?: \Drupal::service('logger.channel.search_api');
   }
 
   /**

@@ -5,6 +5,10 @@ services:
     tags:
       - { name: access_check, applies_to: _search_api_tasks }
 
+  logger.channel.search_api:
+    parent: logger.channel_base
+    arguments: ['search_api']
+
   paramconverter.search_api:
     class: Drupal\search_api\ParamConverter\SearchApiConverter
     arguments: ['@entity.manager', '@user.shared_tempstore', '@current_user']

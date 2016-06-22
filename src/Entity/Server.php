@@ -304,7 +304,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      \Drupal::logger('search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
+      \Drupal::service('logger.channel.search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 
@@ -335,7 +335,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      \Drupal::logger('search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
+      \Drupal::service('logger.channel.search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 

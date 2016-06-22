@@ -252,7 +252,7 @@ class IndexAddFieldsForm extends EntityForm {
       }
       $vars['@fields'] = implode('; ', $unmapped_types);
       $vars['%index'] = $this->entity->label();
-      \Drupal::logger('search_api')
+      \Drupal::service('logger.channel.search_api')
         ->warning('Warning while retrieving available fields for index %index: could not find a type mapping for the following fields: @fields.', $vars);
     }
 

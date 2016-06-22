@@ -67,7 +67,7 @@ class RenderedItem extends ProcessorPluginBase {
     $plugin->setRenderer($renderer);
 
     /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.factory')->get('search_api');
+    $logger = $container->get('logger.channel.search_api');
     $plugin->setLogger($logger);
 
     return $plugin;
@@ -126,7 +126,7 @@ class RenderedItem extends ProcessorPluginBase {
    *   The logger to use.
    */
   public function getLogger() {
-    return $this->logger ?: \Drupal::logger('search_api');
+    return $this->logger ?: \Drupal::service('logger.channel.search_api');
   }
 
   /**

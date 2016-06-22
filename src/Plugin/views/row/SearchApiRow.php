@@ -48,7 +48,6 @@ class SearchApiRow extends RowPluginBase {
    *
    * @var \Psr\Log\LoggerInterface|null
    */
-  // @todo Make this into a trait, with an additional logException() method.
   protected $logger;
 
   /**
@@ -59,7 +58,7 @@ class SearchApiRow extends RowPluginBase {
     $row = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
     $row->setEntityTypeManager($container->get('entity_type.manager'));
-    $row->setLogger($container->get('logger.factory')->get('search_api'));
+    $row->setLogger($container->get('logger.channel.search_api'));
 
     return $row;
   }
@@ -94,7 +93,7 @@ class SearchApiRow extends RowPluginBase {
    *   The logger to use.
    */
   public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.factory')->get('search_api');
+    return $this->logger ?: \Drupal::service('logger.channel.search_api');
   }
 
   /**

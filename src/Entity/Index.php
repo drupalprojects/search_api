@@ -408,7 +408,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $all_datasources[$name] = $datasource;
       }
       elseif (!class_exists($datasource_definition['class'])) {
-        \Drupal::logger('search_api')->warning('Datasource @id specifies a non-existing @class.', array('@id' => $name, '@class' => $datasource_definition['class']));
+        \Drupal::service('logger.channel.search_api')->warning('Datasource @id specifies a non-existing @class.', array('@id' => $name, '@class' => $datasource_definition['class']));
       }
     }
 
@@ -648,7 +648,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
       elseif (!class_exists($processor_definition['class'])) {
-        \Drupal::logger('search_api')->warning('Processor @id specifies a non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class']));
+        \Drupal::service('logger.channel.search_api')->warning('Processor @id specifies a non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class']));
       }
     }
 
@@ -872,7 +872,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $missing_ids = array_reduce(array_map('array_values', $items_by_datasource), 'array_merge', array());
       $args['%index'] = $this->label();
       $args['@items'] = '"' . implode('", "', $missing_ids) . '"';
-      \Drupal::logger('search_api')
+      \Drupal::service('logger.channel.search_api')
         ->warning('Could not load the following items on index %index: @items.', $args);
       // Also remove those items from tracking so we don't keep trying to load
       // them.

@@ -126,9 +126,7 @@ class SearchApiQuery extends QueryPluginBase {
     /** @var static $plugin */
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.factory')->get('search_api');
-    $plugin->setLogger($logger);
+    $plugin->setLogger($container->get('logger.channel.search_api'));
 
     return $plugin;
   }
@@ -140,7 +138,7 @@ class SearchApiQuery extends QueryPluginBase {
    *   The logger to use.
    */
   public function getLogger() {
-    return $this->logger ?: \Drupal::logger('search_api');
+    return $this->logger ?: \Drupal::service('logger.channel.search_api');
   }
 
   /**
