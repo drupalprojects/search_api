@@ -91,22 +91,25 @@ class IndexProcessorsForm extends EntityForm {
       $processors_by_stage[$stage] = $this->entity->getProcessorsByStage($stage, FALSE);
     }
 
+    $enabled_processors = $this->entity->getProcessors();
+
+    $backend_discouraged_processors = array();
     if ($this->entity->getServerInstance()) {
       $backend_discouraged_processors = $this->entity->getServerInstance()
         ->getDiscouragedProcessors();
 
       foreach ($backend_discouraged_processors as $processor_id) {
-        // Remove processors from the overview.
-        unset($all_processors[$processor_id]);
+        if (!isset($enabled_processors[$processor_id])) {
+          // Remove processors from the overview.
+          unset($all_processors[$processor_id]);
 
-        // Remove processors from the stages.
-        foreach ($processors_by_stage as $stage => $processors) {
-          unset($processors_by_stage[$stage][$processor_id]);
+          // Remove processors from the stages.
+          foreach ($processors_by_stage as $stage => $processors) {
+            unset($processors_by_stage[$stage][$processor_id]);
+          }
         }
       }
     }
-
-    $enabled_processors = $this->entity->getProcessors();
 
     $form['#tree'] = TRUE;
     $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
@@ -139,6 +142,9 @@ class IndexProcessorsForm extends EntityForm {
         '#disabled' => $processor->isLocked(),
         '#access' => !$processor->isHidden(),
       );
+      if (in_array($processor_id, $backend_discouraged_processors)) {
+        $form['status'][$processor_id]['#description'] .= '<br /><strong>' . $this->t('It is recommended not to use this processor with the selected server.') . '</strong>';
+      }
     }
 
     $form['weights'] = array(
