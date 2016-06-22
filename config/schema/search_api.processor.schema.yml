@@ -44,6 +44,12 @@ plugin.plugin_configuration.search_api_processor.highlight:
     excerpt_length:
       type: integer
       label: 'The requested length of the excerpt, in characters'
+    exclude_fields:
+      type: sequence
+      label: 'Fields excluded from excerpt'
+      sequence:
+        type: string
+        label: 'An excluded field''s ID'
     highlight:
       type: string
       label: 'Defines whether returned fields should be highlighted (always/if returned/never).'

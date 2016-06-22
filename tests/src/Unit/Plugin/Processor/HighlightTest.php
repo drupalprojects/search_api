@@ -25,12 +25,25 @@ class HighlightTest extends UnitTestCase {
   protected $processor;
 
   /**
+   * The index mock used for the tests.
+   *
+   * @var \PHPUnit_Framework_MockObject_MockObject|\Drupal\search_api\IndexInterface
+   */
+  protected $index;
+
+  /**
    * Creates a new processor object for use in the tests.
    */
   protected function setUp() {
     parent::setUp();
 
     $this->processor = new Highlight(array(), 'highlight', array());
+
+    $this->index = $this->getMock('Drupal\search_api\IndexInterface');
+    $this->index->expects($this->any())
+      ->method('getFulltextFields')
+      ->willReturn(array('body', 'title'));
+    $this->processor->setIndex($this->index);
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
@@ -102,19 +115,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue('foo'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value');
     $fields = array(
@@ -124,7 +134,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -148,19 +158,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value');
     $fields = array(
@@ -170,7 +177,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -194,19 +201,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value');
     $fields = array(
@@ -216,7 +220,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -238,19 +242,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value');
     $fields = array(
@@ -260,7 +261,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -287,19 +288,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array($this->getFieldBody());
     $fields = array(
@@ -309,7 +307,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -333,19 +331,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'diam')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array($this->getFieldBody());
     $fields = array(
@@ -355,7 +350,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -381,19 +376,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue('congue'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array($this->getFieldBody());
     $fields = array(
@@ -403,7 +395,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -429,19 +421,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $field = Utility::createField($index, 'body');
+    $field = Utility::createField($this->index, 'body');
     $field->setType('text');
     $field->setDatasourceId('entity:node');
     $field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array($this->getFieldBody());
     $fields = array(
@@ -451,7 +440,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -489,19 +478,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue($keys));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $body_field = Utility::createField($index, 'body');
+    $body_field = Utility::createField($this->index, 'body');
     $body_field->setType('text');
     $body_field->setDatasourceId('entity:node');
     $body_field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $body_field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $fields = array(
       'entity:node/body' => array(
@@ -512,7 +498,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -537,23 +523,23 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $body_field = Utility::createField($index, 'body');
+    $body_field = Utility::createField($this->index, 'body');
     $body_field->setType('text');
     $body_field->setDatasourceId('entity:node');
     $body_field->setPropertyPath('body');
-    $title_field = Utility::createField($index, 'title');
+    $title_field = Utility::createField($this->index, 'title');
     $title_field->setType('text');
     $title_field->setDatasourceId('entity:node');
     $title_field->setPropertyPath('title');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
-      ->will($this->returnValue(array('body' => $body_field, 'title' => $title_field)));
+      ->will($this->returnValue(array(
+        'body' => $body_field,
+        'title' => $title_field,
+      )));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value', 'foo bar');
     $title_values = array('Title foo');
@@ -568,7 +554,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 1, $fields);
+    $items = $this->createItems($this->index, 1, $fields);
 
     $results = Utility::createSearchResultSet($query);
     $results->setResultItems($items);
@@ -595,19 +581,16 @@ class HighlightTest extends UnitTestCase {
       ->will($this->returnValue(array('#conjunction' => 'OR', 'foo')));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
-    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
-
-    $body_field = Utility::createField($index, 'body');
+    $body_field = Utility::createField($this->index, 'body');
     $body_field->setType('text');
     $body_field->setDatasourceId('entity:node');
     $body_field->setPropertyPath('body');
 
-    $index->expects($this->atLeastOnce())
+    $this->index->expects($this->atLeastOnce())
       ->method('getFields')
       ->will($this->returnValue(array('body' => $body_field)));
 
-    $this->processor->setIndex($index);
+    $this->processor->setIndex($this->index);
 
     $body_values = array('Some foo value', 'foo bar');
     $fields = array(
@@ -617,7 +600,7 @@ class HighlightTest extends UnitTestCase {
       ),
     );
 
-    $items = $this->createItems($index, 2, $fields);
+    $items = $this->createItems($this->index, 2, $fields);
 
     $items[$this->itemIds[1]]->getField('body')->setValues(array('The second item also contains foo in its body.'));
 
@@ -636,6 +619,68 @@ class HighlightTest extends UnitTestCase {
     $excerpt2 = '… The second item also contains <strong>foo</strong> in its body. …';
     $this->assertEquals($excerpt1, $items[$this->itemIds[0]]->getExcerpt(), 'Correct excerpt created from two text fields.');
     $this->assertEquals($excerpt2, $items[$this->itemIds[1]]->getExcerpt(), 'Correct excerpt created for second item.');
+  }
+
+  /**
+   * Tests excerpts with some fields excluded.
+   */
+  public function testExcerptExcludeFields() {
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
+    /** @var \Drupal\search_api\Query\QueryInterface $query */
+
+    $body_field = Utility::createField($this->index, 'body');
+    $body_field->setType('text');
+    $body_field->setDatasourceId('entity:node');
+    $body_field->setPropertyPath('body');
+    $title_field = Utility::createField($this->index, 'title');
+    $title_field->setType('text');
+    $title_field->setDatasourceId('entity:node');
+    $title_field->setPropertyPath('title');
+
+    $this->index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array(
+        'body' => $body_field,
+        'title' => $title_field,
+      )));
+
+    $this->processor->setIndex($this->index);
+
+    $this->processor->setConfiguration(array(
+      'exclude_fields' => array('title'),
+    ));
+
+    $body_values = array('Some foo value', 'foo bar');
+    $title_values = array('Title foo');
+    $fields = array(
+      'entity:node/body' => array(
+        'type' => 'text',
+        'values' => $body_values,
+      ),
+      'title' => array(
+        'type' => 'text',
+        'values' => $title_values,
+      ),
+    );
+
+    $items = $this->createItems($this->index, 1, $fields);
+
+    $results = Utility::createSearchResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getExtraData('highlighted_fields');
+    $this->assertEquals('Some <strong>foo</strong> value', $output[$this->itemIds[0]]['body'][0], 'Highlighting is correctly applied to first body field value.');
+    $this->assertEquals('<strong>foo</strong> bar', $output[$this->itemIds[0]]['body'][1], 'Highlighting is correctly applied to second body field value.');
+    $this->assertEquals('Title <strong>foo</strong>', $output[$this->itemIds[0]]['title'][0], 'Highlighting is correctly applied to title field.');
+
+    $excerpt = '… Some <strong>foo</strong> value … <strong>foo</strong> bar …';
+    $this->assertEquals($excerpt, $items[$this->itemIds[0]]->getExcerpt(), 'Correct excerpt created ignoring title field.');
   }
 
   /**
