@@ -221,6 +221,14 @@ interface FieldInterface extends \Traversable {
   public function getType();
 
   /**
+   * Retrieves the Search API data type plugin for this field's type.
+   *
+   * @return \Drupal\search_api\DataType\DataTypeInterface|null
+   *   The data type plugin, or NULL if the type is unknown.
+   */
+  public function getDataTypePlugin();
+
+  /**
    * Sets the Search API data type of this field.
    *
    * @param string $type

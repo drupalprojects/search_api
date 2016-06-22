@@ -430,6 +430,29 @@ class DependencyRemovalTest extends KernelTestBase {
   }
 
   /**
+   * Data provider for this class's test methods.
+   *
+   * If $remove_dependency is TRUE, in Plugin::onDependencyRemoval() it clears
+   * its configuration (and thus its dependency, in those test plugins) and
+   * returns TRUE, which the index will take as "all OK, dependency removed" and
+   * leave the plugin where it is, only with updated configuration.
+   *
+   * If $remove_dependency is FALSE, Plugin::onDependencyRemoval() will do
+   * nothing and just return FALSE, the index says "oh, that plugin still has
+   * that removed dependency, so I should better remove the plugin" and the
+   * plugin gets removed.
+   *
+   * @return array
+   *   An array of argument arrays for this class's test methods.
+   */
+  public function dependencyTestDataProvider() {
+    return array(
+      'Remove dependency' => array(TRUE),
+      'Keep dependency' => array(FALSE),
+    );
+  }
+
+  /**
    * Tests whether module dependencies are handled correctly.
    */
   public function testModuleDependency() {
@@ -488,25 +511,102 @@ class DependencyRemovalTest extends KernelTestBase {
   }
 
   /**
-   * Data provider for this class's test methods.
+   * Tests whether dependencies of used data types are handled correctly.
    *
-   * If $remove_dependency is TRUE, in Plugin::onDependencyRemoval() it clears
-   * its configuration (and thus its dependency, in those test plugins) and
-   * returns TRUE, which the index will take as "all OK, dependency removed" and
-   * leave the plugin where it is, only with updated configuration.
+   * @param string $dependency_type
+   *   The type of dependency that should be set on the data type (and then
+   *   removed): "module" or "config".
    *
-   * If $remove_dependency is FALSE, Plugin::onDependencyRemoval() will do
-   * nothing and just return FALSE, the index says "oh, that plugin still has
-   * that removed dependency, so I should better remove the plugin" and the
-   * plugin gets removed.
+   * @dataProvider dataTypeDependencyTestDataProvider
+   */
+  public function testDataTypeDependency($dependency_type) {
+    switch ($dependency_type) {
+      case 'module':
+        $type = 'search_api_test';
+        $config_dependency_key = 'module';
+        $config_dependency_name = 'search_api_test';
+        break;
+
+      case 'config':
+        $type = 'search_api_test_altering';
+        $config_dependency_key = $this->dependency->getConfigDependencyKey();
+        $config_dependency_name = $this->dependency->getConfigDependencyName();
+        \Drupal::state()->set('search_api_test.data_type.dependencies', array(
+          $config_dependency_key => array(
+            $config_dependency_name,
+          ),
+        ));
+        break;
+
+      default:
+        $this->fail();
+        return;
+    }
+
+    // Use the "user" datasource (to not get a module dependency via that) and
+    // add a field with the given data type.
+    $datasources['entity:user'] = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.datasource')
+      ->createInstance('entity:user', array('index' => $this->index));
+    $this->index->setDatasources($datasources);
+    $field = Utility::createField($this->index, 'uid', array(
+      'label' => 'ID',
+      'datasource_id' => 'entity:user',
+      'property_path' => 'uid',
+      'type' => $type,
+    ));
+    $this->index->addField($field);
+    // Set the server to NULL to not have a dependency on that by default.
+    $this->index->setServer(NULL);
+    $this->index->save();
+
+    // Check the dependencies were calculated correctly.
+    $dependencies = $this->index->getDependencies();
+    $dependencies += array($config_dependency_key => array());
+    $this->assertContains($config_dependency_name, $dependencies[$config_dependency_key], 'Data type dependency correctly inserted');
+
+    switch ($dependency_type) {
+      case 'module':
+        // Disabling modules in Kernel tests normally doesn't trigger any kind of
+        // reaction, just removes it from the list of modules (e.g., to avoid
+        // calling of a hook). Therefore, we have to trigger that behavior
+        // ourselves.
+        \Drupal::getContainer()
+          ->get('config.manager')
+          ->uninstall('module', 'search_api_test');
+        break;
+
+      case 'config':
+        $this->dependency->delete();
+        break;
+    }
+
+    // Reload the index and check it's still there.
+    $this->reloadIndex();
+    $this->assertInstanceOf('Drupal\search_api\IndexInterface', $this->index, 'Index not removed');
+
+    // Make sure the dependency has been removed.
+    $dependencies = $this->index->getDependencies();
+    $dependencies += array($config_dependency_key => array());
+    $this->assertNotContains($config_dependency_name, $dependencies[$config_dependency_key], 'Data type dependency correctly removed');
+
+    // Make sure the field type has changed.
+    $field = $this->index->getField('uid');
+    $this->assertNotNull($field, 'Field was not removed');
+    $this->assertEquals('string', $field->getType(), 'Field type was changed to fallback type');
+  }
+
+  /**
+   * Data provider for testDataTypeDependency().
    *
    * @return array
-   *   An array of argument arrays for this class's test methods.
+   *   An array of argument arrays for
+   *   \Drupal\Tests\search_api\Kernel\DependencyRemovalTest::testDataTypeDependency().
    */
-  public function dependencyTestDataProvider() {
+  public function dataTypeDependencyTestDataProvider() {
     return array(
-      'Remove dependency' => array(TRUE),
-      'Keep dependency' => array(FALSE),
+      'Module dependency' => array('module'),
+      'Config dependency' => array('config'),
     );
   }
 

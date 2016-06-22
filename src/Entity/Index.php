@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Component\Plugin\DependentPluginInterface;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -1537,10 +1539,44 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $this->dependencies = $original_dependencies;
 
     // Include the field dependencies.
+    $type_dependencies = array();
     foreach ($this->getFields() as $field_id => $field) {
       foreach ($field->getDependencies() as $dependency_type => $names) {
         foreach ($names as $name) {
           $dependency_data[$dependency_type][$name]['always']['fields'][$field_id] = $field;
+        }
+      }
+
+      // Also take dependencies of the field's data type plugin into account.
+      // (Since data type plugins cannot have configuration, this will always be
+      // the same for a certain type, so we only have to compute this once per
+      // type.)
+      $type = $field->getType();
+      if (!isset($type_dependencies[$type])) {
+        $type_dependencies[$type] = array();
+        $data_type = $field->getDataTypePlugin();
+        if ($data_type && !$data_type->isDefault()) {
+          $definition = $data_type->getPluginDefinition();
+          $type_dependencies[$type]['module'][] = $definition['provider'];
+          // Plugins can declare additional dependencies in their definition.
+          if (!empty($definition['config_dependencies'])) {
+            $type_dependencies[$type] = NestedArray::mergeDeep(
+              $type_dependencies[$type],
+              $definition['config_dependencies']
+            );
+          }
+          // If a plugin is dependent, calculate its dependencies.
+          if ($data_type instanceof DependentPluginInterface) {
+            $type_dependencies[$type] = NestedArray::mergeDeep(
+              $type_dependencies[$type],
+              $data_type->calculateDependencies()
+            );
+          }
+        }
+      }
+      foreach ($type_dependencies[$type] as $dependency_type => $list) {
+        foreach ($list as $name) {
+          $dependency_data[$dependency_type][$name]['optional']['fields'][$field_id] = $field;
         }
       }
     }
@@ -1671,6 +1707,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
             // the server.
             if ($plugin_type == 'index') {
               $this->setServer(NULL);
+              continue;
+            }
+
+            // Fields can only have optional dependencies caused by their data
+            // type plugin. Reset to the fallback type.
+            if ($plugin_type == 'fields') {
+              foreach ($plugins as $field) {
+                $field->setType($field->getDataTypePlugin()->getFallbackType());
+              }
               continue;
             }
 

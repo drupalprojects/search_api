@@ -19,7 +19,7 @@ class DataTypePluginManager extends DefaultPluginManager {
   /**
    * Static cache for the data type definitions.
    *
-   * @var string[][]
+   * @var \Drupal\search_api\DataType\DataTypeInterface[]
    *
    * @see \Drupal\search_api\DataType\DataTypePluginManager::getInstances()
    */
@@ -50,7 +50,7 @@ class DataTypePluginManager extends DefaultPluginManager {
    *   An array of data type plugins, keyed by type identifier.
    */
   public function getInstances() {
-    if (!isset($this->DataTypes)) {
+    if (!isset($this->dataTypes)) {
       $this->dataTypes = array();
 
       foreach ($this->getDefinitions() as $name => $data_type_definition) {

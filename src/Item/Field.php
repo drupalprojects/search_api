@@ -414,6 +414,17 @@ class Field implements \IteratorAggregate, FieldInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDataTypePlugin() {
+    $data_type_manager = $this->getDataTypeManager();
+    if ($data_type_manager->hasDefinition($this->getType())) {
+      return $data_type_manager->createInstance($this->getType());
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setType($type) {
     if ($type != $this->type && $this->isTypeLocked()) {
       $field_label = $this->getLabel();
@@ -443,14 +454,9 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function addValue($value) {
-    // If the data type of the field is a custom one, then the value can be
-    // altered by the data type plugin.
-    /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type_plugin */
-    $data_type_plugin = NULL;
-    $data_type_manager = $this->getDataTypeManager();
-    if ($data_type_manager->hasDefinition($this->getType())) {
-      $data_type_plugin = $data_type_manager->createInstance($this->getType());
-    }
+    // The data type has to be able to alter the given value before it is
+    // included.
+    $data_type_plugin = $this->getDataTypePlugin();
     if ($data_type_plugin) {
       $value = $data_type_plugin->getValue($value);
     }
