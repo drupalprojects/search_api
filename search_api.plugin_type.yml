@@ -1,3 +1,8 @@
+search_api_backend:
+  label: Search API backend
+  plugin_manager_service_id: plugin.manager.search_api.backend
+  plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
+
 search_api_datasource:
   label: Search API datasource
   plugin_manager_service_id: plugin.manager.search_api.datasource
