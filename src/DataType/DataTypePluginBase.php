@@ -3,7 +3,6 @@
 namespace Drupal\search_api\DataType;
 
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\search_api\Backend\BackendPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -44,47 +43,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class DataTypePluginBase extends PluginBase implements DataTypeInterface {
 
   /**
-   * The backend plugin manager.
-   *
-   * @var \Drupal\search_api\Backend\BackendPluginManager|null
-   */
-  protected $backendManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    /** @var static $data_type */
-    $data_type = new static($configuration, $plugin_id, $plugin_definition);
-
-    /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_manager */
-    $backend_manager = $container->get('plugin.manager.search_api.backend');
-    $data_type->setBackendManager($backend_manager);
-
-    return $data_type;
-  }
-
-  /**
-   * Retrieves the backend plugin manager.
-   *
-   * @return \Drupal\search_api\Backend\BackendPluginManager
-   *   The backend plugin manager.
-   */
-  public function getBackendManager() {
-    return $this->backendManager ?: \Drupal::service('plugin.manager.search_api.backend');
-  }
-
-  /**
-   * Sets the backend plugin manager.
-   *
-   * @param \Drupal\search_api\Backend\BackendPluginManager $backend_manager
-   *   The backend plugin manager.
-   *
-   * @return $this
-   */
-  public function setBackendManager(BackendPluginManager $backend_manager) {
-    $this->backendManager = $backend_manager;
-    return $this;
+    return new static($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
