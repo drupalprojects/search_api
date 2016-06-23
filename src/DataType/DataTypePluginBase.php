@@ -55,7 +55,7 @@ abstract class DataTypePluginBase extends PluginBase implements DataTypeInterfac
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var static $data_type */
-    $data_type = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $data_type = new static($configuration, $plugin_id, $plugin_definition);
 
     /** @var \Drupal\search_api\Backend\BackendPluginManager $backend_manager */
     $backend_manager = $container->get('plugin.manager.search_api.backend');
