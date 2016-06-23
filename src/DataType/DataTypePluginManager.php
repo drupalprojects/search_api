@@ -71,14 +71,13 @@ class DataTypePluginManager extends DefaultPluginManager {
    *   An associative array with all recognized types as keys, mapped to their
    *   translated display names.
    *
-   * @see \Drupal\search_api\DataTypePluginManager::getInstances()
+   * @see \Drupal\search_api\DataType\DataTypePluginManager::getInstances()
    */
   public function getInstancesOptions() {
     $types = array();
     foreach ($this->getInstances() as $id => $info) {
       $types[$id] = $info->label();
     }
-
     return $types;
   }
 

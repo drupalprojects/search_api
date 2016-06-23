@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * Plugins extending this class need to define a plugin definition array through
  * annotation. These definition arrays may be altered through
- * hook_search_api_tracker_info_alter(). The definition includes the following
+ * hook_search_api_data_type_info_alter(). The definition includes the following
  * keys:
  * - id: The unique, system-wide identifier of the data type class.
  * - label: The human-readable name of the data type class, translated.
@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   translated.
  * - fallback_type: (optional) The fallback data type for this data type. Needs
  *   to be one of the default data types defined in the Search API itself.
- *   Defaults to "text".
+ *   Defaults to "string".
  *
  * A complete plugin definition should be written as in this example:
  *
