@@ -298,6 +298,8 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Adds a processor to this index.
    *
+   * An existing processor with the same ID will be replaced.
+   *
    * @param \Drupal\search_api\Processor\ProcessorInterface $processor
    *   The processor to be added.
    *

@@ -175,8 +175,7 @@ class IndexProcessorsForm extends EntityForm {
     foreach ($processors_by_stage as $stage => $processors) {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
       foreach ($processors as $processor_id => $processor) {
-        $config = $processor->getConfiguration();
-        $weight = isset($config['weights'][$stage]) ? $config['weights'][$stage] : $processor->getDefaultWeight($stage);
+        $weight = $processor->getWeight($stage);
         if ($processor->isHidden()) {
           $form['processors'][$processor_id]['weights'][$stage] = array(
             '#type' => 'value',
@@ -288,9 +287,6 @@ class IndexProcessorsForm extends EntityForm {
         $new_settings[$processor_id]['settings'] = $processor->getConfiguration();
         $new_settings[$processor_id]['settings'] += array('index' => $this->entity);
       }
-      if (!empty($values['processors'][$processor_id]['weights'])) {
-        $new_settings[$processor_id]['settings']['weights'] = $values['processors'][$processor_id]['weights'];
-      }
     }
 
     $new_configurations = array();
@@ -298,6 +294,11 @@ class IndexProcessorsForm extends EntityForm {
       /** @var \Drupal\search_api\Processor\ProcessorInterface $new_processor */
       $new_processor_settings['settings']['index'] = $this->entity;
       $new_processor = $this->processorPluginManager->createInstance($plugin_id, $new_processor_settings['settings']);
+      if (!empty($values['processors'][$plugin_id]['weights'])) {
+        foreach ($values['processors'][$plugin_id]['weights'] as $stage => $weight) {
+          $processor->setWeight($stage, (int) $weight);
+        }
+      }
       $this->entity->addProcessor($new_processor);
       $new_configurations[$plugin_id] = $new_processor->getConfiguration();
     }

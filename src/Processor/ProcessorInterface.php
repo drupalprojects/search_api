@@ -80,22 +80,31 @@ interface ProcessorInterface extends IndexPluginInterface {
   public function supportsStage($stage_identifier);
 
   /**
-   * Returns the default weight for a specific processing stage.
-   *
-   * Some processors should ensure they run earlier or later in a particular
-   * stage. Processors with lower weights are run earlier. The default value is
-   * used when the processor is first enabled. It can then be changed through
-   * reordering by the user.
+   * Returns the weight for a specific processing stage.
    *
    * @param string $stage
-   *   The stage whose default weight should be returned. See
-   *   \Drupal\search_api\Processor\ProcessorPluginManager::getProcessingStages()
-   *   for the valid values.
+   *   The stage whose weight should be returned.
    *
    * @return int
    *   The default weight for the given stage.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorPluginManager::getProcessingStages()
    */
-  public function getDefaultWeight($stage);
+  public function getWeight($stage);
+
+  /**
+   * Sets the weight for a specific processing stage.
+   *
+   * @param string $stage
+   *   The stage whose weight should be set.
+   * @param int $weight
+   *   The weight for the given stage.
+   *
+   * @return $this
+   *
+   * @see \Drupal\search_api\Processor\ProcessorPluginManager::getProcessingStages()
+   */
+  public function setWeight($stage, $weight);
 
   /**
    * Determines whether this processor should always be enabled.
