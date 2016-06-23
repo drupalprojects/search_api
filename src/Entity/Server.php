@@ -408,7 +408,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    return $this->getBackend()->search($query);
+    $this->getBackend()->search($query);
   }
 
   /**

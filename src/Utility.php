@@ -512,19 +512,6 @@ class Utility {
   }
 
   /**
-   * Creates a new search result set.
-   *
-   * @param \Drupal\search_api\Query\QueryInterface $query
-   *   The executed search query.
-   *
-   * @return \Drupal\search_api\Query\ResultSetInterface
-   *   A search result set for the given query.
-   */
-  public static function createSearchResultSet(QueryInterface $query) {
-    return new ResultSet($query);
-  }
-
-  /**
    * Creates a search item object.
    *
    * @param \Drupal\search_api\IndexInterface $index

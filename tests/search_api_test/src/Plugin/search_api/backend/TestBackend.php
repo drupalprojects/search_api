@@ -177,7 +177,7 @@ class TestBackend extends BackendPluginBase {
   public function search(QueryInterface $query) {
     $this->checkError(__FUNCTION__);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = $query->getResults();
     $result_items = array();
     $datasources = $query->getIndex()->getDatasources();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
@@ -208,7 +208,6 @@ class TestBackend extends BackendPluginBase {
       $result_items[$item_id] = $item;
     }
     $results->setResultCount(count($result_items));
-    return $results;
   }
 
   /**

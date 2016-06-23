@@ -3,6 +3,7 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Highlight;
+use Drupal\search_api\Query\ResultSet;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
@@ -136,7 +137,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -179,7 +180,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -222,7 +223,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -263,7 +264,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
     $highlighted_fields[$this->itemIds[0]]["body_2"][0] = 'Old highlighting text';
@@ -309,7 +310,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -352,7 +353,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -397,7 +398,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -442,7 +443,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -500,7 +501,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -556,7 +557,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -604,7 +605,7 @@ class HighlightTest extends UnitTestCase {
 
     $items[$this->itemIds[1]]->getField('body')->setValues(array('The second item also contains foo in its body.'));
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 
@@ -668,7 +669,7 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 1, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = new ResultSet($query);
     $results->setResultItems($items);
     $results->setResultCount(1);
 

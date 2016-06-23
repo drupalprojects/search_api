@@ -188,9 +188,6 @@ interface BackendSpecificInterface {
    * @param \Drupal\search_api\Query\QueryInterface $query
    *   The query to execute.
    *
-   * @return \Drupal\search_api\Query\ResultSetInterface
-   *   The search results.
-   *
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an error prevented the search from completing.
    */

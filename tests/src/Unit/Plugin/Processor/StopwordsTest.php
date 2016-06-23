@@ -3,6 +3,7 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Stopwords;
+use Drupal\search_api\Query\ResultSet;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
@@ -110,9 +111,7 @@ class StopwordsTest extends UnitTestCase {
     unset($keys[1]);
     $this->assertEquals($keys, $query->getKeys());
 
-    $results = Utility::createSearchResultSet($query);
-    $this->processor->postprocessSearchResults($results);
-    $this->assertEquals(array('bar'), $results->getIgnoredSearchKeys());
+    $this->assertEquals(array('bar'), $query->getResults()->getIgnoredSearchKeys());
   }
 
 }

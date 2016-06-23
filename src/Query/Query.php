@@ -31,6 +31,13 @@ class Query implements QueryInterface {
   protected $indexId;
 
   /**
+   * The search results.
+   *
+   * @var \Drupal\search_api\Query\ResultSetInterface
+   */
+  protected $results;
+
+  /**
    * The result cache service.
    *
    * @var \Drupal\search_api\Query\ResultsCacheInterface
@@ -119,6 +126,13 @@ class Query implements QueryInterface {
   protected $preExecuteRan = FALSE;
 
   /**
+   * Flag for whether execute() was already called for this query.
+   *
+   * @var bool
+   */
+  protected $executed = FALSE;
+
+  /**
    * Constructs a Query object.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -140,6 +154,7 @@ class Query implements QueryInterface {
       throw new SearchApiException("Can't search on index '$index_label' which is disabled.");
     }
     $this->index = $index;
+    $this->results = new ResultSet($this);
     $this->resultsCache = $results_cache;
     $this->options = $options + array(
       'conjunction' => 'AND',
@@ -358,42 +373,47 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function execute() {
+    if ($this->hasExecuted()) {
+      return $this->results;
+    }
+
+    $this->executed = TRUE;
+
     // Check for aborted status both before and after calling preExecute().
-    $response = $this->getAbortResults();
-    if ($response) {
-      return $response;
+    if ($this->shouldAbort()) {
+      return $this->results;
     }
 
     // Prepare the query for execution by the server.
     $this->preExecute();
 
-    $response = $this->getAbortResults();
-    if ($response) {
-      return $response;
+    if ($this->shouldAbort()) {
+      return $this->results;
     }
 
     // Execute query.
-    $response = $this->index->getServerInstance()->search($this);
+    $this->index->getServerInstance()->search($this);
 
     // Postprocess the search results.
-    $this->postExecute($response);
+    $this->postExecute();
 
-    return $response;
+    return $this->results;
   }
 
   /**
-   * Creates and returns an empty result set if the query was aborted.
+   * Determines whether the query should be aborted.
    *
-   * @return \Drupal\search_api\Query\ResultSetInterface|null
-   *   An empty result set if the query was aborted, NULL otherwise.
+   * Also prepares the result set if the query should be aborted.
+   *
+   * @return bool
+   *   TRUE if the query should be aborted, FALSE otherwise.
    */
-  protected function getAbortResults() {
+  protected function shouldAbort() {
     if (!$this->wasAborted() && $this->languages !== array()) {
-      return NULL;
+      return FALSE;
     }
-    $response = Utility::createSearchResultSet($this);
-    $this->postExecute($response);
-    return $response;
+    $this->postExecute();
+    return TRUE;
   }
 
   /**
@@ -419,19 +439,33 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function postExecute(ResultSetInterface $results) {
+  public function postExecute() {
     // Postprocess results.
-    $this->index->postprocessSearchResults($results);
+    $this->index->postprocessSearchResults($this->results);
 
     // Let modules alter the results.
     $hooks = array('search_api_results');
     foreach ($this->tags as $tag) {
       $hooks[] = "search_api_results_$tag";
     }
-    \Drupal::moduleHandler()->alter($hooks, $results);
+    \Drupal::moduleHandler()->alter($hooks, $this->results);
 
     // Store the results in the static cache.
-    $this->resultsCache->addResults($results);
+    $this->resultsCache->addResults($this->results);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasExecuted() {
+    return $this->executed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResults() {
+    return $this->results;
   }
 
   /**

@@ -224,11 +224,28 @@ interface QueryInterface extends ConditionSetInterface {
    *
    * This method should always be called by execute() and contain all necessary
    * operations after the results are returned from the server.
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $results
-   *   The search results returned by the server.
    */
-  public function postExecute(ResultSetInterface $results);
+  public function postExecute();
+
+  /**
+   * Determines whether this query has been executed already.
+   *
+   * @return bool
+   *   TRUE if this query has been executed already, FALSE otherwise.
+   */
+  public function hasExecuted();
+
+  /**
+   * Retrieves this query's result set.
+   *
+   * If this query hasn't been executed yet, the results will be incomplete.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   The results of the search.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::hasExecuted()
+   */
+  public function getResults();
 
   /**
    * Retrieves the index associated with this search.

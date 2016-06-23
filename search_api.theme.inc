@@ -403,8 +403,8 @@ function theme_search_api_index($variables) {
       $query->addTag('server_index_status');
       $label = t('Server index status');
       try {
-        $response = $server->search($query);
-        $count = $response->getResultCount();
+        $server->search($query);
+        $count = $query->getResults()->getResultCount();
         // Build the server index status translation variables.
         $vars = array(':url' => Url::fromUri('https://drupal.org/node/2009804#server-index-status')->toString());
         // Build the server index status info.

@@ -1493,7 +1493,7 @@ class Database extends BackendPluginBase {
 
     $db_query = $this->createDbQuery($query, $fields);
 
-    $results = Utility::createSearchResultSet($query);
+    $results = $query->getResults();
 
     $skip_count = $query->getOption('skip result count');
     if (!$skip_count) {
@@ -1570,10 +1570,16 @@ class Database extends BackendPluginBase {
       }
     }
 
-    $results->setWarnings(array_keys($this->warnings));
-    $results->setIgnoredSearchKeys(array_keys($this->ignored));
-
-    return $results;
+    // Add additional warnings and ignored keys.
+    $metadata = array(
+      'warnings' => 'addWarning',
+      'ignored' => 'addIgnoredSearchKey',
+    );
+    foreach ($metadata as $property => $method) {
+      foreach (array_keys($this->$property) as $value) {
+        $results->$method($value);
+      }
+    }
   }
 
   /**
