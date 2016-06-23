@@ -296,7 +296,7 @@ class IndexProcessorsForm extends EntityForm {
       $new_processor = $this->processorPluginManager->createInstance($plugin_id, $new_processor_settings['settings']);
       if (!empty($values['processors'][$plugin_id]['weights'])) {
         foreach ($values['processors'][$plugin_id]['weights'] as $stage => $weight) {
-          $processor->setWeight($stage, (int) $weight);
+          $new_processor->setWeight($stage, (int) $weight);
         }
       }
       $this->entity->addProcessor($new_processor);
