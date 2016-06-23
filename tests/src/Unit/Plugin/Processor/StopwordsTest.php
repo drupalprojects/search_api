@@ -3,7 +3,6 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Stopwords;
-use Drupal\search_api\Query\ResultSet;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 

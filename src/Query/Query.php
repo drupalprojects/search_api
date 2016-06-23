@@ -5,7 +5,6 @@ namespace Drupal\search_api\Query;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api\Utility;
 
 /**
  * Provides a standard implementation for a Search API query.

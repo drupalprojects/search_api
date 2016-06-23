@@ -21,8 +21,6 @@ use Drupal\search_api\Item\Item;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Query\Query;
-use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Query\ResultSet;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
