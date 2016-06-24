@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Query;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -12,6 +13,10 @@ use Drupal\search_api\SearchApiException;
 class Query implements QueryInterface {
 
   use StringTranslationTrait;
+  use DependencySerializationTrait {
+    __sleep as traitSleep;
+    __wakeup as traitWakeup;
+  }
 
   /**
    * The index on which the query will be executed.
@@ -569,13 +574,19 @@ class Query implements QueryInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function __clone() {
+    $this->results = $this->getResults()->getCloneForQuery($this);
+  }
+
+  /**
    * Implements the magic __sleep() method to avoid serializing the index.
    */
   public function __sleep() {
     $this->indexId = $this->index->id();
-    $keys = get_object_vars($this);
-    unset($keys['index'], $keys['resultsCache'], $keys['stringTranslation']);
-    return array_keys($keys);
+    $keys = $this->traitSleep();
+    return array_diff($keys, array('index'));
   }
 
   /**
@@ -586,8 +597,9 @@ class Query implements QueryInterface {
       $this->index = \Drupal::entityTypeManager()
         ->getStorage('search_api_index')
         ->load($this->indexId);
-      unset($this->indexId);
+      $this->indexId = NULL;
     }
+    $this->traitWakeup();
   }
 
   /**

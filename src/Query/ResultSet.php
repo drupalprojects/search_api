@@ -189,6 +189,15 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCloneForQuery(QueryInterface $query) {
+    $clone = clone $this;
+    $clone->query = $query;
+    return $clone;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getIterator() {
     return new \ArrayIterator($this->resultItems);
   }

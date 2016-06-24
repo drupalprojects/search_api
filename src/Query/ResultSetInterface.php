@@ -184,4 +184,15 @@ interface ResultSetInterface extends \Traversable {
    */
   public function setExtraData($key, $data = NULL);
 
+  /**
+   * Creates a clone of this result set based on the given query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The query for the new result set.
+   *
+   * @return static
+   *   A clone of this result set.
+   */
+  public function getCloneForQuery(QueryInterface $query);
+
 }
