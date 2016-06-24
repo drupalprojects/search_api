@@ -33,6 +33,9 @@ interface DatasourceInterface extends IndexPluginInterface {
   /**
    * Retrieves the properties exposed by the underlying complex data type.
    *
+   * Property names have to start with a letter or an underscore, followed by
+   * any number of letters, numbers and underscores.
+   *
    * @return \Drupal\Core\TypedData\DataDefinitionInterface[]
    *   An associative array of property data types, keyed by the property name.
    */

@@ -125,12 +125,18 @@ interface ProcessorInterface extends IndexPluginInterface {
   /**
    * Retrieves the properties this processor defines for the given datasource.
    *
+   * Property names have to start with a letter or an underscore, followed by
+   * any number of letters, numbers and underscores. To avoid collisions, it is
+   * also recommended to prefix the property name with the identifier of the
+   * module defining the processor.
+   *
    * @param \Drupal\search_api\Datasource\DatasourceInterface|null $datasource
    *   (optional) The datasource this set of properties belongs to. If NULL, the
    *   datasource-independent properties should be added (or modified).
    *
    * @return \Drupal\search_api\Processor\ProcessorPropertyInterface[]
-   *   An array of property definitions for that datasource.
+   *   An array of property definitions for that datasource, keyed by
+   *   property names.
    */
   public function getPropertyDefinitions(DatasourceInterface $datasource = NULL);
 
