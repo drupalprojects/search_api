@@ -2,8 +2,12 @@
 
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
+use Drupal\Core\TypedData\DataDefinition;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
+use Drupal\search_api\Processor\ProcessorInterface;
+use Drupal\search_api\Processor\ProcessorProperty;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
 
@@ -237,6 +241,131 @@ class AggregatedFieldsTest extends UnitTestCase {
     $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
     $properties = $this->processor->getPropertyDefinitions($datasource);
     $this->assertEmpty($properties, 'Datasource-specific properties did not get changed.');
+  }
+
+  /**
+   * Tests that field extraction in the processor works correctly.
+   */
+  public function testFieldExtraction() {
+    /** @var \Drupal\Tests\search_api\TestComplexDataInterface|\PHPUnit_Framework_MockObject_MockObject $object */
+    $object = $this->getMock('Drupal\Tests\search_api\TestComplexDataInterface');
+    $bar_foo_property = $this->getMock('Drupal\Core\TypedData\TypedDataInterface');
+    $bar_foo_property->method('getValue')
+      ->willReturn('value3');
+    $bar_foo_property->method('getDataDefinition')
+      ->willReturn(new DataDefinition());
+    $bar_property = $this->getMock('Drupal\Tests\search_api\TestComplexDataInterface');
+    $bar_property->method('get')
+      ->willReturnMap(array(
+        array('foo', $bar_foo_property),
+      ));
+    $foobar_property = $this->getMock('Drupal\Core\TypedData\TypedDataInterface');
+    $foobar_property->method('getValue')
+      ->willReturn('wrong_value2');
+    $foobar_property->method('getDataDefinition')
+      ->willReturn(new DataDefinition());
+    $object->method('get')
+      ->willReturnMap(array(
+        array('bar', $bar_property),
+        array('foobar', $foobar_property),
+      ));
+
+    /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
+    $index = $this->getMock('Drupal\search_api\IndexInterface');
+
+    $field = Utility::createField($index, 'aggregated_field', array(
+      'property_path' => 'aggregated_field',
+      'configuration' => array(
+        'type' => 'union',
+        'fields' => array(
+          'aggregated_field',
+          'foo',
+          'entity:test1/bar:foo',
+          'entity:test1/baz',
+          'entity:test2/foobar',
+        ),
+      ),
+    ));
+    $index->method('getFieldsByDatasource')
+      ->willReturnMap(array(
+        array(NULL, array('aggregated_field' => $field)),
+      ));
+    $index->method('getPropertyDefinitions')
+      ->willReturnMap(array(
+        array(
+          NULL,
+          array(
+            'foo' => new ProcessorProperty(array(
+              'processor_id' => 'processor1',
+            )),
+          ),
+        ),
+        array(
+          'entity:test1',
+          array(
+            'bar' => new DataDefinition(),
+            'foobar' => new DataDefinition(),
+          ),
+        ),
+      ));
+    $processor_mock = $this->getMock('Drupal\search_api\Processor\ProcessorInterface');
+    $processor_mock->method('addFieldValues')
+      ->willReturnCallback(function (ItemInterface $item) {
+        foreach ($item->getFields(FALSE) as $field) {
+          if ($field->getCombinedPropertyPath() == 'foo') {
+            $field->setValues(array('value4', 'value5'));
+          }
+        }
+      });
+    $index->method('getProcessorsByStage')
+      ->willReturnMap(array(
+        array(
+          ProcessorInterface::STAGE_ADD_PROPERTIES,
+          TRUE,
+          array(
+            'aggregated_field' => $this->processor,
+            'processor1' => $processor_mock,
+          ),
+        ),
+      ));
+    $this->processor->setIndex($index);
+
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface|\PHPUnit_Framework_MockObject_MockObject $datasource */
+    $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $datasource->method('getPluginId')
+      ->willReturn('entity:test1');
+
+    $item = Utility::createItem($index, 'id', $datasource);
+    $item->setOriginalObject($object);
+    $item->setField('aggregated_field', clone $field);
+    $item->setField('test1', Utility::createField($index, 'test1', array(
+      'property_path' => 'baz',
+      'values' => array(
+        'wrong_value1',
+      ),
+    )));
+    $item->setField('test2', Utility::createField($index, 'test2', array(
+      'datasource_id' => 'entity:test1',
+      'property_path' => 'baz',
+      'values' => array(
+        'value1',
+        'value2',
+      ),
+    )));
+    $item->setFieldsExtracted(TRUE);
+
+    $this->processor->addFieldValues($item);
+
+    $expected = array(
+      'value1',
+      'value2',
+      'value3',
+      'value4',
+      'value5',
+    );
+    $actual = $item->getField('aggregated_field')->getValues();
+    sort($actual);
+    $this->assertEquals($expected, $actual);
   }
 
 }

@@ -204,6 +204,114 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   }
 
   /**
+   * Extracts property values from items.
+   *
+   * Values are taken from existing fields on the item, where present, and are
+   * otherwise extracted from the item's underlying object.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   The items from which properties should be extracted.
+   * @param string[][] $required_properties
+   *   The properties that should be extracted, keyed by datasource ID and
+   *   property path, with the values being the IDs that the values should be
+   *   put under in the return value.
+   * @param bool $load
+   *   (optional) If FALSE, only field values already present will be returned.
+   *   Otherwise, fields will be extracted (and underlying objects loaded) if
+   *   necessary.
+   *
+   * @return mixed[][][]
+   *   Arrays of field values, keyed by items' indexes in $items and the given
+   *   field IDs from $required_properties.
+   */
+  protected function extractItemValues(array $items, array $required_properties, $load = TRUE) {
+    $extracted_values = array();
+
+    foreach ($items as $i => $item) {
+      $item_values = array();
+      /** @var \Drupal\search_api\Item\FieldInterface[][] $missing_fields */
+      $missing_fields = array();
+      $processor_fields = array();
+      $needed_processors = array();
+      foreach (array(NULL, $item->getDatasourceId()) as $datasource_id) {
+        if (empty($required_properties[$datasource_id])) {
+          continue;
+        }
+
+        $properties = $this->index->getPropertyDefinitions($datasource_id);
+        foreach ($required_properties[$datasource_id] as $property_path => $combined_id) {
+          // If a field with the right property path is already set on the item,
+          // use it. This might actually make problems in case the values have
+          // already been processed in some way, or use a data type that
+          // transformed their original value. But that will hopefully not be a
+          // problem in most situations.
+          foreach ($this->filterForPropertyPath($item->getFields(FALSE), $property_path) as $field) {
+            if ($field->getDatasourceId() === $datasource_id) {
+              $item_values[$combined_id] = $field->getValues();
+              continue 2;
+            }
+          }
+
+          // There are no values present on the item for this property. If we
+          // don't want to extract any fields, skip it.
+          if (!$load) {
+            continue;
+          }
+
+          // If the field is not already on the item, we need to extract it. We
+          // set our own combined ID as the field identifier as kind of a hack,
+          // to easily be able to add the field values to $property_values
+          // afterwards.
+          $property = NULL;
+          if (isset($properties[$property_path])) {
+            $property = $properties[$property_path];
+          }
+          if ($property instanceof ProcessorPropertyInterface) {
+            $processor_fields[] = Utility::createField($this->index, $combined_id, array(
+              'datasource_id' => $datasource_id,
+              'property_path' => $property_path,
+            ));
+            $needed_processors[$property->getProcessorId()] = TRUE;
+          }
+          elseif ($datasource_id) {
+            $missing_fields[$property_path][] = Utility::createField($this->index, $combined_id);
+          }
+          else {
+            // Extracting properties without a datasource is pointless.
+            $item_values[$combined_id] = array();
+          }
+        }
+      }
+      if ($missing_fields) {
+        Utility::extractFields($item->getOriginalObject(), $missing_fields);
+        foreach ($missing_fields as $property_fields) {
+          foreach ($property_fields as $field) {
+            $item_values[$field->getFieldIdentifier()] = $field->getValues();
+          }
+        }
+      }
+      if ($processor_fields) {
+        $dummy_item = clone $item;
+        $dummy_item->setFields($processor_fields);
+        $processors = $this->index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);
+        foreach ($processors as $processor_id => $processor) {
+          // Avoid an infinite recursion.
+          if (isset($needed_processors[$processor_id]) && $processor != $this) {
+            $processor->addFieldValues($dummy_item);
+          }
+        }
+        foreach ($processor_fields as $field) {
+          $item_values[$field->getFieldIdentifier()] = $field->getValues();
+        }
+      }
+
+      $extracted_values[$i] = $item_values;
+    }
+
+    return $extracted_values;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preprocessIndexItems(array &$items) {}
