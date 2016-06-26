@@ -900,9 +900,8 @@ class IntegrationTest extends WebTestBase {
     );
     $this->drupalPostForm($this->getIndexPath('processors'), $edit, $this->t('Save'));
     $index = $this->getIndex(TRUE);
-    $processors = $index->getProcessors();
-    if (isset($processors['ignorecase'])) {
-      $configuration = $processors['ignorecase']->getConfiguration();
+    try {
+      $configuration = $index->getProcessor('ignorecase')->getConfiguration();
       unset($configuration['weights']);
       $expected = array(
         'fields' => array(
@@ -911,7 +910,7 @@ class IntegrationTest extends WebTestBase {
       );
       $this->assertEqual($expected, $configuration, 'Title field enabled for ignore case filter.');
     }
-    else {
+    catch (SearchApiException $e) {
       $this->fail('"Ignore case" processor not enabled.');
     }
     $this->assertText($this->t('The indexing workflow was successfully edited.'));

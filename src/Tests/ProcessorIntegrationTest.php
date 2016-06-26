@@ -195,8 +195,7 @@ class ProcessorIntegrationTest extends WebTestBase {
     $index->removeProcessor('aggregated_field');
     $index->save();
 
-    $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(!empty($processors['aggregated_field']), 'The "Aggregated fields" processor cannot be disabled.');
+    $this->assertTrue($this->loadIndex()->isValidProcessor('aggregated_field'), 'The "Aggregated fields" processor cannot be disabled.');
 
     $options['query']['datasource'] = '';
     $this->drupalGet($this->getIndexPath('fields/add'), $options);
@@ -312,8 +311,7 @@ class ProcessorIntegrationTest extends WebTestBase {
     $index->removeProcessor('rendered_item');
     $index->save();
 
-    $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(!empty($processors['rendered_item']), 'The "Rendered item" processor cannot be disabled.');
+    $this->assertTrue($this->loadIndex()->isValidProcessor('rendered_item'), 'The "Rendered item" processor cannot be disabled.');
 
     $options['query']['datasource'] = '';
     $this->drupalGet($this->getIndexPath('fields/add'), $options);
@@ -376,8 +374,7 @@ class ProcessorIntegrationTest extends WebTestBase {
     $index->removeProcessor('add_url');
     $index->save();
 
-    $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(!empty($processors['add_url']), 'The "Add URL" processor cannot be disabled.');
+    $this->assertTrue($this->loadIndex()->isValidProcessor('add_url'), 'The "Add URL" processor cannot be disabled.');
   }
 
   /**
@@ -393,8 +390,7 @@ class ProcessorIntegrationTest extends WebTestBase {
       "status[$processor_id]" => 1,
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
-    $processors = $this->loadIndex()->getProcessors();
-    $this->assertTrue(!empty($processors[$processor_id]), "Successfully enabled the '$processor_id' processor.'");
+    $this->assertTrue($this->loadIndex()->isValidProcessor($processor_id), "Successfully enabled the '$processor_id' processor.'");
   }
 
   /**
@@ -426,13 +422,12 @@ class ProcessorIntegrationTest extends WebTestBase {
     }
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
 
-    $processors = $this->loadIndex()->getProcessors();
-    $processor_present = !empty($processors[$processor_id]);
-    $this->assertTrue($processor_present, "Successfully enabled the '$processor_id' processor.'");
-    if ($processor_present) {
-      $actual_configuration = $processors[$processor_id]->getConfiguration();
+    $processor = $this->loadIndex()->getProcessor($processor_id);
+    $this->assertTrue($processor, "Successfully enabled the '$processor_id' processor.'");
+    if ($processor) {
+      $actual_configuration = $processor->getConfiguration();
       unset($actual_configuration['fields'], $actual_configuration['weights']);
-      $configuration += $processors[$processor_id]->defaultConfiguration();
+      $configuration += $processor->defaultConfiguration();
       $this->assertEqual($configuration, $actual_configuration, "Processor configuration for processor '$processor_id' was set correctly.");
     }
   }

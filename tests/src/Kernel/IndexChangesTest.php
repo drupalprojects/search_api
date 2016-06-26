@@ -147,10 +147,9 @@ class IndexChangesTest extends KernelTestBase {
     );
     $this->assertEquals($expected, $tracker->getRemainingItems());
 
-    $datasources = $this->index->getDatasources();
-    $all_datasources = $this->index->getDatasources(FALSE);
-    $datasources['entity:entity_test'] = $all_datasources['entity:entity_test'];
-    $this->index->setDatasources($datasources)->save();
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
+    $datasource = $this->index->createPlugin('datasource', 'entity:entity_test');
+    $this->index->addDatasource($datasource)->save();
 
     $this->taskManager->executeAllTasks();
 
@@ -219,9 +218,7 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals($expected, $indexed_items);
     $this->assertEquals(0, $tracker->getRemainingItemsCount());
 
-    $datasources = $this->index->getDatasources();
-    unset($datasources['entity:entity_test']);
-    $this->index->setDatasources($datasources)->save();
+    $this->index->removeDatasource('entity:entity_test')->save();
 
     $this->assertEquals(1, $tracker->getTotalItemsCount());
 
@@ -266,9 +263,7 @@ class IndexChangesTest extends KernelTestBase {
     $this->index->save();
 
     /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
-    $tracker = $this->container
-      ->get('plugin.manager.search_api.tracker')
-      ->createInstance('search_api_test', array('index' => $this->index));
+    $tracker = $this->index->createPlugin('tracker', 'search_api_test');
     $this->index->setTracker($tracker)->save();
 
     $this->taskManager->executeAllTasks();
@@ -285,9 +280,7 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals($expected, $methods);
 
     /** @var \Drupal\search_api\Tracker\TrackerInterface $tracker */
-    $tracker = $this->container
-      ->get('plugin.manager.search_api.tracker')
-      ->createInstance('default', array('index' => $this->index));
+    $tracker = $this->index->createPlugin('tracker', 'default');
     $this->index->setTracker($tracker)->save();
 
     $this->taskManager->executeAllTasks();

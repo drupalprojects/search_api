@@ -71,8 +71,7 @@ class IndexImportTest extends KernelTestBase {
     // Check initial conditions.
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->storage->load('database_search_index');
-    $processors = $index->getProcessors();
-    $this->assertArrayNotHasKey('stopwords', $processors, 'Processor is not in index');
+    $this->assertFalse($index->isValidProcessor('stopwords'), 'Processor is not in index');
 
     // Prepare the import by creating a copy of the active config in sync.
     /** @var \Drupal\Core\Config\StorageInterface $sync */
@@ -110,13 +109,12 @@ class IndexImportTest extends KernelTestBase {
     $this->storage->resetCache(array('database_search_index'));
     /** @var \Drupal\search_api\IndexInterface $imported_index */
     $imported_index = $this->storage->load('database_search_index');
-    $imported_processors = $imported_index->getProcessors();
-    $this->assertArrayHasKey('stopwords', $imported_processors, 'Processor is in index after import');
+    $this->assertTrue($imported_index->isValidProcessor('stopwords'), 'Processor is in index after import');
 
     // Check that the processor does not have the default configuration.
-    $processors_config = $imported_processors['stopwords']->getConfiguration();
-    $this->assertArrayHasKey('stopwords', $processors_config, 'Stopwords are configured');
-    $actual_stopwords = $processors_config['stopwords'];
+    $processor_config = $imported_index->getProcessor('stopwords')->getConfiguration();
+    $this->assertArrayHasKey('stopwords', $processor_config, 'Stopwords are configured');
+    $actual_stopwords = $processor_config['stopwords'];
     $this->assertEquals($expected_stopwords, $actual_stopwords, 'Processor config was correctly set during import');
   }
 

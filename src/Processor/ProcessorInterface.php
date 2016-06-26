@@ -71,13 +71,13 @@ interface ProcessorInterface extends IndexPluginInterface {
   /**
    * Checks whether this processor implements a particular stage.
    *
-   * @param string $stage_identifier
+   * @param string $stage
    *   The stage to check: one of the self::STAGE_* constants.
    *
    * @return bool
    *   TRUE if the processor runs on this particular stage; FALSE otherwise.
    */
-  public function supportsStage($stage_identifier);
+  public function supportsStage($stage);
 
   /**
    * Returns the weight for a specific processing stage.

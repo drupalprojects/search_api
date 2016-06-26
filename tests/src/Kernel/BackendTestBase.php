@@ -181,16 +181,11 @@ abstract class BackendTestBase extends KernelTestBase {
    * Enables the "HTML Filter" processor for the index.
    */
   protected function enableHtmlFilter() {
-    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
 
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-    $processor = \Drupal::getContainer()
-      ->get('plugin.manager.search_api.processor')
-      ->createInstance('html_filter');
-
-    $index->addProcessor($processor);
-    $index->save();
+    $processor = $index->createPlugin('processor', 'html_filter');
+    $index->addProcessor($processor)->save();
 
     $this->assertArrayHasKey('html_filter', $index->getProcessors(), 'HTML filter processor is added.');
   }
@@ -199,7 +194,6 @@ abstract class BackendTestBase extends KernelTestBase {
    * Disables the "HTML Filter" processor for the index.
    */
   protected function disableHtmlFilter() {
-    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
     $index->removeField('body');
     $index->removeProcessor('html_filter');
@@ -866,7 +860,6 @@ abstract class BackendTestBase extends KernelTestBase {
    * @see https://www.drupal.org/node/1916474
    */
   protected function regressionTest1916474() {
-    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
     $this->addField($index, 'prices', 'decimal');
     $success = $index->save();
@@ -935,7 +928,6 @@ abstract class BackendTestBase extends KernelTestBase {
    * @see https://www.drupal.org/node/2616268
    */
   protected function regressionTest2471509() {
-    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getIndex();
     $this->addField($index, 'body');
     $index->save();

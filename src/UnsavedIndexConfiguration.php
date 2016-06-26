@@ -225,8 +225,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getDatasources($only_enabled = TRUE) {
-    return $this->entity->getDatasources($only_enabled);
+  public function getDatasources() {
+    return $this->entity->getDatasources();
   }
 
   /**
@@ -288,15 +288,15 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getProcessors($only_enabled = TRUE) {
-    return $this->entity->getProcessors($only_enabled);
+  public function getProcessors() {
+    return $this->entity->getProcessors();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage, $only_enabled = TRUE) {
-    return $this->entity->getProcessorsByStage($stage, $only_enabled);
+  public function getProcessorsByStage($stage) {
+    return $this->entity->getProcessorsByStage($stage);
   }
 
   /**

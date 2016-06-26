@@ -54,9 +54,9 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function supportsStage($stage_identifier) {
+  public function supportsStage($stage) {
     $plugin_definition = $this->getPluginDefinition();
-    return isset($plugin_definition['stages'][$stage_identifier]);
+    return isset($plugin_definition['stages'][$stage]);
   }
 
   /**

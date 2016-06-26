@@ -3,10 +3,12 @@
 namespace Drupal\search_api\Entity;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
@@ -18,6 +20,7 @@ use Drupal\search_api\Tracker\TrackerInterface;
 use Drupal\search_api\Utility;
 use Drupal\user\TempStoreException;
 use Drupal\views\Views;
+use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
  * Defines the search index configuration entity.
@@ -260,8 +263,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * one.
    *
    * @var \Drupal\search_api\Processor\ProcessorInterface[]|null
-   *
-   * @see loadProcessors()
    */
   protected $processorInstances;
 
@@ -351,9 +352,62 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function setDatasources(array $datasources = NULL) {
-    $this->datasourceInstances = $datasources;
-    return $this;
+  public function createPlugin($type, $plugin_id, $configuration = array()) {
+    try {
+      /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
+      $plugin_manager = \Drupal::getContainer()
+        ->get("plugin.manager.search_api.$type");
+      $configuration['index'] = $this;
+      return $plugin_manager->createInstance($plugin_id, $configuration);
+    }
+    catch (ServiceNotFoundException $e) {
+      throw new SearchApiException("Unknown plugin type '$type'");
+    }
+    catch (PluginException $e) {
+      throw new SearchApiException("Unknown $type plugin with ID '$plugin_id'");
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createPlugins($type, array $plugin_ids = NULL, $configurations = array()) {
+    if ($plugin_ids === NULL) {
+      try {
+        /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
+        $plugin_manager = \Drupal::getContainer()
+          ->get("plugin.manager.search_api.$type");
+        $plugin_ids = array_keys($plugin_manager->getDefinitions());
+      }
+      catch (ServiceNotFoundException $e) {
+        throw new SearchApiException("Unknown plugin type '$type'");
+      }
+    }
+
+    $plugins = array();
+    foreach ($plugin_ids as $plugin_id) {
+      $configuration = array();
+      if (isset($configurations[$plugin_id])) {
+        $configuration = $configurations[$plugin_id];
+      }
+      elseif (isset($this->{"{$type}_settings"}[$plugin_id])) {
+        $configuration = $this->{"{$type}_settings"}[$plugin_id]['settings'];
+      }
+      $plugins[$plugin_id] = $this->createPlugin($type, $plugin_id, $configuration);
+    }
+
+    return $plugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDatasources() {
+    if ($this->datasourceInstances === NULL) {
+      $this->datasourceInstances = $this->createPlugins('datasource', array_keys($this->datasource_settings));
+    }
+
+    return $this->datasourceInstances;
   }
 
   /**
@@ -388,46 +442,45 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDatasources($only_enabled = TRUE) {
-    if ($only_enabled && $this->datasourceInstances !== NULL) {
-      return $this->datasourceInstances;
+  public function addDatasource(DatasourceInterface $datasource) {
+    // Make sure the datasourceInstances are loaded before trying to add a plugin
+    // to them.
+    if ($this->datasourceInstances === NULL) {
+      $this->getDatasources();
     }
+    $this->datasourceInstances[$datasource->getPluginId()] = $datasource;
 
-    $all_datasources = array();
-    /** @var $datasource_plugin_manager \Drupal\search_api\Datasource\DatasourcePluginManager */
-    $datasource_plugin_manager = \Drupal::service('plugin.manager.search_api.datasource');
+    return $this;
+  }
 
-    foreach ($datasource_plugin_manager->getDefinitions() as $name => $datasource_definition) {
-      if (class_exists($datasource_definition['class']) && empty($all_datasources[$name])) {
-        // Create our settings for this datasource.
-        $config = isset($this->datasource_settings[$name]) ? $this->datasource_settings[$name]['settings'] : array();
-        $config += array('index' => $this);
-
-        /** @var $datasource \Drupal\search_api\Datasource\DatasourceInterface */
-        $datasource = $datasource_plugin_manager->createInstance($name, $config);
-        $all_datasources[$name] = $datasource;
-      }
-      elseif (!class_exists($datasource_definition['class'])) {
-        \Drupal::service('logger.channel.search_api')->warning('Datasource @id specifies a non-existing @class.', array('@id' => $name, '@class' => $datasource_definition['class']));
-      }
+  /**
+   * {@inheritdoc}
+   */
+  public function removeDatasource($datasource_id) {
+    // Make sure the datasourceInstances are loaded before trying to remove a
+    // plugin from them.
+    if ($this->datasourceInstances === NULL) {
+      $this->getDatasources();
     }
+    unset($this->datasourceInstances[$datasource_id]);
 
-    // Filter datasources by status if required.
-    if (!$only_enabled) {
-      return $all_datasources;
-    }
+    return $this;
+  }
 
-    $enabled_datasources = array_intersect_key($all_datasources, $this->datasource_settings);
-    $this->datasourceInstances = $enabled_datasources;
-
-    return $enabled_datasources;
+  /**
+   * {@inheritdoc}
+   */
+  public function setDatasources(array $datasources = NULL) {
+    $this->datasourceInstances = $datasources;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasValidTracker() {
-    return (bool) \Drupal::service('plugin.manager.search_api.tracker')
+    return (bool) \Drupal::getContainer()
+      ->get('plugin.manager.search_api.tracker')
       ->getDefinition($this->getTrackerId(), FALSE);
   }
 
@@ -452,17 +505,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->trackerInstance) {
       $tracker_id = $this->getTrackerId();
 
-      if (empty($this->tracker_settings[$tracker_id]['settings'])) {
-        $configuration = array('index' => $this);
-      }
-      else {
-        $configuration = array('index' => $this) + $this->tracker_settings[$tracker_id]['settings'];
+      $configuration = array();
+      if (!empty($this->tracker_settings[$tracker_id]['settings'])) {
+        $configuration = $this->tracker_settings[$tracker_id]['settings'];
       }
 
-      if (!($this->trackerInstance = \Drupal::service('plugin.manager.search_api.tracker')->createInstance($tracker_id, $configuration))) {
-        $index_label = $this->label();
-        throw new SearchApiException("The tracker with ID '$tracker_id' could not be retrieved for index '$index_label'.");
-      }
+      $this->trackerInstance = $this->createPlugin('tracker', $tracker_id, $configuration);
     }
 
     return $this->trackerInstance;
@@ -525,22 +573,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getProcessors($only_enabled = TRUE) {
-    if (!$only_enabled) {
-      return $this->loadProcessors();
-    }
-
+  public function getProcessors() {
     if ($this->processorInstances !== NULL) {
       return $this->processorInstances;
     }
-
-    $processors = $this->loadProcessors();
 
     // Filter the processors to only include those that are enabled (or locked).
     // We should only reach this point in the code once, at the first call after
     // the index is loaded.
     $this->processorInstances = array();
-    foreach ($processors as $processor_id => $processor) {
+    foreach ($this->createPlugins('processor') as $processor_id => $processor) {
       if (isset($this->processor_settings[$processor_id]) || $processor->isLocked()) {
         $this->processorInstances[$processor_id] = $processor;
       }
@@ -552,10 +594,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage, $only_enabled = TRUE) {
+  public function getProcessorsByStage($stage) {
     // Get a list of all processors meeting the criteria (stage and, optionally,
     // enabled) along with their effective weights (user-set or default).
-    $processors = $this->getProcessors($only_enabled);
+    $processors = $this->getProcessors();
     $processor_weights = array();
     foreach ($processors as $name => $processor) {
       if ($processor->supportsStage($stage)) {
@@ -572,6 +614,28 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     return $return_processors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValidProcessor($processor_id) {
+    $processors = $this->getProcessors();
+    return !empty($processors[$processor_id]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessor($processor_id) {
+    $processors = $this->getProcessors();
+
+    if (empty($processors[$processor_id])) {
+      $index_label = $this->label();
+      throw new SearchApiException("The processor with ID '$processor_id' could not be retrieved for index '$index_label'.");
+    }
+
+    return $processors[$processor_id];
   }
 
   /**
@@ -614,39 +678,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Retrieves all processors supported by this index.
-   *
-   * @return \Drupal\search_api\Processor\ProcessorInterface[]
-   *   The loaded processors, keyed by processor ID.
+   * {@inheritdoc}
    */
-  protected function loadProcessors() {
-    $processor_instances = array();
-
-    /** @var $processor_plugin_manager \Drupal\search_api\Processor\ProcessorPluginManager */
-    $processor_plugin_manager = \Drupal::service('plugin.manager.search_api.processor');
-    $processor_settings = $this->processor_settings;
-
-    foreach ($processor_plugin_manager->getDefinitions() as $name => $processor_definition) {
-      if (isset($this->processorInstances[$name])) {
-        $processor_instances[$name] = $this->processorInstances[$name];
-      }
-      elseif (class_exists($processor_definition['class'])) {
-        // Create our settings for this processor.
-        $settings = empty($processor_settings[$name]['settings']) ? array() : $processor_settings[$name]['settings'];
-        $settings['index'] = $this;
-
-        /** @var $processor \Drupal\search_api\Processor\ProcessorInterface */
-        $processor = $processor_plugin_manager->createInstance($name, $settings);
-        if ($processor->supportsIndex($this)) {
-          $processor_instances[$name] = $processor;
-        }
-      }
-      elseif (!class_exists($processor_definition['class'])) {
-        \Drupal::service('logger.channel.search_api')->warning('Processor @id specifies a non-existing @class.', array('@id' => $name, '@class' => $processor_definition['class']));
-      }
-    }
-
-    return $processor_instances;
+  public function setProcessors(array $processors) {
+    $this->processorInstances = $processors;
+    return $this;
   }
 
   /**
