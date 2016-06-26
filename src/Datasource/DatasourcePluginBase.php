@@ -137,7 +137,7 @@ abstract class DatasourcePluginBase extends IndexPluginBase implements Datasourc
    * {@inheritdoc}
    */
   public function getItemIds($page = NULL) {
-    return array();
+    return NULL;
   }
 
   /**

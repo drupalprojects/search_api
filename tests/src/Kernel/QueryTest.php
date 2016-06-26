@@ -6,6 +6,8 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Query\Query;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api_test\PluginTestTrait;
 
 /**
  * Tests query functionality.
@@ -14,12 +16,15 @@ use Drupal\search_api\Query\Query;
  */
 class QueryTest extends KernelTestBase {
 
+  use PluginTestTrait;
+
   /**
    * {@inheritdoc}
    */
   public static $modules = array(
     'search_api',
     'search_api_test',
+    'search_api_test_hooks',
     'language',
     'user',
     'system',
@@ -63,8 +68,14 @@ class QueryTest extends KernelTestBase {
       'id' => 'test_index',
       'status' => 1,
       'datasource_settings' => array(
-        'entity:entity_test' => array(
-          'plugin_id' => 'entity:entity_test',
+        'search_api_test' => array(
+          'plugin_id' => 'search_api_test',
+          'settings' => array(),
+        ),
+      ),
+      'processor_settings' => array(
+        'search_api_test' => array(
+          'plugin_id' => 'search_api_test',
           'settings' => array(),
         ),
       ),
@@ -78,6 +89,70 @@ class QueryTest extends KernelTestBase {
       'options' => array('index_directly' => FALSE),
     ))->save();
     $this->index = Index::load('test_index');
+  }
+
+  /**
+   * Tests that processing levels are working correctly.
+   *
+   * @param int $level
+   *   The processing level to test.
+   * @param bool $hooks_and_processors_invoked
+   *   (optional) Whether hooks and processors should be invoked with this
+   *   processing level.
+   *
+   * @dataProvider testProcessingLevelDataProvider
+   */
+  public function testProcessingLevel($level, $hooks_and_processors_invoked = TRUE) {
+    /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
+    $processor = $this->container->get('plugin.manager.search_api.processor')
+      ->createInstance('search_api_test', array('index' => $this->index));
+    $this->index->addProcessor($processor)->save();
+
+    $query = $this->index->query();
+    if ($level != QueryInterface::PROCESSING_FULL) {
+      $query->setProcessingLevel($level);
+    }
+    $this->assertEquals($level, $query->getProcessingLevel());
+    $query->addTag('andrew_hill');
+
+    $_SESSION['messages']['status'] = array();
+    $query->execute();
+    $messages = $_SESSION['messages']['status'];
+    $_SESSION['messages']['status'] = array();
+
+    $methods = $this->getCalledMethods('processor');
+    if ($hooks_and_processors_invoked) {
+      $expected = array(
+        'Funky blue note',
+        'Stepping into tomorrow',
+        'Llama',
+      );
+      $this->assertEquals($expected, $messages);
+      $this->assertTrue($query->getOption('tag query alter hook'));
+      $this->assertContains('preprocessSearchQuery', $methods);
+      $this->assertContains('postprocessSearchResults', $methods);
+    }
+    else {
+      $this->assertEmpty($messages);
+      $this->assertFalse($query->getOption('tag query alter hook'));
+      $this->assertNotContains('preprocessSearchQuery', $methods);
+      $this->assertNotContains('postprocessSearchResults', $methods);
+    }
+  }
+
+  /**
+   * Provides test data for the testProcessingLevel() method.
+   *
+   * @return array[]
+   *   Arrays of method arguments for the
+   *   \Drupal\Tests\search_api\Kernel\QueryTest::testProcessingLevel() method.
+   */
+  public function testProcessingLevelDataProvider() {
+    return array(
+      'none' => array(QueryInterface::PROCESSING_NONE, FALSE),
+      'basic' => array(QueryInterface::PROCESSING_BASIC),
+      'full' => array(QueryInterface::PROCESSING_FULL),
+    );
   }
 
   /**
@@ -96,19 +171,6 @@ class QueryTest extends KernelTestBase {
    * Tests that serialization of queries works correctly.
    */
   public function testQuerySerialization() {
-    $query = $this->prepareQuery();
-    $cloned_query = clone $query;
-    $unserialized_query = unserialize(serialize($query));
-    $this->assertEquals($cloned_query, $unserialized_query);
-  }
-
-  /**
-   * Prepares a query for testing purposes.
-   *
-   * @return \Drupal\search_api\Query\Query
-   *   A search query.
-   */
-  protected function prepareQuery() {
     $results_cache = $this->container->get('search_api.results_static_cache');
     $query = Query::create($this->index, $results_cache);
     $tags = array('tag1', 'tag2');
@@ -124,7 +186,10 @@ class QueryTest extends KernelTestBase {
     $query->setOption('option1', array('foo' => 'bar'));
     $translation = $this->container->get('string_translation');
     $query->setStringTranslation($translation);
-    return $query;
+
+    $cloned_query = clone $query;
+    $unserialized_query = unserialize(serialize($query));
+    $this->assertEquals($cloned_query, $unserialized_query);
   }
 
 }

@@ -23,6 +23,33 @@ interface QueryInterface extends ConditionSetInterface {
   const SORT_DESC = 'DESC';
 
   /**
+   * Constant representing a completely unprocessed search.
+   *
+   * No processors or hooks will be invoked for searches with this processing
+   * level.
+   */
+  const PROCESSING_NONE = 0;
+
+  /**
+   * Constant representing a search with only basic processing.
+   *
+   * Hook implementations or processors adding extra functionality, not
+   * necessary for a basic search, should ignore searches with this level.
+   *
+   * Typical examples for such "extra functionality" would be facets,
+   * spellchecking or highlighting.
+   */
+  const PROCESSING_BASIC = 1;
+
+  /**
+   * Constant representing a search with normal/full processing.
+   *
+   * This is the default for queries where no processing level has been
+   * explicitly set.
+   */
+  const PROCESSING_FULL = 2;
+
+  /**
    * Instantiates a new instance of this query class.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -165,6 +192,29 @@ interface QueryInterface extends ConditionSetInterface {
    */
   public function range($offset = NULL, $limit = NULL);
 
+  /**
+   * Retrieves the processing level for this query.
+   *
+   * @return int
+   *   The processing level of this query, as one of the
+   *   \Drupal\search_api\Query\QueryInterface::PROCESSING_* constants.
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::PROCESSING_NONE
+   * @see \Drupal\search_api\Query\QueryInterface::PROCESSING_BASIC
+   * @see \Drupal\search_api\Query\QueryInterface::PROCESSING_FULL
+   */
+  public function getProcessingLevel();
+
+  /**
+   * Sets the processing level for this query.
+   *
+   * @param int $level
+   *   The processing level of this query, as one of the
+   *   \Drupal\search_api\Query\QueryInterface::PROCESSING_* constants.
+   *
+   * @return $this
+   */
+  public function setProcessingLevel($level);
   /**
    * Aborts this query.
    *

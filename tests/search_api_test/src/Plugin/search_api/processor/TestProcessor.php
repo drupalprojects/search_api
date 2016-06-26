@@ -3,6 +3,8 @@
 namespace Drupal\search_api_test\Plugin\search_api\processor;
 
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api_test\TestPluginTrait;
 
 /**
@@ -16,6 +18,27 @@ use Drupal\search_api_test\TestPluginTrait;
 class TestProcessor extends ProcessorPluginBase {
 
   use TestPluginTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function supportsStage($stage_identifier) {
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessSearchQuery(QueryInterface $query) {
+    $this->logMethodCall(__FUNCTION__, func_get_args());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postprocessSearchResults(ResultSetInterface $results) {
+    $this->logMethodCall(__FUNCTION__, func_get_args());
+  }
 
   /**
    * {@inheritdoc}

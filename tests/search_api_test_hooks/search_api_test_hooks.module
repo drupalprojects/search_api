@@ -21,7 +21,9 @@ function search_api_test_hooks_search_api_backend_info_alter(array &$backend_inf
  * Implements hook_search_api_datasource_info_alter.
  */
 function search_api_test_hooks_search_api_datasource_info_alter(array &$infos) {
-  $infos['entity:node']['label'] = 'Distant land';
+  if (isset($infos['entity:node'])) {
+    $infos['entity:node']['label'] = 'Distant land';
+  }
 }
 
 /**
@@ -55,10 +57,35 @@ function search_api_test_hooks_search_api_query_alter(QueryInterface &$query) {
 }
 
 /**
+ * Implements hook_search_api_query_TAG_alter.
+ */
+function search_api_test_hooks_search_api_query_andrew_hill_alter(QueryInterface &$query) {
+  // Exclude the node with ID 2 from the search results.
+  $query->setOption('tag query alter hook', TRUE);
+  $index = $query->getIndex();
+  $fields = $index->getFields();
+  foreach ($index->getDatasources() as $datasource_id => $datasource) {
+    if ($datasource->getEntityTypeId() == 'node') {
+      $field = Utility::createCombinedId($datasource_id, 'nid');
+      if (isset($fields[$field])) {
+        $query->addCondition($field, 2, '<>');
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_search_api_results_alter.
  */
 function search_api_test_hooks_search_api_results_alter(ResultSetInterface &$results) {
   drupal_set_message('Stepping into tomorrow');
+}
+
+/**
+ * Implements hook_search_api_results_TAG_alter.
+ */
+function search_api_test_hooks_search_api_results_andrew_hill_alter(ResultSetInterface &$results) {
+  drupal_set_message('Llama');
 }
 
 /**
@@ -83,28 +110,4 @@ function search_api_test_hooks_search_api_data_type_info_alter(array &$data_type
 function search_api_test_hooks_search_api_field_type_mapping_alter(array &$mapping) {
   $mapping['datetime_iso8601'] = FALSE;
   $mapping['timestamp'] = FALSE;
-}
-
-/**
- * Implements hook_search_api_query_TAG_alter.
- */
-function search_api_test_hooks_search_api_query_andrew_hill_alter(QueryInterface &$query) {
-  // Exclude the node with ID 2 from the search results.
-  $fields = $query->getIndex()->getFields();
-  foreach ($query->getIndex()->getDatasources() as $datasource_id => $datasource) {
-    if ($datasource->getEntityTypeId() == 'node') {
-      $field = Utility::createCombinedId($datasource_id, 'nid');
-      if (isset($fields[$field])) {
-        $query->addCondition($field, 2, '<>');
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_search_api_results_TAG_alter.
- */
-function search_api_test_hooks_search_api_results_andrew_hill_alter(
-  ResultSetInterface &$results) {
-  drupal_set_message('Llama');
 }

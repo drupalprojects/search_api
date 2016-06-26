@@ -9,7 +9,7 @@ use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\Highlight;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorProperty;
-use Drupal\search_api\Query\Query;
+use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSet;
 use Drupal\search_api\Utility;
 use Drupal\Tests\UnitTestCase;
@@ -79,8 +79,35 @@ class HighlightTest extends UnitTestCase {
     /** @var \Drupal\search_api\Query\ResultSet $results */
 
     $this->processor->postprocessSearchResults($results);
-    $output = $results->getExtraData('highlighted_fields');
-    $this->assertEmpty($output, 'No highlighting data added to result set.');
+  }
+
+  /**
+   * Makes sure that queries with "basic" processing set are ignored.
+   */
+  public function testPostprocessBasicQuery() {
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_BASIC);
+
+    $results = $this->getMockBuilder('Drupal\search_api\Query\ResultSet')
+      ->setMethods(array('getResultCount', 'getQuery'))
+      ->setConstructorArgs(array($query))
+      ->getMock();
+
+    $results->expects($this->once())
+      ->method('getResultCount')
+      ->willReturn(1);
+    $results->expects($this->once())
+      ->method('getQuery')
+      ->will($this->returnValue($query));
+    $results->expects($this->never())
+      ->method('getItems');
+    $results->expects($this->never())
+      ->method('setExtraData');
+    /** @var \Drupal\search_api\Query\ResultSet $results */
+
+    $this->processor->postprocessSearchResults($results);
   }
 
   /**
@@ -88,6 +115,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsWithoutKeywords() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
 
     $results = $this->getMockBuilder('Drupal\search_api\Query\ResultSet')
       ->setMethods(array('getResultCount', 'getQuery'))
@@ -109,8 +139,6 @@ class HighlightTest extends UnitTestCase {
     /** @var \Drupal\search_api\Query\ResultSet $results */
 
     $this->processor->postprocessSearchResults($results);
-    $output = $results->getExtraData('highlighted_fields');
-    $this->assertEmpty($output, 'No highlighting data added to result set.');
   }
 
   /**
@@ -118,6 +146,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsWithResults() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue('foo'));
@@ -155,9 +186,15 @@ class HighlightTest extends UnitTestCase {
    * Tests changing the prefix and suffix used for highlighting.
    */
   public function testPostprocessSearchResultsWithChangedPrefixSuffix() {
-    $this->processor->setConfiguration(array('prefix' => '<em>', 'suffix' => '</em>'));
+    $this->processor->setConfiguration(array(
+      'prefix' => '<em>',
+      'suffix' => '</em>',
+    ));
 
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
@@ -198,6 +235,9 @@ class HighlightTest extends UnitTestCase {
     $this->processor->setConfiguration(array('highlight' => 'never'));
 
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
@@ -236,6 +276,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsWithPreviousHighlighting() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
@@ -279,6 +322,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsExcerpt() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
@@ -319,6 +365,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsExerptMatchNearEnd() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'diam')));
@@ -361,6 +410,9 @@ class HighlightTest extends UnitTestCase {
     $this->processor->setConfiguration(array('excerpt_length' => 64));
 
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue('congue'));
@@ -403,6 +455,9 @@ class HighlightTest extends UnitTestCase {
     $this->processor->setConfiguration(array('excerpt' => FALSE));
 
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'congue')));
@@ -457,6 +512,9 @@ class HighlightTest extends UnitTestCase {
       ),
     );
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue($keys));
@@ -499,6 +557,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsWithTwoFields() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
@@ -554,6 +615,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testPostprocessSearchResultsWithTwoItems() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'OR', 'foo')));
@@ -577,7 +641,8 @@ class HighlightTest extends UnitTestCase {
 
     $items = $this->createItems($this->index, 2, $fields);
 
-    $items[$this->itemIds[1]]->getField('body')->setValues(array('The second item also contains foo in its body.'));
+    $items[$this->itemIds[1]]->getField('body')
+      ->setValues(array('The second item also contains foo in its body.'));
 
     $results = new ResultSet($query);
     $results->setResultItems($items);
@@ -601,6 +666,9 @@ class HighlightTest extends UnitTestCase {
    */
   public function testExcerptExcludeFields() {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getKeys')
       ->will($this->returnValue(array('#conjunction' => 'AND', 'foo')));
@@ -754,6 +822,9 @@ class HighlightTest extends UnitTestCase {
     $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
     $query->method('getKeys')
       ->willReturn('foo');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
     $results = new ResultSet($query);
     $results->setResultCount(1)
       ->setResultItems(array($item));

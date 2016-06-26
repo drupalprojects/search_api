@@ -58,6 +58,15 @@ class Query implements QueryInterface {
   protected $parseMode = 'terms';
 
   /**
+   * The processing level for this search query.
+   *
+   * One of the \Drupal\search_api\Query\QueryInterface::PROCESSING_* constants.
+   *
+   * @var int
+   */
+  protected $processingLevel = self::PROCESSING_FULL;
+
+  /**
    * The language codes which should be searched by this query.
    *
    * @var string[]|null
@@ -355,6 +364,21 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
+  public function getProcessingLevel() {
+    return $this->processingLevel;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProcessingLevel($level) {
+    $this->processingLevel = $level;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function abort($error_message = NULL) {
     $this->aborted = isset($error_message) ? $error_message : TRUE;
   }
@@ -424,8 +448,9 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function preExecute() {
-    // Make sure to only execute this once per query.
-    if (!$this->preExecuteRan) {
+    // Make sure to only execute this once per query, and not for queries with
+    // the "none" processing level.
+    if (!$this->preExecuteRan && $this->processingLevel != self::PROCESSING_NONE) {
       $this->preExecuteRan = TRUE;
 
       // Preprocess query.
@@ -444,6 +469,10 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function postExecute() {
+    if ($this->processingLevel == self::PROCESSING_NONE) {
+      return;
+    }
+
     // Postprocess results.
     $this->index->postprocessSearchResults($this->results);
 

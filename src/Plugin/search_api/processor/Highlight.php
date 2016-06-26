@@ -14,6 +14,8 @@ use Drupal\search_api\Utility;
 /**
  * Adds a highlighted excerpt to results and highlights returned fields.
  *
+ * This processor won't run for queries with the "basic" processing level set.
+ *
  * @SearchApiProcessor(
  *   id = "highlight",
  *   label = @Translation("Highlight"),
@@ -167,7 +169,10 @@ class Highlight extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function postprocessSearchResults(ResultSetInterface $results) {
-    if (!$results->getResultCount() || !($keys = $this->getKeywords($results->getQuery()))) {
+    $query = $results->getQuery();
+    if (!$results->getResultCount()
+      || $query->getProcessingLevel() != QueryInterface::PROCESSING_FULL
+      || !($keys = $this->getKeywords($query))) {
       return;
     }
 
