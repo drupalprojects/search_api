@@ -247,7 +247,7 @@ class ContentAccessTest extends ProcessorTestBase {
     }
 
     foreach ($items as $item) {
-      $this->assertEquals(array('node_access__all'), $item->getField('search_api_node_grants')->getValues());
+      $this->assertEquals(array('node_access__all'), $item->getField('node_grants')->getValues());
     }
   }
 
@@ -272,7 +272,7 @@ class ContentAccessTest extends ProcessorTestBase {
     }
 
     foreach ($items as $item) {
-      $this->assertEquals(array('node_access_search_api_test:0'), $item->getField('search_api_node_grants')->getValues());
+      $this->assertEquals(array('node_access_search_api_test:0'), $item->getField('node_grants')->getValues());
     }
   }
 

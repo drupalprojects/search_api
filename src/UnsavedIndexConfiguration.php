@@ -323,8 +323,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getFields() {
-    return $this->entity->getFields();
+  public function getFields($include_server_defined = FALSE) {
+    return $this->entity->getFields($include_server_defined);
   }
 
   /**

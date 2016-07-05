@@ -145,6 +145,13 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * {@inheritdoc}
    */
+  public function getBackendDefinedFields(IndexInterface $index) {
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function addIndex(IndexInterface $index) {}
 
   /**

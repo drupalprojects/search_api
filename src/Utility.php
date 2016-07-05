@@ -412,9 +412,8 @@ class Utility {
   /**
    * Determines whether a field ID is reserved for special use.
    *
-   * This is the case for the "magic" pseudo-fields documented in
-   * \Drupal\search_api\Query\QueryInterface for use in queries, like
-   * "search_api_id".
+   * We define all field IDs starting with "search_api_" as reserved, to be safe
+   * for future additions (and from clashing with backend-defined fields).
    *
    * @param string $field_id
    *   The field ID.
@@ -423,13 +422,7 @@ class Utility {
    *   TRUE if the field ID is reserved, FALSE if it can be used normally.
    */
   public static function isFieldIdReserved($field_id) {
-    $reserved_ids = array_flip(array(
-      'search_api_id',
-      'search_api_datasource',
-      'search_api_language',
-      'search_api_relevance',
-    ));
-    return isset($reserved_ids[$field_id]);
+    return substr($field_id, 0, 11) == 'search_api_';
   }
 
   /**
@@ -664,10 +657,18 @@ class Utility {
   public static function getNewFieldId(IndexInterface $index, $property_path) {
     list(, $suggested_id) = static::splitPropertyPath($property_path);
 
+    // Avoid clashes with reserved IDs by removing the reserved "search_api_"
+    // from our suggested ID.
+    $suggested_id = str_replace('search_api_', '', $suggested_id);
+
     $field_id = $suggested_id;
     $i = 0;
     while ($index->getField($field_id)) {
       $field_id = $suggested_id . '_' . ++$i;
+    }
+
+    while (static::isFieldIdReserved($field_id)) {
+      $field_id = '_' . $field_id;
     }
 
     return $field_id;

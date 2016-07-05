@@ -493,10 +493,15 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Returns a list of all indexed fields of this index.
    *
+   * @param bool $include_server_defined
+   *   (optional) If TRUE, also include special fields defined by the server
+   *   backend. For more information, see
+   *   \Drupal\search_api\Backend\BackendSpecificInterface::getBackendDefinedFields().
+   *
    * @return \Drupal\search_api\Item\FieldInterface[]
    *   An array of all indexed fields for this index, keyed by field identifier.
    */
-  public function getFields();
+  public function getFields($include_server_defined = FALSE);
 
   /**
    * Returns a field from this index.

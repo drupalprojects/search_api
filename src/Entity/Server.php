@@ -188,14 +188,30 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function supportsDataType($type) {
-    return $this->hasValidBackend() ? $this->getBackend()->supportsDataType($type) : FALSE;
+    if ($this->hasValidBackend()) {
+      return $this->getBackend()->supportsDataType($type);
+    }
+    return FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDiscouragedProcessors() {
-    return $this->getBackend()->getDiscouragedProcessors();
+    if ($this->hasValidBackend()) {
+      return $this->getBackend()->getDiscouragedProcessors();
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBackendDefinedFields(IndexInterface $index) {
+    if ($this->hasValidBackend()) {
+      return $this->getBackend()->getBackendDefinedFields($index);
+    }
+    return array();
   }
 
   /**

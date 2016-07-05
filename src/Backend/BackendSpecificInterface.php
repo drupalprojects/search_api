@@ -90,6 +90,28 @@ interface BackendSpecificInterface {
   public function getDiscouragedProcessors();
 
   /**
+   * Provides information on additional fields made available by the backend.
+   *
+   * If a backend indexes additional data with items and wants to make this
+   * available as fixed fields on the index (e.g., to be used with Views), it
+   * can implement this method to facilitate this.
+   *
+   * Fields returned here are expected to work correctly with this server when
+   * used in query conditions, sorts or similar places.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The index for which fields are being determined.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface[]
+   *   An array of additional fields that are available for this index, keyed by
+   *   their field IDs. The field IDs should always start with "search_api_"
+   *   (avoiding the special field IDs defined by
+   *   \Drupal\search_api\Query\QueryInterface::sort()) to avoid conflicts with
+   *   user-defined fields.
+   */
+  public function getBackendDefinedFields(IndexInterface $index);
+
+  /**
    * Adds a new index to this server.
    *
    * If the index was already added to the server, the object should treat this

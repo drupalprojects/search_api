@@ -771,19 +771,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFields() {
-    // ::$fieldInstances is already filled with fields, so keep on using those.
-    if ($this->fieldInstances !== NULL) {
-      return $this->fieldInstances;
+  public function getFields($include_server_defined = FALSE) {
+    if (!isset($this->fieldInstances)) {
+      $this->fieldInstances = array();
+      foreach ($this->field_settings as $key => $field_info) {
+        $this->fieldInstances[$key] = Utility::createField($this, $key, $field_info);
+      }
     }
 
-    $fields = array();
-    foreach ($this->field_settings as $key => $field_info) {
-      $fields[$key] = Utility::createField($this, $key, $field_info);
+    $fields = $this->fieldInstances;
+    if ($include_server_defined && $this->hasValidServer()) {
+      $fields += $this->getServerInstance()->getBackendDefinedFields($this);
     }
-
-    $this->fieldInstances = $fields;
-
     return $fields;
   }
 

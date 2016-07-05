@@ -968,15 +968,15 @@ class IntegrationTest extends WebTestBase {
 
     // Change the boost of the field.
     $this->drupalGet($this->getIndexPath('fields'));
-    $this->drupalPostForm(NULL, array('fields[search_api_url][boost]' => '8.0'), $this->t('Save changes'));
+    $this->drupalPostForm(NULL, array('fields[url][boost]' => '8.0'), $this->t('Save changes'));
     $this->assertText('The changes were successfully saved.');
-    $this->assertOptionSelected('edit-fields-search-api-url-boost', '8.0', 'Boost is correctly saved.');
+    $this->assertOptionSelected('edit-fields-url-boost', '8.0', 'Boost is correctly saved.');
 
     // Change the type of the field.
     $this->drupalGet($this->getIndexPath('fields'));
-    $this->drupalPostForm(NULL, array('fields[search_api_url][type]' => 'text'), $this->t('Save changes'));
+    $this->drupalPostForm(NULL, array('fields[url][type]' => 'text'), $this->t('Save changes'));
     $this->assertText('The changes were successfully saved.');
-    $this->assertOptionSelected('edit-fields-search-api-url-type', 'text', 'Type is correctly saved.');
+    $this->assertOptionSelected('edit-fields-url-type', 'text', 'Type is correctly saved.');
   }
 
   /**

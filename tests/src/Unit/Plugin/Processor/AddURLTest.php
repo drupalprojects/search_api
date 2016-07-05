@@ -98,7 +98,7 @@ class AddURLTest extends UnitTestCase {
     }
 
     // Check the valid item.
-    $field = $items[$this->itemIds[0]]->getField('search_api_url');
+    $field = $items[$this->itemIds[0]]->getField('url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field.');
 
     // Check that no other fields were changed.
@@ -106,7 +106,7 @@ class AddURLTest extends UnitTestCase {
     $this->assertEquals($body_value, $field->getValues(), 'Body field was not changed.');
 
     // Check the second item to be sure that all are processed.
-    $field = $items[$this->itemIds[1]]->getField('search_api_url');
+    $field = $items[$this->itemIds[1]]->getField('url');
     $this->assertEquals(array('http://www.example.com/node/example'), $field->getValues(), 'Valid URL added as value to the field in the second item.');
   }
 
