@@ -314,7 +314,12 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function preprocessIndexItems(array &$items) {}
+  public function alterIndexedItems(array &$items) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array $items) {}
 
   /**
    * {@inheritdoc}

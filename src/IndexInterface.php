@@ -408,14 +408,24 @@ interface IndexInterface extends ConfigEntityInterface {
   public function setProcessors(array $processors);
 
   /**
+   * Alter the items to be indexed.
+   *
+   * Lets all enabled processors for this index alter the indexed items.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be indexed, passed by reference.
+   */
+  public function alterIndexedItems(array &$items);
+
+  /**
    * Preprocesses data items for indexing.
    *
    * Lets all enabled processors for this index preprocess the indexed data.
    *
-   * @param array $items
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
    *   An array of items to be preprocessed for indexing.
    */
-  public function preprocessIndexItems(array &$items);
+  public function preprocessIndexItems(array $items);
 
   /**
    * Preprocesses a search query.

@@ -12,7 +12,7 @@ use Drupal\search_api_test\TestPluginTrait;
  *
  * @SearchApiProcessor(
  *   id = "search_api_test",
- *   label = @Translation("Dependency test processor"),
+ *   label = @Translation("Test processor"),
  * )
  */
 class TestProcessor extends ProcessorPluginBase {
@@ -24,6 +24,27 @@ class TestProcessor extends ProcessorPluginBase {
    */
   public function supportsStage($stage_identifier) {
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preIndexSave() {
+    $this->logMethodCall(__FUNCTION__, func_get_args());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function alterIndexedItems(array &$items) {
+    $this->logMethodCall(__FUNCTION__, func_get_args());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array $items) {
+    $this->logMethodCall(__FUNCTION__, func_get_args());
   }
 
   /**
@@ -44,7 +65,9 @@ class TestProcessor extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    return $this->configuration;
+    $dependencies = $this->configuration;
+    unset($dependencies['weights']);
+    return $dependencies;
   }
 
   /**

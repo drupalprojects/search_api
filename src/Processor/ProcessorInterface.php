@@ -27,26 +27,44 @@ interface ProcessorInterface extends IndexPluginInterface {
 
   /**
    * Processing stage: add properties.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::getPropertyDefinitions()
+   * @see \Drupal\search_api\Processor\ProcessorInterface::addFieldValues()
    */
   const STAGE_ADD_PROPERTIES = 'add_properties';
 
   /**
    * Processing stage: preprocess index.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::preIndexSave()
    */
   const STAGE_PRE_INDEX_SAVE = 'pre_index_save';
 
   /**
+   * Processing stage: alter indexed items.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::alterIndexedItems()
+   */
+  const STAGE_ALTER_ITEMS = 'alter_items';
+
+  /**
    * Processing stage: preprocess index.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::preprocessIndexItems()
    */
   const STAGE_PREPROCESS_INDEX = 'preprocess_index';
 
   /**
    * Processing stage: preprocess query.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::preprocessSearchQuery()
    */
   const STAGE_PREPROCESS_QUERY = 'preprocess_query';
 
   /**
    * Processing stage: postprocess query.
+   *
+   * @see \Drupal\search_api\Processor\ProcessorInterface::postprocessSearchResults()
    */
   const STAGE_POSTPROCESS_QUERY = 'postprocess_query';
 
@@ -157,12 +175,20 @@ interface ProcessorInterface extends IndexPluginInterface {
   public function preIndexSave();
 
   /**
+   * Alter the items to be indexed.
+   *
+   * @param \Drupal\search_api\Item\ItemInterface[] $items
+   *   An array of items to be indexed, passed by reference.
+   */
+  public function alterIndexedItems(array &$items);
+
+  /**
    * Preprocesses search items for indexing.
    *
    * @param \Drupal\search_api\Item\ItemInterface[] $items
-   *   An array of items to be preprocessed for indexing, passed by reference.
+   *   An array of items to be preprocessed for indexing.
    */
-  public function preprocessIndexItems(array &$items);
+  public function preprocessIndexItems(array $items);
 
   /**
    * Preprocesses a search query.

@@ -688,7 +688,16 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function preprocessIndexItems(array &$items) {
+  public function alterIndexedItems(array &$items) {
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ALTER_ITEMS) as $processor) {
+      $processor->alterIndexedItems($items);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocessIndexItems(array $items) {
     foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PREPROCESS_INDEX) as $processor) {
       $processor->preprocessIndexItems($items);
     }
@@ -950,9 +959,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $items = array();
     foreach ($search_objects as $item_id => $object) {
       $items[$item_id] = Utility::createItemFromObject($this, $object, $item_id);
-      // This will cache the extracted fields so processors, etc., can retrieve
-      // them directly.
-      $items[$item_id]->getFields();
     }
 
     // Remember the items that were initially passed, to be able to determine
@@ -961,7 +967,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $rejected_ids = array_combine($rejected_ids, $rejected_ids);
 
     // Preprocess the indexed items.
+    $this->alterIndexedItems($items);
     \Drupal::moduleHandler()->alter('search_api_index_items', $this, $items);
+    foreach ($items as $item) {
+      // This will cache the extracted fields so processors, etc., can retrieve
+      // them directly.
+      $item->getFields();
+    }
     $this->preprocessIndexItems($items);
 
     // Remove all items still in $items from $rejected_ids. Thus, only the
