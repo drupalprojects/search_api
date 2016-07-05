@@ -317,7 +317,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    *   The string value to preprocess, as a reference. Can be manipulated
    *   directly, nothing has to be returned. Can either be left a string, or be
    *   changed into a nested keys array, as defined by
-   *   \Drupal\search_api\Query\QueryInterface::getKeys().
+   *   \Drupal\search_api\ParseMode\ParseModeInterface::parseInput().
    */
   protected function processKey(&$value) {
     $this->process($value);

@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Query;
 
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ParseMode\ParseModeInterface;
 
 /**
  * Represents a search query on a Search API index.
@@ -69,21 +70,9 @@ interface QueryInterface extends ConditionSetInterface {
   public static function create(IndexInterface $index, ResultsCacheInterface $results_cache, array $options = array());
 
   /**
-   * Retrieves the parse modes supported by this query class.
-   *
-   * @return string[][]
-   *   An associative array of parse modes recognized by objects of this class.
-   *   The keys are the parse modes' IDs, values are associative arrays
-   *   containing the following entries:
-   *   - name: The translated name of the parse mode.
-   *   - description: (optional) A translated text describing the parse mode.
-   */
-  public function parseModes();
-
-  /**
    * Retrieves the parse mode.
    *
-   * @return string
+   * @return \Drupal\search_api\ParseMode\ParseModeInterface
    *   The parse mode.
    */
   public function getParseMode();
@@ -91,12 +80,12 @@ interface QueryInterface extends ConditionSetInterface {
   /**
    * Sets the parse mode.
    *
-   * @param string $parse_mode
+   * @param \Drupal\search_api\ParseMode\ParseModeInterface $parse_mode
    *   The parse mode.
    *
    * @return $this
    */
-  public function setParseMode($parse_mode);
+  public function setParseMode(ParseModeInterface $parse_mode);
 
   /**
    * Retrieves the languages that will be searched by this query.
@@ -309,18 +298,9 @@ interface QueryInterface extends ConditionSetInterface {
    * Retrieves the search keys for this query.
    *
    * @return array|string|null
-   *   This object's search keys – either a string or an array specifying a
-   *   complex search expression.
-   *   An array will contain a '#conjunction' key specifying the conjunction
-   *   type, and search strings or nested expression arrays at numeric keys.
-   *   Additionally, a '#negation' key might be present, which means – unless it
-   *   maps to a FALSE value – that the search keys contained in that array
-   *   should be negated, i.e. not be present in returned results. The negation
-   *   works on the whole array, not on each contained term individually – i.e.,
-   *   with the "AND" conjunction and negation, only results that contain all
-   *   the terms in the array should be excluded; with the "OR" conjunction and
-   *   negation, all results containing one or more of the terms in the array
-   *   should be excluded.
+   *   This object's search keys, in the format described by
+   *   \Drupal\search_api\ParseMode\ParseModeInterface::parseInput(). Or NULL if
+   *   the query doesn't have any search keys set.
    *
    * @see keys()
    */

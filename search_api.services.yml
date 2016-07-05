@@ -32,6 +32,10 @@ services:
     class: Drupal\search_api\Display\DisplayPluginManager
     parent: default_plugin_manager
 
+  plugin.manager.search_api.parse_mode:
+    class: Drupal\search_api\ParseMode\ParseModePluginManager
+    parent: default_plugin_manager
+
   plugin.manager.search_api.processor:
     class: Drupal\search_api\Processor\ProcessorPluginManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@string_translation']

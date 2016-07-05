@@ -5,6 +5,7 @@ namespace Drupal\search_api\Query;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -51,11 +52,9 @@ class Query implements QueryInterface {
   /**
    * The parse mode to use for fulltext search keys.
    *
-   * @var string
-   *
-   * @see \Drupal\search_api\Query\QueryInterface::parseModes()
+   * @var \Drupal\search_api\ParseMode\ParseModeInterface|null
    */
-  protected $parseMode = 'terms';
+  protected $parseMode;
 
   /**
    * The processing level for this search query.
@@ -186,101 +185,22 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function parseModes() {
-    $modes['direct'] = array(
-      'name' => $this->t('Direct query'),
-      'description' => $this->t("Don't parse the query, just hand it to the search server unaltered. Might fail if the query contains syntax errors in regard to the specific server's query syntax."),
-    );
-    $modes['single'] = array(
-      'name' => $this->t('Single term'),
-      'description' => $this->t('The query is interpreted as a single keyword, maybe containing spaces or special characters.'),
-    );
-    $modes['terms'] = array(
-      'name' => $this->t('Multiple terms'),
-      'description' => $this->t('The query is interpreted as multiple keywords separated by spaces. Keywords containing spaces may be "quoted". Quoted keywords must still be separated by spaces.'),
-    );
-    // @todo Add fourth mode for complicated expressions, e.g.: »"vanilla ice" OR (love NOT hate)«
-    return $modes;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getParseMode() {
+    if (!$this->parseMode) {
+      $this->parseMode = \Drupal::getContainer()
+        ->get('plugin.manager.search_api.parse_mode')
+        ->createInstance('terms')
+        ->setConjunction($this->options['conjunction']);
+    }
     return $this->parseMode;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setParseMode($parse_mode) {
+  public function setParseMode(ParseModeInterface $parse_mode) {
     $this->parseMode = $parse_mode;
     return $this;
-  }
-
-  /**
-   * Parses search keys input by the user according to the given parse mode.
-   *
-   * @param string|array|null $keys
-   *   The keywords to parse.
-   *
-   * @return array|null|string
-   *   The parsed keywords, in the format defined by
-   *   \Drupal\search_api\Query\QueryInterface::getKeys().
-   *
-   * @see \Drupal\search_api\Query\QueryInterface::parseModes()
-   */
-  protected function parseKeys($keys) {
-    if ($keys === NULL || is_array($keys)) {
-      return $keys;
-    }
-    $keys = '' . $keys;
-    switch ($this->parseMode) {
-      case 'direct':
-        return $keys;
-
-      case 'single':
-        return array('#conjunction' => $this->options['conjunction'], $keys);
-
-      case 'terms':
-        $ret = explode(' ', $keys);
-        $quoted = FALSE;
-        $str = '';
-        foreach ($ret as $k => $v) {
-          if (!$v) {
-            continue;
-          }
-          if ($quoted) {
-            if (substr($v, -1) == '"') {
-              $v = substr($v, 0, -1);
-              $str .= ' ' . $v;
-              $ret[$k] = $str;
-              $quoted = FALSE;
-            }
-            else {
-              $str .= ' ' . $v;
-              unset($ret[$k]);
-            }
-          }
-          elseif ($v[0] == '"') {
-            $len = strlen($v);
-            if ($len > 1 && $v[$len - 1] == '"') {
-              $ret[$k] = substr($v, 1, -1);
-            }
-            else {
-              $str = substr($v, 1);
-              $quoted = TRUE;
-              unset($ret[$k]);
-            }
-          }
-        }
-        if ($quoted) {
-          $ret[] = $str;
-        }
-        $ret['#conjunction'] = $this->options['conjunction'];
-        return array_filter($ret);
-    }
-    return NULL;
   }
 
   /**
@@ -310,11 +230,11 @@ class Query implements QueryInterface {
    */
   public function keys($keys = NULL) {
     $this->origKeys = $keys;
-    if (isset($keys)) {
-      $this->keys = $this->parseKeys($keys);
+    if (is_scalar($keys)) {
+      $this->keys = $this->getParseMode()->parseInput("$keys");
     }
     else {
-      $this->keys = NULL;
+      $this->keys = $keys;
     }
     return $this;
   }

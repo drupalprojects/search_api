@@ -63,6 +63,12 @@ class HooksTest extends WebTestBase {
     $this->drupalGet($this->getIndexPath('processors'));
     $this->assertText('Mystic bounce');
 
+    // hook_search_api_parse_mode_info_alter was invoked.
+    $definition = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.parse_mode')
+      ->getDefinition('direct');
+    $this->assertEqual('Song for My Father', $definition['label']);
+
     $this->drupalGet($this->getIndexPath());
     $this->drupalPostForm(NULL, [], $this->t('Index now'));
 

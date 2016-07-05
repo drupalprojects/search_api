@@ -23,6 +23,11 @@ search_api_processor:
   plugin_manager_service_id: plugin.manager.search_api.processor
   plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
 
+search_api_parse_mode:
+  label: Search API parse mode
+  plugin_manager_service_id: plugin.manager.search_api.parse_mode
+  plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
+
 search_api_tracker:
   label: Search API tracker
   plugin_manager_service_id: plugin.manager.search_api.tracker

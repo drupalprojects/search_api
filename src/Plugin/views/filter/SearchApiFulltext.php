@@ -211,7 +211,7 @@ class SearchApiFulltext extends FilterPluginBase {
     // If the operator was set to OR or NOT, set OR as the conjunction. It is
     // also set for NOT since otherwise it would be "not all of these words".
     if ($this->operator != 'and') {
-      $query->setOption('conjunction', 'OR');
+      $query->getParseMode()->setConjunction('OR');
     }
 
     $query->setFulltextFields($fields);

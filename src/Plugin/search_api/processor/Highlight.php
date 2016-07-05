@@ -328,7 +328,7 @@ class Highlight extends ProcessorPluginBase {
    *
    * @param array $keys
    *   A search keys array, as specified by
-   *   \Drupal\search_api\Query\QueryInterface::getKeys().
+   *   \Drupal\search_api\ParseMode\ParseModeInterface::parseInput().
    *
    * @return string[]
    *   An array of all unique positive keywords contained in the keys array.

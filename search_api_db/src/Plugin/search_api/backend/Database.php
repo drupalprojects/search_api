@@ -1800,8 +1800,8 @@ class Database extends BackendPluginBase {
    *
    * @param string|array $keys
    *   The search keys, formatted like the return value of
-   *   \Drupal\search_api\Query\QueryInterface::getKeys(), but preprocessed
-   *   according to internal requirements.
+   *   \Drupal\search_api\ParseMode\ParseModeInterface::parseInput(), but
+   *   preprocessed according to internal requirements.
    * @param array $fields
    *   The fulltext fields on which to search, with their names as keys mapped
    *   to internal information about them.
