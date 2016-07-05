@@ -200,6 +200,34 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   }
 
   /**
+   * Verifies that the given condition operator is valid for this backend.
+   *
+   * @param string $operator
+   *   The operator in question.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if the operator is not known.
+   *
+   * @see \Drupal\search_api\Query\ConditionSetInterface::addCondition()
+   */
+  protected function validateOperator($operator) {
+    switch ($operator) {
+      case '=':
+      case '<>':
+      case '<':
+      case '<=':
+      case '>=':
+      case '>':
+      case 'IN':
+      case 'NOT IN':
+      case 'BETWEEN':
+      case 'NOT BETWEEN':
+        return;
+    }
+    throw new SearchApiException("Unknown operator '$operator' used in search query condition");
+  }
+
+  /**
    * Implements the magic __sleep() method.
    *
    * Prevents the server entity from being serialized.

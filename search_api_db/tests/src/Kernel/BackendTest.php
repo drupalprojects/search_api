@@ -64,6 +64,7 @@ class BackendTest extends BackendTestBase {
     $this->searchSuccessPartial();
     $this->editServerMinChars();
     $this->searchSuccessMinChars();
+    $this->checkUnknownOperator();
   }
 
   /**
@@ -402,6 +403,21 @@ class BackendTest extends BackendTestBase {
     $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Query with NOT NULL filter returned correct result.');
     $this->assertIgnored($results);
     $this->assertWarnings($results);
+  }
+
+  /**
+   * Checks that an unknown operator throws an exception.
+   */
+  protected function checkUnknownOperator() {
+    try {
+      $this->buildSearch()
+        ->addCondition('id', 1, '!=')
+        ->execute();
+      $this->fail('Unknown operator "!=" did not throw an exception.');
+    }
+    catch (SearchApiException $e) {
+      $this->assertTrue(TRUE, 'Unknown operator "!=" threw an exception.');
+    }
   }
 
   /**

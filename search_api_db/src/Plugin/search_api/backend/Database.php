@@ -2049,7 +2049,8 @@ class Database extends BackendPluginBase {
    *   The condition to set on the query, or NULL if none is necessary.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if an unknown field was used in the filter.
+   *   Thrown if an unknown field or operator was used in one of the contained
+   *   conditions.
    */
   protected function createDbCondition(ConditionGroupInterface $conditions, array $fields, SelectInterface $db_query, IndexInterface $index) {
     $conjunction = $conditions->getConjunction();
@@ -2070,7 +2071,8 @@ class Database extends BackendPluginBase {
         $field = $condition->getField();
         $operator = $condition->getOperator();
         $value = $condition->getValue();
-        $not_equals_operators = array('<>', '!=', 'NOT IN', 'NOT BETWEEN');
+        $this->validateOperator($operator);
+        $not_equals_operators = array('<>', 'NOT IN', 'NOT BETWEEN');
         $not_equals = in_array($operator, $not_equals_operators);
         $not_between = $operator == 'NOT BETWEEN';
 
