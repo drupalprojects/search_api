@@ -13,7 +13,7 @@ trait ExampleContentTrait {
   /**
    * The generated test entities, keyed by ID.
    *
-   * @var \Drupal\entity_test\Entity\EntityTest[]
+   * @var \Drupal\entity_test\Entity\EntityTestMulRevChanged[]
    */
   protected $entities = array();
 
@@ -21,8 +21,8 @@ trait ExampleContentTrait {
    * Sets up the necessary bundles on the test entity type.
    */
   protected function setUpExampleStructure() {
-    entity_test_create_bundle('item');
-    entity_test_create_bundle('article');
+    entity_test_create_bundle('item', NULL, 'entity_test_mulrev_changed');
+    entity_test_create_bundle('article', NULL, 'entity_test_mulrev_changed');
   }
 
   /**
@@ -66,7 +66,7 @@ trait ExampleContentTrait {
       'category' => 'article_category',
       'width' => '2.0',
     ));
-    $count = \Drupal::entityQuery('entity_test')->count()->execute();
+    $count = \Drupal::entityQuery('entity_test_mulrev_changed')->count()->execute();
     $this->assertEqual($count, 5, "$count items inserted.");
   }
 
@@ -78,11 +78,11 @@ trait ExampleContentTrait {
    * @param array $values
    *   The entity's property values.
    *
-   * @return \Drupal\entity_test\Entity\EntityTest
+   * @return \Drupal\entity_test\Entity\EntityTestMulRevChanged
    *   The created entity.
    */
   protected function addTestEntity($id, array $values) {
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_test');
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev_changed');
     $values['id'] = $id;
     $this->entities[$id] = $storage->create($values);
     $this->entities[$id]->save();
@@ -115,7 +115,7 @@ trait ExampleContentTrait {
    */
   protected function getItemIds(array $entity_ids) {
     $translate_ids = function ($entity_id) {
-      return Utility::createCombinedId('entity:entity_test', $entity_id . ':en');
+      return Utility::createCombinedId('entity:entity_test_mulrev_changed', $entity_id . ':en');
     };
     return array_map($translate_ids, $entity_ids);
   }

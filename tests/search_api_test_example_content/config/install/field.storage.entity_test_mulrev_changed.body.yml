@@ -1,8 +1,8 @@
-id: entity_test.body
+id: entity_test_mulrev_changed.body
 status: true
 langcode: en
 field_name: body
-entity_type: entity_test
+entity_type: entity_test_mulrev_changed
 type: text_with_summary
 settings: {  }
 module: text

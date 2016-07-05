@@ -1,8 +1,8 @@
-id: entity_test.item.width
+id: entity_test_mulrev_changed.item.width
 status: true
 langcode: en
 field_name: width
-entity_type: entity_test
+entity_type: entity_test_mulrev_changed
 bundle: item
 label: Width
 description: ''
@@ -16,5 +16,5 @@ settings:
   suffix: ''
 dependencies:
   config:
-    - field.storage.entity_test.width
+    - field.storage.entity_test_mulrev_changed.width
 field_type: float

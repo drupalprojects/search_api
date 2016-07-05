@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\search_api\Kernel;
 
-use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -50,7 +50,7 @@ class IndexChangesTest extends KernelTestBase {
    *
    * @var string
    */
-  protected $testEntityTypeId = 'entity_test';
+  protected $testEntityTypeId = 'entity_test_mulrev_changed';
 
   /**
    * The task manager to use for the tests.
@@ -69,7 +69,7 @@ class IndexChangesTest extends KernelTestBase {
       'search_api_item',
       'search_api_task',
     ));
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('user');
 
     $this->taskManager = $this->container->get('search_api.task_manager');
@@ -86,7 +86,7 @@ class IndexChangesTest extends KernelTestBase {
       'langcode' => 'en',
     ))->save();
 
-    EntityTest::create(array(
+    EntityTestMulRevChanged::create(array(
       'id' => 1,
       'name' => 'test 1',
     ))->save();
@@ -116,8 +116,8 @@ class IndexChangesTest extends KernelTestBase {
           'plugin_id' => 'entity:user',
           'settings' => array(),
         ),
-        'entity:entity_test' => array(
-          'plugin_id' => 'entity:entity_test',
+        'entity:entity_test_mulrev_changed' => array(
+          'plugin_id' => 'entity:entity_test_mulrev_changed',
           'settings' => array(),
         ),
       ),
@@ -148,13 +148,13 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals($expected, $tracker->getRemainingItems());
 
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
-    $datasource = $this->index->createPlugin('datasource', 'entity:entity_test');
+    $datasource = $this->index->createPlugin('datasource', 'entity:entity_test_mulrev_changed');
     $this->index->addDatasource($datasource)->save();
 
     $this->taskManager->executeAllTasks();
 
     $expected = array(
-      Utility::createCombinedId('entity:entity_test', '1:en'),
+      Utility::createCombinedId('entity:entity_test_mulrev_changed', '1:en'),
       Utility::createCombinedId('entity:user', '1:en'),
     );
     $remaining_items = $tracker->getRemainingItems();
@@ -166,14 +166,14 @@ class IndexChangesTest extends KernelTestBase {
       'name' => 'someone',
       'langcode' => 'en',
     ))->save();
-    EntityTest::create(array(
+    EntityTestMulRevChanged::create(array(
       'id' => 2,
       'name' => 'test 2',
     ))->save();
 
     $expected = array(
-      Utility::createCombinedId('entity:entity_test', '1:en'),
-      Utility::createCombinedId('entity:entity_test', '2:en'),
+      Utility::createCombinedId('entity:entity_test_mulrev_changed', '1:en'),
+      Utility::createCombinedId('entity:entity_test_mulrev_changed', '2:en'),
       Utility::createCombinedId('entity:user', '1:en'),
       Utility::createCombinedId('entity:user', '2:en'),
     );
@@ -201,7 +201,7 @@ class IndexChangesTest extends KernelTestBase {
     $tracker = $this->index->getTrackerInstance();
 
     $expected = array(
-      Utility::createCombinedId('entity:entity_test', '1:en'),
+      Utility::createCombinedId('entity:entity_test_mulrev_changed', '1:en'),
       Utility::createCombinedId('entity:user', '1:en'),
     );
     $remaining_items = $tracker->getRemainingItems();
@@ -218,7 +218,7 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals($expected, $indexed_items);
     $this->assertEquals(0, $tracker->getRemainingItemsCount());
 
-    $this->index->removeDatasource('entity:entity_test')->save();
+    $this->index->removeDatasource('entity:entity_test_mulrev_changed')->save();
 
     $this->assertEquals(1, $tracker->getTotalItemsCount());
 
@@ -235,7 +235,7 @@ class IndexChangesTest extends KernelTestBase {
       'name' => 'someone',
       'langcode' => 'en',
     ))->save();
-    EntityTest::create(array(
+    EntityTestMulRevChanged::create(array(
       'id' => 2,
       'name' => 'test 2',
     ))->save();

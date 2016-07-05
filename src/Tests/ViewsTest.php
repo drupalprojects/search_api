@@ -206,7 +206,7 @@ class ViewsTest extends WebTestBase {
     // 1: datasource
     // 2: type (not = true)
     // 3: keywords (break_phrase = true)
-    $this->checkResults(array(), array(4, 5), 'Search with arguments', 'entity:entity_test/item/grape');
+    $this->checkResults(array(), array(4, 5), 'Search with arguments', 'entity:entity_test_mulrev_changed/item/grape');
 
     // "Type" doesn't have "break_phrase" enabled, so the second argument won't
     // have any effect.
@@ -220,7 +220,7 @@ class ViewsTest extends WebTestBase {
       'keywords[value]' => 'melon',
       'keywords_op' => '>=',
     );
-    $this->checkResults($query, array(2, 5), 'Search with arguments and filters', 'entity:entity_test/all/orange');
+    $this->checkResults($query, array(2, 5), 'Search with arguments and filters', 'entity:entity_test_mulrev_changed/all/orange');
 
     // Make sure there was a display plugin created for this view.
     $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')->getInstances();
@@ -312,7 +312,7 @@ class ViewsTest extends WebTestBase {
     // Add the "User ID" relationship.
     $this->clickLink($this->t('Add relationships'));
     $edit = array(
-      'name[search_api_datasource_database_search_index_entity_entity_test.user_id]' => 'search_api_datasource_database_search_index_entity_entity_test.user_id',
+      'name[search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id]' => 'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id',
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Add and configure relationships'));
     $this->drupalPostForm(NULL, array(), $this->t('Apply'));
@@ -320,7 +320,7 @@ class ViewsTest extends WebTestBase {
     // Add new fields. First check that the listing seems correct.
     $this->clickLink($this->t('Add fields'));
     $this->assertResponse(200);
-    $this->assertText($this->t('Test entity datasource'));
+    $this->assertText($this->t('Test entity - revisions and data table datasource'));
     $this->assertText($this->t('Authored on'));
     $this->assertText($this->t('Body (indexed field)'));
     $this->assertText($this->t('Index Test index'));
@@ -337,12 +337,12 @@ class ViewsTest extends WebTestBase {
     // Then add some fields.
     $fields = array(
       'views.counter',
-      'search_api_datasource_database_search_index_entity_entity_test.id',
+      'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.id',
       'search_api_index_database_search_index.search_api_datasource',
-      'search_api_datasource_database_search_index_entity_entity_test.body',
+      'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.body',
       'search_api_index_database_search_index.category',
       'search_api_index_database_search_index.keywords',
-      'search_api_datasource_database_search_index_entity_entity_test.user_id',
+      'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id',
       'search_api_entity_user.name',
       'search_api_entity_user.roles',
     );
@@ -416,7 +416,7 @@ class ViewsTest extends WebTestBase {
           }
         }
         else {
-          $data = array('entity:entity_test');
+          $data = array('entity:entity_test_mulrev_changed');
         }
         $prefix = "#$id [$field] ";
         $text = $prefix . implode("|$prefix", $data);

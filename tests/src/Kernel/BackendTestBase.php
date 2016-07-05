@@ -59,7 +59,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installConfig('search_api_test_example_content');
 
     // Set the tracking page size so tracking will work properly.
@@ -170,7 +170,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $index = $this->getIndex();
     $this->assertTrue((bool) $index, 'The index was successfully created.');
 
-    $this->assertEquals(array("entity:entity_test"), $index->getDatasourceIds(), 'Datasources are set correctly.');
+    $this->assertEquals(array("entity:entity_test_mulrev_changed"), $index->getDatasourceIds(), 'Datasources are set correctly.');
     $this->assertEquals('default', $index->getTrackerId(), 'Tracker is set correctly.');
 
     $this->assertEquals(5, $index->getTrackerInstance()->getTotalItemsCount(), 'Correct item count.');
@@ -260,7 +260,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $id = reset($ids);
     $this->assertEquals($id, key($results->getResultItems()));
     $this->assertEquals($id, $results->getResultItems()[$id]->getId());
-    $this->assertEquals('entity:entity_test', $results->getResultItems()[$id]->getDatasourceId());
+    $this->assertEquals('entity:entity_test_mulrev_changed', $results->getResultItems()[$id]->getDatasourceId());
 
     $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
     $this->assertEquals(3, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
@@ -838,13 +838,13 @@ abstract class BackendTestBase extends KernelTestBase {
     // Create a "prices" field on the test entity type.
     FieldStorageConfig::create(array(
       'field_name' => 'prices',
-      'entity_type' => 'entity_test',
+      'entity_type' => 'entity_test_mulrev_changed',
       'type' => 'decimal',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ))->save();
     FieldConfig::create(array(
       'field_name' => 'prices',
-      'entity_type' => 'entity_test',
+      'entity_type' => 'entity_test_mulrev_changed',
       'bundle' => 'item',
       'label' => 'Prices',
     ))->save();
@@ -1031,8 +1031,8 @@ abstract class BackendTestBase extends KernelTestBase {
       'status' => TRUE,
       'server' => $this->serverId,
       'datasource_settings' => array(
-        'entity:entity_test' => array(
-          'plugin_id' => 'entity:entity_test',
+        'entity:entity_test_mulrev_changed' => array(
+          'plugin_id' => 'entity:entity_test_mulrev_changed',
           'settings' => array(),
         ),
       ),
@@ -1118,7 +1118,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $field_info = array(
       'label' => $property_name,
       'type' => $type,
-      'datasource_id' => 'entity:entity_test',
+      'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => $property_name,
     );
     $field = Utility::createField($index, $property_name, $field_info);

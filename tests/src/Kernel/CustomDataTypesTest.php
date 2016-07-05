@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\search_api\Kernel;
 
-use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -49,7 +49,7 @@ class CustomDataTypesTest extends KernelTestBase {
   /**
    * An array of test entities.
    *
-   * @var \Drupal\entity_test\Entity\EntityTest[]
+   * @var \Drupal\entity_test\Entity\EntityTestMulRevChanged[]
    */
   protected $entities;
 
@@ -62,7 +62,7 @@ class CustomDataTypesTest extends KernelTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
@@ -80,14 +80,14 @@ class CustomDataTypesTest extends KernelTestBase {
     $this->installConfig(array('search_api_test_db'));
 
     // Create test entities.
-    $this->entities[1] = EntityTest::create(array(
+    $this->entities[1] = EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile' . json_decode('"\u1F601"'),
       'body' => 'test test case Case casE',
       'type' => 'item',
       'keywords' => array('Orange', 'orange', 'örange', 'Orange'),
       'category' => 'item_category',
     ));
-    $this->entities[2] = EntityTest::create(array(
+    $this->entities[2] = EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
       'type' => 'item',
@@ -123,8 +123,8 @@ class CustomDataTypesTest extends KernelTestBase {
     $original_value = $this->entities[1]->get('name')->getValue()[0]['value'];
     $original_type = $this->index->getField('name')->getType();
 
-    $item = $this->index->loadItem('entity:entity_test/1:en');
-    $item = Utility::createItemFromObject($this->index, $item, 'entity:entity_test/1:en');
+    $item = $this->index->loadItem('entity:entity_test_mulrev_changed/1:en');
+    $item = Utility::createItemFromObject($this->index, $item, 'entity:entity_test_mulrev_changed/1:en');
 
     $name_field = $item->getField('name');
     $processed_value = $name_field->getValues()[0];

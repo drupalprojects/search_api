@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\search_api\Kernel;
 
-use Drupal\entity_test\Entity\EntityTestMul;
+use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
@@ -33,7 +33,7 @@ class DatasourceTaskTest extends KernelTestBase {
    *
    * @var string
    */
-  protected $testEntityTypeId = 'entity_test_mul';
+  protected $testEntityTypeId = 'entity_test_mulrev_changed';
 
   /**
    * The search server used for testing.
@@ -79,7 +79,7 @@ class DatasourceTaskTest extends KernelTestBase {
 
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('sequences'));
-    $this->installEntitySchema('entity_test_mul');
+    $this->installEntitySchema('entity_test_mulrev_changed');
 
     $this->taskManager = $this->container->get('search_api.task_manager');
 
@@ -140,9 +140,9 @@ class DatasourceTaskTest extends KernelTestBase {
   public function testItemTranslations() {
     // Test retrieving language and translations when no translations are
     // available.
-    /** @var \Drupal\entity_test\Entity\EntityTestMul $entity_1 */
+    /** @var \Drupal\entity_test\Entity\EntityTestMulRevChanged $entity_1 */
     $uid = $this->container->get('current_user')->id();
-    $entity_1 = EntityTestMul::create(array(
+    $entity_1 = EntityTestMulRevChanged::create(array(
       'id' => 1,
       'name' => 'test 1',
       'user_id' => $uid,
@@ -153,8 +153,8 @@ class DatasourceTaskTest extends KernelTestBase {
     $entity_1->addTranslation('l1')->save();
     $entity_1->addTranslation('l2')->save();
 
-    /** @var \Drupal\entity_test\Entity\EntityTestMul $entity_2 */
-    $entity_2 = EntityTestMul::create(array(
+    /** @var \Drupal\entity_test\Entity\EntityTestMulRevChanged $entity_2 */
+    $entity_2 = EntityTestMulRevChanged::create(array(
       'id' => 2,
       'name' => 'test 2',
       'user_id' => $uid,

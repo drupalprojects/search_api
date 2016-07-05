@@ -1,9 +1,9 @@
-id: entity_test.item.category
+id: entity_test_mulrev_changed.article.category
 status: true
 langcode: en
 field_name: category
-entity_type: entity_test
-bundle: item
+entity_type: entity_test_mulrev_changed
+bundle: article
 label: Category
 description: ''
 required: false
@@ -12,5 +12,5 @@ default_value_callback: ''
 settings: {  }
 dependencies:
   config:
-    - field.storage.entity_test.category
+    - field.storage.entity_test_mulrev_changed.category
 field_type: string

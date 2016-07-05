@@ -44,7 +44,7 @@ class IndexImportTest extends KernelTestBase {
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
     $this->installSchema('system', array('router'));
     $this->installSchema('user', array('users_data'));
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's

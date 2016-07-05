@@ -45,7 +45,7 @@ class QueryTest extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
 
     // Set tracking page size so tracking will work properly.
     \Drupal::configFactory()

@@ -45,9 +45,9 @@ class FieldValuesExtractionTest extends KernelTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installConfig(array('search_api_test_extraction'));
-    $entity_storage = \Drupal::entityTypeManager()->getStorage('entity_test');
+    $entity_storage = \Drupal::entityTypeManager()->getStorage('entity_test_mulrev_changed');
 
     $this->entities[0] = $entity_storage->create(array(
       'type' => 'article',
