@@ -885,7 +885,7 @@ class Database extends BackendPluginBase {
 
         // Make sure the table and column now exist. (Especially important when
         // we actually add the index for the first time.)
-        $storage_exists = $this->database->schema()
+        $storage_exists = empty($field['table']) || $this->database->schema()
           ->fieldExists($field['table'], 'value');
         $denormalized_storage_exists = $this->database->schema()
           ->fieldExists($denormalized_table, $field['column']);
@@ -1490,6 +1490,9 @@ class Database extends BackendPluginBase {
       throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
     $fields = $this->getFieldInfo($index);
+    $fields['search_api_id'] = array(
+      'column' => 'item_id',
+    );
 
     $db_query = $this->createDbQuery($query, $fields);
 
@@ -1524,10 +1527,6 @@ class Database extends BackendPluginBase {
           }
           if ($field_name == 'search_api_relevance') {
             $db_query->orderBy('score', $order);
-            continue;
-          }
-          if ($field_name == 'search_api_id') {
-            $db_query->orderBy('item_id', $order);
             continue;
           }
 
@@ -2489,6 +2488,15 @@ class Database extends BackendPluginBase {
     }
 
     return $suggestions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getSpecialFields(IndexInterface $index, ItemInterface $item = NULL) {
+    $fields = parent::getSpecialFields($index, $item);
+    unset($fields['search_api_id']);
+    return $fields;
   }
 
   /**

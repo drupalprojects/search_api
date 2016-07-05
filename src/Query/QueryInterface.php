@@ -154,8 +154,12 @@ interface QueryInterface extends ConditionSetInterface {
    * relevance.
    *
    * @param string $field
-   *   The field to sort by. The special fields 'search_api_relevance' (sort by
-   *   relevance) and 'search_api_id' (sort by item id) may be used.
+   *   The ID of the field to sort by. In addition to all indexed fields on the
+   *   index, the following special field IDs may be used:
+   *   - search_api_relevance: Sort by relevance.
+   *   - search_api_datasource: Sort by datasource.
+   *   - search_api_language: Sort by language.
+   *   - search_api_id: Sort by item ID.
    * @param string $order
    *   The order to sort items in – one of the SORT_* constants.
    *

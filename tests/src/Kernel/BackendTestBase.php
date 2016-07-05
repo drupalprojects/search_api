@@ -89,7 +89,7 @@ abstract class BackendTestBase extends KernelTestBase {
    *
    * Uses a single method to save time.
    */
-  public function testFramework() {
+  public function testBackend() {
     $this->insertExampleContent();
     $this->checkDefaultServer();
     $this->checkServerBackend();
@@ -144,16 +144,12 @@ abstract class BackendTestBase extends KernelTestBase {
   /**
    * Checks backend specific features.
    */
-  protected function checkBackendSpecificFeatures() {
-    $this->assertTrue(TRUE, 'There are no backend specific features to test.');
-  }
+  protected function checkBackendSpecificFeatures() {}
 
   /**
    * Runs backend specific regression tests.
    */
-  protected function backendSpecificRegressionTests() {
-    $this->assertTrue(TRUE, 'There are no backend specific regression tests.');
-  }
+  protected function backendSpecificRegressionTests() {}
 
   /**
    * Tests the server that was installed through default configuration files.
@@ -214,11 +210,15 @@ abstract class BackendTestBase extends KernelTestBase {
    *   (optional) Conditions to set on the query, in the format "field,value".
    * @param string[]|null $fields
    *   (optional) Fulltext fields to search for the keys.
+   * @param bool $place_id_sort
+   *   (optional) Whether to place a default sort on the item ID.
    *
    * @return \Drupal\search_api\Query\QueryInterface
    *   A search query on the test index.
    */
-  protected function buildSearch($keys = NULL, array $conditions = array(), array $fields = NULL) {
+  protected function buildSearch($keys = NULL, array $conditions = array(), array $fields = NULL, $place_id_sort = TRUE) {
+    static $i = 0;
+
     $query = $this->getIndex()->query();
     if ($keys) {
       $query->keys($keys);
@@ -231,6 +231,11 @@ abstract class BackendTestBase extends KernelTestBase {
       $query->addCondition($field, $value);
     }
     $query->range(0, 10);
+    if ($place_id_sort) {
+      // Use the normal "id" and the magic "search_api_id" field alternately, to
+      // make sure both work as expected.
+      $query->sort((++$i % 2) ? 'id' : 'search_api_id');
+    }
 
     return $query;
   }
@@ -240,39 +245,29 @@ abstract class BackendTestBase extends KernelTestBase {
    */
   protected function searchNoResults() {
     $results = $this->buildSearch('test')->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'No search results returned without indexing.');
-    $this->assertEquals(array(), array_keys($results->getResultItems()), 'No search results returned without indexing.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(), $results, 'Search before indexing');
   }
 
   /**
    * Tests whether some test searches have the correct results.
    */
   protected function searchSuccess() {
-    $results = $this->buildSearch('test')->range(1, 2)->sort('id', QueryInterface::SORT_ASC)->execute();
+    $results = $this->buildSearch('test')->range(1, 2)->execute();
     $this->assertEquals(4, $results->getResultCount(), 'Search for »test« returned correct number of results.');
     $this->assertEquals($this->getItemIds(array(2, 3)), array_keys($results->getResultItems()), 'Search for »test« returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertEmpty($results->getIgnoredSearchKeys());
+    $this->assertEmpty($results->getWarnings());
 
-    $ids = $this->getItemIds(array(2));
-    $id = reset($ids);
+    $id = $this->getItemIds(array(2))[0];
     $this->assertEquals($id, key($results->getResultItems()));
     $this->assertEquals($id, $results->getResultItems()[$id]->getId());
     $this->assertEquals('entity:entity_test_mulrev_changed', $results->getResultItems()[$id]->getDatasourceId());
 
-    $results = $this->buildSearch('test foo')->sort('id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Search for »test foo« returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()), 'Search for »test foo« returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $results = $this->buildSearch('test foo')->execute();
+    $this->assertResults(array(1, 2, 4), $results, 'Search for »test foo«');
 
-    $results = $this->buildSearch('foo', array('type,item'))->sort('id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Search for »foo« returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2)), array_keys($results->getResultItems()), 'Search for »foo« returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $results = $this->buildSearch('foo', array('type,item'))->execute();
+    $this->assertResults(array(1, 2), $results, 'Search for »foo«');
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -290,64 +285,42 @@ abstract class BackendTestBase extends KernelTestBase {
       ),
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Complex search 1 returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Complex search 1 returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(4), $results, 'Complex search 1');
 
-    $query = $this->buildSearch()->sort('id');
+    $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
     $conditions->addCondition('name', 'bar');
     $conditions->addCondition('body', 'bar');
     $query->addConditionGroup($conditions);
     $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Search with multi-field fulltext filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 3, 5)), array_keys($results->getResultItems()), 'Search with multi-field fulltext filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 3, 5), $results, 'Search with multi-field fulltext filter');
 
-    $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'IN')->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Query with IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $results = $this->buildSearch()
+      ->addCondition('keywords', array('grape', 'apple'), 'IN')
+      ->execute();
+    $this->assertResults(array(2, 4, 5), $results, 'Query with IN filter');
 
     $results = $this->buildSearch()->addCondition('keywords', array('grape', 'apple'), 'NOT IN')->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Query with NOT IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 3)), array_keys($results->getResultItems()), 'Query with NOT IN filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 3), $results, 'Query with NOT IN filter');
 
     $results = $this->buildSearch()->addCondition('width', array('0.9', '1.5'), 'BETWEEN')->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Query with BETWEEN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with BETWEEN filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(4), $results, 'Query with BETWEEN filter');
 
     $results = $this->buildSearch()
       ->addCondition('width', array('0.9', '1.5'), 'NOT BETWEEN')
-      ->sort('id')
       ->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Query with NOT BETWEEN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 3, 5)), array_keys($results->getResultItems()), 'Query with NOT BETWEEN filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 3, 5), $results, 'Query with NOT BETWEEN filter');
 
     $results = $this->buildSearch()
       ->setLanguages(array('und', 'en'))
       ->addCondition('keywords', array('grape', 'apple'), 'IN')
       ->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Query with IN filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Query with IN filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(2, 4, 5), $results, 'Query with IN filter');
 
     $results = $this->buildSearch()
       ->setLanguages(array('und'))
       ->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'Query with languages returned correct number of results.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(), $results, 'Query with languages');
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR')
@@ -355,36 +328,66 @@ abstract class BackendTestBase extends KernelTestBase {
       ->addCondition('width', array('0.9', '1.5'), 'BETWEEN');
     $query->addConditionGroup($conditions);
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(4), $results, 'Query with search_api_language filter');
 
     $results = $this->buildSearch()
       ->addCondition('search_api_language', 'und')
       ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
       ->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'Query with search_api_language filter returned correct number of results.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(), $results, 'Query with search_api_language filter');
 
     $results = $this->buildSearch()
       ->addCondition('search_api_language', array('und', 'en'), 'IN')
       ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
       ->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language "IN" filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(4), $results, 'Query with search_api_language filter');
 
     $results = $this->buildSearch()
       ->addCondition('search_api_language', array('und', 'de'), 'NOT IN')
       ->addCondition('width', array('0.9', '1.5'), 'BETWEEN')
       ->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Query with search_api_language "NOT IN" filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4)), array_keys($results->getResultItems()), 'Query with search_api_language filter returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(4), $results, 'Query with search_api_language "NOT IN" filter');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_id', $this->getItemIds(array(1))[0])
+      ->execute();
+    $this->assertResults(array(1), $results, 'Query with search_api_id filter');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_id', $this->getItemIds(array(2, 4)), 'NOT IN')
+      ->execute();
+    $this->assertResults(array(1, 3, 5), $results, 'Query with search_api_id "NOT IN" filter');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_id', $this->getItemIds(array(3))[0], '>')
+      ->execute();
+    $this->assertResults(array(4, 5), $results, 'Query with search_api_id "greater than" filter');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_datasource', 'foobar')
+      ->execute();
+    $this->assertResults(array(), $results, 'Query for a non-existing datasource');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_datasource', array('foobar', 'entity:entity_test_mulrev_changed'), 'IN')
+      ->execute();
+    $this->assertResults(array(1, 2, 3, 4, 5), $results, 'Query with search_api_id "IN" filter');
+
+    $results = $this->buildSearch()
+      ->addCondition('search_api_datasource', array('foobar', 'entity:entity_test_mulrev_changed'), 'NOT IN')
+      ->execute();
+    $this->assertResults(array(), $results, 'Query with search_api_id "NOT IN" filter');
+
+    // For a query without keys, all of these except for the last one should
+    // have no effect. Therefore, we expect results with IDs in descending
+    // order.
+    $results = $this->buildSearch(NULL, array(), array(), FALSE)
+      ->sort('search_api_relevance')
+      ->sort('search_api_datasource', QueryInterface::SORT_DESC)
+      ->sort('search_api_language')
+      ->sort('search_api_id', QueryInterface::SORT_DESC)
+      ->execute();
+    $this->assertResults(array(5, 4, 3, 2, 1), $results, 'Query with magic sorts');
   }
 
   /**
@@ -404,8 +407,7 @@ abstract class BackendTestBase extends KernelTestBase {
     );
     $query->setOption('search_api_facets', $facets);
     $results = $query->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4, 5)), array_keys($results->getResultItems()));
+    $this->assertResults(array(4, 5), $results, 'OR facets query');
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
@@ -431,8 +433,7 @@ abstract class BackendTestBase extends KernelTestBase {
     );
     $query->setOption('search_api_facets', $facets);
     $results = $query->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'OR facets query returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(4, 5)), array_keys($results->getResultItems()));
+    $this->assertResults(array(4, 5), $results, 'OR facets query');
     $expected = array(
       array('count' => 2, 'filter' => '"article_category"'),
       array('count' => 2, 'filter' => '"item_category"'),
@@ -463,26 +464,20 @@ abstract class BackendTestBase extends KernelTestBase {
    * @see https://www.drupal.org/node/2007872
    */
   protected function regressionTest2007872() {
-    $results = $this->buildSearch('test')
-      ->sort('id', QueryInterface::SORT_ASC)
-      ->sort('type', QueryInterface::SORT_ASC)
+    $results = $this->buildSearch('test', array(), array(), FALSE)
+      ->sort('id')
+      ->sort('type')
       ->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Sorting on field with NULLs returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4)), array_keys($results->getResultItems()), 'Sorting on field with NULLs returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 3, 4), $results, 'Sorting on field with NULLs');
 
-    $query = $this->buildSearch();
+    $query = $this->buildSearch(NULL, array(), array(), FALSE);
     $conditions = $query->createConditionGroup('OR');
     $conditions->addCondition('id', 3);
     $conditions->addCondition('type', 'article');
     $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
+    $query->sort('search_api_id', QueryInterface::SORT_DESC);
     $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'OR filter on field with NULLs returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4, 5)), array_keys($results->getResultItems()), 'OR filter on field with NULLs returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(5, 4, 3), $results, 'OR filter on field with NULLs');
   }
 
   /**
@@ -498,12 +493,8 @@ abstract class BackendTestBase extends KernelTestBase {
     $conditions->addCondition('keywords', 'orange');
     $conditions->addCondition('keywords', 'apple');
     $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'OR filter on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'OR filter on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 4, 5), $results, 'OR filter on multi-valued field');
 
     $query = $this->buildSearch();
     $conditions = $query->createConditionGroup('OR');
@@ -514,12 +505,8 @@ abstract class BackendTestBase extends KernelTestBase {
     $conditions->addCondition('keywords', 'apple');
     $conditions->addCondition('keywords', 'grape');
     $query->addConditionGroup($conditions);
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Multiple OR filters on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Multiple OR filters on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(2, 4, 5), $results, 'Multiple OR filters on multi-valued field');
 
     $query = $this->buildSearch();
     $conditions1 = $query->createConditionGroup('OR');
@@ -532,12 +519,8 @@ abstract class BackendTestBase extends KernelTestBase {
     $conditions->addCondition('keywords', 'grape');
     $conditions1->addConditionGroup($conditions);
     $query->addConditionGroup($conditions1);
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'Complex nested filters on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(2, 4, 5)), array_keys($results->getResultItems()), 'Complex nested filters on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(2, 4, 5), $results, 'Complex nested filters on multi-valued field');
   }
 
   /**
@@ -591,20 +574,16 @@ abstract class BackendTestBase extends KernelTestBase {
       'test',
     );
     $query = $this->buildSearch($keys, array(), array('name'));
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(3, $results->getResultCount(), 'OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4)), array_keys($results->getResultItems()), 'OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 4), $results, 'OR keywords');
 
     $query = $this->buildSearch($keys, array(), array('name', 'body'));
     $query->range(0, 0);
     $results = $query->execute();
     $this->assertEquals(5, $results->getResultCount(), 'Multi-field OR keywords returned correct number of results.');
     $this->assertFalse($results->getResultItems(), 'Multi-field OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertEmpty($results->getIgnoredSearchKeys());
+    $this->assertEmpty($results->getWarnings());
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -617,12 +596,8 @@ abstract class BackendTestBase extends KernelTestBase {
       ),
     );
     $query = $this->buildSearch($keys, array(), array('name'));
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Nested OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 4, 5), $results, 'Nested OR keywords');
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -638,12 +613,8 @@ abstract class BackendTestBase extends KernelTestBase {
       ),
     );
     $query = $this->buildSearch($keys, array(), array('name', 'body'));
-    $query->sort('id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'Nested multi-field OR keywords returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'Nested multi-field OR keywords returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 4, 5), $results, 'Nested multi-field OR keywords');
   }
 
   /**
@@ -658,11 +629,8 @@ abstract class BackendTestBase extends KernelTestBase {
       'foo',
       'bar',
     );
-    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Negated AND fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Negated AND fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $results = $this->buildSearch($keys)->execute();
+    $this->assertResults(array(3, 4), $results, 'Negated AND fulltext search');
 
     $keys = array(
       '#conjunction' => 'OR',
@@ -671,10 +639,7 @@ abstract class BackendTestBase extends KernelTestBase {
       'baz',
     );
     $results = $this->buildSearch($keys)->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Negated OR fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'Negated OR fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(3), $results, 'Negated OR fulltext search');
 
     $keys = array(
       '#conjunction' => 'AND',
@@ -686,11 +651,8 @@ abstract class BackendTestBase extends KernelTestBase {
         'bar',
       ),
     );
-    $results = $this->buildSearch($keys)->sort('search_api_id', QueryInterface::SORT_ASC)->execute();
-    $this->assertEquals(2, $results->getResultCount(), 'Nested NOT AND fulltext search returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3, 4)), array_keys($results->getResultItems()), 'Nested NOT AND fulltext search returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $results = $this->buildSearch($keys)->execute();
+    $this->assertResults(array(3, 4), $results, 'Nested NOT AND fulltext search');
   }
 
   /**
@@ -701,17 +663,13 @@ abstract class BackendTestBase extends KernelTestBase {
   protected function regressionTest2136409() {
     $query = $this->buildSearch();
     $query->addCondition('category', NULL);
-    $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'NULL filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(3)), array_keys($results->getResultItems()), 'NULL filter returned correct result.');
+    $this->assertResults(array(3), $results, 'NULL filter');
 
     $query = $this->buildSearch();
     $query->addCondition('category', NULL, '<>');
-    $query->sort('search_api_id', QueryInterface::SORT_ASC);
     $results = $query->execute();
-    $this->assertEquals(4, $results->getResultCount(), 'NOT NULL filter returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 4, 5)), array_keys($results->getResultItems()), 'NOT NULL filter returned correct result.');
+    $this->assertResults(array(1, 2, 4, 5), $results, 'NOT NULL filter');
   }
 
   /**
@@ -878,35 +836,23 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $query = $this->buildSearch(NULL, array('prices,3.25'));
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Filter on decimal field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'Filter on decimal field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(6), $results, 'Filter on decimal field');
 
     $query = $this->buildSearch(NULL, array('prices,3.5'));
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Filter on decimal field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'Filter on decimal field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(6), $results, 'Filter on decimal field');
 
     // Use the "prices" field, since we've added it now, to also check for
     // proper handling of (NOT) BETWEEN for multi-valued fields.
     $query = $this->buildSearch()
       ->addCondition('prices', array(3.6, 3.8), 'BETWEEN');
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'BETWEEN filter on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(6)), array_keys($results->getResultItems()), 'BETWEEN filter on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(6), $results, 'BETWEEN filter on multi-valued field');
 
     $query = $this->buildSearch()
       ->addCondition('prices', array(3.6, 3.8), 'NOT BETWEEN');
     $results = $query->execute();
-    $this->assertEquals(5, $results->getResultCount(), 'NOT BETWEEN filter on multi-valued field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(1, 2, 3, 4, 5)), array_keys($results->getResultItems()), 'NOT BETWEEN filter on multi-valued field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(1, 2, 3, 4, 5), $results, 'NOT BETWEEN filter on multi-valued field');
   }
 
   /**
@@ -950,10 +896,7 @@ abstract class BackendTestBase extends KernelTestBase {
     // For a string field, 50 characters shouldn't be a problem.
     $query = $this->buildSearch(NULL, array('body,astringlongerthanfiftycharactersthatcantbestoredbythedbbackend'));
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Filter on new string field returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(8)), array_keys($results->getResultItems()), 'Filter on new string field returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(8), $results, 'Filter on new string field');
 
     $index->removeField('body');
     $index->save();
@@ -982,16 +925,11 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $query = $this->buildSearch($mb_word);
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for word with 28 multi-byte characters returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(9)), array_keys($results->getResultItems()), 'Search for word with 28 multi-byte characters returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(9), $results, 'Search for word with 28 multi-byte characters');
 
     $query = $this->buildSearch($mb_word . 'ä');
     $results = $query->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'Search for unknown word with 29 multi-byte characters returned no results.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(), $results, 'Search for unknown word with 29 multi-byte characters');
 
     // Test the same body when indexed as a string (255 characters limit should
     // not be reached).
@@ -1003,16 +941,11 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $query = $this->buildSearch(NULL, array("body,$mb_body"));
     $results = $query->execute();
-    $this->assertEquals(1, $results->getResultCount(), 'Search for body with 231 multi-byte characters returned correct number of results.');
-    $this->assertEquals($this->getItemIds(array(9)), array_keys($results->getResultItems()), 'Search for body with 231 multi-byte characters returned correct result.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(9), $results, 'Search for body with 231 multi-byte characters');
 
     $query = $this->buildSearch(NULL, array("body,{$mb_body}ä"));
     $results = $query->execute();
-    $this->assertEquals(0, $results->getResultCount(), 'Search for unknown body with 232 multi-byte characters returned no results.');
-    $this->assertIgnored($results);
-    $this->assertWarnings($results);
+    $this->assertResults(array(), $results, 'Search for unknown body with 232 multi-byte characters');
 
     $index->getField('body')->setType('text');
     $index->save();
@@ -1055,31 +988,26 @@ abstract class BackendTestBase extends KernelTestBase {
   }
 
   /**
-   * Asserts ignored fields from a set of search results.
+   * Asserts that the given result set complies with expectations.
    *
+   * @param int[] $result_ids
+   *   The expected result item IDs, as raw entity IDs.
    * @param \Drupal\search_api\Query\ResultSetInterface $results
-   *   The results to check.
-   * @param array $ignored
+   *   The returned result set.
+   * @param string $search_label
+   *   (optional) A label for the search to include in assertion messages.
+   * @param string[] $ignored
    *   (optional) The ignored keywords that should be present, if any.
-   * @param string $message
-   *   (optional) The message to be displayed with the assertion.
-   */
-  protected function assertIgnored(ResultSetInterface $results, array $ignored = array(), $message = 'No keys were ignored.') {
-    $this->assertEquals($ignored, $results->getIgnoredSearchKeys(), $message);
-  }
-
-  /**
-   * Asserts warnings from a set of search results.
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $results
-   *   The results to check.
-   * @param array $warnings
+   * @param string[] $warnings
    *   (optional) The ignored warnings that should be present, if any.
-   * @param string $message
-   *   (optional) The message to be displayed with the assertion.
    */
-  protected function assertWarnings(ResultSetInterface $results, array $warnings = array(), $message = 'No warnings were displayed.') {
-    $this->assertEquals($warnings, $results->getWarnings(), $message);
+  protected function assertResults(array $result_ids, ResultSetInterface $results, $search_label = 'Search', array $ignored = array(), array $warnings = array()) {
+    $this->assertEquals(count($result_ids), $results->getResultCount(), "$search_label returned correct number of results.");
+    if ($result_ids) {
+      $this->assertEquals($this->getItemIds($result_ids), array_keys($results->getResultItems()), "$search_label returned correct results.");
+    }
+    $this->assertEquals($ignored, $results->getIgnoredSearchKeys());
+    $this->assertEquals($warnings, $results->getWarnings());
   }
 
   /**

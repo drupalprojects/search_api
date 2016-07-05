@@ -195,10 +195,12 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       'type' => 'string',
       'original type' => 'string',
     );
+    $fields['search_api_id'] = Utility::createField($index, 'search_api_id', $field_info);
     $fields['search_api_datasource'] = Utility::createField($index, 'search_api_datasource', $field_info);
     $fields['search_api_language'] = Utility::createField($index, 'search_api_language', $field_info);
 
     if ($item) {
+      $fields['search_api_id']->setValues(array($item->getId()));
       $fields['search_api_datasource']->setValues(array($item->getDatasourceId()));
       $fields['search_api_language']->setValues(array($item->getLanguage()));
     }
