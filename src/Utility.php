@@ -59,14 +59,18 @@ class Utility {
    *
    * @return bool
    *   TRUE if $type is one of the specified types, FALSE otherwise.
-   *
-   * @see https://drupal.org/node/2644502
    */
   public static function isTextType($type, array $text_types = array('text')) {
-    // @todo Currently, this is useless, but later we could also check
-    //   automatically for custom types that have one of the passed types as their
-    //   fallback.
-    return in_array($type, $text_types);
+    if (in_array($type, $text_types)) {
+      return TRUE;
+    }
+    $data_type = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.data_type')
+      ->createInstance($type);
+    if ($data_type && !$data_type->isDefault()) {
+      return in_array($data_type->getFallbackType(), $text_types);
+    }
+    return FALSE;
   }
 
   /**
@@ -160,8 +164,10 @@ class Utility {
         // custom types.
       }
       static::$dataTypeFallbackMapping[$index_id] = array();
-      /** @var \Drupal\search_api\DataType\DataTypeInterface $data_type */
-      foreach (\Drupal::service('plugin.manager.search_api.data_type')->getInstances() as $type_id => $data_type) {
+      $data_types = \Drupal::getContainer()
+        ->get('plugin.manager.search_api.data_type')
+        ->getInstances();
+      foreach ($data_types as $type_id => $data_type) {
         // We know for sure that we do not need to fall back for the default
         // data types as they are always present and are required to be
         // supported by all backends.
