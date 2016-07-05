@@ -109,7 +109,13 @@ class IntegrationTest extends WebTestBase {
    * server also has an integer as id/label.
    */
   public function testIntegerIndex() {
-    $this->getTestServer(789, 456);
+    Server::create(array(
+      'id' => 456,
+      'name' => 789,
+      'description' => 'WebTest server' . ' description',
+      'backend' => 'search_api_test',
+      'backend_config' => array(),
+    ))->save();
 
     $this->drupalCreateNode(array('type' => 'article'));
     $this->drupalCreateNode(array('type' => 'article'));
