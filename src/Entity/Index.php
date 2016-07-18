@@ -1425,43 +1425,39 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $old_processors = $original->getProcessors();
     $new_processors = $this->getProcessors();
 
-    // Only actually do something when the processor settings are changed.
-    if ($old_processors != $new_processors) {
-      $requires_reindex = FALSE;
+    $requires_reindex = FALSE;
 
-      // Loop over all new settings and check if the processors were already set
-      // in the original entity.
-      foreach ($new_processors as $key => $processor) {
-        // The processor is new, because it wasn't configured in the original
-        // entity.
-        if (!isset($old_processors[$key])) {
-          if ($processor->requiresReindexing(NULL, $processor->getConfiguration())) {
+    // Loop over all new settings and check if the processors were already set
+    // in the original entity.
+    foreach ($new_processors as $key => $processor) {
+      // The processor is new, because it wasn't configured in the original
+      // entity.
+      if (!isset($old_processors[$key])) {
+        if ($processor->requiresReindexing(NULL, $processor->getConfiguration())) {
+          $requires_reindex = TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!$requires_reindex) {
+      // Loop over all original settings and check if one of them has been
+      // removed or changed.
+      foreach ($old_processors as $key => $old_processor) {
+        $new_processor = isset($new_processors[$key]) ? $new_processors[$key] : NULL;
+        $old_config = $old_processor->getConfiguration();
+        $new_config = $new_processor ? $new_processor->getConfiguration() : NULL;
+        if (!$new_processor || $old_config != $new_config) {
+          if ($old_processor->requiresReindexing($old_config, $new_config)) {
             $requires_reindex = TRUE;
             break;
           }
         }
       }
+    }
 
-      if (!$requires_reindex) {
-        // Loop over all original settings and check if one of them has been
-        // removed or changed.
-        foreach ($old_processors as $key => $old_processor) {
-          $new_processor = isset($new_processors[$key]) ? $new_processors[$key] : NULL;
-          $old_config = $old_processor->getConfiguration();
-          $new_config = $new_processor ? $new_processor->getConfiguration() : NULL;
-          if (!$new_processor || $old_config != $new_config) {
-            if ($old_processor->requiresReindexing($old_config, $new_config)) {
-              $requires_reindex = TRUE;
-              break;
-            }
-          }
-
-        }
-      }
-
-      if ($requires_reindex) {
-        $this->reindex();
-      }
+    if ($requires_reindex) {
+      $this->reindex();
     }
   }
 
