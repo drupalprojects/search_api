@@ -329,7 +329,11 @@ function search_api_theme() {
       'file' => 'search_api.theme.inc',
     ),
     'search_api_index' => array(
-      'variables' => array('index' => NULL),
+      'variables' => array(
+        'index' => NULL,
+        'server_count' => NULL,
+        'server_count_error' => NULL,
+      ),
       'function' => 'theme_search_api_index',
       'file' => 'search_api.theme.inc',
     ),
