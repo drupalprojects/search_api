@@ -267,10 +267,14 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
             $property = $properties[$property_path];
           }
           if ($property instanceof ProcessorPropertyInterface) {
-            $processor_fields[] = Utility::createField($this->index, $combined_id, array(
+            $field_info = array(
               'datasource_id' => $datasource_id,
               'property_path' => $property_path,
-            ));
+            );
+            if ($property instanceof ConfigurablePropertyInterface) {
+              $field_info['configuration'] = $property->defaultConfiguration();
+            }
+            $processor_fields[] = Utility::createField($this->index, $combined_id, $field_info);
             $needed_processors[$property->getProcessorId()] = TRUE;
           }
           elseif ($datasource_id) {
