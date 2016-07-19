@@ -123,9 +123,13 @@ class RenderedItemTest extends ProcessorTestBase {
 
     $this->index->getDatasources();
 
-    // Enable the classy theme as the tests rely on markup from that.
+    // Enable the classy and stable themes as the tests rely on markup from
+    // that. Set stable as the active theme, but make classy the default. The
+    // processor should switch to classy to perform the rendering.
     \Drupal::service('theme_handler')->install(array('classy'));
-    \Drupal::theme()->setActiveTheme(\Drupal::service('theme.initialization')->initTheme('classy'));
+    \Drupal::service('theme_handler')->install(array('stable'));
+    \Drupal::configFactory()->getEditable('system.theme')->set('default', 'classy')->save();
+    \Drupal::theme()->setActiveTheme(\Drupal::service('theme.initialization')->initTheme('stable'));
   }
 
   /**
