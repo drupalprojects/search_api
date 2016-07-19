@@ -10,7 +10,6 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
-use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 
 /**
  * Tests the "Rendered item" processor.
