@@ -897,8 +897,8 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * This replicates the interface of Views' default SQL backend to simplify
    * the Views integration of the Search API. If you are writing Search
-   * API-specific Views code, you should better use the filter() or condition()
-   * methods.
+   * API-specific Views code, you should better use the addConditionGroup() or
+   * addCondition() methods.
    *
    * @param int $group
    *   The condition group to add these to; groups are used to create AND/OR
