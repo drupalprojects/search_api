@@ -12,6 +12,8 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -39,7 +41,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("Indexes items in the database. Supports several advanced features, but should not be used for large sites.")
  * )
  */
-class Database extends BackendPluginBase {
+class Database extends BackendPluginBase implements PluginFormInterface {
+
+  use PluginFormTrait;
 
   /**
    * Multiplier for scores to have precision when converted from float to int.

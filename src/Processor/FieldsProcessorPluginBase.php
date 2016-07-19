@@ -4,8 +4,10 @@ namespace Drupal\search_api\Processor;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\ConditionInterface;
@@ -32,7 +34,9 @@ use Drupal\search_api\Utility;
  * - testField()
  * - testType()
  */
-abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
+abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements PluginFormInterface {
+
+  use PluginFormTrait;
 
   // @todo Add defaultConfiguration() implementation and find a cleaner solution
   //   for all the isset($this->configuration['fields']) checks.
@@ -41,8 +45,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $form = parent::buildConfigurationForm($form, $form_state);
-
     $fields = $this->index->getFields();
     $field_options = array();
     $default_fields = array();
@@ -72,8 +74,6 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    parent::validateConfigurationForm($form, $form_state);
-
     $fields = array_filter($form_state->getValues()['fields']);
     if ($fields) {
       $fields = array_keys($fields);

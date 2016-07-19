@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Plugin\search_api\tracker\Basic;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility;
 use Drupal\search_api_test\Plugin\search_api\tracker\TestTracker;
@@ -71,6 +72,7 @@ class IntegrationTest extends WebTestBase {
    */
   public function testFramework() {
     $this->createServer();
+    $this->createServerDuplicate();
     $this->checkServerAvailability();
     $this->createIndex();
     $this->createIndexDuplicate();
@@ -133,6 +135,9 @@ class IntegrationTest extends WebTestBase {
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertResponse(200);
+    $this->assertText($this->t('Please configure the used datasources.'));
+    $this->drupalPostForm(NULL, array(), $this->t('Save'));
+    $this->assertResponse(200);
     $this->assertText($this->t('The index was successfully saved.'));
     $this->assertText($this->t('Successfully executed @count pending task.', array('@count' => 1)));
     $this->assertEqual(2, $this->countTrackedItems());
@@ -158,12 +163,15 @@ class IntegrationTest extends WebTestBase {
 
   /**
    * Tests creating a search server via the UI.
+   *
+   * @param string $server_id
+   *   The ID of the server to create.
    */
   protected function createServer($server_id = '_test_server') {
     $this->serverId = $server_id;
     $server_name = 'Search API &{}<>! Server';
     $server_description = 'A >server< used for testing &.';
-    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_server.add_form', array(), array('absolute' => TRUE));
+    $settings_path = 'admin/config/search/search-api/add-server';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200, 'Server add page exists');
@@ -208,10 +216,28 @@ class IntegrationTest extends WebTestBase {
   }
 
   /**
+   * Tests creating a search server with an existing machine name.
+   */
+  protected function createServerDuplicate() {
+    $server_add_page = 'admin/config/search/search-api/add-server';
+    $this->drupalGet($server_add_page);
+
+    $edit = array(
+      'name' => $this->serverId,
+      'id' => $this->serverId,
+      'backend' => 'search_api_test',
+    );
+
+    // Try to submit an server with a duplicate machine name.
+    $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('The machine-readable name is already in use. It must be unique.'));
+  }
+
+  /**
    * Tests creating a search index via the UI.
    */
   protected function createIndex() {
-    $settings_path = $this->urlGenerator->generateFromRoute('entity.search_api_index.add_form', array(), array('absolute' => TRUE));
+    $settings_path = 'admin/config/search/search-api/add-index';
     $this->indexId = 'test_index';
     $index_description = 'An >index< used for &! tęsting.';
     $index_name = 'Search >API< test &!^* index';
@@ -238,7 +264,9 @@ class IntegrationTest extends WebTestBase {
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
+    $this->assertText($this->t('Please configure the used datasources.'));
 
+    $this->drupalPostForm(NULL, array(), $this->t('Save'));
     $this->assertText($this->t('The index was successfully saved.'));
     // @todo Make this work correctly.
     // $this->assertUrl($this->getIndexPath('fields/add'), array(), 'Correct redirect to index page.');
@@ -267,7 +295,9 @@ class IntegrationTest extends WebTestBase {
     $edit['id'] = $index2_id;
     unset($edit['server']);
     $this->drupalPostForm($settings_path, $edit, $this->t('Save and edit'));
+    $this->assertText($this->t('Please configure the used datasources.'));
 
+    $this->drupalPostForm(NULL, array(), $this->t('Save and edit'));
     $this->assertText($this->t('The index was successfully saved.'));
     $this->indexStorage->resetCache(array($index2_id));
     $index = $this->indexStorage->load($index2_id);
@@ -284,7 +314,6 @@ class IntegrationTest extends WebTestBase {
   protected function createIndexDuplicate() {
     $index_add_page = 'admin/config/search/search-api/add-index';
     $this->drupalGet($index_add_page);
-    $this->indexId = 'test_index';
 
     $edit = array(
       'name' => $this->indexId,
@@ -378,6 +407,9 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm($edit_path, $edit, $this->t('Save'));
     $this->assertResponse(200);
     $this->assertText($this->t('The index was successfully saved.'));
+    $index = $this->getIndex(TRUE);
+    $tracker = $index->getTrackerInstance();
+    $this->assertTrue($tracker instanceof Basic, 'Tracker was successfully switched.');
   }
 
   /**
@@ -391,6 +423,10 @@ class IntegrationTest extends WebTestBase {
     );
 
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));
+    $this->assertResponse(200);
+    $this->assertText($this->t('Please configure the used datasources.'));
+
+    $this->drupalPostForm(NULL, array(), $this->t('Save'));
     $this->assertResponse(200);
     $this->assertText($this->t('The index was successfully saved.'));
     $this->assertText($edit['name']);
@@ -1088,6 +1124,8 @@ class IntegrationTest extends WebTestBase {
       'datasources[]' => array('entity:user', 'entity:node'),
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
+    $this->assertText($this->t('Please configure the used datasources.'));
+    $this->drupalPostForm(NULL, array(), $this->t('Save'));
     $this->assertText($this->t('The index was successfully saved.'));
 
     $tracked_items = $this->countTrackedItems();
@@ -1160,8 +1198,9 @@ class IntegrationTest extends WebTestBase {
     $this->assertUrl('admin/config/search/search-api', array(), 'Correct redirect to search api overview page.');
 
     // Confirm that the index hasn't been deleted.
+    $this->indexStorage->resetCache(array($this->indexId));
     /** @var $index \Drupal\search_api\IndexInterface */
-    $index = $this->indexStorage->load($this->indexId, TRUE);
+    $index = $this->indexStorage->load($this->indexId);
     if ($this->assertTrue($index, 'The index associated with the server was not deleted.')) {
       $this->assertFalse($index->status(), 'The index associated with the server was disabled.');
       $this->assertNull($index->getServerId(), 'The index was removed from the server.');
