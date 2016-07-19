@@ -24,14 +24,6 @@ class SearchApiFulltext extends FilterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function showOperatorForm(&$form, FormStateInterface $form_state) {
-    parent::showOperatorForm($form, $form_state);
-    $form['operator']['#description'] = $this->t('This operator only applies when using "Search keys" as the "Use as" setting.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function operatorOptions($which = 'title') {
     $options = array();
     foreach ($this->operators() as $id => $info) {
