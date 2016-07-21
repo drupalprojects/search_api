@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.20 (2016-07-21):
+-----------------------------
 - #2731103 by drunken monkey: Fixed the default value for the taxonomy term
   filter "multiple" setting.
 - #1818572 by morningtime, drunken monkey, lodey, guillaumev: Added pretty
