@@ -505,13 +505,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function supportsFeature($feature) {
-    $supported = array(
-      'search_api_autocomplete' => TRUE,
-      'search_api_facets' => TRUE,
-      'search_api_facets_operator_or' => TRUE,
+  public function getSupportedFeatures() {
+    return array(
+      'search_api_autocomplete',
+      'search_api_facets',
+      'search_api_facets_operator_or',
     );
-    return isset($supported[$feature]);
   }
 
   /**

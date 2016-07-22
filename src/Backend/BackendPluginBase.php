@@ -98,8 +98,8 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   /**
    * {@inheritdoc}
    */
-  public function supportsFeature($feature) {
-    return FALSE;
+  public function getSupportedFeatures() {
+    return array();
   }
 
   /**

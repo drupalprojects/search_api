@@ -62,8 +62,8 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function supportsFeature($feature) {
-    return $feature == 'search_api_mlt';
+  public function getSupportedFeatures() {
+    return array('search_api_mlt');
   }
 
   /**
