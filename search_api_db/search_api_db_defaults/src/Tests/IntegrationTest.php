@@ -103,6 +103,13 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet('admin/config/search/search-api/index/default_index');
     $this->assertResponse(200, 'Index was not removed.');
 
+    // Check that saving any of the index's config forms works fine.
+    foreach (array('edit', 'fields', 'processors') as $tab) {
+      $submit = $tab == 'fields' ? $this->t('Save changes') : $this->t('Save');
+      $this->drupalPostForm("admin/config/search/search-api/index/default_index/$tab", array(), $submit);
+      $this->assertResponse(200);
+    }
+
     $this->drupalLogin($this->authenticatedUser);
     $this->drupalGet('search/content');
     $this->assertResponse(200, 'Authenticated user can access the search view.');
