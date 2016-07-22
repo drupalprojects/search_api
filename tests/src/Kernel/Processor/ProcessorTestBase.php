@@ -65,10 +65,11 @@ abstract class ProcessorTestBase extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('node', array('node_access'));
-    $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
+    $this->installSchema('search_api', array('search_api_item'));
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('comment');
+    $this->installEntitySchema('search_api_task');
     $this->installSchema('comment', array('comment_entity_statistics'));
     $this->installConfig(array('field'));
 

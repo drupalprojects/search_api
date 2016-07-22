@@ -77,9 +77,10 @@ class DatasourceTaskTest extends KernelTestBase {
     );
     \Drupal::state()->set($this->testEntityTypeId . '.bundles', $bundles);
 
-    $this->installSchema('search_api', array('search_api_item', 'search_api_task'));
+    $this->installSchema('search_api', array('search_api_item'));
     $this->installSchema('system', array('sequences'));
     $this->installEntitySchema('entity_test_mulrev_changed');
+    $this->installEntitySchema('search_api_task');
 
     $this->taskManager = $this->container->get('search_api.task_manager');
 

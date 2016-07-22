@@ -50,7 +50,7 @@ class DependencyRemovalTest extends KernelTestBase {
   public function setUp() {
     parent::setUp();
 
-    $this->installSchema('search_api', 'search_api_task');
+    $this->installEntitySchema('search_api_task');
 
     \Drupal::configFactory()->getEditable('search_api.settings')
       ->set('default_tracker', 'default')
