@@ -208,13 +208,14 @@ class IndexForm extends EntityForm {
       $datasource_options[$datasource_id] = !empty($definition['label']) ? $definition['label'] : $datasource_id;
     }
     $form['datasources'] = array(
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#title' => $this->t('Data sources'),
       '#description' => $this->t('Select one or more data sources of items that will be stored in this index.'),
       '#options' => $datasource_options,
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,
       '#required' => TRUE,
+      '#attributes' => array('class' => array('search-api-checkboxes-list')),
       '#ajax' => array(
         'trigger_as' => array('name' => 'datasources_configure'),
         'callback' => '::buildAjaxDatasourceConfigForm',
@@ -502,7 +503,7 @@ class IndexForm extends EntityForm {
     }
 
     // Store the array of datasource plugin IDs with integer keys.
-    $datasource_ids = array_values($form_state->getValue('datasources', array()));
+    $datasource_ids = array_values(array_filter($form_state->getValue('datasources', array())));
     $form_state->setValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource with a form.

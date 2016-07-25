@@ -131,7 +131,7 @@ class IntegrationTest extends WebTestBase {
       'status' => 1,
       'description' => 'test Index:: 123~',
       'server' => 456,
-      'datasources[]' => array('entity:node'),
+      'datasources[entity:node]' => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
     $this->assertResponse(200);
@@ -241,6 +241,7 @@ class IntegrationTest extends WebTestBase {
     $this->indexId = 'test_index';
     $index_description = 'An >index< used for &! tęsting.';
     $index_name = 'Search >API< test &!^* index';
+    $index_datasource = 'entity:node';
 
     $this->drupalGet($settings_path);
     $this->assertResponse(200);
@@ -260,7 +261,7 @@ class IntegrationTest extends WebTestBase {
       'status' => 1,
       'description' => $index_description,
       'server' => $this->serverId,
-      'datasources[]' => array('entity:node'),
+      'datasources[' . $index_datasource . ']' => TRUE,
     );
 
     $this->drupalPostForm(NULL, $edit, $this->t('Save'));
@@ -283,7 +284,7 @@ class IntegrationTest extends WebTestBase {
       $this->assertTrue($index->status(), 'Index status correctly inserted.');
       $this->assertEqual($index->getDescription(), $edit['description'], 'Index ID correctly inserted.');
       $this->assertEqual($index->getServerId(), $edit['server'], 'Index server ID correctly inserted.');
-      $this->assertEqual($index->getDatasourceIds(), $edit['datasources[]'], 'Index datasource id correctly inserted.');
+      $this->assertEqual($index->getDatasourceIds()[0], $index_datasource, 'Index datasource id correctly inserted.');
     }
     else {
       // Since none of the other tests would work, bail at this point.
@@ -319,7 +320,7 @@ class IntegrationTest extends WebTestBase {
       'name' => $this->indexId,
       'id' => $this->indexId,
       'server' => $this->serverId,
-      'datasources[]' => array('entity:node'),
+      'datasources[entity:node]' => TRUE,
     );
 
     // Try to submit an index with a duplicate machine name.
@@ -419,7 +420,7 @@ class IntegrationTest extends WebTestBase {
     $edit = array(
       'name' => 'IndexName',
       'id' => 'user_index',
-      'datasources[]' => 'entity:user',
+      'datasources[entity:user]' => TRUE,
     );
 
     $this->drupalPostForm('admin/config/search/search-api/add-index', $edit, $this->t('Save'));
@@ -1121,7 +1122,8 @@ class IntegrationTest extends WebTestBase {
     // Enable indexing of users.
     $settings_path = $this->getIndexPath('edit');
     $edit = array(
-      'datasources[]' => array('entity:user', 'entity:node'),
+      'datasources[entity:user]' => TRUE,
+      'datasources[entity:node]' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $this->assertText($this->t('Please configure the used datasources.'));
@@ -1133,7 +1135,8 @@ class IntegrationTest extends WebTestBase {
 
     // Disable indexing of users again.
     $edit = array(
-      'datasources[]' => array('entity:node'),
+      'datasources[entity:user]' => FALSE,
+      'datasources[entity:node]' => TRUE,
     );
     $this->drupalPostForm($settings_path, $edit, $this->t('Save'));
     $this->assertText($this->t('The index was successfully saved.'));
