@@ -15,6 +15,7 @@ use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
+use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Render\Element;
@@ -2416,10 +2417,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       // To avoid suggesting incomplete words, we have to temporarily disable
       // the "partial_matches" option. There should be no way we'll save the
       // server during the createDbQuery() call, so this should be safe.
-      $options = $this->options;
-      $this->options['partial_matches'] = FALSE;
+      $configuration = $this->configuration;
+      $this->configuration['partial_matches'] = FALSE;
       $db_query = $this->createDbQuery($query, $fields);
-      $this->options = $options;
+      $this->configuration = $configuration;
 
       // We need a list of all current results to match the suggestions against.
       // However, since MySQL doesn't allow using a temporary table multiple
