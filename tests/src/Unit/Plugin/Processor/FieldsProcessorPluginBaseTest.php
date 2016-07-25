@@ -84,7 +84,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
       return FALSE;
     };
     $this->processor->setMethodOverride('testType', $override);
-    $configuration['fields'] = array('text_field' => 'text_field', 'float_field' => 'float_field');
+    $configuration['fields'] = array('text_field', 'float_field');
     $this->processor->setConfiguration($configuration);
 
     $items = $this->getTestItem();
