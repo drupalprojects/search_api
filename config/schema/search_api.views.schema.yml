@@ -7,7 +7,7 @@ views.query.search_api_query:
       label: If the underlying search index has access checks enabled, this option allows you to disable them for this view.
     skip_access:
       type: boolean
-      label: Do not execute additional access checks for all entities in the search results.
+      label: Do not execute additional access checks for all items in the search results.
     parse_mode:
       type: string
       label: Chooses how the search keys will be parsed.

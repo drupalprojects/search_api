@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
@@ -553,6 +554,18 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkItemAccess(ComplexDataInterface $item, AccountInterface $account = NULL) {
+    if ($entity = $this->getEntity($item)) {
+      return $this->getEntityTypeManager()
+        ->getAccessControlHandler($this->getEntityTypeId())
+        ->access($entity, 'view', $account);
+    }
+    return FALSE;
   }
 
   /**

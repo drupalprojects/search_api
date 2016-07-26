@@ -315,23 +315,21 @@ class SearchApiQuery extends QueryPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
+    $form['skip_access'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Skip item access checks'),
+      '#description' => $this->t("By default, an additional access check will be executed for each item returned by the search query. However, since removing results this way will break paging and result counts, it is preferable to configure the view in a way that it will only return accessible results. If you are sure that only accessible results will be returned in the search, or if you want to show results to which the user normally wouldn't have access, you can enable this option to skip those additional access checks. This should be used with care."),
+      '#default_value' => $this->options['skip_access'],
+      '#weight' => -1,
+    );
+
     $form['bypass_access'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Bypass access checks'),
       '#description' => $this->t('If the underlying search index has access checks enabled (e.g., through the "Content access" processor), this option allows you to disable them for this view. This will never disable any filters placed on this view.'),
       '#default_value' => $this->options['bypass_access'],
     );
-
-    if ($this->getEntityTypes(TRUE)) {
-      $form['skip_access'] = array(
-        '#type' => 'checkbox',
-        '#title' => $this->t('Skip entity access checks'),
-        '#description' => $this->t("By default, an additional access check will be executed for each entity returned by the search query. However, since removing results this way will break paging and result counts, it is preferable to configure the view in a way that it will only return accessible results. If you are sure that only accessible results will be returned in the search, or if you want to show results to which the user normally wouldn't have access, you can enable this option to skip those additional access checks. This should be used with care."),
-        '#default_value' => $this->options['skip_access'],
-        '#weight' => -1,
-      );
-      $form['bypass_access']['#states']['visible'][':input[name="query[options][skip_access]"]']['checked'] = TRUE;
-    }
+    $form['bypass_access']['#states']['visible'][':input[name="query[options][skip_access]"]']['checked'] = TRUE;
 
     // @todo Move this setting to the argument and filter plugins where it makes
     //   more sense for users.
@@ -571,18 +569,11 @@ class SearchApiQuery extends QueryPluginBase {
     $count = 0;
 
     // First, unless disabled, check access for all entities in the results.
-    if (!$this->options['skip_access'] && $this->getEntityTypes(TRUE)) {
+    if (!$this->options['skip_access']) {
       $account = $this->getAccessAccount();
       foreach ($results as $item_id => $result) {
-        $entity_type_id = $result->getDatasource()->getEntityTypeId();
-        if (!$entity_type_id) {
-          continue;
-        }
-        $entity = $result->getOriginalObject()->getValue();
-        if ($entity instanceof EntityInterface) {
-          if (!$entity->access('view', $account)) {
-            unset($results[$item_id]);
-          }
+        if (!$result->checkAccess($account)) {
+          unset($results[$item_id]);
         }
       }
     }

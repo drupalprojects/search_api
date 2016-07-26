@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ProcessorInterface;
@@ -382,6 +383,19 @@ class Item implements \IteratorAggregate, ItemInterface {
       unset($this->extraData[$key]);
     }
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkAccess(AccountInterface $account = NULL) {
+    try {
+      return $this->getDatasource()
+        ->checkItemAccess($this->getOriginalObject(), $account);
+    }
+    catch (SearchApiException $e) {
+      return FALSE;
+    }
   }
 
   /**
