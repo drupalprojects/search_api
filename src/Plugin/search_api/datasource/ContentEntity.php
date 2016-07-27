@@ -18,7 +18,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
-use Drupal\Core\TypedData\TypedDataManager;
+use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\field\FieldConfigInterface;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
@@ -72,7 +72,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * The typed data manager.
    *
-   * @var \Drupal\Core\TypedData\TypedDataManager|null
+   * @var \Drupal\Core\TypedData\TypedDataManagerInterface|null
    */
   protected $typedDataManager;
 
@@ -240,7 +240,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * Retrieves the typed data manager.
    *
-   * @return \Drupal\Core\TypedData\TypedDataManager
+   * @return \Drupal\Core\TypedData\TypedDataManagerInterface
    *   The typed data manager.
    */
   public function getTypedDataManager() {
@@ -250,12 +250,12 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * Sets the typed data manager.
    *
-   * @param \Drupal\Core\TypedData\TypedDataManager $typed_data_manager
+   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
    *   The new typed data manager.
    *
    * @return $this
    */
-  public function setTypedDataManager(TypedDataManager $typed_data_manager) {
+  public function setTypedDataManager(TypedDataManagerInterface $typed_data_manager) {
     $this->typedDataManager = $typed_data_manager;
     return $this;
   }
