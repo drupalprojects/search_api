@@ -327,6 +327,13 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
         $properties += $this->getEntityFieldManager()->getFieldDefinitions($type, $bundle_id);
       }
     }
+    // Exclude properties with custom storage, since we can't extract them
+    // currently, due to a shortcoming of Core's Typed Data API. See #2695527.
+    foreach ($properties as $key => $property) {
+      if ($property->getFieldStorageDefinition()->hasCustomStorage()) {
+        unset($properties[$key]);
+      }
+    }
     return $properties;
   }
 
