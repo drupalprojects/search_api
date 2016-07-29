@@ -7,6 +7,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\Node;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Plugin\search_api\tracker\Basic;
 use Drupal\search_api\SearchApiException;
@@ -461,14 +462,33 @@ class IntegrationTest extends WebTestBase {
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 0, 'No items are tracked yet.');
 
-    // Add two articles and a page.
+    // Add two articles and two pages (one of them "invisible" to Search API).
     $article1 = $this->drupalCreateNode(array('type' => 'article'));
     $this->drupalCreateNode(array('type' => 'article'));
     $this->drupalCreateNode(array('type' => 'page'));
+    $page2 = Node::create(array(
+      'body' => array(
+        array(
+          'value' => $this->randomMachineName(32),
+          'format' => filter_default_format(),
+        )
+      ),
+      'title' => $this->randomMachineName(8),
+      'type' => 'page',
+      'uid' => \Drupal::currentUser()->id(),
+    ));
+    $page2->search_api_skip_tracking = TRUE;
+    $page2->save();
 
-    // Those 3 new nodes should be added to the tracking table immediately.
+    // The 3 new nodes without "search_api_skip_tracking" property set should
+    // have been added to the tracking table immediately.
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 3, 'Three items are tracked.');
+
+    $this->getCalledMethods('backend');
+    $page2->delete();
+    $methods = $this->getCalledMethods('backend');
+    $this->assertEqual($methods, array(), 'Tracking of a delete operation could successfully be prevented.');
 
     // Test disabling the index.
     $settings_path = $this->getIndexPath('edit');
@@ -569,6 +589,18 @@ class IntegrationTest extends WebTestBase {
 
     $tracked_items = $this->countTrackedItems();
     $this->assertEqual($tracked_items, 2, 'Two items are tracked.');
+
+    // Index items, then check whether updating an article is handled correctly.
+    $this->getCalledMethods('backend');
+    $article1->save();
+    $methods = $this->getCalledMethods('backend');
+    $this->assertEqual($methods, array('indexItems'), 'Update successfully tracked.');
+
+    $article1->search_api_skip_tracking = TRUE;
+    $article1->save();
+    $methods = $this->getCalledMethods('backend');
+    $this->assertEqual($methods, array(), 'Tracking of entity update successfully prevented.');
+    unset($article1->search_api_skip_tracking);
 
     // Delete an article. That should remove it from the item table.
     $article1->delete();
