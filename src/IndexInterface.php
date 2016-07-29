@@ -47,18 +47,6 @@ interface IndexInterface extends ConfigEntityInterface {
   public function isReadOnly();
 
   /**
-   * Gets the cache ID prefix used for this index's caches.
-   *
-   * @param string $sub_id
-   *   An ID for the particular cache within the index that should be
-   *   identified.
-   *
-   * @return string
-   *   The cache ID (prefix) for this index's caches.
-   */
-  public function getCacheId($sub_id);
-
-  /**
    * Retrieves an option.
    *
    * @param string $name

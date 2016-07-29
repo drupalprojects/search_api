@@ -49,9 +49,14 @@ class AggregatedFieldsTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    $datasource = $this->getMock('\Drupal\search_api\Datasource\DatasourceInterface');
+    $datasource->expects($this->any())
+      ->method('getPropertyDefinitions')
+      ->willReturn(array());
     $this->index = new Index(array(
       'datasourceInstances' => array(
-        'entity:test1' => (object) array(),
+        'entity:test1' => $datasource,
+        'entity:test2' => $datasource,
       ),
       'processorInstances' => array(),
       'field_settings' => array(
@@ -74,11 +79,6 @@ class AggregatedFieldsTest extends UnitTestCase {
           'type' => 'string',
           'property_path' => 'aggregated_field',
         ),
-      ),
-      'properties' => array(
-        NULL => array(),
-        'entity:test1' => array(),
-        'entity:test2' => array(),
       ),
     ), 'search_api_index');
     $this->processor = new AggregatedFields(array('index' => $this->index), 'aggregated_field', array());

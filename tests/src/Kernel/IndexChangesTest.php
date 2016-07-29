@@ -3,6 +3,8 @@
 namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -289,6 +291,113 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals(array('trackAllItemsDeleted'), $methods);
     $arguments = $this->getMethodArguments('tracker', 'trackAllItemsDeleted');
     $this->assertEquals(array(), $arguments);
+  }
+
+  /**
+   * Tests correct reaction when a processor adding a property is removed.
+   */
+  public function testPropertyProcessorRemoved() {
+    $processor = $this->container
+      ->get('plugin.manager.search_api.processor')
+      ->createInstance('add_url', array(
+        'index' => $this->index,
+      ));
+    $this->index->addProcessor($processor);
+
+    $info = array(
+      'datasource_id' => 'entity:entity_test_mulrev_changed',
+      'property_path' => 'id',
+    );
+    $this->index->addField(Utility::createField($this->index, 'id', $info));
+    $info = array(
+      'property_path' => 'search_api_url',
+    );
+    $this->index->addField(Utility::createField($this->index, 'url', $info));
+
+    $this->index->save();
+
+    $fields = array_keys($this->index->getFields());
+    sort($fields);
+    $this->assertEquals(array('id', 'url'), $fields);
+
+    $this->index->removeProcessor('add_url')->save();
+
+    $fields = array_keys($this->index->getFields());
+    $this->assertEquals(array('id'), $fields);
+  }
+
+  /**
+   * Tests correct reaction when a bundle containing a property is removed.
+   */
+  public function testPropertyBundleRemoved() {
+    entity_test_create_bundle('bundle1', NULL, 'entity_test_mulrev_changed');
+    entity_test_create_bundle('bundle2', NULL, 'entity_test_mulrev_changed');
+
+    $this->enableModules(array('field', 'text'));
+    $this->installEntitySchema('field_storage_config');
+    $this->installEntitySchema('field_config');
+    $this->installConfig('field');
+
+    FieldStorageConfig::create(array(
+      'field_name' => 'field1',
+      'entity_type' => 'entity_test_mulrev_changed',
+      'type' => 'text',
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field1',
+      'entity_type' => 'entity_test_mulrev_changed',
+      'bundle' => 'bundle1',
+    ))->save();
+    FieldStorageConfig::create(array(
+      'field_name' => 'field2',
+      'entity_type' => 'entity_test_mulrev_changed',
+      'type' => 'text',
+    ))->save();
+    FieldConfig::create(array(
+      'field_name' => 'field2',
+      'entity_type' => 'entity_test_mulrev_changed',
+      'bundle' => 'bundle2',
+    ))->save();
+
+    $datasource_id = 'entity:entity_test_mulrev_changed';
+    $datasource = $this->container
+      ->get('plugin.manager.search_api.datasource')
+      ->createInstance($datasource_id, array(
+        'index' => $this->index,
+        'bundles' => array(
+          'default' => TRUE,
+          'selected' => array(),
+        ),
+      ));
+    $this->index->setDatasources(array($datasource_id => $datasource));
+
+    $info = array(
+      'datasource_id' => $datasource_id,
+      'property_path' => 'field1',
+    );
+    $this->index->addField(Utility::createField($this->index, 'field1', $info));
+    $info = array(
+      'datasource_id' => $datasource_id,
+      'property_path' => 'field2',
+    );
+    $this->index->addField(Utility::createField($this->index, 'field2', $info));
+
+    $this->index->save();
+
+    $fields = array_keys($this->index->getFields());
+    sort($fields);
+    $this->assertEquals(array('field1', 'field2'), $fields);
+
+    $this->index->getDatasource($datasource_id)->setConfiguration(array(
+      'bundles' => array(
+        'default' => TRUE,
+        'selected' => array('bundle2'),
+      ),
+    ));
+    $this->index->save();
+
+    $fields = array_keys($this->index->getFields());
+    $this->assertEquals(array('field1'), $fields);
   }
 
   /**

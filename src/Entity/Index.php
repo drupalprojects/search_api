@@ -226,13 +226,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $serverInstance;
 
   /**
-   * Cached return values for several of the class's methods.
-   *
-   * @var array
-   */
-  protected $cache = array();
-
-  /**
    * The array of processor settings.
    *
    * The array has the following structure:
@@ -265,13 +258,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var \Drupal\search_api\Processor\ProcessorInterface[]|null
    */
   protected $processorInstances;
-
-  /**
-   * Cached property definitions, keyed by datasource ID and property name.
-   *
-   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][]
-   */
-  protected $properties = array();
 
   /**
    * Whether reindexing has been triggered for this index in this page request.
@@ -311,13 +297,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCacheId($sub_id) {
-    return 'search_api_index:' . $this->id() . ':' . $sub_id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getOption($name, $default = NULL) {
     return isset($this->options[$name]) ? $this->options[$name] : $default;
   }
@@ -334,10 +313,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function setOption($name, $option) {
     $this->options[$name] = $option;
-    // If the fields are changed, reset the static fields cache.
-    if ($name == 'fields') {
-      $this->cache = array();
-    }
     return $this;
   }
 
@@ -648,11 +623,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $this->getProcessors();
     }
     $this->processorInstances[$processor->getPluginId()] = $processor;
-
-    if ($processor->supportsStage(ProcessorInterface::STAGE_ADD_PROPERTIES)) {
-      $this->properties = array();
-    }
-
     return $this;
   }
 
@@ -665,14 +635,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->processorInstances === NULL) {
       $this->getProcessors();
     }
-
-    if (!empty($this->processorInstances[$processor_id])) {
-      $processor = $this->processorInstances[$processor_id];
-      if ($processor->supportsStage(ProcessorInterface::STAGE_ADD_PROPERTIES)) {
-        $this->properties = array();
-      }
-      unset($this->processorInstances[$processor_id]);
-    }
+    unset($this->processorInstances[$processor_id]);
 
     return $this;
   }
@@ -833,30 +796,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id) {
-    static $recursion = FALSE;
-
-    if (!isset($this->properties[$datasource_id])) {
-      if (isset($datasource_id)) {
-        $datasource = $this->getDatasource($datasource_id);
-        $this->properties[$datasource_id] = $datasource->getPropertyDefinitions();
-      }
-      else {
-        $datasource = NULL;
-        $this->properties[$datasource_id] = array();
-      }
-
-      // We have to take care that we don't end up in an infinite loop if any
-      // processor's properties depend on the available properties on the index.
-      if (!$recursion) {
-        $recursion = TRUE;
-        foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES) as $processor) {
-          $this->properties[$datasource_id] += $processor->getPropertyDefinitions($datasource);
-        }
-        $recursion = FALSE;
-      }
+    if (isset($datasource_id)) {
+      $datasource = $this->getDatasource($datasource_id);
+      $properties = $datasource->getPropertyDefinitions();
+    }
+    else {
+      $datasource = NULL;
+      $properties = array();
     }
 
-    return $this->properties[$datasource_id];
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES) as $processor) {
+      $properties += $processor->getPropertyDefinitions($datasource);
+    }
+
+    return $properties;
   }
 
   /**
@@ -1146,28 +1099,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
   }
 
   /**
-   * Sets this object as the index for all fields contained in the given array.
-   *
-   * This is important when loading fields from the cache, because their index
-   * objects might point to another instance of this index.
-   *
-   * @param array $fields
-   *   An array containing various values, some of which might be
-   *   \Drupal\search_api\Item\FieldInterface objects and some of which might be
-   *   nested arrays containing such objects.
-   */
-  protected function updateFieldsIndex(array $fields) {
-    foreach ($fields as $value) {
-      if (is_array($value)) {
-        $this->updateFieldsIndex($value);
-      }
-      elseif ($value instanceof FieldInterface) {
-        $value->setIndex($this);
-      }
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function query(array $options = array()) {
@@ -1207,12 +1138,21 @@ class Index extends ConfigEntityBase implements IndexInterface {
       'index_directly' => TRUE,
     );
 
-    // Remove all "locked" and "hidden" flags from all fields of the index. If
-    // they are still valid, they should be re-added by the processors.
     foreach ($this->getFields() as $field_id => $field) {
+      // Remove all "locked" and "hidden" flags from all fields of the index. If
+      // they are still valid, they should be re-added by the processors.
       $field->setIndexedLocked(FALSE);
       $field->setTypeLocked(FALSE);
       $field->setHidden(FALSE);
+
+      // Also check whether the underlying property actually (still) exists.
+      $datasource_id = $field->getDatasourceId();
+      if (!isset($properties[$datasource_id])) {
+        $properties[$datasource_id] = $this->getPropertyDefinitions($datasource_id);
+      }
+      if (!Utility::retrieveNestedProperty($properties[$datasource_id], $field->getPropertyPath())) {
+        $this->removeField($field_id);
+      }
     }
 
     // Call the preIndexSave() method of all applicable processors.
@@ -1863,7 +1803,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * Implements the magic __sleep() method.
    *
-   * Prevents the cached plugins and fields from being serialized.
+   * Prevents the instantiated plugins and fields from being serialized.
    */
   public function __sleep() {
     $properties = get_object_vars($this);
@@ -1872,7 +1812,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($properties['serverInstance']);
     unset($properties['processorInstances']);
     unset($properties['fieldInstances']);
-    unset($properties['cache']);
     return array_keys($properties);
   }
 
