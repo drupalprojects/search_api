@@ -68,7 +68,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, NULL, t('Continue'));
     $args = array(
       '@count' => 3,
-      '%names' => 'Database Search Defaults, Database search, Search API',
+      '%names' => 'Database Search Defaults, Database Search, Search API',
     );
     $success_text = strip_tags(t('@count modules have been enabled: %names.', $args));
     $this->assertText($success_text, 'Modules have been installed.');
