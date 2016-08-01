@@ -247,7 +247,7 @@ function theme_search_api_server($variables) {
   foreach ($server->getIndexes() as $index) {
     $indexes['#links'][] = array(
       'title' => $index->label(),
-      'url' => $index->toUrl('canonical')->toString(),
+      'url' => $index->toUrl('canonical'),
     );
   }
   // Check if the indexes variable contains links.
