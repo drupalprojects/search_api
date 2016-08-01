@@ -7,12 +7,13 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\ConditionInterface;
 use Drupal\search_api\Query\QueryInterface;
-use Drupal\search_api\Utility;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a base class for processors that work on individual fields.
@@ -38,8 +39,50 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
 
   use PluginFormTrait;
 
+  /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelperInterface|null
+   */
+  protected $dataTypeHelper;
+
   // @todo Add defaultConfiguration() implementation and find a cleaner solution
   //   for all the isset($this->configuration['fields']) checks.
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var static $processor */
+    $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+
+    $processor->setDataTypeHelper($container->get('search_api.data_type_helper'));
+
+    return $processor;
+  }
+
+  /**
+   * Retrieves the data type helper.
+   *
+   * @return \Drupal\search_api\Utility\DataTypeHelperInterface
+   *   The data type helper.
+   */
+  public function getDataTypeHelper() {
+    return $this->dataTypeHelper ?: \Drupal::service('search_api.data_type_helper');
+  }
+
+  /**
+   * Sets the data type helper.
+   *
+   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $data_type_helper
+   *   The new data type helper.
+   *
+   * @return $this
+   */
+  public function setDataTypeHelper(DataTypeHelperInterface $data_type_helper) {
+    $this->dataTypeHelper = $data_type_helper;
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -287,7 +330,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return Utility::isTextType($type, array('text', 'string'));
+    return $this->getDataTypeHelper()->isTextType($type, array('text', 'string'));
   }
 
   /**

@@ -141,7 +141,7 @@ function search_api_config_import_steps_alter(&$sync_steps, ConfigImporter $conf
   $prefix_length = strlen($prefix);
   foreach ($new_or_changed as $config_id) {
     if (substr($config_id, 0, $prefix_length) === $prefix) {
-      $sync_steps[] = array('Drupal\search_api\Utility', 'processIndexTasks');
+      $sync_steps[] = array('Drupal\search_api\Task\IndexTaskManager', 'processIndexTasks');
     }
   }
 }

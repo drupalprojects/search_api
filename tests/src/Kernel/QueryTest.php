@@ -172,8 +172,7 @@ class QueryTest extends KernelTestBase {
    * Tests that serialization of queries works correctly.
    */
   public function testQuerySerialization() {
-    $results_cache = $this->container->get('search_api.results_static_cache');
-    $query = Query::create($this->index, $results_cache);
+    $query = Query::create($this->index);
     $tags = array('tag1', 'tag2');
     $query->keys('foo bar')
       ->addCondition('field1', 'value', '<')

@@ -28,7 +28,7 @@ use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api\Utility;
+use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
 use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -778,7 +778,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *
    * @param string $type
    *   An indexed field's search type. One of the keys from
-   *   \Drupal\search_api\Utility::getDefaultDataTypes().
+   *   \Drupal\search_api\Utility\Utility::getDefaultDataTypes().
    *
    * @return array
    *   Column configurations to use for the field's database column.

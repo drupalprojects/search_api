@@ -203,7 +203,7 @@ function hook_search_api_views_field_handler_mapping_alter(array &$mapping) {
  */
 function hook_search_api_index_items_alter(\Drupal\search_api\IndexInterface $index, array &$items) {
   foreach ($items as $item_id => $item) {
-    list(, $raw_id) = \Drupal\search_api\Utility::splitCombinedId($item->getId());
+    list(, $raw_id) = \Drupal\search_api\Utility\Utility::splitCombinedId($item->getId());
     if ($raw_id % 5 == 0) {
       unset($items[$item_id]);
     }

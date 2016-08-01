@@ -6,9 +6,9 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Utility;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Tests the Views integration of the Search API.

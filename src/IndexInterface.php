@@ -72,7 +72,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   identifiers, the values are arrays for specifying the field settings. The
    *   structure of those arrays looks like this:
    *   - type: The type set for this field. One of the types returned by
-   *     \Drupal\search_api\Utility::getDefaultDataTypes().
+   *     \Drupal\search_api\Utility\Utility::getDefaultDataTypes().
    *   - boost: (optional) A boost value for terms found in this field during
    *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
    * - processors: An array of all processors available for the index. The keys

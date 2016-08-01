@@ -10,7 +10,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api\Utility;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Returns HTML for a fields form table.

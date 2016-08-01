@@ -8,7 +8,7 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyBase;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
-use Drupal\search_api\Utility;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Defines an "aggregated field" property.
