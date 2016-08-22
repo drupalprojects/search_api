@@ -59,10 +59,6 @@ views.argument.search_api_more_like_this:
         type: string
         label: 'Field'
 
-views.argument.search_api_taxonomy_term:
-  type: views.argument.search_api
-  label: 'Search API taxonomy term'
-
 views.field.search_api:
   type: views_field
   label: 'Search API standard'
@@ -202,10 +198,6 @@ views.filter.search_api_string:
   type: views.filter.search_api_numeric
   label: 'Search API string'
 
-views.filter.search_api_term:
-  type: views.filter.taxonomy_index_tid
-  label: 'Search API taxonomy term'
-
 views.filter.search_api_text:
   type: views.filter.search_api_string
   label: 'Search API text'
@@ -240,9 +232,6 @@ views.filter_value.search_api_options:
 
 views.filter_value.search_api_string:
   type: views.filter_value.numeric
-
-views.filter_value.search_api_term:
-  type: string
 
 views.filter_value.search_api_text:
   type: views.filter_value.numeric

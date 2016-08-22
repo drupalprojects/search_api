@@ -1,8 +1,9 @@
 <?php
 
-namespace Drupal\search_api\Plugin\views\argument;
+namespace Drupal\search_api_views_taxonomy\Plugin\views\argument;
 
 use Drupal\Component\Utility\Html;
+use Drupal\search_api\Plugin\views\argument\SearchApiStandard;
 use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\taxonomy\Entity\Term;
 
@@ -11,9 +12,9 @@ use Drupal\taxonomy\Entity\Term;
  *
  * @ingroup views_argument_handlers
  *
- * @ViewsArgument("search_api_taxonomy_term")
+ * @ViewsArgument("search_api_term")
  */
-class SearchApiTaxonomyTerm extends SearchApiStandard {
+class SearchApiTerm extends SearchApiStandard {
 
   use UncacheableDependencyTrait;
 

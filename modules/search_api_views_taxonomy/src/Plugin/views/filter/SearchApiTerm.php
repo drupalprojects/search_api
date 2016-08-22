@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\search_api\Plugin\views\filter;
+namespace Drupal\search_api_views_taxonomy\Plugin\views\filter;
 
+use Drupal\search_api\Plugin\views\filter\SearchApiFilterTrait;
 use Drupal\search_api\UncacheableDependencyTrait;
 use Drupal\taxonomy\Plugin\views\filter\TaxonomyIndexTid;
 

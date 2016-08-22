@@ -292,11 +292,11 @@ function _search_api_views_handler_mapping() {
       ),
       'entity:taxonomy_term' => array(
         'argument' => array(
-          'id' => 'search_api_taxonomy_term',
+          'id' => 'search_api',
           'filter' => 'intval',
         ),
         'filter' => array(
-          'id' => 'search_api_term',
+          'id' => 'search_api',
         ),
         'sort' => array(
           'id' => 'search_api',
