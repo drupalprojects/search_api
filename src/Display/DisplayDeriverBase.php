@@ -2,7 +2,7 @@
 
 namespace Drupal\search_api\Display;
 
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -46,7 +46,7 @@ abstract class DisplayDeriverBase implements ContainerDeriverInterface {
   /**
    * Retrieves the entity manager.
    *
-   * @return \Drupal\Core\Entity\EntityTypeManager
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
    *   The entity manager.
    */
   public function getEntityTypeManager() {
@@ -56,12 +56,12 @@ abstract class DisplayDeriverBase implements ContainerDeriverInterface {
   /**
    * Sets the entity manager.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
    *
    * @return $this
    */
-  public function setEntityTypeManager(EntityTypeManager $entity_type_manager) {
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
     return $this;
   }
