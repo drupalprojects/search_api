@@ -12,12 +12,8 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\search_api\Plugin\PluginFormTrait;
-use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
-use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
-use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\DataType\DataTypePluginManager;
@@ -25,12 +21,17 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\Plugin\PluginFormTrait;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
+use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
 use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -2484,10 +2485,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $incomp_len = strlen($incomplete_key);
       foreach ($db_query->execute() as $row) {
         $suffix = ($pass == 1) ? substr($row->word, $incomp_len) : ' ' . $row->word;
-        $suggestions[] = array(
-          'suggestion_suffix' => $suffix,
-          'results' => $row->results,
-        );
+        $suggestions[] = Suggestion::fromSuggestionSuffix($suffix, $row->results);
       }
     }
 
