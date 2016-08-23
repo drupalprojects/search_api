@@ -715,7 +715,7 @@ abstract class SearchApiAbstractDataSourceController implements SearchApiDataSou
     }
     $this->checkIndex($index);
     $select = db_select($this->table, 't');
-    $select->addField('t', 'item_id');
+    $select->addField('t', $this->itemIdColumn);
     $select->condition($this->indexIdColumn, $index->id);
     $select->condition($this->changedColumn, 0, '>');
     $select->orderBy($this->changedColumn, 'ASC');
