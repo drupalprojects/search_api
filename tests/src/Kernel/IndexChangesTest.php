@@ -198,6 +198,11 @@ class IndexChangesTest extends KernelTestBase {
    * Tests correct reactions when a datasource is removed.
    */
   public function testDatasourceRemoved() {
+    $info = array(
+      'datasource_id' => 'entity:entity_test_mulrev_changed',
+      'property_path' => 'id',
+    );
+    $this->index->addField(Utility::createField($this->index, 'id', $info));
     $this->index->save();
 
     $tracker = $this->index->getTrackerInstance();
@@ -221,6 +226,8 @@ class IndexChangesTest extends KernelTestBase {
     $this->assertEquals(0, $tracker->getRemainingItemsCount());
 
     $this->index->removeDatasource('entity:entity_test_mulrev_changed')->save();
+
+    $this->assertArrayNotHasKey('id', $this->index->getFields());
 
     $this->assertEquals(1, $tracker->getTotalItemsCount());
 

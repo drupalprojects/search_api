@@ -1148,7 +1148,12 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // Also check whether the underlying property actually (still) exists.
       $datasource_id = $field->getDatasourceId();
       if (!isset($properties[$datasource_id])) {
-        $properties[$datasource_id] = $this->getPropertyDefinitions($datasource_id);
+        if ($datasource_id === NULL || $this->isValidDatasource($datasource_id)) {
+          $properties[$datasource_id] = $this->getPropertyDefinitions($datasource_id);
+        }
+        else {
+          $properties[$datasource_id] = array();
+        }
       }
       if (!Utility::retrieveNestedProperty($properties[$datasource_id], $field->getPropertyPath())) {
         $this->removeField($field_id);
