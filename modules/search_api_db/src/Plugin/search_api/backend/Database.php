@@ -2260,7 +2260,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $select->range(0, $limit);
       }
       if ($facet['min_count'] > 1) {
-        $select->having('num >= :count', array(':count' => $facet['min_count']));
+        $select->having('COUNT(DISTINCT t.item_id) >= :count', array(':count' => $facet['min_count']));
       }
 
       $terms = array();
@@ -2479,7 +2479,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $db_query->addExpression('COUNT(DISTINCT item_id)', 'results');
       $db_query->fields('t', array('word'))
         ->groupBy('word')
-        ->having('results <= :max', array(':max' => $max_occurrences))
+        ->having('COUNT(DISTINCT item_id) <= :max', array(':max' => $max_occurrences))
         ->orderBy('results', 'DESC')
         ->range(0, $limit);
       $incomp_len = strlen($incomplete_key);
