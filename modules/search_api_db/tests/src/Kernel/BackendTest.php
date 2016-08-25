@@ -43,7 +43,9 @@ class BackendTest extends BackendTestBase {
   public function setUp() {
     parent::setUp();
 
-    //
+    // Create a dummy table that will cause a naming conflict with the backend's
+    // default table names, thus testing whether it correctly reacts to such
+    // conflicts.
     \Drupal::database()->schema()->createTable('search_api_db_database_search_index', array(
       'fields' => array(
         'id' => array(
