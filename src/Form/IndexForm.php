@@ -207,6 +207,7 @@ class IndexForm extends EntityForm {
     foreach ($this->getDatasourcePluginManager()->getDefinitions() as $datasource_id => $definition) {
       $datasource_options[$datasource_id] = !empty($definition['label']) ? $definition['label'] : $datasource_id;
     }
+    asort($datasource_options, SORT_NATURAL | SORT_FLAG_CASE);
     $form['datasources'] = array(
       '#type' => 'checkboxes',
       '#title' => $this->t('Data sources'),
