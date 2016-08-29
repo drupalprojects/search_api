@@ -102,7 +102,11 @@ class AggregatedFields extends ProcessorPluginBase {
           break;
       }
 
-      $aggregated_field->setValues($values);
+      // Do not use setValues(), since that doesn't preprocess the values
+      // according to their data type.
+      foreach ($values as $value) {
+        $aggregated_field->addValue($value);
+      }
     }
   }
 
