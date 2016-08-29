@@ -168,8 +168,8 @@ function hook_search_api_views_handler_mapping_alter(array &$mapping) {
  *
  * @param array $mapping
  *   An associative array with property data types as the keys and Views field
- *   handler definitions as the values (i.e., just the inner "field" portion of
- *   Views data definition items). In some cases the value might also be NULL
+ *   handler definitions as the values (that is, just the inner "field" portion
+ *   of Views data definition items). In some cases the value might also be NULL
  *   instead, to indicate that properties of this type shouldn't have field
  *   handlers. The data types in the keys might also contain asterisks (*) as
  *   wildcard characters. Data types with wildcards will be matched only if no

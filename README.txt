@@ -90,10 +90,10 @@ framework.
   The display plugins are a bit of a special case there, because they aren't
   really "extending" the framework, but are rather a way of telling the Search
   API (and all modules integrating with it) about search pages your module
-  defines. They can then be used to provide, e.g., faceting support for those
-  pages. Therefore, if your module provides any search pages, it's a good idea
-  to provide display plugins for them. For an example (for Views pages), see
-  \Drupal\search_api\Plugin\search_api\display\ViewsPageDisplay.
+  defines. They can then be used to provide, for example, faceting support for
+  those pages. Therefore, if your module provides any search pages, it's a good
+  idea to provide display plugins for them. For an example (for Views pages),
+  see \Drupal\search_api\Plugin\search_api\display\ViewsPageDisplay.
 
 The handbook documentation for developers is available at [5].
 

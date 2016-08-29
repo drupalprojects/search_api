@@ -48,8 +48,8 @@ interface ConfigurablePluginInterface extends PluginInspectionInterface, Derivat
    *   etc.) and dependency name.
    *
    * @return bool
-   *   Whether the dependency was successfully removed from the plugin – i.e.,
-   *   after the configuration changes that were made, none of the removed
+   *   Whether the dependency was successfully removed from the plugin – that
+   *   is, after the configuration changes that were made, none of the removed
    *   items are dependencies of this plugin anymore.
    */
   public function onDependencyRemoval(array $dependencies);

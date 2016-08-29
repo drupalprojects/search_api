@@ -218,9 +218,9 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   implemented by this datasource; or NULL to retrieve all items at once.
    *
    * @return string[]|null
-   *   An array with datasource-specific (i.e., not prefixed with the datasource
-   *   ID) item IDs; or NULL if there are no more items for this and all
-   *   following pages.
+   *   An array with datasource-specific item IDs (that is, raw item IDs not
+   *   prefixed with the datasource ID); or NULL if there are no more items for
+   *   this and all following pages.
    */
   public function getItemIds($page = NULL);
 

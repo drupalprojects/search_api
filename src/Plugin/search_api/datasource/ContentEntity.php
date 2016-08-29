@@ -738,9 +738,9 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
 
     $configuration = $this->getConfiguration();
 
-    // If "default" is TRUE (i.e., "All except those selected"), remove all the
-    // selected bundles from the available ones to compute the indexed bundles.
-    // Otherwise, return all the selected bundles.
+    // If "default" is TRUE (that is, "All except those selected"),remove all
+    // the selected bundles from the available ones to compute the indexed
+    // bundles. Otherwise, return all the selected bundles.
     $bundles = array();
     $entity_bundles = $this->getEntityBundles();
     $selected_bundles = array_flip($configuration['bundles']['selected']);

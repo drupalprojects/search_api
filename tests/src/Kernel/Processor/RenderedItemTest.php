@@ -160,13 +160,13 @@ class RenderedItemTest extends ProcessorTestBase {
       $values = $field->getValues();
       // Test that the value is properly wrapped in a
       // \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface
-      // object, which contains a string (not, e.g., some markup object).
+      // object, which contains a string (not, for example, some markup object).
       $this->assertInstanceOf('Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface', $values[0], "Node item $nid rendered value is properly wrapped in a text value object.");
       $this->assertInternalType('string', $values[0]->getText(), "Node item $nid rendered value is a string.");
       $this->assertEquals(1, count($values), 'Node item ' . $nid . ' rendered value is a single value.');
       // These tests rely on the template not changing. However, if we'd only
       // check whether the field values themselves are included, there could
-      // easier be false positives. For example the title text was present even
+      // easier be false positives. For example, the title text was present even
       // when the processor was broken, because the schema metadata was also
       // adding it to the output.
       $this->assertTrue(substr_count($values[0], 'view-mode-full') > 0, 'Node item ' . $nid . ' rendered in view-mode "full".');

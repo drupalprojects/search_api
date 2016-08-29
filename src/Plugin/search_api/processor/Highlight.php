@@ -510,7 +510,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   The search keywords entered by the user.
    * @param bool $html
    *   (optional) Whether the text can contain HTML tags or not. In the former
-   *   case, text inside tags (i.e., tag names and attributes) won't be
+   *   case, text inside tags (that is, tag names and attributes) won't be
    *   highlighted.
    *
    * @return string

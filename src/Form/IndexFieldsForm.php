@@ -207,7 +207,7 @@ class IndexFieldsForm extends EntityForm {
     $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
     $form['#tree'] = TRUE;
 
-    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, e.g. titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
+    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, for example titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
     if ($index->hasValidServer()) {
       $arguments = array(
         ':server-url' => $index->getServerInstance()->toUrl('canonical')->toString(),

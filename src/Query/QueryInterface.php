@@ -254,11 +254,11 @@ interface QueryInterface extends ConditionSetInterface {
    * Prepares the query object for the search.
    *
    * This method should always be called by execute() and contain all necessary
-   * operations before the query is passed to the server's search() method.
+   * operations that have to be execute before the query is passed to the
+   * server's search() method.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if any wrong options were set on the query (e.g., conditions or
-   *   sorts on unknown fields).
+   *   Thrown if any wrong options were discovered.
    */
   public function preExecute();
 
@@ -470,8 +470,8 @@ interface QueryInterface extends ConditionSetInterface {
    *
    * @return string[]
    *   The tags associated with this search query, as both the array keys and
-   *   values. Returned by reference so it's possible to, e.g., remove existing
-   *   tags.
+   *   values. Returned by reference so it's possible, for example, to remove
+   *   existing tags.
    */
   public function &getTags();
 

@@ -435,7 +435,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $form['partial_matches'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Search on parts of a word'),
-      '#description' => $this->t('Find keywords in parts of a word, too. (E.g., find results with "database" when searching for "base"). <strong>Caution:</strong> This can make searches much slower on large sites!'),
+      '#description' => $this->t('Find keywords in parts of a word, too. (For example, find results with "database" when searching for "base"). <strong>Caution:</strong> This can make searches much slower on large sites!'),
       '#default_value' => $this->configuration['partial_matches'],
     );
 
@@ -821,7 +821,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *   TRUE if the data needs to be reindexed, FALSE otherwise.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if any exceptions occur internally, e.g., in the database
+   *   Thrown if any exceptions occur internally – for example, in the database
    *   layer.
    */
   protected function fieldsUpdated(IndexInterface $index) {
@@ -1196,8 +1196,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             // Taken from core search to reflect less importance of words later
             // in the text.
             // Focus is a decaying value in terms of the amount of unique words
-            // up to this point. From 100 words and more, it decays, to e.g. 0.5
-            // at 500 words and 0.3 at 1000 words.
+            // up to this point. From 100 words and more, it decays, to (for
+            // example) 0.5 at 500 words and 0.3 at 1000 words.
             $score *= min(1, .01 + 3.5 / (2 + count($unique_tokens) * .015));
 
             // Only insert each canonical base form of a word once.

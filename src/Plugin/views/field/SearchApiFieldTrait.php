@@ -382,10 +382,10 @@ trait SearchApiFieldTrait {
                 }
               }
               catch (\InvalidArgumentException $e) {
-                // This can easily happen, e.g., when requesting a field that
-                // only exists on a different bundle. Unfortunately, there is no
-                // ComplexDataInterface::hasProperty() method, so we can only
-                // catch and ignore the exception.
+                // This can easily happen, for example, when requesting a field
+                // that only exists on a different bundle. Unfortunately, there
+                // is no ComplexDataInterface::hasProperty() method, so we can
+                // only catch and ignore the exception.
               }
             }
           }

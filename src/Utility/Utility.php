@@ -376,7 +376,7 @@ class Utility {
    * rather weird. Therefore, this method should be used when making a copy of
    * such an array, or of an array containing references.
    *
-   * This method will also omit empty array elements (i.e., elements that
+   * This method will also omit empty array elements (that is, elements that
    * evaluate to FALSE according to PHP's native rules).
    *
    * @param array $array
@@ -442,7 +442,7 @@ class Utility {
    * @return array
    *   A numeric array, containing the datasource ID in element 0 and the raw
    *   item ID or property path in element 1. In the case of
-   *   datasource-independent properties (i.e., when there is no prefix),
+   *   datasource-independent properties (that is, when there is no prefix),
    *   element 0 will be NULL.
    */
   public static function splitCombinedId($combined_id) {

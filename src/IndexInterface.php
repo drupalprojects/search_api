@@ -596,9 +596,9 @@ interface IndexInterface extends ConfigEntityInterface {
   /**
    * Indexes some objects on this index.
    *
-   * Will return the IDs of items that were marked as indexed – i.e., items that
-   * were either rejected from indexing (by a processor or alter hook) or were
-   * successfully indexed.
+   * Will return the IDs of items that were marked as indexed – that is, items
+   * that were either rejected from indexing (by a processor or alter hook) or
+   * were successfully indexed.
    *
    * @param \Drupal\Core\TypedData\ComplexDataInterface[] $search_objects
    *   An array of search objects to be indexed, keyed by their item IDs.
@@ -693,8 +693,8 @@ interface IndexInterface extends ConfigEntityInterface {
    * Marks all items in this index for reindexing.
    *
    * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if an internal error prevented the operation from succeeding.
-   *   E.g., if the tracker couldn't be loaded.
+   *   Thrown if an internal error prevented the operation from succeeding – for
+   *   example, if the tracker couldn't be loaded.
    */
   public function reindex();
 

@@ -225,9 +225,9 @@ class Tokenizer extends FieldsProcessorPluginBase {
 
     // To improve searching for numerical data such as dates, IP addresses or
     // version numbers, we consider a group of numerical characters separated
-    // only by punctuation characters to be one piece. This also means that
-    // searching for e.g. '20/03/1984' also returns results with '20-03-1984'
-    // in them.
+    // only by punctuation characters to be one piece. This also means, for
+    // example, that searching for "20/03/1984" also returns results with
+    // "20-03-1984" in them.
     // Readable regular expression: "([number]+)[punctuation]+(?=[number])".
     $text = preg_replace('/([' . $this->getPregClassNumbers() . ']+)[' . $this->getPregClassPunctuation() . ']+(?=[' . $this->getPregClassNumbers() . '])/u', '\1', $text);
 

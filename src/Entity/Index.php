@@ -857,8 +857,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // Check whether there are requested items that couldn't be loaded.
     $items_by_datasource = array_filter($items_by_datasource);
     if ($items_by_datasource) {
-      // Extract the second-level values of the two-dimensional array (i.e., the
-      // combined item IDs) and log a warning reporting their absence.
+      // Extract the second-level values of the two-dimensional array (that is,
+      // the combined item IDs) and log a warning reporting their absence.
       $missing_ids = array_reduce(array_map('array_values', $items_by_datasource), 'array_merge', array());
       $args['%index'] = $this->label();
       $args['@items'] = '"' . implode('", "', $missing_ids) . '"';

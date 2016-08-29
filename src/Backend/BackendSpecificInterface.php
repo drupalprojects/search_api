@@ -91,8 +91,8 @@ interface BackendSpecificInterface {
    * Provides information on additional fields made available by the backend.
    *
    * If a backend indexes additional data with items and wants to make this
-   * available as fixed fields on the index (e.g., to be used with Views), it
-   * can implement this method to facilitate this.
+   * available as fixed fields on the index (for example, to be used with
+   * Views), it can implement this method to facilitate this.
    *
    * Fields returned here are expected to work correctly with this server when
    * used in query conditions, sorts or similar places.

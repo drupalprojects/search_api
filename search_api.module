@@ -25,7 +25,7 @@ use Drupal\search_api\Task\IndexTaskManager;
 function search_api_help($route_name) {
   switch ($route_name) {
     case 'search_api.overview':
-      $message = t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (e.g., an Apache Solr server, the database, …). An index defines the indexed content (e.g., all content and all comments on "Article" posts).');
+      $message = t('Below is a list of indexes grouped by the server they are associated with. A server is the definition of the actual indexing, querying and storage engine (for example, an Apache Solr server, the database, …). An index defines the indexed content (for example, all content and all comments on "Article" posts).');
 
       $search_module_warning = _search_api_search_module_warning();
       if ($search_module_warning) {

@@ -288,7 +288,7 @@ class SearchApiQuery extends QueryPluginBase {
     $form['bypass_access'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Bypass access checks'),
-      '#description' => $this->t('If the underlying search index has access checks enabled (e.g., through the "Content access" processor), this option allows you to disable them for this view. This will never disable any filters placed on this view.'),
+      '#description' => $this->t('If the underlying search index has access checks enabled (for example, through the "Content access" processor), this option allows you to disable them for this view. This will never disable any filters placed on this view.'),
       '#default_value' => $this->options['bypass_access'],
     );
     $form['bypass_access']['#states']['visible'][':input[name="query[options][skip_access]"]']['checked'] = TRUE;
@@ -791,14 +791,27 @@ class SearchApiQuery extends QueryPluginBase {
    * Adds a new ($field $operator $value) condition filter.
    *
    * @param string $field
-   *   The field to filter on, e.g. 'title'. The special field
-   *   "search_api_datasource" can be used to filter by datasource ID.
+   *   The ID of the field to filter on, for example "status". The special
+   *   fields "search_api_datasource" (filter on datasource ID),
+   *   "search_api_language" (filter on language code) and "search_api_id"
+   *   (filter on item ID) can be used in addition to all indexed fields on the
+   *   index.
+   *   However, for filtering on language code, using
+   *   \Drupal\search_api\Plugin\views\query\SearchApiQuery::setLanguages is the
+   *   preferred method, unless a complex condition containing the language code
+   *   is required.
    * @param mixed $value
-   *   The value the field should have (or be related to by the operator).
+   *   The value the field should have (or be related to by the operator). If
+   *   $operator is "IN" or "NOT IN", $value has to be an array of values. If
+   *   $operator is "BETWEEN" or "NOT BETWEEN", it has to be an array with
+   *   exactly two values: the lower bound in key 0 and the upper bound in key 1
+   *   (both inclusive). Otherwise, $value must be a scalar.
    * @param string $operator
    *   The operator to use for checking the constraint. The following operators
-   *   are supported for primitive types: "=", "<>", "<", "<=", ">=", ">". They
-   *   have the same semantics as the corresponding SQL operators.
+   *   are always supported for primitive types: "=", "<>", "<", "<=", ">=",
+   *   ">", "IN", "NOT IN", "BETWEEN", "NOT BETWEEN". They have the same
+   *   semantics as the corresponding SQL operators. Other operators might be
+   *   added by backend features.
    *   If $field is a fulltext field, $operator can only be "=" or "<>", which
    *   are in this case interpreted as "contains" or "doesn't contain",
    *   respectively.
@@ -1104,20 +1117,11 @@ class SearchApiQuery extends QueryPluginBase {
    * Retrieves the search keys for this query.
    *
    * @return array|string|null
-   *   This object's search keys - either a string or an array specifying a
-   *   complex search expression.
-   *   An array will contain a '#conjunction' key specifying the conjunction
-   *   type, and search strings or nested expression arrays at numeric keys.
-   *   Additionally, a '#negation' key might be present, which means – unless it
-   *   maps to a FALSE value – that the search keys contained in that array
-   *   should be negated, i.e. not be present in returned results. The negation
-   *   works on the whole array, not on each contained term individually – i.e.,
-   *   with the "AND" conjunction and negation, only results that contain all
-   *   the terms in the array should be excluded; with the "OR" conjunction and
-   *   negation, all results containing one or more of the terms in the array
-   *   should be excluded.
+   *   This object's search keys, in the format described by
+   *   \Drupal\search_api\ParseMode\ParseModeInterface::parseInput(). Or NULL if
+   *   the query doesn't have any search keys set.
    *
-   * @see keys()
+   * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::keys()
    *
    * @see \Drupal\search_api\Query\QueryInterface::getKeys()
    */

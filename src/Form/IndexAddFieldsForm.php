@@ -393,7 +393,7 @@ class IndexAddFieldsForm extends EntityForm {
 
       // Don't allow indexing of properties with unmapped types. Also, prefer
       // a "parent.child" type mapping (taking into account the parent property
-      // for, e.g., text fields).
+      // for, for example, text fields).
       $type = $property->getDataType();
       if ($parent_child_type && !empty($type_mapping[$parent_child_type])) {
         $type = $parent_child_type;
