@@ -5,6 +5,8 @@ namespace Drupal\search_api\Tests;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\entity_test\Entity\EntityTestMulRevChanged;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,7 +27,11 @@ class ViewsTest extends SimpletestWebTestBase {
    *
    * @var string[]
    */
-  public static $modules = array('search_api_test_views', 'views_ui');
+  public static $modules = array(
+    'search_api_test_views',
+    'views_ui',
+    'language',
+  );
 
   /**
    * A search index ID.
@@ -39,6 +45,9 @@ class ViewsTest extends SimpletestWebTestBase {
    */
   public function setUp() {
     parent::setUp();
+
+    // Add a second language.
+    ConfigurableLanguage::createFromLangcode('nl')->save();
 
     \Drupal::getContainer()
       ->get('search_api.index_task_manager')
@@ -197,7 +206,7 @@ class ViewsTest extends SimpletestWebTestBase {
     $this->checkResults($query, array(1, 2, 4, 5), 'Search with Keywords "not empty" filter');
 
     $query = array(
-      'language' => array('***LANGUAGE_language_content***'),
+      'language' => array('***LANGUAGE_site_default***'),
     );
     $this->checkResults($query, array(1, 2, 3, 4, 5), 'Search with "Page content language" filter');
     $query = array(
@@ -295,6 +304,19 @@ class ViewsTest extends SimpletestWebTestBase {
    * Test Views admin UI and field handlers.
    */
   public function testViewsAdmin() {
+    // Add some Dutch nodes.
+    foreach (array(1, 2, 3, 4, 5) as $id) {
+      $entity = EntityTestMulRevChanged::load($id);
+      $entity = $entity->addTranslation('nl', array(
+        'body' => "dutch node $id",
+        'category' => "dutch category $id",
+        'keywords' => array("dutch $id A", "dutch $id B"),
+      ));
+      $entity->save();
+    }
+    $this->entities = EntityTestMulRevChanged::loadMultiple();
+    $this->indexItems($this->indexId);
+
     // For viewing the user name and roles of the user associated with test
     // entities, the logged-in user needs to have the permission to administer
     // both users and permissions.
@@ -431,18 +453,28 @@ class ViewsTest extends SimpletestWebTestBase {
           }
           $field_entity = $field_entity->{$direct_property}[0]->entity;
         }
-        if ($field != 'search_api_datasource') {
-          $data = Utility::extractFieldValues($field_entity->get($field));
-          if (!$data) {
-            $data = array('[EMPTY]');
+        // Check that both the English and the Dutch entity are present in the
+        // results, with their correct field values.
+        $entities = array($field_entity);
+        if ($field_entity->hasTranslation('nl')) {
+          $entities[] = $field_entity->getTranslation('nl');
+        }
+        foreach ($entities as $i => $field_entity) {
+          if ($field != 'search_api_datasource') {
+            $data = Utility::extractFieldValues($field_entity->get($field));
+            if (!$data) {
+              $data = array('[EMPTY]');
+            }
           }
+          else {
+            $data = array('entity:entity_test_mulrev_changed');
+          }
+          $row_num = 2 * $id + $i - 1;
+          $prefix = "#$row_num [$field] ";
+          $text = $prefix . implode("|$prefix", $data);
+          $translated = $i ? ' [translated]' : '';
+          $this->assertText($text, "Correct value displayed for field $field on entity #$id (\"$text\")$translated");
         }
-        else {
-          $data = array('entity:entity_test_mulrev_changed');
-        }
-        $prefix = "#$id [$field] ";
-        $text = $prefix . implode("|$prefix", $data);
-        $this->assertText($text, "Correct value displayed for field $field on entity #$id (\"$text\")");
       }
     }
   }

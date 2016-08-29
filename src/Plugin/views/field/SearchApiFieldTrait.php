@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -369,6 +370,9 @@ trait SearchApiFieldTrait {
                   }
                   if (!$value->access('view', $account)) {
                     continue;
+                  }
+                  if ($value instanceof ContentEntityInterface && $value->hasTranslation($row->search_api_language)) {
+                    $typed_data = $value->getTranslation($row->search_api_language)->getTypedData();
                   }
                 }
 
