@@ -35,7 +35,32 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Indexes items in a database.
+ * Indexes and searches items using the database.
+ *
+ * Database SELECT queries issued by this service class will be marked with tags
+ * according to their context. The following are used:
+ * - search_api_db_search: For all queries that are based on a search query.
+ * - search_api_db_facets_base: For the query which creates a temporary results
+ *   table to be used for facetting. (Is always used in conjunction with
+ *   "search_api_db_search".)
+ * - search_api_db_facet: For queries on the temporary results table for
+ *   determining the items of a specific facet.
+ * - search_api_db_facet_all: For queries to return all indexed values for a
+ *   specific field. Is used when a facet has a "min_count" of 0.
+ * - search_api_db_autocomplete: For queries which create a temporary results
+ *   table to be used for computing autocomplete suggestions. (Is always used in
+ *   conjunction with "search_api_db_search".)
+ *
+ * The following metadata will be present for those SELECT queries:
+ * - search_api_query: The Search API query object. (Always present.)
+ * - search_api_db_fields: Internal storage information for the indexed fields,
+ *   as used by this service class. (Always present.)
+ * - search_api_db_facet: The settings array of the facet currently being
+ *   computed. (Present for "search_api_db_facet" and "search_api_db_facet_all"
+ *   queries.)
+ * - search_api_db_autocomplete: An array containing the parameters of the
+ *   getAutocompleteSuggestions() call, except "query". (Present for
+ *   "search_api_db_autocomplete" queries.)
  *
  * @SearchApiBackend(
  *   id = "search_api_db",
@@ -1521,46 +1546,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $db_query->range($offset, $limit);
       }
 
-      $sort = $query->getSorts();
-      if ($sort) {
-        $db_fields = $db_query->getFields();
-        foreach ($sort as $field_name => $order) {
-          if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
-            $msg = $this->t('Unknown sort order @order. Assuming "@default".', array('@order' => $order, '@default' => QueryInterface::SORT_ASC));
-            $this->warnings[(string) $msg] = 1;
-            $order = QueryInterface::SORT_ASC;
-          }
-          if ($field_name == 'search_api_relevance') {
-            $db_query->orderBy('score', $order);
-            continue;
-          }
-
-          if (!isset($fields[$field_name])) {
-            throw new SearchApiException("Trying to sort on unknown field '$field_name'.");
-          }
-          $alias = $this->getTableAlias(array('table' => $db_info['index_table']), $db_query);
-          $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
-          // PostgreSQL automatically adds a field to the SELECT list when
-          // sorting on it. Therefore, if we have aggregations present we also
-          // have to add the field to the GROUP BY (since Drupal won't do it for
-          // us). However, if no aggregations are present, a GROUP BY would lead
-          // to another error. Therefore, we only add it if there is already a
-          // GROUP BY.
-          if ($db_query->getGroupBy()) {
-            $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
-          }
-          // For SELECT DISTINCT queries in combination with an ORDER BY clause,
-          // MySQL 5.7 and higher require that the ORDER BY expressions are part
-          // of the field list. Ensure that all fields used for sorting are part
-          // of the select list.
-          if (empty($db_fields[$fields[$field_name]['column']])) {
-            $db_query->addField($alias, $fields[$field_name]['column']);
-          }
-        }
-      }
-      else {
-        $db_query->orderBy('score', 'DESC');
-      }
+      $this->setQuerySort($query, $db_query, $fields);
 
       $result = $db_query->execute();
 
@@ -1669,6 +1655,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $db_query->addTag('search_api_db_search');
     $db_query->addMetaData('search_api_query', $query);
     $db_query->addMetaData('search_api_db_fields', $fields);
+
+    // Allow subclasses and other modules to alter the query (before a count
+    // query is constructed from it).
+    $this->getModuleHandler()->alter('search_api_db_query', $db_query, $query);
+    $this->preQuery($db_query, $query);
 
     return $db_query;
   }
@@ -2192,6 +2183,83 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $condition .= ' AND ' . $additional_on;
     }
     return $db_query->$join($field['table'], 't', $condition, $on_arguments);
+  }
+
+  /**
+   * Preprocesses a search's database query before it is executed.
+   *
+   * This allows subclasses to alter the DB query before a count query (or facet
+   * queries, or other related queries) are constructed from it.
+   *
+   * @param \Drupal\Core\Database\Query\SelectInterface $db_query
+   *   The database query to be executed for the search. Will have "item_id" and
+   *   "score" columns in its result.
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search query that is being executed.
+   *
+   * @see hook_search_api_db_query_alter()
+   */
+  protected function preQuery(SelectInterface &$db_query, QueryInterface $query) {}
+
+  /**
+   * Adds the approiate "ORDER BY" statements to a search database query.
+   *
+   * @param \Drupal\search_api\Query\QueryInterface $query
+   *   The search query whose sorts should be applied.
+   * @param \Drupal\Core\Database\Query\SelectInterface $db_query
+   *   The database query constructed for the search.
+   * @param string[][] $fields
+   *   An array containing information about the internal server storage of the
+   *   indexed fields.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if an illegal sort was specified.
+   */
+  protected function setQuerySort(QueryInterface $query, SelectInterface $db_query, array $fields) {
+    $sort = $query->getSorts();
+    if ($sort) {
+      $db_fields = $db_query->getFields();
+      foreach ($sort as $field_name => $order) {
+        if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
+          $msg = $this->t('Unknown sort order @order. Assuming "@default".', array(
+            '@order' => $order,
+            '@default' => QueryInterface::SORT_ASC
+          ));
+          $this->warnings[(string) $msg] = 1;
+          $order = QueryInterface::SORT_ASC;
+        }
+        if ($field_name == 'search_api_relevance') {
+          $db_query->orderBy('score', $order);
+          continue;
+        }
+
+        if (!isset($fields[$field_name])) {
+          throw new SearchApiException("Trying to sort on unknown field '$field_name'.");
+        }
+        $index_table = $this->getIndexDbInfo($query->getIndex())['index_table'];
+        $alias = $this->getTableAlias(array('table' => $index_table), $db_query);
+        $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
+        // PostgreSQL automatically adds a field to the SELECT list when
+        // sorting on it. Therefore, if we have aggregations present we also
+        // have to add the field to the GROUP BY (since Drupal won't do it for
+        // us). However, if no aggregations are present, a GROUP BY would lead
+        // to another error. Therefore, we only add it if there is already a
+        // GROUP BY.
+        if ($db_query->getGroupBy()) {
+          $db_query->groupBy($alias . '.' . $fields[$field_name]['column']);
+        }
+        // For SELECT DISTINCT queries in combination with an ORDER BY clause,
+        // MySQL 5.7 and higher require that the ORDER BY expressions are part
+        // of the field list. Ensure that all fields used for sorting are part
+        // of the select list.
+        if (empty($db_fields[$fields[$field_name]['column']])) {
+          $db_query->addField($alias, $fields[$field_name]['column']);
+        }
+      }
+    }
+    else {
+      $db_query->orderBy('score', 'DESC');
+    }
   }
 
   /**
