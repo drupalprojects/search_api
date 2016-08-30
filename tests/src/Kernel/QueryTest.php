@@ -106,7 +106,7 @@ class QueryTest extends KernelTestBase {
   public function testProcessingLevel($level, $hooks_and_processors_invoked = TRUE) {
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
     $processor = $this->container->get('plugin.manager.search_api.processor')
-      ->createInstance('search_api_test', array('index' => $this->index));
+      ->createInstance('search_api_test', array('#index' => $this->index));
     $this->index->addProcessor($processor)->save();
 
     $query = $this->index->query();

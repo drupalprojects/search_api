@@ -332,7 +332,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
       $plugin_manager = \Drupal::getContainer()
         ->get("plugin.manager.search_api.$type");
-      $configuration['index'] = $this;
+      $configuration['#index'] = $this;
       return $plugin_manager->createInstance($plugin_id, $configuration);
     }
     catch (ServiceNotFoundException $e) {

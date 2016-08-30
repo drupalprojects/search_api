@@ -49,7 +49,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
       ->method('getFields')
       ->will($this->returnValue($fields));
 
-    $this->processor = new TestFieldsProcessorPlugin(array('index' => $this->index), '', array());
+    $this->processor = new TestFieldsProcessorPlugin(array('#index' => $this->index), '', array());
   }
 
   /**

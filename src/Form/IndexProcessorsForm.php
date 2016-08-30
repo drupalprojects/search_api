@@ -346,7 +346,7 @@ class IndexProcessorsForm extends EntityForm {
    */
   protected function getAllProcessors() {
     $processors = $this->entity->getProcessors();
-    $settings['index'] = $this->entity;
+    $settings['#index'] = $this->entity;
 
     foreach ($this->processorPluginManager->getDefinitions() as $name => $processor_definition) {
       if (isset($processors[$name])) {

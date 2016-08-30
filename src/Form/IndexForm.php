@@ -533,7 +533,7 @@ class IndexForm extends EntityForm {
       }
     }
     else {
-      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('index' => $this->originalEntity));
+      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('#index' => $this->originalEntity));
       if ($tracker instanceof PluginFormInterface) {
         $form_state->setRebuild();
       }

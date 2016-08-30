@@ -88,7 +88,7 @@ class AggregatedFieldsTest extends UnitTestCase {
         ),
       ),
     ), 'search_api_index');
-    $this->processor = new AggregatedFields(array('index' => $this->index), 'aggregated_field', array());
+    $this->processor = new AggregatedFields(array('#index' => $this->index), 'aggregated_field', array());
     $this->index->addProcessor($this->processor);
     $this->setUpMockContainer();
 

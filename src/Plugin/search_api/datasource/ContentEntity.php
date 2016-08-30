@@ -94,9 +94,9 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    if (!empty($configuration['index']) && $configuration['index'] instanceof IndexInterface) {
-      $this->setIndex($configuration['index']);
-      unset($configuration['index']);
+    if (!empty($configuration['#index']) && $configuration['#index'] instanceof IndexInterface) {
+      $this->setIndex($configuration['#index']);
+      unset($configuration['#index']);
     }
 
     // Since defaultConfiguration() depends on the plugin definition, we need to

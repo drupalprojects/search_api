@@ -307,7 +307,7 @@ class IndexChangesTest extends KernelTestBase {
     $processor = $this->container
       ->get('plugin.manager.search_api.processor')
       ->createInstance('add_url', array(
-        'index' => $this->index,
+        '#index' => $this->index,
       ));
     $this->index->addProcessor($processor);
 
@@ -370,7 +370,7 @@ class IndexChangesTest extends KernelTestBase {
     $datasource = $this->container
       ->get('plugin.manager.search_api.datasource')
       ->createInstance($datasource_id, array(
-        'index' => $this->index,
+        '#index' => $this->index,
         'bundles' => array(
           'default' => TRUE,
           'selected' => array(),
