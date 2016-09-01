@@ -46,6 +46,13 @@ class Query implements QueryInterface {
   protected $results;
 
   /**
+   * The search ID set for this query.
+   *
+   * @var string
+   */
+  protected $searchId;
+
+  /**
    * The parse mode to use for fulltext search keys.
    *
    * @var \Drupal\search_api\ParseMode\ParseModeInterface|null
@@ -184,7 +191,6 @@ class Query implements QueryInterface {
     $this->results = new ResultSet($this);
     $this->options = $options + array(
       'conjunction' => 'AND',
-      'search id' => __CLASS__,
     );
     $this->conditionGroup = $this->createConditionGroup('AND');
   }
@@ -263,6 +269,37 @@ class Query implements QueryInterface {
   public function setQueryHelper(QueryHelperInterface $query_helper) {
     $this->queryHelper = $query_helper;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSearchId($generate = TRUE) {
+    if ($generate && !isset($this->searchId)) {
+      static $num = 0;
+      $this->searchId = 'search_' . ++$num;
+    }
+    return $this->searchId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSearchId($search_id) {
+    $this->searchId = $search_id;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisplayPlugin() {
+    $display_manager = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.display');
+    if (isset($this->searchId) && $display_manager->hasDefinition($this->searchId)) {
+      return $display_manager->createInstance($this->searchId);
+    }
+    return NULL;
   }
 
   /**

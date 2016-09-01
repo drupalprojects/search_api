@@ -192,4 +192,18 @@ class QueryTest extends KernelTestBase {
     $this->assertEquals($cloned_query, $unserialized_query);
   }
 
+  /**
+   * Tests whether the display plugin integration works correctly.
+   */
+  public function testDisplayPluginIntegration() {
+    $query = $this->index->query();
+    $this->assertSame(NULL, $query->getSearchId(FALSE));
+    $this->assertSame('search_1', $query->getSearchId());
+    $this->assertSame('search_1', $query->getSearchId(FALSE));
+    $this->assertSame(NULL, $query->getDisplayPlugin());
+
+    $query = $this->index->query()->setSearchId('search_api_test');
+    $this->assertInstanceOf('Drupal\search_api_test\Plugin\search_api\display\TestDisplay', $query->getDisplayPlugin());
+  }
+
 }

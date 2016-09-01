@@ -70,6 +70,51 @@ interface QueryInterface extends ConditionSetInterface {
   public static function create(IndexInterface $index, array $options = array());
 
   /**
+   * Retrieves the search ID.
+   *
+   * @param bool $generate
+   *   (optional) If TRUE and no search ID was set yet for this query, generate
+   *   one automatically. If FALSE, NULL will be returned in this case.
+   *
+   * @return string|null
+   *   The search ID, or NULL if none was set yet and $generate is FALSE.
+   */
+  public function getSearchId($generate = TRUE);
+
+  /**
+   * Sets the search ID.
+   *
+   * The search ID is a freely-chosen machine name identifying this search query
+   * for purposes of identifying the query later in the page request. It will be
+   * used, amongst other things, to identify the query in the search results
+   * cache service.
+   *
+   * If the set ID is the same as a display plugin ID, this will also
+   * automatically set that display plugin for this query. Queries for the same
+   * display or search page should therefore usually use the same search ID.
+   *
+   * @param string $search_id
+   *   The new search ID.
+   *
+   * @return $this
+   *
+   * @see \Drupal\search_api\Query\QueryInterface::getDisplayPlugin()
+   * @see \Drupal\search_api\Query\ResultsCacheInterface
+   */
+  public function setSearchId($search_id);
+
+  /**
+   * Retrieves the search display associated with this query (if any).
+   *
+   * If the search ID set for this query corresponds to a display plugin ID,
+   * that display will be returned. Otherwise, NULL is returned.
+   *
+   * @return \Drupal\search_api\Display\DisplayInterface|null
+   *   The search display associated with this query, if any; NULL otherwise.
+   */
+  public function getDisplayPlugin();
+
+  /**
    * Retrieves the parse mode.
    *
    * @return \Drupal\search_api\ParseMode\ParseModeInterface
@@ -378,8 +423,6 @@ interface QueryInterface extends ConditionSetInterface {
    *     the whole result in the index.
    *   - limit: The maximum number of search results to return. -1 means no
    *     limit.
-   *   - 'search id': A string that will be used as the identifier when storing
-   *     this search in the Search API's static cache.
    *   - 'skip result count': If present and set to TRUE, the search's result
    *     count will not be needed. Service classes can check for this option to
    *     possibly avoid executing expensive operations to compute the result

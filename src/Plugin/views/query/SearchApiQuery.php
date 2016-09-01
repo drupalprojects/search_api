@@ -194,17 +194,8 @@ class SearchApiQuery extends QueryPluginBase {
       $this->query = $this->index->query();
       $this->query->addTag('views');
       $this->query->addTag('views_' . $view->id());
+      $this->query->setSearchId('views_page:' . $view->id() . '__' . $view->current_display);
       $this->query->setOption('search_api_view', $view);
-
-      // We only provide a display plugin for Views page displays.
-      // @todo figure out how to allow new displays for other views display
-      //   types to be added. Do we need a hook for this?
-      if ($display->getPluginId() == 'page') {
-        // Load the Search API display and attach it to the query.
-        $display_plugin_manager = \Drupal::service('plugin.manager.search_api.display');
-        $search_api_display = $display_plugin_manager->createInstance('views_page:' . $view->id() . '__' . $view->current_display);
-        $this->query->setOption('search_api_display', $search_api_display);
-      }
     }
     catch (\Exception $e) {
       $this->abort($e->getMessage());
@@ -371,11 +362,6 @@ class SearchApiQuery extends QueryPluginBase {
     // Initialize the pager and let it modify the query to add limits.
     $view->initPager();
     $view->pager->query();
-
-    // Set the search ID, if it was not already set.
-    if ($this->query->getOption('search id') == get_class($this->query)) {
-      $this->query->setOption('search id', 'search_api_views:' . $view->storage->id() . ':' . $view->current_display);
-    }
 
     // Add the "search_api_bypass_access" option to the query, if desired.
     if (!empty($this->options['bypass_access'])) {

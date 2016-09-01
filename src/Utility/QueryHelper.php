@@ -84,8 +84,7 @@ class QueryHelper implements QueryHelperInterface {
    * {@inheritdoc}
    */
   public function addResults(ResultSetInterface $results) {
-    // @todo Create getter and setter methods for the search ID. See #2772829.
-    $search_id = $results->getQuery()->getOption('search id', '');
+    $search_id = $results->getQuery()->getSearchId();
     $request = $this->getCurrentRequest();
     if (!isset($this->results[$request])) {
       $this->results[$request] = array(
