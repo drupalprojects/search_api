@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\cache;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\cache\Time;
@@ -41,7 +42,13 @@ class SearchApiCache extends Time {
       'current_page' => $this->view->getCurrentPage(),
       'search_api results' => $this->getQuery()->getSearchApiResults(),
     );
-    \Drupal::cache($this->resultsBin)->set($this->generateResultsKey(), $data, $this->cacheSetMaxAge($type), $this->getCacheTags());
+
+    $expire = $this->cacheSetMaxAge($type);
+    if ($expire !== Cache::PERMANENT) {
+      $expire += (int) $this->view->getRequest()->server->get('REQUEST_TIME');
+    }
+    \Drupal::cache($this->resultsBin)
+      ->set($this->generateResultsKey(), $data, $expire, $this->getCacheTags());
   }
 
   /**
