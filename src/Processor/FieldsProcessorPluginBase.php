@@ -34,6 +34,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * run on:
  * - testField()
  * - testType()
+ *
+ * Processors extending this class should usually support the following stages:
+ * - pre_index_save
+ * - preprocess_index
+ * - preprocess_query
  */
 abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements PluginFormInterface {
 
@@ -87,18 +92,39 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
   /**
    * {@inheritdoc}
    */
+  public function preIndexSave() {
+    parent::preIndexSave();
+
+    if (!isset($this->configuration['fields'])) {
+      return;
+    }
+
+    $renames = $this->index->getFieldRenames();
+
+    $selected_fields = array_flip($this->configuration['fields']);
+    $renames = array_intersect_key($renames, $selected_fields);
+    if ($renames) {
+      $new_fields = array_keys(array_diff_key($selected_fields, $renames));
+      $new_fields = array_merge($new_fields, array_values($renames));
+      $this->configuration['fields'] = $new_fields;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $fields = $this->index->getFields();
     $field_options = array();
     $default_fields = array();
     if (isset($this->configuration['fields'])) {
-      $default_fields = array_filter($this->configuration['fields']);
+      $default_fields = $this->configuration['fields'];
     }
     foreach ($fields as $name => $field) {
       if ($this->testType($field->getType())) {
         $field_options[$name] = Html::escape($field->getPrefixedLabel());
         if (!isset($this->configuration['fields']) && $this->testField($name, $field)) {
-          $default_fields[$name] = $name;
+          $default_fields[] = $name;
         }
       }
     }

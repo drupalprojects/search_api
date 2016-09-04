@@ -489,6 +489,21 @@ interface IndexInterface extends ConfigEntityInterface {
   public function removeField($field_id);
 
   /**
+   * Sets this index's fields.
+   *
+   * Usually, it's a better idea to add/rename/remove fields individually with
+   * the above methods. Use this method only if this is for some reason not
+   * easily possible (such as when renaming multiple fields at once might cause
+   * conflicts).
+   *
+   * @param \Drupal\search_api\Item\FieldInterface[] $fields
+   *   An array of fields for this index, keyed by field IDs.
+   *
+   * @return $this
+   */
+  public function setFields(array $fields);
+
+  /**
    * Returns a list of all indexed fields of this index.
    *
    * @param bool $include_server_defined
@@ -534,6 +549,14 @@ interface IndexInterface extends ConfigEntityInterface {
    *   available for this index.
    */
   public function getFulltextFields();
+
+  /**
+   * Retrieves all field IDs that changed compared to the index's saved version.
+   *
+   * @return string[]
+   *   An associative array mapping old field IDs to the new ones.
+   */
+  public function getFieldRenames();
 
   /**
    * Retrieves the properties of one of this index's datasources.

@@ -39,6 +39,13 @@ class Field implements \IteratorAggregate, FieldInterface {
   protected $fieldIdentifier;
 
   /**
+   * The field's original identifier.
+   *
+   * @var string
+   */
+  protected $originalFieldIdentifier;
+
+  /**
    * The field's datasource's ID.
    *
    * @var string|null
@@ -169,7 +176,7 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function __construct(IndexInterface $index, $field_identifier) {
     $this->index = $index;
-    $this->fieldIdentifier = $field_identifier;
+    $this->fieldIdentifier = $this->originalFieldIdentifier = $field_identifier;
   }
 
   /**
@@ -218,6 +225,28 @@ class Field implements \IteratorAggregate, FieldInterface {
    */
   public function getFieldIdentifier() {
     return $this->fieldIdentifier;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOriginalFieldIdentifier() {
+    return $this->originalFieldIdentifier;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFieldIdentifier($field_id) {
+    $this->fieldIdentifier = $field_id;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function wasRenamed() {
+    return $this->fieldIdentifier != $this->originalFieldIdentifier;
   }
 
   /**

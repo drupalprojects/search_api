@@ -604,8 +604,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
     // If dealing with features or stale data or whatever, we might already have
     // settings stored for this index. If we have, we should take care to only
-    // change what is needed, so we don't save the server (potentially setting
-    // it to "Overridden") unnecessarily.
+    // change what is needed, so we don't discard indexed data unnecessarily.
     // The easiest way to do this is by just pretending the index was already
     // present, but its fields were updated.
     $this->fieldsUpdated($index);
@@ -615,6 +614,25 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function updateIndex(IndexInterface $index) {
+    // Process field ID changes so they won't lead to reindexing.
+    $renames = $index->getFieldRenames();
+    if ($renames) {
+      $db_info = $this->getIndexDbInfo($index);
+      // We have to recreate "field_tables" from scratch in case field IDs got
+      // swapped between two (or more) fields.
+      $fields = array();
+      foreach ($db_info['field_tables'] as $field_id => $info) {
+        if (isset($renames[$field_id])) {
+          $field_id = $renames[$field_id];
+        }
+        $fields[$field_id] = $info;
+      }
+      if ($fields != $db_info['field_tables']) {
+        $db_info['field_tables'] = $fields;
+        $this->getKeyValueStore()->set($index->id(), $db_info);
+      }
+    }
+
     // Check if any fields were updated and trigger a reindex if needed.
     if ($this->fieldsUpdated($index)) {
       $index->reindex();

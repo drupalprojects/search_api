@@ -18,6 +18,7 @@ use Drupal\search_api\Utility\Utility;
  *   label = @Translation("Tokenizer"),
  *   description = @Translation("Splits text into individual words for searching."),
  *   stages = {
+ *     "pre_index_save" = 0,
  *     "preprocess_index" = -6,
  *     "preprocess_query" = -6
  *   }

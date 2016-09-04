@@ -745,6 +745,8 @@ class IntegrationTest extends WebTestBase {
     }
 
     $edit = array(
+      'fields[title][title]' => 'new_title',
+      'fields[title][id]' => 'new_id',
       'fields[title][type]' => 'text',
       'fields[title][boost]' => '21.0',
       'fields[revision_log][type]' => 'search_api_test',
@@ -755,13 +757,24 @@ class IntegrationTest extends WebTestBase {
     $index = $this->getIndex(TRUE);
     $fields = $index->getFields();
 
-    if ($this->assertTrue(!empty($fields['title']), 'type field is indexed.')) {
-      $this->assertEqual($fields['title']->getType(), $edit['fields[title][type]'], 'title field type is text.');
-      $this->assertEqual($fields['title']->getBoost(), $edit['fields[title][boost]'], 'title field boost value is 21.');
+    if ($this->assertTrue(!empty($fields['new_id']), 'title field is indexed.')) {
+      $this->assertEqual($fields['new_id']->getLabel(), $edit['fields[title][title]'], 'title field title is saved.');
+      $this->assertEqual($fields['new_id']->getFieldIdentifier(), $edit['fields[title][id]'], 'title field id value is saved.');
+      $this->assertEqual($fields['new_id']->getType(), $edit['fields[title][type]'], 'title field type is text.');
+      $this->assertEqual($fields['new_id']->getBoost(), $edit['fields[title][boost]'], 'title field boost value is 21.');
     }
+
     if ($this->assertTrue(!empty($fields['revision_log']), 'revision_log field is indexed.')) {
       $this->assertEqual($fields['revision_log']->getType(), $edit['fields[revision_log][type]'], 'revision_log field type is search_api_test.');
     }
+
+    // Reset field values to original.
+    $edit = array(
+      'fields[new_id][title]' => 'Title',
+      'fields[new_id][id]' => 'title',
+    );
+    $this->drupalPostForm($this->getIndexPath('fields'), $edit, $this->t('Save changes'));
+    $this->assertText($this->t('The changes were successfully saved.'));
   }
 
   /**
@@ -895,7 +908,7 @@ class IntegrationTest extends WebTestBase {
     $this->drupalGet($this->getIndexPath('fields'));
     $this->assertResponse(200);
     $this->assertNoText('field_link', 'The Link field was removed from the index.');
-    $this->assertText('field_image', 'The Image field was not removed from the index.');
+    $this->assertFieldByName('fields[field_image][id]', 'field_image', 'The Image field was not removed from the index.');
 
     $field_dependencies = \Drupal::config('search_api.index.' . $this->indexId)->get('dependencies.config');
     $this->assertFalse(in_array('field.storage.node.field_link', (array) $field_dependencies), "The link field has been removed from the index's dependencies.");

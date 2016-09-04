@@ -23,7 +23,8 @@ use Drupal\search_api\Utility\Utility;
  *   label = @Translation("Highlight"),
  *   description = @Translation("Adds a highlighted excerpt to results and highlights returned fields."),
  *   stages = {
- *     "postprocess_query" = 0
+ *     "pre_index_save" = 0,
+ *     "postprocess_query" = 0,
  *   }
  * )
  */
@@ -63,6 +64,27 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
       self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
       self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preIndexSave() {
+    parent::preIndexSave();
+
+    if (empty($this->configuration['exclude_fields'])) {
+      return;
+    }
+
+    $renames = $this->index->getFieldRenames();
+
+    $selected_fields = array_flip($this->configuration['exclude_fields']);
+    $renames = array_intersect_key($renames, $selected_fields);
+    if ($renames) {
+      $new_fields = array_keys(array_diff_key($selected_fields, $renames));
+      $new_fields = array_merge($new_fields, array_values($renames));
+      $this->configuration['exclude_fields'] = $new_fields;
     }
   }
 
@@ -120,8 +142,8 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
     // Exclude certain fulltext fields.
     $fields = $this->index->getFields();
     $fulltext_fields = array();
-    foreach ($this->index->getFulltextFields() as $field) {
-      $fulltext_fields[$field] = $fields[$field]->getLabel() . ' (' . $field . ')';
+    foreach ($this->index->getFulltextFields() as $field_id) {
+      $fulltext_fields[$field_id] = $fields[$field_id]->getLabel() . ' (' . $field_id . ')';
     }
     $form['exclude_fields'] = array(
       '#type' => 'checkboxes',

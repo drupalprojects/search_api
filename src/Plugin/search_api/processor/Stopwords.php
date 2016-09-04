@@ -15,6 +15,7 @@ use Drupal\search_api\Utility\Utility;
  *   label = @Translation("Stopwords"),
  *   description = @Translation("Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both 'Ignore case' and 'Tokenizer' have run."),
  *   stages = {
+ *     "pre_index_save" = 0,
  *     "preprocess_index" = -5,
  *     "preprocess_query" = -2,
  *   }

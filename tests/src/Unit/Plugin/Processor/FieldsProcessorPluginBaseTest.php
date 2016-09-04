@@ -44,12 +44,32 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $this->index->expects($this->any())
       ->method('status')
       ->will($this->returnValue(TRUE));
-    $fields = $this->getTestItem()[$this->itemIds[0]]->getFields();
+    $items = $this->getTestItem();
+    $fields = $items[$this->itemIds[0]]->getFields();
     $this->index->expects($this->any())
       ->method('getFields')
       ->will($this->returnValue($fields));
 
     $this->processor = new TestFieldsProcessorPlugin(array('#index' => $this->index), '', array());
+  }
+
+  /**
+   * Tests whether the processor handles field ID changes correctly.
+   */
+  public function testFieldRenaming() {
+    $configuration['fields'] = array('text_field', 'float_field');
+    $this->processor->setConfiguration($configuration);
+
+    $this->index->method('getFieldRenames')
+      ->willReturn(array(
+        'text_field' => 'foobar',
+      ));
+
+    $this->processor->preIndexSave();
+
+    $fields = $this->processor->getConfiguration()['fields'];
+    sort($fields);
+    $this->assertEquals(array('float_field', 'foobar'), $fields);
   }
 
   /**

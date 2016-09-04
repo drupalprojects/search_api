@@ -719,6 +719,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
     $this->fieldInstances[$new_field_id] = $this->fieldInstances[$old_field_id];
     unset($this->fieldInstances[$old_field_id]);
+    $this->fieldInstances[$new_field_id]->setFieldIdentifier($new_field_id);
 
     return $this;
   }
@@ -738,6 +739,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($this->fieldInstances[$field_id]);
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFields(array $fields) {
+    $this->fieldInstances = $fields;
   }
 
   /**
@@ -790,6 +798,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
     }
     return $fulltext_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldRenames() {
+    $renames = array();
+    foreach ($this->getFields() as $field_id => $field) {
+      if ($field->getOriginalFieldIdentifier() != $field_id) {
+        $renames[$field->getOriginalFieldIdentifier()] = $field_id;
+      }
+    }
+    return $renames;
   }
 
   /**
@@ -1270,6 +1291,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     catch (SearchApiException $e) {
       watchdog_exception('search_api', $e);
     }
+
+    // Reset the field instances so saved renames won't be reported anymore.
+    $this->fieldInstances = NULL;
   }
 
   /**

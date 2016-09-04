@@ -60,6 +60,25 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
+   * Tests whether the processor handles field ID changes correctly.
+   */
+  public function testFieldRenaming() {
+    $configuration['exclude_fields'] = array('body', 'title');
+    $this->processor->setConfiguration($configuration);
+
+    $this->index->method('getFieldRenames')
+      ->willReturn(array(
+        'title' => 'foobar',
+      ));
+
+    $this->processor->preIndexSave();
+
+    $fields = $this->processor->getConfiguration()['exclude_fields'];
+    sort($fields);
+    $this->assertEquals(array('body', 'foobar'), $fields);
+  }
+
+  /**
    * Tests postprocessing with an empty result set.
    */
   public function testPostprocessSearchResultsWithEmptyResult() {
