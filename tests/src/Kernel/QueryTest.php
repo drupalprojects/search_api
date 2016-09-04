@@ -193,6 +193,34 @@ class QueryTest extends KernelTestBase {
   }
 
   /**
+   *
+   * Tests that the results cache works correctly.
+   */
+  public function testResultsCache() {
+    /** @var \Drupal\search_api\Query\QueryInterface[] $results */
+    $results = array();
+    $search_ids = array('foo', 'bar');
+    foreach ($search_ids as $search_id) {
+      $results[$search_id] = $this->index->query()
+        ->setSearchId($search_id)
+        ->execute();
+    }
+
+    $results_cache = \Drupal::getContainer()
+      ->get('search_api.query_helper');
+    foreach ($search_ids as $search_id) {
+      $this->assertSame($results[$search_id], $results_cache->getResults($search_id));
+    }
+    $this->assertNull($results_cache->getResults('foobar'));
+
+    $this->assertSame($results, $results_cache->getAllResults());
+
+    $results_cache->removeResults('foo');
+    unset($results['foo']);
+    $this->assertSame($results, $results_cache->getAllResults());
+  }
+
+  /**
    * Tests whether the display plugin integration works correctly.
    */
   public function testDisplayPluginIntegration() {

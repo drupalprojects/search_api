@@ -45,6 +45,15 @@ interface QueryHelperInterface {
   public function getResults($search_id);
 
   /**
+   * Retrieves all results data cached in this request.
+   *
+   * @return \Drupal\search_api\Query\ResultSetInterface[]
+   *   The results of all searches cached in this service, keyed by their
+   *   search IDs.
+   */
+  public function getAllResults();
+
+  /**
    * Removes the result set with the given search ID from the cache.
    *
    * @param string $search_id

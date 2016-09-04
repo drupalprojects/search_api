@@ -118,6 +118,17 @@ class QueryHelper implements QueryHelperInterface {
   /**
    * {@inheritdoc}
    */
+  public function getAllResults() {
+    $request = $this->getCurrentRequest();
+    if (isset($this->results[$request])) {
+      return $this->results[$request];
+    }
+    return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function removeResults($search_id) {
     $request = $this->getCurrentRequest();
     if (isset($this->results[$request])) {
