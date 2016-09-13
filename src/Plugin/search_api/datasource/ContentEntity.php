@@ -405,8 +405,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    if ($this->hasBundles()) {
-      $bundles = $this->getEntityBundleOptions();
+    if ($this->hasBundles() && ($bundles = $this->getEntityBundleOptions())) {
       $form['bundles'] = array(
         '#type' => 'details',
         '#title' => $this->t('Bundles'),
