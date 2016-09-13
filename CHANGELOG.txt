@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2566241 by drunken monkey: Fixed index tracker select default value.
 - #2555177 by drunken monkey: Fixed empty bundle selects in datasource config
   forms.
 

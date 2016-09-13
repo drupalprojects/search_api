@@ -254,8 +254,8 @@ class IndexForm extends EntityForm {
       '#type' => 'radios',
       '#title' => $this->t('Tracker'),
       '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes.'),
-      '#options' => $this->getTrackerPluginManager()->getOptionsList(),
-      '#default_value' => $index->hasValidTracker() ? $index->getTrackerInstance()->getPluginId() : key($tracker_options),
+      '#options' => $tracker_options,
+      '#default_value' => $index->getTrackerId(),
       '#required' => TRUE,
       '#ajax' => array(
         'trigger_as' => array('name' => 'tracker_configure'),
@@ -264,7 +264,7 @@ class IndexForm extends EntityForm {
         'method' => 'replace',
         'effect' => 'fade',
       ),
-      '#access' => count($tracker_options) > 1,
+      '#access' => !$index->hasValidTracker() || count($tracker_options) > 1,
     );
 
     $form['tracker_config'] = array(
