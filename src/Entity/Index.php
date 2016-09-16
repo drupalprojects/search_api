@@ -693,6 +693,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       throw new SearchApiException("'$field_id' is a reserved value and cannot be used as the machine name of a normal field.");
     }
 
+    // This will automatically call getFields(), thus initializing
+    // $this->fieldInstances, if that hasn't been done yet.
     $old_field = $this->getField($field_id);
     if ($old_field && $old_field != $field) {
       throw new SearchApiException("Cannot add field with machine name '$field_id': machine name is already taken.");
@@ -1186,12 +1188,31 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $processor->preIndexSave();
     }
 
+    // Write the field and plugin settings to the persistent *_settings
+    // properties.
+    $this->writeChangesToSettings();
+
+    // Since we change dependency-relevant data in this method, we can only call
+    // the parent method at the end (or we'd need to re-calculate the
+    // dependencies).
+    parent::preSave($storage);
+  }
+
+  /**
+   * Prepares for changes to this index to be persisted.
+   *
+   * To this end, the settings for all loaded field and plugin objects are
+   * written back to the corresponding *_settings properties.
+   *
+   * @return $this
+   */
+  protected function writeChangesToSettings() {
     // Calculate field dependencies and save field settings containing them.
     $fields = $this->getFields();
     $field_dependencies = $this->getFieldDependencies();
     $field_dependencies += array_fill_keys(array_keys($fields), array());
     $this->field_settings = array();
-    foreach ($this->getFields() as $field_id => $field) {
+    foreach ($fields as $field_id => $field) {
       $field->setDependencies($field_dependencies[$field_id]);
       $this->field_settings[$field_id] = $field->getSettings();
     }
@@ -1225,10 +1246,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       );
     }
 
-    // Since we change dependency-relevant data in this method, we can only call
-    // the parent method at the end (or we'd need to re-calculate the
-    // dependencies).
-    parent::preSave($storage);
+    return $this;
   }
 
   /**
@@ -1835,6 +1853,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * Prevents the instantiated plugins and fields from being serialized.
    */
   public function __sleep() {
+    // First, write our changes to the persistent *_settings properties so they
+    // won't be discarded. Make sure we have a container to do this. This is
+    // important to correctly display test failures.
+    if (\Drupal::hasContainer()) {
+      $this->writeChangesToSettings();
+    }
+
+    // Then, return a list of all properties that don't contain objects.
     $properties = get_object_vars($this);
     unset($properties['datasourceInstances']);
     unset($properties['trackerInstance']);

@@ -640,7 +640,9 @@ class Field implements \IteratorAggregate, FieldInterface {
    * Implements the magic __wakeup() method to control object unserialization.
    */
   public function __wakeup() {
-    if ($this->indexId) {
+    // Make sure we have a container to do this. This is important to correctly
+    // display test failures.
+    if ($this->indexId && \Drupal::hasContainer()) {
       $this->index = Index::load($this->indexId);
       unset($this->indexId);
     }

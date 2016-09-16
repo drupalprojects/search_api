@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2727697 by drunken monkey, borisson_: Fixed serialization of modified
+  indexes.
 - #2747767 by joachim: Changed the "Aggregation type" form element to radios.
 - #2565621 by LKS90, drunken monkey: Added a test for the database defaults
   submodule.
