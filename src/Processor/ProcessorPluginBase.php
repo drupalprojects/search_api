@@ -287,7 +287,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
         }
       }
       if ($missing_fields) {
-        Utility::extractFields($item->getOriginalObject(), $missing_fields);
+        Utility::extractFields($item->getOriginalObject(), $missing_fields, $item->getLanguage());
         foreach ($missing_fields as $property_fields) {
           foreach ($property_fields as $field) {
             $item_values[$field->getFieldIdentifier()] = $field->getValues();

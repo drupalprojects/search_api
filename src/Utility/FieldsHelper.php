@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Utility;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -13,6 +14,7 @@ use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListDataDefinitionInterface;
 use Drupal\Core\TypedData\ListInterface;
+use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
@@ -87,7 +89,20 @@ class FieldsHelper implements FieldsHelperInterface {
   /**
    * {@inheritdoc}
    */
-  public function extractFields(ComplexDataInterface $item, array $fields) {
+  public function extractFields(ComplexDataInterface $item, array $fields, $langcode = NULL) {
+    // If a language code was given, get the correct translation (if possible).
+    if ($langcode) {
+      if ($item instanceof TranslatableInterface) {
+        $item = $item->getTranslation($langcode);
+      }
+      else {
+        $value = $item->getValue();
+        if ($value instanceof ContentEntityInterface) {
+          $item = $value->getTranslation($langcode)->getTypedData();
+        }
+      }
+    }
+
     // Figure out which fields are directly on the item and which need to be
     // extracted from nested items.
     $directFields = array();
@@ -125,12 +140,12 @@ class FieldsHelper implements FieldsHelperInterface {
         $itemNested = $itemNested->getTypedData();
       }
       if ($itemNested instanceof ComplexDataInterface && !$itemNested->isEmpty()) {
-        $this->extractFields($itemNested, $fieldsNested);
+        $this->extractFields($itemNested, $fieldsNested, $langcode);
       }
       elseif ($itemNested instanceof ListInterface && !$itemNested->isEmpty()) {
         foreach ($itemNested as $listItem) {
           if ($listItem instanceof ComplexDataInterface && !$listItem->isEmpty()) {
-            $this->extractFields($listItem, $fieldsNested);
+            $this->extractFields($listItem, $fieldsNested, $langcode);
           }
         }
       }

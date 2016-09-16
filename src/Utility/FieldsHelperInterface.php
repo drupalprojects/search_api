@@ -26,8 +26,10 @@ interface FieldsHelperInterface {
    * @param \Drupal\search_api\Item\FieldInterface[][] $fields
    *   An associative array, keyed by property paths, mapped to field objects
    *   with that property path.
+   * @param string|null $langcode
+   *   (optional) The code of the language the retrieved values should have.
    */
-  public function extractFields(ComplexDataInterface $item, array $fields);
+  public function extractFields(ComplexDataInterface $item, array $fields, $langcode = NULL);
 
   /**
    * Extracts value and original type from a single piece of data.
