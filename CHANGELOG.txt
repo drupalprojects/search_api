@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2794093 by drunken monkey, borisson_, kamalrajsahu21: Fixed the processor
+  reordering CSS.
 - #2640982 by drunken monkey, borisson_: Fixed "unsaved changes" code in the
   Fields UI.
 - #2727697 by drunken monkey, borisson_: Fixed serialization of modified
