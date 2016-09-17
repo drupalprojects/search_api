@@ -14,6 +14,7 @@ use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
+use Drupal\search_api\Processor\ProcessorPropertyInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -256,6 +257,9 @@ class IndexAddFieldsForm extends EntityForm {
 
     $query_base = $base_url->getOption('query');
     foreach ($properties as $key => $property) {
+      if ($property instanceof ProcessorPropertyInterface && $property->isHidden()) {
+        continue;
+      }
       $this_path = $parent_path ? $parent_path . ':' : '';
       $this_path .= $key;
 

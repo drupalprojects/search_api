@@ -714,6 +714,11 @@ class IntegrationTest extends WebTestBase {
    * Tests whether adding fields to the index works correctly.
    */
   protected function addFieldsToIndex() {
+    // Make sure that hidden properties are not displayed.
+    $url_options['query']['datasource'] = '';
+    $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
+    $this->assertNoText($this->t('Node access information'));
+
     $fields = array(
       'nid' => $this->t('ID'),
       'title' => $this->t('Title'),
