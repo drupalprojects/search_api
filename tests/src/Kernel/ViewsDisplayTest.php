@@ -27,6 +27,8 @@ class ViewsDisplayTest extends KernelTestBase {
     'entity_test',
     'text',
     'views',
+    'rest',
+    'serialization',
   );
 
   /**

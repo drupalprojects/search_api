@@ -255,6 +255,38 @@ display:
     position: 1
     display_options:
       path: search-api-test
+  block_1:
+    display_plugin: block
+    id: block_1
+    display_title: Block
+    position: 2
+    display_options:
+      display_extenders: {  }
+      defaults:
+        use_ajax: false
+      use_ajax: true
+  rest_export_1:
+    display_plugin: rest_export
+    id: rest_export_1
+    display_title: 'REST export'
+    position: 1
+    display_options:
+      display_extenders: {  }
+      path: search-api-rest-test
+      pager:
+        type: some
+        options:
+          items_per_page: 10
+          offset: 0
+      style:
+        type: serializer
+        options:
+          grouping: {  }
+          uses_fields: false
+          formats: {  }
+      row:
+        type: data_entity
+        options: {  }
 label: 'Search API Test search view'
 module: views
 id: search_api_test_view

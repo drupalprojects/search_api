@@ -19,6 +19,7 @@ class HooksTest extends WebTestBase {
    */
   public static $modules = array(
     'node',
+    'rest',
     'search_api',
     'search_api_test',
     'search_api_test_views',

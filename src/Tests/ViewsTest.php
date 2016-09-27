@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\SearchApiException;
 use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\search_api\Utility\Utility;
@@ -31,6 +32,7 @@ class ViewsTest extends SimpletestWebTestBase {
     'search_api_test_views',
     'views_ui',
     'language',
+    'rest',
   );
 
   /**
@@ -254,12 +256,40 @@ class ViewsTest extends SimpletestWebTestBase {
     $this->checkResults($query, array(2, 5), 'Search with arguments and filters', 'entity:entity_test_mulrev_changed/all/orange');
 
     // Make sure there was a display plugin created for this view.
-    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')->getInstances();
+    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')
+      ->getInstances();
+
+    if ($displays === array()) {
+      throw new SearchApiException("No displays are loaded, tests will fail.");
+    }
+
     $display_id = 'views_page:search_api_test_view__page_1';
-    $this->assertEqual(array($display_id), array_keys($displays), 'A display plugin was created for the test view.');
+    $this->assertTrue(array_key_exists($display_id, $displays), 'A display plugin was created for the test view page display.');
+    $this->assertTrue(array_key_exists('views_block:search_api_test_view__block_1', $displays), 'A display plugin was created for the test view block display.');
+    $this->assertTrue(array_key_exists('views_rest:search_api_test_view__rest_export_1', $displays), 'A display plugin was created for the test view block display.');
     $view_url = Url::fromUserInput('/search-api-test')->toString();
-    $this->assertEqual($view_url, $displays[$display_id]->getPath()->toString(), 'Display returns the correct path.');
+    $this->assertEqual($view_url, $displays[$display_id]->getUrl()->toString(), 'Display returns the correct path.');
     $this->assertEqual('database_search_index', $displays[$display_id]->getIndex()->id(), 'Display returns the correct search index.');
+
+    $admin_user = $this->drupalCreateUser([
+      'administer search_api',
+      'access administration pages',
+      'administer views',
+    ]);
+    $this->drupalLogin($admin_user);
+
+    // Delete the page display for the view.
+    $this->drupalGet('admin/structure/views/view/search_api_test_view');
+    $this->drupalPostForm(NULL, [], $this->t('Delete Page'));
+    $this->drupalPostForm(NULL, [], $this->t('Save'));
+
+    drupal_flush_all_caches();
+
+    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')
+      ->getInstances();
+    $this->assertFalse(array_key_exists('views_page:search_api_test_view__page_1', $displays), 'A display plugin was created for the test view page display.');
+    $this->assertTrue(array_key_exists('views_block:search_api_test_view__block_1', $displays), 'A display plugin was created for the test view block display.');
+    $this->assertTrue(array_key_exists('views_rest:search_api_test_view__rest_export_1', $displays), 'A display plugin was created for the test view block display.');
   }
 
   /**
