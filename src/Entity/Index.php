@@ -1500,7 +1500,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function calculateDependencies() {
     $dependencies = $this->getDependencyData();
-    $this->dependencies = array_map('array_keys', $dependencies);
+    // Keep only "enforced" dependencies, then add those computed by
+    // getDependencyData().
+    $this->dependencies = array_intersect_key($this->dependencies, array('enforced' => TRUE));
+    $this->dependencies += array_map('array_keys', $dependencies);
     return $this;
   }
 
@@ -1535,6 +1538,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * )
    * @endcode
    *
+   * Enforced dependencies are not included in this method's return value.
+   *
    * @return object[][][][][]
    *   An associative array containing the index's dependencies. The array is
    *   first keyed by the config dependency type ("module", "config", etc.) and
@@ -1554,6 +1559,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // afterwards.
     $original_dependencies = $this->dependencies;
     parent::calculateDependencies();
+    unset($this->dependencies['enforced']);
     foreach ($this->dependencies as $dependency_type => $list) {
       foreach ($list as $name) {
         $dependency_data[$dependency_type][$name]['always']['index'][$this->id] = $this;
