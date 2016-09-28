@@ -1,5 +1,13 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+
+Search API 1.0, Beta 2 (2016-09-28):
+---------------------------------
+
+- #2798643 by drunken monkey, Berdir: Enforced dependencies in search index
+  causes notice.
+- #2799475 by borisson_, drunken monkey: Support block and rest displays in the
+  display deriver.
 - #2763161 by drunken monkey, borisson_: Fixed cache issues with Views search
   display plugins.
 - #2800011 by drunken monkey, borisson_: Fixed display of hidden properties
