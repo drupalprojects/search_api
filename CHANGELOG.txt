@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2782577 by drunken monkey, zuhair_ak: Fixed extraction of configurable
+  properties in processors.
 
 Search API 1.0, Beta 2 (2016-09-28):
 ---------------------------------

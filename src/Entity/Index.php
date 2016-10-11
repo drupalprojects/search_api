@@ -780,13 +780,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getFieldsByDatasource($datasource_id) {
-    $datasource_fields = array_fill_keys(array_keys($this->getDatasources()), array());
-    $datasource_fields[NULL] = array();
+    $datasource_fields = array();
     foreach ($this->getFields() as $field_id => $field) {
-      $datasource_fields[$field->getDatasourceId()][$field_id] = $field;
+      if ($field->getDatasourceId() === $datasource_id) {
+        $datasource_fields[$field_id] = $field;
+      }
     }
 
-    return $datasource_fields[$datasource_id];
+    return $datasource_fields;
   }
 
   /**

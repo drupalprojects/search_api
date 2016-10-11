@@ -22,8 +22,9 @@ use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Item\Item;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
+use Drupal\search_api\Processor\ProcessorInterface;
+use Drupal\search_api\Processor\ProcessorPropertyInterface;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\Container;
 
 /**
@@ -188,6 +189,119 @@ class FieldsHelper implements FieldsHelperInterface {
       return array_values($value);
     }
     return array($value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function extractItemValues(array $items, array $required_properties, $load = TRUE) {
+    $extracted_values = array();
+
+    /** @var \Drupal\search_api\Item\ItemInterface $item */
+    foreach ($items as $i => $item) {
+      $index = $item->getIndex();
+      $item_values = array();
+      /** @var \Drupal\search_api\Item\FieldInterface[][] $missing_fields */
+      $missing_fields = array();
+      $processor_fields = array();
+      $needed_processors = array();
+      foreach (array(NULL, $item->getDatasourceId()) as $datasource_id) {
+        if (empty($required_properties[$datasource_id])) {
+          continue;
+        }
+
+        $properties = $index->getPropertyDefinitions($datasource_id);
+        foreach ($required_properties[$datasource_id] as $property_path => $combined_id) {
+          $item_values[$combined_id] = array();
+
+          // If a field with the right property path is already set on the item,
+          // use it. This might actually make problems in case the values have
+          // already been processed in some way, or use a data type that
+          // transformed their original value. But that will hopefully not be a
+          // problem in most situations.
+          foreach ($this->filterForPropertyPath($item->getFields(FALSE), $datasource_id, $property_path) as $field) {
+            $item_values[$combined_id] = $field->getValues();
+            continue 2;
+          }
+
+          // There are no values present on the item for this property. If we
+          // don't want to extract any fields, skip it.
+          if (!$load) {
+            continue;
+          }
+
+          // If the field is not already on the item, we need to extract it. We
+          // set our own combined ID as the field identifier as kind of a hack,
+          // to easily be able to add the field values to $property_values
+          // afterwards.
+          $property = NULL;
+          if (isset($properties[$property_path])) {
+            $property = $properties[$property_path];
+          }
+          if ($property instanceof ProcessorPropertyInterface) {
+            $field_info = array(
+              'datasource_id' => $datasource_id,
+              'property_path' => $property_path,
+            );
+            if ($property instanceof ConfigurablePropertyInterface) {
+              $field_info['configuration'] = $property->defaultConfiguration();
+              // If the index contains a field with that property, just use the
+              // configuration from there instead of the default configuration.
+              // This will probably be what users expect in most situations.
+              foreach ($this->filterForPropertyPath($index->getFields(), $datasource_id, $property_path) as $field) {
+                $field_info['configuration'] = $field->getConfiguration();
+                break;
+              }
+            }
+            $processor_fields[] = $this->createField($index, $combined_id, $field_info);
+            $needed_processors[$property->getProcessorId()] = TRUE;
+          }
+          elseif ($datasource_id) {
+            $missing_fields[$property_path][] = $this->createField($index, $combined_id);
+          }
+        }
+      }
+      if ($missing_fields) {
+        $this->extractFields($item->getOriginalObject(), $missing_fields);
+        foreach ($missing_fields as $property_fields) {
+          foreach ($property_fields as $field) {
+            $item_values[$field->getFieldIdentifier()] = $field->getValues();
+          }
+        }
+      }
+      if ($processor_fields) {
+        $dummy_item = clone $item;
+        $dummy_item->setFields($processor_fields);
+        $dummy_item->setFieldsExtracted(TRUE);
+        $processors = $index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);
+        foreach ($processors as $processor_id => $processor) {
+          // Avoid an infinite recursion.
+          if (isset($needed_processors[$processor_id]) && $processor != $this) {
+            $processor->addFieldValues($dummy_item);
+          }
+        }
+        foreach ($processor_fields as $field) {
+          $item_values[$field->getFieldIdentifier()] = $field->getValues();
+        }
+      }
+
+      $extracted_values[$i] = $item_values;
+    }
+
+    return $extracted_values;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function filterForPropertyPath(array $fields, $datasource_id, $property_path) {
+    $found_fields = array();
+    foreach ($fields as $field_id => $field) {
+      if ($field->getDatasourceId() === $datasource_id && $field->getPropertyPath() === $property_path) {
+        $found_fields[$field_id] = $field;
+      }
+    }
+    return $found_fields;
   }
 
   /**

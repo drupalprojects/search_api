@@ -312,7 +312,8 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       }
     }
 
-    return $this->extractItemValues($result_items, $fields_by_datasource, $load);
+    return $this->getFieldsHelper()
+      ->extractItemValues($result_items, $fields_by_datasource, $load);
   }
 
   /**
