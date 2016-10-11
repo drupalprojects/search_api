@@ -4,8 +4,7 @@ Search API 1.x, dev (xxxx-xx-xx):
   properties in processors.
 
 Search API 1.0, Beta 2 (2016-09-28):
----------------------------------
-
+------------------------------------
 - #2798643 by drunken monkey, Berdir: Enforced dependencies in search index
   causes notice.
 - #2799475 by borisson_, drunken monkey: Support block and rest displays in the
