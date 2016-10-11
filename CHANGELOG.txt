@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2684465 by Dropa, david.gil, drunken monkey: Fixed indexing of
+  non-translated entity references.
 - #2695627 by dermario, drunken monkey: Added support for (NOT) IN and (NOT)
   BETWEEN operators to Views.
 - #2782577 by drunken monkey, zuhair_ak: Fixed extraction of configurable

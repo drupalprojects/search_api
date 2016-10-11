@@ -94,12 +94,16 @@ class FieldsHelper implements FieldsHelperInterface {
     // If a language code was given, get the correct translation (if possible).
     if ($langcode) {
       if ($item instanceof TranslatableInterface) {
-        $item = $item->getTranslation($langcode);
+        if ($item->hasTranslation($langcode)) {
+          $item = $item->getTranslation($langcode);
+        }
       }
       else {
         $value = $item->getValue();
         if ($value instanceof ContentEntityInterface) {
-          $item = $value->getTranslation($langcode)->getTypedData();
+          if ($value->hasTranslation($langcode)) {
+            $item = $value->getTranslation($langcode)->getTypedData();
+          }
         }
       }
     }
