@@ -990,6 +990,9 @@ class SearchApiQuery extends QueryPluginBase {
     if ($operator === '!=') {
       $operator = '<>';
     }
+    elseif (in_array($operator, array('in', 'not in', 'between', 'not between'))) {
+      $operator = strtoupper($operator);
+    }
     return $operator;
   }
 

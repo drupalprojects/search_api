@@ -22,9 +22,7 @@ class SearchApiDate extends Date {
    */
   public function operators() {
     $operators = parent::operators();
-    // @todo Enable "(not) between" again once that operator is available in
-    //   the Search API.
-    unset($operators['between'], $operators['not between'], $operators['regular_expression']);
+    unset($operators['regular_expression']);
     return $operators;
   }
 

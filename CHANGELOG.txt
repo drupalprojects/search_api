@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2695627 by dermario, drunken monkey: Added support for (NOT) IN and (NOT)
+  BETWEEN operators to Views.
 - #2782577 by drunken monkey, zuhair_ak: Fixed extraction of configurable
   properties in processors.
 
