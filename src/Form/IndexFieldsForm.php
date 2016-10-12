@@ -240,11 +240,13 @@ class IndexFieldsForm extends EntityForm {
         '#type' => 'textfield',
         '#default_value' => $field->getLabel() ? $field->getLabel() : $key,
         '#required' => TRUE,
+        '#size' => 40,
       );
       $build['fields'][$key]['id'] = array(
         '#type' => 'textfield',
         '#default_value' => $key,
         '#required' => TRUE,
+        '#size' => 35,
       );
 
       if ($field->getDescription()) {

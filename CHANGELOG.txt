@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2809211 by cristiroma: Fixed size of text fields on "Fields" tab.
 - #2684465 by Dropa, david.gil, drunken monkey: Fixed indexing of
   non-translated entity references.
 - #2695627 by dermario, drunken monkey: Added support for (NOT) IN and (NOT)
