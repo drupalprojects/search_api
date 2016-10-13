@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2769021 by drunken monkey: Added the generated Search API query to the Views
+  preview.
 - #2817341 by mkalkbrenner, drunken monkey: Added PluginDependencyTrait to
   ConfigurablePluginBase.
 - #2809211 by cristiroma: Fixed size of text fields on "Fields" tab.

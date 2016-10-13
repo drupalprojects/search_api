@@ -373,6 +373,9 @@ class SearchApiQuery extends QueryPluginBase {
     if (($path = $this->view->getPath()) && strpos(Url::fromRoute('<current>')->toString(), $this->view->override_path) !== 0) {
       $this->query->setOption('search_api_base_path', $path);
     }
+
+    // Save query information for Views UI.
+    $view->build_info['query'] = (string) $this->query;
   }
 
   /**
