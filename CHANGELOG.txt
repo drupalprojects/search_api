@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2817341 by mkalkbrenner, drunken monkey: Added PluginDependencyTrait to
+  ConfigurablePluginBase.
 - #2809211 by cristiroma: Fixed size of text fields on "Fields" tab.
 - #2684465 by Dropa, david.gil, drunken monkey: Fixed indexing of
   non-translated entity references.
