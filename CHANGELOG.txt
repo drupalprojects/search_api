@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2575641 by rbayliss, dazz, drunken monkey: Fixed behavior of "Save and edit"
+  button for indexes.
 - #2769021 by drunken monkey: Added the generated Search API query to the Views
   preview.
 - #2817341 by mkalkbrenner, drunken monkey: Added PluginDependencyTrait to

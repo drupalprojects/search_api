@@ -302,14 +302,14 @@ class IntegrationTest extends WebTestBase {
       throw new SearchApiException();
     }
 
-    // Test the "Save and edit" button.
+    // Test the "Save and add fields" button.
     $index2_id = 'test_index2';
     $edit['id'] = $index2_id;
     unset($edit['server']);
-    $this->drupalPostForm($settings_path, $edit, $this->t('Save and edit'));
+    $this->drupalPostForm($settings_path, $edit, $this->t('Save and add fields'));
     $this->assertText($this->t('Please configure the used datasources.'));
 
-    $this->drupalPostForm(NULL, array(), $this->t('Save and edit'));
+    $this->drupalPostForm(NULL, array(), $this->t('Save and add fields'));
     $this->assertText($this->t('The index was successfully saved.'));
     $this->indexStorage->resetCache(array($index2_id));
     $index = $this->indexStorage->load($index2_id);

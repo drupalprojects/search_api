@@ -547,13 +547,14 @@ class IndexForm extends EntityForm {
     $actions = parent::actions($form, $form_state);
 
     if ($this->getEntity()->isNew()) {
-      $submit_callbacks = $actions['submit']['#submit'];
-      $submit_callbacks[] = '::redirectToFieldsForm';
       $actions['save_edit'] = array(
         '#type' => 'submit',
-        '#value' => $this->t('Save and edit'),
-        '#submit' => $submit_callbacks,
+        '#value' => $this->t('Save and add fields'),
+        '#submit' => $actions['submit']['#submit'],
         '#button_type' => 'primary',
+        // Work around for submit callbacks after save() not being called due to
+        // batch operations.
+        '#redirect_to_url' => 'add-fields',
       );
     }
 
@@ -608,7 +609,13 @@ class IndexForm extends EntityForm {
         $index = $this->getEntity();
         $index->save();
         drupal_set_message($this->t('The index was successfully saved.'));
-        $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
+        $button = $form_state->getTriggeringElement();
+        if (!empty($button['#redirect_to_url'])) {
+          $form_state->setRedirectUrl($index->toUrl($button['#redirect_to_url']));
+        }
+        else {
+          $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
+        }
       }
       catch (SearchApiException $ex) {
         $form_state->setRebuild();
@@ -617,14 +624,4 @@ class IndexForm extends EntityForm {
       }
     }
   }
-
-  /**
-   * Form submission handler for the 'save and edit' action.
-   *
-   * Redirects to the index's "Fields" config form.
-   */
-  public function redirectToFieldsForm(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirectUrl($this->entity->toUrl('add-fields'));
-  }
-
 }
