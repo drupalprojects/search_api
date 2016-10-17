@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2690229 by drunken monkey: Adapted Core's SubformState solution.
 - #2575641 by rbayliss, dazz, drunken monkey: Fixed behavior of "Save and edit"
   button for indexes.
 - #2769021 by drunken monkey: Added the generated Search API query to the Views

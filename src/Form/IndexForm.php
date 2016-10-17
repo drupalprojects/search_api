@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Form\SubformState;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -295,8 +296,8 @@ class IndexForm extends EntityForm {
       '#type' => 'radios',
       '#title' => $this->t('Server'),
       '#description' => $this->t('Select the server this index should use. Indexes cannot be enabled without a connection to a valid, enabled server.'),
-      '#options' => array(NULL => '<em>' . $this->t('- No server -') . '</em>') + $this->getServerOptions(),
-      '#default_value' => $index->hasValidServer() ? $index->getServerId() : NULL,
+      '#options' => array('' => '<em>' . $this->t('- No server -') . '</em>') + $this->getServerOptions(),
+      '#default_value' => $index->hasValidServer() ? $index->getServerId() : '',
     );
 
     $form['status'] = array(
@@ -384,7 +385,7 @@ class IndexForm extends EntityForm {
         if (!empty($form['datasource_configs'][$datasource_id])) {
           $datasource_form = $form['datasource_configs'][$datasource_id];
         }
-        $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+        $datasource_form_state = SubformState::createForSubform($datasource_form, $form, $form_state);
         $form['datasource_configs'][$datasource_id] = $datasource->buildConfigurationForm($datasource_form, $datasource_form_state);
 
         $show_message = TRUE;
@@ -436,7 +437,7 @@ class IndexForm extends EntityForm {
       // Get the "sub-form state" and appropriate form part to send to
       // buildConfigurationForm().
       $tracker_form = !empty($form['tracker_config']) ? $form['tracker_config'] : array();
-      $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
+      $tracker_form_state = SubformState::createForSubform($tracker_form, $form, $form_state);
       $form['tracker_config'] = $tracker->buildConfigurationForm($tracker_form, $tracker_form_state);
 
       $form['tracker_config']['#type'] = 'details';
@@ -474,7 +475,7 @@ class IndexForm extends EntityForm {
    *
    * Takes care of changes in the selected tracker plugin.
    */
-  public function submitAjaxTrackerConfigForm($form, FormStateInterface $form_state) {
+  public function submitAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
     $form_state->setValue('id', NULL);
     $form_state->setRebuild();
   }
@@ -517,7 +518,7 @@ class IndexForm extends EntityForm {
           continue;
         }
         $datasource_form = &$form['datasource_configs'][$datasource_id];
-        $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+        $datasource_form_state = SubformState::createForSubform($datasource_form, $form, $form_state);
         $datasource->validateConfigurationForm($datasource_form, $datasource_form_state);
       }
     }
@@ -528,7 +529,7 @@ class IndexForm extends EntityForm {
     if ($tracker_id == $form_state->get('tracker')) {
       $tracker = $this->originalEntity->createPlugin('tracker', $tracker_id);
       if ($tracker instanceof PluginFormInterface) {
-        $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
+        $tracker_form_state = SubformState::createForSubform($form['tracker_config'], $form, $form_state);
         $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
       }
     }
@@ -575,7 +576,7 @@ class IndexForm extends EntityForm {
     $datasources = $this->originalEntity->createPlugins('datasource', $datasource_ids);
     foreach ($datasources as $datasource_id => $datasource) {
       if ($datasource instanceof PluginFormInterface) {
-        $datasource_form_state = new SubFormState($form_state, array('datasource_configs', $datasource_id));
+        $datasource_form_state = SubformState::createForSubform($form['datasource_configs'][$datasource_id], $form, $form_state);
         $datasource->submitConfigurationForm($form['datasource_configs'][$datasource_id], $datasource_form_state);
       }
     }
@@ -587,7 +588,7 @@ class IndexForm extends EntityForm {
     $tracker = $this->originalEntity->createPlugin('tracker', $tracker_id);
     if ($tracker_id == $form_state->get('tracker')) {
       if ($tracker instanceof PluginFormInterface) {
-        $tracker_form_state = new SubFormState($form_state, array('tracker_config'));
+        $tracker_form_state = SubformState::createForSubform($form['tracker_config'], $form, $form_state);
         $tracker->submitConfigurationForm($form['tracker_config'], $tracker_form_state);
       }
     }
