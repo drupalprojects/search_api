@@ -10,13 +10,6 @@ use Drupal\search_api\UnsavedConfigurationInterface;
 trait UnsavedConfigurationFormTrait {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\RendererInterface
@@ -37,7 +30,7 @@ trait UnsavedConfigurationFormTrait {
    *   The entity type manager.
    */
   protected function getEntityTypeManager() {
-    return $this->entityTypeManager;
+    return isset($this->entityTypeManager) ? $this->entityTypeManager : \Drupal::entityTypeManager();
   }
 
   /**
@@ -83,7 +76,7 @@ trait UnsavedConfigurationFormTrait {
         $form['#disabled'] = TRUE;
         $username = array(
           '#theme' => 'username',
-          '#account' => $entity->getLockOwner($this->entityTypeManager),
+          '#account' => $entity->getLockOwner($this->getEntityTypeManager()),
         );
         $lockMessageSubstitutions = array(
           '@user' => $this->renderer->render($username),
