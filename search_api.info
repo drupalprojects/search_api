@@ -27,6 +27,7 @@ files[] = includes/processor.inc
 files[] = includes/processor_highlight.inc
 files[] = includes/processor_html_filter.inc
 files[] = includes/processor_ignore_case.inc
+files[] = includes/processor_stemmer.inc
 files[] = includes/processor_stopwords.inc
 files[] = includes/processor_tokenizer.inc
 files[] = includes/processor_transliteration.inc
