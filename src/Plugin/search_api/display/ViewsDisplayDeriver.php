@@ -35,7 +35,7 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
 
       /** @var \Drupal\views\Entity\View $view */
       foreach ($all_views as $view) {
-        $this->derivatives += $this->getDisplaysForIndex($base_plugin_definition, $view, $this->derivatives);
+        $this->derivatives += $this->getDisplaysForView($base_plugin_definition, $view, $this->derivatives);
       }
     }
 
@@ -53,9 +53,9 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
    *   An array of already existing derived plugin definitions.
    *
    * @return array
-   *   Returns an array of plugin definitions.
+   *   Returns an array of plugin definitions, keyed by derivative ID.
    */
-  protected function getDisplaysForIndex(array $base_plugin_definition, ViewEntityInterface $view, $plugin_derivatives) {
+  protected function getDisplaysForView(array $base_plugin_definition, ViewEntityInterface $view, array $plugin_derivatives) {
     $type = $base_plugin_definition['views_display_type'];
 
     $index = SearchApiQuery::getIndexFromTable($view->get('base_table'));
@@ -90,22 +90,20 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
         $display = $executable->getDisplay();
 
         // Create the actual derivative plugin definition.
+        $args = array(
+          '%view_name' => $view->label(),
+          '%display_title' => $display_info['display_title']
+        );
+        if ($view->get('description')) {
+          $args['%view_description'] = $view->get('description');
+          $description = $this->t('%view_description – Represents the display %display_title of view %view_name.', $args);
+        }
+        else {
+          $description = $this->t('Represents the display %display_title of view %view_name.', $args);
+        }
         $plugin_derivatives[$machine_name] = array(
           'label' => $label,
-          'description' => $view->get('description') ? $this->t(
-            '%view_description - Represents the page display %display_title of view %view_name.',
-            array(
-              '%view_name' => $view->label(),
-              '%view_description' => $view->get('description'),
-              '%display_title' => $display_info['display_title']
-            )
-          ) : $this->t(
-            'Represents the page display %display_title of view %view_name.',
-            array(
-              '%view_name' => $view->label(),
-              '%display_title' => $display_info['display_title']
-            )
-          ),
+          'description' => $description,
           'view_id' => $view->id(),
           'view_display' => $name,
           'index' => $index->id(),

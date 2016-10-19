@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Url;
-use Drupal\search_api\Entity\Index;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -105,6 +104,7 @@ abstract class DisplayPluginBase extends PluginBase implements DisplayInterface 
     $this->entityTypeManager = $entity_type_manager;
     return $this;
   }
+
   /**
    * {@inheritdoc}
    */
@@ -135,18 +135,18 @@ abstract class DisplayPluginBase extends PluginBase implements DisplayInterface 
    * {@inheritdoc}
    */
   public function getUrl() {
-    return $this->getPath();
+    $plugin_definition = $this->getPluginDefinition();
+    if (!empty($plugin_definition['path'])) {
+      return Url::fromUserInput($plugin_definition['path']);
+    }
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPath() {
-    $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['path'])) {
-      return Url::fromUserInput($plugin_definition['path']);
-    }
-    return NULL;
+    return $this->getUrl();
   }
 
   /**
