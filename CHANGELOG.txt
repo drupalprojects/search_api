@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2813525 by drunken monkey, alan-ps: Fixed incorrect indexing of
+  nodes/comments with excluded bundle.
 - #2803701 by drunken monkey, rbayliss: Fixed strict warnings from
   UnsavedConfigurationFormTrait.
 - #2711017 by drunken monkey: Adapted Core's UncacheableDependencyTrait.

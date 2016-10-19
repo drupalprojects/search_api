@@ -295,7 +295,9 @@ function search_api_node_access_records_alter(&$grants, NodeInterface $node) {
       switch ($datasource->getEntityTypeId()) {
         case 'node':
           $item_id = $datasource->getItemId($node->getTypedData());
-          $index->trackItemsUpdated($datasource_id, array($item_id));
+          if ($item_id !== NULL) {
+            $index->trackItemsUpdated($datasource_id, array($item_id));
+          }
           break;
 
         case 'comment':
@@ -309,9 +311,14 @@ function search_api_node_access_records_alter(&$grants, NodeInterface $node) {
           }
           $item_ids = array();
           foreach ($comments as $comment) {
-            $item_ids[] = $datasource->getItemId($comment->getTypedData());
+            $item_id = $datasource->getItemId($comment->getTypedData());
+            if ($item_id !== NULL) {
+              $item_ids[] = $item_id;
+            }
           }
-          $index->trackItemsUpdated($datasource_id, $item_ids);
+          if ($item_ids) {
+            $index->trackItemsUpdated($datasource_id, $item_ids);
+          }
           break;
       }
     }

@@ -525,7 +525,10 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    */
   public function getItemId(ComplexDataInterface $item) {
     if ($entity = $this->getEntity($item)) {
-      return $entity->id() . ':' . $entity->language()->getId();
+      $enabled_bundles = $this->getBundles();
+      if (isset($enabled_bundles[$entity->bundle()])) {
+        return $entity->id() . ':' . $entity->language()->getId();
+      }
     }
     return NULL;
   }
