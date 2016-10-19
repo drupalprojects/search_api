@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2818621 by alan-ps: Fixed overly accurate index status percentage.
 - #2792277 by drunken monkey: Fixed issues during config syncing of our
   entities.
 - #2813525 by drunken monkey, alan-ps: Fixed incorrect indexing of
