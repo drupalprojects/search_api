@@ -1150,6 +1150,13 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
+    // If we are in the process of syncing, we shouldn't change any entity
+    // properties (or other configuration).
+    if ($this->isSyncing()) {
+      parent::preSave($storage);
+      return;
+    }
+
     // Prevent enabling of indexes when the server is disabled.
     if ($this->status() && !$this->isServerEnabled()) {
       $this->disable();

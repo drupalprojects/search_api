@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2792277 by drunken monkey: Fixed issues during config syncing of our
+  entities.
 - #2813525 by drunken monkey, alan-ps: Fixed incorrect indexing of
   nodes/comments with excluded bundle.
 - #2803701 by drunken monkey, rbayliss: Fixed strict warnings from
