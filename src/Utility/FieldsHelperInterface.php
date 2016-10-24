@@ -134,6 +134,18 @@ interface FieldsHelperInterface {
   public function getInnerProperty(DataDefinitionInterface $property);
 
   /**
+   * Checks whether the given entity type is a content entity type.
+   *
+   * @param string $entity_type_id
+   *   The ID of the entity type.
+   *
+   * @return bool
+   *   TRUE if the $entity_type_id is a valid content entity type, FALSE
+   *   otherwise.
+   */
+  public function isContentEntityType($entity_type_id);
+
+  /**
    * Determines whether a field ID is reserved for special use.
    *
    * We define all field IDs starting with "search_api_" as reserved, to be safe

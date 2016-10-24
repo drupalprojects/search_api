@@ -2,10 +2,12 @@
 
 namespace Drupal\search_api\Utility;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -31,6 +33,13 @@ use Symfony\Component\DependencyInjection\Container;
  * Provides helper methods for dealing with Search API fields and properties.
  */
 class FieldsHelper implements FieldsHelperInterface {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The entity field manager.
@@ -74,6 +83,8 @@ class FieldsHelper implements FieldsHelperInterface {
   /**
    * Constructs a FieldsHelper object.
    *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
    * @param EntityTypeBundleInfoInterface $entityBundleInfo
@@ -81,7 +92,8 @@ class FieldsHelper implements FieldsHelperInterface {
    * @param \Drupal\search_api\Utility\DataTypeHelperInterface $dataTypeHelper
    *   The data type helper service.
    */
-  public function __construct(EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $entityBundleInfo, DataTypeHelperInterface $dataTypeHelper) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $entityBundleInfo, DataTypeHelperInterface $dataTypeHelper) {
+    $this->entityTypeManager = $entityTypeManager;
     $this->entityFieldManager = $entityFieldManager;
     $this->entityBundleInfo = $entityBundleInfo;
     $this->dataTypeHelper = $dataTypeHelper;
@@ -314,12 +326,15 @@ class FieldsHelper implements FieldsHelperInterface {
   public function getNestedProperties(ComplexDataDefinitionInterface $property) {
     $nestedProperties = $property->getPropertyDefinitions();
     if ($property instanceof EntityDataDefinitionInterface) {
-      $bundles = $this->entityBundleInfo
-        ->getBundleInfo($property->getEntityTypeId());
-      foreach ($bundles as $bundle => $bundleLabel) {
-        $bundleProperties = $this->entityFieldManager
-          ->getFieldDefinitions($property->getEntityTypeId(), $bundle);
-        $nestedProperties += $bundleProperties;
+      $entity_type_id = $property->getEntityTypeId();
+      $is_content_type = $this->isContentEntityType($entity_type_id);
+      if ($is_content_type) {
+        $bundles = $this->entityBundleInfo->getBundleInfo($entity_type_id);
+        foreach ($bundles as $bundle => $bundleLabel) {
+          $bundleProperties = $this->entityFieldManager
+            ->getFieldDefinitions($entity_type_id, $bundle);
+          $nestedProperties += $bundleProperties;
+        }
       }
     }
     return $nestedProperties;
@@ -357,6 +372,19 @@ class FieldsHelper implements FieldsHelperInterface {
       $property = $property->getTargetDefinition();
     }
     return $property;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isContentEntityType($entity_type_id) {
+    try {
+      $definition = $this->entityTypeManager->getDefinition($entity_type_id);
+      return $definition->isSubclassOf(ContentEntityInterface::class);
+    }
+    catch (PluginNotFoundException $e) {
+      return FALSE;
+    }
   }
 
   /**

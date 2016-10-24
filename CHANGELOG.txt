@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2625152 by jhedstrom, drunken monkey, borisson_, mpp, stijn.blomme,
+  Rodlangh: Added an "Index hierarchy" processor.
 - #2818621 by alan-ps: Fixed overly accurate index status percentage.
 - #2792277 by drunken monkey: Fixed issues during config syncing of our
   entities.

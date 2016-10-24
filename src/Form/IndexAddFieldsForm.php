@@ -7,14 +7,16 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\TypedData\FieldItemDataDefinition;
+use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
+use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Processor\ProcessorPropertyInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,6 +26,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class IndexAddFieldsForm extends EntityForm {
 
   use UnsavedConfigurationFormTrait;
+
+  /**
+   * The fields helper.
+   *
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface
+   */
+  protected $fieldsHelper;
 
   /**
    * The index for which the fields are configured.
@@ -68,6 +77,8 @@ class IndexAddFieldsForm extends EntityForm {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
+   * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
+   *   The fields helper.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer to use.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
@@ -75,8 +86,9 @@ class IndexAddFieldsForm extends EntityForm {
    * @param array $parameters
    *   The parameters for this page request.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter, array $parameters) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, FieldsHelperInterface $fields_helper, RendererInterface $renderer, DateFormatterInterface $date_formatter, array $parameters) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->fieldsHelper = $fields_helper;
     $this->renderer = $renderer;
     $this->dateFormatter = $date_formatter;
     $this->parameters = $parameters;
@@ -87,12 +99,13 @@ class IndexAddFieldsForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     $entity_type_manager = $container->get('entity_type.manager');
+    $fields_helper = $container->get('search_api.fields_helper');
     $renderer = $container->get('renderer');
     $date_formatter = $container->get('date.formatter');
     $request_stack = $container->get('request_stack');
     $parameters = $request_stack->getCurrentRequest()->query->all();
 
-    return new static($entity_type_manager, $renderer, $date_formatter, $parameters);
+    return new static($entity_type_manager, $fields_helper, $renderer, $date_formatter, $parameters);
   }
 
 
@@ -264,15 +277,14 @@ class IndexAddFieldsForm extends EntityForm {
       $this_path .= $key;
 
       $label = $property->getLabel();
-      $property = Utility::getInnerProperty($property);
-      $inner_property = $property;
+      $property = $this->fieldsHelper->getInnerProperty($property);
 
       $can_be_indexed = TRUE;
       $nested_properties = array();
       $parent_child_type = NULL;
       if ($property instanceof ComplexDataDefinitionInterface) {
         $can_be_indexed = FALSE;
-        $nested_properties = Utility::getNestedProperties($property);
+        $nested_properties = $this->fieldsHelper->getNestedProperties($property);
         $main_property = $property->getMainPropertyName();
         if ($main_property && isset($nested_properties[$main_property])) {
           $parent_child_type = $property->getDataType() . '.';
@@ -282,18 +294,17 @@ class IndexAddFieldsForm extends EntityForm {
           $can_be_indexed = TRUE;
         }
 
-        // Don't add the additional 'entity' property for entity reference
+        // Don't add the additional "entity" property for entity reference
         // fields which don't target a content entity type.
-        $allowed_properties = array(
-          'field_item:entity_reference',
-          'field_item:image',
-          'field_item:file',
-        );
-        if ($inner_property instanceof FieldItemDataDefinition && in_array($inner_property->getDataType(), $allowed_properties)) {
-          $entity_type = $this->getEntityTypeManager()
-            ->getDefinition($inner_property->getSetting('target_type'));
-          if (!$entity_type->isSubclassOf('Drupal\Core\Entity\ContentEntityInterface')) {
-            unset($nested_properties['entity']);
+        if (isset($nested_properties['entity'])) {
+          $entity_property = $nested_properties['entity'];
+          if ($entity_property instanceof DataReferenceDefinitionInterface) {
+            $target = $entity_property->getTargetDefinition();
+            if ($target instanceof EntityDataDefinitionInterface) {
+              if (!$this->fieldsHelper->isContentEntityType($target->getEntityTypeId())) {
+                unset($nested_properties['entity']);
+              }
+            }
           }
         }
       }
@@ -414,7 +425,7 @@ class IndexAddFieldsForm extends EntityForm {
     $property = $button['#property'];
 
     list($datasource_id, $property_path) = Utility::splitCombinedId($button['#name']);
-    $field = Utility::createFieldFromProperty($this->entity, $property, $datasource_id, $property_path, NULL, $button['#data_type']);
+    $field = $this->fieldsHelper->createFieldFromProperty($this->entity, $property, $datasource_id, $property_path, NULL, $button['#data_type']);
     $field->setLabel($button['#prefixed_label']);
     $this->entity->addField($field);
 
