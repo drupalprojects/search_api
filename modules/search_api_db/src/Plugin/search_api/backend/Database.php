@@ -1315,7 +1315,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $this->getKeyValueStore()->set($index->id(), $db_info);
     }
     catch (\Exception $e) {
-      $transaction->rollback();
+      $transaction->rollBack();
       throw $e;
     }
   }

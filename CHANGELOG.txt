@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2819637 by alan-ps: Renamed use of the DB layer rollback() method to
+  rollBack().
 
 Search API 1.0, Beta 3 (2016-10-24):
 ------------------------------------
