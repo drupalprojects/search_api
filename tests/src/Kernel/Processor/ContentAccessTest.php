@@ -131,7 +131,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $permissions = array('access content', 'access comments');
     user_role_grant_permissions('anonymous', $permissions);
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
     $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
@@ -151,7 +151,7 @@ class ContentAccessTest extends ProcessorTestBase {
   public function testQueryAccessComments() {
     user_role_grant_permissions('anonymous', array('access comments'));
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
     $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
@@ -181,7 +181,7 @@ class ContentAccessTest extends ProcessorTestBase {
     );
     $this->nodes[3] = Node::create($values);
     $this->nodes[3]->save();
-    $this->index->indexItems();
+    $this->indexItems();
     $this->assertEquals(7, $this->index->getTrackerInstance()->getIndexedItemsCount(), '7 items indexed, as expected.');
 
     $query = Utility::createQuery($this->index);
@@ -213,7 +213,7 @@ class ContentAccessTest extends ProcessorTestBase {
       ->execute();
 
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
     $query = Utility::createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
@@ -281,7 +281,7 @@ class ContentAccessTest extends ProcessorTestBase {
    */
   public function testNodeGrantsChange() {
     $this->index->setOption('index_directly', FALSE)->save();
-    $this->index->indexItems();
+    $this->indexItems();
     $remaining = $this->index->getTrackerInstance()->getRemainingItems();
     $this->assertEquals(array(), $remaining, 'All items were indexed.');
 

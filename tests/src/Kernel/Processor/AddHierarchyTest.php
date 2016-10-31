@@ -181,7 +181,7 @@ class AddHierarchyTest extends ProcessorTestBase {
       ));
     }
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
 
     // By default, hierarchy is not indexed, so a search for 'vegetable' should
     // only return node 2.
@@ -199,7 +199,7 @@ class AddHierarchyTest extends ProcessorTestBase {
       ),
     ));
     $this->index->save();
-    $this->index->indexItems();
+    $this->indexItems();
 
     // Query for "vegetable" should return 2 items:
     // Node 1 is "vegetable.turnip" and node 2 is just "vegetable".
@@ -228,7 +228,7 @@ class AddHierarchyTest extends ProcessorTestBase {
       ),
     ));
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
 
     // Searching for 'fruit' or 'vegetable' should return this new node.
     $query = new Query($this->index);
@@ -271,7 +271,7 @@ class AddHierarchyTest extends ProcessorTestBase {
       ));
     }
     $this->index->reindex();
-    $this->index->indexItems();
+    $this->indexItems();
 
     // Initially hierarchy is excluded, so "vegetable" should only return nodes
     // 5 and 6.
@@ -289,7 +289,7 @@ class AddHierarchyTest extends ProcessorTestBase {
       ),
     ));
     $this->index->save();
-    $this->index->indexItems();
+    $this->indexItems();
 
     // A search for "vegetable" should now include the hierarchy.
     $query = new Query($this->index);

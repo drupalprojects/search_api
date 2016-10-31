@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2821955 by mkalkbrenner: Adapted processor test base for use with other
+  backends.
 - #2819637 by alan-ps: Renamed use of the DB layer rollback() method to
   rollBack().
 

@@ -187,4 +187,14 @@ abstract class ProcessorTestBase extends KernelTestBase {
     return $extracted_items;
   }
 
+  /**
+   * Indexes all (unindexed) items.
+   *
+   * @return int
+   *   The number of successfully indexed items.
+   */
+  protected function indexItems() {
+    return $this->index->indexItems();
+  }
+
 }
