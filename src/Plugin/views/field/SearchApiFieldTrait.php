@@ -167,18 +167,30 @@ trait SearchApiFieldTrait {
   }
 
   /**
+   * Adds an ORDER BY clause to the query for click sort columns.
+   *
+   * @param string $order
+   *   Either "ASC" or "DESC".
+   *
+   * @see \Drupal\views\Plugin\views\field\FieldHandlerInterface::clickSort()
+   */
+  public function clickSort($order) {
+    $this->getQuery()->sort($this->definition['search_api field'], $order);
+  }
+
+  /**
    * Determines if this field is click sortable.
    *
+   * This is the case if this Views field is linked to a certain Search API
+   * field.
+   *
    * @return bool
-   *   The value of "click sortable" from the plugin definition, this defaults
-   *   to FALSE if not set.
+   *   TRUE if this field is available for click-sorting, FALSE otherwise.
    *
    * @see \Drupal\views\Plugin\views\field\FieldHandlerInterface::clickSortable()
    */
   public function clickSortable() {
-    // Almost the same logic as in the parent class, but we want to default to
-    // FALSE.
-    return !empty($this->definition['click sortable']);
+    return !empty($this->definition['search_api field']);
   }
 
   /**

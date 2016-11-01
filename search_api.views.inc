@@ -62,7 +62,7 @@ function search_api_views_data() {
           if ($field_handler) {
             $field_definition['field'] = $field_handler;
             $field_definition['field']['real field'] = $field->getCombinedPropertyPath();
-            $field_definition['field']['click sortable'] = TRUE;
+            $field_definition['field']['search_api field'] = $field_id;
           }
         }
         if ($field_definition) {
@@ -402,7 +402,7 @@ function _search_api_views_data_special_fields(array &$table) {
   $table[$relevance_field]['help'] = t('The relevance of this search result with respect to the query');
   $table[$relevance_field]['field']['type'] = 'decimal';
   $table[$relevance_field]['field']['id'] = 'numeric';
-  $table[$relevance_field]['field']['click sortable'] = TRUE;
+  $table[$relevance_field]['field']['search_api field'] = 'search_api_relevance';
   $table[$relevance_field]['sort']['id'] = 'search_api';
   if ($relevance_field != 'search_api_relevance') {
     $table[$relevance_field]['real field'] = 'search_api_relevance';

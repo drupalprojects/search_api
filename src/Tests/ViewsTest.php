@@ -422,11 +422,11 @@ class ViewsTest extends SimpletestWebTestBase {
     $this->entities[4]->setOwnerId($users[1]->id())->save();
     $this->entities[5]->setOwnerId($users[2]->id())->save();
 
-    // Switch to "Fields" row style.
-    $this->clickLink($this->t('Rendered entity'));
+    // Switch to "Table" format.
+    $this->clickLink($this->t('Unformatted list'));
     $this->assertResponse(200);
     $edit = array(
-      'row[type]' => 'fields',
+      'style[type]' => 'table',
     );
     $this->drupalPostForm(NULL, $edit, $this->t('Apply'));
     $this->assertResponse(200);
@@ -498,6 +498,16 @@ class ViewsTest extends SimpletestWebTestBase {
       $this->submitFieldsForm();
     }
 
+    // Add click sorting for all fields where this is possible.
+    $this->clickLink($this->t('Settings'), 0);
+    $edit = array(
+      'style_options[info][search_api_datasource][sortable]' => 1,
+      'style_options[info][category][sortable]' => 1,
+      'style_options[info][keywords][sortable]' => 1,
+    );
+    $this->drupalPostForm(NULL, $edit, $this->t('Apply'));
+
+    // Add a filter for the "Name" field.
     $this->clickLink($this->t('Add filter criteria'));
     $edit = array(
       'name[search_api_index_database_search_index.name]' => 'search_api_index_database_search_index.name',
@@ -556,6 +566,39 @@ class ViewsTest extends SimpletestWebTestBase {
           $this->assertText($text, "Correct value displayed for field $field on entity #$id (\"$text\")$translated");
         }
       }
+    }
+
+    // Check that click-sorting works correctly.
+    $options = array(
+      'query' => array(
+        'order' => 'category',
+        'sort' => 'asc',
+      ),
+    );
+    $this->drupalGet('search-api-test', $options);
+    $this->assertResponse(200);
+    $ordered_categories = array(
+      '[EMPTY]',
+      'article_category',
+      'article_category',
+      'dutch category 1',
+      'dutch category 2',
+      'dutch category 3',
+      'dutch category 4',
+      'dutch category 5',
+      'item_category',
+      'item_category',
+    );
+    foreach ($ordered_categories as $i => $category) {
+      ++$i;
+      $this->assertText("#$i [category] $category", "Row #$i is in correct order.");
+    }
+    $options['query']['sort'] = 'desc';
+    $this->drupalGet('search-api-test', $options);
+    $this->assertResponse(200);
+    foreach (array_reverse($ordered_categories) as $i => $category) {
+      ++$i;
+      $this->assertText("#$i [category] $category", "Row #$i is in correct order.");
     }
   }
 
