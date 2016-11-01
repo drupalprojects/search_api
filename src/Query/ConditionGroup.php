@@ -94,7 +94,7 @@ class ConditionGroup implements ConditionGroupInterface {
   /**
    * Implements the magic __clone() method.
    *
-   * Takes care to clone nested condition groups, too.
+   * Takes care to clone nested conditions and condition groups, too.
    */
   public function __clone() {
     foreach ($this->conditions as $i => $condition) {

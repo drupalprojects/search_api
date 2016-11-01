@@ -648,6 +648,10 @@ class Query implements QueryInterface {
    */
   public function __clone() {
     $this->results = $this->getResults()->getCloneForQuery($this);
+    $this->conditionGroup = clone $this->conditionGroup;
+    if ($this->parseMode) {
+      $this->parseMode = clone $this->parseMode;
+    }
   }
 
   /**

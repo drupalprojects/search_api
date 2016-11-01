@@ -458,6 +458,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->regressionTest2469547();
     $this->regressionTest1403916();
     $this->regressionTest2783987();
+    $this->regressionTest2809753();
   }
 
   /**
@@ -782,6 +783,48 @@ abstract class BackendTestBase extends KernelTestBase {
     );
     $facets = $results->getExtraData('search_api_facets', array())['type'];
     $this->assertEquals($expected, $facets, 'Correct facets were returned');
+  }
+
+  /**
+   * Regression test for multiple facets.
+   *
+   * @see https://www.drupal.org/node/2809753
+   */
+  protected function regressionTest2809753() {
+    $query = $this->buildSearch();
+    $condition_group = $query->createConditionGroup('OR', array('facet:type'));
+    $condition_group->addCondition('type', 'article');
+    $query->addConditionGroup($condition_group);
+    $facets['type'] = array(
+      'field' => 'type',
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => FALSE,
+      'operator' => 'or',
+    );
+    $facets['category'] = array(
+      'field' => 'category',
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => FALSE,
+      'operator' => 'or',
+    );
+    $query->setOption('search_api_facets', $facets);
+    $results = $query->execute();
+
+    $this->assertResults(array(4, 5), $results, 'Multi-facets query');
+    $expected = array(
+      array('count' => 3, 'filter' => '"item"'),
+      array('count' => 2, 'filter' => '"article"'),
+    );
+    $type_facets = $results->getExtraData('search_api_facets')['type'];
+    usort($type_facets, array($this, 'facetCompare'));
+    $this->assertEquals($expected, $type_facets, 'Correct facets were returned for first facet');
+    $expected = array(
+      array('count' => 2, 'filter' => '"article_category"'),
+    );
+    $category_facets = $results->getExtraData('search_api_facets')['category'];
+    $this->assertEquals($expected, $category_facets, 'Correct facets were returned for second facet');
   }
 
   /**
