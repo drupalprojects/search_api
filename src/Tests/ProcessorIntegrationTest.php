@@ -15,7 +15,7 @@ use Drupal\taxonomy\Tests\TaxonomyTestTrait;
  * Tests the admin UI for processors.
  *
  * @todo Move this whole class into a single IntegrationTest check*() method?
- * @todo Add tests for the "Aggregated fields" and "Role filter" processors.
+ * @todo Add tests for the "Role filter" processor.
  *
  * @group search_api
  */
