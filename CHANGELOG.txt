@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2779159 by mark_fullmer, drunken monkey, borisson_: Added a Stemmer
+  processor.
 - #2799497 by drunken monkey: Added a getter for the Views query's "where"
   property.
 - #2574583 by drunken monkey: Fixed loading of entities from excluded bundles.

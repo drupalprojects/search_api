@@ -104,6 +104,17 @@ plugin.plugin_configuration.search_api_processor.ignore_character:
             type: ignore
             label: 'Character set'
 
+plugin.plugin_configuration.search_api_processor.stemmer:
+  type: search_api.fields_processor_configuration
+  label: 'Stemmer processor configuration'
+  mapping:
+    exceptions:
+      type: sequence
+      label: 'Stemming exceptions'
+      sequence:
+        type: string
+        label: Exception
+
 plugin.plugin_configuration.search_api_processor.role_filter:
   type: search_api.default_processor_configuration
   label: 'Role filter processor configuration'
