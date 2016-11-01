@@ -49,16 +49,6 @@ interface DisplayInterface extends PluginInspectionInterface, DerivativeInspecti
   public function getUrl();
 
   /**
-   * Returns the URL of this display.
-   *
-   * @return \Drupal\Core\Url|null
-   *   The URL of the display, or NULL if there is no specific URL for it.
-   *
-   * @deprecated Renamed to getUrl().
-   */
-  public function getPath();
-
-  /**
    * Returns true if the display is being rendered in the current request.
    *
    * @return bool

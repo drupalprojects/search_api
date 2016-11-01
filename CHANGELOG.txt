@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2795861 by sinn: Removed some deprecated methods.
 - #2748323 by sinn: Fixed comment reference to removed method
   alterPropertyDefinitions().
 - #2809753 by drunken monkey: Fixed issues with multiple OR facets.

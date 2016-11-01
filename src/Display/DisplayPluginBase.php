@@ -145,13 +145,6 @@ abstract class DisplayPluginBase extends PluginBase implements DisplayInterface 
   /**
    * {@inheritdoc}
    */
-  public function getPath() {
-    return $this->getUrl();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isRenderedInCurrentRequest() {
     $plugin_definition = $this->getPluginDefinition();
     if (!empty($plugin_definition['path'])) {
