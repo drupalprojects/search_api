@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2574583 by drunken monkey: Fixed loading of entities from excluded bundles.
 - #2795861 by sinn: Removed some deprecated methods.
 - #2748323 by sinn: Fixed comment reference to removed method
   alterPropertyDefinitions().

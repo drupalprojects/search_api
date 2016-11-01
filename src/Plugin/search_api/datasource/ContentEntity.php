@@ -364,12 +364,13 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
     $entities = $this->getEntityStorage()->loadMultiple(array_keys($entity_ids));
     $items = array();
+    $allowed_bundles = $this->getBundles();
     foreach ($entity_ids as $entity_id => $langcodes) {
+      if (empty($entities[$entity_id]) || !isset($allowed_bundles[$entities[$entity_id]->bundle()])) {
+        continue;
+      }
       foreach ($langcodes as $item_id => $langcode) {
-        // @todo Also refuse to load entities from not-included bundles? This
-        //   would help to avoid possible race conditions when removing bundles
-        //   from the datasource config. See #2574583.
-        if (!empty($entities[$entity_id]) && $entities[$entity_id]->hasTranslation($langcode)) {
+        if ($entities[$entity_id]->hasTranslation($langcode)) {
           $items[$item_id] = $entities[$entity_id]->getTranslation($langcode)->getTypedData();
         }
       }

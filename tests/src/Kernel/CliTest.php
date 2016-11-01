@@ -118,14 +118,14 @@ class CliTest extends KernelTestBase {
     EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test_mulrev_changed',
       'keywords' => array('strawberry', 'llama'),
       'category' => 'item_category',
     ))->save();
     EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test_mulrev_changed',
       'keywords' => array('strawberry', 'llama'),
       'category' => 'item_category',
     ))->save();

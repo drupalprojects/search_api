@@ -84,14 +84,14 @@ class CustomDataTypesTest extends KernelTestBase {
     $this->entities[1] = EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile' . json_decode('"\u1F601"'),
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test_mulrev_changed',
       'keywords' => array('Orange', 'orange', 'örange', 'Orange'),
       'category' => 'item_category',
     ));
     $this->entities[2] = EntityTestMulRevChanged::create(array(
       'name' => 'foo bar baz föö smile',
       'body' => 'test test case Case casE',
-      'type' => 'item',
+      'type' => 'entity_test_mulrev_changed',
       'keywords' => array('strawberry', 'llama'),
       'category' => 'item_category',
     ));
