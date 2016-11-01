@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2748323 by sinn: Fixed comment reference to removed method
+  alterPropertyDefinitions().
 - #2809753 by drunken monkey: Fixed issues with multiple OR facets.
 - #2821955 by mkalkbrenner: Adapted processor test base for use with other
   backends.
