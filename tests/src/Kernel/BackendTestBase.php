@@ -192,12 +192,10 @@ abstract class BackendTestBase extends KernelTestBase {
    */
   protected function disableHtmlFilter() {
     $index = $this->getIndex();
-    $index->removeField('body');
     $index->removeProcessor('html_filter');
     $index->save();
 
     $this->assertArrayNotHasKey('html_filter', $index->getProcessors(), 'HTML filter processor is removed.');
-    $this->assertArrayNotHasKey('body', $index->getFields(), 'Body field is removed.');
   }
 
   /**
@@ -879,6 +877,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->regressionTest1916474();
     $this->regressionTest2284199();
     $this->regressionTest2471509();
+    $this->regressionTest2616804();
   }
 
   /**
@@ -943,11 +942,6 @@ abstract class BackendTestBase extends KernelTestBase {
    * @see https://www.drupal.org/node/2616268
    */
   protected function regressionTest2471509() {
-    $index = $this->getIndex();
-    $this->addField($index, 'body');
-    $index->save();
-    $this->indexItems($this->indexId);
-
     $this->addTestEntity(8, array(
       'name' => 'Article with long body',
       'type' => 'article',
@@ -967,7 +961,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $results = $query->execute();
     $this->assertResults(array(8), $results, 'Filter on new string field');
 
-    $index->removeField('body');
+    $index->getField('body')->setType('text');
     $index->save();
   }
 
@@ -976,7 +970,7 @@ abstract class BackendTestBase extends KernelTestBase {
    *
    * @see https://www.drupal.org/node/2616804
    */
-  protected function regressionTests2616804() {
+  protected function regressionTest2616804() {
     // The word has 28 Unicode characters but 56 bytes. Verify that it is still
     // indexed correctly.
     $mb_word = 'äöüßáŧæøðđŋħĸµäöüßáŧæøðđŋħĸµ';
@@ -988,9 +982,8 @@ abstract class BackendTestBase extends KernelTestBase {
       'type' => 'item',
       'body' => $mb_body,
     ));
-    $entity_count = count($this->entities);
     $count = $this->indexItems($this->indexId);
-    $this->assertEquals($entity_count, $count, 'Indexing an item with a word with 28 multi-byte characters worked.');
+    $this->assertEquals(1, $count, 'Indexing an item with a word with 28 multi-byte characters worked.');
 
     $query = $this->buildSearch($mb_word);
     $results = $query->execute();
@@ -1005,6 +998,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $index = $this->getIndex();
     $index->getField('body')->setType('string');
     $index->save();
+    $entity_count = count($this->entities);
     $count = $index->indexItems();
     $this->assertEquals($entity_count, $count, 'Switching type from text to string worked.');
 
