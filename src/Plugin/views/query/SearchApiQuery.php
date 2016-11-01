@@ -536,6 +536,30 @@ class SearchApiQuery extends QueryPluginBase {
   }
 
   /**
+   * Retrieves the conditions placed on this query.
+   *
+   * @return array
+   *   The conditions placed on this query, separated by groups, as an
+   *   associative array with a structure like this:
+   *   - GROUP_ID:
+   *     - type: "AND"/"OR"
+   *     - conditions:
+   *       - [FILTER, VALUE, OPERATOR]
+   *       - [FILTER, VALUE, OPERATOR]
+   *       …
+   *     - condition_groups:
+   *       - ConditionGroupInterface object
+   *       - ConditionGroupInterface object
+   *       …
+   *   - GROUP_ID:
+   *     …
+   *   Returned by reference.
+   */
+  public function &getWhere() {
+    return $this->where;
+  }
+
+  /**
    * Retrieves the account object to use for access checks for this query.
    *
    * @return \Drupal\Core\Session\AccountInterface|null
