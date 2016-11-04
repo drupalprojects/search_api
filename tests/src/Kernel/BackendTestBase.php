@@ -999,7 +999,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $index->getField('body')->setType('string');
     $index->save();
     $entity_count = count($this->entities);
-    $count = $index->indexItems();
+    $count = $this->indexItems($this->indexId);
     $this->assertEquals($entity_count, $count, 'Switching type from text to string worked.');
 
     $query = $this->buildSearch(NULL, array("body,$mb_body"));
