@@ -2571,7 +2571,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $incomp_len = strlen($incomplete_key);
       foreach ($db_query->execute() as $row) {
         $suffix = ($pass == 1) ? substr($row->word, $incomp_len) : ' ' . $row->word;
-        $suggestions[] = Suggestion::fromSuggestionSuffix($suffix, $row->results);
+        $suggestions[] = Suggestion::fromSuggestionSuffix($suffix, $row->results, $user_input);
       }
     }
 

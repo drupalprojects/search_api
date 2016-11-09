@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2824326 by Jo Fitzgerald: Fixed generated autocomplete suggestions of the DB
+  backend.
 - #2824932 by mkalkbrenner: Fixed incorrect indexing call in backend tests.
 - #2821498 by stBorchert: Increased our required minimum Core version to 8.2.
 - #2816979 by drunken monkey: Added click-sorting for indexed fields in Views.
