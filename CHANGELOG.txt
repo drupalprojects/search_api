@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2789431 by phenaproxima, drunken monkey: Added possibility to display
+  processor-generated fields in Views.
 - #2822553 by niko-: Removed a test assertion that failed when run via GUI.
 - #2821445 by drunken monkey: Fixed warning in HTML filter for non-HTML fields.
 - #2733185 by sinn, drunken monkey: Added documentation and tests for tracker

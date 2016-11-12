@@ -9,6 +9,8 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListInterface;
 use Drupal\search_api\Plugin\views\SearchApiHandlerTrait;
+use Drupal\search_api\Processor\ProcessorInterface;
+use Drupal\search_api\Processor\ProcessorPropertyInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
@@ -299,6 +301,7 @@ trait SearchApiFieldTrait {
    * @see \Drupal\views\Plugin\views\field\FieldHandlerInterface::preRender()
    */
   public function preRender(&$values) {
+    $index = $this->getIndex();
     // We deal with the properties one by one, always loading the necessary
     // values for any nested properties coming afterwards.
     // @todo This works quite well, but will load each item/entity individually.
@@ -310,6 +313,9 @@ trait SearchApiFieldTrait {
     //   expandRequiredProperties() would have to provide more information, or
     //   provide a separate properties list for each row.
     foreach ($this->expandRequiredProperties() as $datasource_id => $properties) {
+      if ($datasource_id === '') {
+        $datasource_id = NULL;
+      }
       foreach ($properties as $property_path => $combined_property_path) {
         // Determine the path of the parent property, and the property key to
         // take from it for this property. If the name is "_object", we just
@@ -323,10 +329,8 @@ trait SearchApiFieldTrait {
 
         // Now go through all rows and add the property to them, if necessary.
         foreach ($values as $i => $row) {
-          // Bail for rows with the wrong datasource for this property, or for
-          // which this field doesn't even apply (which will usually be the
-          // same, though).
-          if ($datasource_id != $row->search_api_datasource || !$this->isActiveForRow($row)) {
+          // Check whether this field even exists for this row.
+          if (!$this->isActiveForRow($row)) {
             continue;
           }
           // Check whether there are parent objects present. If no, either load
@@ -365,6 +369,55 @@ trait SearchApiFieldTrait {
               // can't be present).
               if (!($parent instanceof ComplexDataInterface)) {
                 continue;
+              }
+              // Check whether this is a processor-generated property and use
+              // special code to retrieve it in this case.
+              $definitions = $index->getPropertyDefinitions($datasource_id);
+              if (!$parent_path && isset($definitions[$name])) {
+                $definition = $definitions[$name];
+                if ($definition instanceof ProcessorPropertyInterface) {
+                  $processor = $index->getProcessor($definition->getProcessorId());
+                  if (!$processor) {
+                    continue;
+                  }
+                  // We need to call the processor's addFieldValues() method in
+                  // order to get the field value. We do this using a clone of
+                  // the search item so as to preserve the original state of the
+                  // item. We also use a dummy field object – either a clone of
+                  // a fitting indexed field (to get its configuration), or a
+                  // newly created one.
+                  $property_fields = \Drupal::getContainer()
+                    ->get('search_api.fields_helper')
+                    ->filterForPropertyPath($index->getFields(), $datasource_id, $property_path);
+                  if ($property_fields) {
+                    $dummy_field = clone reset($property_fields);
+                  }
+                  else {
+                    $dummy_field = Utility::createFieldFromProperty($index, $definition, $datasource_id, $property_path, 'tmp', 'string');
+                  }
+                  /** @var \Drupal\search_api\Item\ItemInterface $dummy_item */
+                  $dummy_item = clone $row->_item;
+                  $dummy_item->setFields(array(
+                    'tmp' => $dummy_field,
+                  ));
+                  $dummy_item->setFieldsExtracted(TRUE);
+
+                  $processor->addFieldValues($dummy_item);
+
+                  if ($set_values) {
+                    $row->{$combined_property_path} = array();
+                  }
+                  foreach ($dummy_field->getValues() as $value) {
+                    if ($set_values) {
+                      $row->{$combined_property_path}[] = $value;
+                    }
+                    $typed_data = \Drupal::service('typed_data_manager')
+                      ->create($definition, $value);
+                    $row->_relationship_objects[$property_path][] = $typed_data;
+                  }
+
+                  continue;
+                }
               }
               // Add the typed data for the property to our relationship objects
               // for this property path. To treat list properties correctly
@@ -446,6 +499,9 @@ trait SearchApiFieldTrait {
   protected function expandRequiredProperties() {
     $required_properties = array();
     foreach ($this->retrievedProperties as $datasource_id => $properties) {
+      if ($datasource_id === '') {
+        $datasource_id = NULL;
+      }
       foreach (array_keys($properties) as $property_path) {
         $path_to_add = '';
         foreach (explode(':', $property_path) as $component) {
@@ -472,8 +528,8 @@ trait SearchApiFieldTrait {
    *   otherwise.
    */
   protected function isActiveForRow(ResultRow $row) {
-    $datasource_id = $this->getDatasourceId();
-    return !$datasource_id || $row->search_api_datasource === $datasource_id;
+    $datasource_ids = array(NULL, $row->search_api_datasource);
+    return in_array($this->getDatasourceId(), $datasource_ids, TRUE);
   }
 
   /**
