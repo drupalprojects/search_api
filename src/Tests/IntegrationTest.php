@@ -149,7 +149,6 @@ class IntegrationTest extends WebTestBase {
     $this->drupalPostForm(NULL, array(), $this->t('Save'));
     $this->assertResponse(200);
     $this->assertText($this->t('The index was successfully saved.'));
-    $this->assertText($this->t('Successfully executed @count pending task.', array('@count' => 1)));
     $this->assertEqual(2, $this->countTrackedItems());
 
     $this->enableAllProcessors();
