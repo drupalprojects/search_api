@@ -457,6 +457,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->regressionTest1403916();
     $this->regressionTest2783987();
     $this->regressionTest2809753();
+    $this->regressionTest2767609();
   }
 
   /**
@@ -823,6 +824,33 @@ abstract class BackendTestBase extends KernelTestBase {
     );
     $category_facets = $results->getExtraData('search_api_facets')['category'];
     $this->assertEquals($expected, $category_facets, 'Correct facets were returned for second facet');
+  }
+
+  /**
+   * Regression test for conditions with empty strings as values.
+   *
+   * @see https://www.drupal.org/node/2767609
+   */
+  protected function regressionTest2767609() {
+    $results = $this->buildSearch(NULL, array('type,'))->execute();
+    $this->assertResults(array(), $results, 'Search for empty-string type');
+
+    $results = $this->buildSearch(NULL, array('category,'))->execute();
+    $this->assertResults(array(), $results, 'Search for empty-string category');
+
+    $results = $this->buildSearch()
+      ->addCondition('category', '', '<>')
+      ->execute();
+    $this->assertResults(array(1, 2, 3, 4, 5), $results, 'Search for items with category not an empty string');
+
+    // It's not clear what the results for "category < ''" should be, but in
+    // combination with the BETWEEN this should never return results.
+    $results = $this->buildSearch()
+      ->addCondition('category', '', '<')
+      ->addCondition('category', array('', 'foo'), 'BETWEEN')
+      ->addCondition('category', array('', 'a', 'b'), 'NOT IN')
+      ->execute();
+    $this->assertResults(array(), $results, 'Search with various empty-string filters');
   }
 
   /**

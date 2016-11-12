@@ -2112,6 +2112,14 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $nested_condition->isNull($column);
             $db_condition->condition($nested_condition);
           }
+          elseif ($not_equals) {
+            // Since SQL never returns TRUE for comparison with NULL values, we
+            // need to include "OR field IS NULL" explicitly for some operators.
+            $nested_condition = new Condition('OR');
+            $nested_condition->condition($column, $value, $operator);
+            $nested_condition->isNull($column);
+            $db_condition->condition($nested_condition);
+          }
           else {
             $db_condition->condition($column, $value, $operator);
           }
