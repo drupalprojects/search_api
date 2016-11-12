@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2733185 by sinn, drunken monkey: Added documentation and tests for tracker
+  and display plugin alter hooks.
 - #2824326 by Jo Fitzgerald: Fixed generated autocomplete suggestions of the DB
   backend.
 - #2824932 by mkalkbrenner: Fixed incorrect indexing call in backend tests.

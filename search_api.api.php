@@ -112,6 +112,35 @@ function hook_search_api_parse_mode_info_alter(array &$parse_mode_definitions) {
 }
 
 /**
+ * Alter the tracker info.
+ *
+ * @param array $tracker_info
+ *   The Search API tracker info array, keyed by tracker ID.
+ *
+ * @see \Drupal\search_api\Tracker\TrackerPluginBase
+ */
+function hook_search_api_tracker_info_alter(array &$tracker_info) {
+  if (isset($tracker_info['default'])) {
+    $tracker_info['default']['example_original_class'] = $tracker_info['default']['class'];
+    $tracker_info['default']['class'] = '\Drupal\my_module\Plugin\search_api\tracker\MyCustomImplementationTracker';
+  }
+}
+
+/**
+ * Alter the list of known search displays.
+ *
+ * @param array $displays
+ *   The Search API display info array, keyed by display ID
+ *
+ * @see \Drupal\search_api\Display\DisplayPluginBase
+ */
+function hook_search_api_displays_alter(&$displays) {
+  if (isset($displays['some_key'])) {
+    $displays['some_key']['label'] = t('New label for existing Display');
+  }
+}
+
+/**
  * Alter the mapping of Drupal data types to Search API data types.
  *
  * @param array $mapping

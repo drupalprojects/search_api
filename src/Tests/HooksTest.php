@@ -80,6 +80,8 @@ class HooksTest extends WebTestBase {
     // hook_search_api_datasource_info_alter() was invoked.
     $this->drupalGet('admin/config/search/search-api/add-index');
     $this->assertText('Distant land');
+    // hook_search_api_tracker_info_alter() was invoked.
+    $this->assertText('Good luck');
 
     // hook_search_api_processor_info_alter() was invoked.
     $this->drupalGet($this->getIndexPath('processors'));
@@ -143,6 +145,12 @@ class HooksTest extends WebTestBase {
 
     // hook_search_api_server_features_alter() is triggered.
     $this->assertTrue($this->server->supportsFeature('welcome_to_the_jungle'));
+
+    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')
+      ->getInstances();
+    // hook_search_api_displays_alter was invoked.
+    $display_label = $displays['views_page:search_api_test_view__page_1']->label();
+    $this->assertEqual($display_label, 'Some funny label for testing');
   }
 
 }

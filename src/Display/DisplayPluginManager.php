@@ -31,6 +31,7 @@ class DisplayPluginManager extends DefaultPluginManager {
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/search_api/display', $namespaces, $module_handler, 'Drupal\search_api\Display\DisplayInterface', 'Drupal\search_api\Annotation\SearchApiDisplay');
     $this->setCacheBackend($cache_backend, 'search_api_displays');
+    $this->alterInfo('search_api_displays');
   }
 
   /**
