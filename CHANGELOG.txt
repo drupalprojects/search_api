@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2822836 by prince_zyxware: Fixed some Drupal coding standards violations.
 - #2822145 by drunken monkey: Fixed problem with phrase search in Views
   fulltext filter.
 - #2778261 by drunken monkey, BAHbKA: Fixed "Index items immediately"

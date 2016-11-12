@@ -298,7 +298,7 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
     }
 
     // Add an "Exclude" option for terms.
-    if(!empty($facet['query types']) && in_array('term', $facet['query types'])) {
+    if (!empty($facet['query types']) && in_array('term', $facet['query types'])) {
       $form['global']['operator']['#weight'] = -2;
       unset($form['global']['operator']['#suffix']);
       $form['global']['exclude'] = array(
