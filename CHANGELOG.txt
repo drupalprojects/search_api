@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2821445 by drunken monkey: Fixed warning in HTML filter for non-HTML fields.
 - #2733185 by sinn, drunken monkey: Added documentation and tests for tracker
   and display plugin alter hooks.
 - #2824326 by Jo Fitzgerald: Fixed generated autocomplete suggestions of the DB

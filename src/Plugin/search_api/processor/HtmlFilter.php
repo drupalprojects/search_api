@@ -211,14 +211,21 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   protected function parseHtml(&$text, $active_tag = NULL, $boost = 1.0) {
     $ret = array();
     while (($pos = strpos($text, '<')) !== FALSE) {
+      $text_before = substr($text, 0, $pos);
+      $text_after = substr($text, $pos + 1);
+      // Attempt some small error tolerance when literal "<" characters aren't
+      // escaped properly (and are free-standing).
+      if (!preg_match('#^(/?)([-:_a-zA-Z0-9]+)#', $text_after, $m)) {
+        $text = $text_before . '&lt;' . $text_after;
+        continue;
+      }
       if ($boost && $pos > 0) {
-        $value = $this->normalizeText(substr($text, 0, $pos));
+        $value = $this->normalizeText($text_before);
         if ($value !== '') {
           $ret[] = Utility::createTextToken($value, $boost);
         }
       }
-      $text = substr($text, $pos + 1);
-      preg_match('#^(/?)([-:_a-zA-Z0-9]+)#', $text, $m);
+      $text = $text_after;
       $pos = strpos($text, '>');
       $empty_tag = $text[$pos - 1] == '/';
       $text = substr($text, $pos + 1);
