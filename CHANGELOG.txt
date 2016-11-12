@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2470837 by sinn, drunken monkey: Added documentation on why to disable Core
+  Search.
 - #2767609 by drunken monkey, borisson_: Added backend tests for empty value
   conditions.
 - #2789431 by phenaproxima, drunken monkey: Added possibility to display

@@ -506,11 +506,12 @@ function _search_api_view_crud_event(ViewEntityInterface $view) {
  * @see search_api_requirements()
  */
 function _search_api_search_module_warning() {
-  if (Drupal::moduleHandler()->moduleExists('search')) {
+  if (\Drupal::moduleHandler()->moduleExists('search')) {
     $args = array(
       ':url' => Url::fromRoute('system.modules_uninstall')->toString(),
+      ':documentation' => 'https://www.drupal.org/node/2010146#core-search',
     );
-    return t('The default Drupal Search module is still enabled. If you are using Search API, you probably want to <a href=":url">uninstall</a> the Search module for performance reasons.', $args);
+    return t('The default Drupal core Search module is still enabled. If you are using Search API, you probably want to <a href=":url">uninstall</a> the Search module for performance reasons. For more information see <a href=":documentation">the Search API handbook</a>.', $args);
   }
   return NULL;
 }
