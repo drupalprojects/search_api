@@ -64,6 +64,9 @@ plugin.plugin_configuration.search_api_processor.highlight:
     highlight:
       type: string
       label: 'Defines whether returned fields should be highlighted (always/if returned/never).'
+    highlight_partial:
+      type: boolean
+      label: 'Whether matches in parts of words should be highlighted'
 
 plugin.plugin_configuration.search_api_processor.html_filter:
   type: search_api.fields_processor_configuration

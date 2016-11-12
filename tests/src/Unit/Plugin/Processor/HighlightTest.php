@@ -292,6 +292,49 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
+   * Tests highlighting of partial matches.
+   */
+  public function testPostprocessSearchResultsHighlightPartial() {
+    $this->processor->setConfiguration(array('highlight_partial' => TRUE));
+
+    $query = $this->getMock('Drupal\search_api\Query\QueryInterface');
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
+    $query->expects($this->atLeastOnce())
+      ->method('getKeys')
+      ->will($this->returnValue(array('#conjunction' => 'AND', 'partial')));
+    /** @var \Drupal\search_api\Query\QueryInterface $query */
+
+    $field = $this->createTestField('body', 'entity:node/body');
+
+    $this->index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(array('body' => $field)));
+
+    $this->processor->setIndex($this->index);
+
+    $body_values = array('Some longwordtoshowpartialmatching value');
+    $fields = array(
+      'entity:node/body' => array(
+        'type' => 'text',
+        'values' => $body_values,
+      ),
+    );
+
+    $items = $this->createItems($this->index, 1, $fields);
+
+    $results = new ResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $output = $results->getExtraData('highlighted_fields');
+    $this->assertEquals('Some longwordtoshow<strong>partial</strong>matching value', $output[$this->itemIds[0]]['body'][0], 'Highlighting is correctly applied to a partial match.');
+  }
+
+  /**
    * Tests field highlighting when previous highlighting is present.
    */
   public function testPostprocessSearchResultsWithPreviousHighlighting() {

@@ -98,6 +98,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       'excerpt' => TRUE,
       'excerpt_length' => 256,
       'highlight' => 'always',
+      'highlight_partial' => FALSE,
       'exclude_fields' => array(),
     );
   }
@@ -125,6 +126,12 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
         'never' => $this->t('Never'),
       ),
       '#default_value' => $this->configuration['highlight'],
+    );
+    $form['highlight_partial'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Highlight partial matches'),
+      '#description' => $this->t('When enabled, matches in parts of words will be highlighted as well.'),
+      '#default_value' => $this->configuration['highlight_partial'],
     );
     $form['excerpt'] = array(
       '#type' => 'checkbox',
@@ -437,8 +444,18 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
         // we are requiring a match on a word boundary, make sure $text starts
         // and ends with a space.
         $matches = array();
-        if (preg_match('/' . self::$boundary . preg_quote($key, '/') . self::$boundary . '/iu', ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
-          $found_position = $matches[0][1];
+
+        $found_position = FALSE;
+        if (!$this->configuration['highlight_partial']) {
+          $regex = '/' . self::$boundary . preg_quote($key, '/') . self::$boundary . '/iu';
+          if (preg_match($regex, ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
+            $found_position = $matches[0][1];
+          }
+        }
+        else {
+          $found_position = stripos($text, $key, $look_start[$key]);
+        }
+        if ($found_position !== FALSE) {
           $look_start[$key] = $found_position + 1;
           // Keep track of which keys we found this time, in case we need to
           // pass through again to find more text.
@@ -552,9 +569,13 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       }
       return implode('', $texts);
     }
-    $replace = $this->configuration['prefix'] . '\0' . $this->configuration['suffix'];
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
-    $text = preg_replace('/' . self::$boundary . '(' . $keys . ')' . self::$boundary . '/iu', $replace, ' ' . $text . ' ');
+    // If "Highlight partial matches" is disabled, we only want to highlight
+    // matches that are complete words. Otherwise, we want all of them.
+    $boundary = !$this->configuration['highlight_partial'] ? self::$boundary : '';
+    $regex = '/' . $boundary . '(?:' . $keys . ')' . $boundary . '/iu';
+    $replace = $this->configuration['prefix'] . '\0' . $this->configuration['suffix'];
+    $text = preg_replace($regex, $replace, ' ' . $text . ' ');
     return trim($text);
   }
 
