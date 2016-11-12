@@ -12,8 +12,8 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Tests\ExampleContentTrait;
 use Drupal\search_api\Utility\Utility;
+use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 
 /**
  * Provides a base class for backend tests.

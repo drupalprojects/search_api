@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 
@@ -9,7 +9,7 @@ use Drupal\search_api\Entity\Index;
  *
  * @group search_api
  */
-class CacheabilityTest extends WebTestBase {
+class CacheabilityTest extends SearchApiBrowserTestBase {
 
   use ExampleContentTrait;
 
@@ -23,12 +23,12 @@ class CacheabilityTest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'rest',
     'search_api',
     'search_api_test',
     'search_api_test_views',
-  );
+  ];
 
   /**
    * {@inheritdoc}
@@ -58,8 +58,8 @@ class CacheabilityTest extends WebTestBase {
 
     // Verify that the search results are marked as uncacheable.
     $this->drupalGet('search-api-test');
-    $this->assertResponse(200);
-    $this->assertHeader('x-drupal-dynamic-cache', 'UNCACHEABLE');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->responseHeaderEquals('x-drupal-dynamic-cache', 'UNCACHEABLE');
     $this->assertTrue(strpos($this->drupalGetHeader('cache-control'), 'no-cache'));
   }
 

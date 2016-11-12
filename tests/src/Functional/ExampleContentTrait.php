@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
@@ -15,7 +15,7 @@ trait ExampleContentTrait {
    *
    * @var \Drupal\entity_test\Entity\EntityTestMulRevChanged[]
    */
-  protected $entities = array();
+  protected $entities = [];
 
   /**
    * Sets up the necessary bundles on the test entity type.
@@ -31,43 +31,43 @@ trait ExampleContentTrait {
   protected function insertExampleContent() {
     // To test Unicode compliance, include all kind of strange characters here.
     $smiley = json_decode('"\u1F601"');
-    $this->addTestEntity(1, array(
+    $this->addTestEntity(1, [
       'name' => 'foo bar baz foobaz föö smile' . $smiley,
       'body' => 'test test case Case casE',
       'type' => 'item',
-      'keywords' => array('Orange', 'orange', 'örange', 'Orange', $smiley),
+      'keywords' => ['Orange', 'orange', 'örange', 'Orange', $smiley],
       'category' => 'item_category',
-    ));
-    $this->addTestEntity(2, array(
+    ]);
+    $this->addTestEntity(2, [
       'name' => 'foo test foobuz',
       'body' => 'bar test casE',
       'type' => 'item',
-      'keywords' => array('orange', 'apple', 'grape'),
+      'keywords' => ['orange', 'apple', 'grape'],
       'category' => 'item_category',
-    ));
-    $this->addTestEntity(3, array(
+    ]);
+    $this->addTestEntity(3, [
       'name' => 'bar',
       'body' => 'test foobar Case',
       'type' => 'item',
-    ));
-    $this->addTestEntity(4, array(
+    ]);
+    $this->addTestEntity(4, [
       'name' => 'foo baz',
       'body' => 'test test test',
       'type' => 'article',
-      'keywords' => array('apple', 'strawberry', 'grape'),
+      'keywords' => ['apple', 'strawberry', 'grape'],
       'category' => 'article_category',
       'width' => '1.0',
-    ));
-    $this->addTestEntity(5, array(
+    ]);
+    $this->addTestEntity(5, [
       'name' => 'bar baz',
       'body' => 'foo',
       'type' => 'article',
-      'keywords' => array('orange', 'strawberry', 'grape', 'banana'),
+      'keywords' => ['orange', 'strawberry', 'grape', 'banana'],
       'category' => 'article_category',
       'width' => '2.0',
-    ));
+    ]);
     $count = \Drupal::entityQuery('entity_test_mulrev_changed')->count()->execute();
-    $this->assertEqual($count, 5, "$count items inserted.");
+    $this->assertEquals(5, $count, "$count items inserted.");
   }
 
   /**

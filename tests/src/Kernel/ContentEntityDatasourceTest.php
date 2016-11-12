@@ -7,7 +7,7 @@ use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Tests\ExampleContentTrait;
+use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 
 /**
  * Tests correct functionality of the content entity datasource.

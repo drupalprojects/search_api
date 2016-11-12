@@ -1,16 +1,18 @@
 <?php
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Functional;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\simpletest\WebTestBase as SimpletestWebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Provides the base class for web tests for Search API.
  */
-abstract class WebTestBase extends SimpletestWebTestBase {
+abstract class SearchApiBrowserTestBase extends BrowserTestBase {
 
   use StringTranslationTrait;
 
@@ -19,11 +21,11 @@ abstract class WebTestBase extends SimpletestWebTestBase {
    *
    * @var string[]
    */
-  public static $modules = array(
+  public static $modules = [
     'node',
     'search_api',
     'search_api_test',
-  );
+  ];
 
   /**
    * An admin user used for this test.
@@ -33,14 +35,28 @@ abstract class WebTestBase extends SimpletestWebTestBase {
   protected $adminUser;
 
   /**
+   * The number of meta refresh redirects to follow, or NULL if unlimited.
+   *
+   * @var int|null
+   */
+  protected $maximumMetaRefreshCount = NULL;
+
+  /**
+   * The number of meta refresh redirects followed during ::drupalGet().
+   *
+   * @var int
+   */
+  protected $metaRefreshCount = 0;
+
+  /**
    * The permissions of the admin user.
    *
    * @var string[]
    */
-  protected $adminUserPermissions = array(
+  protected $adminUserPermissions = [
     'administer search_api',
     'access administration pages',
-  );
+  ];
 
   /**
    * A user without Search API admin permission.
@@ -78,23 +94,27 @@ abstract class WebTestBase extends SimpletestWebTestBase {
 
     // Create the users used for the tests.
     $this->adminUser = $this->drupalCreateUser($this->adminUserPermissions);
-    $this->unauthorizedUser = $this->drupalCreateUser(array('access administration pages'));
+    $this->unauthorizedUser = $this->drupalCreateUser(['access administration pages']);
     $this->anonymousUser = $this->drupalCreateUser();
 
     // Get the URL generator.
     $this->urlGenerator = $this->container->get('url_generator');
 
-    // Create a node article type.
-    $this->drupalCreateContentType(array(
-      'type' => 'article',
-      'name' => 'Article',
-    ));
+    // Create an article node type, if not already present.
+    if (!NodeType::load('article')) {
+      $this->drupalCreateContentType([
+        'type' => 'article',
+        'name' => 'Article',
+      ]);
+    }
 
-    // Create a node page type.
-    $this->drupalCreateContentType(array(
-      'type' => 'page',
-      'name' => 'Page',
-    ));
+    // Create a page node type, if not already present.
+    if (!NodeType::load('page')) {
+      $this->drupalCreateContentType([
+        'type' => 'page',
+        'name' => 'Page',
+      ]);
+    }
 
     // Do not use a batch for tracking the initial items after creating an
     // index when running the tests via the GUI. Otherwise, it seems Drupal's
@@ -113,13 +133,13 @@ abstract class WebTestBase extends SimpletestWebTestBase {
   public function getTestServer() {
     $server = Server::load('webtest_server');
     if (!$server) {
-      $server = Server::create(array(
+      $server = Server::create([
         'id' => 'webtest_server',
         'name' => 'WebTest server',
         'description' => 'WebTest server' . ' description',
         'backend' => 'search_api_test',
-        'backend_config' => array(),
-      ));
+        'backend_config' => [],
+      ]);
       $server->save();
     }
 
@@ -136,18 +156,18 @@ abstract class WebTestBase extends SimpletestWebTestBase {
     $this->indexId = 'webtest_index';
     $index = Index::load($this->indexId);
     if (!$index) {
-      $index = Index::create(array(
+      $index = Index::create([
         'id' => $this->indexId,
         'name' => 'WebTest index',
         'description' => 'WebTest index' . ' description',
         'server' => 'webtest_server',
-        'datasource_settings' => array(
-          'entity:node' => array(
+        'datasource_settings' => [
+          'entity:node' => [
             'plugin_id' => 'entity:node',
-            'settings' => array(),
-          ),
-        ),
-      ));
+            'settings' => [],
+          ],
+        ],
+      ]);
       $index->save();
     }
 
@@ -177,7 +197,30 @@ abstract class WebTestBase extends SimpletestWebTestBase {
   protected function executeTasks() {
     $task_manager = \Drupal::getContainer()->get('search_api.task_manager');
     $task_manager->executeAllTasks();
-    $this->assertEqual(0, $task_manager->getTasksCount(), 'No more pending tasks.');
+    $this->assertEquals(0, $task_manager->getTasksCount(), 'No more pending tasks.');
+  }
+
+  /**
+   * Checks for meta refresh tag and, if found, calls drupalGet() recursively.
+   *
+   * This function looks for the "http-equiv" attribute to be set to "Refresh"
+   * and is case-sensitive.
+   *
+   * @todo Remove once #2757023 gets committed (and we can depend on it).
+   */
+  protected function checkForMetaRefresh() {
+    $refresh = $this->cssSelect('meta[http-equiv="Refresh"]');
+    if (!empty($refresh) && (!isset($this->maximumMetaRefreshCount) || $this->metaRefreshCount < $this->maximumMetaRefreshCount)) {
+      // Parse the content attribute of the meta tag for the format:
+      // "[delay]: URL=[page_to_redirect_to]".
+      if (preg_match('/\d+;\s*URL=(?<url>.*)/i', $refresh[0]->getAttribute('content'), $match)) {
+        ++$this->metaRefreshCount;
+        $this->drupalGet($this->getAbsoluteUrl(Html::decodeEntities($match['url'])));
+        $this->checkForMetaRefresh();
+      }
+    }
+    // Reset refresh count.
+    $this->metaRefreshCount = 0;
   }
 
 }

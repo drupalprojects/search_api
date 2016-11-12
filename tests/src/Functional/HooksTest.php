@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_test\PluginTestTrait;
@@ -10,21 +10,21 @@ use Drupal\search_api_test\PluginTestTrait;
  *
  * @group search_api
  */
-class HooksTest extends WebTestBase {
+class HooksTest extends SearchApiBrowserTestBase {
 
   use PluginTestTrait;
 
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'node',
     'rest',
     'search_api',
     'search_api_test',
     'search_api_test_views',
     'search_api_test_hooks',
-  );
+  ];
 
   /**
    * The test server.
@@ -40,10 +40,10 @@ class HooksTest extends WebTestBase {
     parent::setUp();
 
     // Create some nodes.
-    $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 1'));
-    $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 2'));
-    $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 3'));
-    $this->drupalCreateNode(array('type' => 'page', 'title' => 'node - 4'));
+    $this->drupalCreateNode(['type' => 'page', 'title' => 'node - 1']);
+    $this->drupalCreateNode(['type' => 'page', 'title' => 'node - 2']);
+    $this->drupalCreateNode(['type' => 'page', 'title' => 'node - 3']);
+    $this->drupalCreateNode(['type' => 'page', 'title' => 'node - 4']);
 
     // Create an index and server to work with.
     $this->server = $this->getTestServer();
@@ -75,73 +75,75 @@ class HooksTest extends WebTestBase {
   public function testHooks() {
     // hook_search_api_backend_info_alter() was invoked.
     $this->drupalGet('admin/config/search/search-api/add-server');
-    $this->assertText('Slims return');
+    $this->assertSession()->pageTextContains('Slims return');
 
     // hook_search_api_datasource_info_alter() was invoked.
     $this->drupalGet('admin/config/search/search-api/add-index');
-    $this->assertText('Distant land');
+    $this->assertSession()->pageTextContains('Distant land');
     // hook_search_api_tracker_info_alter() was invoked.
-    $this->assertText('Good luck');
+    $this->assertSession()->pageTextContains('Good luck');
 
     // hook_search_api_processor_info_alter() was invoked.
     $this->drupalGet($this->getIndexPath('processors'));
-    $this->assertText('Mystic bounce');
+    $this->assertSession()->pageTextContains('Mystic bounce');
 
     // hook_search_api_parse_mode_info_alter was invoked.
     $definition = \Drupal::getContainer()
       ->get('plugin.manager.search_api.parse_mode')
       ->getDefinition('direct');
-    $this->assertEqual('Song for My Father', $definition['label']);
+    $this->assertEquals('Song for My Father', $definition['label']);
 
     // Saving the index should trigger the processor's preIndexSave() method.
-    $this->drupalPostForm(NULL, array(), $this->t('Save'));
+    $this->submitForm([], $this->t('Save'));
     $processor_methods = $this->getCalledMethods('processor');
-    $this->assertEqual(array('preIndexSave'), $processor_methods);
+    $this->assertEquals(['preIndexSave'], $processor_methods);
 
     $this->drupalGet($this->getIndexPath());
-    $this->drupalPostForm(NULL, array(), $this->t('Index now'));
+    // Duplication on value $this->t('Index now')) with summary.
+    $this->submitForm([], $this->t('Index now'));
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains('Successfully indexed 4 items.');
 
     // During indexing, alterIndexedItems() and preprocessIndexItems() should be
     // called on the processor.
     $processor_methods = $this->getCalledMethods('processor');
-    $expected = array('alterIndexedItems', 'preprocessIndexItems');
-    $this->assertEqual($expected, $processor_methods);
+    $expected = ['alterIndexedItems', 'preprocessIndexItems'];
+    $this->assertEquals($expected, $processor_methods);
 
     // hook_search_api_index_items_alter() was invoked, this removed node:1.
     // hook_search_api_query_TAG_alter() was invoked, this removed node:3.
-    $this->assertText('There are 2 items indexed on the server for this index.');
-    $this->assertText('Successfully indexed 4 items.');
-    $this->assertText('Stormy');
+    $this->assertSession()->pageTextContains('There are 2 items indexed on the server for this index.');
+    $this->assertSession()->pageTextContains('Stormy');
 
     // hook_search_api_items_indexed() was invoked.
-    $this->assertText('Please set me at ease');
+    $this->assertSession()->pageTextContains('Please set me at ease');
 
     // hook_search_api_index_reindex() was invoked.
     $this->drupalGet($this->getIndexPath('reindex'));
-    $this->drupalPostForm(NULL, array(), $this->t('Confirm'));
-    $this->assertText('Montara');
+    $this->submitForm([], $this->t('Confirm'));
+    $this->assertSession()->pageTextContains('Montara');
 
     // hook_search_api_data_type_info_alter() was invoked.
     $this->drupalGet($this->getIndexPath('fields'));
-    $this->assertText('Peace/Dolphin dance');
+    $this->assertSession()->pageTextContains('Peace/Dolphin dance');
     // The implementation of hook_search_api_field_type_mapping_alter() has
     // removed all dates, so we can't see any timestamp anymore in the page.
     $url_options['query']['datasource'] = 'entity:node';
     $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
-    $this->assertNoText('timestamp');
+    $this->assertSession()->pageTextNotContains('timestamp');
 
     $this->drupalGet('search-api-test');
     // hook_search_api_query_alter() was invoked.
-    $this->assertText('Funky blue note');
+    $this->assertSession()->pageTextContains('Funky blue note');
     // hook_search_api_results_alter() was invoked.
-    $this->assertText('Stepping into tomorrow');
+    $this->assertSession()->pageTextContains('Stepping into tomorrow');
     // hook_search_api_results_TAG_alter() was invoked.
-    $this->assertText('Llama');
+    $this->assertSession()->pageTextContains('Llama');
 
     // The query alter methods of the processor were called.
     $processor_methods = $this->getCalledMethods('processor');
-    $expected = array('preprocessSearchQuery', 'postprocessSearchResults');
-    $this->assertEqual($expected, $processor_methods);
+    $expected = ['preprocessSearchQuery', 'postprocessSearchResults'];
+    $this->assertEquals($expected, $processor_methods);
 
     // hook_search_api_server_features_alter() is triggered.
     $this->assertTrue($this->server->supportsFeature('welcome_to_the_jungle'));
@@ -150,7 +152,7 @@ class HooksTest extends WebTestBase {
       ->getInstances();
     // hook_search_api_displays_alter was invoked.
     $display_label = $displays['views_page:search_api_test_view__page_1']->label();
-    $this->assertEqual($display_label, 'Some funny label for testing');
+    $this->assertEquals('Some funny label for testing', $display_label);
   }
 
 }

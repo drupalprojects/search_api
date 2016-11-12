@@ -54,7 +54,7 @@ class IndexStatusForm extends FormBase {
       // Add the "Index now" form.
       $form['index'] = array(
         '#type' => 'details',
-        '#title' => $this->t('Index now'),
+        '#title' => $this->t('Start indexing now'),
         '#open' => TRUE,
         '#attributes' => array(
           'class' => array('container-inline'),
