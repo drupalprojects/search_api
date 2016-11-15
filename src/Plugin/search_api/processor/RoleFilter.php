@@ -62,19 +62,19 @@ class RoleFilter extends ProcessorPluginBase implements PluginFormInterface {
     $form['default'] = array(
       '#type' => 'radios',
       '#title' => $this->t('Which users should be indexed?'),
-      '#default_value' => $this->configuration['default'],
       '#options' => array(
         1 => $this->t('All but those from one of the selected roles'),
         0 => $this->t('Only those from the selected roles'),
       ),
+      '#default_value' => (int) $this->configuration['default'],
     );
     $form['roles'] = array(
       '#type' => 'select',
       '#title' => $this->t('Roles'),
-      '#default_value' => array_combine($this->configuration['roles'], $this->configuration['roles']),
       '#options' => $options,
-      '#size' => min(4, count($options)),
       '#multiple' => TRUE,
+      '#size' => min(4, count($options)),
+      '#default_value' => array_combine($this->configuration['roles'], $this->configuration['roles']),
     );
     return $form;
   }
