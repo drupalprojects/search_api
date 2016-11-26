@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Tests;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
@@ -283,6 +284,41 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
    */
   public function checkContentAccessIntegration() {
     $this->enableProcessor('content_access');
+
+    // Ensure the fields required for the "Content access" processor are now
+    // indexed.
+    $index = $this->loadIndex();
+    $index->save();
+    $content_access_fields = array(
+      'status' => array(
+        'datasource_id' => 'entity:node',
+        'property_path' => 'status',
+        'type' => 'boolean',
+        'indexed_locked' => TRUE,
+        'type_locked' => TRUE,
+      ),
+      'uid' => array(
+        'datasource_id' => 'entity:node',
+        'property_path' => 'uid',
+        'type' => 'integer',
+        'indexed_locked' => TRUE,
+        'type_locked' => TRUE,
+      ),
+      'node_grants' => array(
+        'property_path' => 'search_api_node_grants',
+        'type' => 'string',
+        'indexed_locked' => TRUE,
+        'type_locked' => TRUE,
+        'hidden' => TRUE,
+      ),
+    );
+    $index_fields = $index->getFields();
+    foreach ($content_access_fields as $field_id => $settings) {
+      $this->assertTrue(!empty($index_fields[$field_id]), "Field $field_id (required by \"Content access\" processor) is present.");
+      $field_settings = $index_fields[$field_id]->getSettings();
+      unset($field_settings['label'], $field_settings['dependencies']);
+      $this->assertEquals($settings, $field_settings, "Field $field_id has the correct settings.");
+    }
   }
 
   /**
