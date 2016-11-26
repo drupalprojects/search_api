@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2650364 by drunken monkey: Added a "skip access checks" option to the Views
+  relationship plugin.
 - #2826160 by keboca, drunken monkey: Fixed config form of "Role filter"
   processor to be more robust.
 - #2753815 by niko-, drunken monkey, itsekhmistro, borisson_: Ported Simpletest

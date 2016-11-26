@@ -235,3 +235,10 @@ views.filter_value.search_api_text:
 views.filter_value.search_api_user:
   type: string
 
+views.relationship.search_api:
+  type: views_relationship
+  label: 'Search API'
+  mapping:
+    skip_access:
+      type: boolean
+      label: Do not execute access checks for entities referenced via this relationship.

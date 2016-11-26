@@ -17,6 +17,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
+use Drupal\user\Entity\User;
 
 /**
  * Tests the Views integration of the Search API.
@@ -370,6 +371,19 @@ class ViewsTest extends SearchApiBrowserTestBase {
    * Test Views admin UI and field handlers.
    */
   public function testViewsAdmin() {
+    // Add a field from a related entity to the index to test whether it gets
+    // displayed correctly.
+    $index = Index::load($this->indexId);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($index, 'author', [
+        'label' => 'Author name',
+        'type' => 'string',
+        'datasource_id' => 'entity:entity_test_mulrev_changed',
+        'property_path' => 'user_id:entity:name',
+      ]);
+    $index->addField($field)->save();
+
     // Add some Dutch nodes.
     foreach ([1, 2, 3, 4, 5] as $id) {
       $entity = EntityTestMulRevChanged::load($id);
@@ -393,7 +407,8 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'administer users',
       'administer permissions',
     ];
-    $this->drupalLogin($this->drupalCreateUser($permissions));
+    $admin_user = $this->drupalCreateUser($permissions);
+    $this->drupalLogin($admin_user);
 
     $this->drupalGet('admin/structure/views/view/search_api_test_view');
     $this->assertSession()->statusCodeEquals(200);
@@ -454,6 +469,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'search_api_index_database_search_index.keywords',
       'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id',
       'search_api_entity_user.name',
+      'search_api_index_database_search_index.author',
       'search_api_entity_user.roles',
     ];
     $edit = [];
@@ -549,6 +565,12 @@ class ViewsTest extends SearchApiBrowserTestBase {
           $prefix = "#$row_num [$field] ";
           $text = $prefix . implode("|$prefix", $data);
           $this->assertSession()->pageTextContains($text);
+          // Special case for field "author", which duplicates content of
+          // "name".
+          if ($field === 'name') {
+            $text = str_replace('[name]', '[author]', $text);
+            $this->assertSession()->pageTextContains($text);
+          }
         }
       }
     }
@@ -585,6 +607,27 @@ class ViewsTest extends SearchApiBrowserTestBase {
       ++$i;
       $this->assertSession()->pageTextContains("#$i [category] $category");
     }
+
+    // Check the results with an anonymous visitor. All "name" fields should be
+    // empty.
+    $this->drupalLogout();
+    $this->drupalGet('search-api-test');
+    $this->assertSession()->statusCodeEquals(200);
+    $html = $this->getSession()->getPage()->getContent();
+    $this->assertEquals(10, substr_count($html, '[name] [EMPTY]'));
+
+    // Set "Skip access checks" on the "user_id" relationship and check again.
+    // The "name" field should now be listed regardless.
+    $this->drupalLogin($admin_user);
+    $this->drupalGet('admin/structure/views/nojs/handler/search_api_test_view/page_1/relationship/user_id');
+    $this->submitForm(['options[skip_access]' => 1], $this->t('Apply'));
+    $this->submitForm([], $this->t('Save'));
+    $this->assertSession()->statusCodeEquals(200);
+
+    $this->drupalLogout();
+    $this->drupalGet('search-api-test');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextNotContains('[name] [EMPTY]');
   }
 
   /**
@@ -636,7 +679,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
         $edit['options[fallback_options][display_methods][user][display_method]'] = 'id';
         break;
 
-      case 'name':
+      case 'author':
         break;
 
       case 'roles':
