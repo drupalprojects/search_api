@@ -515,6 +515,10 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'name[search_api_index_database_search_index.name]' => 'search_api_index_database_search_index.name',
     ];
     $this->submitForm($edit, $this->t('Add and configure filter criteria'));
+    $edit = [
+      'options[expose_button][checkbox][checkbox]' => 1,
+    ];
+    $this->submitForm($edit, $this->t('Expose filter'));
     $this->submitPluginForm([]);
 
     // Save the view.

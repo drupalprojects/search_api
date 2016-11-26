@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2826308 by drunken monkey, mkalkbrenner: Fixed unwanted filter in Views
+  tests.
 - #2734897 by niko-, drunken monkey: Added tests for preIndexSave()
   implementations.
 - #2650364 by drunken monkey: Added a "skip access checks" option to the Views
