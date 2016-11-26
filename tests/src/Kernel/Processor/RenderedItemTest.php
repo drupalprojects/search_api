@@ -226,7 +226,7 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->assertTrue(array_key_exists('rendered_item', $properties), 'The Properties where modified with the "rendered_item".');
     $this->assertInstanceOf('Drupal\search_api\Plugin\search_api\processor\Property\RenderedItemProperty', $properties['rendered_item'], 'Added property has the correct class.');
     $this->assertTrue(($properties['rendered_item'] instanceof DataDefinitionInterface), 'The "rendered_item" contains a valid DataDefinition instance.');
-    $this->assertEquals('text', $properties['rendered_item']->getDataType(), 'Correct DataType set in the DataDefinition.');
+    $this->assertEquals('field_item:text_long.string', $properties['rendered_item']->getDataType(), 'Correct DataType set in the DataDefinition.');
 
     // Verify that there are no properties if a datasource is given.
     $properties = $this->processor->getPropertyDefinitions($this->index->getDatasource('entity:node'));

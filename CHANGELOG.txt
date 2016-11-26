@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2826822 by drunken monkey: Fixed use of illegal typed data type "text".
 - #2826308 by drunken monkey, mkalkbrenner: Fixed unwanted filter in Views
   tests.
 - #2734897 by niko-, drunken monkey: Added tests for preIndexSave()
