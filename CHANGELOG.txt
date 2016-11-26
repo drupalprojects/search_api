@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2827717 by Fabien.Godineau, drunken monkey: Fixed disabling of search views
+  when reverting an index.
 - #2822836 by prince_zyxware: Fixed some Drupal coding standards violations.
 - #2822145 by drunken monkey: Fixed problem with phrase search in Views
   fulltext filter.
