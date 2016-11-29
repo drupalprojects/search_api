@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2828380 by jansete: Fixed taxonomy term access tag in Views filter.
 - #2827717 by Fabien.Godineau, drunken monkey: Fixed disabling of search views
   when reverting an index.
 - #2822836 by prince_zyxware: Fixed some Drupal coding standards violations.
