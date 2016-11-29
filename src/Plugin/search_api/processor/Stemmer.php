@@ -69,7 +69,7 @@ class Stemmer extends FieldsProcessorPluginBase {
     parent::validateConfigurationForm($form, $form_state);
 
     $exceptions = $form_state->getValue('exceptions');
-    if (!($parsed = parse_ini_string($exceptions))) {
+    if (($parsed = parse_ini_string($exceptions)) === FALSE) {
       $el = $form['exceptions'];
       $form_state->setError($el, $el['#title'] . ': ' . $this->t('The entered text is not in valid WORD=STEM format.'));
     }

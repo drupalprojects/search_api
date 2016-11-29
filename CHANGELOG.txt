@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2828184 by ekes: Fixed bug in Stemmer config form validation.
 - #2828848 by mkalkbrenner, drunken monkey, borisson_: Prepared IntegrationTest
   to be executed with different backends.
 - #2828148 by ekes, borisson_, drunken monkey: Fixed problem when stemming
