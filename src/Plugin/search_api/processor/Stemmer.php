@@ -107,20 +107,15 @@ class Stemmer extends FieldsProcessorPluginBase {
    */
   protected function process(&$value) {
     // In the absence of the tokenizer processor, this ensures split words.
-    $words = preg_split('/[^\p{L}\p{N}]+/u', strip_tags($value), -1, PREG_SPLIT_DELIM_CAPTURE);
+    $words = preg_split('/[^\p{L}\p{N}]+/u', strip_tags($value), -1, PREG_SPLIT_NO_EMPTY);
     $stemmed = array();
     foreach ($words as $i => $word) {
-      if ($i % 2 == 0 && strlen($word)) {
-        // To optimize processing, store processed stems in a static array.
-        if (!isset($this->stems[$word])) {
-          $stem = new Porter2($word, $this->configuration['exceptions']);
-          $this->stems[$word] = $stem->stem();
-        }
-        $stemmed[] = $this->stems[$word];
+      // To optimize processing, store processed stems in a static array.
+      if (!isset($this->stems[$word])) {
+        $stem = new Porter2($word, $this->configuration['exceptions']);
+        $this->stems[$word] = $stem->stem();
       }
-      else {
-        $stemmed[] = $word;
-      }
+      $stemmed[] = $this->stems[$word];
     }
     $value = implode(' ', $stemmed);
   }

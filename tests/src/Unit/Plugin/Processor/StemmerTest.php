@@ -181,6 +181,10 @@ class StemmerTest extends UnitTestCase {
       array('knopp', 'knopp'),
       array('knot', 'knot'),
       array('knots', 'knot'),
+      // This can happen when Tokenizer is off during indexing, or when
+      // preprocessing a search query with quoted keywords.
+      array(" \tExtra  spaces \rappeared \n", 'extra space appear'),
+      array("\tspaced-out  \r\n", 'space out'),
     );
   }
 
