@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2828848 by mkalkbrenner, drunken monkey, borisson_: Prepared IntegrationTest
+  to be executed with different backends.
 - #2828148 by ekes, borisson_, drunken monkey: Fixed problem when stemming
   multiple words at once.
 - #2826822 by drunken monkey: Fixed use of illegal typed data type "text".
