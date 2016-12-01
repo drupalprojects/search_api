@@ -10,14 +10,12 @@ use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
-use Drupal\user\Entity\User;
 
 /**
  * Tests the Views integration of the Search API.
@@ -27,7 +25,6 @@ use Drupal\user\Entity\User;
 class ViewsTest extends SearchApiBrowserTestBase {
 
   use ExampleContentTrait;
-  use StringTranslationTrait;
 
   /**
    * Modules to enable for this test.
@@ -318,8 +315,8 @@ class ViewsTest extends SearchApiBrowserTestBase {
 
     // Delete the page display for the view.
     $this->drupalGet('admin/structure/views/view/search_api_test_view');
-    $this->submitForm([], $this->t('Delete Page'));
-    $this->submitForm([], $this->t('Save'));
+    $this->submitForm([], 'Delete Page');
+    $this->submitForm([], 'Save');
 
     drupal_flush_all_caches();
 
@@ -424,40 +421,40 @@ class ViewsTest extends SearchApiBrowserTestBase {
     $this->entities[5]->setOwnerId($users[2]->id())->save();
 
     // Switch to "Table" format.
-    $this->clickLink($this->t('Unformatted list'));
+    $this->clickLink('Unformatted list');
     $this->assertSession()->statusCodeEquals(200);
     $edit = [
       'style[type]' => 'table',
     ];
-    $this->submitForm($edit, $this->t('Apply'));
+    $this->submitForm($edit, 'Apply');
     $this->assertSession()->statusCodeEquals(200);
-    $this->submitForm([], $this->t('Apply'));
+    $this->submitForm([], 'Apply');
     $this->assertSession()->statusCodeEquals(200);
 
     // Add the "User ID" relationship.
-    $this->clickLink($this->t('Add relationships'));
+    $this->clickLink('Add relationships');
     $edit = [
       'name[search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id]' => 'search_api_datasource_database_search_index_entity_entity_test_mulrev_changed.user_id',
     ];
-    $this->submitForm($edit, $this->t('Add and configure relationships'));
-    $this->submitForm([], $this->t('Apply'));
+    $this->submitForm($edit, 'Add and configure relationships');
+    $this->submitForm([], 'Apply');
 
     // Add new fields. First check that the listing seems correct.
-    $this->clickLink($this->t('Add fields'));
+    $this->clickLink('Add fields');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains($this->t('Test entity - revisions and data table datasource'));
-    $this->assertSession()->pageTextContains($this->t('Authored on'));
-    $this->assertSession()->pageTextContains($this->t('Body (indexed field)'));
-    $this->assertSession()->pageTextContains($this->t('Index Test index'));
-    $this->assertSession()->pageTextContains($this->t('Item ID'));
-    $this->assertSession()->pageTextContains($this->t('Excerpt'));
-    $this->assertSession()->pageTextContains($this->t('The search result excerpted to show found search terms'));
-    $this->assertSession()->pageTextContains($this->t('Relevance'));
-    $this->assertSession()->pageTextContains($this->t('The relevance of this search result with respect to the query'));
-    $this->assertSession()->pageTextContains($this->t('Language code'));
-    $this->assertSession()->pageTextContains($this->t('The user language code.'));
-    $this->assertSession()->pageTextContains($this->t('(No description available)'));
-    $this->assertSession()->pageTextNotContains($this->t('Error: missing help'));
+    $this->assertSession()->pageTextContains('Test entity - revisions and data table datasource');
+    $this->assertSession()->pageTextContains('Authored on');
+    $this->assertSession()->pageTextContains('Body (indexed field)');
+    $this->assertSession()->pageTextContains('Index Test index');
+    $this->assertSession()->pageTextContains('Item ID');
+    $this->assertSession()->pageTextContains('Excerpt');
+    $this->assertSession()->pageTextContains('The search result excerpted to show found search terms');
+    $this->assertSession()->pageTextContains('Relevance');
+    $this->assertSession()->pageTextContains('The relevance of this search result with respect to the query');
+    $this->assertSession()->pageTextContains('Language code');
+    $this->assertSession()->pageTextContains('The user language code.');
+    $this->assertSession()->pageTextContains('(No description available)');
+    $this->assertSession()->pageTextNotContains('Error: missing help');
 
     // Then add some fields.
     $fields = [
@@ -476,7 +473,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     foreach ($fields as $field) {
       $edit["name[$field]"] = $field;
     }
-    $this->submitForm($edit, $this->t('Add and configure fields'));
+    $this->submitForm($edit, 'Add and configure fields');
     $this->assertSession()->statusCodeEquals(200);
 
     // @todo For some strange reason, the "roles" field form is not included
@@ -501,28 +498,28 @@ class ViewsTest extends SearchApiBrowserTestBase {
     }
 
     // Add click sorting for all fields where this is possible.
-    $this->clickLink($this->t('Settings'), 0);
+    $this->clickLink('Settings', 0);
     $edit = [
       'style_options[info][search_api_datasource][sortable]' => 1,
       'style_options[info][category][sortable]' => 1,
       'style_options[info][keywords][sortable]' => 1,
     ];
-    $this->submitForm($edit, $this->t('Apply'));
+    $this->submitForm($edit, 'Apply');
 
     // Add a filter for the "Name" field.
-    $this->clickLink($this->t('Add filter criteria'));
+    $this->clickLink('Add filter criteria');
     $edit = [
       'name[search_api_index_database_search_index.name]' => 'search_api_index_database_search_index.name',
     ];
-    $this->submitForm($edit, $this->t('Add and configure filter criteria'));
+    $this->submitForm($edit, 'Add and configure filter criteria');
     $edit = [
       'options[expose_button][checkbox][checkbox]' => 1,
     ];
-    $this->submitForm($edit, $this->t('Expose filter'));
+    $this->submitForm($edit, 'Expose filter');
     $this->submitPluginForm([]);
 
     // Save the view.
-    $this->submitForm([], $this->t('Save'));
+    $this->submitForm([], 'Save');
     $this->assertSession()->statusCodeEquals(200);
 
     // Check the results.
@@ -624,8 +621,8 @@ class ViewsTest extends SearchApiBrowserTestBase {
     // The "name" field should now be listed regardless.
     $this->drupalLogin($admin_user);
     $this->drupalGet('admin/structure/views/nojs/handler/search_api_test_view/page_1/relationship/user_id');
-    $this->submitForm(['options[skip_access]' => 1], $this->t('Apply'));
-    $this->submitForm([], $this->t('Save'));
+    $this->submitForm(['options[skip_access]' => 1], 'Apply');
+    $this->submitForm([], 'Save');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->drupalLogout();
@@ -704,8 +701,8 @@ class ViewsTest extends SearchApiBrowserTestBase {
    *   The values to set in the form.
    */
   protected function submitPluginForm(array $edit) {
-    $button_label = $this->t('Apply');
-    $buttons = $this->xpath('//input[starts-with(@value, :label)]', [':label' => $button_label->render()]);
+    $button_label = 'Apply';
+    $buttons = $this->xpath('//input[starts-with(@value, :label)]', [':label' => $button_label]);
     if ($buttons) {
       $button_label = $buttons[0]->getAttribute('value');
     }

@@ -3,7 +3,6 @@
 namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
@@ -13,8 +12,6 @@ use Drupal\Tests\BrowserTestBase;
  * Provides the base class for web tests for Search API.
  */
 abstract class SearchApiBrowserTestBase extends BrowserTestBase {
-
-  use StringTranslationTrait;
 
   /**
    * Modules to enable for this test.

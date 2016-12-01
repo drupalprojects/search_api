@@ -197,7 +197,7 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     $edit = [
       'status[stopwords]' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $enabled = array_values(array_diff($enabled, ['stopwords']));
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
@@ -212,10 +212,10 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
   public function testLimitProcessors() {
     $this->loadProcessorsTab();
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains($this->t('Highlight'));
-    $this->assertSession()->pageTextContains($this->t('Ignore character'));
-    $this->assertSession()->pageTextContains($this->t('Tokenizer'));
-    $this->assertSession()->pageTextContains($this->t('Stopwords'));
+    $this->assertSession()->pageTextContains('Highlight');
+    $this->assertSession()->pageTextContains('Ignore character');
+    $this->assertSession()->pageTextContains('Tokenizer');
+    $this->assertSession()->pageTextContains('Stopwords');
 
     // Create a new server with the "search_api_test" backend.
     $server = Server::create([
@@ -237,15 +237,15 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     // Use the newly created server.
     $settings_path = 'admin/config/search/search-api/index/' . $this->indexId . '/edit';
     $this->drupalGet($settings_path);
-    $this->submitForm(['server' => 'webtest_server'], $this->t('Save'));
+    $this->submitForm(['server' => 'webtest_server'], 'Save');
 
     // Load the processors again and check that they are not shown anymore.
     $this->loadProcessorsTab();
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextNotContains($this->t('Highlight'));
-    $this->assertSession()->pageTextNotContains($this->t('Ignore character'));
-    $this->assertSession()->pageTextNotContains($this->t('Tokenizer'));
-    $this->assertSession()->pageTextNotContains($this->t('Stopwords'));
+    $this->assertSession()->pageTextNotContains('Highlight');
+    $this->assertSession()->pageTextNotContains('Ignore character');
+    $this->assertSession()->pageTextNotContains('Tokenizer');
+    $this->assertSession()->pageTextNotContains('Stopwords');
   }
 
   /**
@@ -264,8 +264,8 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     // See \Drupal\search_api\Tests\IntegrationTest::addField().
     $this->assertSession()->responseContains('name="aggregated_field"');
     $this->submitForm([], 'aggregated_field');
-    $args['%label'] = $this->t('Aggregated field');
-    $this->assertSession()->responseContains($this->t('Field %label was added to the index.', $args));
+    $args['%label'] = 'Aggregated field';
+    $this->assertSession()->responseContains(new FormattableMarkup('Field %label was added to the index.', $args));
     $this->assertSession()->addressEquals($this->getIndexPath('fields/aggregated_field/edit'));
     $edit = [
       'type' => 'first',
@@ -273,10 +273,10 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
       'fields[entity:node/type]' => 'type',
       'fields[entity:node/uid]' => 'uid',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
 
     $this->assertSession()->addressEquals($this->getIndexPath('fields'));
-    $this->assertSession()->responseContains($this->t('The field configuration was successfully saved.'));
+    $this->assertSession()->responseContains('The field configuration was successfully saved.');
   }
 
   /**
@@ -345,7 +345,7 @@ h1: 4
 foo bar
 TAGS
     ];
-    $this->checkValidationError($configuration, 'html_filter', $this->t('Tags is not a valid YAML map.'));
+    $this->checkValidationError($configuration, 'html_filter', 'Tags is not a valid YAML map.');
     $configuration = [
       'tags' => <<<TAGS
 h1:
@@ -356,9 +356,9 @@ h3: -1
 TAGS
     ];
     $errors = [
-      $this->t("Boost value for tag @tag can't be an array.", ['@tag' => '<h1>']),
-      $this->t('Boost value for tag @tag must be numeric.', ['@tag' => '<h2>']),
-      $this->t('Boost value for tag @tag must be non-negative.', ['@tag' => '<h3>']),
+      new FormattableMarkup("Boost value for tag @tag can't be an array.", ['@tag' => '<h1>']),
+      new FormattableMarkup('Boost value for tag @tag must be numeric.', ['@tag' => '<h2>']),
+      new FormattableMarkup('Boost value for tag @tag must be non-negative.', ['@tag' => '<h3>']),
     ];
     $this->checkValidationError($configuration, 'html_filter', $errors);
 
@@ -387,7 +387,7 @@ TAGS
     $configuration = [
       'ignorable' => ':)',
     ];
-    $this->checkValidationError($configuration, 'ignore_character', $this->t('The entered text is no valid regular expression.'));
+    $this->checkValidationError($configuration, 'ignore_character', 'The entered text is no valid regular expression.');
 
     $configuration = $form_values = [
       'ignorable' => '[¿¡!?,.]',
@@ -442,18 +442,18 @@ TAGS
     // See \Drupal\search_api\Tests\IntegrationTest::addField().
     $this->assertSession()->responseContains('name="rendered_item"');
     $this->submitForm([], 'rendered_item');
-    $args['%label'] = $this->t('Rendered HTML output');
-    $this->assertSession()->responseContains($this->t('Field %label was added to the index.', $args));
+    $args['%label'] = 'Rendered HTML output';
+    $this->assertSession()->responseContains(new FormattableMarkup('Field %label was added to the index.', $args));
     $this->assertSession()->addressEquals($this->getIndexPath('fields/rendered_item/edit'));
     $edit = [
       'roles[]' => ['authenticated'],
       'view_mode[entity:node][article]' => 'default',
       'view_mode[entity:node][page]' => 'teaser',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
 
     $this->assertSession()->addressEquals($this->getIndexPath('fields'));
-    $this->assertSession()->responseContains($this->t('The field configuration was successfully saved.'));
+    $this->assertSession()->responseContains('The field configuration was successfully saved.');
   }
 
   /**
@@ -476,7 +476,7 @@ TAGS
     $configuration = [
       'spaces' => ':)',
     ];
-    $this->checkValidationError($configuration, 'tokenizer', $this->t('The entered text is no valid regular expression.'));
+    $this->checkValidationError($configuration, 'tokenizer', 'The entered text is no valid regular expression.');
 
     $configuration = [
       'spaces' => '',
@@ -535,7 +535,7 @@ TAGS
     $edit = [
       "status[$processor_id]" => 1,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->assertTrue($this->loadIndex()->isValidProcessor($processor_id), "Successfully enabled the '$processor_id' processor.'");
   }
 
@@ -569,7 +569,7 @@ TAGS
     if ($enable) {
       $edit["status[$processor_id]"] = 1;
     }
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
 
     $processor = $this->loadIndex()->getProcessor($processor_id);
     $this->assertTrue($processor, "Successfully enabled the '$processor_id' processor.'");
@@ -599,7 +599,7 @@ TAGS
 
     $edit = $this->getFormValues($form_values, "processors[$processor_id][settings]");
     $edit["status[$processor_id]"] = 1;
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
 
     if (!is_array($messages)) {
       $messages = [$messages];
@@ -607,8 +607,8 @@ TAGS
     foreach ($messages as $message) {
       $this->assertSession()->responseContains($message);
     }
-    $this->assertSession()->pageTextNotContains($this->t('The indexing workflow was successfully edited.'));
-    $this->assertSession()->pageTextNotContains($this->t('No values were changed.'));
+    $this->assertSession()->pageTextNotContains('The indexing workflow was successfully edited.');
+    $this->assertSession()->pageTextNotContains('No values were changed.');
 
     $this->loadProcessorsTab(TRUE);
   }

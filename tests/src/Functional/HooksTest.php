@@ -94,13 +94,13 @@ class HooksTest extends SearchApiBrowserTestBase {
     $this->assertEquals('Song for My Father', $definition['label']);
 
     // Saving the index should trigger the processor's preIndexSave() method.
-    $this->submitForm([], $this->t('Save'));
+    $this->submitForm([], 'Save');
     $processor_methods = $this->getCalledMethods('processor');
     $this->assertEquals(['preIndexSave'], $processor_methods);
 
     $this->drupalGet($this->getIndexPath());
-    // Duplication on value $this->t('Index now')) with summary.
-    $this->submitForm([], $this->t('Index now'));
+    // Duplication on value 'Index now' with summary.
+    $this->submitForm([], 'Index now');
     $this->checkForMetaRefresh();
     $this->assertSession()->pageTextContains('Successfully indexed 4 items.');
 
@@ -120,7 +120,7 @@ class HooksTest extends SearchApiBrowserTestBase {
 
     // hook_search_api_index_reindex() was invoked.
     $this->drupalGet($this->getIndexPath('reindex'));
-    $this->submitForm([], $this->t('Confirm'));
+    $this->submitForm([], 'Confirm');
     $this->assertSession()->pageTextContains('Montara');
 
     // hook_search_api_data_type_info_alter() was invoked.

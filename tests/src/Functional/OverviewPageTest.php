@@ -101,7 +101,7 @@ class OverviewPageTest extends SearchApiBrowserTestBase {
     $index_class = Html::cleanCssIdentifier($index->getEntityTypeId() . '-' . $index->id());
     $fields = $this->xpath('//tr[contains(@class,"' . $index_class . '") and contains(@class, "search-api-list-enabled")]');
     $this->assertNotEmpty($fields, 'Index is in proper table');
-    $this->assertSession()->linkNotExists($this->t('Execute pending tasks'), 'No pending tasks to execute.');
+    $this->assertSession()->linkNotExists('Execute pending tasks', 'No pending tasks to execute.');
 
     // Tests that the "Execute pending tasks" local action is correctly
     // displayed when there are pending tasks.
@@ -113,7 +113,7 @@ class OverviewPageTest extends SearchApiBrowserTestBase {
     // #2722237.
     \Drupal::cache('render')->invalidateAll();
     $this->drupalGet($this->overviewPageUrl);
-    $this->assertSession()->linkExists($this->t('Execute pending tasks'), 0);
+    $this->assertSession()->linkExists('Execute pending tasks', 0);
   }
 
   /**

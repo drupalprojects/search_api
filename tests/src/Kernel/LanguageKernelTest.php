@@ -4,7 +4,6 @@ namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
-use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;

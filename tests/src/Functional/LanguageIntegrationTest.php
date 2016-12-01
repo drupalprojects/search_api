@@ -67,14 +67,14 @@ class LanguageIntegrationTest extends SearchApiBrowserTestBase {
 
     // Clear index.
     $this->drupalGet($this->getIndexPath());
-    $this->submitForm([], $this->t('Clear all indexed data'));
-    $this->submitForm([], $this->t('Confirm'));
+    $this->submitForm([], 'Clear all indexed data');
+    $this->submitForm([], 'Confirm');
 
     // Make sure all 5 items are successfully indexed.
     $this->drupalGet($this->getIndexPath());
-    $this->submitForm([], $this->t('Index now'));
+    $this->submitForm([], 'Index now');
     $this->checkForMetaRefresh();
-    $this->assertSession()->pageTextContains($this->t('Successfully indexed 5 items'));
+    $this->assertSession()->pageTextContains('Successfully indexed 5 items');
 
     // Change the datasource to disallow indexing of dutch.
     $form_values = [
@@ -82,7 +82,7 @@ class LanguageIntegrationTest extends SearchApiBrowserTestBase {
       'datasource_configs[entity:node][languages][selected][nl]' => 1,
     ];
     $this->drupalGet($this->getIndexPath('edit'));
-    $this->submitForm($form_values, $this->t('Save'));
+    $this->submitForm($form_values, 'Save');
     $this->checkForMetaRefresh();
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('The index was successfully saved.');
@@ -90,9 +90,9 @@ class LanguageIntegrationTest extends SearchApiBrowserTestBase {
     // Make sure that we only have 3 indexed items now. The 2 original nodes
     // + 1 translation in lolspeak, the 2 dutch translations should be ignored.
     $this->drupalGet($this->getIndexPath());
-    $this->submitForm([], $this->t('Index now'));
+    $this->submitForm([], 'Index now');
     $this->checkForMetaRefresh();
-    $this->assertSession()->pageTextContains($this->t('Successfully indexed 3 items'));
+    $this->assertSession()->pageTextContains('Successfully indexed 3 items');
 
     // Change the datasource to only allow indexing of dutch.
     $form_values = [
@@ -102,7 +102,7 @@ class LanguageIntegrationTest extends SearchApiBrowserTestBase {
       'datasource_configs[entity:node][bundles][selected][article]' => 1,
     ];
     $this->drupalGet($this->getIndexPath('edit'));
-    $this->submitForm($form_values, $this->t('Save'));
+    $this->submitForm($form_values, 'Save');
     $this->checkForMetaRefresh();
     $this->assertSession()->statusCodeEquals(200);
     //Completed 1 of 1.
@@ -111,9 +111,9 @@ class LanguageIntegrationTest extends SearchApiBrowserTestBase {
     // Make sure that we only have 2 index items. The only indexed items should
     // be the dutch translations.
     $this->drupalGet($this->getIndexPath());
-    $this->submitForm([], $this->t('Index now'));
+    $this->submitForm([], 'Index now');
     $this->checkForMetaRefresh();
-    $this->assertSession()->pageTextContains($this->t('Successfully indexed 2 items'));
+    $this->assertSession()->pageTextContains('Successfully indexed 2 items');
   }
 
   /**
