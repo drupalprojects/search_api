@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2823985 by felribeiro, dermario, borisson_: Added an integration test for
+  the "Role filter" processor.
 - #2832015 by mkalkbrenner: Removed translations from functional tests.
 - #2828184 by ekes: Fixed bug in Stemmer config form validation.
 - #2828848 by mkalkbrenner, drunken monkey, borisson_: Prepared IntegrationTest

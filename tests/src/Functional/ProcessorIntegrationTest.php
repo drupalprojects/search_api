@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\search_api\Tests;
+namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
@@ -11,13 +11,11 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api_test\PluginTestTrait;
 use Drupal\taxonomy\Tests\TaxonomyTestTrait;
-use Drupal\Tests\search_api\Functional\SearchApiBrowserTestBase;
 
 /**
  * Tests the admin UI for processors.
  *
  * @todo Move this whole class into a single IntegrationTest check*() method?
- * @todo Add tests for the "Role filter" processor.
  *
  * @group search_api
  */
@@ -50,6 +48,10 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
       'datasource_settings' => [
         'entity:node' => [
           'plugin_id' => 'entity:node',
+          'settings' => [],
+        ],
+        'entity:user' => [
+          'plugin_id' => 'entity:user',
           'settings' => [],
         ],
       ],
@@ -153,6 +155,13 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
 
     $this->checkNodeStatusIntegration();
     $enabled[] = 'node_status';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEquals($enabled, $actual_processors);
+
+    $this->checkRoleFilterIntegration();
+    $enabled[] = 'role_filter';
     sort($enabled);
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
@@ -424,6 +433,21 @@ TAGS
    */
   public function checkNodeStatusIntegration() {
     $this->enableProcessor('node_status');
+  }
+
+  /**
+   * Tests the UI for the "Role filter" processor.
+   */
+  public function checkRoleFilterIntegration() {
+    $this->enableProcessor('role_filter');
+
+    $configuration = [
+      'default' => 1,
+      'roles' => [
+        'anonymous',
+      ],
+    ];
+    $this->editSettingsForm($configuration, 'role_filter');
   }
 
   /**
