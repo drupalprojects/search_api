@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2827961 by drunken monkey, Steven Jones: Fixed problems with giant scores in
+  DB backend.
 - #2823985 by felribeiro, dermario, borisson_: Added an integration test for
   the "Role filter" processor.
 - #2832015 by mkalkbrenner: Removed translations from functional tests.

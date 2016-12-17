@@ -1261,11 +1261,15 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $field_name = self::getTextFieldName($field_id);
             $boost = $field_info['boost'];
             foreach ($unique_tokens as $token) {
+              $score = round($token['score'] * $boost * self::SCORE_MULTIPLIER);
+              // Take care that the score doesn't exceed the maximum value for
+              // the database column (2^32-1).
+              $score = min((int) $score, 4294967295);
               $text_inserts[] = array(
                 'item_id' => $item_id,
                 'field_name' => $field_name,
                 'word' => $token['value'],
-                'score' => (int) round($token['score'] * $boost * self::SCORE_MULTIPLIER),
+                'score' => $score,
               );
             }
           }

@@ -15,8 +15,8 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  *   description = @Translation("Configure types of characters which should be ignored for searches."),
  *   stages = {
  *     "pre_index_save" = 0,
- *     "preprocess_index" = -20,
- *     "preprocess_query" = -20
+ *     "preprocess_index" = -10,
+ *     "preprocess_query" = -10,
  *   }
  * )
  */
