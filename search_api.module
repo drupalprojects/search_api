@@ -294,6 +294,10 @@ function search_api_node_access_records_alter(&$grants, NodeInterface $node) {
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
       switch ($datasource->getEntityTypeId()) {
         case 'node':
+          // Don't index the node if search_api_skip_tracking is set on it.
+          if ($node->search_api_skip_tracking) {
+            continue 2;
+          }
           $item_id = $datasource->getItemId($node->getTypedData());
           if ($item_id !== NULL) {
             $index->trackItemsUpdated($datasource_id, array($item_id));
