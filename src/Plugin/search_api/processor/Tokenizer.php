@@ -104,7 +104,7 @@ class Tokenizer extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function testType($type) {
-    return Utility::isTextType($type);
+    return $this->getDataTypeHelper()->isTextType($type);
   }
 
   /**

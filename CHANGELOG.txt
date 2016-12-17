@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2709351 by drunken monkey: Fixed invalid processor configurations when field
+  configuration changes.
 - #2829351 by SchnWalter, drunken monkey, borisson_: Fixed
   $entity->search_api_skip_tracking for nodes.
 - #2827961 by drunken monkey, Steven Jones: Fixed problems with giant scores in

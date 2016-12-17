@@ -95,19 +95,31 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
   public function preIndexSave() {
     parent::preIndexSave();
 
-    if (!isset($this->configuration['fields'])) {
+    if (empty($this->configuration['fields'])) {
       return;
     }
 
-    $renames = $this->index->getFieldRenames();
-
+    // Apply field ID changes to the fields selected for this processor.
     $selected_fields = array_flip($this->configuration['fields']);
+    $renames = $this->index->getFieldRenames();
     $renames = array_intersect_key($renames, $selected_fields);
     if ($renames) {
       $new_fields = array_keys(array_diff_key($selected_fields, $renames));
       $new_fields = array_merge($new_fields, array_values($renames));
       $this->configuration['fields'] = $new_fields;
     }
+
+    // Remove fields from the configuration that are no longer compatible with
+    // this processor (or no longer present on the index at all).
+    foreach ($this->configuration['fields'] as $i => $field_id) {
+      $field = $this->index->getField($field_id);
+      if ($field === NULL || !$this->testType($field->getType())) {
+        unset($this->configuration['fields'][$i]);
+      }
+    }
+    // Serialization might be problematic if the array indices aren't completely
+    // sequential.
+    $this->configuration['fields'] = array_values($this->configuration['fields']);
   }
 
   /**
@@ -356,7 +368,8 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
    *   TRUE if fields of that type should be processed, FALSE otherwise.
    */
   protected function testType($type) {
-    return $this->getDataTypeHelper()->isTextType($type, array('text', 'string'));
+    return $this->getDataTypeHelper()
+      ->isTextType($type, array('text', 'string'));
   }
 
   /**

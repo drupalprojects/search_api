@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
+use Drupal\search_api\Item\Field;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Query\Condition;
@@ -54,22 +55,47 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   }
 
   /**
-   * Tests whether the processor handles field ID changes correctly.
+   * Tests whether the processor handles field changes correctly.
    */
   public function testFieldRenaming() {
-    $configuration['fields'] = array('text_field', 'float_field');
+    $configuration['fields'] = array(
+      'float_field',
+      'float_field_2',
+      'string_field',
+      'text_field',
+      'text_field_2',
+    );
     $this->processor->setConfiguration($configuration);
+
+    $override = function ($type) {
+      return in_array($type, array('string', 'text'));
+    };
+    $this->processor->setMethodOverride('testType', $override);
 
     $this->index->method('getFieldRenames')
       ->willReturn(array(
-        'text_field' => 'foobar',
+        'float_field' => 'foo',
+        'text_field' => 'bar',
+      ));
+    $this->index->method('getField')
+      ->willReturnMap(array(
+        array('float_field', (new Field($this->index, ''))->setType('float')),
+        array('float_field_2', NULL),
+        array('string_field', (new Field($this->index, ''))->setType('string')),
+        array('bar', (new Field($this->index, ''))->setType('text')),
+        array('text_field_2', (new Field($this->index, ''))->setType('text')),
       ));
 
     $this->processor->preIndexSave();
 
     $fields = $this->processor->getConfiguration()['fields'];
     sort($fields);
-    $this->assertEquals(array('float_field', 'foobar'), $fields);
+    $expected = array(
+      'bar',
+      'string_field',
+      'text_field_2',
+    );
+    $this->assertEquals($expected, $fields);
   }
 
   /**
