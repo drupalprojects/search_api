@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2837099 by drunken monkey: Fixed the tests in latest Drupal 8.3 dev version.
 - #2709351 by drunken monkey: Fixed invalid processor configurations when field
   configuration changes.
 - #2829351 by SchnWalter, drunken monkey, borisson_: Fixed

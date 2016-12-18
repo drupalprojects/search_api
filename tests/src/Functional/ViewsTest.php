@@ -718,12 +718,16 @@ class ViewsTest extends SearchApiBrowserTestBase {
    * before modules install we need to add test entity bundles for this test.
    */
   public function installDrupal() {
+    // @todo Once we depend on Drupal 8.3+, this can be simplified by a lot.
+    $password = $this->randomMachineName();
     // Define information about the user 1 account.
     $this->rootUser = new UserSession(array(
       'uid' => 1,
       'name' => 'admin',
       'mail' => 'admin@example.com',
-      'passRaw' => $this->randomMachineName(),
+      'pass_raw' => $password,
+      'passRaw' => $password,
+      'timezone' => date_default_timezone_get(),
     ));
 
     // The child site derives its session name from the database prefix when
