@@ -46,14 +46,8 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
       'id' => $this->indexId,
       'status' => 1,
       'datasource_settings' => [
-        'entity:node' => [
-          'plugin_id' => 'entity:node',
-          'settings' => [],
-        ],
-        'entity:user' => [
-          'plugin_id' => 'entity:user',
-          'settings' => [],
-        ],
+        'entity:node' => [],
+        'entity:user' => [],
       ],
     ]);
 

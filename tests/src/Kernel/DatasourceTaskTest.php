@@ -116,16 +116,10 @@ class DatasourceTaskTest extends KernelTestBase {
       'id' => 'test_index',
       'status' => 1,
       'datasource_settings' => array(
-        'entity:' . $this->testEntityTypeId => array(
-          'plugin_id' => 'entity:' . $this->testEntityTypeId,
-          'settings' => array(),
-        ),
+        'entity:' . $this->testEntityTypeId => array(),
       ),
       'tracker_settings' => array(
-        'default' => array(
-          'plugin_id' => 'default',
-          'settings' => array(),
-        ),
+        'default' => array(),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),

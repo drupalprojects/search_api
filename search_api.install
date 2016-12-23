@@ -125,3 +125,42 @@ function search_api_requirements($phase) {
   }
   return array();
 }
+
+/**
+ * Adapts index config schema to remove an unnecessary layer for plugins.
+ */
+function search_api_update_8101() {
+  // This update function updates search indexes for the change from
+  // https://www.drupal.org/node/2656052.
+  $config_factory = \Drupal::configFactory();
+  $plugin_types = [
+    'processor',
+    'datasource',
+    'tracker',
+  ];
+
+  foreach ($config_factory->listAll('search_api.index.') as $index_id) {
+    $index = $config_factory->getEditable($index_id);
+    $changed = FALSE;
+
+    foreach ($plugin_types as $plugin_type) {
+      $property = $plugin_type . '_settings';
+      $plugins = $index->get($property);
+      foreach ($plugins as $id => $config) {
+        if (isset($config['plugin_id']) && isset($config['settings'])) {
+          $changed = TRUE;
+          $plugins[$id] = $config['settings'];
+        }
+      }
+      $index->set($property, $plugins);
+    }
+
+    if ($changed) {
+      // Mark the resulting configuration as trusted data. This avoids issues
+      // with future schema changes.
+      $index->save(TRUE);
+    }
+  }
+
+  return t('Index config schema updated.');
+}

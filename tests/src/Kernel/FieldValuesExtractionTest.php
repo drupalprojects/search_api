@@ -120,10 +120,7 @@ class FieldValuesExtractionTest extends KernelTestBase {
         ),
       ),
       'datasource_settings' => array(
-        'entity:entity_test_mulrev_changed' => array(
-          'plugin_id' => 'entity:entity_test_mulrev_changed',
-          'settings' => array(),
-        ),
+        'entity:entity_test_mulrev_changed' => array(),
       ),
     ));
 

@@ -65,10 +65,10 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  *     "description",
  *     "read_only",
  *     "field_settings",
- *     "processor_settings",
- *     "options",
  *     "datasource_settings",
+ *     "processor_settings",
  *     "tracker_settings",
+ *     "options",
  *     "server",
  *   },
  *   links = {
@@ -150,8 +150,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @code
    * array(
    *   'DATASOURCE_ID' => array(
-   *     'plugin_id' => 'DATASOURCE_ID',
-   *     'settings' => array(),
+   *     // Settings …
    *   ),
    *   …
    * )
@@ -183,8 +182,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @code
    * array(
    *   'TRACKER_ID' => array(
-   *     'plugin_id' => 'TRACKER_ID',
-   *     'settings' => array(),
+   *     // Settings …
    *   ),
    * )
    * @endcode
@@ -233,11 +231,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @code
    * array(
    *   'PROCESSOR_ID' => array(
-   *     'plugin_id' => 'PROCESSOR_ID',
-   *     'settings' => array(
-   *       'weights' => array(),
-   *       …
-   *     ),
+   *     'weights' => array(),
+   *     // Other settings …
    *   ),
    *   …
    * )
@@ -366,7 +361,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $configuration = $configurations[$plugin_id];
       }
       elseif (isset($this->{"{$type}_settings"}[$plugin_id])) {
-        $configuration = $this->{"{$type}_settings"}[$plugin_id]['settings'];
+        $configuration = $this->{"{$type}_settings"}[$plugin_id];
       }
       $plugins[$plugin_id] = $this->createPlugin($type, $plugin_id, $configuration);
     }
@@ -481,8 +476,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $tracker_id = $this->getTrackerId();
 
       $configuration = array();
-      if (!empty($this->tracker_settings[$tracker_id]['settings'])) {
-        $configuration = $this->tracker_settings[$tracker_id]['settings'];
+      if (!empty($this->tracker_settings[$tracker_id])) {
+        $configuration = $this->tracker_settings[$tracker_id];
       }
 
       $this->trackerInstance = $this->createPlugin('tracker', $tracker_id, $configuration);
@@ -1229,29 +1224,20 @@ class Index extends ConfigEntityBase implements IndexInterface {
     $processors = $this->getProcessors();
     $this->processor_settings = array();
     foreach ($processors as $processor_id => $processor) {
-      $this->processor_settings[$processor_id] = array(
-        'plugin_id' => $processor_id,
-        'settings' => $processor->getConfiguration(),
-      );
+      $this->processor_settings[$processor_id] = $processor->getConfiguration();
     }
 
     // Write the tracker configuration to the settings property.
     $tracker = $this->getTrackerInstance();
     $tracker_id = $tracker->getPluginId();
     $this->tracker_settings = array(
-      $tracker_id => array(
-        'plugin_id' => $tracker_id,
-        'settings' => $tracker->getConfiguration(),
-      ),
+      $tracker_id => $tracker->getConfiguration(),
     );
 
     // Write the enabled datasources to the settings array.
     $this->datasource_settings = array();
     foreach ($this->getDatasources() as $plugin_id => $datasource) {
-      $this->datasource_settings[$plugin_id] = array(
-        'plugin_id' => $plugin_id,
-        'settings' => $datasource->getConfiguration(),
-      );
+      $this->datasource_settings[$plugin_id] = $datasource->getConfiguration();
     }
 
     return $this;
@@ -1802,10 +1788,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         ->get('default_tracker');
 
       $this->tracker_settings = array(
-        $default_tracker_id => array(
-          'plugin_id' => $default_tracker_id,
-          'settings' => array(),
-        ),
+        $default_tracker_id => array(),
       );
       // Reset $trackerInstance so it will get newly loaded from our reset
       // settings when required.
@@ -1824,15 +1807,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       foreach ($plugin_configs as $plugin_id => $plugin_config) {
         switch ($plugin_type) {
           case 'processors':
-            $this->processor_settings[$plugin_id]['settings'] = $plugin_config;
+            $this->processor_settings[$plugin_id] = $plugin_config;
             break;
 
           case 'datasources':
-            $this->datasource_settings[$plugin_id]['settings'] = $plugin_config;
+            $this->datasource_settings[$plugin_id] = $plugin_config;
             break;
 
           case 'tracker':
-            $this->tracker_settings[$plugin_id]['settings'] = $plugin_config;
+            $this->tracker_settings[$plugin_id] = $plugin_config;
             break;
 
         }

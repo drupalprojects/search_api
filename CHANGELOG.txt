@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2656052 by drunken monkey: Removed the "plugin_id"/"settings" sub-level of
+  index plugin settings.
 - #2837099 by drunken monkey: Fixed the tests in latest Drupal 8.3 dev version.
 - #2709351 by drunken monkey: Fixed invalid processor configurations when field
   configuration changes.

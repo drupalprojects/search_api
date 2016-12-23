@@ -93,16 +93,10 @@ class ServerChangesTest extends KernelTestBase {
       'id' => 'test_index',
       'status' => 1,
       'datasource_settings' => array(
-        'entity:user' => array(
-          'plugin_id' => 'entity:user',
-          'settings' => array(),
-        ),
+        'entity:user' => array(),
       ),
       'tracker_settings' => array(
-        'default' => array(
-          'plugin_id' => 'default',
-          'settings' => array(),
-        ),
+        'default' => array(),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),

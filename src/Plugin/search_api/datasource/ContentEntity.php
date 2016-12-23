@@ -991,24 +991,20 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
     $entity_type = $entity->getEntityTypeId();
     $datasource_id = 'entity:' . $entity_type;
     $entity_bundle = $entity->bundle();
-
-    $index_names = \Drupal::entityQuery('search_api_index')
-      ->condition('datasource_settings.*.plugin_id', $datasource_id)
-      ->execute();
-
-    if (!$index_names) {
-      return array();
-    }
+    $has_bundles = $entity->getEntityType()->hasKey('bundle');
 
     // Needed for PhpStorm. See https://youtrack.jetbrains.com/issue/WI-23395.
     /** @var \Drupal\search_api\IndexInterface[] $indexes */
-    $indexes = Index::loadMultiple($index_names);
+    $indexes = Index::loadMultiple();
 
-    // If the datasource's entity type supports bundles, we have to filter the
-    // indexes for whether they also include the specific bundle of the given
-    // entity. Otherwise, we are done.
-    if ($entity_type !== $entity_bundle) {
-      foreach ($indexes as $index_id => $index) {
+    foreach ($indexes as $index_id => $index) {
+      // Filter our indexes that don't contain the datasource in question.
+      if (!$index->isValidDatasource($datasource_id)) {
+        unset($indexes[$index_id]);
+      }
+      elseif ($has_bundles) {
+        // If the entity type supports bundles, we also have to filter out
+        // indexes that exclude the entity's bundle.
         try {
           $config = $index->getDatasource($datasource_id)->getConfiguration();
           $default = !empty($config['bundles']['default']);

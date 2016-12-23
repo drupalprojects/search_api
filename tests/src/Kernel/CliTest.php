@@ -93,16 +93,10 @@ class CliTest extends KernelTestBase {
       'id' => 'index',
       'status' => 1,
       'datasource_settings' => array(
-        'entity:entity_test_mulrev_changed' => array(
-          'plugin_id' => 'entity:entity_test_mulrev_changed',
-          'settings' => array(),
-        ),
+        'entity:entity_test_mulrev_changed' => array(),
       ),
       'tracker_settings' => array(
-        'default' => array(
-          'plugin_id' => 'default',
-          'settings' => array(),
-        ),
+        'default' => array(),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => TRUE),

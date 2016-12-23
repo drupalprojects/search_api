@@ -86,17 +86,14 @@ class IndexImportTest extends KernelTestBase {
     $expected_stopwords = array('a', 'an', 'and', 'are', 'as');
     $import_config = $sync->read('search_api.index.database_search_index');
     $import_config['processor_settings']['stopwords'] = array(
-      'plugin_id' => 'stopwords',
-      'settings' => array(
-        'weights' => array(
-          'preprocess_query' => -10,
-          'postprocess_query' => -10,
-        ),
-        'fields' => array(
-          'name',
-        ),
-        'stopwords' => $expected_stopwords,
+      'weights' => array(
+        'preprocess_query' => -10,
+        'postprocess_query' => -10,
       ),
+      'fields' => array(
+        'name',
+      ),
+      'stopwords' => $expected_stopwords,
     );
     $sync->write('search_api.index.database_search_index', $import_config);
 

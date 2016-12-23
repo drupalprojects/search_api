@@ -164,10 +164,7 @@ class OverviewPageTest extends SearchApiBrowserTestBase {
       'id' => 'test_index_2',
       'name' => 'WebTest index 2',
       'datasource_settings' => [
-        'entity:node' => [
-          'plugin_id' => 'entity:node',
-          'settings' => [],
-        ],
+        'entity:node' => [],
       ],
     ]);
     $index2->save();

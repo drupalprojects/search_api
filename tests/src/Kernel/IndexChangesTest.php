@@ -108,20 +108,11 @@ class IndexChangesTest extends KernelTestBase {
       'id' => 'test_index',
       'status' => 1,
       'tracker_settings' => array(
-        'default' => array(
-          'plugin_id' => 'default',
-          'settings' => array(),
-        ),
+        'default' => array(),
       ),
       'datasource_settings' => array(
-        'entity:user' => array(
-          'plugin_id' => 'entity:user',
-          'settings' => array(),
-        ),
-        'entity:entity_test_mulrev_changed' => array(
-          'plugin_id' => 'entity:entity_test_mulrev_changed',
-          'settings' => array(),
-        ),
+        'entity:user' => array(),
+        'entity:entity_test_mulrev_changed' => array(),
       ),
       'server' => $this->server->id(),
       'options' => array('index_directly' => FALSE),
@@ -135,10 +126,7 @@ class IndexChangesTest extends KernelTestBase {
    */
   public function testDatasourceAdded() {
     $this->index->set('datasource_settings', array(
-      'entity:user' => array(
-        'plugin_id' => 'entity:user',
-        'settings' => array(),
-      ),
+      'entity:user' => array(),
     ));
     $this->index->save();
 

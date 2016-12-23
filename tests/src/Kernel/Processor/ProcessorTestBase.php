@@ -109,21 +109,12 @@ abstract class ProcessorTestBase extends KernelTestBase {
       'name' => 'Index name',
       'status' => TRUE,
       'datasource_settings' => array(
-        'entity:comment' => array(
-          'plugin_id' => 'entity:comment',
-          'settings' => array(),
-        ),
-        'entity:node' => array(
-          'plugin_id' => 'entity:node',
-          'settings' => array(),
-        ),
+        'entity:comment' => array(),
+        'entity:node' => array(),
       ),
       'server' => 'server',
       'tracker_settings' => array(
-        'default' => array(
-          'plugin_id' => 'default',
-          'settings' => array(),
-        ),
+        'default' => array(),
       ),
     ));
     $this->index->setServer($this->server);

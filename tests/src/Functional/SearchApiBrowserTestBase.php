@@ -159,10 +159,7 @@ abstract class SearchApiBrowserTestBase extends BrowserTestBase {
         'description' => 'WebTest index' . ' description',
         'server' => 'webtest_server',
         'datasource_settings' => [
-          'entity:node' => [
-            'plugin_id' => 'entity:node',
-            'settings' => [],
-          ],
+          'entity:node' => [],
         ],
       ]);
       $index->save();
