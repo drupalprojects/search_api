@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2632880 by drunken monkey, donquixote: Added possibility to change indexed
+  bundles on disabled indexes.
 - #2828380 by jansete: Fixed taxonomy term access tag in Views filter.
 - #2827717 by Fabien.Godineau, drunken monkey: Fixed disabling of search views
   when reverting an index.
