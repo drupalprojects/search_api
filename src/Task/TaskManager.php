@@ -273,7 +273,7 @@ class TaskManager implements TaskManagerInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if any error occurred while processing the task.
    */
-  public function processBatch(array $task_ids, array $conditions, array &$context) {
+  public function processBatch(array $task_ids, array $conditions, &$context) {
     // Initialize context information.
     if (!isset($context['sandbox']['task_ids'])) {
       $context['sandbox']['task_ids'] = $task_ids;

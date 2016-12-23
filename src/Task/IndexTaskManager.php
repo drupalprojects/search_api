@@ -70,7 +70,7 @@ class IndexTaskManager implements IndexTaskManagerInterface, EventSubscriberInte
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if any error occurred while tracking items.
    */
-  public static function processIndexTasks(array &$context, ConfigImporter $config_importer) {
+  public static function processIndexTasks(&$context, ConfigImporter $config_importer) {
     $index_task_manager = \Drupal::getContainer()
       ->get('search_api.index_task_manager');
 
