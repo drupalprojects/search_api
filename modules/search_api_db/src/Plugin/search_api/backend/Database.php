@@ -2352,6 +2352,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $select->addExpression('COUNT(DISTINCT t.item_id)', 'num');
       $select->groupBy('value');
       $select->orderBy('num', 'DESC');
+      $select->orderBy('value', 'ASC');
 
       $limit = $facet['limit'];
       if ((int) $limit > 0) {
