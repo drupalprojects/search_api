@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2839445 by borisson_: Fixed test failure in for some Core versions.
 - #2833229 by timcosgrove: Removed array type hinting for batch contexts.
 - #2656052 by drunken monkey: Removed the "plugin_id"/"settings" sub-level of
   index plugin settings.

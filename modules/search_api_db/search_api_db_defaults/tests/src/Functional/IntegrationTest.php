@@ -65,7 +65,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     $this->assertSession()->pageTextContains(t('Some required modules must be enabled'));
 
-    $this->drupalPostForm(NULL, NULL, t('Continue'));
+    $this->drupalPostForm(NULL, [], t('Continue'));
     $args = [
       '@count' => 3,
       '%names' => 'Database Search Defaults, Database Search, Search API',
