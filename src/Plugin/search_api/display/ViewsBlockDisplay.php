@@ -2,8 +2,6 @@
 
 namespace Drupal\search_api\Plugin\search_api\display;
 
-use Drupal\search_api\Display\DisplayPluginBase;
-
 /**
  * Represents a Views block display.
  *
@@ -13,7 +11,7 @@ use Drupal\search_api\Display\DisplayPluginBase;
  *   deriver = "Drupal\search_api\Plugin\search_api\display\ViewsDisplayDeriver"
  * )
  */
-class ViewsBlockDisplay extends DisplayPluginBase {
+class ViewsBlockDisplay extends ViewsDisplayBase {
 
   /**
    * {@inheritdoc}

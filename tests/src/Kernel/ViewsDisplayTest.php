@@ -78,4 +78,25 @@ class ViewsDisplayTest extends KernelTestBase {
     $this->assertArrayHasKey('views_page:search_api_test_view__page_1', $displays);
   }
 
+  /**
+   * Tests the dependency information on the display.
+   */
+  public function testDependencyInfo() {
+    $this->installConfig('search_api_test_views');
+
+    /** @var \Drupal\search_api\Display\DisplayInterface $display */
+    $display = $this->container
+      ->get('plugin.manager.search_api.display')
+      ->createInstance('views_page:search_api_test_view__page_1');
+
+    $this->assertEquals('views_page:search_api_test_view__page_1', $display->getPluginId());
+
+    $dependencies = $display->calculateDependencies();
+    $this->assertArrayHasKey('module', $dependencies);
+    $this->assertArrayHasKey('config', $dependencies);
+    $this->assertContains('search_api', $dependencies['module']);
+    $this->assertContains('search_api.index.database_search_index', $dependencies['config']);
+    $this->assertContains('views.view.search_api_test_view', $dependencies['config']);
+  }
+
 }

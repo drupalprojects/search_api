@@ -2,8 +2,6 @@
 
 namespace Drupal\search_api\Plugin\search_api\display;
 
-use Drupal\search_api\Display\DisplayPluginBase;
-
 /**
  * Represents a Views page display.
  *
@@ -13,4 +11,4 @@ use Drupal\search_api\Display\DisplayPluginBase;
  *   deriver = "Drupal\search_api\Plugin\search_api\display\ViewsDisplayDeriver"
  * )
  */
-class ViewsPageDisplay extends DisplayPluginBase {}
+class ViewsPageDisplay extends ViewsDisplayBase {}

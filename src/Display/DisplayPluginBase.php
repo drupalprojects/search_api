@@ -154,4 +154,21 @@ abstract class DisplayPluginBase extends PluginBase implements DisplayInterface 
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    $dependencies = [];
+
+    // By default, add dependencies to the module providing this display and to
+    // the index it is based on.
+    $definition = $this->getPluginDefinition();
+    $dependencies['module'][] = $definition['provider'];
+
+    $index = $this->getIndex();
+    $dependencies[$index->getConfigDependencyKey()][] = $index->getConfigDependencyName();
+
+    return $dependencies;
+  }
+
 }

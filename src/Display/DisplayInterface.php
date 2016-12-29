@@ -5,6 +5,7 @@ namespace Drupal\search_api\Display;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Component\Plugin\DependentPluginInterface;
 
 /**
  * Defines an interface for display plugins.
@@ -14,7 +15,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
  * @see \Drupal\search_api\Display\DisplayPluginBase
  * @see plugin_api
  */
-interface DisplayInterface extends PluginInspectionInterface, DerivativeInspectionInterface, ContainerFactoryPluginInterface {
+interface DisplayInterface extends PluginInspectionInterface, DerivativeInspectionInterface, ContainerFactoryPluginInterface, DependentPluginInterface {
 
   /**
    * Returns the display label.
