@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2809469 by StryKaizer, borisson_, drunken monkey, pfrenssen: Fixed
+  incompatible cache modes used for Search API views.
 - #2839142 by borisson_, drunken monkey: Added new test for Defaults module
   index creation.
 - #2831436 by borisson_, drunken monkey: Added dependency information to

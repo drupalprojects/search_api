@@ -9,6 +9,7 @@ use Drupal\comment\Entity\Comment;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Entity\Index;
@@ -468,6 +469,23 @@ function search_api_search_api_index_update(IndexInterface $index) {
 function search_api_view_insert(ViewEntityInterface $view) {
   _search_api_view_crud_event($view);
 
+  // Disable Views' default caching mechanisms on Search API views.
+  $displays = $view->get('display');
+  if ($displays['default']['display_options']['query']['type'] === 'search_api_query') {
+    $change = FALSE;
+    foreach ($displays as $id => $display) {
+      if (isset($display['display_options']['cache']['type']) && in_array($display['display_options']['cache']['type'], ['tag', 'time'])) {
+        $displays[$id]['display_options']['cache']['type'] = 'none';
+        $change = TRUE;
+      }
+    }
+
+    if ($change) {
+      drupal_set_message(\Drupal::translation()->translate('The selected caching mechanism does not work with views on Search API indexes. Please either use one of the Search API-specific caching options or "None". Caching was turned off for this view.'), 'warning');
+      $view->set('display', $displays);
+      $view->save();
+    }
+  }
 }
 
 /**
@@ -497,6 +515,18 @@ function _search_api_view_crud_event(ViewEntityInterface $view) {
     \Drupal::getContainer()
       ->get('plugin.manager.search_api.display')
       ->clearCachedDefinitions();
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for form "views_ui_edit_display_form".
+ */
+function search_api_form_views_ui_edit_display_form_alter(&$form, FormStateInterface $form_state) {
+  // Disable Views' default caching mechanisms on Search API views.
+  $displays = $form_state->getStorage()['view']->get('display');
+  if ($displays['default']['display_options']['query']['type'] === 'search_api_query') {
+    unset($form['options']['cache']['type']['#options']['tag']);
+    unset($form['options']['cache']['type']['#options']['time']);
   }
 }
 

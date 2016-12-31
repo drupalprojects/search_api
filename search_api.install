@@ -164,3 +164,39 @@ function search_api_update_8101() {
 
   return t('Index config schema updated.');
 }
+
+/**
+ * Removes unsupported cache plugins from Search API views.
+ */
+function search_api_update_8102() {
+  $config_factory = \Drupal::configFactory();
+  $changed = [];
+
+  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
+    $view = $config_factory->getEditable($view_config_name);
+    $displays = $view->get('display');
+
+    if ($displays['default']['display_options']['query']['type'] === 'search_api_query') {
+      $change = FALSE;
+      foreach ($displays as $id => $display) {
+        if (!empty($display['display_options']['cache']['type']) && in_array($display['display_options']['cache']['type'], ['tag', 'time'])
+        ) {
+          $displays[$id]['display_options']['cache']['type'] = 'none';
+          $change = TRUE;
+        }
+      }
+
+      if ($change) {
+        $view->set('display', $displays);
+        $view->save(TRUE);
+        $changed[] = $view->get('id');
+      }
+    }
+  }
+
+  if (!empty($changed)) {
+    return \Drupal::translation()->translate('Removed incompatible cache options for the following Search API-based views: @ids', ['@ids' => implode(', ', array_unique($changed))]);
+  }
+
+  return NULL;
+}
