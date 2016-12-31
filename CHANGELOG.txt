@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2839142 by borisson_, drunken monkey: Added new test for Defaults module
+  index creation.
 - #2831436 by borisson_, drunken monkey: Added dependency information to
   display plugins.
 - #2836994 by dermario: Fixed order of facets in DB backend unreliable.
