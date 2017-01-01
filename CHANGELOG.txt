@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2838075 by dsnopek: Fixed possible race condition in
+  hook_system_info_alter().
 - #2836687 by sarthak drupal: Fixed one doc comment typo.
 - #2632880 by drunken monkey, donquixote: Added possibility to change indexed
   bundles on disabled indexes.
