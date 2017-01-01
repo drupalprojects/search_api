@@ -86,6 +86,7 @@ function search_api_test_hooks_search_api_items_indexed(IndexInterface $index, a
  */
 function search_api_test_hooks_search_api_query_alter(QueryInterface &$query) {
   drupal_set_message('Funky blue note');
+  drupal_set_message(sprintf('Search id: %s', $query->getSearchId(FALSE)));
   $query->addTag('andrew_hill');
 }
 

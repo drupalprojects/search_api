@@ -116,6 +116,7 @@ class QueryTest extends KernelTestBase {
     if ($hooks_and_processors_invoked) {
       $expected = array(
         'Funky blue note',
+        'Search id: ',
         'Stepping into tomorrow',
         'Llama',
       );

@@ -133,6 +133,7 @@ class HooksTest extends SearchApiBrowserTestBase {
     $this->assertSession()->pageTextNotContains('timestamp');
 
     $this->drupalGet('search-api-test');
+    $this->assertSession()->pageTextContains('Search id: views_page:search_api_test_view__page_1');
     // hook_search_api_query_alter() was invoked.
     $this->assertSession()->pageTextContains('Funky blue note');
     // hook_search_api_results_alter() was invoked.

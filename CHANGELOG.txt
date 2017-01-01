@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2839981 by borisson_, drunken monkey: Fixed search ID for non-page views.
 - #2834350 by alan-ps: Fixed missing field restriction in DB backend
   autocomplete code.
 - #2809469 by StryKaizer, borisson_, drunken monkey, pfrenssen: Fixed
