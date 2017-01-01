@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.0, Beta 3 (2016-10-24):
 ------------------------------------
 - #2839981 by borisson_, drunken monkey: Fixed search ID for non-page views.
