@@ -2559,6 +2559,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
         $field_query = $this->database->select($fields[$field]['table'], 't');
         $field_query->fields('t', array('word', 'item_id'))
+          ->condition('field_name', $field)
           ->condition('item_id', $all_results, 'IN');
         if ($pass == 1) {
           $field_query->condition('word', $incomplete_like, 'LIKE')
