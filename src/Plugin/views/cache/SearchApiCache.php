@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Plugin\views\cache;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Component\Utility\Crypt;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\Plugin\views\cache\Time;
@@ -110,7 +111,7 @@ class SearchApiCache extends Time {
         ->convertTokensToKeys($display_handler_cache_contexts)
         ->getKeys();
 
-      $this->resultsKey = $this->view->storage->id() . ':' . $this->displayHandler->display['id'] . ':results:' . hash('sha256', serialize($key_data));
+      $this->resultsKey = $this->view->storage->id() . ':' . $this->displayHandler->display['id'] . ':results:' . Crypt::hashBase64(serialize($key_data));
     }
 
     return $this->resultsKey;

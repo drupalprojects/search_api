@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api_db\Plugin\search_api\backend;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -993,7 +994,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
               'not null' => TRUE,
             ),
             'field_name' => array(
-              'description' => "The name of the field in which the token appears, or an MD5 hash of the field",
+              'description' => "The name of the field in which the token appears, or a base-64 encoded sha-256 hash of the field",
               'not null' => TRUE,
               'type' => 'varchar',
               'length' => 191,
@@ -1336,7 +1337,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected static function getTextFieldName($name) {
     if (strlen($name) > 191) {
       // Replace long field names with something unique and predictable.
-      return md5($name);
+      return Crypt::hashBase64($name);
     }
     else {
       return $name;
