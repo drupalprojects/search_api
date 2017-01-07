@@ -192,6 +192,12 @@ class SearchApiFacetapiAdapter extends FacetapiAdapter {
    */
   public function getSearchKeys() {
     $search = $this->getCurrentSearch();
+
+    // If the search is empty then there's no reason to continue.
+    if (!$search) {
+      return NULL;
+    }
+
     $keys = $search[0]->getOriginalKeys();
     if (is_array($keys)) {
       // This will happen nearly never when displaying the search keys to the

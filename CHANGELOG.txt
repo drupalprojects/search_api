@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #1670420 by kyletaylored, dorficus, drunken monkey: Fixed potential fatal
+  error in facet adapter's getSearchKeys() method.
 - #2838075 by dsnopek: Fixed possible race condition in
   hook_system_info_alter().
 - #2836687 by sarthak drupal: Fixed one doc comment typo.
