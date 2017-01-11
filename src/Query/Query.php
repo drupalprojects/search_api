@@ -318,6 +318,9 @@ class Query implements QueryInterface {
    */
   public function setParseMode(ParseModeInterface $parse_mode) {
     $this->parseMode = $parse_mode;
+    if (is_scalar($this->origKeys)) {
+      $this->keys = $parse_mode->parseInput($this->origKeys);
+    }
     return $this;
   }
 

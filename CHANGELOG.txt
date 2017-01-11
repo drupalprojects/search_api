@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2682615 by drunken monkey: Added tests for object serialization and cloning.
 - #2794879 by drunken monkey: Added property paths to the "Fields" tab.
 - #2840261 by alan-ps: Fixed usage of outdated hash functions.
 

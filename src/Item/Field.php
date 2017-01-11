@@ -639,7 +639,6 @@ class Field implements \IteratorAggregate, FieldInterface {
     unset($properties['datasource']);
     unset($properties['dataDefinition']);
     unset($properties['dataTypeManager']);
-    unset($properties['values']);
     return array_keys($properties);
   }
 
@@ -650,8 +649,10 @@ class Field implements \IteratorAggregate, FieldInterface {
     // Make sure we have a container to do this. This is important to correctly
     // display test failures.
     if ($this->indexId && \Drupal::hasContainer()) {
-      $this->index = Index::load($this->indexId);
-      unset($this->indexId);
+      $this->index = \Drupal::entityTypeManager()
+        ->getStorage('search_api_index')
+        ->load($this->indexId);
+      $this->indexId = NULL;
     }
   }
 
