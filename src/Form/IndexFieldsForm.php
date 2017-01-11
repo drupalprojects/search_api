@@ -224,6 +224,10 @@ class IndexFieldsForm extends EntityForm {
       '#header' => array(
         t('Field'),
         t('Machine name'),
+        [
+          'data' => t('Property path'),
+          'class' => [RESPONSIVE_PRIORITY_LOW],
+        ],
         t('Type'),
         t('Boost'),
         array(
@@ -247,6 +251,9 @@ class IndexFieldsForm extends EntityForm {
         '#default_value' => $key,
         '#required' => TRUE,
         '#size' => 35,
+      );
+      $build['fields'][$key]['property_path'] = array(
+        '#markup' => Html::escape($field->getPropertyPath()),
       );
 
       if ($field->getDescription()) {

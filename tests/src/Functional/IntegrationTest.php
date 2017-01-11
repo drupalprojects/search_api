@@ -756,6 +756,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
       'title' => 'Title',
       'body' => 'Body',
       'revision_log' => 'Revision log message',
+      'uid:entity:name' => 'Authored by » User » Name',
     ];
     foreach ($fields as $property_path => $label) {
       $this->addField('entity:node', $property_path, $label);
@@ -831,6 +832,9 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->drupalGet($this->getIndexPath('fields'));
     $this->submitForm($edit, 'Save changes');
     $this->assertSession()->pageTextContains('The changes were successfully saved.');
+
+    // Make sure that property paths are correctly displayed.
+    $this->assertSession()->pageTextContains('uid:entity:name');
   }
 
   /**

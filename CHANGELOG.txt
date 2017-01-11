@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2794879 by drunken monkey: Added property paths to the "Fields" tab.
 - #2840261 by alan-ps: Fixed usage of outdated hash functions.
 
 Search API 1.0, Beta 3 (2016-10-24):
