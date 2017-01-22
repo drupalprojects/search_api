@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2840675 by nicrodgers, drunken monkey: Added support for Views filters with
+  option lists.
 - #2841550 by drunken monkey: Fixed execution of pending tasks.
 - #2841827 by umed91, drunken monkey: Fixed some code style issues.
 - #2682615 by drunken monkey: Added tests for object serialization and cloning.
