@@ -303,7 +303,6 @@ function search_api_preprocess_search_api_index(array &$variables) {
   }
 }
 
-
 /**
  * Returns HTML for a search index.
  *

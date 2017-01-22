@@ -74,7 +74,6 @@ class ViewsTest extends SearchApiBrowserTestBase {
   public function testView() {
     $this->checkResults([], array_keys($this->entities), 'Unfiltered search');
 
-
     $this->checkResults(
       ['search_api_fulltext' => 'foobar'],
       [3],
@@ -780,7 +779,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
       $services['services']['simpletest.config_schema_checker'] = [
         'class' => ConfigSchemaChecker::class,
         'arguments' => ['@config.typed', $this->getConfigSchemaExclusions()],
-        'tags' => [['name' => 'event_subscriber']]
+        'tags' => [['name' => 'event_subscriber']],
       ];
       file_put_contents($directory . '/services.yml', Yaml::encode($services));
     }

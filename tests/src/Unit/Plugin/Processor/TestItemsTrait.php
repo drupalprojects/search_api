@@ -28,7 +28,7 @@ trait TestItemsTrait {
   /**
    * The class container.
    *
-   * @var \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface
    */
   protected $container;
 

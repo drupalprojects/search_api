@@ -92,7 +92,7 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
         // Create the actual derivative plugin definition.
         $args = array(
           '%view_name' => $view->label(),
-          '%display_title' => $display_info['display_title']
+          '%display_title' => $display_info['display_title'],
         );
         if ($view->get('description')) {
           $args['%view_description'] = $view->get('description');

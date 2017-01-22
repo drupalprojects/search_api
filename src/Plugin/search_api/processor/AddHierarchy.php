@@ -60,7 +60,7 @@ class AddHierarchy extends ProcessorPluginBase implements PluginFormInterface {
   /**
    * Retrieves the entity type manager service.
    *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
    *   The entity type manager service.
    */
   public function getEntityTypeManager() {

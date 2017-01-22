@@ -267,8 +267,8 @@ class TaskManager implements TaskManagerInterface {
    *   An array of conditions defining the tasks to be executed. Should be used
    *   to retrieve more task IDs if necessary.
    * @param array $context
-   *   The current batch context, as defined in the @link batch Batch operations
-   *   @endlink documentation.
+   *   The context of the current batch, as defined in the @link batch Batch
+   *   operations @endlink documentation.
    *
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if any error occurred while processing the task.

@@ -2,10 +2,8 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ParseMode\ParseModeInterface;
-use Drupal\search_api\ParseMode\ParseModePluginManager;
 
 /**
  * Represents a search query on a Search API index.
@@ -253,6 +251,7 @@ interface QueryInterface extends ConditionSetInterface {
    * @return $this
    */
   public function setProcessingLevel($level);
+
   /**
    * Aborts this query.
    *

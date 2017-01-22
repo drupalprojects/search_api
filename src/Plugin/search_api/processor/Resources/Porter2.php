@@ -52,25 +52,25 @@ class Porter2 {
   public function __construct($word, $custom_exceptions = array()) {
     $this->word = $word;
     $this->exceptions = $custom_exceptions + array(
-        'skis' => 'ski',
-        'skies' => 'sky',
-        'dying' => 'die',
-        'lying' => 'lie',
-        'tying' => 'tie',
-        'idly' => 'idl',
-        'gently' => 'gentl',
-        'ugly' => 'ugli',
-        'early' => 'earli',
-        'only' => 'onli',
-        'singly' => 'singl',
-        'sky' => 'sky',
-        'news' => 'news',
-        'howe' => 'howe',
-        'atlas' => 'atlas',
-        'cosmos' => 'cosmos',
-        'bias' => 'bias',
-        'andes' => 'andes',
-      );
+      'skis' => 'ski',
+      'skies' => 'sky',
+      'dying' => 'die',
+      'lying' => 'lie',
+      'tying' => 'tie',
+      'idly' => 'idl',
+      'gently' => 'gentl',
+      'ugly' => 'ugli',
+      'early' => 'earli',
+      'only' => 'onli',
+      'singly' => 'singl',
+      'sky' => 'sky',
+      'news' => 'news',
+      'howe' => 'howe',
+      'atlas' => 'atlas',
+      'cosmos' => 'cosmos',
+      'bias' => 'bias',
+      'andes' => 'andes',
+    );
 
     // Set initial y, or y after a vowel, to Y.
     $inc = 0;
@@ -344,11 +344,7 @@ class Porter2 {
       // Among the suffixes, if found and in R2, delete.
       if ($this->hasEnding($check)) {
         if ($this->inR2($check)) {
-          if ($check !== 'ion' || in_array($this->charAt(-4), array(
-              's',
-              't'
-            ))
-          ) {
+          if ($check !== 'ion' || in_array($this->charAt(-4), ['s', 't'])) {
             $this->removeEnding($check);
           }
         }

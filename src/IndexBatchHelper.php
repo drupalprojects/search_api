@@ -107,8 +107,8 @@ class IndexBatchHelper {
    * @param int $limit
    *   The maximum number of items to index in total, or -1 to index all items.
    * @param array|\ArrayAccess $context
-   *   The current batch context, as defined in the
-   *   @link batch Batch operations @endlink documentation.
+   *   The context of the current batch, as defined in the @link batch Batch
+   *   operations @endlink documentation.
    */
   public static function process(IndexInterface $index, $batch_size, $limit, &$context) {
     // Check if the sandbox should be initialized.

@@ -299,7 +299,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * Retrieves the language manager.
    *
-   * @return \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @return \Drupal\Core\Language\LanguageManagerInterface
    *   The language manager.
    */
   public function getLanguageManager() {

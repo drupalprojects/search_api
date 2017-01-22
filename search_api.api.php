@@ -130,7 +130,7 @@ function hook_search_api_tracker_info_alter(array &$tracker_info) {
  * Alter the list of known search displays.
  *
  * @param array $displays
- *   The Search API display info array, keyed by display ID
+ *   The Search API display info array, keyed by display ID.
  *
  * @see \Drupal\search_api\Display\DisplayPluginBase
  */

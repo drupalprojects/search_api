@@ -339,7 +339,7 @@ class IndexProcessorsForm extends EntityForm {
   }
 
   /**
-   * Retrieves all available processor
+   * Retrieves all available processors.
    */
   protected function getAllProcessors() {
     $processors = $this->entity->getProcessors();
@@ -359,7 +359,7 @@ class IndexProcessorsForm extends EntityForm {
       else {
         $this->logger->warning('Processor %id specifies a non-existing class %class.', array(
           '%id' => $name,
-          '%class' => $processor_definition['class']
+          '%class' => $processor_definition['class'],
         ));
       }
     }

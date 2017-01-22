@@ -602,7 +602,6 @@ class IndexForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     // @todo Redirect to a confirm form if changing server or tracker, since
     //   that isn't such a light operation (equaling a "clear", basically).
-
     // Only save the index if the form doesn't need to be rebuilt.
     if (!$form_state->isRebuilding()) {
       try {
@@ -625,4 +624,5 @@ class IndexForm extends EntityForm {
       }
     }
   }
+
 }

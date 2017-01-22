@@ -41,7 +41,7 @@ class AddHierarchyTest extends ProcessorTestBase {
   protected static $hierarchy = array(
     'fruit' => array(
       'apple',
-      'pear'
+      'pear',
     ),
     'vegetable' => array(
       'radish',

@@ -185,7 +185,6 @@ class QueryTest extends KernelTestBase {
   }
 
   /**
-   *
    * Tests that the results cache works correctly.
    */
   public function testResultsCache() {

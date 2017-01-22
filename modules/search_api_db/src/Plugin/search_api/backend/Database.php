@@ -2254,7 +2254,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
           $msg = $this->t('Unknown sort order @order. Assuming "@default".', array(
             '@order' => $order,
-            '@default' => QueryInterface::SORT_ASC
+            '@default' => QueryInterface::SORT_ASC,
           ));
           $this->warnings[(string) $msg] = 1;
           $order = QueryInterface::SORT_ASC;

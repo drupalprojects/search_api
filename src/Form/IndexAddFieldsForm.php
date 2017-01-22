@@ -108,7 +108,6 @@ class IndexAddFieldsForm extends EntityForm {
     return new static($entity_type_manager, $fields_helper, $renderer, $date_formatter, $parameters);
   }
 
-
   /**
    * Retrieves a single page request parameter.
    *
