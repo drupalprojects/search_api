@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2840261 by alan-ps: Fixed usage of outdated hash functions.
 - #1670420 by kyletaylored, dorficus, drunken monkey: Fixed potential fatal
   error in facet adapter's getSearchKeys() method.
 - #2838075 by dsnopek: Fixed possible race condition in
