@@ -235,22 +235,16 @@ function drush_search_api_enable($index_id = NULL) {
     return;
   }
 
-  $index_ids = search_api_drush_get_indexes($index_id);
+  $indexes = search_api_drush_get_indexes($index_id);
 
-  if (!$index_ids) {
+  if (!$indexes) {
     drush_set_error(dt('You must specify at least one index to enable. The indexes I know about are:'));
     drush_search_api_list();
   }
 
-  foreach ($index_ids as $index_id) {
-    $indexes = search_api_drush_get_indexes($index_id);
-    if (!$indexes) {
-      continue;
-    }
-    foreach ($indexes as $index) {
-      if ($index_id || !$index->status()) {
-        search_api_drush_set_index_state($index);
-      }
+  foreach ($indexes as $index) {
+    if (!$index->status()) {
+      search_api_drush_set_index_state($index);
     }
   }
 }
@@ -275,19 +269,16 @@ function drush_search_api_disable($index_id = NULL) {
     return;
   }
 
-  $index_ids = search_api_drush_get_indexes($index_id);
+  $indexes = search_api_drush_get_indexes($index_id);
 
-  if (!$index_ids) {
+  if (!$indexes) {
     drush_set_error(dt('You must specify at least one index to disable. The indexes I know about are:'));
     drush_search_api_list();
   }
 
-  foreach ($index_ids as $index_id) {
-    $indexes = search_api_drush_get_indexes($index_id);
-    foreach ($indexes as $index) {
-      if ($index->status()) {
-        search_api_drush_set_index_state($index, FALSE);
-      }
+  foreach ($indexes as $index) {
+    if ($index->status()) {
+      search_api_drush_set_index_state($index, FALSE);
     }
   }
 }
