@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2833482 by drunken monkey: Fixed undefined constant when uninstalling facets
+  module.
 - #2840261 by alan-ps: Fixed usage of outdated hash functions.
 - #1670420 by kyletaylored, dorficus, drunken monkey: Fixed potential fatal
   error in facet adapter's getSearchKeys() method.
