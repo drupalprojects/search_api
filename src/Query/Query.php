@@ -189,9 +189,7 @@ class Query implements QueryInterface {
     }
     $this->index = $index;
     $this->results = new ResultSet($this);
-    $this->options = $options + array(
-      'conjunction' => 'AND',
-    );
+    $this->options = $options;
     $this->conditionGroup = $this->createConditionGroup('AND');
   }
 
@@ -308,7 +306,6 @@ class Query implements QueryInterface {
   public function getParseMode() {
     if (!$this->parseMode) {
       $this->parseMode = $this->getParseModeManager()->createInstance('terms');
-      $this->parseMode->setConjunction($this->options['conjunction']);
     }
     return $this->parseMode;
   }

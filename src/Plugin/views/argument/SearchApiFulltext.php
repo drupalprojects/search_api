@@ -138,11 +138,9 @@ class SearchApiFulltext extends SearchApiStandard {
         ->createInstance($this->options['parse_mode']);
       $this->query->setParseMode($parse_mode);
     }
+    $this->query->getParseMode()->setConjunction($this->options['conjunction']);
     if ($this->options['fields']) {
       $this->query->setFulltextFields($this->options['fields']);
-    }
-    if ($this->options['conjunction'] != 'AND') {
-      $this->query->setOption('conjunction', $this->options['conjunction']);
     }
 
     $old = $this->query->getOriginalKeys();

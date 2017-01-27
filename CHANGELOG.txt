@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2843632 by beram, drunken monkey: Fixed "contains any" for Views fulltext
+  contextual filter.
 - #2842971 by jespermb, borisson_: Fixed wrong URL for block search displays.
 - #2842546 by alan-ps: Fixed Drush commands for enabling and disabling indexes.
 - #2840675 by nicrodgers, drunken monkey: Added support for Views filters with
