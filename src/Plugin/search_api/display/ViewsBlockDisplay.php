@@ -16,6 +16,14 @@ class ViewsBlockDisplay extends ViewsDisplayBase {
   /**
    * {@inheritdoc}
    */
+  public function getUrl() {
+    // Blocks don't have a path, so don't return one.
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isRenderedInCurrentRequest() {
     // There is no way to know if a block is embedded on a page, because
     // blocks can be rendered in isolation (see big_pipe, esi, ...). To be
