@@ -924,11 +924,19 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
         elseif ($new_type == 'text' && $field['boost'] != $new_fields[$field_id]->getBoost()) {
           if (!$reindex) {
-            $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
-            $this->database->update($text_table)
-              ->expression('score', 'score * :mult', array(':mult' => $multiplier))
-              ->condition('field_name', self::getTextFieldName($field_id))
-              ->execute();
+            // If there was a non-zero boost set previously, we can just update
+            // all scores with a single UPDATE query. Otherwise, no way around
+            // re-indexing.
+            if ($field['boost']) {
+              $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
+              $this->database->update($text_table)
+                ->expression('score', 'score * :mult', array(':mult' => $multiplier))
+                ->condition('field_name', self::getTextFieldName($field_id))
+                ->execute();
+            }
+            else {
+              $reindex = TRUE;
+            }
           }
         }
 

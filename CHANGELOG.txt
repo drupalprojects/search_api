@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2844192 by BR0kEN, drunken monkey: Fixed failure in DB backend when setting
+  field boost from 0 to other value.
 - #2847588 by Nick_vh, drunken monkey: Improved the description of the
   search_api_views_taxonomy module.
 - #2843632 by beram, drunken monkey: Fixed "contains any" for Views fulltext
