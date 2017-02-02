@@ -99,6 +99,7 @@ class IndexProcessorsForm extends EntityForm {
     }
 
     $stages = $this->processorPluginManager->getProcessingStages();
+    /** @var \Drupal\search_api\Processor\ProcessorInterface[][] $processors_by_stage */
     $processors_by_stage = array();
     foreach ($all_processors as $processor_id => $processor) {
       foreach ($stages as $stage => $definition) {
@@ -190,9 +191,15 @@ class IndexProcessorsForm extends EntityForm {
       );
     }
     foreach ($processors_by_stage as $stage => $processors) {
-      /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
+      // Sort the processors by weight for this stage.
+      $processor_weights = [];
       foreach ($processors as $processor_id => $processor) {
-        $weight = $processor->getWeight($stage);
+        $processor_weights[$processor_id] = $processor->getWeight($stage);
+      }
+      asort($processor_weights);
+
+      foreach ($processor_weights as $processor_id => $weight) {
+        $processor = $processors[$processor_id];
         if ($processor->isHidden()) {
           $form['processors'][$processor_id]['weights'][$stage] = array(
             '#type' => 'value',
@@ -208,6 +215,7 @@ class IndexProcessorsForm extends EntityForm {
           '#type' => 'weight',
           '#title' => $this->t('Weight for processor %title', array('%title' => $processor->label())),
           '#title_display' => 'invisible',
+          '#delta' => 50,
           '#default_value' => $weight,
           '#parents' => array('processors', $processor_id, 'weights', $stage),
           '#attributes' => array(
