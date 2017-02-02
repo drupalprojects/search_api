@@ -931,62 +931,6 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * {@inheritdoc}
    */
-  public function getFieldDependenciesForEntityType($entity_type_id, array $fields, array $all_fields) {
-    $field_dependencies = array();
-
-    // Figure out which fields are directly on the item and which need to be
-    // extracted from nested items.
-    $direct_fields = array();
-    $nested_fields = array();
-    foreach ($fields as $field) {
-      if (strpos($field, ':entity:') !== FALSE) {
-        list($direct, $nested) = explode(':entity:', $field, 2);
-        $nested_fields[$direct][] = $nested;
-      }
-      else {
-        // Support nested Search API fields.
-        $base_field_name = explode(':', $field, 2)[0];
-        $direct_fields[$base_field_name] = TRUE;
-      }
-    }
-
-    // Extract the config dependency name for direct fields.
-    foreach (array_keys($this->getEntityTypeBundleInfo()->getBundleInfo($entity_type_id)) as $bundle) {
-      foreach ($this->getEntityFieldManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
-        if ($field_definition instanceof FieldConfigInterface) {
-          if (isset($direct_fields[$field_name]) || isset($nested_fields[$field_name])) {
-            // Make a mapping of dependencies and fields that depend on them.
-            $storage_definition = $field_definition->getFieldStorageDefinition();
-            if (!$storage_definition instanceof EntityInterface) {
-              continue;
-            }
-            $dependency = $storage_definition->getConfigDependencyName();
-            $search_api_fields = array();
-
-            // Get a list of enabled fields on the datasource.
-            foreach ($all_fields as $field_id => $property_path) {
-              if (strpos($property_path, $field_definition->getName()) !== FALSE) {
-                $search_api_fields[] = $field_id;
-              }
-            }
-            $field_dependencies[$dependency] = $search_api_fields;
-          }
-
-          // Recurse for nested fields.
-          if (isset($nested_fields[$field_name])) {
-            $entity_type = $field_definition->getSetting('target_type');
-            $field_dependencies += $this->getFieldDependenciesForEntityType($entity_type, $nested_fields[$field_name], $all_fields);
-          }
-        }
-      }
-    }
-
-    return $field_dependencies;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function getIndexesForEntity(ContentEntityInterface $entity) {
     $entity_type = $entity->getEntityTypeId();
     $datasource_id = 'entity:' . $entity_type;
