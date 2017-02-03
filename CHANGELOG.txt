@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2849507 by drunken monkey: Fixed test fails on Drupal 8.4.
 - #2846255 by drunken monkey: Fixed displayed order of processors in UI.
 - #2656916 by drunken monkey: Removed unused field dependency calculation
   method.

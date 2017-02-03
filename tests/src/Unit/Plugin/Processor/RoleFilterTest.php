@@ -3,8 +3,11 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
+use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Plugin\search_api\processor\RoleFilter;
 use Drupal\search_api\Utility\Utility;
+use Drupal\Tests\search_api\Unit\TestNodeInterface;
+use Drupal\Tests\search_api\Unit\TestUserInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -45,19 +48,19 @@ class RoleFilterTest extends UnitTestCase {
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\IndexInterface');
 
-    $node_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $node_datasource = $this->getMock(DatasourceInterface::class);
     $node_datasource->expects($this->any())
       ->method('getEntityTypeId')
       ->will($this->returnValue('node'));
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $node_datasource */
-    $user_datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $user_datasource = $this->getMock(DatasourceInterface::class);
     $user_datasource->expects($this->any())
       ->method('getEntityTypeId')
       ->will($this->returnValue('user'));
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
 
     $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '1:en'), $node_datasource);
-    $node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
+    $node = $this->getMockBuilder(TestNodeInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     /** @var \Drupal\node\NodeInterface $node */
@@ -65,7 +68,7 @@ class RoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, Utility::createCombinedId('entity:user', '1:en'), $user_datasource);
-    $account1 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
+    $account1 = $this->getMockBuilder(TestUserInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $account1->expects($this->any())
@@ -76,7 +79,7 @@ class RoleFilterTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, Utility::createCombinedId('entity:user', '2:en'), $user_datasource);
-    $account2 = $this->getMockBuilder('Drupal\Tests\search_api\TestUserInterface')
+    $account2 = $this->getMockBuilder(TestUserInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $account2->expects($this->any())

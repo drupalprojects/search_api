@@ -3,8 +3,11 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
+use Drupal\search_api\Datasource\DatasourceInterface;
+use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\search_api\processor\NodeStatus;
 use Drupal\search_api\Utility\Utility;
+use Drupal\Tests\search_api\Unit\TestNodeInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -42,20 +45,20 @@ class NodeStatusTest extends UnitTestCase {
 
     $this->processor = new NodeStatus(array(), 'node_status', array());
 
-    $datasource = $this->getMock('Drupal\search_api\Datasource\DatasourceInterface');
+    $datasource = $this->getMock(DatasourceInterface::class);
     $datasource->expects($this->any())
       ->method('getEntityTypeId')
       ->will($this->returnValue('node'));
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
 
     /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
+    $index = $this->getMock(IndexInterface::class);
     $index->expects($this->any())
       ->method('getDatasources')
       ->will($this->returnValue(array($datasource)));
 
     $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '1:en'), $datasource);
-    $unpublished_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
+    $unpublished_node = $this->getMockBuilder(TestNodeInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
 
@@ -68,7 +71,7 @@ class NodeStatusTest extends UnitTestCase {
     $this->items[$item->getId()] = $item;
 
     $item = Utility::createItem($index, Utility::createCombinedId('entity:node', '2:en'), $datasource);
-    $published_node = $this->getMockBuilder('Drupal\Tests\search_api\TestNodeInterface')
+    $published_node = $this->getMockBuilder(TestNodeInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
 
@@ -93,7 +96,7 @@ class NodeStatusTest extends UnitTestCase {
    * Tests whether supportsIndex() returns FALSE for an index without nodes.
    */
   public function testSupportsIndexUnsupported() {
-    $index = $this->getMock('Drupal\search_api\IndexInterface');
+    $index = $this->getMock(IndexInterface::class);
     $index->expects($this->any())
       ->method('getDatasources')
       ->will($this->returnValue(array()));
