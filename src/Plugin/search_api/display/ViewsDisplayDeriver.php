@@ -11,9 +11,9 @@ use Drupal\views\ViewEntityInterface;
 /**
  * Derives a display plugin definition for all supported search view displays.
  *
- * @see \Drupal\search_api\Plugin\search_api\display\ViewsBlockDisplay
- * @see \Drupal\search_api\Plugin\search_api\display\ViewsPageDisplay
- * @see \Drupal\search_api\Plugin\search_api\display\ViewsRestDisplay
+ * @see \Drupal\search_api\Plugin\search_api\display\ViewsBlock
+ * @see \Drupal\search_api\Plugin\search_api\display\ViewsPage
+ * @see \Drupal\search_api\Plugin\search_api\display\ViewsRest
  */
 class ViewsDisplayDeriver extends DisplayDeriverBase {
 

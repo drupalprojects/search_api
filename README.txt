@@ -93,7 +93,7 @@ framework.
   defines. They can then be used to provide, for example, faceting support for
   those pages. Therefore, if your module provides any search pages, it's a good
   idea to provide display plugins for them. For an example (for Views pages),
-  see \Drupal\search_api\Plugin\search_api\display\ViewsPageDisplay.
+  see \Drupal\search_api\Plugin\search_api\display\ViewsPage.
 
 The handbook documentation for developers is available at [5].
 

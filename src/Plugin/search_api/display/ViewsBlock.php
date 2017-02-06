@@ -11,7 +11,7 @@ namespace Drupal\search_api\Plugin\search_api\display;
  *   deriver = "Drupal\search_api\Plugin\search_api\display\ViewsDisplayDeriver"
  * )
  */
-class ViewsBlockDisplay extends ViewsDisplayBase {
+class ViewsBlock extends ViewsDisplayBase {
 
   /**
    * {@inheritdoc}
