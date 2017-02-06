@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2842856 by drunken monkey: Fixed language filters for "Multiple types"
+  indexes.
 - #2844990 by drunken monkey: Made the "Role filter" data alteration available
   for multi-type indexes.
 - #2837745 by drunken monkey, klausi: Fixed NULL tags on old serialized queries.
