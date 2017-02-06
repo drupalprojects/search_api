@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2844990 by drunken monkey: Made the "Role filter" data alteration available
+  for multi-type indexes.
 - #2837745 by drunken monkey, klausi: Fixed NULL tags on old serialized queries.
 - #2833482 by drunken monkey: Fixed undefined constant when uninstalling facets
   module.
