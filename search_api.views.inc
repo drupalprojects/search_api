@@ -278,6 +278,9 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'text' => array(
+        'argument' => array(
+          'id' => 'search_api',
+        ),
         'filter' => array(
           'id' => 'search_api_text',
         ),
@@ -286,6 +289,9 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'options' => array(
+        'argument' => array(
+          'id' => 'search_api',
+        ),
         'filter' => array(
           'id' => 'search_api_options',
         ),
@@ -306,6 +312,10 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'entity:user' => array(
+        'argument' => array(
+          'id' => 'search_api',
+          'filter' => 'intval',
+        ),
         'filter' => array(
           'id' => 'search_api_user',
         ),
@@ -314,6 +324,9 @@ function _search_api_views_handler_mapping() {
         ),
       ),
       'entity:node_type' => array(
+        'argument' => array(
+          'id' => 'search_api',
+        ),
         'filter' => array(
           'id' => 'search_api_options',
           'options callback' => 'node_type_get_names',

@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2844527 by ayalon, drunken monkey: Added some contextual filters for Views.
 - #2847307 by JayKandari, drunken monkey: Removed "Display" suffix from our
   search display plugins.
 - #2849507 by drunken monkey: Fixed test fails on Drupal 8.4.
