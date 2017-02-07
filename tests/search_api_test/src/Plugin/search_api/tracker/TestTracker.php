@@ -14,6 +14,7 @@ use Drupal\search_api_test\TestPluginTrait;
  * @SearchApiTracker(
  *   id = "search_api_test",
  *   label = @Translation("Test tracker"),
+ *   description = @Translation("This is the test tracker plugin description."),
  * )
  */
 class TestTracker extends TrackerPluginBase implements PluginFormInterface {

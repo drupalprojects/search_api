@@ -204,16 +204,10 @@ class IndexForm extends EntityForm {
 
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
-    $datasource_options = array();
-    foreach ($this->getDatasourcePluginManager()->getDefinitions() as $datasource_id => $definition) {
-      $datasource_options[$datasource_id] = !empty($definition['label']) ? $definition['label'] : $datasource_id;
-    }
-    asort($datasource_options, SORT_NATURAL | SORT_FLAG_CASE);
     $form['datasources'] = array(
       '#type' => 'checkboxes',
       '#title' => $this->t('Data sources'),
       '#description' => $this->t('Select one or more data sources of items that will be stored in this index.'),
-      '#options' => $datasource_options,
       '#default_value' => $index->getDatasourceIds(),
       '#multiple' => TRUE,
       '#required' => TRUE,
@@ -226,6 +220,13 @@ class IndexForm extends EntityForm {
         'effect' => 'fade',
       ),
     );
+    $datasource_options = array();
+    foreach ($index->createPlugins('datasource') as $datasource_id => $datasource) {
+      $datasource_options[$datasource_id] = $datasource->label();
+      $form['datasources'][$datasource_id]['#description'] = $datasource->getDescription();
+    }
+    asort($datasource_options, SORT_NATURAL | SORT_FLAG_CASE);
+    $form['datasources']['#options'] = $datasource_options;
 
     $form['datasource_configs'] = array(
       '#type' => 'container',
@@ -250,12 +251,10 @@ class IndexForm extends EntityForm {
 
     $this->buildDatasourcesConfigForm($form, $form_state, $index);
 
-    $tracker_options = $this->getTrackerPluginManager()->getOptionsList();
     $form['tracker'] = array(
       '#type' => 'radios',
       '#title' => $this->t('Tracker'),
       '#description' => $this->t('Select the type of tracker which should be used for keeping track of item changes.'),
-      '#options' => $tracker_options,
       '#default_value' => $index->getTrackerId(),
       '#required' => TRUE,
       '#ajax' => array(
@@ -265,8 +264,15 @@ class IndexForm extends EntityForm {
         'method' => 'replace',
         'effect' => 'fade',
       ),
-      '#access' => !$index->hasValidTracker() || count($tracker_options) > 1,
     );
+    $tracker_options = array();
+    foreach ($index->createPlugins('tracker') as $tracker_id => $tracker) {
+      $tracker_options[$tracker_id] = $tracker->label();
+      $form['tracker'][$tracker_id]['#description'] = $tracker->getDescription();
+    }
+    asort($tracker_options, SORT_NATURAL | SORT_FLAG_CASE);
+    $form['tracker']['#options'] = $tracker_options;
+    $form['tracker']['#access'] = !$index->hasValidTracker() || count($tracker_options) > 1;
 
     $form['tracker_config'] = array(
       '#type' => 'container',

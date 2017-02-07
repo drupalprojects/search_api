@@ -588,40 +588,6 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
-    $summary = '';
-
-    // Add bundle information in the description.
-    if ($this->hasBundles()) {
-      $bundles = array_values(array_intersect_key($this->getEntityBundleOptions(), array_flip($this->configuration['bundles']['selected'])));
-      if ($this->configuration['bundles']['default']) {
-        $summary .= $this->t('Excluded bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
-      }
-      else {
-        $summary .= $this->t('Included bundles: @bundles', array('@bundles' => implode(', ', $bundles)));
-      }
-    }
-
-    // Add language information in the description.
-    if ($this->isTranslatable()) {
-      if ($summary) {
-        $summary .= '; ';
-      }
-      $languages = array_intersect_key($this->getTranslationOptions(), array_flip($this->configuration['languages']['selected']));
-      if ($this->configuration['languages']['default']) {
-        $summary .= $this->t('Excluded languages: @languages', array('@languages' => implode(', ', $languages)));
-      }
-      else {
-        $summary .= $this->t('Included languages: @languages', array('@languages' => implode(', ', $languages)));
-      }
-    }
-
-    return $summary;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getEntityTypeId() {
     $plugin_definition = $this->getPluginDefinition();
     return $plugin_definition['entity_type'];

@@ -60,9 +60,9 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
-    if (!empty($configuration['server']) && $configuration['server'] instanceof ServerInterface) {
-      $this->setServer($configuration['server']);
-      unset($configuration['server']);
+    if (!empty($configuration['#server']) && $configuration['#server'] instanceof ServerInterface) {
+      $this->setServer($configuration['#server']);
+      unset($configuration['#server']);
     }
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }

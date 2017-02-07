@@ -150,7 +150,19 @@ class ServerForm extends EntityForm {
       '#description' => $this->t('Enter a description for the server.'),
       '#default_value' => $server->getDescription(),
     );
-    $backend_options = $this->getBackendOptions();
+
+    $backends = $this->getBackendPluginManager()->getDefinitions();
+    $backend_options = [];
+    $descriptions = [];
+    foreach ($backends as $backend_id => $definition) {
+      $config = $backend_id === $server->getBackendId() ? $server->getBackendConfig() : [];
+      $config['#server'] = $server;
+      $backend = $this->getBackendPluginManager()
+        ->createInstance($backend_id, $config);
+      $backend_options[$backend_id] = $backend->label();
+      $descriptions[$backend_id]['#description'] = $backend->getDescription();
+    }
+    asort($backend_options, SORT_NATURAL | SORT_FLAG_CASE);
     if ($backend_options) {
       if (count($backend_options) == 1) {
         $server->set('backend', key($backend_options));
@@ -170,26 +182,12 @@ class ServerForm extends EntityForm {
           'effect' => 'fade',
         ),
       );
+      $form['backend'] += $descriptions;
     }
     else {
       drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href=":url">module that provides a backend plugin</a> to proceed.', array(':url' => Url::fromUri('https://www.drupal.org/node/1254698')->toString())), 'error');
       $form = array();
     }
-  }
-
-  /**
-   * Returns all available backend plugins, as an options list.
-   *
-   * @return string[]
-   *   An associative array mapping backend plugin IDs to their (HTML-escaped)
-   *   labels.
-   */
-  protected function getBackendOptions() {
-    $options = array();
-    foreach ($this->getBackendPluginManager()->getDefinitions() as $plugin_id => $plugin_definition) {
-      $options[$plugin_id] = Html::escape($plugin_definition['label']);
-    }
-    return $options;
   }
 
   /**
@@ -214,7 +212,6 @@ class ServerForm extends EntityForm {
         // Modify the backend plugin configuration container element.
         $form['backend_config']['#type'] = 'details';
         $form['backend_config']['#title'] = $this->t('Configure %plugin backend', array('%plugin' => $backend->label()));
-        $form['backend_config']['#description'] = $backend->getDescription();
         $form['backend_config']['#open'] = TRUE;
       }
     }

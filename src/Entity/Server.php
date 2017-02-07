@@ -136,7 +136,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if (!$this->backendPlugin) {
       $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
       $config = $this->backend_config;
-      $config['server'] = $this;
+      $config['#server'] = $this;
       if (!($this->backendPlugin = $backend_plugin_manager->createInstance($this->getBackendId(), $config))) {
         $backend_id = $this->getBackendId();
         $label = $this->label();

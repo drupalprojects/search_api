@@ -273,11 +273,22 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     $this->drupalGet($settings_path);
     $this->assertSession()->statusCodeEquals(200);
+
+    // Make sure datasource and tracker plugin descriptions are displayed.
+    $dummy_index = Index::create();
+    foreach (['datasource', 'tracker'] as $plugin_type) {
+      foreach ($dummy_index->createPlugins($plugin_type) as $plugin) {
+        $description = strip_tags($plugin->getDescription());
+        $description = Html::decodeEntities($description);
+        $this->assertSession()->pageTextContains($description);
+      }
+    }
+
+    // Test form validation (required fields).
     $edit = [
       'status' => 1,
       'description' => $index_description,
     ];
-
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('Index name field is required.');
     $this->assertSession()->pageTextContains('Machine-readable name field is required.');
