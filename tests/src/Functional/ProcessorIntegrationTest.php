@@ -148,8 +148,8 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     sort($actual_processors);
     $this->assertEquals($enabled, $actual_processors);
 
-    $this->checkNodeStatusIntegration();
-    $enabled[] = 'node_status';
+    $this->checkEntityStatusIntegration();
+    $enabled[] = 'entity_status';
     sort($enabled);
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
@@ -454,10 +454,10 @@ TAGS
   }
 
   /**
-   * Tests the UI for the "Node status" processor.
+   * Tests the UI for the "Entity status" processor.
    */
-  public function checkNodeStatusIntegration() {
-    $this->enableProcessor('node_status');
+  public function checkEntityStatusIntegration() {
+    $this->enableProcessor('entity_status');
   }
 
   /**

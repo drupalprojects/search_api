@@ -690,11 +690,11 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     $edit = [
       'status[content_access]' => 1,
+      'status[entity_status]' => 1,
       'status[highlight]' => 1,
       'status[html_filter]' => 1,
       'status[ignorecase]' => 1,
       'status[ignore_character]' => 1,
-      'status[node_status]' => 1,
       'status[stopwords]' => 1,
       'status[tokenizer]' => 1,
       'status[transliteration]' => 1,

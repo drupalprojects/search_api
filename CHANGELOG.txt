@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2491175 by drunken monkey, ptmkenny: Added a new "Entity status" processor
+  to replace "Node status".
 - #2681273 by drunken monkey, borisson_: Added plugin descriptions consistently
   to the UI.
 - #2642792 by drunken monkey: Fixed and expanded the RenderedItemTest.

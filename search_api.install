@@ -200,3 +200,28 @@ function search_api_update_8102() {
 
   return NULL;
 }
+
+/**
+ * Switches from the old "Node status" to the new "Entity status" processor.
+ */
+function search_api_update_8103() {
+  // This update function updates search indexes for the change from
+  // https://www.drupal.org/node/2491175.
+  $config_factory = \Drupal::configFactory();
+
+  foreach ($config_factory->listAll('search_api.index.') as $index_id) {
+    $index = $config_factory->getEditable($index_id);
+    $processors = $index->get('processor_settings');
+
+    if (!empty($processors['node_status'])) {
+      $processors['entity_status'] = $processors['node_status'];
+      unset($processors['node_status']);
+      $index->set('processor_settings', $processors);
+      // Mark the resulting configuration as trusted data. This avoids issues
+      // with future schema changes.
+      $index->save(TRUE);
+    }
+  }
+
+  return t('Switched from old "Node status" to new "Entity status" processor.');
+}
