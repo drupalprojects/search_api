@@ -756,7 +756,8 @@ class ViewsTest extends SearchApiBrowserTestBase {
     ];
     $this->writeSettings($settings);
     // Allow for test-specific overrides.
-    $settings_testing_file = DRUPAL_ROOT . '/' . $this->originalSiteDirectory . '/settings.testing.php';
+    $original_site =  !empty($this->originalSiteDirectory) ? $this->originalSiteDirectory : $this->originalSite;
+    $settings_testing_file = DRUPAL_ROOT . '/' . $original_site . '/settings.testing.php';
     if (file_exists($settings_testing_file)) {
       // Copy the testing-specific settings.php overrides in place.
       copy($settings_testing_file, $directory . '/settings.testing.php');
@@ -765,7 +766,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
       file_put_contents($directory . '/settings.php', "\n\$test_class = '" . get_class($this) . "';\n" . 'include DRUPAL_ROOT . \'/\' . $site_path . \'/settings.testing.php\';' . "\n", FILE_APPEND);
     }
 
-    $settings_services_file = DRUPAL_ROOT . '/' . $this->originalSiteDirectory . '/testing.services.yml';
+    $settings_services_file = DRUPAL_ROOT . '/' . $original_site . '/testing.services.yml';
     if (!file_exists($settings_services_file)) {
       // Otherwise, use the default services as a starting point for overrides.
       $settings_services_file = DRUPAL_ROOT . '/sites/default/default.services.yml';
