@@ -28,6 +28,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  * @ConfigEntityType(
  *   id = "search_api_index",
  *   label = @Translation("Search index"),
+ *   label_collection = @Translation("Search indexes"),
  *   label_singular = @Translation("search index"),
  *   label_plural = @Translation("search indexes"),
  *   label_count = @PluralTranslation(

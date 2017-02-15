@@ -15,6 +15,7 @@ use Drupal\search_api\ServerInterface;
  * @ConfigEntityType(
  *   id = "search_api_server",
  *   label = @Translation("Search server"),
+ *   label_collection = @Translation("Search servers"),
  *   label_singular = @Translation("search server"),
  *   label_plural = @Translation("search servers"),
  *   label_count = @PluralTranslation(
