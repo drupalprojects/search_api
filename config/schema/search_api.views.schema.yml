@@ -209,7 +209,12 @@ views.filter_value.search_api_datasource:
   type: string
 
 views.filter_value.search_api_date:
-  type: string
+  type: views.filter_value.numeric
+  label: 'Date'
+  mapping:
+    type:
+      type: string
+      label: 'Type'
 
 views.filter_value.search_api_fulltext:
   type: string

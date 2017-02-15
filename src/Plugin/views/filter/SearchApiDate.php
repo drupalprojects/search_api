@@ -70,6 +70,24 @@ class SearchApiDate extends Date {
   /**
    * {@inheritdoc}
    */
+  protected function opBetween($field) {
+    if ($this->value['type'] == 'offset') {
+      $a = strtotime($this->value['min'], REQUEST_TIME);
+      $b = strtotime($this->value['max'], REQUEST_TIME);
+    }
+    else {
+      $a = intval(strtotime($this->value['min'], 0));
+      $b = intval(strtotime($this->value['max'], 0));
+    }
+    $real_field = $this->realField;
+    $operator = strtoupper($this->operator);
+    $group = $this->options['group'];
+    $this->getQuery()->addCondition($real_field, [$a, $b], $operator, $group);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function opSimple($field) {
     $value = intval(strtotime($this->value['value'], 0));
     if (!empty($this->value['type']) && $this->value['type'] == 'offset') {

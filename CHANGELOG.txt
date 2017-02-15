@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2843854 by becw, drunken monkey: Fixed date filters in search views.
 - #2753763 by drholera, drunken monkey: Added a logging trait which can also
   log exceptions.
 - #2850025 by alan-ps: Added a "label_collection" property for our entity types.
