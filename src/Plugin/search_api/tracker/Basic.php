@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Plugin\search_api\tracker;
 
 use Drupal\Core\Database\Connection;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Tracker\TrackerPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -10,13 +11,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a tracker implementation which uses a FIFO-like processing order.
  *
- * @SearchApiTracker(
+ *  @SearchApiTracker(
  *   id = "default",
  *   label = @Translation("Default"),
  *   description = @Translation("Index tracker which uses first in/first out for processing pending items.")
  * )
  */
 class Basic extends TrackerPluginBase {
+
+  use LoggerTrait;
 
   /**
    * Status value that represents items which are indexed in their latest form.
@@ -179,7 +182,7 @@ class Basic extends TrackerPluginBase {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }
@@ -203,7 +206,7 @@ class Basic extends TrackerPluginBase {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }
@@ -222,7 +225,7 @@ class Basic extends TrackerPluginBase {
       $update->execute();
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }
@@ -244,7 +247,7 @@ class Basic extends TrackerPluginBase {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }
@@ -267,7 +270,7 @@ class Basic extends TrackerPluginBase {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }
@@ -285,7 +288,7 @@ class Basic extends TrackerPluginBase {
       $delete->execute();
     }
     catch (\Exception $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       $transaction->rollBack();
     }
   }

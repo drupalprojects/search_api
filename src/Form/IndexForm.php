@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Form\SubformState;
+use Drupal\Core\Utility\Error;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
@@ -623,9 +624,13 @@ class IndexForm extends EntityForm {
           $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
         }
       }
-      catch (SearchApiException $ex) {
+      catch (SearchApiException $e) {
         $form_state->setRebuild();
-        watchdog_exception('search_api', $ex);
+
+        $message = '%type: @message in %function (line %line of %file).';
+        $variables = Error::decodeException($e);
+        $this->getLogger('search_api')->error($message, $variables);
+
         drupal_set_message($this->t('The index could not be saved.'), 'error');
       }
     }

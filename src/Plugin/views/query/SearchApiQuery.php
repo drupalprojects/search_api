@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
@@ -20,7 +21,6 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,6 +34,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SearchApiQuery extends QueryPluginBase {
 
+  use LoggerTrait;
   use UncacheableDependencyTrait;
 
   /**
@@ -113,13 +114,6 @@ class SearchApiQuery extends QueryPluginBase {
   protected $groupOperator = 'AND';
 
   /**
-   * The logger to use for log messages.
-   *
-   * @var \Psr\Log\LoggerInterface|null
-   */
-  protected $logger;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -129,29 +123,6 @@ class SearchApiQuery extends QueryPluginBase {
     $plugin->setLogger($container->get('logger.channel.search_api'));
 
     return $plugin;
-  }
-
-  /**
-   * Retrieves the logger to use for log messages.
-   *
-   * @return \Psr\Log\LoggerInterface
-   *   The logger to use.
-   */
-  public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.channel.search_api');
-  }
-
-  /**
-   * Sets the logger to use for log messages.
-   *
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The new logger.
-   *
-   * @return $this
-   */
-  public function setLogger(LoggerInterface $logger) {
-    $this->logger = $logger;
-    return $this;
   }
 
   /**

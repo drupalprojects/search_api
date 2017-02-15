@@ -5,6 +5,7 @@ namespace Drupal\search_api\Item;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
@@ -13,6 +14,8 @@ use Drupal\search_api\Utility\Utility;
  * Represents a field on a search item that can be indexed.
  */
 class Field implements \IteratorAggregate, FieldInterface {
+
+  use LoggerTrait;
 
   /**
    * The index this field is attached to.
@@ -365,7 +368,7 @@ class Field implements \IteratorAggregate, FieldInterface {
         $this->description = $this->description ?: FALSE;
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api', $e);
+        $this->logException($e);
       }
     }
     return $this->description ?: NULL;
@@ -392,7 +395,7 @@ class Field implements \IteratorAggregate, FieldInterface {
           $this->labelPrefix = $this->getDatasource()->label();
         }
         catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
+          $this->logException($e);
         }
         $this->labelPrefix .= ' » ';
       }
@@ -511,7 +514,7 @@ class Field implements \IteratorAggregate, FieldInterface {
         $this->originalType = $this->getDataDefinition()->getDataType();
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api', $e);
+        $this->logException($e);
       }
     }
     return $this->originalType;

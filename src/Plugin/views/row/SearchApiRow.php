@@ -5,7 +5,7 @@ namespace Drupal\search_api\Plugin\views\row;
 use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Psr\Log\LoggerInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\SearchApiException;
@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SearchApiRow extends RowPluginBase {
 
+  use LoggerTrait;
   use UncacheableDependencyTrait;
 
   /**
@@ -42,13 +43,6 @@ class SearchApiRow extends RowPluginBase {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
-  /**
-   * The logger to use for logging messages.
-   *
-   * @var \Psr\Log\LoggerInterface|null
-   */
-  protected $logger;
 
   /**
    * {@inheritdoc}
@@ -84,26 +78,6 @@ class SearchApiRow extends RowPluginBase {
   public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
     return $this;
-  }
-
-  /**
-   * Retrieves the logger to use.
-   *
-   * @return \Psr\Log\LoggerInterface
-   *   The logger to use.
-   */
-  public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.channel.search_api');
-  }
-
-  /**
-   * Sets the logger to use.
-   *
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger to use.
-   */
-  public function setLogger(LoggerInterface $logger) {
-    $this->logger = $logger;
   }
 
   /**
@@ -229,7 +203,7 @@ class SearchApiRow extends RowPluginBase {
       return $this->index->getDatasource($datasource_id)->viewItem($row->_object, $view_mode);
     }
     catch (SearchApiException $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
       return '';
     }
   }

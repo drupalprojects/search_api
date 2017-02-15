@@ -5,6 +5,7 @@ namespace Drupal\search_api\Plugin\views\argument;
 use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Entity\Index;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -16,6 +17,7 @@ use Drupal\search_api\SearchApiException;
  */
 class SearchApiMoreLikeThis extends SearchApiStandard {
 
+  use LoggerTrait;
   use UncacheableDependencyTrait;
 
   /**
@@ -70,7 +72,7 @@ class SearchApiMoreLikeThis extends SearchApiStandard {
       $server = $this->query->getIndex()->getServerInstance();
       if (!$server->supportsFeature('search_api_mlt')) {
         $backend_id = $server->getBackendId();
-        \Drupal::service('logger.channel.search_api')->error('The search backend "@backend_id" does not offer "More like this" functionality.',
+        $this->getLogger()->error('The search backend "@backend_id" does not offer "More like this" functionality.',
           array('@backend_id' => $backend_id));
         $this->query->abort();
         return;

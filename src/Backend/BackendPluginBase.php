@@ -4,6 +4,7 @@ namespace Drupal\search_api\Backend;
 
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
@@ -39,6 +40,8 @@ use Drupal\search_api\Utility\Utility;
  * @see plugin_api
  */
 abstract class BackendPluginBase extends ConfigurablePluginBase implements BackendInterface {
+
+  use LoggerTrait;
 
   /**
    * The server this backend is configured for.
@@ -137,7 +140,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       $vars = array(
         '%server' => $this->getServer()->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
       drupal_set_message($this->t('Deleting some of the items on the server failed. Check the logs for details. The server was still removed.'), 'error');
     }
   }

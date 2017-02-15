@@ -4,18 +4,18 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Database\Connection;
-use Psr\Log\LoggerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
-use Drupal\search_api\Item\ItemInterface;
-use Drupal\search_api\Processor\ProcessorProperty;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Item\ItemInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ProcessorPluginBase;
+use Drupal\search_api\Processor\ProcessorProperty;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -35,19 +35,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class ContentAccess extends ProcessorPluginBase {
 
+  use LoggerTrait;
+
   /**
    * The database connection.
    *
    * @var \Drupal\Core\Database\Connection|null
    */
   protected $database;
-
-  /**
-   * The logger to use for logging messages.
-   *
-   * @var \Psr\Log\LoggerInterface|null
-   */
-  protected $logger;
 
   /**
    * {@inheritdoc}
@@ -83,26 +78,6 @@ class ContentAccess extends ProcessorPluginBase {
   public function setDatabase(Connection $database) {
     $this->database = $database;
     return $this;
-  }
-
-  /**
-   * Retrieves the logger to use.
-   *
-   * @return \Psr\Log\LoggerInterface
-   *   The logger to use.
-   */
-  public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.channel.search_api');
-  }
-
-  /**
-   * Sets the logger to use.
-   *
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger to use.
-   */
-  public function setLogger(LoggerInterface $logger) {
-    $this->logger = $logger;
   }
 
   /**
@@ -238,7 +213,7 @@ class ContentAccess extends ProcessorPluginBase {
           $this->addNodeAccess($query, $account);
         }
         catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
+          $this->logException($e);
         }
       }
       else {

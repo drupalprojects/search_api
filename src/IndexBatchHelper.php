@@ -169,10 +169,10 @@ class IndexBatchHelper {
         $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['original_item_count']);
       }
     }
-    catch (\Exception $ex) {
+    catch (\Exception $e) {
       // Log exception to watchdog and abort the batch job.
-      watchdog_exception('search_api', $ex);
-      $context['message'] = static::t('An error occurred during indexing: @message', array('@message' => $ex->getMessage()));
+      watchdog_exception('search_api', $e);
+      $context['message'] = static::t('An error occurred during indexing: @message', array('@message' => $e->getMessage()));
       $context['finished'] = 1;
       $context['results']['not indexed'] += ($context['sandbox']['limit'] - $context['sandbox']['progress']);
     }

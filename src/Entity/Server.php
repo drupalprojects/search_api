@@ -5,6 +5,7 @@ namespace Drupal\search_api\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
@@ -58,6 +59,8 @@ use Drupal\search_api\ServerInterface;
  * )
  */
 class Server extends ConfigEntityBase implements ServerInterface {
+
+  use LoggerTrait;
 
   /**
    * The ID of the server.
@@ -259,7 +262,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while adding index %index to server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while adding index %index to server %server: @message in %function (line %line of %file).', $vars);
     }
 
     $task_manager = \Drupal::getContainer()
@@ -283,7 +286,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while updating the fields of index %index on server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while updating the fields of index %index on server %server: @message in %function (line %line of %file).', $vars);
     }
 
     $task_manager = \Drupal::getContainer()
@@ -311,7 +314,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => is_object($index) ? $index->label() : $index,
       );
-      watchdog_exception('search_api', $e, '%type while removing index %index from server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while removing index %index from server %server: @message in %function (line %line of %file).', $vars);
     }
 
     $task_manager = \Drupal::getContainer()
@@ -344,7 +347,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      \Drupal::service('logger.channel.search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
+      $this->getLogger()->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 
@@ -359,7 +362,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%server' => $this->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
     }
 
     $task_manager = \Drupal::getContainer()
@@ -375,7 +378,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $vars = array(
         '%index' => $index->label(),
       );
-      \Drupal::service('logger.channel.search_api')->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
+      $this->getLogger()->warning('Trying to delete items from index %index which is marked as read-only.', $vars);
       return;
     }
 
@@ -402,7 +405,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         '%server' => $this->label(),
         '%index' => $index->label(),
       );
-      watchdog_exception('search_api', $e, '%type while deleting items of index %index from server %server: @message in %function (line %line of %file).', $vars);
+      $this->logException($e, '%type while deleting items of index %index from server %server: @message in %function (line %line of %file).', $vars);
     }
 
     $task_manager = \Drupal::getContainer()
@@ -425,7 +428,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         $args = array(
           '%index' => $index->label(),
         );
-        watchdog_exception('search_api', $e, '%type while deleting all items from index %index: @message in %function (line %line of %file).', $args);
+        $this->logException($e, '%type while deleting all items from index %index: @message in %function (line %line of %file).', $args);
         $failed[] = $index->label();
       }
     }

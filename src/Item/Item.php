@@ -5,6 +5,7 @@ namespace Drupal\search_api\Item;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorPropertyInterface;
 use Drupal\search_api\SearchApiException;
@@ -15,6 +16,8 @@ use Drupal\search_api\Utility\Utility;
  * Provides a default implementation for a search item.
  */
 class Item implements \IteratorAggregate, ItemInterface {
+
+  use LoggerTrait;
 
   /**
    * The search index with which this item is associated.
@@ -250,7 +253,7 @@ class Item implements \IteratorAggregate, ItemInterface {
         catch (SearchApiException $e) {
           // If we couldn't load the object, just log an error and fail
           // silently to set the values.
-          watchdog_exception('search_api', $e);
+          $this->logException($e);
         }
       }
       $this->fieldsExtracted = TRUE;

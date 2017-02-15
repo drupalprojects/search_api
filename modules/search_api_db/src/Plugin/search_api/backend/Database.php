@@ -32,7 +32,6 @@ use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
 use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
 use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -119,13 +118,6 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected $dataTypePluginManager;
 
   /**
-   * The logger to use for logging messages.
-   *
-   * @var \Psr\Log\LoggerInterface|null
-   */
-  protected $logger;
-
-  /**
    * The key-value store to use.
    *
    * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
@@ -187,37 +179,20 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     /** @var static $backend */
     $backend = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-    $module_handler = $container->get('module_handler');
-    $backend->setModuleHandler($module_handler);
-
-    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
-    $config_factory = $container->get('config.factory');
-    $backend->setConfigFactory($config_factory);
-
-    /** @var \Drupal\search_api\DataType\DataTypePluginManager $data_type_plugin_manager */
-    $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
-    $backend->setDataTypePluginManager($data_type_plugin_manager);
-
-    /** @var \Psr\Log\LoggerInterface $logger */
-    $logger = $container->get('logger.channel.search_api_db');
-    $backend->setLogger($logger);
-
-    /** @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface $keyvalue_factory */
-    $keyvalue_factory = $container->get('keyvalue');
-    $backend->setKeyValueStore($keyvalue_factory->get(self::INDEXES_KEY_VALUE_STORE_ID));
+    $backend->setModuleHandler($container->get('module_handler'));
+    $backend->setConfigFactory($container->get('config.factory'));
+    $backend->setDataTypePluginManager($container->get('plugin.manager.search_api.data_type'));
+    $backend->setLogger($container->get('logger.channel.search_api_db'));
+    $backend->setKeyValueStore($container->get('keyvalue')->get(self::INDEXES_KEY_VALUE_STORE_ID));
 
     // For a new backend plugin, the database might not be set yet. In that case
     // we of course also don't need a DBMS compatibility handler.
     if ($backend->getDatabase()) {
-      /** @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $dbms_compatibility_handler */
       $dbms_compatibility_handler = $container->get('search_api_db.database_compatibility');
       // Make sure that we actually provide a handler for the right database,
       // otherwise fall back to the generic handler.
       if ($dbms_compatibility_handler->getDatabase() != $backend->getDatabase()) {
-        /** @var \Drupal\Component\Transliteration\TransliterationInterface $transliterator */
-        $transliterator = $container->get('transliteration');
-        $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $transliterator);
+        $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $container->get('transliteration'));
       }
       $backend->setDbmsCompatibilityHandler($dbms_compatibility_handler);
     }
@@ -301,29 +276,6 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    */
   public function setDataTypePluginManager(DataTypePluginManager $data_type_plugin_manager) {
     $this->dataTypePluginManager = $data_type_plugin_manager;
-    return $this;
-  }
-
-  /**
-   * Retrieves the logger to use.
-   *
-   * @return \Psr\Log\LoggerInterface
-   *   The logger to use.
-   */
-  public function getLogger() {
-    return $this->logger ?: \Drupal::service('logger.channel.search_api_db');
-  }
-
-  /**
-   * Sets the logger to use.
-   *
-   * @param \Psr\Log\LoggerInterface $logger
-   *   The logger to use.
-   *
-   * @return $this
-   */
-  public function setLogger(LoggerInterface $logger) {
-    $this->logger = $logger;
     return $this;
   }
 
@@ -802,7 +754,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     catch (\PDOException $e) {
       $variables['%column'] = $column;
       $variables['%table'] = $db['table'];
-      watchdog_exception('search_api_db', $e, '%type while trying to add a database index for column %column to table %table: @message in %function (line %line of %file).', $variables, RfcLogLevel::WARNING);
+      $this->logException($e, '%type while trying to add a database index for column %column to table %table: @message in %function (line %line of %file).', $variables, RfcLogLevel::WARNING);
     }
 
     if ($new_table) {
@@ -2455,7 +2407,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $result = $this->database->queryTemporary((string) $db_query, $args);
     }
     catch (\PDOException $e) {
-      watchdog_exception('search_api', $e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
+      $this->logException($e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
       return FALSE;
     }
     return $result;

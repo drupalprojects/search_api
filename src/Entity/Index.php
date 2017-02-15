@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
+use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
@@ -87,6 +88,8 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  * )
  */
 class Index extends ConfigEntityBase implements IndexInterface {
+
+  use LoggerTrait;
 
   /**
    * The ID of the index.
@@ -867,7 +870,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
       }
       catch (SearchApiException $e) {
-        watchdog_exception('search_api', $e);
+        $this->logException($e);
         // If the complete datasource could not be loaded, don't report all its
         // individual requested items as missing.
         unset($items_by_datasource[$datasource_id]);
@@ -882,8 +885,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       $missing_ids = array_reduce(array_map('array_values', $items_by_datasource), 'array_merge', array());
       $args['%index'] = $this->label();
       $args['@items'] = '"' . implode('", "', $missing_ids) . '"';
-      \Drupal::service('logger.channel.search_api')
-        ->warning('Could not load the following items on index %index: @items.', $args);
+      $this->getLogger()->warning('Could not load the following items on index %index: @items.', $args);
       // Also remove those items from tracking so we don't keep trying to load
       // them.
       foreach ($items_by_datasource as $datasource_id => $raw_ids) {
@@ -909,7 +911,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         }
         catch (SearchApiException $e) {
           $variables['%index'] = $this->label();
-          watchdog_exception('search_api', $e, '%type while trying to index items on index %index: @message in %function (line %line of %file)', $variables);
+          $this->logException($e, '%type while trying to index items on index %index: @message in %function (line %line of %file)', $variables);
         }
       }
     }
@@ -1052,7 +1054,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
           }
         }
         catch (SearchApiException $e) {
-          watchdog_exception('search_api', $e);
+          $this->logException($e);
         }
       }
     }
@@ -1302,7 +1304,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       Cache::invalidateTags($this->getCacheTags());
     }
     catch (SearchApiException $e) {
-      watchdog_exception('search_api', $e);
+      $this->logException($e);
     }
 
     // Reset the field instances so saved renames won't be reported anymore.

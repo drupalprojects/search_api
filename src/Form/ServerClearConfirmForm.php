@@ -5,6 +5,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Error;
 use Drupal\search_api\SearchApiException;
 
 /**
@@ -58,10 +59,13 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
         $index->reindex();
       }
       catch (SearchApiException $e) {
-        $args = array(
+        $message = '%type while clearing index %index: @message in %function (line %line of %file).';
+        $variables = array(
           '%index' => $index->label(),
         );
-        watchdog_exception('search_api', $e, '%type while clearing index %index: @message in %function (line %line of %file).', $args);
+        $variables += Error::decodeException($e);
+        $this->getLogger('search_api')->error($message, $variables);
+
         $failed_reindexing[] = $index->label();
       }
     }

@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Error;
 use Drupal\search_api\Backend\BackendPluginManager;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
@@ -306,7 +307,11 @@ class ServerForm extends EntityForm {
       }
       catch (SearchApiException $e) {
         $form_state->setRebuild();
-        watchdog_exception('search_api', $e);
+
+        $message = '%type: @message in %function (line %line of %file).';
+        $variables = Error::decodeException($e);
+        $this->getLogger('search_api')->error($message, $variables);
+
         drupal_set_message($this->t('The server could not be saved.'), 'error');
       }
     }
