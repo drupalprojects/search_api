@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\LoggerTrait;
@@ -28,7 +27,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SearchApiRow extends RowPluginBase {
 
   use LoggerTrait;
-  use UncacheableDependencyTrait;
 
   /**
    * The search index.

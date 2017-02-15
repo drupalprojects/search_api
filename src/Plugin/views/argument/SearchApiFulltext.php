@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\ParseMode\ParseModePluginManager;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
@@ -16,8 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ViewsArgument("search_api_fulltext")
  */
 class SearchApiFulltext extends SearchApiStandard {
-
-  use UncacheableDependencyTrait;
 
   /**
    * The parse mode manager.

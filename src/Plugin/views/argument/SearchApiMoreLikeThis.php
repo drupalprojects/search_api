@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\LoggerTrait;
@@ -18,7 +17,6 @@ use Drupal\search_api\SearchApiException;
 class SearchApiMoreLikeThis extends SearchApiStandard {
 
   use LoggerTrait;
-  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

@@ -3,7 +3,6 @@
 namespace Drupal\search_api_views_taxonomy\Plugin\views\argument;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\search_api\Plugin\views\argument\SearchApiStandard;
 use Drupal\taxonomy\Entity\Term;
 
@@ -15,8 +14,6 @@ use Drupal\taxonomy\Entity\Term;
  * @ViewsArgument("search_api_term")
  */
 class SearchApiTerm extends SearchApiStandard {
-
-  use UncacheableDependencyTrait;
 
   /**
    * {@inheritdoc}

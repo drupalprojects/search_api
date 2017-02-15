@@ -4,7 +4,6 @@ namespace Drupal\search_api\Plugin\views\argument;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -16,8 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ViewsArgument("search_api_date")
  */
 class SearchApiDate extends SearchApiStandard {
-
-  use UncacheableDependencyTrait;
 
   /**
    * The date formatter.

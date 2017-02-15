@@ -23,6 +23,36 @@ views.row.search_api:
           type: string
           label: View mode for the specific bundle
 
+views.cache.search_api_time:
+  type: views_cache
+  label: 'Time-based caching (Search API)'
+  mapping:
+    options:
+      type: mapping
+      label: 'Cache options'
+      mapping:
+        results_lifespan:
+          type: integer
+          label: 'The length of time raw query results should be cached.'
+        results_lifespan_custom:
+          type: integer
+          label: 'Length of time in seconds raw query results should be cached.'
+        output_lifespan:
+          type: integer
+          label: 'The length of time rendered HTML output should be cached.'
+        output_lifespan_custom:
+          type: integer
+          label: 'Length of time in seconds rendered HTML output should be cached.'
+
+views.cache.search_api_tag:
+  type: views_cache
+  label: 'Tag-based caching (Search API)'
+  mapping:
+    options:
+      type: mapping
+      label: 'Cache options'
+
+
 views.argument.search_api:
   type: views.argument.numeric
   label: 'Search API'

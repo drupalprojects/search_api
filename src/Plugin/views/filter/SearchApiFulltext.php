@@ -3,7 +3,6 @@
 namespace Drupal\search_api\Plugin\views\filter;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\search_api\Entity\Index;
@@ -20,7 +19,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SearchApiFulltext extends FilterPluginBase {
 
-  use UncacheableDependencyTrait;
   use SearchApiFilterTrait;
 
   /**

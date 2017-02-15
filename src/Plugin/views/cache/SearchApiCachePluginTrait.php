@@ -2,31 +2,15 @@
 
 namespace Drupal\search_api\Plugin\views\cache;
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Component\Utility\Crypt;
-use Drupal\search_api\SearchApiException;
+use Drupal\Core\Cache\Cache;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
-use Drupal\views\Plugin\views\cache\Time;
+use Drupal\search_api\SearchApiException;
 
 /**
- * Defines a cache plugin for use with Search API views.
- *
- * @ingroup views_cache_plugins
- *
- * @ViewsCache(
- *   id = "search_api",
- *   title = @Translation("Search API specific"),
- *   help = @Translation("Cache Search API views. (Other methods probably won't work with search views.)")
- * )
+ * Provides a trait to use in Views cache plugins for Search API queries.
  */
-class SearchApiCache extends Time {
-
-  /**
-   * Static cache for SearchApiCache::getResultsKey().
-   *
-   * @var string|null
-   */
-  protected $resultsKey;
+trait SearchApiCachePluginTrait {
 
   /**
    * {@inheritdoc}
@@ -127,8 +111,9 @@ class SearchApiCache extends Time {
    *   Thrown if there is no current Views query, or it is no Search API query.
    */
   protected function getQuery() {
-    if (isset($this->view->query) && $this->view->query instanceof SearchApiQuery) {
-      return $this->view->query;
+    $query = $this->view->getQuery();
+    if ($query instanceof SearchApiQuery) {
+      return $query;
     }
     throw new SearchApiException('No matching Search API Views query found in view.');
   }

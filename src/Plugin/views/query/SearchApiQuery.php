@@ -4,7 +4,6 @@ namespace Drupal\search_api\Plugin\views\query;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -35,7 +34,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SearchApiQuery extends QueryPluginBase {
 
   use LoggerTrait;
-  use UncacheableDependencyTrait;
 
   /**
    * Number of results to display.

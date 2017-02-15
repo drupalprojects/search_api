@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Plugin\views\sort;
 
-use Drupal\Core\Cache\UncacheableDependencyTrait;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
 
 /**
@@ -11,8 +10,6 @@ use Drupal\views\Plugin\views\sort\SortPluginBase;
  * @ViewsSort("search_api")
  */
 class SearchApiSort extends SortPluginBase {
-
-  use UncacheableDependencyTrait;
 
   /**
    * The associated views query object.
