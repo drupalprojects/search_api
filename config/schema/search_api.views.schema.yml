@@ -187,10 +187,6 @@ views.filter.search_api_datasource:
   type: views.filter.search_api_options
   label: 'Search API datasource'
 
-views.filter_value.search_api_date:
-  type: views.filter_value.date
-  label: 'Search API date'
-
 views.filter.search_api_fulltext:
   type: views_filter
   label: 'Search API fulltext search'
@@ -239,12 +235,8 @@ views.filter_value.search_api_datasource:
   type: string
 
 views.filter_value.search_api_date:
-  type: views.filter_value.numeric
-  label: 'Date'
-  mapping:
-    type:
-      type: string
-      label: 'Type'
+  type: views.filter_value.date
+  label: 'Search API date'
 
 views.filter_value.search_api_fulltext:
   type: string

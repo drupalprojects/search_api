@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2853049 by Blanca.Esqueda: Fixed config schema error for Views date filters.
 - #2847810 by JayKandari: Added Stemmer to ProcessorIntegrationTest.
 - #2753667 by pfrenssen, drunken monkey, borisson_, idimopoulos, sandervd,
   sardara: Improved Views cache plugins and their cache metadata.
