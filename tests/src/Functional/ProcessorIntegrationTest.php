@@ -192,6 +192,13 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     sort($actual_processors);
     $this->assertEquals($enabled, $actual_processors);
 
+    $this->checkStemmerIntegration();
+    $enabled[] = 'stemmer';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEquals($enabled, $actual_processors);
+
     // The 'add_url' processor is not available to be removed because it's
     // locked.
     $this->checkUrlFieldIntegration();
@@ -559,6 +566,20 @@ TAGS
       ],
     ];
     $this->editSettingsForm($configuration, 'hierarchy', $edit, TRUE, FALSE);
+  }
+
+  /**
+   * Tests the UI for the "Stemmer" processor.
+   */
+  public function checkStemmerIntegration() {
+    $this->enableProcessor('stemmer');
+    $configuration = [
+      'exceptions' => ['indian' => 'india'],
+    ];
+    $form_values = [
+      'exceptions' => 'indian=india',
+    ];
+    $this->editSettingsForm($configuration, 'stemmer', $form_values);
   }
 
   /**

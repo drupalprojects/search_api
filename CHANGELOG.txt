@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2847810 by JayKandari: Added Stemmer to ProcessorIntegrationTest.
 - #2753667 by pfrenssen, drunken monkey, borisson_, idimopoulos, sandervd,
   sardara: Improved Views cache plugins and their cache metadata.
 - #2843854 by becw, drunken monkey: Fixed date filters in search views.
