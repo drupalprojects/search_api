@@ -13,7 +13,6 @@ use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;

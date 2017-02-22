@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2852807 by alan-ps: Fixed CheckStyle warnings in this project.
 - #2659868 by borisson_, drunken monkey: Fixed CacheabilityTest to make sure it
   displays the rendered entities.
 - #2853049 by Blanca.Esqueda: Fixed config schema error for Views date filters.

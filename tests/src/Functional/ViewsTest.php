@@ -749,7 +749,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     ];
     $this->writeSettings($settings);
     // Allow for test-specific overrides.
-    $original_site =  !empty($this->originalSiteDirectory) ? $this->originalSiteDirectory : $this->originalSite;
+    $original_site = !empty($this->originalSiteDirectory) ? $this->originalSiteDirectory : $this->originalSite;
     $settings_testing_file = DRUPAL_ROOT . '/' . $original_site . '/settings.testing.php';
     if (file_exists($settings_testing_file)) {
       // Copy the testing-specific settings.php overrides in place.
