@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2574889 by drunken monkey, ChristianAdamski: Added Tour module integration.
 - #2780341 by Berdir: Fixed passing of custom ranges to date facets.
 - #2765317 by JorgenSandstrom, NWOM, drunken monkey: Added a "Last" aggregation
   type.
