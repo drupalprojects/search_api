@@ -120,12 +120,6 @@ class IndexFieldsForm extends EntityForm {
     $form['#tree'] = TRUE;
 
     $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, for example titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
-    if ($index->hasValidServer()) {
-      $arguments = array(
-        ':server-url' => $index->getServerInstance()->toUrl('canonical')->toString(),
-      );
-      $form['description']['#markup'] .= $this->t('<p>Check the <a href=":server-url">server\'s</a> backend class description for details.</p>', $arguments);
-    }
 
     if ($fields = $index->getFieldsByDatasource(NULL)) {
       $form['_general'] = $this->buildFieldsTable($fields);
@@ -222,7 +216,7 @@ class IndexFieldsForm extends EntityForm {
       '#theme' => 'search_api_admin_fields_table',
       '#parents' => array(),
       '#header' => array(
-        t('Field'),
+        t('Label'),
         t('Machine name'),
         [
           'data' => t('Property path'),

@@ -24,7 +24,7 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getDescription() {
-    return $this->t('All indexed data for this index will be deleted from the search server. Searches on this index will not return any items until they are reindexed. This action cannot be undone.');
+    return $this->t('All indexed data for this index will be deleted from the search server. Searches on this index will not return any results until items are reindexed. This action cannot be undone.');
   }
 
   /**
