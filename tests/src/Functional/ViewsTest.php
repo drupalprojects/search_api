@@ -39,13 +39,6 @@ class ViewsTest extends SearchApiBrowserTestBase {
   ];
 
   /**
-   * A search index ID.
-   *
-   * @var string
-   */
-  protected $indexId = 'database_search_index';
-
-  /**
    * {@inheritdoc}
    */
   public function setUp() {
