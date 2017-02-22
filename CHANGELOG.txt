@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2814925 by kducharm, drunken monkey, Cyberwolf: Fixed indexing of computed
+  fields.
 - #2852807 by alan-ps: Fixed CheckStyle warnings in this project.
 - #2659868 by borisson_, drunken monkey: Fixed CacheabilityTest to make sure it
   displays the rendered entities.

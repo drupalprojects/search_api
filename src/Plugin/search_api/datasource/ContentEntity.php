@@ -329,9 +329,15 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
     }
     // Exclude properties with custom storage, since we can't extract them
     // currently, due to a shortcoming of Core's Typed Data API. See #2695527.
+    // Computed properties should mostly be OK, though, even though they still
+    // count as having "custom storage". The "Path" field from the Core module
+    // does not work, though, so we explicitly exclude it here to avoid
+    // confusion.
     foreach ($properties as $key => $property) {
-      if ($property->getFieldStorageDefinition()->hasCustomStorage()) {
-        unset($properties[$key]);
+      if (!$property->isComputed() || $key === 'path') {
+        if ($property->getFieldStorageDefinition()->hasCustomStorage()) {
+          unset($properties[$key]);
+        }
       }
     }
     return $properties;
