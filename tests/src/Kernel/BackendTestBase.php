@@ -458,6 +458,7 @@ abstract class BackendTestBase extends KernelTestBase {
     $this->regressionTest2783987();
     $this->regressionTest2809753();
     $this->regressionTest2767609();
+    $this->regressionTest2745655();
   }
 
   /**
@@ -851,6 +852,32 @@ abstract class BackendTestBase extends KernelTestBase {
       ->addCondition('category', array('', 'a', 'b'), 'NOT IN')
       ->execute();
     $this->assertResults(array(), $results, 'Search with various empty-string filters');
+  }
+
+  /**
+   * Tests (NOT) NULL conditions on fulltext fields.
+   *
+   * @see https://www.drupal.org/node/2745655
+   */
+  protected function regressionTest2745655() {
+    $name = $this->entities[3]->name[0]->value;
+    $this->entities[3]->name[0]->value = NULL;
+    $this->entities[3]->save();
+    $this->indexItems($this->indexId);
+
+    $results = $this->buildSearch()
+      ->addCondition('name', NULL)
+      ->execute();
+    $this->assertResults([3], $results, 'Search for items without name');
+
+    $results = $this->buildSearch()
+      ->addCondition('name', NULL, '<>')
+      ->execute();
+    $this->assertResults([1, 2, 4, 5], $results, 'Search for items with name');
+
+    $this->entities[3]->set('name', [$name]);
+    $this->entities[3]->save();
+    $this->indexItems($this->indexId);
   }
 
   /**
