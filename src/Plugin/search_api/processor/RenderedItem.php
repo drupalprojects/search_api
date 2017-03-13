@@ -19,6 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Adds an additional field containing the rendered item.
  *
+ * @see \Drupal\search_api\Plugin\search_api\processor\Property\RenderedItemProperty
+ *
  * @SearchApiProcessor(
  *   id = "rendered_item",
  *   label = @Translation("Rendered item"),

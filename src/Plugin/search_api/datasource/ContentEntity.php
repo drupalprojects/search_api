@@ -26,6 +26,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -91,6 +92,13 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   protected $languageManager;
 
   /**
+   * The fields helper.
+   *
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface|null
+   */
+  protected $fieldsHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
@@ -121,6 +129,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
     $datasource->setTypedDataManager($container->get('typed_data_manager'));
     $datasource->setConfigFactory($container->get('config.factory'));
     $datasource->setLanguageManager($container->get('language_manager'));
+    $datasource->setFieldsHelper($container->get('search_api.fields_helper'));
 
     return $datasource;
   }
@@ -136,43 +145,13 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   }
 
   /**
-   * Retrieves the entity field manager.
-   *
-   * @return \Drupal\Core\Entity\EntityFieldManagerInterface
-   *   The entity field manager.
-   */
-  public function getEntityFieldManager() {
-    return $this->entityFieldManager ?: \Drupal::getContainer()->get('entity_field.manager');
-  }
-
-  /**
-   * Retrieves the entity display repository.
-   *
-   * @return \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   *   The entity entity display repository.
-   */
-  public function getEntityDisplayRepository() {
-    return $this->entityDisplayRepository ?: \Drupal::getContainer()->get('entity_display.repository');
-  }
-
-  /**
-   * Retrieves the entity display repository.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   *   The entity entity display repository.
-   */
-  public function getEntityTypeBundleInfo() {
-    return $this->entityTypeBundleInfo ?: \Drupal::getContainer()->get('entity_type.bundle.info');
-  }
-
-  /**
    * Retrieves the entity storage.
    *
    * @return \Drupal\Core\Entity\EntityStorageInterface
    *   The entity storage.
    */
   protected function getEntityStorage() {
-    return $this->getEntityTypeManager()->getStorage($this->pluginDefinition['entity_type']);
+    return $this->getEntityTypeManager()->getStorage($this->getEntityTypeId());
   }
 
   /**
@@ -182,7 +161,8 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    *   The entity type definition.
    */
   protected function getEntityType() {
-    return $this->getEntityTypeManager()->getDefinition($this->getEntityTypeId());
+    return $this->getEntityTypeManager()
+      ->getDefinition($this->getEntityTypeId());
   }
 
   /**
@@ -199,6 +179,16 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   }
 
   /**
+   * Retrieves the entity field manager.
+   *
+   * @return \Drupal\Core\Entity\EntityFieldManagerInterface
+   *   The entity field manager.
+   */
+  public function getEntityFieldManager() {
+    return $this->entityFieldManager ?: \Drupal::service('entity_field.manager');
+  }
+
+  /**
    * Sets the entity field manager.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -212,6 +202,16 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   }
 
   /**
+   * Retrieves the entity display repository.
+   *
+   * @return \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   *   The entity entity display repository.
+   */
+  public function getEntityDisplayRepository() {
+    return $this->entityDisplayRepository ?: \Drupal::service('entity_display.repository');
+  }
+
+  /**
    * Sets the entity display repository.
    *
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
@@ -222,6 +222,16 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
   public function setEntityDisplayRepository(EntityDisplayRepositoryInterface $entity_display_repository) {
     $this->entityDisplayRepository = $entity_display_repository;
     return $this;
+  }
+
+  /**
+   * Retrieves the entity display repository.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   *   The entity entity display repository.
+   */
+  public function getEntityTypeBundleInfo() {
+    return $this->entityTypeBundleInfo ?: \Drupal::service('entity_type.bundle.info');
   }
 
   /**
@@ -314,6 +324,29 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    */
   public function setLanguageManager(LanguageManagerInterface $language_manager) {
     $this->languageManager = $language_manager;
+  }
+
+  /**
+   * Retrieves the fields helper.
+   *
+   * @return \Drupal\search_api\Utility\FieldsHelperInterface
+   *   The fields helper.
+   */
+  public function getFieldsHelper() {
+    return $this->fieldsHelper ?: \Drupal::service('search_api.fields_helper');
+  }
+
+  /**
+   * Sets the fields helper.
+   *
+   * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
+   *   The new fields helper.
+   *
+   * @return $this
+   */
+  public function setFieldsHelper(FieldsHelperInterface $fields_helper) {
+    $this->fieldsHelper = $fields_helper;
+    return $this;
   }
 
   /**
@@ -633,7 +666,9 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    * {@inheritdoc}
    */
   public function getPartialItemIds($page = NULL, array $bundles = NULL, array $languages = NULL) {
-    $select = \Drupal::entityQuery($this->getEntityTypeId());
+    $select = $this->getEntityTypeManager()
+      ->getStorage($this->getEntityTypeId())
+      ->getQuery();
 
     // We want to determine all entities of either one of the given bundles OR
     // one of the given languages. That means we can't just filter for $bundles
@@ -878,7 +913,7 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
       }
     }
 
-    $property = Utility::getInnerProperty($property);
+    $property = $this->getFieldsHelper()->getInnerProperty($property);
 
     if ($property instanceof EntityDataDefinitionInterface) {
       $entity_type_definition = $this->getEntityTypeManager()
@@ -890,7 +925,8 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
     }
 
     if (isset($nested_path) && $property instanceof ComplexDataDefinitionInterface) {
-      $nested_dependencies = $this->getPropertyPathDependencies($nested_path, Utility::getNestedProperties($property));
+      $nested = $this->getFieldsHelper()->getNestedProperties($property);
+      $nested_dependencies = $this->getPropertyPathDependencies($nested_path, $nested);
       foreach ($nested_dependencies as $type => $names) {
         $dependencies += array($type => array());
         $dependencies[$type] += $names;

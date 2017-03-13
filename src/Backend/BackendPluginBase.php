@@ -10,7 +10,7 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\ConfigurablePluginBase;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility\FieldsHelper;
 
 /**
  * Defines a base class for backend plugins.
@@ -60,6 +60,13 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
   protected $serverId;
 
   /**
+   * The fields helper.
+   *
+   * @var \Drupal\search_api\Utility\FieldsHelper|null
+   */
+  protected $fieldsHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
@@ -68,6 +75,29 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       unset($configuration['#server']);
     }
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * Retrieves the fields helper.
+   *
+   * @return \Drupal\search_api\Utility\FieldsHelper
+   *   The fields helper.
+   */
+  public function getFieldsHelper() {
+    return $this->fieldsHelper ?: \Drupal::service('search_api.fields_helper');
+  }
+
+  /**
+   * Sets the fields helper.
+   *
+   * @param \Drupal\search_api\Utility\FieldsHelper $fields_helper
+   *   The new fields helper.
+   *
+   * @return $this
+   */
+  public function setFieldsHelper(FieldsHelper $fields_helper) {
+    $this->fieldsHelper = $fields_helper;
+    return $this;
   }
 
   /**
@@ -198,9 +228,12 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       'type' => 'string',
       'original type' => 'string',
     );
-    $fields['search_api_id'] = Utility::createField($index, 'search_api_id', $field_info);
-    $fields['search_api_datasource'] = Utility::createField($index, 'search_api_datasource', $field_info);
-    $fields['search_api_language'] = Utility::createField($index, 'search_api_language', $field_info);
+    $fields['search_api_id'] = $this->getFieldsHelper()
+      ->createField($index, 'search_api_id', $field_info);
+    $fields['search_api_datasource'] = $this->getFieldsHelper()
+      ->createField($index, 'search_api_datasource', $field_info);
+    $fields['search_api_language'] = $this->getFieldsHelper()
+      ->createField($index, 'search_api_language', $field_info);
 
     if ($item) {
       $fields['search_api_id']->setValues(array($item->getId()));

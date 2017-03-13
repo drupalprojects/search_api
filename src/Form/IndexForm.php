@@ -9,7 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Utility\Error;
-use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
@@ -26,13 +25,6 @@ class IndexForm extends EntityForm {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
-  /**
-   * The datasource plugin manager.
-   *
-   * @var \Drupal\search_api\Datasource\DatasourcePluginManager
-   */
-  protected $datasourcePluginManager;
 
   /**
    * The tracker plugin manager.
@@ -53,14 +45,11 @@ class IndexForm extends EntityForm {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager
-   *   The search datasource plugin manager.
    * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
    *   The Search API tracker plugin manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, DatasourcePluginManager $datasource_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, TrackerPluginManager $tracker_plugin_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->datasourcePluginManager = $datasource_plugin_manager;
     $this->trackerPluginManager = $tracker_plugin_manager;
   }
 
@@ -68,63 +57,9 @@ class IndexForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = $container->get('entity_type.manager');
-    /** @var \Drupal\search_api\Datasource\DatasourcePluginManager $datasource_plugin_manager */
-    $datasource_plugin_manager = $container->get('plugin.manager.search_api.datasource');
-    /** @var \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager */
     $tracker_plugin_manager = $container->get('plugin.manager.search_api.tracker');
-    return new static($entity_type_manager, $datasource_plugin_manager, $tracker_plugin_manager);
-  }
-
-  /**
-   * Returns the entity type manager.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
-   *   The entity type manager.
-   */
-  protected function getEntityTypeManager() {
-    return $this->entityTypeManager ?: \Drupal::service('entity_type.manager');
-  }
-
-  /**
-   * Returns the datasource plugin manager.
-   *
-   * @return \Drupal\search_api\Datasource\DatasourcePluginManager
-   *   The datasource plugin manager.
-   */
-  protected function getDatasourcePluginManager() {
-    return $this->datasourcePluginManager ?: \Drupal::service('plugin.manager.search_api.datasource');
-  }
-
-  /**
-   * Returns the tracker plugin manager.
-   *
-   * @return \Drupal\search_api\Tracker\TrackerPluginManager
-   *   The tracker plugin manager.
-   */
-  protected function getTrackerPluginManager() {
-    return $this->trackerPluginManager ?: \Drupal::service('plugin.manager.search_api.tracker');
-  }
-
-  /**
-   * Returns the index storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   The index storage controller.
-   */
-  protected function getIndexStorage() {
-    return $this->getEntityTypeManager()->getStorage('search_api_index');
-  }
-
-  /**
-   * Returns the server storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   The server storage controller.
-   */
-  protected function getServerStorage() {
-    return $this->getEntityTypeManager()->getStorage('search_api_server');
+    return new static($entity_type_manager, $tracker_plugin_manager);
   }
 
   /**
@@ -135,8 +70,11 @@ class IndexForm extends EntityForm {
    */
   protected function getServerOptions() {
     $options = array();
-    /** @var \Drupal\search_api\ServerInterface $server */
-    foreach ($this->getServerStorage()->loadMultiple() as $server_id => $server) {
+    /** @var \Drupal\search_api\ServerInterface[] $servers */
+    $servers = $this->entityTypeManager
+      ->getStorage('search_api_server')
+      ->loadMultiple();
+    foreach ($servers as $server_id => $server) {
       // @todo Special formatting for disabled servers.
       $options[$server_id] = Html::escape($server->label());
     }
@@ -191,13 +129,14 @@ class IndexForm extends EntityForm {
       '#default_value' => $index->label(),
       '#required' => TRUE,
     );
+    $index_storage = $this->entityTypeManager->getStorage('search_api_index');
     $form['id'] = array(
       '#type' => 'machine_name',
       '#default_value' => $index->isNew() ? NULL : $index->id(),
       '#maxlength' => 50,
       '#required' => TRUE,
       '#machine_name' => array(
-        'exists' => array($this->getIndexStorage(), 'load'),
+        'exists' => array($index_storage, 'load'),
         'source' => array('name'),
       ),
       '#disabled' => !$index->isNew(),
@@ -431,7 +370,7 @@ class IndexForm extends EntityForm {
     else {
       // Probably an AJAX rebuild of the form – use the tracker selected by
       // the user.
-      $tracker = $this->getTrackerPluginManager()->createInstance($selected_tracker, array());
+      $tracker = $this->trackerPluginManager->createInstance($selected_tracker, array());
     }
 
     if (empty($tracker)) {

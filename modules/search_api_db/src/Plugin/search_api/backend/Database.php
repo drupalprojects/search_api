@@ -27,6 +27,7 @@ use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Utility\DataTypeHelper;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
 use Drupal\search_api_autocomplete\Suggestion;
@@ -139,6 +140,13 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected $dateFormatter;
 
   /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelper|null
+   */
+  protected $dataTypeHelper;
+
+  /**
    * The keywords ignored during the current search query.
    *
    * @var array
@@ -184,6 +192,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $backend->setDataTypePluginManager($container->get('plugin.manager.search_api.data_type'));
     $backend->setLogger($container->get('logger.channel.search_api_db'));
     $backend->setKeyValueStore($container->get('keyvalue')->get(self::INDEXES_KEY_VALUE_STORE_ID));
+    $backend->setDateFormatter($container->get('date.formatter'));
+    $backend->setDataTypeHelper($container->get('search_api.data_type_helper'));
 
     // For a new backend plugin, the database might not be set yet. In that case
     // we of course also don't need a DBMS compatibility handler.
@@ -322,6 +332,29 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    */
   public function setDateFormatter(DateFormatterInterface $date_formatter) {
     $this->dateFormatter = $date_formatter;
+    return $this;
+  }
+
+  /**
+   * Retrieves the data type helper.
+   *
+   * @return \Drupal\search_api\Utility\DataTypeHelper
+   *   The data type helper.
+   */
+  public function getDataTypeHelper() {
+    return $this->dataTypeHelper ?: \Drupal::service('search_api.data_type_helper');
+  }
+
+  /**
+   * Sets the data type helper.
+   *
+   * @param \Drupal\search_api\Utility\DataTypeHelper $data_type_helper
+   *   The new data type helper.
+   *
+   * @return $this
+   */
+  public function setDataTypeHelper(DataTypeHelper $data_type_helper) {
+    $this->dataTypeHelper = $data_type_helper;
     return $this;
   }
 
@@ -833,7 +866,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $denormalized_table = $db_info['index_table'];
 
       foreach ($fields as $field_id => $field) {
-        if (!isset($text_table) && Utility::isTextType($field['type'])) {
+        $was_text_type = $this->getDataTypeHelper()->isTextType($field['type']);
+        if (!isset($text_table) && $was_text_type) {
           // Stash the shared text table name for the index.
           $text_table = $field['table'];
         }
@@ -849,7 +883,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $fields[$field_id]['type'] = $new_type;
         $fields[$field_id]['boost'] = $new_fields[$field_id]->getBoost();
         if ($old_type != $new_type) {
-          if ($old_type == 'text' || $new_type == 'text') {
+          $is_text_type = $this->getDataTypeHelper()->isTextType($new_type);
+          if ($was_text_type || $is_text_type) {
             // A change in fulltext status necessitates completely clearing the
             // index.
             $reindex = TRUE;
@@ -874,7 +909,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $reindex = TRUE;
           }
         }
-        elseif ($new_type == 'text' && $field['boost'] != $new_fields[$field_id]->getBoost()) {
+        elseif ($was_text_type && $field['boost'] != $new_fields[$field_id]->getBoost()) {
           if (!$reindex) {
             // If there was a non-zero boost set previously, we can just update
             // all scores with a single UPDATE query. Otherwise, no way around
@@ -898,7 +933,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           ->fieldExists($field['table'], 'value');
         $denormalized_storage_exists = $this->database->schema()
           ->fieldExists($denormalized_table, $field['column']);
-        if (!Utility::isTextType($field['type']) && !$storage_exists) {
+        if (!$was_text_type && !$storage_exists) {
           $db = array(
             'table' => $field['table'],
           );
@@ -921,7 +956,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       foreach ($new_fields as $field_id => $field) {
         $reindex = TRUE;
         $fields[$field_id] = array();
-        if (Utility::isTextType($field->getType())) {
+        if ($this->getDataTypeHelper()->isTextType($field->getType())) {
           if (!isset($text_table)) {
             // If we have not encountered a text table, assign a name for it.
             $text_table = $this->findFreeTable($prefix . '_', 'text');
@@ -1006,7 +1041,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *   The table which stores the denormalized data for this field.
    */
   protected function removeFieldStorage($name, $field, $index_table) {
-    if (Utility::isTextType($field['type'])) {
+    if ($this->getDataTypeHelper()->isTextType($field['type'])) {
       // Remove data from the text table.
       $this->database->delete($field['table'])
         ->condition('field_name', self::getTextFieldName($name))
@@ -1170,7 +1205,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           $db_info['field_tables'][$field_id]['multi-valued'] = TRUE;
         }
 
-        if (Utility::isTextType($type)) {
+        if ($this->getDataTypeHelper()->isTextType($type)) {
           // Remember the text table the first time we encounter it.
           if (!isset($text_table)) {
             $text_table = $table;
@@ -1326,7 +1361,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return Utility::isTextType($type) ? array() : NULL;
+      return $this->getDataTypeHelper()->isTextType($type) ? array() : NULL;
     }
     switch ($type) {
       case 'text':
@@ -1534,7 +1569,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $result = $db_query->execute();
 
       foreach ($result as $row) {
-        $item = Utility::createItem($index, $row->item_id);
+        $item = $this->getFieldsHelper()->createItem($index, $row->item_id);
         $item->setScore($row->score / self::SCORE_MULTIPLIER);
         $results->addResultItem($item);
       }
@@ -1597,7 +1632,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           if (!isset($fields[$name])) {
             throw new SearchApiException("Unknown field '$name' specified as search target.");
           }
-          if (!Utility::isTextType($fields[$name]['type'])) {
+          if (!$this->getDataTypeHelper()->isTextType($fields[$name]['type'])) {
             $types = $this->getDataTypePluginManager()->getInstances();
             $type = $types[$fields[$name]['type']]->label();
             throw new SearchApiException("Cannot perform fulltext search on field '$name' of type '$type'.");
@@ -2089,7 +2124,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $db_condition->condition($column, $value, $operator);
           }
         }
-        elseif (Utility::isTextType($field_info['type'])) {
+        elseif ($this->getDataTypeHelper()->isTextType($field_info['type'])) {
           $keys = $this->prepareKeys($value);
           if (!isset($keys)) {
             continue;
@@ -2301,7 +2336,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
       // If "Include missing facet" is disabled, we use an INNER JOIN and add IS
       // NOT NULL for shared tables.
-      $is_text_type = Utility::isTextType($field['type']);
+      $is_text_type = $this->getDataTypeHelper()->isTextType($field['type']);
       $alias = $this->getTableAlias($field, $select, TRUE, $facet['missing'] ? 'leftJoin' : 'innerJoin');
       $select->addField($alias, $is_text_type ? 'word' : 'value', 'value');
       if ($is_text_type) {
@@ -2515,7 +2550,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       /** @var \Drupal\Core\Database\Query\SelectInterface|null $word_query */
       $word_query = NULL;
       foreach ($fulltext_fields as $field) {
-        if (!isset($fields[$field]) || !Utility::isTextType($fields[$field]['type'])) {
+        if (!isset($fields[$field]) || !$this->getDataTypeHelper()->isTextType($fields[$field]['type'])) {
           continue;
         }
         $field_query = $this->database->select($fields[$field]['table'], 't');

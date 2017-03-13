@@ -4,13 +4,106 @@ namespace Drupal\search_api\Plugin\views\cache;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Utility\QueryHelperInterface;
 
 /**
  * Provides a trait to use in Views cache plugins for Search API queries.
  */
 trait SearchApiCachePluginTrait {
+
+  /**
+   * The cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface|null
+   */
+  protected $cacheBackend;
+
+  /**
+   * The cache contexts manager.
+   *
+   * @var \Drupal\Core\Cache\Context\CacheContextsManager|null
+   */
+  protected $cacheContextsManager;
+
+  /**
+   * The query helper.
+   *
+   * @var \Drupal\search_api\Utility\QueryHelperInterface|null
+   */
+  protected $queryHelper;
+
+  /**
+   * Retrieves the cache backend.
+   *
+   * @return \Drupal\Core\Cache\CacheBackendInterface
+   *   The cache backend.
+   */
+  public function getCacheBackend() {
+    return $this->cacheBackend ?: \Drupal::cache($this->resultsBin);
+  }
+
+  /**
+   * Sets the cache backend.
+   *
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The new cache backend.
+   *
+   * @return $this
+   */
+  public function setCacheBackend(CacheBackendInterface $cache_backend) {
+    $this->cacheBackend = $cache_backend;
+    return $this;
+  }
+
+  /**
+   * Retrieves the cache contexts manager.
+   *
+   * @return \Drupal\Core\Cache\Context\CacheContextsManager
+   *   The cache contexts manager.
+   */
+  public function getCacheContextsManager() {
+    return $this->cacheContextsManager ?: \Drupal::service('cache_contexts_manager');
+  }
+
+  /**
+   * Sets the cache contexts manager.
+   *
+   * @param \Drupal\Core\Cache\Context\CacheContextsManager $cache_contexts_manager
+   *   The new cache contexts manager.
+   *
+   * @return $this
+   */
+  public function setCacheContextsManager(CacheContextsManager $cache_contexts_manager) {
+    $this->cacheContextsManager = $cache_contexts_manager;
+    return $this;
+  }
+
+  /**
+   * Retrieves the query helper.
+   *
+   * @return \Drupal\search_api\Utility\QueryHelperInterface
+   *   The query helper.
+   */
+  public function getQueryHelper() {
+    return $this->queryHelper ?: \Drupal::service('search_api.query_helper');
+  }
+
+  /**
+   * Sets the query helper.
+   *
+   * @param \Drupal\search_api\Utility\QueryHelperInterface $query_helper
+   *   The new query helper.
+   *
+   * @return $this
+   */
+  public function setQueryHelper(QueryHelperInterface $query_helper) {
+    $this->queryHelper = $query_helper;
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -32,7 +125,7 @@ trait SearchApiCachePluginTrait {
     if ($expire !== Cache::PERMANENT) {
       $expire += (int) $this->view->getRequest()->server->get('REQUEST_TIME');
     }
-    \Drupal::cache($this->resultsBin)
+    $this->getCacheBackend()
       ->set($this->generateResultsKey(), $data, $expire, $this->getCacheTags());
   }
 
@@ -46,7 +139,7 @@ trait SearchApiCachePluginTrait {
 
     // Values to set: $view->result, $view->total_rows, $view->execute_time,
     // $view->current_page.
-    if ($cache = \Drupal::cache($this->resultsBin)->get($this->generateResultsKey())) {
+    if ($cache = $this->getCacheBackend()->get($this->generateResultsKey())) {
       $cutoff = $this->cacheExpire($type);
       if (!$cutoff || $cache->created > $cutoff) {
         $this->view->result = $cache->data['result'];
@@ -58,9 +151,7 @@ trait SearchApiCachePluginTrait {
         // et al. work.
         /** @var \Drupal\search_api\Query\ResultSetInterface $results */
         $results = $cache->data['search_api results'];
-        \Drupal::getContainer()
-          ->get('search_api.query_helper')
-          ->addResults($results);
+        $this->getQueryHelper()->addResults($results);
 
         try {
           $this->getQuery()->setSearchApiResults($results);
@@ -91,7 +182,7 @@ trait SearchApiCachePluginTrait {
       $display_handler_cache_contexts = $this->displayHandler
         ->getCacheMetadata()
         ->getCacheContexts();
-      $key_data += \Drupal::service('cache_contexts_manager')
+      $key_data += $this->getCacheContextsManager()
         ->convertTokensToKeys($display_handler_cache_contexts)
         ->getKeys();
 

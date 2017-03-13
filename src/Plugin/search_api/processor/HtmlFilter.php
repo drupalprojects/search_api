@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\Yaml\Dumper;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -29,6 +30,36 @@ use Symfony\Component\Yaml\Parser;
  * )
  */
 class HtmlFilter extends FieldsProcessorPluginBase {
+
+  /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelperInterface|null
+   */
+  protected $dataTypeHelper;
+
+  /**
+   * Retrieves the data type helper.
+   *
+   * @return \Drupal\search_api\Utility\DataTypeHelperInterface
+   *   The data type helper.
+   */
+  public function getDataTypeHelper() {
+    return $this->dataTypeHelper ?: \Drupal::service('search_api.data_type_helper');
+  }
+
+  /**
+   * Sets the data type helper.
+   *
+   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $data_type_helper
+   *   The new data type helper.
+   *
+   * @return $this
+   */
+  public function setDataTypeHelper(DataTypeHelperInterface $data_type_helper) {
+    $this->dataTypeHelper = $data_type_helper;
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -161,7 +192,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
     // Remove invisible content.
     $text = preg_replace('@<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)[^>]*>.*</\1>@siU', ' ', $value);
     // Let removed tags still delimit words.
-    $is_text_type = Utility::isTextType($type);
+    $is_text_type = $this->getDataTypeHelper()->isTextType($type);
     if ($is_text_type) {
       $text = str_replace(array('<', '>'), array(' <', '> '), $text);
       if ($this->configuration['title']) {

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2311039 by drunken monkey: Fixed missing dependency injection for all form
+  and plugin classes.
 - #2745655 by drunken monkey: Added test for (NOT) NULL conditions on fulltext
   fields in DB backend.
 - #2574889 by drunken monkey, ChristianAdamski: Added Tour module integration.

@@ -11,6 +11,7 @@ use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -51,6 +52,13 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
   protected static $split;
 
   /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelperInterface|null
+   */
+  protected $dataTypeHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
@@ -65,6 +73,29 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
       self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
     }
+  }
+
+  /**
+   * Retrieves the data type helper.
+   *
+   * @return \Drupal\search_api\Utility\DataTypeHelperInterface
+   *   The data type helper.
+   */
+  public function getDataTypeHelper() {
+    return $this->dataTypeHelper ?: \Drupal::service('search_api.data_type_helper');
+  }
+
+  /**
+   * Sets the data type helper.
+   *
+   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $data_type_helper
+   *   The new data type helper.
+   *
+   * @return $this
+   */
+  public function setDataTypeHelper(DataTypeHelperInterface $data_type_helper) {
+    $this->dataTypeHelper = $data_type_helper;
+    return $this;
   }
 
   /**
@@ -278,7 +309,6 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
     $item_fields = $this->getFulltextFields($results, NULL, $this->configuration['highlight'] == 'always');
     $highlighted_fields = array();
     foreach ($item_fields as $item_id => $fields) {
-      /** @var \Drupal\search_api\Item\FieldInterface $field */
       foreach ($fields as $field_id => $values) {
         $change = FALSE;
         foreach ($values as $i => $value) {
@@ -308,9 +338,9 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   (optional) If FALSE, only field values already present will be returned.
    *   Otherwise, fields will be loaded if necessary.
    *
-   * @return \Drupal\search_api\Item\FieldInterface[][]
-   *   An two-dimensional array of fulltext fields, keyed first by item ID and
-   *   then field ID.
+   * @return mixed[][][]
+   *   Field values extracted from the result items' fulltext fields, keyed by
+   *   item ID, field ID and then numeric indices.
    */
   protected function getFulltextFields(array $result_items, array $fulltext_fields = NULL, $load = TRUE) {
     // All the index's fulltext fields, grouped by datasource.
@@ -319,7 +349,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       if (isset($fulltext_fields) && !in_array($field_id, $fulltext_fields)) {
         continue;
       }
-      if (Utility::isTextType($field->getType())) {
+      if ($this->getDataTypeHelper()->isTextType($field->getType())) {
         $fields_by_datasource[$field->getDatasourceId()][$field->getPropertyPath()] = $field_id;
       }
     }

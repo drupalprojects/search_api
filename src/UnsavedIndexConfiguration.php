@@ -55,6 +55,13 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   protected $lock;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|null
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new UnsavedIndexConfiguration.
    *
    * @param \Drupal\search_api\IndexInterface $index
@@ -69,6 +76,29 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
     $this->entity = $index;
     $this->tempStore = $temp_store;
     $this->currentUserId = $current_user_id;
+  }
+
+  /**
+   * Retrieves the entity type manager.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
+   */
+  public function getEntityTypeManager() {
+    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
+  }
+
+  /**
+   * Sets the entity type manager.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The new entity type manager.
+   *
+   * @return $this
+   */
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+    return $this;
   }
 
   /**
@@ -98,13 +128,12 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getLockOwner(EntityTypeManagerInterface $entity_type_manager = NULL) {
+  public function getLockOwner() {
     if (!$this->lock) {
       return NULL;
     }
     $uid = is_numeric($this->lock->owner) ? $this->lock->owner : 0;
-    $entity_type_manager = $entity_type_manager ?: \Drupal::entityTypeManager();
-    return $entity_type_manager->getStorage('user')->load($uid);
+    return $this->getEntityTypeManager()->getStorage('user')->load($uid);
   }
 
   /**
@@ -125,16 +154,14 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function savePermanent(EntityTypeManagerInterface $entity_type_manager = NULL) {
-    if (!$entity_type_manager) {
-      $entity_type_manager = \Drupal::entityTypeManager();
-    }
+  public function savePermanent() {
     // Make sure to overwrite only the index's fields, not just all properties.
     // Unlike the Views UI, we have several separate pages for editing index
     // entities, and only one of them is locked. Therefore, this extra step is
     // necessary, we can't just call $this->entity->save().
     /** @var \Drupal\search_api\IndexInterface $original */
-    $storage = $entity_type_manager->getStorage($this->entity->getEntityTypeId());
+    $storage = $this->getEntityTypeManager()
+      ->getStorage($this->entity->getEntityTypeId());
     $original = $storage->loadUnchanged($this->entity->id());
     $fields = $this->entity->getFields();
     // Set the correct index object on the field objects.

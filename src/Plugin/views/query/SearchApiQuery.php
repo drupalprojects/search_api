@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
@@ -112,12 +113,20 @@ class SearchApiQuery extends QueryPluginBase {
   protected $groupOperator = 'AND';
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|null
+   */
+  protected $moduleHandler;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     /** @var static $plugin */
     $plugin = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
+    $plugin->setModuleHandler($container->get('module_handler'));
     $plugin->setLogger($container->get('logger.channel.search_api'));
 
     return $plugin;
@@ -146,6 +155,29 @@ class SearchApiQuery extends QueryPluginBase {
       return Index::load($index_id);
     }
     return NULL;
+  }
+
+  /**
+   * Retrieves the module handler.
+   *
+   * @return \Drupal\Core\Extension\ModuleHandlerInterface
+   *   The module handler.
+   */
+  public function getModuleHandler() {
+    return $this->moduleHandler ?: \Drupal::moduleHandler();
+  }
+
+  /**
+   * Sets the module handler.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The new module handler.
+   *
+   * @return $this
+   */
+  public function setModuleHandler(ModuleHandlerInterface $module_handler) {
+    $this->moduleHandler = $module_handler;
+    return $this;
   }
 
   /**
@@ -355,7 +387,7 @@ class SearchApiQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function alter(ViewExecutable $view) {
-    \Drupal::moduleHandler()->invokeAll('views_query_alter', array($view, $this));
+    $this->getModuleHandler()->invokeAll('views_query_alter', array($view, $this));
   }
 
   /**

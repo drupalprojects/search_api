@@ -162,9 +162,16 @@ class Query implements QueryInterface {
   protected $parseModeManager;
 
   /**
+   * The display plugin manager.
+   *
+   * @var \Drupal\search_api\Display\DisplayPluginManager|null
+   */
+  protected $displayPluginManager;
+
+  /**
    * The result cache service.
    *
-   * @var \Drupal\search_api\Utility\QueryHelperInterface
+   * @var \Drupal\search_api\Utility\QueryHelperInterface|null
    */
   protected $queryHelper;
 
@@ -247,6 +254,29 @@ class Query implements QueryInterface {
   }
 
   /**
+   * Retrieves the display plugin manager.
+   *
+   * @return \Drupal\search_api\Display\DisplayPluginManager
+   *   The display plugin manager.
+   */
+  public function getDisplayPluginManager() {
+    return $this->displayPluginManager ?: \Drupal::service('plugin.manager.search_api.display');
+  }
+
+  /**
+   * Sets the display plugin manager.
+   *
+   * @param \Drupal\search_api\Display\DisplayPluginManager $display_plugin_manager
+   *   The new display plugin manager.
+   *
+   * @return $this
+   */
+  public function setDisplayPluginManager($display_plugin_manager) {
+    $this->displayPluginManager = $display_plugin_manager;
+    return $this;
+  }
+
+  /**
    * Retrieves the query helper.
    *
    * @return \Drupal\search_api\Utility\QueryHelperInterface
@@ -292,8 +322,7 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function getDisplayPlugin() {
-    $display_manager = \Drupal::getContainer()
-      ->get('plugin.manager.search_api.display');
+    $display_manager = $this->getDisplayPluginManager();
     if (isset($this->searchId) && $display_manager->hasDefinition($this->searchId)) {
       return $display_manager->createInstance($this->searchId);
     }

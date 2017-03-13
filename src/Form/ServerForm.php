@@ -58,26 +58,6 @@ class ServerForm extends EntityForm {
   }
 
   /**
-   * Retrieves the server storage controller.
-   *
-   * @return \Drupal\Core\Entity\EntityStorageInterface
-   *   The server storage controller.
-   */
-  protected function getStorage() {
-    return $this->storage ?: \Drupal::service('entity_type.manager')->getStorage('search_api_server');
-  }
-
-  /**
-   * Retrieves the backend plugin manager.
-   *
-   * @return \Drupal\search_api\Backend\BackendPluginManager
-   *   The backend plugin manager.
-   */
-  protected function getBackendPluginManager() {
-    return $this->backendPluginManager ?: \Drupal::service('plugin.manager.search_api.backend');
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
@@ -133,7 +113,7 @@ class ServerForm extends EntityForm {
       '#maxlength' => 50,
       '#required' => TRUE,
       '#machine_name' => array(
-        'exists' => array($this->getStorage(), 'load'),
+        'exists' => array($this->storage, 'load'),
         'source' => array('name'),
       ),
       '#disabled' => !$server->isNew(),
@@ -151,13 +131,13 @@ class ServerForm extends EntityForm {
       '#default_value' => $server->getDescription(),
     );
 
-    $backends = $this->getBackendPluginManager()->getDefinitions();
+    $backends = $this->backendPluginManager->getDefinitions();
     $backend_options = [];
     $descriptions = [];
     foreach ($backends as $backend_id => $definition) {
       $config = $backend_id === $server->getBackendId() ? $server->getBackendConfig() : [];
       $config['#server'] = $server;
-      $backend = $this->getBackendPluginManager()
+      $backend = $this->backendPluginManager
         ->createInstance($backend_id, $config);
       $backend_options[$backend_id] = $backend->label();
       $descriptions[$backend_id]['#description'] = $backend->getDescription();

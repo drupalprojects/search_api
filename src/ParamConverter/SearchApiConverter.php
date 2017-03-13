@@ -65,10 +65,11 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
     // store the lock metadata.
     $store = $this->tempStoreFactory->get('search_api_index');
     $current_user_id = $this->currentUser->id() ?: session_id();
-    /** @var \Drupal\search_api\IndexInterface|\Drupal\search_api\UnsavedConfigurationInterface $index */
+    /** @var \Drupal\search_api\IndexInterface|\Drupal\search_api\UnsavedIndexConfiguration $index */
     if ($index = $store->get($value)) {
       $index = new UnsavedIndexConfiguration($index, $store, $current_user_id);
       $index->setLockInformation($store->getMetadata($value));
+      $index->setEntityTypeManager($this->entityManager);
     }
     // Otherwise, create a new temporary copy of the search index.
     else {

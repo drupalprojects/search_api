@@ -12,7 +12,8 @@ use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\UnsavedConfigurationInterface;
-use Drupal\search_api\Utility\Utility;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -45,6 +46,20 @@ class IndexFieldsForm extends EntityForm {
   protected $dataTypePluginManager;
 
   /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelperInterface|null
+   */
+  protected $dataTypeHelper;
+
+  /**
+   * The fields helper.
+   *
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface|null
+   */
+  protected $fieldsHelper;
+
+  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -71,13 +86,19 @@ class IndexFieldsForm extends EntityForm {
    *   The renderer to use.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter.
+   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $data_type_helper
+   *   The data type helper.
+   * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
+   *   The fields helper.
    */
-  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, DataTypePluginManager $data_type_plugin_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter) {
+  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, DataTypePluginManager $data_type_plugin_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter, DataTypeHelperInterface $data_type_helper, FieldsHelperInterface $fields_helper) {
     $this->tempStore = $temp_store_factory->get('search_api_index');
     $this->entityTypeManager = $entity_type_manager;
     $this->dataTypePluginManager = $data_type_plugin_manager;
     $this->renderer = $renderer;
     $this->dateFormatter = $date_formatter;
+    $this->dataTypeHelper = $data_type_helper;
+    $this->fieldsHelper = $fields_helper;
   }
 
   /**
@@ -89,18 +110,10 @@ class IndexFieldsForm extends EntityForm {
     $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
     $renderer = $container->get('renderer');
     $date_formatter = $container->get('date.formatter');
+    $data_type_helper = $container->get('search_api.data_type_helper');
+    $fields_helper = $container->get('search_api.fields_helper');
 
-    return new static($temp_store_factory, $entity_type_manager, $data_type_plugin_manager, $renderer, $date_formatter);
-  }
-
-  /**
-   * Retrieves the data type plugin manager.
-   *
-   * @return \Drupal\search_api\DataType\DataTypePluginManager
-   *   The data type plugin manager.
-   */
-  public function getDataTypePluginManager() {
-    return $this->dataTypePluginManager;
+    return new static($temp_store_factory, $entity_type_manager, $data_type_plugin_manager, $renderer, $date_formatter, $data_type_helper, $fields_helper);
   }
 
   /**
@@ -134,7 +147,8 @@ class IndexFieldsForm extends EntityForm {
 
     // Build the data type table.
     $instances = $this->dataTypePluginManager->getInstances();
-    $fallback_mapping = Utility::getDataTypeFallbackMapping($index);
+    $fallback_mapping = $this->dataTypeHelper
+      ->getDataTypeFallbackMapping($index);
 
     $data_types = array();
     foreach ($instances as $name => $type) {
@@ -170,9 +184,9 @@ class IndexFieldsForm extends EntityForm {
    *   The build structure.
    */
   protected function buildFieldsTable(array $fields) {
-    $data_type_plugin_manager = $this->getDataTypePluginManager();
-    $types = $data_type_plugin_manager->getInstancesOptions();
-    $fallback_types = Utility::getDataTypeFallbackMapping($this->entity);
+    $types = $this->dataTypePluginManager->getInstancesOptions();
+    $fallback_types = $this->dataTypeHelper
+      ->getDataTypeFallbackMapping($this->entity);
 
     // If one of the unsupported types is actually used by the index, show a
     // warning.
@@ -187,7 +201,7 @@ class IndexFieldsForm extends EntityForm {
 
     $fulltext_types = array('text');
     // Add all data types with fallback "text" to fulltext types as well.
-    foreach ($data_type_plugin_manager->getInstances() as $id => $type) {
+    foreach ($this->dataTypePluginManager->getInstances() as $id => $type) {
       if ($type->getFallbackType() == 'text') {
         $fulltext_types[] = $id;
       }
@@ -339,7 +353,7 @@ class IndexFieldsForm extends EntityForm {
       $new_ids[$new_id][] = $field_id;
 
       // Check for reserved and other illegal field IDs.
-      if (Utility::isFieldIdReserved($new_id)) {
+      if ($this->fieldsHelper->isFieldIdReserved($new_id)) {
         $args = array(
           '%field_id' => $new_id,
         );
@@ -403,7 +417,7 @@ class IndexFieldsForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $index = $this->entity;
     if ($index instanceof UnsavedConfigurationInterface) {
-      $index->savePermanent($this->getEntityTypeManager());
+      $index->savePermanent();
     }
     else {
       $index->save();

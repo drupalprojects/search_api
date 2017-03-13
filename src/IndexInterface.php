@@ -68,20 +68,6 @@ interface IndexInterface extends ConfigEntityInterface {
    * - cron_limit: The maximum number of items to be indexed per cron batch.
    * - index_directly: Boolean setting whether entities are indexed immediately
    *   after they are created or updated.
-   * - fields: An array of all indexed fields for this index. Keys are the field
-   *   identifiers, the values are arrays for specifying the field settings. The
-   *   structure of those arrays looks like this:
-   *   - type: The type set for this field. One of the types returned by
-   *     \Drupal\search_api\Utility\Utility::getDefaultDataTypes().
-   *   - boost: (optional) A boost value for terms found in this field during
-   *     searches. Usually only relevant for fulltext fields. Defaults to 1.0.
-   * - processors: An array of all processors available for the index. The keys
-   *   are the processor identifiers, the values are arrays containing the
-   *   settings for that processor. The inner structure looks like this:
-   *   - status: Boolean indicating whether the processor is enabled.
-   *   - weight: Used for sorting the processors.
-   *   - settings: Processor-specific settings, configured via the processor's
-   *     configuration form.
    *
    * @return array
    *   An associative array of option values, keyed by the option name.

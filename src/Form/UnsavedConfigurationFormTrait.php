@@ -24,16 +24,6 @@ trait UnsavedConfigurationFormTrait {
   protected $dateFormatter;
 
   /**
-   * Retrieves the entity type manager.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
-   *   The entity type manager.
-   */
-  protected function getEntityTypeManager() {
-    return isset($this->entityTypeManager) ? $this->entityTypeManager : \Drupal::entityTypeManager();
-  }
-
-  /**
    * Retrieves the renderer.
    *
    * @return \Drupal\Core\Render\RendererInterface
@@ -76,7 +66,7 @@ trait UnsavedConfigurationFormTrait {
         $form['#disabled'] = TRUE;
         $username = array(
           '#theme' => 'username',
-          '#account' => $entity->getLockOwner($this->getEntityTypeManager()),
+          '#account' => $entity->getLockOwner(),
         );
         $lockMessageSubstitutions = array(
           '@user' => $this->renderer->render($username),

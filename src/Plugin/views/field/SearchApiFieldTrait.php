@@ -8,8 +8,10 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataReferenceInterface;
 use Drupal\Core\TypedData\ListInterface;
+use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\search_api\Plugin\views\SearchApiHandlerTrait;
 use Drupal\search_api\Processor\ProcessorPropertyInterface;
+use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
@@ -86,6 +88,66 @@ trait SearchApiFieldTrait {
    * @var bool[]
    */
   protected $skipAccessChecks = array();
+
+  /**
+   * The fields helper.
+   *
+   * @var \Drupal\search_api\Utility\FieldsHelperInterface|null
+   */
+  protected $fieldsHelper;
+
+  /**
+   * The typed data manager.
+   *
+   * @var \Drupal\Core\TypedData\TypedDataManagerInterface|null
+   */
+  protected $typedDataManager;
+
+  /**
+   * Retrieves the typed data manager.
+   *
+   * @return \Drupal\Core\TypedData\TypedDataManagerInterface
+   *   The typed data manager.
+   */
+  public function getTypedDataManager() {
+    return $this->typedDataManager ?: \Drupal::service('typed_data_manager');
+  }
+
+  /**
+   * Sets the typed data manager.
+   *
+   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
+   *   The new typed data manager.
+   *
+   * @return $this
+   */
+  public function setTypedDataManager(TypedDataManagerInterface $typed_data_manager) {
+    $this->typedDataManager = $typed_data_manager;
+    return $this;
+  }
+
+  /**
+   * Retrieves the fields helper.
+   *
+   * @return \Drupal\search_api\Utility\FieldsHelperInterface
+   *   The fields helper.
+   */
+  public function getFieldsHelper() {
+    return $this->fieldsHelper ?: \Drupal::service('search_api.fields_helper');
+  }
+
+  /**
+   * Sets the fields helper.
+   *
+   * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
+   *   The new fields helper.
+   *
+   * @return $this
+   */
+  public function setFieldsHelper(FieldsHelperInterface $fields_helper) {
+    $this->fieldsHelper = $fields_helper;
+    return $this;
+  }
 
   /**
    * Determines whether this field can have multiple values.
@@ -410,14 +472,14 @@ trait SearchApiFieldTrait {
                   // item. We also use a dummy field object – either a clone of
                   // a fitting indexed field (to get its configuration), or a
                   // newly created one.
-                  $property_fields = \Drupal::getContainer()
-                    ->get('search_api.fields_helper')
+                  $property_fields = $this->getFieldsHelper()
                     ->filterForPropertyPath($index->getFields(), $datasource_id, $property_path);
                   if ($property_fields) {
                     $dummy_field = clone reset($property_fields);
                   }
                   else {
-                    $dummy_field = Utility::createFieldFromProperty($index, $definition, $datasource_id, $property_path, 'tmp', 'string');
+                    $dummy_field = $this->getFieldsHelper()
+                      ->createFieldFromProperty($index, $definition, $datasource_id, $property_path, 'tmp', 'string');
                   }
                   /** @var \Drupal\search_api\Item\ItemInterface $dummy_item */
                   $dummy_item = clone $row->_item;
@@ -438,7 +500,7 @@ trait SearchApiFieldTrait {
                     if ($set_values) {
                       $row->{$combined_property_path}[] = $value;
                     }
-                    $typed_data = \Drupal::service('typed_data_manager')
+                    $typed_data = $this->getTypedDataManager()
                       ->create($definition, $value);
                     $row->_relationship_objects[$property_path][] = $typed_data;
                     $row->_relationship_parent_indices[$property_path][] = $j;
@@ -493,7 +555,8 @@ trait SearchApiFieldTrait {
             // the relationship objects for the next iteration of the outer loop
             // over properties.
             foreach ($row->_relationship_objects[$property_path] as $typed_data) {
-              $row->{$combined_property_path}[] = Utility::extractFieldValues($typed_data);
+              $row->{$combined_property_path}[] = $this->getFieldsHelper()
+                ->extractFieldValues($typed_data);
             }
 
             // If we just set any field values on the result row, clean them up

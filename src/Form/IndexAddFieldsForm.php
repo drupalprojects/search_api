@@ -16,6 +16,7 @@ use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Processor\ProcessorPropertyInterface;
+use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,6 +34,13 @@ class IndexAddFieldsForm extends EntityForm {
    * @var \Drupal\search_api\Utility\FieldsHelperInterface
    */
   protected $fieldsHelper;
+
+  /**
+   * The data type helper.
+   *
+   * @var \Drupal\search_api\Utility\DataTypeHelperInterface|null
+   */
+  protected $dataTypeHelper;
 
   /**
    * The index for which the fields are configured.
@@ -79,6 +87,8 @@ class IndexAddFieldsForm extends EntityForm {
    *   The entity manager.
    * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
    *   The fields helper.
+   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $data_type_helper
+   *   The data type helper.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer to use.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
@@ -86,9 +96,10 @@ class IndexAddFieldsForm extends EntityForm {
    * @param array $parameters
    *   The parameters for this page request.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, FieldsHelperInterface $fields_helper, RendererInterface $renderer, DateFormatterInterface $date_formatter, array $parameters) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, FieldsHelperInterface $fields_helper, DataTypeHelperInterface $data_type_helper, RendererInterface $renderer, DateFormatterInterface $date_formatter, array $parameters) {
     $this->entityTypeManager = $entity_type_manager;
     $this->fieldsHelper = $fields_helper;
+    $this->dataTypeHelper = $data_type_helper;
     $this->renderer = $renderer;
     $this->dateFormatter = $date_formatter;
     $this->parameters = $parameters;
@@ -100,12 +111,13 @@ class IndexAddFieldsForm extends EntityForm {
   public static function create(ContainerInterface $container) {
     $entity_type_manager = $container->get('entity_type.manager');
     $fields_helper = $container->get('search_api.fields_helper');
+    $data_type_helper = $container->get('search_api.data_type_helper');
     $renderer = $container->get('renderer');
     $date_formatter = $container->get('date.formatter');
     $request_stack = $container->get('request_stack');
     $parameters = $request_stack->getCurrentRequest()->query->all();
 
-    return new static($entity_type_manager, $fields_helper, $renderer, $date_formatter, $parameters);
+    return new static($entity_type_manager, $fields_helper, $data_type_helper, $renderer, $date_formatter, $parameters);
   }
 
   /**
@@ -265,7 +277,7 @@ class IndexAddFieldsForm extends EntityForm {
       list($active_item, $active_property_path) = explode(':', $active_property_path, 2) + array(1 => '');
     }
 
-    $type_mapping = Utility::getFieldTypeMapping();
+    $type_mapping = $this->dataTypeHelper->getFieldTypeMapping();
 
     $query_base = $base_url->getOption('query');
     foreach ($properties as $key => $property) {

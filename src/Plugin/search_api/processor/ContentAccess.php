@@ -5,6 +5,7 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 use Drupal\comment\CommentInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\node\NodeInterface;
@@ -45,6 +46,13 @@ class ContentAccess extends ProcessorPluginBase {
   protected $database;
 
   /**
+   * The current_user service used by this plugin.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface|null
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -53,6 +61,7 @@ class ContentAccess extends ProcessorPluginBase {
 
     $processor->setLogger($container->get('logger.channel.search_api'));
     $processor->setDatabase($container->get('database'));
+    $processor->setCurrentUser($container->get('current_user'));
 
     return $processor;
   }
@@ -77,6 +86,29 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function setDatabase(Connection $database) {
     $this->database = $database;
+    return $this;
+  }
+
+  /**
+   * Retrieves the current user.
+   *
+   * @return \Drupal\Core\Session\AccountProxyInterface
+   *   The current user.
+   */
+  public function getCurrentUser() {
+    return $this->currentUser ?: \Drupal::currentUser();
+  }
+
+  /**
+   * Sets the current user.
+   *
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current user.
+   *
+   * @return $this
+   */
+  public function setCurrentUser(AccountProxyInterface $current_user) {
+    $this->currentUser = $current_user;
     return $this;
   }
 
@@ -204,7 +236,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public function preprocessSearchQuery(QueryInterface $query) {
     if (!$query->getOption('search_api_bypass_access')) {
-      $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
+      $account = $query->getOption('search_api_access_account', $this->getCurrentUser());
       if (is_numeric($account)) {
         $account = User::load($account);
       }
@@ -217,7 +249,7 @@ class ContentAccess extends ProcessorPluginBase {
         }
       }
       else {
-        $account = $query->getOption('search_api_access_account', \Drupal::currentUser());
+        $account = $query->getOption('search_api_access_account', $this->getCurrentUser());
         if ($account instanceof AccountInterface) {
           $account = $account->id();
         }

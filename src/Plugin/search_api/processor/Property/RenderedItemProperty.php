@@ -10,6 +10,8 @@ use Drupal\search_api\Processor\ConfigurablePropertyBase;
 
 /**
  * Defines a "rendered item" property.
+ *
+ * @see \Drupal\search_api\Plugin\search_api\processor\RenderedItem
  */
 class RenderedItemProperty extends ConfigurablePropertyBase {
 

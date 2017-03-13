@@ -97,10 +97,10 @@ trait TestItemsTrait {
         if (isset($field_info['datasource_id']) && $field_info['datasource_id'] != $datasource_id) {
           continue;
         }
-        $field_id = \Drupal::getContainer()
-          ->get('search_api.fields_helper')
-          ->getNewFieldId($index, $field_info['property_path']);
-        $field = Utility::createField($index, $field_id, $field_info);
+        $fields_helper = \Drupal::getContainer()
+          ->get('search_api.fields_helper');
+        $field_id = $fields_helper->getNewFieldId($index, $field_info['property_path']);
+        $field = $fields_helper->createField($index, $field_id, $field_info);
         $item->setField($field_id, $field);
       }
       $item->setFieldsExtracted(TRUE);
