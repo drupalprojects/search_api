@@ -130,7 +130,7 @@ class IndexProcessorsForm extends EntityForm {
     }
 
     $form['#tree'] = TRUE;
-    $form['#attached']['library'][] = 'search_api/drupal.search_api.index-active-formatters';
+    $form['#attached']['library'][] = 'search_api/drupal.search_api.processors';
     $form['#title'] = $this->t('Manage processors for search index %label', array('%label' => $this->entity->label()));
     $form['description']['#markup'] = '<p>' . $this->t('Configure processors which will pre- and post-process data at index and search time.') . '</p>';
 
