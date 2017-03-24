@@ -5,6 +5,7 @@
  * Defines theme functions for the Search API module.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
@@ -380,6 +381,18 @@ function theme_search_api_index(array $variables) {
     // Check if the datasource is valid.
     if ($index->isValidDatasource($datasource_id)) {
       $info = $index->getDatasource($datasource_id)->label();
+      if ($tracker) {
+        $args = [
+          '@indexed' => $tracker->getIndexedItemsCount($datasource_id),
+          '@total' => $tracker->getTotalItemsCount($datasource_id),
+        ];
+        $indexed = t('@indexed/@total indexed', $args);
+        $args = [
+          '@datasource' => $info,
+          '@indexed' => $indexed,
+        ];
+        $info = new FormattableMarkup('@datasource <small>(@indexed)</small>', $args);
+      }
     }
     else {
       $classes[] = 'error';
