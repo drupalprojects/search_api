@@ -9,6 +9,7 @@ use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
@@ -42,6 +43,7 @@ class RenderedItemTest extends ProcessorTestBase {
     'search_api',
     'search_api_db',
     'search_api_test',
+    'language',
     'comment',
     'system',
     'filter',
@@ -58,6 +60,16 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->installConfig(array('system', 'filter', 'node', 'comment', 'user'));
     $this->installSchema('system', array('router'));
     \Drupal::service('router.builder')->rebuild();
+
+    // Create the default languages and a new one for translations.
+    $this->installConfig(array('language'));
+    /** @var \Drupal\language\Entity\ConfigurableLanguage $language */
+    $language = ConfigurableLanguage::create(array(
+      'id' => 'de',
+      'label' => 'German',
+      'weight' => 0,
+    ));
+    $language->save();
 
     // Creates node types for testing.
     foreach (['article', 'page'] as $type_id) {
@@ -160,13 +172,25 @@ class RenderedItemTest extends ProcessorTestBase {
    * Tests whether the rendered_item field is correctly filled by the processor.
    */
   public function testAddFieldValues() {
+    $this->nodes[4] = $this->nodes[3]->addTranslation('de');
+    $this->nodes[4]->set('title', 'Titel für Knoten 4');
+    $this->nodes[4]->set('body', [
+      'value' => 'Körper für Knoten 4',
+      'summary' => 'Zusammenfassung für Knoten 4',
+    ]);
+    $this->nodes[4]->save();
+
+    $this->assertEquals('en', $this->nodes[1]->language()->getId());
+    $this->assertEquals('en', $this->nodes[2]->language()->getId());
+    $this->assertEquals('en', $this->nodes[3]->language()->getId());
+    $this->assertEquals('de', $this->nodes[4]->language()->getId());
+
     $items = array();
-    foreach ($this->nodes as $node) {
+    foreach ($this->nodes as $i => $node) {
       $items[] = array(
         'datasource' => 'entity:node',
         'item' => $node->getTypedData(),
-        'item_id' => $node->id(),
-        'text' => 'node text' . $node->id(),
+        'item_id' => $i,
       );
     }
     $user = User::create([
@@ -325,7 +349,7 @@ class RenderedItemTest extends ProcessorTestBase {
     // Verify that no field values were added.
     foreach ($items as $key => $item) {
       $rendered_item = $item->getField('rendered_item');
-      $this->assertFalse($rendered_item->getValues(), 'No rendered_item field value added when disabled for content type.');
+      $this->assertEmpty($rendered_item->getValues(), 'No rendered_item field value added when disabled for content type.');
     }
   }
 
