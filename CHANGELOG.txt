@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2855157 by dbjpanda: Fixed a small CSS error.
 - #2842007 by shashank.mundhra: Fixed DB comment of search_api_item.status
   column.
 - #2682369 by Alumei, drunken monkey, swentel, Crell, stBorchert, prics,
