@@ -117,6 +117,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
+    $this->checkIndexing();
 
     $this->deleteServer();
   }
@@ -181,6 +182,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->disableEnableIndex();
     $this->changeIndexDatasource();
     $this->changeIndexServer();
+    $this->checkIndexing();
   }
 
   /**
@@ -1376,6 +1378,55 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     // After saving the new index, we should have called reindex.
     $remaining_items = $this->countRemainingItems();
     $this->assertEquals($node_count, $remaining_items, 'All items still need to be indexed.');
+  }
+
+  /**
+   * Tests whether indexing via the UI works correctly.
+   */
+  protected function checkIndexing() {
+    $node = $this->drupalCreateNode(['type' => 'article']);
+    $this->drupalCreateNode(['type' => 'article']);
+    $this->drupalCreateNode(['type' => 'article']);
+    $this->drupalCreateNode(['type' => 'article']);
+
+    // Skip indexing for one node.
+    $key = 'search_api_test.backend.indexItems.skip';
+    \Drupal::state()->set($key, ['entity:node/' . $node->id() . ':' . $node->language()->getId()]);
+
+    // Ensure all items need to be indexed.
+    $this->getIndex()->reindex();
+
+    $this->drupalPostForm($this->getIndexPath(), [], 'Index now');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->checkForMetaRefresh();
+    $count = \Drupal::entityQuery('node')->count()->execute() - 1;
+    $this->assertSession()->pageTextContains("Successfully indexed $count items.");
+    $this->assertSession()->pageTextContains('1 item could not be indexed.');
+    $this->assertSession()->pageTextNotContains("Couldn't index items.");
+    $this->assertSession()->pageTextNotContains('An error occurred');
+
+    $this->drupalPostForm($this->getIndexPath(), [], 'Index now');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains("Couldn't index items.");
+    $this->assertSession()->pageTextNotContains('An error occurred');
+
+    \Drupal::state()->set($key, []);
+    $this->setError('backend', 'indexItems');
+    $this->drupalPostForm($this->getIndexPath(), [], 'Index now');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains("Couldn't index items.");
+    $this->assertSession()->pageTextNotContains('An error occurred');
+
+    $this->setError('backend', 'indexItems', FALSE);
+    $this->drupalPostForm($this->getIndexPath(), [], 'Index now');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains("Successfully indexed 1 item.");
+    $this->assertSession()->pageTextNotContains('could not be indexed.');
+    $this->assertSession()->pageTextNotContains("Couldn't index items.");
+    $this->assertSession()->pageTextNotContains('An error occurred');
   }
 
   /**

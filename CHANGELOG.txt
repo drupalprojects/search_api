@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2645882 by drunken monkey, borisson_: Fixed "items could not be indexed"
+  message for "Index now".
 - #2641388 by mallezie, drunken monkey, borisson_, janusman: Added various UX
   improvements for the "Fields" tab.
 - #2861587 by alexpott: Fixed the DB/Defaults integration tests.

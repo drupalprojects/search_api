@@ -116,7 +116,6 @@ class IndexBatchHelper {
       // Initialize the sandbox with data which is shared among the batch runs.
       $context['sandbox']['limit'] = $limit;
       $context['sandbox']['batch_size'] = $batch_size;
-      $context['sandbox']['progress'] = 0;
     }
     // Check if the results should be initialized.
     if (!isset($context['results']['indexed'])) {
@@ -135,7 +134,7 @@ class IndexBatchHelper {
       // a minimum is taking between the allowed number of items and the
       // remaining item count to prevent incorrect reporting of not indexed
       // items.
-      $actual_limit = min($context['sandbox']['limit'] - $context['sandbox']['progress'], $remaining_item_count);
+      $actual_limit = min($context['sandbox']['limit'] - $context['results']['indexed'], $remaining_item_count);
     }
     else {
       // Use the remaining item count as actual limit.
@@ -144,7 +143,7 @@ class IndexBatchHelper {
 
     // Store original count of items to be indexed to show progress properly.
     if (empty($context['sandbox']['original_item_count'])) {
-      $context['sandbox']['original_item_count'] = min($remaining_item_count, $actual_limit);
+      $context['sandbox']['original_item_count'] = $actual_limit;
     }
 
     // Determine the number of items to index for this run.
@@ -155,18 +154,17 @@ class IndexBatchHelper {
       $indexed = $index->indexItems($to_index);
       // Increment the indexed result and progress.
       $context['results']['indexed'] += $indexed;
-      $context['results']['not indexed'] += ($to_index - $indexed);
-      $context['sandbox']['progress'] += $to_index;
       // Display progress message.
       if ($indexed > 0) {
         $context['message'] = static::formatPlural($context['results']['indexed'], 'Successfully indexed 1 item.', 'Successfully indexed @count items.');
       }
       // Everything has been indexed?
-      if ($indexed === 0 || $context['sandbox']['progress'] >= $context['sandbox']['original_item_count']) {
+      if ($indexed === 0 || $context['results']['indexed'] >= $context['sandbox']['original_item_count']) {
         $context['finished'] = 1;
+        $context['results']['not indexed'] = $context['sandbox']['original_item_count'] - $context['results']['indexed'];
       }
       else {
-        $context['finished'] = ($context['sandbox']['progress'] / $context['sandbox']['original_item_count']);
+        $context['finished'] = ($context['results']['indexed'] / $context['sandbox']['original_item_count']);
       }
     }
     catch (\Exception $e) {
@@ -174,7 +172,7 @@ class IndexBatchHelper {
       watchdog_exception('search_api', $e);
       $context['message'] = static::t('An error occurred during indexing: @message', array('@message' => $e->getMessage()));
       $context['finished'] = 1;
-      $context['results']['not indexed'] += ($context['sandbox']['limit'] - $context['sandbox']['progress']);
+      $context['results']['not indexed'] = $context['sandbox']['original_item_count'] - $context['results']['indexed'];
     }
   }
 

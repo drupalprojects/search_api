@@ -101,8 +101,14 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
     $state = \Drupal::state();
     $key = 'search_api_test.backend.indexed.' . $index->id();
     $indexed_values = $state->get($key, array());
+    $skip = $state->get('search_api_test.backend.indexItems.skip', array());
+    $skip = array_flip($skip);
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $id => $item) {
+      if (isset($skip[$id])) {
+        unset($items[$id]);
+        continue;
+      }
       $indexed_values[$id] = array();
       foreach ($item->getFields() as $field_id => $field) {
         $indexed_values[$id][$field_id] = $field->getValues();
