@@ -311,7 +311,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->assertSession()->pageTextContains('The index was successfully saved.');
 
     // @todo Make this work correctly.
-    // $this->assertUrl($this->getIndexPath('fields/add'), [], 'Correct redirect to index page.');
+    // $this->assertUrl($this->getIndexPath('fields/add/nojs'), [], 'Correct redirect to index page.');
     $this->assertHtmlEscaped($index_name);
 
     $this->drupalGet($this->getIndexPath('edit'));
@@ -733,7 +733,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     ])->save();
 
     $url_options['query']['datasource'] = 'entity:node';
-    $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'), $url_options);
     $this->assertHtmlEscaped($field_name);
 
     $this->addField('entity:node', 'field__field_', $field_name);
@@ -759,7 +759,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
   protected function addFieldsToIndex() {
     // Make sure that hidden properties are not displayed.
     $url_options['query']['datasource'] = '';
-    $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'), $url_options);
     $this->assertSession()->pageTextNotContains('Node access information');
 
     $fields = [
@@ -788,7 +788,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     // Ensure that we aren't offered to index properties of the "Content type"
     // property.
-    $path = $this->getIndexPath('fields/add');
+    $path = $this->getIndexPath('fields/add/nojs');
     $url_options = ['query' => ['datasource' => 'entity:node']];
     $this->drupalGet($path, $url_options);
     $this->assertSession()->responseNotContains('property_path=type');
@@ -887,7 +887,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
    *   (optional) If given, the label to check for in the success message.
    */
   protected function addField($datasource_id, $property_path, $label = NULL) {
-    $path = $this->getIndexPath('fields/add');
+    $path = $this->getIndexPath('fields/add/nojs');
     $url_options = ['query' => ['datasource' => $datasource_id]];
     list($parent_path) = Utility::splitPropertyPath($property_path);
     if ($parent_path) {
@@ -1031,11 +1031,11 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     // everything else.
     $message_parts = explode('@age', $message);
 
-    $this->drupalGet($this->getIndexPath('fields/add'));
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'));
     $this->assertSession()->responseContains($message_parts[0]);
     $this->assertSession()->responseContains($message_parts[1]);
     $this->assertFalse($this->xpath('//input[not(@disabled)]'));
-    $this->drupalGet($this->getIndexPath('fields/rendered_item/edit'));
+    $this->drupalGet($this->getIndexPath('fields/edit/rendered_item'));
     $this->assertSession()->responseContains($message_parts[0]);
     $this->assertSession()->responseContains($message_parts[1]);
     $this->assertFalse($this->xpath('//input[not(@disabled)]'));

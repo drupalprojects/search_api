@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
@@ -11,6 +12,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\UnsavedConfigurationInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
@@ -120,6 +122,8 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+
     $index = $this->entity;
 
     // Do not allow the form to be cached. See
@@ -131,6 +135,25 @@ class IndexFieldsForm extends EntityForm {
     // Set an appropriate page title.
     $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
     $form['#tree'] = TRUE;
+
+    $form['add-field'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Add fields'),
+      '#url' => $this->entity->toUrl('add-fields'),
+      '#attributes' => [
+        'class' => [
+          'use-ajax',
+          'button',
+          'button-action',
+          'button--primary',
+          'button--small',
+        ],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode([
+          'width' => 700,
+        ]),
+      ],
+    ];
 
     $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, for example titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
 
@@ -199,11 +222,17 @@ class IndexFieldsForm extends EntityForm {
       }
     }
 
-    $fulltext_types = array('text');
+    $fulltext_types = array(
+      array(
+        'value' => 'text',
+      ),
+    );
     // Add all data types with fallback "text" to fulltext types as well.
-    foreach ($this->dataTypePluginManager->getInstances() as $id => $type) {
+    foreach ($this->dataTypePluginManager->getInstances() as $type_id => $type) {
       if ($type->getFallbackType() == 'text') {
-        $fulltext_types[] = $id;
+        $fulltext_types[] = array(
+          'value' => $type_id,
+        );
       }
     }
 
@@ -271,7 +300,6 @@ class IndexFieldsForm extends EntityForm {
         );
       }
 
-      $css_key = '#edit-fields-' . Html::getId($key);
       $build['fields'][$key]['type'] = array(
         '#type' => 'select',
         '#options' => $types,
@@ -285,10 +313,12 @@ class IndexFieldsForm extends EntityForm {
         '#type' => 'select',
         '#options' => $boosts,
         '#default_value' => sprintf('%.1f', $field->getBoost()),
+        '#states' => array(
+          'visible' => array(
+            ':input[name="fields[' . $key . '][type]"]' => $fulltext_types,
+          ),
+        ),
       );
-      foreach ($fulltext_types as $type) {
-        $build['fields'][$key]['boost']['#states']['visible'][$css_key . '-type'][] = array('value' => $type);
-      }
 
       $route_parameters = array(
         'search_api_index' => $this->entity->id(),
@@ -298,12 +328,27 @@ class IndexFieldsForm extends EntityForm {
       // don't break the table structure. (theme_search_api_admin_fields_table()
       // does not add empty cells.)
       $build['fields'][$key]['edit']['#markup'] = '<span></span>';
-      if ($field->getDataDefinition() instanceof ConfigurablePropertyInterface) {
-        $build['fields'][$key]['edit'] = array(
-          '#type' => 'link',
-          '#title' => $this->t('Edit'),
-          '#url' => Url::fromRoute('entity.search_api_index.field_config', $route_parameters),
-        );
+      try {
+        if ($field->getDataDefinition() instanceof ConfigurablePropertyInterface) {
+          $build['fields'][$key]['edit'] = array(
+            '#type' => 'link',
+            '#title' => $this->t('Edit'),
+            '#url' => Url::fromRoute('entity.search_api_index.field_config', $route_parameters),
+            '#attributes' => [
+              'class' => [
+                'use-ajax',
+              ],
+              'data-dialog-type' => 'modal',
+              'data-dialog-options' => Json::encode([
+                'width' => 700,
+              ]),
+            ],
+          );
+        }
+      }
+      catch (SearchApiException $e) {
+        // Could not retrieve data definition. Since this almost certainly means
+        // that the property isn't configurable, we can just ignore it here.
       }
       $build['fields'][$key]['remove']['#markup'] = '<span></span>';
       if (!$field->isIndexedLocked()) {
@@ -311,6 +356,9 @@ class IndexFieldsForm extends EntityForm {
           '#type' => 'link',
           '#title' => $this->t('Remove'),
           '#url' => Url::fromRoute('entity.search_api_index.remove_field', $route_parameters),
+          '#attributes' => array(
+            'class' => array('use-ajax'),
+          ),
         );
       }
     }

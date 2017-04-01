@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2641388 by mallezie, drunken monkey, borisson_, janusman: Added various UX
+  improvements for the "Fields" tab.
 - #2861587 by alexpott: Fixed the DB/Defaults integration tests.
 - #2855758 by StryKaizer, drunken monkey: Fixed "is rendered" checks for Views
   block displays.

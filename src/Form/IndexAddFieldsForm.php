@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
+use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
@@ -65,6 +66,13 @@ class IndexAddFieldsForm extends EntityForm {
    * @var string[][]
    */
   protected $unmappedFields = array();
+
+  /**
+   * The "id" attribute of the generated form.
+   *
+   * @var string
+   */
+  protected $formIdAttribute;
 
   /**
    * {@inheritdoc}
@@ -150,15 +158,22 @@ class IndexAddFieldsForm extends EntityForm {
     $args['%index'] = $index->label();
     $form['#title'] = $this->t('Add fields to index %index', $args);
 
-    $form['properties'] = array(
-      '#theme' => 'search_api_form_item_list',
-    );
+    $this->formIdAttribute = Html::getUniqueId($this->getFormId());
+    $form['#id'] = $this->formIdAttribute;
+
+    $form['messages'] = [
+      '#type' => 'status_messages',
+    ];
+
     $datasources = array(
       '' => NULL,
     );
     $datasources += $this->entity->getDatasources();
-    foreach ($datasources as $datasource) {
-      $form['properties'][] = $this->getDatasourceListItem($datasource);
+    foreach ($datasources as $datasource_id => $datasource) {
+      $item = $this->getDatasourceListItem($datasource);
+      if ($item) {
+        $form['datasources']['datasource_' . $datasource_id] = $item;
+      }
     }
 
     $form['actions'] = $this->actionsElement($form, $form_state);
@@ -200,52 +215,25 @@ class IndexAddFieldsForm extends EntityForm {
    *   attached properties.
    */
   protected function getDatasourceListItem(DatasourceInterface $datasource = NULL) {
-    $item = array(
-      '#type' => 'container',
-      '#attributes' => array(
-        'class' => array('container-inline'),
-      ),
-    );
-
-    $active = FALSE;
-    $datasource_id = $datasource ? $datasource->getPluginId() : '';
-    $active_datasource = $this->getParameter('datasource');
-    if (isset($active_datasource)) {
-      $active = $active_datasource == $datasource_id;
-    }
-
-    $url = $this->entity->toUrl('add-fields');
-    if ($active) {
-      $expand_link = array(
-        '#type' => 'link',
-        '#title' => '(-) ',
-        '#url' => $url,
-      );
-    }
-    else {
-      $url->setOption('query', array('datasource' => $datasource_id));
-      $expand_link = array(
-        '#type' => 'link',
-        '#title' => '(+) ',
-        '#url' => $url,
-      );
-    }
-    $item['expand_link'] = $expand_link;
-
-    $label = $datasource ? Html::escape($datasource->label()) : $this->t('General');
-    $item['label']['#markup'] = $label;
-
-    if ($active) {
-      $properties = $this->entity->getPropertyDefinitions($datasource_id ?: NULL);
-      if ($properties) {
+    $datasource_id = $datasource ? $datasource->getPluginId() : NULL;
+    $datasource_id_param = $datasource_id ?: '';
+    $properties = $this->entity->getPropertyDefinitions($datasource_id);
+    if ($properties) {
+      $active_property_path = '';
+      $active_datasource = $this->getParameter('datasource');
+      if ($active_datasource !== NULL && $active_datasource == $datasource_id_param) {
         $active_property_path = $this->getParameter('property_path', '');
-        $base_url = clone $url;
-        $base_url->setOption('query', array('datasource' => $datasource_id));
-        $item['properties'] = $this->getPropertiesList($properties, $active_property_path, $base_url);
       }
+
+      $base_url = $this->entity->toUrl('add-fields');
+      $base_url->setOption('query', array('datasource' => $datasource_id_param));
+
+      $item = $this->getPropertiesList($properties, $active_property_path, $base_url, $datasource_id);
+      $item['#title'] = $datasource ? $datasource->label() : $this->t('General');
+      return $item;
     }
 
-    return $item;
+    return NULL;
   }
 
   /**
@@ -258,6 +246,9 @@ class IndexAddFieldsForm extends EntityForm {
    * @param \Drupal\Core\Url $base_url
    *   The base URL to which property path parameters should be added for
    *   the navigation links.
+   * @param string|null $datasource_id
+   *   The datasource ID of the listed properties, or NULL for
+   *   datasource-independent properties.
    * @param string $parent_path
    *   (optional) The common property path prefix of the given properties.
    * @param string $label_prefix
@@ -267,7 +258,7 @@ class IndexAddFieldsForm extends EntityForm {
    *   A render array representing the given properties and, possibly, nested
    *   properties.
    */
-  protected function getPropertiesList(array $properties, $active_property_path, Url $base_url, $parent_path = '', $label_prefix = '') {
+  protected function getPropertiesList(array $properties, $active_property_path, Url $base_url, $datasource_id, $parent_path = '', $label_prefix = '') {
     $list = array(
       '#theme' => 'search_api_form_item_list',
     );
@@ -340,33 +331,6 @@ class IndexAddFieldsForm extends EntityForm {
         continue;
       }
 
-      $nested_list = array();
-      $expand_link = array();
-      if ($nested_properties) {
-        if ($key == $active_item) {
-          $link_url = clone $base_url;
-          $query_base['property_path'] = $parent_path;
-          $link_url->setOption('query', $query_base);
-          $expand_link = array(
-            '#type' => 'link',
-            '#title' => '(-) ',
-            '#url' => $link_url,
-          );
-
-          $nested_list = $this->getPropertiesList($nested_properties, $active_property_path, $base_url, $this_path, $label_prefix . $label . ' » ');
-        }
-        else {
-          $link_url = clone $base_url;
-          $query_base['property_path'] = $this_path;
-          $link_url->setOption('query', $query_base);
-          $expand_link = array(
-            '#type' => 'link',
-            '#title' => '(+) ',
-            '#url' => $link_url,
-          );
-        }
-      }
-
       $item = array(
         '#type' => 'container',
         '#attributes' => array(
@@ -374,8 +338,36 @@ class IndexAddFieldsForm extends EntityForm {
         ),
       );
 
-      if ($expand_link) {
-        $item['expand_link'] = $expand_link;
+      $nested_list = array();
+      if ($nested_properties) {
+        if ($key == $active_item) {
+          $link_url = clone $base_url;
+          $query_base['property_path'] = $parent_path;
+          $link_url->setOption('query', $query_base);
+          $item['expand_link'] = array(
+            '#type' => 'link',
+            '#title' => '(-) ',
+            '#url' => $link_url,
+            '#ajax' => array(
+              'wrapper' => $this->formIdAttribute,
+            ),
+          );
+
+          $nested_list = $this->getPropertiesList($nested_properties, $active_property_path, $base_url, $datasource_id, $this_path, $label_prefix . $label . ' » ');
+        }
+        else {
+          $link_url = clone $base_url;
+          $query_base['property_path'] = $this_path;
+          $link_url->setOption('query', $query_base);
+          $item['expand_link'] = array(
+            '#type' => 'link',
+            '#title' => '(+) ',
+            '#url' => $link_url,
+            '#ajax' => array(
+              'wrapper' => $this->formIdAttribute,
+            ),
+          );
+        }
       }
 
       $item['label']['#markup'] = Html::escape($label) . ' ';
@@ -383,12 +375,15 @@ class IndexAddFieldsForm extends EntityForm {
       if ($can_be_indexed) {
         $item['add'] = array(
           '#type' => 'submit',
-          '#name' => Utility::createCombinedId($this->getParameter('datasource') ?: NULL, $this_path),
+          '#name' => Utility::createCombinedId($datasource_id, $this_path),
           '#value' => $this->t('Add'),
           '#submit' => array('::addField', '::save'),
           '#property' => $property,
           '#prefixed_label' => $label_prefix . $label,
           '#data_type' => $type_mapping[$type],
+          '#ajax' => array(
+            'wrapper' => $this->formIdAttribute,
+          ),
         );
       }
 
@@ -396,7 +391,7 @@ class IndexAddFieldsForm extends EntityForm {
         $item['properties'] = $nested_list;
       }
 
-      $list[] = $item;
+      $list[$key] = $item;
     }
 
     return $list;
@@ -445,7 +440,15 @@ class IndexAddFieldsForm extends EntityForm {
         'search_api_index' => $this->entity->id(),
         'field_id' => $field->getFieldIdentifier(),
       );
-      $form_state->setRedirect('entity.search_api_index.field_config', $parameters);
+      $options = array();
+      $route = $this->getRequest()->attributes->get('_route');
+      if ($route === 'entity.search_api_index.add_fields_ajax') {
+        $options['query'] = [
+          MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax',
+          'modal_redirect' => 1,
+        ];
+      }
+      $form_state->setRedirect('entity.search_api_index.field_config', $parameters, $options);
     }
 
     $args['%label'] = $field->getLabel();

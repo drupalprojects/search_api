@@ -300,14 +300,14 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     $this->assertTrue($this->loadIndex()->isValidProcessor('aggregated_field'), 'The "Aggregated fields" processor cannot be disabled.');
 
     $options['query']['datasource'] = '';
-    $this->drupalGet($this->getIndexPath('fields/add'), $options);
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'), $options);
 
     // See \Drupal\search_api\Tests\IntegrationTest::addField().
     $this->assertSession()->responseContains('name="aggregated_field"');
     $this->submitForm([], 'aggregated_field');
     $args['%label'] = 'Aggregated field';
     $this->assertSession()->responseContains(new FormattableMarkup('Field %label was added to the index.', $args));
-    $this->assertSession()->addressEquals($this->getIndexPath('fields/aggregated_field/edit'));
+    $this->assertSession()->addressEquals($this->getIndexPath('fields/edit/aggregated_field'));
     $edit = [
       'type' => 'first',
       'fields[entity:node/title]' => 'title',
@@ -493,14 +493,14 @@ TAGS
     $this->assertTrue($this->loadIndex()->isValidProcessor('rendered_item'), 'The "Rendered item" processor cannot be disabled.');
 
     $options['query']['datasource'] = '';
-    $this->drupalGet($this->getIndexPath('fields/add'), $options);
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'), $options);
 
     // See \Drupal\search_api\Tests\IntegrationTest::addField().
     $this->assertSession()->responseContains('name="rendered_item"');
     $this->submitForm([], 'rendered_item');
     $args['%label'] = 'Rendered HTML output';
     $this->assertSession()->responseContains(new FormattableMarkup('Field %label was added to the index.', $args));
-    $this->assertSession()->addressEquals($this->getIndexPath('fields/rendered_item/edit'));
+    $this->assertSession()->addressEquals($this->getIndexPath('fields/edit/rendered_item'));
     $edit = [
       'roles[]' => ['authenticated'],
       'view_mode[entity:node][article]' => 'default',

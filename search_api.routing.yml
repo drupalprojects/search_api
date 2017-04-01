@@ -124,7 +124,19 @@ entity.search_api_index.fields:
     _entity_access: 'search_api_index.fields'
 
 entity.search_api_index.add_fields:
-  path: '/admin/config/search/search-api/index/{search_api_index}/fields/add'
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/add/nojs'
+  options:
+    parameters:
+      search_api_index:
+        tempstore: TRUE
+        type: 'entity:search_api_index'
+  defaults:
+    _entity_form: 'search_api_index.add_fields'
+  requirements:
+    _entity_access: 'search_api_index.fields'
+
+entity.search_api_index.add_fields_ajax:
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/add/ajax'
   options:
     parameters:
       search_api_index:
@@ -136,7 +148,7 @@ entity.search_api_index.add_fields:
     _entity_access: 'search_api_index.fields'
 
 entity.search_api_index.field_config:
-  path: '/admin/config/search/search-api/index/{search_api_index}/fields/{field_id}/edit'
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/edit/{field_id}'
   options:
     parameters:
       search_api_index:
@@ -149,7 +161,7 @@ entity.search_api_index.field_config:
     _entity_access: 'search_api_index.fields'
 
 entity.search_api_index.remove_field:
-  path: '/admin/config/search/search-api/index/{search_api_index}/fields/{field_id}/remove'
+  path: '/admin/config/search/search-api/index/{search_api_index}/fields/remove/{field_id}'
   options:
     parameters:
       search_api_index:

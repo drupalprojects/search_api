@@ -3,15 +3,71 @@
 namespace Drupal\search_api\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\EventSubscriber\AjaxResponseSubscriber;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides route responses for search indexes.
  */
 class IndexController extends ControllerBase {
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack|null
+   */
+  protected $requestStack;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    /** @var static $controller */
+    $controller = parent::create($container);
+
+    $controller->setRequestStack($container->get('request_stack'));
+
+    return $controller;
+  }
+
+  /**
+   * Retrieves the request stack.
+   *
+   * @return \Symfony\Component\HttpFoundation\RequestStack
+   *   The request stack.
+   */
+  public function getRequestStack() {
+    return $this->requestStack ?: \Drupal::service('request_stack');
+  }
+
+  /**
+   * Retrieves the current request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request|null
+   */
+  public function getRequest() {
+    return $this->getRequestStack()->getCurrentRequest();
+  }
+
+  /**
+   * Sets the request stack.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The new request stack.
+   *
+   * @return $this
+   */
+  public function setRequestStack(RequestStack $request_stack) {
+    $this->requestStack = $request_stack;
+    return $this;
+  }
 
   /**
    * Displays information about a search index.
@@ -96,10 +152,12 @@ class IndexController extends ControllerBase {
    */
   public function removeField(IndexInterface $search_api_index, $field_id) {
     $fields = $search_api_index->getFields();
+    $success = FALSE;
     if (isset($fields[$field_id])) {
       try {
         $search_api_index->removeField($field_id);
         $search_api_index->save();
+        $success = TRUE;
       }
       catch (SearchApiException $e) {
         $args['%field'] = $fields[$field_id]->getLabel();
@@ -110,7 +168,13 @@ class IndexController extends ControllerBase {
       throw new NotFoundHttpException();
     }
 
-    // Redirect to the index's "View" page.
+    // If this is an AJAX request, just remove the row in question.
+    if ($success && $this->getRequest()->request->get(AjaxResponseSubscriber::AJAX_REQUEST_PARAMETER)) {
+      $response = new AjaxResponse();
+      $response->addCommand(new RemoveCommand("tr[data-field-row-id='$field_id']"));
+      return $response;
+    }
+    // Redirect to the index's "Fields" page.
     $url = $search_api_index->toUrl('fields');
     return $this->redirect($url->getRouteName(), $url->getRouteParameters());
   }

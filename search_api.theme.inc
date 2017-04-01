@@ -36,15 +36,14 @@ function theme_search_api_admin_fields_table($variables) {
           $row[] = $cell;
         }
       }
-      if (empty($form['fields'][$name]['description']['#value'])) {
-        $rows[] = Utility::deepCopy($row);
+      $row = array(
+        'data' => $row,
+        'data-field-row-id' => $name,
+      );
+      if (!empty($form['fields'][$name]['description']['#value'])) {
+        $row['title'] = strip_tags($form['fields'][$name]['description']['#value']);
       }
-      else {
-        $rows[] = array(
-          'data' => $row,
-          'title' => strip_tags($form['fields'][$name]['description']['#value']),
-        );
-      }
+      $rows[] = $row;
     }
   }
 
@@ -61,6 +60,7 @@ function theme_search_api_admin_fields_table($variables) {
     '#theme' => 'table',
     '#header' => $form['#header'],
     '#rows' => $rows,
+    '#empty' => t('No fields have been added for this datasource.'),
   );
 
   $output .= render($build);
@@ -161,6 +161,9 @@ function theme_search_api_form_item_list(array $variables) {
   $build = array(
     '#theme' => 'item_list',
   );
+  if (!empty($element['#title'])) {
+    $build['#title'] = $element['#title'];
+  }
   foreach (Element::children($element) as $key) {
     $build['#items'][$key] = $element[$key];
   }
