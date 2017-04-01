@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2861587 by alexpott: Fixed the DB/Defaults integration tests.
 - #2855758 by StryKaizer, drunken monkey: Fixed "is rendered" checks for Views
   block displays.
 - #2855444 by drunken monkey: Added language-specific test for the "Rendered
