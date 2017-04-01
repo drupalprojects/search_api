@@ -42,7 +42,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ),
       'status' => array(
-        'description' => 'Boolean indicating whether the item needs to be reindexed',
+        'description' => 'Boolean indicating the reindexation status, "1" when we need to reindex, "0" otherwise',
         'type' => 'int',
         'not null' => TRUE,
       ),
