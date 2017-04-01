@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2855758 by StryKaizer, drunken monkey: Fixed "is rendered" checks for Views
+  block displays.
 - #2855444 by drunken monkey: Added language-specific test for the "Rendered
   item" processor.
 - #2794295 by isramv, drunken monkey, alan-ps: Fixed default index indexing term

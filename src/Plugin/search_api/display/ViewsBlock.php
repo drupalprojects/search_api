@@ -25,10 +25,18 @@ class ViewsBlock extends ViewsDisplayBase {
    * {@inheritdoc}
    */
   public function isRenderedInCurrentRequest() {
-    // There is no way to know if a block is embedded on a page, because
-    // blocks can be rendered in isolation (see big_pipe, esi, ...). To be
-    // sure we're not disclosing information we're not sure about, we always
-    // return false.
+    // There can be more than one block rendering the display. If any block is
+    // rendered, we return TRUE.
+    $plugin_id = 'views_block:' . $this->pluginDefinition['view_id'] . '-' . $this->pluginDefinition['view_display'];
+    $blocks = $this->getEntityTypeManager()
+      ->getStorage('block')
+      ->loadByProperties(array('plugin' => $plugin_id));
+    foreach ($blocks as $block) {
+      if ($block->access('view')) {
+        return TRUE;
+      }
+    }
+
     return FALSE;
   }
 
