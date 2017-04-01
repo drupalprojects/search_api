@@ -37,7 +37,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  *     plural = "@count search indexes",
  *   ),
  *   handlers = {
- *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
+ *     "storage" = "Drupal\search_api\Entity\SearchApiConfigEntityStorage",
  *     "list_builder" = "Drupal\search_api\IndexListBuilder",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\IndexForm",
@@ -258,13 +258,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @var \Drupal\search_api\Processor\ProcessorInterface[]|null
    */
   protected $processorInstances;
-
-  /**
-   * Whether reindexing has been triggered for this index in this page request.
-   *
-   * @var bool
-   */
-  protected $hasReindexed = FALSE;
 
   /**
    * The number of currently active "batch tracking" modes.
@@ -569,13 +562,23 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage) {
-    // Get a list of all processors meeting the criteria (stage and, optionally,
-    // enabled) along with their effective weights (user-set or default).
+  public function getProcessorsByStage($stage, $overrides = []) {
+    // Get a list of all processors which support this stage, along with their
+    // weights.
     $processors = $this->getProcessors();
     $processor_weights = array();
     foreach ($processors as $name => $processor) {
       if ($processor->supportsStage($stage)) {
+        $processor_weights[$name] = $processor->getWeight($stage);
+      }
+    }
+
+    // Apply any overrides that were passed by the caller.
+    foreach ($overrides as $name => $settings) {
+      /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
+      $processor = $this->createPlugin('processor', $name, $settings);
+      if ($processor->supportsStage($stage)) {
+        $processors[$name] = $processor;
         $processor_weights[$name] = $processor->getWeight($stage);
       }
     }
@@ -819,6 +822,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function discardFieldChanges() {
+    $this->fieldInstances = NULL;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPropertyDefinitions($datasource_id) {
     if (isset($datasource_id)) {
       $datasource = $this->getDatasource($datasource_id);
@@ -979,7 +990,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       // Since we've indexed items now, triggering reindexing would have some
       // effect again. Therefore, we reset the flag.
-      $this->hasReindexed = FALSE;
+      $this->setHasReindexed(FALSE);
       \Drupal::moduleHandler()->invokeAll('search_api_items_indexed', array($this, $processed_ids));
     }
 
@@ -1085,8 +1096,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function reindex() {
-    if ($this->status() && !$this->hasReindexed) {
-      $this->hasReindexed = TRUE;
+    if ($this->status() && !$this->isReindexing()) {
+      $this->setHasReindexed();
       $this->getTrackerInstance()->trackAllItemsUpdated();
       \Drupal::moduleHandler()->invokeAll('search_api_index_reindex', array($this, FALSE));
     }
@@ -1099,9 +1110,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->status()) {
       // Only invoke the hook if we actually did something.
       $invoke_hook = FALSE;
-      if (!$this->hasReindexed) {
+      if (!$this->isReindexing()) {
         $invoke_hook = TRUE;
-        $this->hasReindexed = TRUE;
+        $this->setHasReindexed();
         $this->getTrackerInstance()->trackAllItemsUpdated();
       }
       if (!$this->isReadOnly()) {
@@ -1118,7 +1129,23 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function isReindexing() {
-    return $this->hasReindexed;
+    $id = $this->id();
+    return \Drupal::state()->get("search_api.index.$id.has_reindexed", FALSE);
+  }
+
+  /**
+   * Sets whether this index has all items marked for re-indexing.
+   *
+   * @param bool $has_reindexed
+   *   (optional) TRUE if the index has all items marked for re-indexing, FALSE
+   *   otherwise.
+   *
+   * @return $this
+   */
+  protected function setHasReindexed($has_reindexed = TRUE) {
+    $id = $this->id();
+    \Drupal::state()->set("search_api.index.$id.has_reindexed", $has_reindexed);
+    return $this;
   }
 
   /**
@@ -1156,9 +1183,26 @@ class Index extends ConfigEntityBase implements IndexInterface {
       return;
     }
 
-    // Prevent enabling of indexes when the server is disabled.
-    if ($this->status() && !$this->isServerEnabled()) {
-      $this->disable();
+    // Retrieve active config overrides for this index.
+    $overrides = Utility::getConfigOverrides($this);
+
+    // Prevent enabling of indexes when the server is disabled. Take into
+    // account that both the index's "status" and "server" properties might be
+    // overridden.
+    if ($this->status() && !isset($overrides['status'])) {
+      // NULL would be a valid override, so we can't use isset() here.
+      if (!array_key_exists('server', $overrides)) {
+        if (!$this->isServerEnabled()) {
+          $this->disable();
+        }
+      }
+      else {
+        $server_id = $overrides['server'];
+        $server = $server_id !== NULL ? Server::load($server_id) : NULL;
+        if (!$server || !$server->status()) {
+          $this->disable();
+        }
+      }
     }
 
     // Merge in default options.
@@ -1191,7 +1235,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     // Call the preIndexSave() method of all applicable processors.
-    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PRE_INDEX_SAVE) as $processor) {
+    $processor_overrides = !empty($overrides['processor_settings']) ? $overrides['processor_settings'] : [];
+    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PRE_INDEX_SAVE, $processor_overrides) as $processor) {
       $processor->preIndexSave();
     }
 
@@ -1253,6 +1298,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
+    // New indexes don't have any items indexed.
+    if (!$update) {
+      $this->setHasReindexed();
+    }
+
     try {
       // Fake an original for inserts to make code cleaner.
       /** @var \Drupal\search_api\IndexInterface $original */
@@ -1307,9 +1357,6 @@ class Index extends ConfigEntityBase implements IndexInterface {
     catch (SearchApiException $e) {
       $this->logException($e);
     }
-
-    // Reset the field instances so saved renames won't be reported anymore.
-    $this->fieldInstances = NULL;
   }
 
   /**

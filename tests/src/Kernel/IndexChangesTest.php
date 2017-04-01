@@ -266,11 +266,7 @@ class IndexChangesTest extends KernelTestBase {
     $this->taskManager->executeAllTasks();
 
     $methods = $this->getCalledMethods('tracker');
-    // Note: The initial "trackAllItemsUpdated" call comes from the test
-    // backend, which marks the index for re-indexing every time it gets
-    // updated.
     $expected = array(
-      'trackAllItemsUpdated',
       'trackItemsInserted',
       'trackItemsInserted',
     );

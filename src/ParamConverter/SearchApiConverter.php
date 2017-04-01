@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\ParamConverter;
 
+use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\ParamConverter\EntityConverter;
 use Drupal\Core\ParamConverter\ParamConverterInterface;
@@ -56,7 +57,11 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
    */
   public function convert($value, $definition, $name, array $defaults) {
     /** @var \Drupal\search_api\IndexInterface $entity */
-    if (!($entity = parent::convert($value, $definition, $name, $defaults))) {
+    $storage = $this->entityManager->getStorage('search_api_index');
+    if (!($storage instanceof ConfigEntityStorageInterface)) {
+      return NULL;
+    }
+    if (!($entity = $storage->loadOverrideFree($value))) {
       return NULL;
     }
 

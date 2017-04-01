@@ -311,12 +311,15 @@ interface IndexInterface extends ConfigEntityInterface {
    * @param string $stage
    *   The stage for which to return the processors. One of the
    *   \Drupal\search_api\Processor\ProcessorInterface::STAGE_* constants.
+   * @param array[] $overrides
+   *   (optional) Overrides to apply to the index's processors, keyed by
+   *   processor IDs with their respective overridden settings as values.
    *
    * @return \Drupal\search_api\Processor\ProcessorInterface[]
    *   An array of all enabled processors that support the given stage, ordered
    *   by the weight for that stage.
    */
-  public function getProcessorsByStage($stage);
+  public function getProcessorsByStage($stage, $overrides = []);
 
   /**
    * Determines whether the given processor ID is valid for this index.
@@ -543,6 +546,13 @@ interface IndexInterface extends ConfigEntityInterface {
    *   An associative array mapping old field IDs to the new ones.
    */
   public function getFieldRenames();
+
+  /**
+   * Resets the index's fields to the saved state.
+   *
+   * @return $this
+   */
+  public function discardFieldChanges();
 
   /**
    * Retrieves the properties of one of this index's datasources.

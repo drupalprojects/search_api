@@ -2,6 +2,10 @@
 
 namespace Drupal\search_api\Utility;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Config\ConfigFactoryOverrideInterface;
+use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
@@ -10,6 +14,7 @@ use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
+use Symfony\Component\DependencyInjection\TaggedContainerInterface;
 
 /**
  * Contains utility methods for the Search API.
@@ -490,6 +495,52 @@ class Utility {
       return array(NULL, $property_path);
     }
     return array($property_path, NULL);
+  }
+
+  /**
+   * Retrieves all overridden property values for the given config entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The config entity to check for overrides.
+   *
+   * @return array
+   *   An associative array mapping property names to their overridden values.
+   */
+  public static function getConfigOverrides(EntityInterface $entity) {
+    $entity_type = $entity->getEntityType();
+    if (!($entity_type instanceof ConfigEntityTypeInterface)) {
+      return [];
+    }
+
+    $config_key = $entity_type->getConfigPrefix() . '.' . $entity->id();
+    $overrides = [];
+
+    // Overrides from tagged services.
+    $container = \Drupal::getContainer();
+    if ($container instanceof TaggedContainerInterface) {
+      $tags = $container->findTaggedServiceIds('config.factory.override');
+      foreach (array_keys($tags) as $service_id) {
+        $override = $container->get($service_id);
+        if ($override instanceof ConfigFactoryOverrideInterface) {
+          $service_overrides = $override->loadOverrides([$config_key]);
+          if (!empty($service_overrides[$config_key])) {
+            // Existing overrides take precedence since these will have been
+            // added by events with a higher priority.
+            $arrays = [$service_overrides[$config_key], $overrides];
+            $overrides = NestedArray::mergeDeepArray($arrays, TRUE);
+          }
+        }
+      }
+    }
+
+    // Overrides from settings.php. (This takes precedence over overrides from
+    // services.)
+    if (isset($GLOBALS['config'][$config_key])) {
+      $arrays = [$overrides, $GLOBALS['config'][$config_key]];
+      $overrides = NestedArray::mergeDeepArray($arrays, TRUE);
+    }
+
+    return $overrides;
   }
 
 }

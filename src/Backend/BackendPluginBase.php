@@ -112,6 +112,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    */
   public function setServer(ServerInterface $server) {
     $this->server = $server;
+    return $this;
   }
 
   /**

@@ -30,7 +30,22 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
   /**
    * {@inheritdoc}
    */
+  public function postInsert() {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this);
+      return;
+    }
+    $this->checkError(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preUpdate() {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this);
+      return;
+    }
     $this->checkError(__FUNCTION__);
   }
 
@@ -38,6 +53,9 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function postUpdate() {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      return call_user_func($override, $this);
+    }
     $this->checkError(__FUNCTION__);
     return $this->getReturnValue(__FUNCTION__, FALSE);
   }
@@ -96,6 +114,9 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function indexItems(IndexInterface $index, array $items) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      return call_user_func($override, $this, $index, $items);
+    }
     $this->checkError(__FUNCTION__);
 
     $state = \Drupal::state();
@@ -123,6 +144,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function addIndex(IndexInterface $index) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $index);
+      return;
+    }
     $this->checkError(__FUNCTION__);
   }
 
@@ -130,6 +155,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function updateIndex(IndexInterface $index) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $index);
+      return;
+    }
     $this->checkError(__FUNCTION__);
     $index->reindex();
   }
@@ -138,6 +167,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function removeIndex($index) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $index);
+      return;
+    }
     $this->checkError(__FUNCTION__);
   }
 
@@ -145,6 +178,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function deleteItems(IndexInterface $index, array $item_ids) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $index, $item_ids);
+      return;
+    }
     $this->checkError(__FUNCTION__);
 
     $state = \Drupal::state();
@@ -161,6 +198,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function deleteAllIndexItems(IndexInterface $index, $datasource_id = NULL) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $index, $datasource_id);
+      return;
+    }
     $this->checkError(__FUNCTION__);
 
     $key = 'search_api_test.backend.indexed.' . $index->id();
@@ -184,6 +225,10 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      call_user_func($override, $this, $query);
+      return;
+    }
     $this->checkError(__FUNCTION__);
 
     $results = $query->getResults();
@@ -223,6 +268,9 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function isAvailable() {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      return call_user_func($override, $this);
+    }
     return $this->getReturnValue(__FUNCTION__, TRUE);
   }
 
@@ -230,6 +278,9 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getDiscouragedProcessors() {
+    if ($override = $this->getMethodOverride(__FUNCTION__)) {
+      return (array) call_user_func($override, $this);
+    }
     return $this->getReturnValue(__FUNCTION__, array());
   }
 

@@ -27,7 +27,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("Adds an additional field containing the rendered item as it would look when viewed."),
  *   stages = {
  *     "add_properties" = 0,
- *     "pre_index_save" = -10,
  *   },
  *   locked = true,
  *   hidden = true,

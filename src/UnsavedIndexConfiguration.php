@@ -159,10 +159,11 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
     // Unlike the Views UI, we have several separate pages for editing index
     // entities, and only one of them is locked. Therefore, this extra step is
     // necessary, we can't just call $this->entity->save().
+    /** @var \Drupal\search_api\Entity\SearchApiConfigEntityStorage $storage */
+    $storage = $this->getEntityTypeManager()->getStorage('search_api_index');
+    $storage->resetCache([$this->entity->id()]);
     /** @var \Drupal\search_api\IndexInterface $original */
-    $storage = $this->getEntityTypeManager()
-      ->getStorage($this->entity->getEntityTypeId());
-    $original = $storage->loadUnchanged($this->entity->id());
+    $original = $storage->loadOverrideFree($this->entity->id());
     $fields = $this->entity->getFields();
     // Set the correct index object on the field objects.
     foreach ($fields as $field) {
@@ -368,8 +369,8 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage) {
-    return $this->entity->getProcessorsByStage($stage);
+  public function getProcessorsByStage($stage, $overrides = []) {
+    return $this->entity->getProcessorsByStage($stage, $overrides);
   }
 
   /**
@@ -503,6 +504,14 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
    */
   public function getFieldRenames() {
     return $this->entity->getFieldRenames();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function discardFieldChanges() {
+    $this->entity->discardFieldChanges();
+    return $this;
   }
 
   /**

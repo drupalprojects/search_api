@@ -74,6 +74,21 @@ trait TestPluginTrait {
   }
 
   /**
+   * Retrieves a possible override set for the given method.
+   *
+   * @param string $method
+   *   The name of the method.
+   *
+   * @return callable|null
+   *   The method override to use, or NULL if none was set.
+   */
+  protected function getMethodOverride($method) {
+    $type = $this->getPluginType();
+    $key = "search_api_test.$type.method.$method";
+    return \Drupal::state()->get($key);
+  }
+
+  /**
    * Returns the plugin type of this object.
    *
    * Equivalent to the last component of the namespace.

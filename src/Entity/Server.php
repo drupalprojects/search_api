@@ -9,6 +9,7 @@ use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
  * Defines the search server configuration entity.
@@ -24,7 +25,7 @@ use Drupal\search_api\ServerInterface;
  *     plural = "@count search servers",
  *   ),
  *   handlers = {
- *     "storage" = "Drupal\Core\Config\Entity\ConfigEntityStorage",
+ *     "storage" = "Drupal\search_api\Entity\SearchApiConfigEntityStorage",
  *     "form" = {
  *       "default" = "Drupal\search_api\Form\ServerForm",
  *       "edit" = "Drupal\search_api\Form\ServerForm",
@@ -464,11 +465,38 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if (!isset($this->original)) {
       return;
     }
+    // Retrieve active config overrides for this server.
+    $overrides = Utility::getConfigOverrides($this);
 
-    $this->getBackend()->preUpdate();
+    // If there are overrides for the backend or its configuration, attempt to
+    // apply them for the preUpdate() call.
+    if (isset($overrides['backend']) || isset($overrides['backend_config'])) {
+      $backend_config = $this->getBackendConfig();
+      if (isset($overrides['backend_config'])) {
+        $backend_config = $overrides['backend_config'];
+      }
+      $backend_id = $this->getBackendId();
+      if (isset($overrides['backend'])) {
+        $backend_id = $overrides['backend'];
+      }
+      $backend_plugin_manager = \Drupal::service('plugin.manager.search_api.backend');
+      $backend_config['#server'] = $this;
+      if (!($backend = $backend_plugin_manager->createInstance($backend_id, $backend_config))) {
+        $label = $this->label();
+        throw new SearchApiException("The backend with ID '$backend_id' could not be retrieved for server '$label'.");
+      }
+    }
+    else {
+      $backend = $this->getBackend();
+    }
+
+    $backend->preUpdate();
 
     // If the server is being disabled, also disable all its indexes.
-    if (!$this->isSyncing() && !$this->status() && $this->original->status()) {
+    if (!$this->isSyncing()
+        && !isset($overrides['status'])
+        && !$this->status()
+        && $this->original->status()) {
       foreach ($this->getIndexes(array('status' => TRUE)) as $index) {
         /** @var \Drupal\search_api\IndexInterface $index */
         $index->setStatus(FALSE)->save();

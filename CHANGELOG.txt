@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2682369 by Alumei, drunken monkey, swentel, Crell, stBorchert, prics,
+  borisson_: Fixed problems with overridden config entities.
 - #2645882 by drunken monkey, borisson_: Fixed "items could not be indexed"
   message for "Index now".
 - #2641388 by mallezie, drunken monkey, borisson_, janusman: Added various UX

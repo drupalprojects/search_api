@@ -365,6 +365,7 @@ class AggregatedFieldsTest extends UnitTestCase {
       ->willReturnMap(array(
         array(
           ProcessorInterface::STAGE_ADD_PROPERTIES,
+          array(),
           array(
             'aggregated_field' => $this->processor,
             'processor1' => $processor_mock,

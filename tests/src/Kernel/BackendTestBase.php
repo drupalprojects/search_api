@@ -1018,6 +1018,8 @@ abstract class BackendTestBase extends KernelTestBase {
 
     $index->getField('body')->setType('text');
     $index->save();
+    $count = $this->indexItems($this->indexId);
+    $this->assertEquals(count($this->entities), $count, 'All items needed to be re-indexed after switching type from string to text.');
   }
 
   /**
