@@ -13,8 +13,8 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\search_api\Display\DisplayInterface;
 use Drupal\search_api\Entity\Index;
-use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
 
 /**
@@ -283,19 +283,21 @@ class ViewsTest extends SearchApiBrowserTestBase {
     $this->checkResults($query, [], 'Search for results of no available datasource');
 
     // Make sure there was a display plugin created for this view.
-    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')
+    /** @var \Drupal\search_api\Display\DisplayInterface[] $displays */
+    $displays = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.display')
       ->getInstances();
 
-    if ($displays === []) {
-      throw new SearchApiException("No displays are loaded, tests will fail.");
-    }
-
     $display_id = 'views_page:search_api_test_view__page_1';
-    $this->assertTrue(array_key_exists($display_id, $displays), 'A display plugin was created for the test view page display.');
-    $this->assertTrue(array_key_exists('views_block:search_api_test_view__block_1', $displays), 'A display plugin was created for the test view block display.');
-    $this->assertTrue(array_key_exists('views_rest:search_api_test_view__rest_export_1', $displays), 'A display plugin was created for the test view block display.');
+    $this->assertArrayHasKey($display_id, $displays, 'A display plugin was created for the test view page display.');
+    $this->assertArrayHasKey('views_block:search_api_test_view__block_1', $displays, 'A display plugin was created for the test view block display.');
+    $this->assertArrayHasKey('views_rest:search_api_test_view__rest_export_1', $displays, 'A display plugin was created for the test view block display.');
+    $this->assertEquals('/search-api-test', $displays[$display_id]->getPath(), 'Display returns the correct path.');
     $view_url = Url::fromUserInput('/search-api-test')->toString();
-    $this->assertEquals($view_url, $displays[$display_id]->getUrl()->toString(), 'Display returns the correct path.');
+    $this->assertEquals($view_url, $displays[$display_id]->getUrl()->toString(), 'Display returns the correct URL.');
+    $this->assertNull($displays['views_block:search_api_test_view__block_1']->getPath(), 'Block display returns the correct path.');
+    $this->assertEquals('/search-api-rest-test', $displays['views_rest:search_api_test_view__rest_export_1']->getPath(), 'REST display returns the correct path.');
+
     $this->assertEquals('database_search_index', $displays[$display_id]->getIndex()->id(), 'Display returns the correct search index.');
 
     $admin_user = $this->drupalCreateUser([
@@ -312,11 +314,12 @@ class ViewsTest extends SearchApiBrowserTestBase {
 
     drupal_flush_all_caches();
 
-    $displays = \Drupal::getContainer()->get('plugin.manager.search_api.display')
+    $displays = \Drupal::getContainer()
+      ->get('plugin.manager.search_api.display')
       ->getInstances();
-    $this->assertFalse(array_key_exists('views_page:search_api_test_view__page_1', $displays), 'A display plugin was created for the test view page display.');
-    $this->assertTrue(array_key_exists('views_block:search_api_test_view__block_1', $displays), 'A display plugin was created for the test view block display.');
-    $this->assertTrue(array_key_exists('views_rest:search_api_test_view__rest_export_1', $displays), 'A display plugin was created for the test view block display.');
+    $this->assertArrayNotHasKey('views_page:search_api_test_view__page_1', $displays, 'No display plugin was created for the test view page display.');
+    $this->assertArrayHasKey('views_block:search_api_test_view__block_1', $displays, 'A display plugin was created for the test view block display.');
+    $this->assertArrayHasKey('views_rest:search_api_test_view__rest_export_1', $displays, 'A display plugin was created for the test view block display.');
   }
 
   /**

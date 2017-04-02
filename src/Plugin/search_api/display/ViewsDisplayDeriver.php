@@ -110,7 +110,7 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
         ) + $base_plugin_definition;
 
         // Add the path information to the definition.
-        if ($display->getPath()) {
+        if ($display->hasPath()) {
           $plugin_derivatives[$machine_name]['path'] = '/' . $display->getPath();
         }
       }

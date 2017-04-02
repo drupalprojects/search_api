@@ -16,14 +16,6 @@ class ViewsBlock extends ViewsDisplayBase {
   /**
    * {@inheritdoc}
    */
-  public function getUrl() {
-    // Blocks don't have a path, so don't return one.
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isRenderedInCurrentRequest() {
     // There can be more than one block rendering the display. If any block is
     // rendered, we return TRUE.
