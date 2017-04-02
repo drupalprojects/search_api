@@ -180,7 +180,7 @@ class ConfigOverrideIntegrationTest extends SearchApiBrowserTestBase {
 
     // The "Edit", "Fields", "Processors" and "Disable" tabs/forms should use
     // the override-free index version.
-    foreach (['edit', 'fields', 'fields/add', 'processors', 'disable'] as $tab) {
+    foreach (['edit', 'fields', 'fields/add/nojs', 'processors', 'disable'] as $tab) {
       $this->drupalGet("$base_path/index/test_index/$tab");
       $this->assertSession()->pageTextContains('Test index');
       $this->assertSession()->responseNotContains('Overridden index');

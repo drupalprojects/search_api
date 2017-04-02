@@ -129,7 +129,8 @@ class HooksTest extends SearchApiBrowserTestBase {
     // The implementation of hook_search_api_field_type_mapping_alter() has
     // removed all dates, so we can't see any timestamp anymore in the page.
     $url_options['query']['datasource'] = 'entity:node';
-    $this->drupalGet($this->getIndexPath('fields/add'), $url_options);
+    $this->drupalGet($this->getIndexPath('fields/add/nojs'), $url_options);
+    $this->assertSession()->pageTextContains('Add fields to index');
     $this->assertSession()->pageTextNotContains('timestamp');
 
     $this->drupalGet('search-api-test');

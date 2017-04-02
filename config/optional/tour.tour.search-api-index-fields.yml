@@ -21,7 +21,7 @@ tips:
     body: With the "Add fields" button you can add additional fields to this index.
     weight: 2
     attributes:
-      data-class: action-links .button[data-drupal-link-system-path$='/fields/add']
+      data-class: button-action[data-drupal-selector="edit-add-field"]
   search-api-index-fields-label:
     id: search-api-index-fields-label
     plugin: text
