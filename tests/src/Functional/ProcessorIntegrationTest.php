@@ -210,7 +210,9 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
       ProcessorInterface::STAGE_POSTPROCESS_QUERY,
     ];
     /** @var \Drupal\search_api\Processor\ProcessorInterface[] $processors */
-    $processors = $this->loadIndex()->createPlugins('processor');
+    $processors = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugins($this->loadIndex());
     $page = $this->getSession()->getPage();
     foreach ($stages as $stage) {
       // Since the order of processors with the same weight is undefined, we

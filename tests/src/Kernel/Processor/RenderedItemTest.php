@@ -153,9 +153,10 @@ class RenderedItemTest extends ProcessorTestBase {
     );
     $field = Utility::createField($this->index, 'rendered_item', $field_info);
     $this->index->addField($field);
-
-    $this->index->setDatasources($this->index->createPlugins('datasource'));
-
+    $datasources = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createDatasourcePlugins($this->index);
+    $this->index->setDatasources($datasources);
     $this->index->save();
 
 

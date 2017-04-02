@@ -3,7 +3,6 @@
 namespace Drupal\search_api\Entity;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
-use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -21,7 +20,6 @@ use Drupal\search_api\Tracker\TrackerInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\TempStoreException;
 use Drupal\views\Views;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 
 /**
  * Defines the search index configuration entity.
@@ -320,59 +318,11 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function createPlugin($type, $plugin_id, $configuration = array()) {
-    try {
-      /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
-      $plugin_manager = \Drupal::getContainer()
-        ->get("plugin.manager.search_api.$type");
-      $configuration['#index'] = $this;
-      return $plugin_manager->createInstance($plugin_id, $configuration);
-    }
-    catch (ServiceNotFoundException $e) {
-      throw new SearchApiException("Unknown plugin type '$type'");
-    }
-    catch (PluginException $e) {
-      throw new SearchApiException("Unknown $type plugin with ID '$plugin_id'");
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function createPlugins($type, array $plugin_ids = NULL, $configurations = array()) {
-    if ($plugin_ids === NULL) {
-      try {
-        /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
-        $plugin_manager = \Drupal::getContainer()
-          ->get("plugin.manager.search_api.$type");
-        $plugin_ids = array_keys($plugin_manager->getDefinitions());
-      }
-      catch (ServiceNotFoundException $e) {
-        throw new SearchApiException("Unknown plugin type '$type'");
-      }
-    }
-
-    $plugins = array();
-    foreach ($plugin_ids as $plugin_id) {
-      $configuration = array();
-      if (isset($configurations[$plugin_id])) {
-        $configuration = $configurations[$plugin_id];
-      }
-      elseif (isset($this->{"{$type}_settings"}[$plugin_id])) {
-        $configuration = $this->{"{$type}_settings"}[$plugin_id];
-      }
-      $plugins[$plugin_id] = $this->createPlugin($type, $plugin_id, $configuration);
-    }
-
-    return $plugins;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDatasources() {
     if ($this->datasourceInstances === NULL) {
-      $this->datasourceInstances = $this->createPlugins('datasource', array_keys($this->datasource_settings));
+      $this->datasourceInstances = \Drupal::getContainer()
+        ->get('search_api.plugin_helper')
+        ->createDatasourcePlugins($this, array_keys($this->datasource_settings));
     }
 
     return $this->datasourceInstances;
@@ -478,7 +428,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
         $configuration = $this->tracker_settings[$tracker_id];
       }
 
-      $this->trackerInstance = $this->createPlugin('tracker', $tracker_id, $configuration);
+      $this->trackerInstance = \Drupal::getContainer()
+        ->get('search_api.plugin_helper')
+        ->createTrackerPlugin($this, $tracker_id, $configuration);
     }
 
     return $this->trackerInstance;
@@ -550,7 +502,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     // We should only reach this point in the code once, at the first call after
     // the index is loaded.
     $this->processorInstances = array();
-    foreach ($this->createPlugins('processor') as $processor_id => $processor) {
+    $processors = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugins($this);
+    foreach ($processors as $processor_id => $processor) {
       if (isset($this->processor_settings[$processor_id]) || $processor->isLocked()) {
         $this->processorInstances[$processor_id] = $processor;
       }
@@ -574,12 +529,18 @@ class Index extends ConfigEntityBase implements IndexInterface {
     }
 
     // Apply any overrides that were passed by the caller.
-    foreach ($overrides as $name => $settings) {
-      /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-      $processor = $this->createPlugin('processor', $name, $settings);
+    $plugin_helper = \Drupal::getContainer()->get('search_api.plugin_helper');
+    foreach ($overrides as $name => $config) {
+      $processor = $plugin_helper->createProcessorPlugin($this, $name, $config);
       if ($processor->supportsStage($stage)) {
         $processors[$name] = $processor;
         $processor_weights[$name] = $processor->getWeight($stage);
+      }
+      else {
+        // In rare cases, the override might change whether or not the processor
+        // supports the given stage. So, to make sure, unset the weight in case
+        // it was set before.
+        unset($processor_weights[$name]);
       }
     }
 

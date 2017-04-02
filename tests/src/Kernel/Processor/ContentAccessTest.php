@@ -110,11 +110,13 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[2]->save();
 
     // Also index users, to verify that they are unaffected by the processor.
-    $datasources = $this->index->createPlugins('datasource', array(
-      'entity:comment',
-      'entity:node',
-      'entity:user',
-    ));
+    $datasources = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createDatasourcePlugins($this->index, [
+        'entity:comment',
+        'entity:node',
+        'entity:user',
+      ]);
     $this->index->setDatasources($datasources);
     $this->index->save();
 

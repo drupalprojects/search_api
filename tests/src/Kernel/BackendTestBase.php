@@ -181,7 +181,9 @@ abstract class BackendTestBase extends KernelTestBase {
     $index = $this->getIndex();
 
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-    $processor = $index->createPlugin('processor', 'html_filter');
+    $processor = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugin($index, 'html_filter');
     $index->addProcessor($processor)->save();
 
     $this->assertArrayHasKey('html_filter', $index->getProcessors(), 'HTML filter processor is added.');

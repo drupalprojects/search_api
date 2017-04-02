@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2842029 by vasike, drunken monkey: Added a "plugin helper" service for
+  creating index plugins.
 - #2863253 by drunken monkey: Added hook infos for all our hooks.
 - #2856050 by StryKaizer, drunken monkey, marthinal, borisson_: Added getPath()
   to display plugins and deprecated getUrl().

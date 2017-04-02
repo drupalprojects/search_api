@@ -249,7 +249,10 @@ class ViewsTest extends SearchApiBrowserTestBase {
 
     // Make sure the datasource filter works correctly with multiple selections.
     $index = Index::load($this->indexId);
-    $index->addDatasource($index->createPlugin('datasource', 'entity:user'));
+    $datasource = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createDatasourcePlugin($index, 'entity:user');
+    $index->addDatasource($datasource);
     $index->save();
 
     $query = [

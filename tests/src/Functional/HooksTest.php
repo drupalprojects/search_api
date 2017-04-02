@@ -52,14 +52,18 @@ class HooksTest extends SearchApiBrowserTestBase {
     // Add the test processor to the index so we can make sure that all expected
     // processor methods are called, too.
     /** @var \Drupal\search_api\Processor\ProcessorInterface $processor */
-    $processor = $index->createPlugin('processor', 'search_api_test');
+    $processor = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugin($index, 'search_api_test');
     $index->addProcessor($processor)->save();
 
     // Parts of this test actually use the "database_search_index" from the
     // search_api_test_db module (via the test view). Set the processor there,
     // too.
     $index = Index::load('database_search_index');
-    $processor = $index->createPlugin('processor', 'search_api_test');
+    $processor = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugin($index, 'search_api_test');
     $index->addProcessor($processor)->save();
 
     // Reset the called methods on the processor.

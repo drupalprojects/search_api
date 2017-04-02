@@ -12,6 +12,7 @@ use Drupal\Core\Utility\Error;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
+use Drupal\search_api\Utility\PluginHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,11 +28,11 @@ class IndexForm extends EntityForm {
   protected $entityTypeManager;
 
   /**
-   * The tracker plugin manager.
+   * The plugin helper.
    *
-   * @var \Drupal\search_api\Tracker\TrackerPluginManager
+   * @var \Drupal\search_api\Utility\PluginHelperInterface
    */
-  protected $trackerPluginManager;
+  protected $pluginHelper;
 
   /**
    * The index before the changes.
@@ -45,12 +46,12 @@ class IndexForm extends EntityForm {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
-   *   The Search API tracker plugin manager.
+   * @param \Drupal\search_api\Utility\PluginHelperInterface $plugin_helper
+   *   The plugin helper.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, TrackerPluginManager $tracker_plugin_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, PluginHelperInterface $plugin_helper) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->trackerPluginManager = $tracker_plugin_manager;
+    $this->pluginHelper = $plugin_helper;
   }
 
   /**
@@ -58,8 +59,8 @@ class IndexForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     $entity_type_manager = $container->get('entity_type.manager');
-    $tracker_plugin_manager = $container->get('plugin.manager.search_api.tracker');
-    return new static($entity_type_manager, $tracker_plugin_manager);
+    $plugin_helper = $container->get('search_api.plugin_helper');
+    return new static($entity_type_manager, $plugin_helper);
   }
 
   /**
@@ -161,7 +162,7 @@ class IndexForm extends EntityForm {
       ),
     );
     $datasource_options = array();
-    foreach ($index->createPlugins('datasource') as $datasource_id => $datasource) {
+    foreach ($this->pluginHelper->createDatasourcePlugins($index) as $datasource_id => $datasource) {
       $datasource_options[$datasource_id] = $datasource->label();
       $form['datasources'][$datasource_id]['#description'] = $datasource->getDescription();
     }
@@ -206,7 +207,7 @@ class IndexForm extends EntityForm {
       ),
     );
     $tracker_options = array();
-    foreach ($index->createPlugins('tracker') as $tracker_id => $tracker) {
+    foreach ($this->pluginHelper->createTrackerPlugins($index) as $tracker_id => $tracker) {
       $tracker_options[$tracker_id] = $tracker->label();
       $form['tracker'][$tracker_id]['#description'] = $tracker->getDescription();
     }
@@ -318,7 +319,7 @@ class IndexForm extends EntityForm {
     else {
       // The form is being rebuilt – use the datasources selected by the user
       // instead of the ones saved in the config.
-      $datasources = $index->createPlugins('datasource', $selected_datasources);
+      $datasources = $this->pluginHelper->createDatasourcePlugins($index, $selected_datasources);
     }
     $form_state->set('datasources', array_keys($datasources));
 
@@ -370,7 +371,7 @@ class IndexForm extends EntityForm {
     else {
       // Probably an AJAX rebuild of the form – use the tracker selected by
       // the user.
-      $tracker = $this->trackerPluginManager->createInstance($selected_tracker, array());
+      $tracker = $this->pluginHelper->createTrackerPlugin($index, $selected_tracker);
     }
 
     if (empty($tracker)) {
@@ -455,7 +456,7 @@ class IndexForm extends EntityForm {
     $form_state->setValue('datasources', $datasource_ids);
 
     // Call validateConfigurationForm() for each enabled datasource with a form.
-    $datasources = $this->originalEntity->createPlugins('datasource', $datasource_ids);
+    $datasources = $this->pluginHelper->createDatasourcePlugins($index, $datasource_ids);
     $previous_datasources = $form_state->get('datasources');
     foreach ($datasources as $datasource_id => $datasource) {
       if ($datasource instanceof PluginFormInterface) {
@@ -473,14 +474,14 @@ class IndexForm extends EntityForm {
     // has not changed and if it has a form.
     $tracker_id = $form_state->getValue('tracker', NULL);
     if ($tracker_id == $form_state->get('tracker')) {
-      $tracker = $this->originalEntity->createPlugin('tracker', $tracker_id);
+      $tracker = $this->pluginHelper->createTrackerPlugin($index, $tracker_id);
       if ($tracker instanceof PluginFormInterface) {
         $tracker_form_state = SubformState::createForSubform($form['tracker_config'], $form, $form_state);
         $tracker->validateConfigurationForm($form['tracker_config'], $tracker_form_state);
       }
     }
     else {
-      $tracker = $this->trackerPluginManager->createInstance($tracker_id, array('#index' => $this->originalEntity));
+      $tracker = $this->pluginHelper->createTrackerPlugin($this->originalEntity, $tracker_id);
       if ($tracker instanceof PluginFormInterface) {
         $form_state->setRebuild();
       }
@@ -519,7 +520,7 @@ class IndexForm extends EntityForm {
     $index->setOptions($form_state->getValue('options', array()) + $this->originalEntity->getOptions());
 
     $datasource_ids = $form_state->getValue('datasources', array());
-    $datasources = $this->originalEntity->createPlugins('datasource', $datasource_ids);
+    $datasources = $this->pluginHelper->createDatasourcePlugins($index, $datasource_ids);
     foreach ($datasources as $datasource_id => $datasource) {
       if ($datasource instanceof PluginFormInterface) {
         $datasource_form_state = SubformState::createForSubform($form['datasource_configs'][$datasource_id], $form, $form_state);
@@ -531,7 +532,7 @@ class IndexForm extends EntityForm {
     // Call submitConfigurationForm() for the (possibly new) tracker, if it
     // has not changed and if it has a form.
     $tracker_id = $form_state->getValue('tracker', NULL);
-    $tracker = $this->originalEntity->createPlugin('tracker', $tracker_id);
+    $tracker = $this->pluginHelper->createTrackerPlugin($index, $tracker_id);
     if ($tracker_id == $form_state->get('tracker')) {
       if ($tracker instanceof PluginFormInterface) {
         $tracker_form_state = SubformState::createForSubform($form['tracker_config'], $form, $form_state);

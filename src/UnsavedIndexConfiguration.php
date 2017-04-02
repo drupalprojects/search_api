@@ -231,20 +231,6 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function createPlugin($type, $plugin_id, $configuration = array()) {
-    return $this->entity->createPlugin($type, $plugin_id, $configuration);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function createPlugins($type, array $plugin_ids = NULL, $configurations = array()) {
-    return $this->entity->createPlugins($type, $plugin_ids, $configurations);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getDatasources() {
     return $this->entity->getDatasources();
   }

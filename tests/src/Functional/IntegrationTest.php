@@ -278,8 +278,12 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     // Make sure datasource and tracker plugin descriptions are displayed.
     $dummy_index = Index::create();
-    foreach (['datasource', 'tracker'] as $plugin_type) {
-      foreach ($dummy_index->createPlugins($plugin_type) as $plugin) {
+    foreach (['createDatasourcePlugins', 'createTrackerPlugins'] as $method) {
+      /** @var \Drupal\search_api\Plugin\IndexPluginInterface[] $plugins */
+      $plugins = \Drupal::getContainer()
+        ->get('search_api.plugin_helper')
+        ->$method($dummy_index);
+      foreach ($plugins as $plugin) {
         $description = strip_tags($plugin->getDescription());
         $description = Html::decodeEntities($description);
         $this->assertSession()->pageTextContains($description);

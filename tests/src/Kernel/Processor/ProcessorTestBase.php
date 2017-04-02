@@ -136,7 +136,9 @@ abstract class ProcessorTestBase extends KernelTestBase {
 
     if ($processor) {
       /** @var \Drupal\search_api\Processor\ProcessorPluginManager $plugin_manager */
-      $this->processor = $this->index->createPlugin('processor', $processor);
+      $this->processor = \Drupal::getContainer()
+        ->get('search_api.plugin_helper')
+        ->createProcessorPlugin($this->index, $processor);
       $this->index->addProcessor($this->processor);
     }
     $this->index->save();

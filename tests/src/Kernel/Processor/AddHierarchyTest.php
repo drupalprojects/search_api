@@ -131,9 +131,10 @@ class AddHierarchyTest extends ProcessorTestBase {
     $this->index->save();
 
     // Setup a node index.
-    $this->index->setDatasources(array(
-      'entity:node' => $this->index->createPlugin('datasource', 'entity:node'),
-    ));
+    $datasources = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createDatasourcePlugins($this->index, ['entity:node']);
+    $this->index->setDatasources($datasources);
     $this->index->save();
     $this->container
       ->get('search_api.index_task_manager')

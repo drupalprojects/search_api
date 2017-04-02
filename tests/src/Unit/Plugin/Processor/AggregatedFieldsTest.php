@@ -12,6 +12,7 @@ use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorProperty;
+use Drupal\search_api\Utility\PluginHelperInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Unit\TestComplexDataInterface;
 use Drupal\Tests\UnitTestCase;
@@ -96,6 +97,13 @@ class AggregatedFieldsTest extends UnitTestCase {
     $this->processor = new AggregatedFields(array('#index' => $this->index), 'aggregated_field', array());
     $this->index->addProcessor($this->processor);
     $this->setUpMockContainer();
+
+    $plugin_helper = $this->getMockBuilder(PluginHelperInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $plugin_helper->method('getProcessorsByStage')
+      ->willReturn([]);
+    $this->container->set('search_api.plugin_helper', $plugin_helper);
 
     // We want to check correct data type handling, so we need a somewhat more
     // complex mock-up for the datatype plugin handler.

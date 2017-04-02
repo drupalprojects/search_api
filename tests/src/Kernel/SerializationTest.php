@@ -50,9 +50,11 @@ class SerializationTest extends KernelTestBase {
       'property_path' => 'uid:entity:created',
     );
     $index->addField($field_helper->createField($index, 'test1', $field_info));
-    $index->addDatasource($index->createPlugin('datasource', 'entity:user'));
-    $index->addProcessor($index->createPlugin('processor', 'highlight'));
-    $index->setTracker($index->createPlugin('tracker', 'search_api_test'));
+    $plugin_creation_helper = \Drupal::getContainer()
+      ->get('search_api.plugin_helper');
+    $index->addDatasource($plugin_creation_helper->createDatasourcePlugin($index, 'entity:user'));
+    $index->addProcessor($plugin_creation_helper->createProcessorPlugin($index, 'highlight'));
+    $index->setTracker($plugin_creation_helper->createTrackerPlugin($index, 'search_api_test'));
 
     /** @var \Drupal\search_api\IndexInterface $serialized */
     $serialized = unserialize(serialize($index));
@@ -212,7 +214,9 @@ class SerializationTest extends KernelTestBase {
    */
   protected function createTestItem() {
     $index = $this->createTestIndex();
-    $datasource = $index->createPlugin('datasource', 'entity:user');
+    $datasource = \Drupal::getContainer()
+      ->get('search_api.plugin_helper')
+      ->createDatasourcePlugin($index, 'entity:user');
     $item = new Item($index, 'id', $datasource);
 
     $item->setBoost(2);

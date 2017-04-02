@@ -97,45 +97,6 @@ interface IndexInterface extends ConfigEntityInterface {
   public function setOptions(array $options);
 
   /**
-   * Creates a plugin object for this index.
-   *
-   * @param string $type
-   *   The type of plugin to create: "datasource", "processor" or "tracker".
-   * @param string $plugin_id
-   *   The plugin's ID.
-   * @param array $configuration
-   *   (optional) The configuration to set for the plugin.
-   *
-   * @return \Drupal\search_api\Plugin\IndexPluginInterface
-   *   The new plugin object.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if an unknown $type or $plugin_id is given.
-   */
-  public function createPlugin($type, $plugin_id, $configuration = array());
-
-  /**
-   * Creates multiple plugin objects for this index.
-   *
-   * @param string $type
-   *   The type of plugin to create: "datasource", "processor" or "tracker".
-   * @param string[]|null $plugin_ids
-   *   (optional) The IDs of the plugins to create, or NULL to create instances
-   *   for all known plugins of this type.
-   * @param array $configurations
-   *   (optional) The configurations to set for the plugins, keyed by plugin ID.
-   *   Missing configurations are either taken from the index's stored settings,
-   *   if they are present there, or default to an empty array.
-   *
-   * @return \Drupal\search_api\Plugin\IndexPluginInterface[]
-   *   The created plugin objects.
-   *
-   * @throws \Drupal\search_api\SearchApiException
-   *   Thrown if an unknown $type or plugin ID is given.
-   */
-  public function createPlugins($type, array $plugin_ids = NULL, $configurations = array());
-
-  /**
    * Retrieves this index's datasource plugins.
    *
    * @return \Drupal\search_api\Datasource\DatasourceInterface[]
