@@ -23,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "my_display",
  *   label = @Translation("My display"),
  *   description = @Translation("A few words about this search display"),
+ *   index = "search_index",
+ *   path = "/my/custom/search",
  * )
  * @endcode
  *

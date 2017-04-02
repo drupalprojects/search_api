@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2856003 by borisson_, drunken monkey: Added "index" and "path" to search
+  display annotation definition.
 - #2842557 by StryKaizer, Boobaa, drunken monkey, borisson_: Fixed "is rendered
   on current page" checks for Views displays with contextual filters.
 - #2855157 by dbjpanda: Fixed a small CSS error.
