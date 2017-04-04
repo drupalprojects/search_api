@@ -12,7 +12,7 @@ use Drupal\search_api\Processor\FieldsProcessorPluginBase;
  * @SearchApiProcessor(
  *   id = "stemmer",
  *   label = @Translation("Stemmer"),
- *   description = @Translation("Stems search terms (e.g., <em>talking</em> to <em>talk</em>). Currently, this only acts on English language content. It uses the Porter 2 stemmer algorithm (<a href=""https://wikipedia.org/wiki/Stemming"">More information</a>). For best results, use after tokenizing."),
+ *   description = @Translation("Stems search terms (for example, <em>talking</em> to <em>talk</em>). Currently, this only acts on English language content. It uses the Porter 2 stemmer algorithm (<a href=""https://wikipedia.org/wiki/Stemming"">More information</a>). For best results, use after tokenizing."),
  *   stages = {
  *     "pre_index_save" = 0,
  *     "preprocess_index" = 0,
