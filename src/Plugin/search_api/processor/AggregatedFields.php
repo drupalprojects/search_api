@@ -101,6 +101,11 @@ class AggregatedFields extends ProcessorPluginBase {
             $values = array(reset($values));
           }
           break;
+        case 'last':
+          if ($values) {
+            $values = array(end($values));
+          }
+          break;
       }
 
       // Do not use setValues(), since that doesn't preprocess the values

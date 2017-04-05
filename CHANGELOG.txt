@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2765317 by vasike: Added a "Last" aggregation for aggregated fields.
 - #2861657 by drunken monkey: Removed remaining usages of "e.g.".
 
 Search API 1.0, Beta 5 (2017-04-02):

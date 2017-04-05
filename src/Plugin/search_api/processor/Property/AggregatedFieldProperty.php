@@ -147,6 +147,7 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
           'max' => $this->t('Maximum'),
           'min' => $this->t('Minimum'),
           'first' => $this->t('First'),
+          'last' => $this->t('Last'),
         );
 
       case 'description':
@@ -158,6 +159,7 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
           'max' => $this->t('The Maximum aggregation computes the numerically largest contained field value.'),
           'min' => $this->t('The Minimum aggregation computes the numerically smallest contained field value.'),
           'first' => $this->t('The First aggregation will simply keep the first encountered field value.'),
+          'last' => $this->t('The Last aggregation will keep the last encountered field value.'),
         );
 
     }

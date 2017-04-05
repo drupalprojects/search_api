@@ -257,6 +257,13 @@ class AggregatedFieldsTest extends UnitTestCase {
           array('foobar'),
         ),
       ),
+      '"Last" aggregation' => array(
+        'last',
+        array(
+          array('baz'),
+          array('foobar'),
+        ),
+      ),
     );
   }
 
