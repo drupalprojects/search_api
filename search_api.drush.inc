@@ -680,7 +680,15 @@ function drush_search_api_set_index_server($index_id = NULL, $server_id = NULL) 
   }
 }
 
-
+/**
+ * Loads an override-free copy of an entity, for saving.
+ *
+ * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+ *   The entity to reload.
+ *
+ * @return \Drupal\Core\Entity\EntityInterface|null
+ *   The override-free version of the entity, or NULL if it couldn't be loaded.
+ */
 function _search_api_drush_reload_entity_override_free(ConfigEntityInterface $entity) {
   /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
   $storage = \Drupal::entityTypeManager()
