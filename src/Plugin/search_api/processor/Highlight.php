@@ -12,7 +12,6 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * Adds a highlighted excerpt to results and highlights returned fields.

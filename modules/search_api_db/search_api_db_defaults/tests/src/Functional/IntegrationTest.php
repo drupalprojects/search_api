@@ -61,7 +61,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     \Drupal::state()->set('search_api_use_tracking_batch', FALSE);
 
     // Install the search_api_db_defaults module.
-    if (version_compare(\Drupal::VERSION, '8.3', '>=')){
+    if (version_compare(\Drupal::VERSION, '8.3', '>=')) {
       $edit_enable = [
         'modules[search_api_db_defaults][enable]' => TRUE,
       ];

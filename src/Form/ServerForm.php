@@ -94,6 +94,10 @@ class ServerForm extends EntityForm {
   /**
    * Builds the form for the basic server properties.
    *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\ServerInterface $server
    *   The server that is being created or edited.
    */
@@ -173,6 +177,10 @@ class ServerForm extends EntityForm {
   /**
    * Builds the backend-specific configuration form.
    *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\ServerInterface $server
    *   The server that is being created or edited.
    */
@@ -210,6 +218,14 @@ class ServerForm extends EntityForm {
 
   /**
    * Handles switching the selected backend plugin.
+   *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return array
+   *   The part of the form to return as AJAX.
    */
   public static function buildAjaxBackendConfigForm(array $form, FormStateInterface $form_state) {
     // The work is already done in form(), where we rebuild the entity according
@@ -294,13 +310,6 @@ class ServerForm extends EntityForm {
         drupal_set_message($this->t('The server could not be saved.'), 'error');
       }
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function delete(array $form, FormStateInterface $form_state) {
-    $form_state->setRedirect('search_api.server_delete', array('search_api_server' => $this->getEntity()->id()));
   }
 
 }

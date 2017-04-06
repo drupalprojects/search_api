@@ -11,7 +11,6 @@ use Drupal\Core\Form\SubformState;
 use Drupal\Core\Utility\Error;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
-use Drupal\search_api\Tracker\TrackerPluginManager;
 use Drupal\search_api\Utility\PluginHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -118,6 +117,10 @@ class IndexForm extends EntityForm {
   /**
    * Builds the form for the basic index properties.
    *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\IndexInterface $index
    *   The index that is being created or edited.
    */
@@ -306,6 +309,10 @@ class IndexForm extends EntityForm {
   /**
    * Builds the configuration forms for all selected datasources.
    *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\IndexInterface $index
    *   The index being created or edited.
    */
@@ -352,6 +359,10 @@ class IndexForm extends EntityForm {
   /**
    * Builds the tracker configuration form.
    *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    * @param \Drupal\search_api\IndexInterface $index
    *   The index being created or edited.
    */
@@ -404,6 +415,11 @@ class IndexForm extends EntityForm {
    * Form submission handler for buildEntityForm().
    *
    * Takes care of changes in the selected datasources.
+   *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    */
   public function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
     $form_state->setValue('id', NULL);
@@ -412,6 +428,14 @@ class IndexForm extends EntityForm {
 
   /**
    * Handles changes to the selected datasources.
+   *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return array
+   *   The part of the form to return as AJAX.
    */
   public function buildAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
     return $form['datasource_configs'];
@@ -421,6 +445,11 @@ class IndexForm extends EntityForm {
    * Form submission handler for buildEntityForm().
    *
    * Takes care of changes in the selected tracker plugin.
+   *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
    */
   public function submitAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
     $form_state->setValue('id', NULL);
@@ -429,6 +458,14 @@ class IndexForm extends EntityForm {
 
   /**
    * Handles switching the selected tracker plugin.
+   *
+   * @param array $form
+   *   The current form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current form state.
+   *
+   * @return array
+   *   The part of the form to return as AJAX.
    */
   public function buildAjaxTrackerConfigForm(array $form, FormStateInterface $form_state) {
     return $form['tracker_config'];

@@ -9,7 +9,6 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
 use Drupal\search_api\ServerInterface;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * Implements hook_search_api_backend_info_alter().
