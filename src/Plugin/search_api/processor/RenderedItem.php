@@ -137,7 +137,7 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * Retrieves the theme manager.
    *
-   * @return \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
+   * @return \Drupal\Core\Theme\ThemeManagerInterface
    *   The theme manager.
    */
   protected function getThemeManager() {
@@ -160,7 +160,7 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * Retrieves the theme initialization service.
    *
-   * @return \Drupal\Core\Theme\ThemeInitializationInterface $theme_initialization
+   * @return \Drupal\Core\Theme\ThemeInitializationInterface
    *   The theme initialization service.
    */
   protected function getThemeInitializer() {
@@ -183,7 +183,7 @@ class RenderedItem extends ProcessorPluginBase {
   /**
    * Retrieves the config factory service.
    *
-   * @return \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @return \Drupal\Core\Config\ConfigFactoryInterface
    *   The config factory.
    */
   protected function getConfigFactory() {
@@ -214,9 +214,9 @@ class RenderedItem extends ProcessorPluginBase {
 
     if (!$datasource) {
       $definition = array(
-        'type' => 'field_item:text_long.string',
         'label' => $this->t('Rendered HTML output'),
         'description' => $this->t('The complete HTML which would be displayed when viewing the item'),
+        'type' => 'search_api_html',
         'processor_id' => $this->getPluginId(),
       );
       $properties['rendered_item'] = new RenderedItemProperty($definition);

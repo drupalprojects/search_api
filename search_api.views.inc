@@ -686,10 +686,19 @@ function _search_api_views_get_field_handler_for_property(DataDefinitionInterfac
     }
   }
 
-  // If there is a definition and the property represents a Field API field, add
-  // the "field_name" key.
+  // Field items have a special handler, but need a fallback handler set to be
+  // able to optionally circumvent entity field rendering. That's why we just
+  // set the "field_item:…" types to their fallback handlers in
+  // _search_api_views_get_field_handler_mapping(), along with non-field item
+  // types, and here manually update entity field properties to have the correct
+  // definition, with "search_api_field" handler, correct fallback handler and
+  // "field_name" and "entity_type" correctly set.
   if (isset($definition) && $property instanceof FieldItemDataDefinition) {
     list(, $field_name) = Utility::splitPropertyPath($property_path, TRUE);
+    if (!isset($definition['fallback_handler'])) {
+      $definition['fallback_handler'] = $definition['id'];
+      $definition['id'] = 'search_api_field';
+    }
     $definition['field_name'] = $field_name;
     $definition['entity_type'] = $property
       ->getFieldDefinition()
@@ -728,6 +737,9 @@ function _search_api_views_get_field_handler_mapping() {
     );
     $plain_mapping['field_item:text_long'] = $text_mapping;
     $plain_mapping['field_item:text_with_summary'] = $text_mapping;
+    $plain_mapping['search_api_html'] = $text_mapping;
+    unset($text_mapping['filter_type']);
+    $plain_mapping['search_api_text'] = $text_mapping;
 
     $numeric_mapping = array(
       'id' => 'search_api_numeric',
@@ -767,23 +779,9 @@ function _search_api_views_get_field_handler_mapping() {
     $plain_mapping['field_item:entity_reference'] = $ref_mapping;
     $plain_mapping['field_item:comment'] = $ref_mapping;
 
-    // Field items have a special handler, but need a fallback handler set to be
-    // able to optionally circumvent entity field rendering. That's why we just
-    // set the "field_item:…" types to their fallback handlers above, along with
-    // non-field item types, and here go through them again to add the proper
-    // handler ("search_api_field") under "id" and move the previous one to
-    // "fallback_handler".
-    foreach ($plain_mapping as $key => $definition) {
-      if (substr($key, 0, 11) == 'field_item:') {
-        $plain_mapping[$key]['fallback_handler'] = $definition['id'];
-        $plain_mapping[$key]['id'] = 'search_api_field';
-      }
-    }
-
     // Finally, set a default handler for unknown field items.
     $plain_mapping['field_item:*'] = array(
-      'id' => 'search_api_field',
-      'fallback_handler' => 'search_api',
+      'id' => 'search_api',
     );
 
     // Let other modules change or expand this mapping.

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2839932 by drunken monkey,  borisson_, bmcclure, jacktonkin: Fixed Views
+  problems with "Rendered item" fields.
 - #2765317 by vasike: Added a "Last" aggregation for aggregated fields.
 - #2861657 by drunken monkey: Removed remaining usages of "e.g.".
 

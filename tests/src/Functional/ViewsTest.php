@@ -8,12 +8,12 @@ use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\Testing\ConfigSchemaChecker;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\UserSession;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\search_api\Display\DisplayInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
 
@@ -368,6 +368,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
   public function testViewsAdmin() {
     // Add a field from a related entity to the index to test whether it gets
     // displayed correctly.
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
     $field = \Drupal::getContainer()
       ->get('search_api.fields_helper')
@@ -377,7 +378,20 @@ class ViewsTest extends SearchApiBrowserTestBase {
         'datasource_id' => 'entity:entity_test_mulrev_changed',
         'property_path' => 'user_id:entity:name',
       ]);
-    $index->addField($field)->save();
+    $index->addField($field);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($index, 'rendered_item', [
+        'label' => 'Rendered HTML output',
+        'type' => 'text',
+        'property_path' => 'rendered_item',
+        'configuration' => [
+          'roles' => array(AccountInterface::ANONYMOUS_ROLE),
+          'view_mode' => [],
+        ],
+      ]);
+    $index->addField($field);
+    $index->save();
 
     // Add some Dutch nodes.
     foreach ([1, 2, 3, 4, 5] as $id) {
@@ -466,6 +480,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'search_api_entity_user.name',
       'search_api_index_database_search_index.author',
       'search_api_entity_user.roles',
+      'search_api_index_database_search_index.rendered_item',
     ];
     $edit = [];
     foreach ($fields as $field) {
@@ -684,6 +699,12 @@ class ViewsTest extends SearchApiBrowserTestBase {
       case 'roles':
         $edit['options[field_rendering]'] = FALSE;
         $edit['options[fallback_options][display_methods][user_role][display_method]'] = 'id';
+        break;
+
+      case 'rendered_item':
+        // "Rendered item" isn't based on a Field API field, so there is no
+        // "Fallback options" form (added otherwise by SearchApiEntityField).
+        unset($edit['options[fallback_options][multi_separator]']);
         break;
     }
 

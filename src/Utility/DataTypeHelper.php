@@ -84,7 +84,8 @@ class DataTypeHelper implements DataTypeHelperInterface {
           'field_item:string_long.string',
           'field_item:text_long.string',
           'field_item:text_with_summary.string',
-          'text',
+          'search_api_html',
+          'search_api_text',
         ),
         'string' => array(
           'string',
