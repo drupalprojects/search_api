@@ -28,7 +28,7 @@ class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
    *
    * @see setMethodOverride()
    */
-  protected $methodOverrides = array();
+  protected $methodOverrides = [];
 
   /**
    * Tokenizes the given string by splitting on space characters.
@@ -43,7 +43,7 @@ class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
    */
   public static function createTokenizedText($value, $score = 1.0) {
     $return = new TextValue($value);
-    $tokens = array();
+    $tokens = [];
     foreach (explode(' ', $value) as $word) {
       $tokens[] = Utility::createTextToken($word, $score);
     }

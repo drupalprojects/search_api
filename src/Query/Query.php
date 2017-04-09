@@ -110,7 +110,7 @@ class Query implements QueryInterface {
    *
    * @var array
    */
-  protected $sorts = array();
+  protected $sorts = [];
 
   /**
    * Information about whether the query has been aborted or not.
@@ -131,7 +131,7 @@ class Query implements QueryInterface {
    *
    * @var string[]
    */
-  protected $tags = array();
+  protected $tags = [];
 
   /**
    * Flag for whether preExecute() was already called for this query.
@@ -189,7 +189,7 @@ class Query implements QueryInterface {
    *   Thrown if a search on that index (or with those options) won't be
    *   possible.
    */
-  public function __construct(IndexInterface $index, array $options = array()) {
+  public function __construct(IndexInterface $index, array $options = []) {
     if (!$index->status()) {
       $index_label = $index->label();
       throw new SearchApiException("Can't search on index '$index_label' which is disabled.");
@@ -203,7 +203,7 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(IndexInterface $index, array $options = array()) {
+  public static function create(IndexInterface $index, array $options = []) {
     return new static($index, $options);
   }
 
@@ -368,7 +368,7 @@ class Query implements QueryInterface {
   /**
    * {@inheritdoc}
    */
-  public function createConditionGroup($conjunction = 'AND', array $tags = array()) {
+  public function createConditionGroup($conjunction = 'AND', array $tags = []) {
     return new ConditionGroup($conjunction, $tags);
   }
 
@@ -507,7 +507,7 @@ class Query implements QueryInterface {
    *   TRUE if the query should be aborted, FALSE otherwise.
    */
   protected function shouldAbort() {
-    if (!$this->wasAborted() && $this->languages !== array()) {
+    if (!$this->wasAborted() && $this->languages !== []) {
       return FALSE;
     }
     $this->postExecute();
@@ -527,7 +527,7 @@ class Query implements QueryInterface {
       $this->index->preprocessSearchQuery($this);
 
       // Let modules alter the query.
-      $hooks = array('search_api_query');
+      $hooks = ['search_api_query'];
       foreach ($this->tags as $tag) {
         $hooks[] = "search_api_query_$tag";
       }
@@ -547,7 +547,7 @@ class Query implements QueryInterface {
     $this->index->postprocessSearchResults($this->results);
 
     // Let modules alter the results.
-    $hooks = array('search_api_results');
+    $hooks = ['search_api_results'];
     foreach ($this->tags as $tag) {
       $hooks[] = "search_api_results_$tag";
     }
@@ -689,7 +689,7 @@ class Query implements QueryInterface {
   public function __sleep() {
     $this->indexId = $this->index->id();
     $keys = $this->traitSleep();
-    return array_diff($keys, array('index'));
+    return array_diff($keys, ['index']);
   }
 
   /**
@@ -723,7 +723,7 @@ class Query implements QueryInterface {
       $ret .= "Conditions:\n  $conditions\n";
     }
     if ($this->sorts) {
-      $sorts = array();
+      $sorts = [];
       foreach ($this->sorts as $field => $order) {
         $sorts[] = "$field $order";
       }

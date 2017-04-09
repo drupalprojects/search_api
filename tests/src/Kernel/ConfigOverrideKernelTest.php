@@ -21,12 +21,12 @@ class ConfigOverrideKernelTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'search_api',
     'search_api_test',
     'system',
     'user',
-  );
+  ];
 
   /**
    * The test server used for this test.

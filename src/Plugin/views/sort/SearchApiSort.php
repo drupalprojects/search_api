@@ -30,7 +30,7 @@ class SearchApiSort extends SortPluginBase {
     if (isset($this->query->orderby)) {
       unset($this->query->orderby);
       $sort = &$this->query->getSort();
-      $sort = array();
+      $sort = [];
     }
     $this->query->sort($this->realField, $this->options['order']);
   }

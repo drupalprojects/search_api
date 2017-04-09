@@ -23,7 +23,7 @@ trait TestItemsTrait {
    *
    * @var string[]
    */
-  protected $itemIds = array();
+  protected $itemIds = [];
 
   /**
    * The class container.
@@ -59,7 +59,7 @@ trait TestItemsTrait {
     $item->setField($fieldId, $field);
     $item->setFieldsExtracted(TRUE);
 
-    return array($itemId => $item);
+    return [$itemId => $item];
   }
 
   /**
@@ -81,9 +81,9 @@ trait TestItemsTrait {
    * @return \Drupal\search_api\Item\ItemInterface[]
    *   An array containing the requested test items.
    */
-  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL, array $datasource_ids = array('entity:node')) {
+  public function createItems(IndexInterface $index, $count, array $fields, ComplexDataInterface $object = NULL, array $datasource_ids = ['entity:node']) {
     $datasource_count = count($datasource_ids);
-    $items = array();
+    $items = [];
     for ($i = 0; $i < $count; ++$i) {
       $datasource_id = $datasource_ids[$i % $datasource_count];
       $this->itemIds[$i] = $item_id = Utility::createCombinedId($datasource_id, ($i + 1) . ':en');
@@ -118,7 +118,7 @@ trait TestItemsTrait {
       ->disableOriginalConstructor()
       ->getMock();
     $dataTypeManager->method('getInstances')
-      ->will($this->returnValue(array()));
+      ->will($this->returnValue([]));
 
     $moduleHandler = $this->getMockBuilder('Drupal\Core\Extension\ModuleHandlerInterface')
       ->disableOriginalConstructor()
@@ -138,11 +138,11 @@ trait TestItemsTrait {
 
     $queryHelper = $this->getMock('Drupal\search_api\Utility\QueryHelperInterface');
     $queryHelper->method('createQuery')
-      ->willReturnCallback(function (IndexInterface $index, array $options = array()) {
+      ->willReturnCallback(function (IndexInterface $index, array $options = []) {
         return Query::create($index, $options);
       });
     $queryHelper->method('getResults')
-      ->will($this->returnValue(array()));
+      ->will($this->returnValue([]));
 
     $this->container = new ContainerBuilder();
     $this->container->set('plugin.manager.search_api.data_type', $dataTypeManager);

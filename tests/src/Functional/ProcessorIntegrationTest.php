@@ -332,29 +332,29 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     // indexed.
     $index = $this->loadIndex();
     $index->save();
-    $content_access_fields = array(
-      'status' => array(
+    $content_access_fields = [
+      'status' => [
         'datasource_id' => 'entity:node',
         'property_path' => 'status',
         'type' => 'boolean',
         'indexed_locked' => TRUE,
         'type_locked' => TRUE,
-      ),
-      'uid' => array(
+      ],
+      'uid' => [
         'datasource_id' => 'entity:node',
         'property_path' => 'uid',
         'type' => 'integer',
         'indexed_locked' => TRUE,
         'type_locked' => TRUE,
-      ),
-      'node_grants' => array(
+      ],
+      'node_grants' => [
         'property_path' => 'search_api_node_grants',
         'type' => 'string',
         'indexed_locked' => TRUE,
         'type_locked' => TRUE,
         'hidden' => TRUE,
-      ),
-    );
+      ],
+    ];
     $index_fields = $index->getFields();
     foreach ($content_access_fields as $field_id => $settings) {
       $this->assertTrue(!empty($index_fields[$field_id]), "Field $field_id (required by \"Content access\" processor) is present.");

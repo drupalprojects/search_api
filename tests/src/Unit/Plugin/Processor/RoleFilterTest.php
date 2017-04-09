@@ -33,7 +33,7 @@ class RoleFilterTest extends UnitTestCase {
    *
    * @var \Drupal\search_api\Item\ItemInterface[]
    */
-  protected $items = array();
+  protected $items = [];
 
   /**
    * Creates a new processor object for use in the tests.
@@ -43,7 +43,7 @@ class RoleFilterTest extends UnitTestCase {
 
     $this->setUpMockContainer();
 
-    $this->processor = new RoleFilter(array(), 'role_filter', array());
+    $this->processor = new RoleFilter([], 'role_filter', []);
 
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getMock('Drupal\search_api\IndexInterface');
@@ -73,7 +73,7 @@ class RoleFilterTest extends UnitTestCase {
       ->getMock();
     $account1->expects($this->any())
       ->method('getRoles')
-      ->will($this->returnValue(array('authenticated' => 'authenticated', 'editor' => 'editor')));
+      ->will($this->returnValue(['authenticated' => 'authenticated', 'editor' => 'editor']));
     /** @var \Drupal\user\UserInterface $account1 */
     $item->setOriginalObject(EntityAdapter::createFromEntity($account1));
     $this->items[$item->getId()] = $item;
@@ -84,7 +84,7 @@ class RoleFilterTest extends UnitTestCase {
       ->getMock();
     $account2->expects($this->any())
       ->method('getRoles')
-      ->will($this->returnValue(array('authenticated' => 'authenticated')));
+      ->will($this->returnValue(['authenticated' => 'authenticated']));
     /** @var \Drupal\user\UserInterface $account2 */
     $item->setOriginalObject(EntityAdapter::createFromEntity($account2));
     $this->items[$item->getId()] = $item;
@@ -94,7 +94,7 @@ class RoleFilterTest extends UnitTestCase {
    * Tests preprocessing search items with an inclusive filter.
    */
   public function testFilterInclusive() {
-    $configuration['roles'] = array('authenticated' => 'authenticated');
+    $configuration['roles'] = ['authenticated' => 'authenticated'];
     $configuration['default'] = 0;
     $this->processor->setConfiguration($configuration);
 
@@ -109,7 +109,7 @@ class RoleFilterTest extends UnitTestCase {
    * Tests preprocessing search items with an exclusive filter.
    */
   public function testFilterExclusive() {
-    $configuration['roles'] = array('editor' => 'editor');
+    $configuration['roles'] = ['editor' => 'editor'];
     $configuration['default'] = 1;
     $this->processor->setConfiguration($configuration);
 

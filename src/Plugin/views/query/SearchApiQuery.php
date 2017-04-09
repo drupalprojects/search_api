@@ -79,7 +79,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @var array
    */
-  protected $errors = array();
+  protected $errors = [];
 
   /**
    * Whether to abort the search instead of executing it.
@@ -96,14 +96,14 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @var string[][]
    */
-  protected $retrievedProperties = array();
+  protected $retrievedProperties = [];
 
   /**
    * The query's conditions representing the different Views filter groups.
    *
    * @var array
    */
-  protected $where = array();
+  protected $where = [];
 
   /**
    * The conjunction with which multiple filter groups are combined.
@@ -188,10 +188,10 @@ class SearchApiQuery extends QueryPluginBase {
       parent::init($view, $display, $options);
       $this->index = static::getIndexFromTable($view->storage->get('base_table'));
       if (!$this->index) {
-        $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', array('%view' => $view->storage->label())));
+        $this->abort(new FormattableMarkup('View %view is not based on Search API but tries to use its query plugin.', ['%view' => $view->storage->label()]));
       }
-      $this->retrievedProperties = array_fill_keys($this->index->getDatasourceIds(), array());
-      $this->retrievedProperties[NULL] = array();
+      $this->retrievedProperties = array_fill_keys($this->index->getDatasourceIds(), []);
+      $this->retrievedProperties[NULL] = [];
       $this->query = $this->index->query();
       $this->query->addTag('views');
       $this->query->addTag('views_' . $view->id());
@@ -248,7 +248,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @see \Drupal\views\Plugin\views\query\Sql::addField()
    * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::addField()
    */
-  public function addField($table, $field, $alias = '', $params = array()) {
+  public function addField($table, $field, $alias = '', $params = []) {
     $this->addRetrievedProperty($field);
     return $field;
   }
@@ -257,14 +257,14 @@ class SearchApiQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function defineOptions() {
-    return parent::defineOptions() + array(
-      'bypass_access' => array(
+    return parent::defineOptions() + [
+      'bypass_access' => [
         'default' => FALSE,
-      ),
-      'skip_access' => array(
+      ],
+      'skip_access' => [
         'default' => FALSE,
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -273,20 +273,20 @@ class SearchApiQuery extends QueryPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['skip_access'] = array(
+    $form['skip_access'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Skip item access checks'),
       '#description' => $this->t("By default, an additional access check will be executed for each item returned by the search query. However, since removing results this way will break paging and result counts, it is preferable to configure the view in a way that it will only return accessible results. If you are sure that only accessible results will be returned in the search, or if you want to show results to which the user normally wouldn't have access, you can enable this option to skip those additional access checks. This should be used with care."),
       '#default_value' => $this->options['skip_access'],
       '#weight' => -1,
-    );
+    ];
 
-    $form['bypass_access'] = array(
+    $form['bypass_access'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Bypass access checks'),
       '#description' => $this->t('If the underlying search index has access checks enabled (for example, through the "Content access" processor), this option allows you to disable them for this view. This will never disable any filters placed on this view.'),
       '#default_value' => $this->options['bypass_access'],
-    );
+    ];
     $form['bypass_access']['#states']['visible'][':input[name="query[options][skip_access]"]']['checked'] = TRUE;
   }
 
@@ -304,7 +304,7 @@ class SearchApiQuery extends QueryPluginBase {
   public function getEntityTypes($return_bool = FALSE) {
     // @todo Might be useful enough to be moved to the Index class? Or maybe
     //   Utility, to finally stop the growth of the Index class.
-    $types = array();
+    $types = [];
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
       if ($type = $datasource->getEntityTypeId()) {
         if ($return_bool) {
@@ -341,7 +341,7 @@ class SearchApiQuery extends QueryPluginBase {
       // Add a nested filter for each filter group, with its set conjunction.
       foreach ($this->where as $group_id => $group) {
         if (!empty($group['conditions']) || !empty($group['condition_groups'])) {
-          $group += array('type' => 'AND');
+          $group += ['type' => 'AND'];
           // For filters without a group, we want to always add them directly to
           // the query.
           $conditions = ($group_id === '') ? $this->query : $this->query->createConditionGroup($group['type']);
@@ -387,7 +387,7 @@ class SearchApiQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function alter(ViewExecutable $view) {
-    $this->getModuleHandler()->invokeAll('views_query_alter', array($view, $this));
+    $this->getModuleHandler()->invokeAll('views_query_alter', [$view, $this]);
   }
 
   /**
@@ -400,7 +400,7 @@ class SearchApiQuery extends QueryPluginBase {
           drupal_set_message(Html::escape($msg), 'error');
         }
       }
-      $view->result = array();
+      $view->result = [];
       $view->total_rows = 0;
       $view->execute_time = 0;
       return;
@@ -441,7 +441,7 @@ class SearchApiQuery extends QueryPluginBase {
           $view->pager->total_items -= $view->pager->options['offset'];
         }
       }
-      $view->result = array();
+      $view->result = [];
       if ($results->getResultItems()) {
         $this->addResults($results->getResultItems(), $view);
       }
@@ -514,12 +514,12 @@ class SearchApiQuery extends QueryPluginBase {
     }
 
     foreach ($results as $item_id => $result) {
-      $values = array();
+      $values = [];
       $values['_item'] = $result;
       $object = $result->getOriginalObject(FALSE);
       if ($object) {
         $values['_object'] = $object;
-        $values['_relationship_objects'][NULL] = array($object);
+        $values['_relationship_objects'][NULL] = [$object];
       }
       $values['search_api_id'] = $item_id;
       $values['search_api_datasource'] = $result->getDatasourceId();
@@ -727,7 +727,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @see \Drupal\search_api\Query\QueryInterface::createConditionGroup()
    */
-  public function createConditionGroup($conjunction = 'AND', array $tags = array()) {
+  public function createConditionGroup($conjunction = 'AND', array $tags = []) {
     if (!$this->shouldAbort()) {
       return $this->query->createConditionGroup($conjunction, $tags);
     }
@@ -849,7 +849,7 @@ class SearchApiQuery extends QueryPluginBase {
       if (empty($group)) {
         $group = 0;
       }
-      $condition = array($field, $value, $operator);
+      $condition = [$field, $value, $operator];
       $this->where[$group]['conditions'][] = $condition;
     }
     return $this;
@@ -918,11 +918,11 @@ class SearchApiQuery extends QueryPluginBase {
       }
     }
     else {
-      $condition = array(
+      $condition = [
         $this->sanitizeFieldId($field),
         $value,
         $this->sanitizeOperator($operator),
-      );
+      ];
       $this->where[$group]['conditions'][] = $condition;
     }
 
@@ -1022,7 +1022,7 @@ class SearchApiQuery extends QueryPluginBase {
     if ($operator === '!=') {
       $operator = '<>';
     }
-    elseif (in_array($operator, array('in', 'not in', 'between', 'not between'))) {
+    elseif (in_array($operator, ['in', 'not in', 'between', 'not between'])) {
       $operator = strtoupper($operator);
     }
     return $operator;
@@ -1084,7 +1084,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @see \Drupal\views\Plugin\views\query\Sql::addOrderBy()
    */
-  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = array()) {
+  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
     $server = $this->getIndex()->getServerInstance();
     if ($table == 'rand') {
       if ($server->supportsFeature('search_api_random_sort')) {

@@ -20,7 +20,7 @@ class SearchApiText extends SearchApiString {
     $operators['=']['title'] = $this->t('contains');
     $operators['!=']['title'] = $this->t("doesn't contain");
 
-    $operators = array_intersect_key($operators, array('=' => 1, '!=' => 1));
+    $operators = array_intersect_key($operators, ['=' => 1, '!=' => 1]);
 
     return $operators;
   }

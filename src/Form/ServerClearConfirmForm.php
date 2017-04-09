@@ -17,7 +17,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to clear all indexed data from the search server %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to clear all indexed data from the search server %name?', ['%name' => $this->entity->label()]);
   }
 
   /**
@@ -31,7 +31,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('entity.search_api_server.canonical', array('search_api_server' => $this->entity->id()));
+    return new Url('entity.search_api_server.canonical', ['search_api_server' => $this->entity->id()]);
   }
 
   /**
@@ -49,20 +49,20 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
       drupal_set_message($this->t('Indexed data could not be cleared for some indexes. Check the logs for details.'), 'error');
     }
 
-    $failed_reindexing = array();
-    $properties = array(
+    $failed_reindexing = [];
+    $properties = [
       'status' => TRUE,
       'read_only' => FALSE,
-    );
+    ];
     foreach ($server->getIndexes($properties) as $index) {
       try {
         $index->reindex();
       }
       catch (SearchApiException $e) {
         $message = '%type while clearing index %index: @message in %function (line %line of %file).';
-        $variables = array(
+        $variables = [
           '%index' => $index->label(),
-        );
+        ];
         $variables += Error::decodeException($e);
         $this->getLogger('search_api')->error($message, $variables);
 
@@ -71,13 +71,13 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
     }
 
     if ($failed_reindexing) {
-      $args = array(
+      $args = [
         '@indexes' => implode(', ', $failed_reindexing),
-      );
+      ];
       drupal_set_message($this->t('Failed to mark the following indexes for reindexing: @indexes. Check the logs for details.', $args), 'warning');
     }
 
-    $form_state->setRedirect('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
+    $form_state->setRedirect('entity.search_api_server.canonical', ['search_api_server' => $server->id()]);
   }
 
 }

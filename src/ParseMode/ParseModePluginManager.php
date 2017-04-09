@@ -62,7 +62,7 @@ class ParseModePluginManager extends DefaultPluginManager {
    * @see \Drupal\search_api\ParseMode\ParseModePluginManager::getInstances()
    */
   public function getInstancesOptions() {
-    $parse_modes = array();
+    $parse_modes = [];
     foreach ($this->getInstances() as $id => $info) {
       $parse_modes[$id] = $info->label();
     }

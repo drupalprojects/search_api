@@ -65,7 +65,7 @@ class IndexAddFieldsForm extends EntityForm {
    *
    * @var string[][]
    */
-  protected $unmappedFields = array();
+  protected $unmappedFields = [];
 
   /**
    * The "id" attribute of the generated form.
@@ -165,9 +165,9 @@ class IndexAddFieldsForm extends EntityForm {
       '#type' => 'status_messages',
     ];
 
-    $datasources = array(
+    $datasources = [
       '' => NULL,
-    );
+    ];
     $datasources += $this->entity->getDatasources();
     foreach ($datasources as $datasource_id => $datasource) {
       $item = $this->getDatasourceListItem($datasource);
@@ -180,25 +180,25 @@ class IndexAddFieldsForm extends EntityForm {
 
     // Log any unmapped types that were encountered.
     if ($this->unmappedFields) {
-      $unmapped_fields = array();
+      $unmapped_fields = [];
       foreach ($this->unmappedFields as $type => $fields) {
         foreach ($fields as $field) {
-          $unmapped_fields[] = new FormattableMarkup('@field (type "@type")', array(
+          $unmapped_fields[] = new FormattableMarkup('@field (type "@type")', [
             '@field' => $field,
             '@type' => $type,
-          ));
+          ]);
         }
       }
-      $form['unmapped_types'] = array(
+      $form['unmapped_types'] = [
         '#type' => 'details',
         '#title' => $this->t('Skipped fields'),
-        'fields' => array(
+        'fields' => [
           '#theme' => 'item_list',
           '#items' => $unmapped_fields,
           '#prefix' => $this->t('The following fields cannot be indexed since there is no type mapping for them:'),
-          '#suffix' => $this->t("If you think one of these fields should be available for indexing, please report this in the module's <a href=':url'>issue queue</a>. (Make sure to first search for an existing issue for this field.) Please note that entity-valued fields generally can be indexed by either indexing their parent reference field, or their child entity ID field.", array(':url' => Url::fromUri('https://www.drupal.org/project/issues/search_api')->toString())),
-        ),
-      );
+          '#suffix' => $this->t("If you think one of these fields should be available for indexing, please report this in the module's <a href=':url'>issue queue</a>. (Make sure to first search for an existing issue for this field.) Please note that entity-valued fields generally can be indexed by either indexing their parent reference field, or their child entity ID field.", [':url' => Url::fromUri('https://www.drupal.org/project/issues/search_api')->toString()]),
+        ],
+      ];
     }
 
     return $form;
@@ -226,7 +226,7 @@ class IndexAddFieldsForm extends EntityForm {
       }
 
       $base_url = $this->entity->toUrl('add-fields');
-      $base_url->setOption('query', array('datasource' => $datasource_id_param));
+      $base_url->setOption('query', ['datasource' => $datasource_id_param]);
 
       $item = $this->getPropertiesList($properties, $active_property_path, $base_url, $datasource_id);
       $item['#title'] = $datasource ? $datasource->label() : $this->t('General');
@@ -259,13 +259,13 @@ class IndexAddFieldsForm extends EntityForm {
    *   properties.
    */
   protected function getPropertiesList(array $properties, $active_property_path, Url $base_url, $datasource_id, $parent_path = '', $label_prefix = '') {
-    $list = array(
+    $list = [
       '#theme' => 'search_api_form_item_list',
-    );
+    ];
 
     $active_item = '';
     if ($active_property_path) {
-      list($active_item, $active_property_path) = explode(':', $active_property_path, 2) + array(1 => '');
+      list($active_item, $active_property_path) = explode(':', $active_property_path, 2) + [1 => ''];
     }
 
     $type_mapping = $this->dataTypeHelper->getFieldTypeMapping();
@@ -282,7 +282,7 @@ class IndexAddFieldsForm extends EntityForm {
       $property = $this->fieldsHelper->getInnerProperty($property);
 
       $can_be_indexed = TRUE;
-      $nested_properties = array();
+      $nested_properties = [];
       $parent_child_type = NULL;
       if ($property instanceof ComplexDataDefinitionInterface) {
         $can_be_indexed = FALSE;
@@ -331,27 +331,27 @@ class IndexAddFieldsForm extends EntityForm {
         continue;
       }
 
-      $item = array(
+      $item = [
         '#type' => 'container',
-        '#attributes' => array(
-          'class' => array('container-inline'),
-        ),
-      );
+        '#attributes' => [
+          'class' => ['container-inline'],
+        ],
+      ];
 
-      $nested_list = array();
+      $nested_list = [];
       if ($nested_properties) {
         if ($key == $active_item) {
           $link_url = clone $base_url;
           $query_base['property_path'] = $parent_path;
           $link_url->setOption('query', $query_base);
-          $item['expand_link'] = array(
+          $item['expand_link'] = [
             '#type' => 'link',
             '#title' => '(-) ',
             '#url' => $link_url,
-            '#ajax' => array(
+            '#ajax' => [
               'wrapper' => $this->formIdAttribute,
-            ),
-          );
+            ],
+          ];
 
           $nested_list = $this->getPropertiesList($nested_properties, $active_property_path, $base_url, $datasource_id, $this_path, $label_prefix . $label . ' » ');
         }
@@ -359,32 +359,32 @@ class IndexAddFieldsForm extends EntityForm {
           $link_url = clone $base_url;
           $query_base['property_path'] = $this_path;
           $link_url->setOption('query', $query_base);
-          $item['expand_link'] = array(
+          $item['expand_link'] = [
             '#type' => 'link',
             '#title' => '(+) ',
             '#url' => $link_url,
-            '#ajax' => array(
+            '#ajax' => [
               'wrapper' => $this->formIdAttribute,
-            ),
-          );
+            ],
+          ];
         }
       }
 
       $item['label']['#markup'] = Html::escape($label) . ' ';
 
       if ($can_be_indexed) {
-        $item['add'] = array(
+        $item['add'] = [
           '#type' => 'submit',
           '#name' => Utility::createCombinedId($datasource_id, $this_path),
           '#value' => $this->t('Add'),
-          '#submit' => array('::addField', '::save'),
+          '#submit' => ['::addField', '::save'],
           '#property' => $property,
           '#prefixed_label' => $label_prefix . $label,
           '#data_type' => $type_mapping[$type],
-          '#ajax' => array(
+          '#ajax' => [
             'wrapper' => $this->formIdAttribute,
-          ),
-        );
+          ],
+        ];
       }
 
       if ($nested_list) {
@@ -401,16 +401,16 @@ class IndexAddFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    return array(
-      'done' => array(
+    return [
+      'done' => [
         '#type' => 'link',
         '#title' => $this->t('Done'),
         '#url' => $this->entity->toUrl('fields'),
-        '#attributes' => array(
-          'class' => array('button'),
-        ),
-      ),
-    );
+        '#attributes' => [
+          'class' => ['button'],
+        ],
+      ],
+    ];
   }
 
   /**
@@ -436,11 +436,11 @@ class IndexAddFieldsForm extends EntityForm {
     $this->entity->addField($field);
 
     if ($property instanceof ConfigurablePropertyInterface) {
-      $parameters = array(
+      $parameters = [
         'search_api_index' => $this->entity->id(),
         'field_id' => $field->getFieldIdentifier(),
-      );
-      $options = array();
+      ];
+      $options = [];
       $route = $this->getRequest()->attributes->get('_route');
       if ($route === 'entity.search_api_index.add_fields_ajax') {
         $options['query'] = [

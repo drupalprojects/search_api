@@ -114,12 +114,12 @@ trait SearchApiCachePluginTrait {
       return;
     }
 
-    $data = array(
+    $data = [
       'result' => $this->view->result,
       'total_rows' => isset($this->view->total_rows) ? $this->view->total_rows : 0,
       'current_page' => $this->view->getCurrentPage(),
       'search_api results' => $this->getQuery()->getSearchApiResults(),
-    );
+    ];
 
     $expire = $this->cacheSetMaxAge($type);
     if ($expire !== Cache::PERMANENT) {

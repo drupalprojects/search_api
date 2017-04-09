@@ -51,8 +51,8 @@ class SearchApiStandard extends ArgumentPluginBase {
   public function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['break_phrase'] = array('default' => FALSE);
-    $options['not'] = array('default' => FALSE);
+    $options['break_phrase'] = ['default' => FALSE];
+    $options['not'] = ['default' => FALSE];
 
     return $options;
   }
@@ -65,22 +65,22 @@ class SearchApiStandard extends ArgumentPluginBase {
 
     if (empty($this->definition['disable_break_phrase'])) {
       // Allow passing multiple values.
-      $form['break_phrase'] = array(
+      $form['break_phrase'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Allow multiple values'),
         '#description' => $this->t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
         '#default_value' => !empty($this->options['break_phrase']),
         '#group' => 'options][more',
-      );
+      ];
     }
 
-    $form['not'] = array(
+    $form['not'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Exclude'),
       '#description' => $this->t('If selected, the values entered for the filter will be excluded rather than limiting the view to those values.'),
       '#default_value' => !empty($this->options['not']),
       '#group' => 'options][more',
-    );
+    ];
   }
 
   /**
@@ -121,7 +121,7 @@ class SearchApiStandard extends ArgumentPluginBase {
       $this->unpackArgumentValue($force_int);
     }
     else {
-      $this->value = array($this->argument);
+      $this->value = [$this->argument];
       $this->operator = 'and';
     }
 

@@ -28,13 +28,13 @@ class SerializationTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'search_api',
     'search_api_test',
     'node',
     'user',
     'system',
-  );
+  ];
 
   /**
    * Tests that serialization of index entities doesn't lead to data loss.
@@ -44,11 +44,11 @@ class SerializationTest extends KernelTestBase {
 
     // Make some changes to the index to ensure they're saved, too.
     $field_helper = \Drupal::getContainer()->get('search_api.fields_helper');
-    $field_info = array(
+    $field_info = [
       'type' => 'date',
       'datasource_id' => 'entity:node',
       'property_path' => 'uid:entity:created',
-    );
+    ];
     $index->addField($field_helper->createField($index, 'test1', $field_info));
     $plugin_creation_helper = \Drupal::getContainer()
       ->get('search_api.plugin_helper');

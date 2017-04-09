@@ -34,7 +34,7 @@ trait SearchApiFieldTrait {
    *
    * @var string[][]
    */
-  protected $retrievedProperties = array();
+  protected $retrievedProperties = [];
 
   /**
    * The combined property path of this field.
@@ -60,7 +60,7 @@ trait SearchApiFieldTrait {
    *
    * @see SearchApiFieldTrait::getValue()
    */
-  protected $overriddenValues = array();
+  protected $overriddenValues = [];
 
   /**
    * Index in the current row's field values that is currently displayed.
@@ -87,7 +87,7 @@ trait SearchApiFieldTrait {
    *
    * @var bool[]
    */
-  protected $skipAccessChecks = array();
+  protected $skipAccessChecks = [];
 
   /**
    * The fields helper.
@@ -163,16 +163,7 @@ trait SearchApiFieldTrait {
   }
 
   /**
-   * Information about options for all kinds of purposes will be held here.
-   *
-   * @code
-   * 'option_name' => array(
-   *  - 'default' => default value,
-   *  - 'contains' => (optional) array of items this contains, with its own
-   *      defaults, etc. If contains is set, the default will be ignored and
-   *      assumed to be array().
-   *  ),
-   * @endcode
+   * Defines the options used by this plugin.
    *
    * @return array
    *   Returns the options of this handler/plugin.
@@ -182,11 +173,11 @@ trait SearchApiFieldTrait {
   public function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['link_to_item'] = array('default' => FALSE);
+    $options['link_to_item'] = ['default' => FALSE];
 
     if ($this->isMultiple()) {
-      $options['multi_type'] = array('default' => 'separator');
-      $options['multi_separator'] = array('default' => ', ');
+      $options['multi_type'] = ['default' => 'separator'];
+      $options['multi_separator'] = ['default' => ', '];
     }
 
     return $options;
@@ -205,45 +196,45 @@ trait SearchApiFieldTrait {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['link_to_item'] = array(
+    $form['link_to_item'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Link this field to its item'),
       '#description' => $this->t('Display this field as a link to its original entity or item.'),
       '#default_value' => $this->options['link_to_item'],
-    );
+    ];
 
     if ($this->isMultiple()) {
-      $form['multi_value_settings'] = array(
+      $form['multi_value_settings'] = [
         '#type' => 'details',
         '#title' => $this->t('Multiple values handling'),
         '#description' => $this->t('If this field contains multiple values for an item, these settings will determine how they are handled.'),
         '#weight' => 80,
-      );
+      ];
 
-      $form['multi_type'] = array(
+      $form['multi_type'] = [
         '#type' => 'radios',
         '#title' => $this->t('Display type'),
-        '#options' => array(
+        '#options' => [
           'ul' => $this->t('Unordered list'),
           'ol' => $this->t('Ordered list'),
           'separator' => $this->t('Simple separator'),
-        ),
+        ],
         '#default_value' => $this->options['multi_type'],
         '#fieldset' => 'multi_value_settings',
         '#weight' => 0,
-      );
-      $form['multi_separator'] = array(
+      ];
+      $form['multi_separator'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Separator'),
         '#default_value' => $this->options['multi_separator'],
-        '#states' => array(
-          'visible' => array(
-            ':input[name="options[multi_type]"]' => array('value' => 'separator'),
-          ),
-        ),
+        '#states' => [
+          'visible' => [
+            ':input[name="options[multi_type]"]' => ['value' => 'separator'],
+          ],
+        ],
         '#fieldset' => 'multi_value_settings',
         '#weight' => 1,
-      );
+      ];
     }
   }
 
@@ -426,7 +417,7 @@ trait SearchApiFieldTrait {
               continue;
             }
             else {
-              $row->_relationship_objects[$parent_path] = array($row->_item->getOriginalObject());
+              $row->_relationship_objects[$parent_path] = [$row->_item->getOriginalObject()];
             }
           }
 
@@ -444,7 +435,7 @@ trait SearchApiFieldTrait {
           if (empty($row->_relationship_objects[$property_path])) {
             // Iterate over all parent objects to get their typed data for this
             // property and to extract their values.
-            $row->_relationship_objects[$property_path] = array();
+            $row->_relationship_objects[$property_path] = [];
             foreach ($row->_relationship_objects[$parent_path] as $j => $parent) {
               // Follow references.
               while ($parent instanceof DataReferenceInterface) {
@@ -483,15 +474,15 @@ trait SearchApiFieldTrait {
                   }
                   /** @var \Drupal\search_api\Item\ItemInterface $dummy_item */
                   $dummy_item = clone $row->_item;
-                  $dummy_item->setFields(array(
+                  $dummy_item->setFields([
                     'tmp' => $dummy_field,
-                  ));
+                  ]);
                   $dummy_item->setFieldsExtracted(TRUE);
 
                   $processor->addFieldValues($dummy_item);
 
                   if ($set_values) {
-                    $row->{$combined_property_path} = array();
+                    $row->{$combined_property_path} = [];
                   }
                   foreach ($dummy_field->getValues() as $value) {
                     if (!$this->checkEntityAccess($value, $combined_property_path)) {
@@ -549,7 +540,7 @@ trait SearchApiFieldTrait {
           }
 
           if ($set_values) {
-            $row->{$combined_property_path} = array();
+            $row->{$combined_property_path} = [];
 
             // Iterate over the typed data objects, extract their values and set
             // the relationship objects for the next iteration of the outer loop
@@ -587,7 +578,7 @@ trait SearchApiFieldTrait {
    *   property path.
    */
   protected function expandRequiredProperties() {
-    $required_properties = array();
+    $required_properties = [];
     foreach ($this->retrievedProperties as $datasource_id => $properties) {
       if ($datasource_id === '') {
         $datasource_id = NULL;
@@ -618,7 +609,7 @@ trait SearchApiFieldTrait {
    *   otherwise.
    */
   protected function isActiveForRow(ResultRow $row) {
-    $datasource_ids = array(NULL, $row->search_api_datasource);
+    $datasource_ids = [NULL, $row->search_api_datasource];
     return in_array($this->getDatasourceId(), $datasource_ids, TRUE);
   }
 
@@ -664,7 +655,7 @@ trait SearchApiFieldTrait {
       $relationship = $this;
       // While doing this, also note which relationships are configured to skip
       // access checks.
-      $skip_access = array();
+      $skip_access = [];
       while (!empty($relationship->options['relationship'])) {
         if (empty($relationships[$relationship->options['relationship']])) {
           break;
@@ -719,7 +710,7 @@ trait SearchApiFieldTrait {
   public function render_item($count, $item) {
     $this->overriddenValues[NULL] = $item['value'];
     $render = $this->render(new ResultRow());
-    $this->overriddenValues = array();
+    $this->overriddenValues = [];
     return $render;
   }
 
@@ -745,11 +736,11 @@ trait SearchApiFieldTrait {
     if (!empty($values->{$property_path})) {
       // Although it's undocumented, the field handler base class assumes items
       // will always be arrays. See #2648012 for documenting this.
-      $items = array();
+      $items = [];
       foreach ((array) $values->{$property_path} as $i => $value) {
-        $item = array(
+        $item = [
           'value' => $value,
-        );
+        ];
 
         if ($this->options['link_to_item']) {
           $item['make_link'] = TRUE;
@@ -760,7 +751,7 @@ trait SearchApiFieldTrait {
       }
       return $items;
     }
-    return array();
+    return [];
   }
 
   /**
@@ -777,22 +768,22 @@ trait SearchApiFieldTrait {
   public function renderItems($items) {
     if (!empty($items)) {
       if ($this->options['multi_type'] == 'separator') {
-        $render = array(
+        $render = [
           '#type' => 'inline_template',
           '#template' => '{{ items|safe_join(separator) }}',
-          '#context' => array(
+          '#context' => [
             'items' => $items,
             'separator' => $this->sanitizeValue($this->options['multi_separator'], 'xss_admin'),
-          ),
-        );
+          ],
+        ];
       }
       else {
-        $render = array(
+        $render = [
           '#theme' => 'item_list',
           '#items' => $items,
           '#title' => NULL,
           '#list_type' => $this->options['multi_type'],
-        );
+        ];
       }
       return $this->getRenderer()->render($render);
     }

@@ -94,7 +94,7 @@ class TaskManager implements TaskManagerInterface {
    * @return \Drupal\Core\Entity\Query\QueryInterface
    *   An entity query for search tasks.
    */
-  protected function getTasksQuery(array $conditions = array()) {
+  protected function getTasksQuery(array $conditions = []) {
     $query = $this->getTaskStorage()->getQuery();
     foreach ($conditions as $property => $values) {
       $query->condition($property, $values, is_array($values) ? 'IN' : '=');
@@ -106,7 +106,7 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getTasksCount(array $conditions = array()) {
+  public function getTasksCount(array $conditions = []) {
     return $this->getTasksQuery($conditions)->count()->execute();
   }
 
@@ -114,12 +114,12 @@ class TaskManager implements TaskManagerInterface {
    * {@inheritdoc}
    */
   public function addTask($type, ServerInterface $server = NULL, IndexInterface $index = NULL, $data = NULL) {
-    $task = $this->getTaskStorage()->create(array(
+    $task = $this->getTaskStorage()->create([
       'type' => $type,
       'server_id' => $server ? $server->id() : NULL,
       'index_id' => $index ? $index->id() : NULL,
       'data' => isset($data) ? serialize($data) : NULL,
-    ));
+    ]);
     $task->save();
     return $task;
   }
@@ -127,12 +127,12 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function loadTasks(array $conditions = array()) {
+  public function loadTasks(array $conditions = []) {
     $task_ids = $this->getTasksQuery($conditions)->execute();
     if ($task_ids) {
       return $this->getTaskStorage()->loadMultiple($task_ids);
     }
-    return array();
+    return [];
   }
 
   /**
@@ -148,7 +148,7 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteTasks(array $conditions = array()) {
+  public function deleteTasks(array $conditions = []) {
     $storage = $this->getTaskStorage();
     while (TRUE) {
       $task_ids = $this->getTasksQuery($conditions)
@@ -185,7 +185,7 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function executeSingleTask(array $conditions = array()) {
+  public function executeSingleTask(array $conditions = []) {
     $task_id = $this->getTasksQuery($conditions)->range(0, 1)->execute();
     if ($task_id) {
       $task_id = reset($task_id);
@@ -200,7 +200,7 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function executeAllTasks(array $conditions = array(), $limit = NULL) {
+  public function executeAllTasks(array $conditions = [], $limit = NULL) {
     // We have to use this roundabout way because tasks, during their execution,
     // might create additional tasks. (For example, see
     // \Drupal\search_api\Task\IndexTaskManager::trackItems().)
@@ -241,19 +241,19 @@ class TaskManager implements TaskManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function setTasksBatch(array $conditions = array()) {
+  public function setTasksBatch(array $conditions = []) {
     $task_ids = $this->getTasksQuery($conditions)->range(0, 100)->execute();
 
     if (!$task_ids) {
       return;
     }
 
-    $batch_definition = array(
-      'operations' => array(
-        array(array($this, 'processBatch'), array($task_ids, $conditions)),
-      ),
-      'finished' => array($this, 'finishBatch'),
-    );
+    $batch_definition = [
+      'operations' => [
+        [[$this, 'processBatch'], [$task_ids, $conditions]],
+      ],
+      'finished' => [$this, 'finishBatch'],
+    ];
     // Schedule the batch.
     batch_set($batch_definition);
   }

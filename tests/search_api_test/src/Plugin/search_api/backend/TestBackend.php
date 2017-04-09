@@ -64,24 +64,24 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function viewSettings() {
-    return array(
-      array(
+    return [
+      [
         'label' => 'Dummy Info',
         'info' => 'Dummy Value',
         'status' => 'error',
-      ),
-      array(
+      ],
+      [
         'label' => 'Dummy Info 2',
         'info' => 'Dummy Value 2',
-      ),
-    );
+      ],
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getSupportedFeatures() {
-    return array('search_api_mlt');
+    return ['search_api_mlt'];
   }
 
   /**
@@ -95,18 +95,18 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array('test' => '');
+    return ['test' => ''];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $form['test'] = array(
+    $form['test'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Test'),
       '#default_value' => $this->configuration['test'],
-    );
+    ];
     return $form;
   }
 
@@ -121,8 +121,8 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
 
     $state = \Drupal::state();
     $key = 'search_api_test.backend.indexed.' . $index->id();
-    $indexed_values = $state->get($key, array());
-    $skip = $state->get('search_api_test.backend.indexItems.skip', array());
+    $indexed_values = $state->get($key, []);
+    $skip = $state->get('search_api_test.backend.indexItems.skip', []);
     $skip = array_flip($skip);
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($items as $id => $item) {
@@ -130,7 +130,7 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
         unset($items[$id]);
         continue;
       }
-      $indexed_values[$id] = array();
+      $indexed_values[$id] = [];
       foreach ($item->getFields() as $field_id => $field) {
         $indexed_values[$id][$field_id] = $field->getValues();
       }
@@ -186,7 +186,7 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
 
     $state = \Drupal::state();
     $key = 'search_api_test.backend.indexed.' . $index->id();
-    $indexed_values = $state->get($key, array());
+    $indexed_values = $state->get($key, []);
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach ($item_ids as $item_id) {
       unset($indexed_values[$item_id]);
@@ -210,7 +210,7 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
       return;
     }
 
-    $indexed = \Drupal::state()->get($key, array());
+    $indexed = \Drupal::state()->get($key, []);
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach (array_keys($indexed) as $item_id) {
       list($item_datasource_id) = Utility::splitCombinedId($item_id);
@@ -232,7 +232,7 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
     $this->checkError(__FUNCTION__);
 
     $results = $query->getResults();
-    $result_items = array();
+    $result_items = [];
     $datasources = $query->getIndex()->getDatasources();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     $datasource = reset($datasources);
@@ -281,14 +281,14 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
     if ($override = $this->getMethodOverride(__FUNCTION__)) {
       return (array) call_user_func($override, $this);
     }
-    return $this->getReturnValue(__FUNCTION__, array());
+    return $this->getReturnValue(__FUNCTION__, []);
   }
 
   /**
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    return !empty($this->configuration['dependencies']) ? $this->configuration['dependencies'] : array();
+    return !empty($this->configuration['dependencies']) ? $this->configuration['dependencies'] : [];
   }
 
   /**

@@ -150,14 +150,14 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *
    * @var array
    */
-  protected $ignored = array();
+  protected $ignored = [];
 
   /**
    * All warnings for the current search query.
    *
    * @var array
    */
-  protected $warnings = array();
+  protected $warnings = [];
 
   /**
    * Constructs a Database object.
@@ -374,15 +374,15 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array(
+    return [
       'database' => NULL,
       'min_chars' => 1,
       'partial_matches' => FALSE,
-      'autocomplete' => array(
+      'autocomplete' => [
         'suggest_suffix' => TRUE,
         'suggest_words' => TRUE,
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -392,7 +392,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     // Discern between creation and editing of a server, since we don't allow
     // the database to be changed later on.
     if (!$this->configuration['database']) {
-      $options = array();
+      $options = [];
       $key = $target = '';
       foreach (CoreDatabase::getAllConnectionInfo() as $key => $targets) {
         foreach ($targets as $target => $info) {
@@ -400,73 +400,73 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
       }
       if (count($options) > 1 || count(reset($options)) > 1) {
-        $form['database'] = array(
+        $form['database'] = [
           '#type' => 'select',
           '#title' => $this->t('Database'),
           '#description' => $this->t('Select the database key and target to use for storing indexing information in. Cannot be changed after creation.'),
           '#options' => $options,
           '#default_value' => 'default:default',
           '#required' => TRUE,
-        );
+        ];
       }
       else {
-        $form['database'] = array(
+        $form['database'] = [
           '#type' => 'value',
           '#value' => "$key:$target",
-        );
+        ];
       }
     }
     else {
-      $form = array(
-        'database' => array(
+      $form = [
+        'database' => [
           '#type' => 'value',
           '#title' => $this->t('Database'),
           '#value' => $this->configuration['database'],
-        ),
-        'database_text' => array(
+        ],
+        'database_text' => [
           '#type' => 'item',
           '#title' => $this->t('Database'),
           '#plain_text' => str_replace(':', ' > ', $this->configuration['database']),
-        ),
-      );
+        ],
+      ];
     }
 
-    $form['min_chars'] = array(
+    $form['min_chars'] = [
       '#type' => 'select',
       '#title' => $this->t('Minimum word length'),
       '#description' => $this->t('The minimum number of characters a word must consist of to be indexed'),
       '#options' => array_combine(
-        array(1, 2, 3, 4, 5, 6),
-        array(1, 2, 3, 4, 5, 6)
+        [1, 2, 3, 4, 5, 6],
+        [1, 2, 3, 4, 5, 6]
       ),
       '#default_value' => $this->configuration['min_chars'],
-    );
+    ];
 
-    $form['partial_matches'] = array(
+    $form['partial_matches'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Search on parts of a word'),
       '#description' => $this->t('Find keywords in parts of a word, too. (For example, find results with "database" when searching for "base"). <strong>Caution:</strong> This can make searches much slower on large sites!'),
       '#default_value' => $this->configuration['partial_matches'],
-    );
+    ];
 
     if ($this->getModuleHandler()->moduleExists('search_api_autocomplete')) {
-      $form['autocomplete'] = array(
+      $form['autocomplete'] = [
         '#type' => 'details',
         '#title' => $this->t('Autocomplete settings'),
         '#description' => $this->t('These settings allow you to configure how suggestions are computed when autocompletion is used. If you are seeing many inappropriate suggestions you might want to deactivate the corresponding suggestion type. You can also deactivate one method to speed up the generation of suggestions.'),
-      );
-      $form['autocomplete']['suggest_suffix'] = array(
+      ];
+      $form['autocomplete']['suggest_suffix'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest word endings'),
         '#description' => $this->t('Suggest endings for the currently entered word.'),
         '#default_value' => $this->configuration['autocomplete']['suggest_suffix'],
-      );
-      $form['autocomplete']['suggest_words'] = array(
+      ];
+      $form['autocomplete']['suggest_words'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Suggest additional words'),
         '#description' => $this->t('Suggest additional words the user might want to search for.'),
         '#default_value' => $this->configuration['autocomplete']['suggest_words'],
-      );
+      ];
     }
 
     return $form;
@@ -476,28 +476,28 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function viewSettings() {
-    $info = array();
+    $info = [];
 
-    $info[] = array(
+    $info[] = [
       'label' => $this->t('Database'),
       'info' => str_replace(':', ' > ', $this->configuration['database']),
-    );
+    ];
     if ($this->configuration['min_chars'] > 1) {
-      $info[] = array(
+      $info[] = [
         'label' => $this->t('Minimum word length'),
         'info' => $this->configuration['min_chars'],
-      );
+      ];
     }
-    $info[] = array(
+    $info[] = [
       'label' => $this->t('Search on parts of a word'),
       'info' => !empty($this->configuration['partial_matches']) ? $this->t('enabled') : $this->t('disabled'),
-    );
+    ];
     if (!empty($this->configuration['autocomplete'])) {
-      $this->configuration['autocomplete'] += array(
+      $this->configuration['autocomplete'] += [
         'suggest_suffix' => TRUE,
         'suggest_words' => TRUE,
-      );
-      $autocomplete_modes = array();
+      ];
+      $autocomplete_modes = [];
       if ($this->configuration['autocomplete']['suggest_suffix']) {
         $autocomplete_modes[] = $this->t('Suggest word endings');
       }
@@ -505,10 +505,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $autocomplete_modes[] = $this->t('Suggest additional words');
       }
       $autocomplete_modes = $autocomplete_modes ? implode('; ', $autocomplete_modes) : $this->t('none');
-      $info[] = array(
+      $info[] = [
         'label' => $this->t('Autocomplete suggestions'),
         'info' => $autocomplete_modes,
-      );
+      ];
     }
 
     return $info;
@@ -518,11 +518,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function getSupportedFeatures() {
-    return array(
+    return [
       'search_api_autocomplete',
       'search_api_facets',
       'search_api_facets_operator_or',
-    );
+    ];
   }
 
   /**
@@ -573,11 +573,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     try {
       // Create the denormalized table now.
       $index_table = $this->findFreeTable('search_api_db_', $index->id());
-      $this->createFieldTable(NULL, array('table' => $index_table), 'index');
+      $this->createFieldTable(NULL, ['table' => $index_table], 'index');
 
-      $db_info = array();
+      $db_info = [];
       $db_info['server'] = $this->server->id();
-      $db_info['field_tables'] = array();
+      $db_info['field_tables'] = [];
       $db_info['index_table'] = $index_table;
       $this->getKeyValueStore()->set($index->id(), $db_info);
     }
@@ -605,7 +605,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $db_info = $this->getIndexDbInfo($index);
       // We have to recreate "field_tables" from scratch in case field IDs got
       // swapped between two (or more) fields.
-      $fields = array();
+      $fields = [];
       foreach ($db_info['field_tables'] as $field_id => $info) {
         if (isset($renames[$field_id])) {
           $field_id = $renames[$field_id];
@@ -715,18 +715,18 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function createFieldTable(FieldInterface $field = NULL, $db, $type = 'field') {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
-      $table = array(
+      $table = [
         'name' => $db['table'],
         'module' => 'search_api_db',
-        'fields' => array(
-          'item_id' => array(
+        'fields' => [
+          'item_id' => [
             'type' => 'varchar',
             'length' => 150,
             'description' => 'The primary identifier of the item',
             'not null' => TRUE,
-          ),
-        ),
-      );
+          ],
+        ],
+      ];
       $this->database->schema()->createTable($db['table'], $table);
       $this->dbmsCompatibility->alterNewTable($db['table'], $type);
     }
@@ -738,28 +738,28 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
     $column = isset($db['column']) ? $db['column'] : 'value';
     $db_field = $this->sqlType($field->getType());
-    $db_field += array(
+    $db_field += [
       'description' => "The field's value for this item",
-    );
+    ];
     if ($new_table) {
       $db_field['not null'] = TRUE;
     }
     $this->database->schema()->addField($db['table'], $column, $db_field);
     if ($db_field['type'] === 'varchar') {
-      $index_spec = array(array($column, 10));
+      $index_spec = [[$column, 10]];
     }
     else {
-      $index_spec = array($column);
+      $index_spec = [$column];
     }
     // Create a table specification skeleton to pass to addIndex().
-    $table_spec = array(
-      'fields' => array(
+    $table_spec = [
+      'fields' => [
         $column => $db_field,
-      ),
-      'indexes' => array(
+      ],
+      'indexes' => [
         $column => $index_spec,
-      ),
-    );
+      ],
+    ];
 
     // This is a quick fix for a core bug, so we can run the tests with SQLite
     // until this is fixed.
@@ -792,12 +792,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     if ($new_table) {
       // Add a covering index for fields with multiple values.
       if (!isset($db['column'])) {
-        $this->database->schema()->addPrimaryKey($db['table'], array('item_id', $column));
+        $this->database->schema()->addPrimaryKey($db['table'], ['item_id', $column]);
       }
       // This is a denormalized table with many columns, where we can't predict
       // the best covering index.
       else {
-        $this->database->schema()->addPrimaryKey($db['table'], array('item_id'));
+        $this->database->schema()->addPrimaryKey($db['table'], ['item_id']);
       }
     }
   }
@@ -820,19 +820,19 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       case 'text':
       case 'string':
       case 'uri':
-        return array('type' => 'varchar', 'length' => 255);
+        return ['type' => 'varchar', 'length' => 255];
 
       case 'integer':
       case 'duration':
       case 'date':
         // 'datetime' sucks. Therefore, we just store the timestamp.
-        return array('type' => 'int', 'size' => 'big');
+        return ['type' => 'int', 'size' => 'big'];
 
       case 'decimal':
-        return array('type' => 'float');
+        return ['type' => 'float'];
 
       case 'boolean':
-        return array('type' => 'int', 'size' => 'tiny');
+        return ['type' => 'int', 'size' => 'tiny'];
 
       default:
         throw new SearchApiException("Unknown field type '$type'.");
@@ -898,8 +898,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           elseif ($this->sqlType($old_type) != $this->sqlType($new_type)) {
             // There is a change in SQL type. We don't have to clear the index,
             // since types can be converted.
-            $this->database->schema()->changeField($field['table'], 'value', 'value', $this->sqlType($new_type) + array('description' => "The field's value for this item"));
-            $this->database->schema()->changeField($denormalized_table, $field['column'], $field['column'], $this->sqlType($new_type) + array('description' => "The field's value for this item"));
+            $this->database->schema()->changeField($field['table'], 'value', 'value', $this->sqlType($new_type) + ['description' => "The field's value for this item"]);
+            $this->database->schema()->changeField($denormalized_table, $field['column'], $field['column'], $this->sqlType($new_type) + ['description' => "The field's value for this item"]);
             $reindex = TRUE;
           }
           elseif ($old_type == 'date' || $new_type == 'date') {
@@ -916,7 +916,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             if ($field['boost']) {
               $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
               $this->database->update($text_table)
-                ->expression('score', 'score * :mult', array(':mult' => $multiplier))
+                ->expression('score', 'score * :mult', [':mult' => $multiplier])
                 ->condition('field_name', self::getTextFieldName($field_id))
                 ->execute();
             }
@@ -933,18 +933,18 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $denormalized_storage_exists = $this->database->schema()
           ->fieldExists($denormalized_table, $field['column']);
         if (!$was_text_type && !$storage_exists) {
-          $db = array(
+          $db = [
             'table' => $field['table'],
-          );
+          ];
           $this->createFieldTable($new_fields[$field_id], $db);
         }
         // Ensure that a column is created in the denormalized storage even for
         // 'text' fields.
         if (!$denormalized_storage_exists) {
-          $db = array(
+          $db = [
             'table' => $denormalized_table,
             'column' => $field['column'],
-          );
+          ];
           $this->createFieldTable($new_fields[$field_id], $db, 'index');
         }
         unset($new_fields[$field_id]);
@@ -954,7 +954,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       // These are new fields that were previously not indexed.
       foreach ($new_fields as $field_id => $field) {
         $reindex = TRUE;
-        $fields[$field_id] = array();
+        $fields[$field_id] = [];
         if ($this->getDataTypeHelper()->isTextType($field->getType())) {
           if (!isset($text_table)) {
             // If we have not encountered a text table, assign a name for it.
@@ -969,7 +969,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
         // Always add a column in the denormalized table.
         $fields[$field_id]['column'] = $this->findFreeColumn($denormalized_table, $field_id);
-        $this->createFieldTable($field, array('table' => $denormalized_table, 'column' => $fields[$field_id]['column']), 'index');
+        $this->createFieldTable($field, ['table' => $denormalized_table, 'column' => $fields[$field_id]['column']], 'index');
 
         $fields[$field_id]['type'] = $field->getType();
         $fields[$field_id]['boost'] = $field->getBoost();
@@ -977,43 +977,43 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
       // If needed, make sure the text table exists.
       if (isset($text_table) && !$this->database->schema()->tableExists($text_table)) {
-        $table = array(
+        $table = [
           'name' => $text_table,
           'module' => 'search_api_db',
-          'fields' => array(
-            'item_id' => array(
+          'fields' => [
+            'item_id' => [
               'type' => 'varchar',
               'length' => 150,
               'description' => 'The primary identifier of the item',
               'not null' => TRUE,
-            ),
-            'field_name' => array(
+            ],
+            'field_name' => [
               'description' => "The name of the field in which the token appears, or a base-64 encoded sha-256 hash of the field",
               'not null' => TRUE,
               'type' => 'varchar',
               'length' => 191,
-            ),
-            'word' => array(
+            ],
+            'word' => [
               'description' => 'The text of the indexed token',
               'type' => 'varchar',
               'length' => 50,
               'not null' => TRUE,
               'binary' => TRUE,
-            ),
-            'score' => array(
+            ],
+            'score' => [
               'description' => 'The score associated with this token',
               'type' => 'int',
               'unsigned' => TRUE,
               'not null' => TRUE,
               'default' => 0,
-            ),
-          ),
-          'indexes' => array(
-            'word_field' => array(array('word', 20), 'field_name'),
-          ),
+            ],
+          ],
+          'indexes' => [
+            'word_field' => [['word', 20], 'field_name'],
+          ],
           // Add a covering index since word is not repeated for each item.
-          'primary key' => array('item_id', 'field_name', 'word'),
-        );
+          'primary key' => ['item_id', 'field_name', 'word'],
+        ];
         $this->database->schema()->createTable($text_table, $table);
         $this->dbmsCompatibility->alterNewTable($text_table, 'text');
       }
@@ -1063,10 +1063,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       // If the index got deleted, create a dummy to simplify the code. Since we
       // can't know, we assume the index was read-only, just to be on the safe
       // side.
-      $index = Index::create(array(
+      $index = Index::create([
         'id' => $index,
         'read_only' => TRUE,
-      ));
+      ]);
     }
 
     $db_info = $this->getIndexDbInfo($index);
@@ -1104,7 +1104,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $index_id = $index->id();
       throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
-    $indexed = array();
+    $indexed = [];
     foreach ($items as $id => $item) {
       try {
         $this->indexItem($index, $item);
@@ -1135,7 +1135,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function indexItem(IndexInterface $index, ItemInterface $item) {
     $fields = $this->getFieldInfo($index);
     $fields_updated = FALSE;
-    $field_errors = array();
+    $field_errors = [];
     $db_info = $this->getIndexDbInfo($index);
     $denormalized_table = $db_info['index_table'];
     $item_id = $item->getId();
@@ -1148,8 +1148,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         ->condition('item_id', $item_id)
         ->execute();
 
-      $denormalized_values = array();
-      $text_inserts = array();
+      $denormalized_values = [];
+      $text_inserts = [];
       $item_fields = $item->getFields();
       $item_fields += $this->getSpecialFields($index, $item);
       foreach ($item_fields as $field_id => $field) {
@@ -1166,7 +1166,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           // Log an error, but only once per field. Since a superfluous field is
           // not too serious, we just index the rest of the item normally.
           $field_errors[$field_id] = TRUE;
-          $this->getLogger()->warning("Unknown field @field: please check (and re-save) the index's fields settings.", array('@field' => $field_id));
+          $this->getLogger()->warning("Unknown field @field: please check (and re-save) the index's fields settings.", ['@field' => $field_id]);
           continue;
         }
 
@@ -1179,14 +1179,14 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           ->execute();
 
         $type = $field->getType();
-        $values = array();
+        $values = [];
         foreach ($field->getValues() as $field_value) {
           $converted_value = $this->convert($field_value, $type, $field->getOriginalType(), $index);
 
           // Don't add NULL values to the array of values. Also, adding an empty
           // array is, of course, a waste of time.
-          if (isset($converted_value) && $converted_value !== array()) {
-            $values = array_merge($values, is_array($converted_value) ? $converted_value : array($converted_value));
+          if (isset($converted_value) && $converted_value !== []) {
+            $values = array_merge($values, is_array($converted_value) ? $converted_value : [$converted_value]);
           }
         }
 
@@ -1210,7 +1210,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $text_table = $table;
           }
 
-          $unique_tokens = array();
+          $unique_tokens = [];
           $denormalized_value = '';
           /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextTokenInterface $token */
           foreach ($values as $token) {
@@ -1242,10 +1242,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $word_base_form = $this->dbmsCompatibility->preprocessIndexValue($word);
 
             if (!isset($unique_tokens[$word_base_form])) {
-              $unique_tokens[$word_base_form] = array(
+              $unique_tokens[$word_base_form] = [
                 'value' => $word,
                 'score' => $score,
-              );
+              ];
             }
             else {
               $unique_tokens[$word_base_form]['score'] += $score;
@@ -1260,12 +1260,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
               // Take care that the score doesn't exceed the maximum value for
               // the database column (2^32-1).
               $score = min((int) $score, 4294967295);
-              $text_inserts[] = array(
+              $text_inserts[] = [
                 'item_id' => $item_id,
                 'field_name' => $field_name,
                 'word' => $token['value'],
                 'score' => $score,
-              );
+              ];
             }
           }
         }
@@ -1277,7 +1277,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           // Use the canonical base form of the value for the comparison to
           // avoid not catching different values that are duplicates under the
           // database table's collation.
-          $case_insensitive_unique_values = array();
+          $case_insensitive_unique_values = [];
           foreach ($values as $value) {
             $value_base_form = $this->dbmsCompatibility->preprocessIndexValue("$value", 'field');
             // We still insert the value in its original case.
@@ -1286,23 +1286,23 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           $values = array_values($case_insensitive_unique_values);
 
           $insert = $this->database->insert($table)
-            ->fields(array('item_id', 'value'));
+            ->fields(['item_id', 'value']);
           foreach ($values as $value) {
-            $insert->values(array(
+            $insert->values([
               'item_id' => $item_id,
               'value' => $value,
-            ));
+            ]);
           }
           $insert->execute();
         }
       }
 
       $this->database->insert($denormalized_table)
-        ->fields(array_merge($denormalized_values, array('item_id' => $item_id)))
+        ->fields(array_merge($denormalized_values, ['item_id' => $item_id]))
         ->execute();
       if ($text_inserts && isset($text_table)) {
         $query = $this->database->insert($text_table)
-          ->fields(array('item_id', 'field_name', 'word', 'score'));
+          ->fields(['item_id', 'field_name', 'word', 'score']);
         foreach ($text_inserts as $row) {
           $query->values($row);
         }
@@ -1360,14 +1360,14 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function convert($value, $type, $original_type, IndexInterface $index) {
     if (!isset($value)) {
       // For text fields, we have to return an array even if the value is NULL.
-      return $this->getDataTypeHelper()->isTextType($type) ? array() : NULL;
+      return $this->getDataTypeHelper()->isTextType($type) ? [] : NULL;
     }
     switch ($type) {
       case 'text':
         /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface $value */
         $tokens = $value->getTokens();
         if ($tokens === NULL) {
-          $tokens = array();
+          $tokens = [];
           $text = $value->getText();
           // For dates, splitting the timestamp makes no sense.
           if ($original_type == 'date') {
@@ -1377,7 +1377,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           foreach (static::splitIntoWords($text) as $word) {
             if ($word) {
               if (Unicode::strlen($word) > 50) {
-                $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', array('%word' => $word, '%index' => $index->label()));
+                $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', ['%word' => $word, '%index' => $index->label()]);
                 $word = Unicode::substr($word, 0, 50);
               }
               $tokens[] = new TextToken($word);
@@ -1391,10 +1391,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
               $score = $token->getBoost();
               $word = $token->getText();
               if (Unicode::strlen($word) > 50) {
-                $new_tokens = array();
+                $new_tokens = [];
                 foreach (static::splitIntoWords($word) as $word) {
                   if (Unicode::strlen($word) > 50) {
-                    $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', array('%word' => $word, '%index' => $index->label()));
+                    $this->getLogger()->warning('An overlong word (more than 50 characters) was encountered while indexing: %word.<br />Since database search servers currently cannot index words of more than 50 characters, the word was truncated for indexing. If this should not be a single word, please make sure the "Tokenizer" processor is enabled and configured correctly for index %index.', ['%word' => $word, '%index' => $index->label()]);
                     $word = Unicode::substr($word, 0, 50);
                   }
                   $new_tokens[] = new TextToken($word, $score);
@@ -1417,7 +1417,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
         if (Unicode::strlen($value) > 255) {
           $value = Unicode::substr($value, 0, 255);
-          $this->getLogger()->warning('An overlong value (more than 255 characters) was encountered while indexing: %value.<br />Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.', array('%value' => $value));
+          $this->getLogger()->warning('An overlong value (more than 255 characters) was encountered while indexing: %value.<br />Database search servers currently cannot index such values correctly – the value was therefore trimmed to the allowed length.', ['%value' => $value]);
         }
         return $value;
 
@@ -1498,7 +1498,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         else {
           if (!isset($query)) {
             $query = $this->database->select($db_info['index_table'], 't')
-              ->fields('t', array('item_id'))
+              ->fields('t', ['item_id'])
               ->condition($datasource_field, $datasource_id);
           }
           $this->database->delete($field['table'])
@@ -1528,7 +1528,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function search(QueryInterface $query) {
-    $this->ignored = $this->warnings = array();
+    $this->ignored = $this->warnings = [];
     $index = $query->getIndex();
     $db_info = $this->getIndexDbInfo($index);
 
@@ -1537,9 +1537,9 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
     }
     $fields = $this->getFieldInfo($index);
-    $fields['search_api_id'] = array(
+    $fields['search_api_id'] = [
       'column' => 'item_id',
-    );
+    ];
 
     $db_query = $this->createDbQuery($query, $fields);
 
@@ -1578,10 +1578,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     }
 
     // Add additional warnings and ignored keys.
-    $metadata = array(
+    $metadata = [
       'warnings' => 'addWarning',
       'ignored' => 'addIgnoredSearchKey',
-    );
+    ];
     foreach ($metadata as $property => $method) {
       foreach (array_keys($this->$property) as $value) {
         $results->$method($value);
@@ -1618,15 +1618,15 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       // can't handle it like other negated subkeys. To avoid additional
       // complexity later, we just wrap $keys so it becomes a subkey.
       if (!empty($keys['#negation'])) {
-        $keys = array(
+        $keys = [
           '#conjunction' => 'AND',
           $keys,
-        );
+        ];
       }
 
       $fulltext_fields = $this->getQueryFulltextFields($query);
       if ($fulltext_fields) {
-        $fulltext_field_information = array();
+        $fulltext_field_information = [];
         foreach ($fulltext_fields as $name) {
           if (!isset($fields[$name])) {
             throw new SearchApiException("Unknown field '$name' specified as search target.");
@@ -1656,7 +1656,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $db_info = $this->getIndexDbInfo($query->getIndex());
       $db_query = $this->database->select($db_info['index_table'], 't');
       $db_query->addField('t', 'item_id', 'item_id');
-      $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
+      $db_query->addExpression(':score', 'score', [':score' => self::SCORE_MULTIPLIER]);
       $db_query->distinct();
     }
 
@@ -1785,7 +1785,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * @return array
    *   The processed keywords.
    */
-  protected function eliminateDuplicates($keys, &$words = array()) {
+  protected function eliminateDuplicates($keys, &$words = []) {
     foreach ($keys as $i => $word) {
       if (!Element::child($i)) {
         continue;
@@ -1828,22 +1828,22 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    */
   protected function createKeysQuery($keys, array $fields, array $all_fields, IndexInterface $index) {
     if (!is_array($keys)) {
-      $keys = array(
+      $keys = [
         '#conjunction' => 'AND',
         $keys,
-      );
+      ];
     }
 
     $neg = !empty($keys['#negation']);
     $conj = $keys['#conjunction'];
-    $words = array();
-    $nested = array();
-    $negated = array();
+    $words = [];
+    $nested = [];
+    $negated = [];
     $db_query = NULL;
     $mul_words = FALSE;
     $neg_nested = $neg && $conj == 'AND';
     $match_parts = !empty($this->configuration['partial_matches']);
-    $keyword_hits = array();
+    $keyword_hits = [];
 
     foreach ($keys as $i => $key) {
       if (!Element::child($i)) {
@@ -1874,16 +1874,16 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $db_query = $this->database->select($field['table'], 't');
       $mul_words = ($word_count > 1);
       if ($neg_nested) {
-        $db_query->fields('t', array('item_id', 'word'));
+        $db_query->fields('t', ['item_id', 'word']);
       }
       elseif ($neg) {
-        $db_query->fields('t', array('item_id'));
+        $db_query->fields('t', ['item_id']);
       }
       elseif ($not_nested) {
-        $db_query->fields('t', array('item_id', 'score'));
+        $db_query->fields('t', ['item_id', 'score']);
       }
       else {
-        $db_query->fields('t', array('item_id', 'score', 'word'));
+        $db_query->fields('t', ['item_id', 'score', 'word']);
       }
 
       if (!$match_parts) {
@@ -1909,7 +1909,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           // afterwards verify that each word matched at least once.
           $alias = 'w' . $i;
           $like = '%' . $this->database->escapeLike($word) . '%';
-          $alias = $db_query->addExpression("CASE WHEN t.word LIKE :like_$alias THEN 1 ELSE 0 END", $alias, array(":like_$alias" => $like));
+          $alias = $db_query->addExpression("CASE WHEN t.word LIKE :like_$alias THEN 1 ELSE 0 END", $alias, [":like_$alias" => $like]);
           $db_query->groupBy($alias);
           $keyword_hits[] = $alias;
         }
@@ -1923,7 +1923,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $db_query->condition($db_or);
       }
 
-      $db_query->condition('field_name', array_map(array(__CLASS__, 'getTextFieldName'), array_keys($fields)), 'IN');
+      $db_query->condition('field_name', array_map([__CLASS__, 'getTextFieldName'], array_keys($fields)), 'IN');
     }
 
     if ($nested) {
@@ -1934,7 +1934,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           if (!$match_parts) {
             $word .= ' ';
             $var = ':word' . strlen($word);
-            $query->addExpression($var, 'word', array($var => $word));
+            $query->addExpression($var, 'word', [$var => $word]);
           }
           else {
             $i += $word_count;
@@ -1970,10 +1970,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
         if (!$match_parts) {
           if ($mul_words) {
-            $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, array($var => $subs));
+            $db_query->having('COUNT(DISTINCT t.word) >= ' . $var, [$var => $subs]);
           }
           else {
-            $db_query->having('COUNT(t.word) >= ' . $var, array($var => $subs));
+            $db_query->having('COUNT(t.word) >= ' . $var, [$var => $subs]);
           }
         }
         else {
@@ -1997,7 +1997,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $db_query = $this->database->select($db_info['index_table'], 't');
         $db_query->addField('t', 'item_id', 'item_id');
         if (!$neg) {
-          $db_query->addExpression(':score', 'score', array(':score' => self::SCORE_MULTIPLIER));
+          $db_query->addExpression(':score', 'score', [':score' => self::SCORE_MULTIPLIER]);
           $db_query->distinct();
         }
       }
@@ -2020,7 +2020,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     }
 
     if ($neg_nested) {
-      $db_query = $this->database->select($db_query, 't')->fields('t', array('item_id'));
+      $db_query = $this->database->select($db_query, 't')->fields('t', ['item_id']);
     }
 
     return $db_query;
@@ -2070,7 +2070,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $db_info = $this->getIndexDbInfo($index);
 
     // Store the table aliases for the fields in this condition group.
-    $tables = array();
+    $tables = [];
     $wildcard_count = 0;
     foreach ($conditions->getConditions() as $condition) {
       if ($condition instanceof ConditionGroupInterface) {
@@ -2084,7 +2084,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $operator = $condition->getOperator();
         $value = $condition->getValue();
         $this->validateOperator($operator);
-        $not_equals_operators = array('<>', 'NOT IN', 'NOT BETWEEN');
+        $not_equals_operators = ['<>', 'NOT IN', 'NOT BETWEEN'];
         $not_equals = in_array($operator, $not_equals_operators);
         $not_between = $operator == 'NOT BETWEEN';
 
@@ -2096,7 +2096,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         // only need to know if there's any value at all for that field.
         if ($value === NULL || empty($field_info['multi-valued'])) {
           if (empty($tables[NULL])) {
-            $table = array('table' => $db_info['index_table']);
+            $table = ['table' => $db_info['index_table']];
             $tables[NULL] = $this->getTableAlias($table, $db_query);
           }
           $column = $tables[NULL] . '.' . $field_info['column'];
@@ -2128,11 +2128,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           if (!isset($keys)) {
             continue;
           }
-          $query = $this->createKeysQuery($keys, array($field => $field_info), $fields, $index);
+          $query = $this->createKeysQuery($keys, [$field => $field_info], $fields, $index);
           // We only want the item IDs, so we use the keys query as a nested
           // query.
           $query = $this->database->select($query, 't')
-            ->fields('t', array('item_id'));
+            ->fields('t', ['item_id']);
           $db_condition->condition('t.item_id', $query, $not_equals ? 'NOT IN' : 'IN');
         }
         elseif ($not_equals) {
@@ -2145,12 +2145,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           if ($not_between) {
             $wildcard1 = ':values_' . ++$wildcard_count;
             $wildcard2 = ':values_' . ++$wildcard_count;
-            $arguments = array_combine(array($wildcard1, $wildcard2), $value);
+            $arguments = array_combine([$wildcard1, $wildcard2], $value);
             $additional_on = "%alias.value BETWEEN $wildcard1 AND $wildcard2";
           }
           else {
             $wildcard = ':values_' . ++$wildcard_count . '[]';
-            $arguments = array($wildcard => (array) $value);
+            $arguments = [$wildcard => (array) $value];
             $additional_on = "%alias.value IN ($wildcard)";
           }
           $alias = $this->getTableAlias($field_info, $db_query, TRUE, 'leftJoin', $additional_on, $arguments);
@@ -2194,7 +2194,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * @return string
    *   The alias for the field's table.
    */
-  protected function getTableAlias(array $field, SelectInterface $db_query, $new_join = FALSE, $join = 'leftJoin', $additional_on = NULL, array $on_arguments = array()) {
+  protected function getTableAlias(array $field, SelectInterface $db_query, $new_join = FALSE, $join = 'leftJoin', $additional_on = NULL, array $on_arguments = []) {
     if (!$new_join) {
       foreach ($db_query->getTables() as $alias => $info) {
         $table = $info['table'];
@@ -2246,10 +2246,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $db_fields = $db_query->getFields();
       foreach ($sort as $field_name => $order) {
         if ($order != QueryInterface::SORT_ASC && $order != QueryInterface::SORT_DESC) {
-          $msg = $this->t('Unknown sort order @order. Assuming "@default".', array(
+          $msg = $this->t('Unknown sort order @order. Assuming "@default".', [
             '@order' => $order,
             '@default' => QueryInterface::SORT_ASC,
-          ));
+          ]);
           $this->warnings[(string) $msg] = 1;
           $order = QueryInterface::SORT_ASC;
         }
@@ -2262,7 +2262,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           throw new SearchApiException("Trying to sort on unknown field '$field_name'.");
         }
         $index_table = $this->getIndexDbInfo($query->getIndex())['index_table'];
-        $alias = $this->getTableAlias(array('table' => $index_table), $db_query);
+        $alias = $this->getTableAlias(['table' => $index_table], $db_query);
         $db_query->orderBy($alias . '.' . $fields[$field_name]['column'], $order);
         // PostgreSQL automatically adds a field to the SELECT list when
         // sorting on it. Therefore, if we have aggregations present we also
@@ -2301,14 +2301,14 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function getFacets(QueryInterface $query, SelectInterface $db_query) {
     $table = $this->getTemporaryResultsTable($db_query);
     if (!$table) {
-      return array();
+      return [];
     }
 
     $fields = $this->getFieldInfo($query->getIndex());
-    $ret = array();
+    $ret = [];
     foreach ($query->getOption('search_api_facets') as $key => $facet) {
       if (empty($fields[$facet['field']])) {
-        $msg = $this->t('Unknown facet field @field.', array('@field' => $facet['field']));
+        $msg = $this->t('Unknown facet field @field.', ['@field' => $facet['field']]);
         $this->warnings[(string) $msg] = 1;
         continue;
       }
@@ -2354,17 +2354,17 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $select->range(0, $limit);
       }
       if ($facet['min_count'] > 1) {
-        $select->having('COUNT(DISTINCT t.item_id) >= :count', array(':count' => $facet['min_count']));
+        $select->having('COUNT(DISTINCT t.item_id) >= :count', [':count' => $facet['min_count']]);
       }
 
-      $terms = array();
-      $values = array();
+      $terms = [];
+      $values = [];
       $has_missing = FALSE;
       foreach ($select->execute() as $row) {
-        $terms[] = array(
+        $terms[] = [
           'count' => $row->num,
           'filter' => isset($row->value) ? '"' . $row->value . '"' : '!',
-        );
+        ];
         if (isset($row->value)) {
           $values[] = $row->value;
         }
@@ -2386,16 +2386,16 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
         $select->isNotNull('value');
         foreach ($select->execute() as $row) {
-          $terms[] = array(
+          $terms[] = [
             'count' => 0,
             'filter' => '"' . $row->value . '"',
-          );
+          ];
         }
         if ($facet['missing'] && !$has_missing) {
-          $terms[] = array(
+          $terms[] = [
             'count' => 0,
             'filter' => '!',
-          );
+          ];
         }
       }
 
@@ -2421,16 +2421,16 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $fields = &$db_query->getFields();
     unset($fields['score']);
     if (count($fields) != 1 || !isset($fields['item_id'])) {
-      $this->getLogger()->warning('Error while adding facets: only "item_id" field should be used, used are: @fields.', array('@fields' => implode(', ', array_keys($fields))));
+      $this->getLogger()->warning('Error while adding facets: only "item_id" field should be used, used are: @fields.', ['@fields' => implode(', ', array_keys($fields))]);
       return FALSE;
     }
     $expressions = &$db_query->getExpressions();
-    $expressions = array();
+    $expressions = [];
 
     // If there's a GROUP BY for item_id, we leave that, all others need to be
     // discarded.
     $group_by = &$db_query->getGroupBy();
-    $group_by = array_intersect_key($group_by, array('t.item_id' => TRUE));
+    $group_by = array_intersect_key($group_by, ['t.item_id' => TRUE]);
 
     $db_query->distinct();
     if (!$db_query->preExecute()) {
@@ -2451,15 +2451,15 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * Implements SearchApiAutocompleteInterface::getAutocompleteSuggestions().
    */
   public function getAutocompleteSuggestions(QueryInterface $query, SearchApiAutocompleteSearch $search, $incomplete_key, $user_input) {
-    $settings = isset($this->configuration['autocomplete']) ? $this->configuration['autocomplete'] : array();
-    $settings += array(
+    $settings = isset($this->configuration['autocomplete']) ? $this->configuration['autocomplete'] : [];
+    $settings += [
       'suggest_suffix' => TRUE,
       'suggest_words' => TRUE,
-    );
+    ];
     // If none of these options is checked, the user apparently chose a very
     // roundabout way of telling us he doesn't want autocompletion.
     if (!array_filter($settings)) {
-      return array();
+      return [];
     }
 
     $index = $query->getIndex();
@@ -2470,8 +2470,8 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     }
     $fields = $this->getFieldInfo($index);
 
-    $suggestions = array();
-    $passes = array();
+    $suggestions = [];
+    $passes = [];
     $incomplete_like = NULL;
 
     // Make the input lowercase as the indexed data is (usually) also all
@@ -2489,7 +2489,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     }
 
     if (!$passes) {
-      return array();
+      return [];
     }
 
     // We want about half of the suggestions from each enabled method.
@@ -2530,10 +2530,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       else {
         $table = $this->getTemporaryResultsTable($db_query);
         if (!$table) {
-          return array();
+          return [];
         }
         $all_results = $this->database->select($table, 't')
-          ->fields('t', array('item_id'));
+          ->fields('t', ['item_id']);
         $total = $this->database->query("SELECT COUNT(item_id) FROM {{$table}}")->fetchField();
       }
       $max_occurrences = $this->getConfigFactory()->get('search_api_db.settings')->get('autocomplete_max_occurrences');
@@ -2553,7 +2553,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           continue;
         }
         $field_query = $this->database->select($fields[$field]['table'], 't');
-        $field_query->fields('t', array('word', 'item_id'))
+        $field_query->fields('t', ['word', 'item_id'])
           ->condition('field_name', $field)
           ->condition('item_id', $all_results, 'IN');
         if ($pass == 1) {
@@ -2568,13 +2568,13 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
       }
       if (!$word_query) {
-        return array();
+        return [];
       }
       $db_query = $this->database->select($word_query, 't');
       $db_query->addExpression('COUNT(DISTINCT item_id)', 'results');
-      $db_query->fields('t', array('word'))
+      $db_query->fields('t', ['word'])
         ->groupBy('word')
-        ->having('COUNT(DISTINCT item_id) <= :max', array(':max' => $max_occurrences))
+        ->having('COUNT(DISTINCT item_id) <= :max', [':max' => $max_occurrences])
         ->orderBy('results', 'DESC')
         ->range(0, $limit);
       $incomp_len = strlen($incomplete_key);
@@ -2621,9 +2621,9 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *   The index data from the key-value store.
    */
   protected function getIndexDbInfo(IndexInterface $index) {
-    $db_info = $this->getKeyValueStore()->get($index->id(), array());
+    $db_info = $this->getKeyValueStore()->get($index->id(), []);
     if ($db_info && $db_info['server'] != $this->server->id()) {
-      return array();
+      return [];
     }
     return $db_info;
   }

@@ -66,7 +66,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    *
    * @var \Drupal\search_api\Item\FieldInterface[]
    */
-  protected $fields = array();
+  protected $fields = [];
 
   /**
    * Whether the fields were already extracted for this item.
@@ -101,7 +101,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    *
    * @var array
    */
-  protected $extraData = array();
+  protected $extraData = [];
 
   /**
    * Constructs an Item object.
@@ -213,9 +213,9 @@ class Item implements \IteratorAggregate, ItemInterface {
   public function getFields($extract = TRUE) {
     if ($extract && !$this->fieldsExtracted) {
       $data_type_fallback_mapping = Utility::getDataTypeFallbackMapping($this->index);
-      foreach (array(NULL, $this->getDatasourceId()) as $datasource_id) {
-        $fields_by_property_path = array();
-        $processors_with_fields = array();
+      foreach ([NULL, $this->getDatasourceId()] as $datasource_id) {
+        $fields_by_property_path = [];
+        $processors_with_fields = [];
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $field_id => $field) {
           // Don't overwrite fields that were previously set.
           if (empty($this->fields[$field_id])) {

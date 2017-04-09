@@ -65,7 +65,7 @@ interface QueryInterface extends ConditionSetInterface {
    *   Thrown if a search on that index (or with those options) won't be
    *   possible.
    */
-  public static function create(IndexInterface $index, array $options = array());
+  public static function create(IndexInterface $index, array $options = []);
 
   /**
    * Retrieves the search ID.
@@ -161,7 +161,7 @@ interface QueryInterface extends ConditionSetInterface {
    * @return \Drupal\search_api\Query\ConditionGroupInterface
    *   A condition group object that is set to use the specified conjunction.
    */
-  public function createConditionGroup($conjunction = 'AND', array $tags = array());
+  public function createConditionGroup($conjunction = 'AND', array $tags = []);
 
   /**
    * Sets the keys to search for.

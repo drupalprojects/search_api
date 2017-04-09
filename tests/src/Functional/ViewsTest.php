@@ -386,7 +386,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
         'type' => 'text',
         'property_path' => 'rendered_item',
         'configuration' => [
-          'roles' => array(AccountInterface::ANONYMOUS_ROLE),
+          'roles' => [AccountInterface::ANONYMOUS_ROLE],
           'view_mode' => [],
         ],
       ]);
@@ -740,14 +740,14 @@ class ViewsTest extends SearchApiBrowserTestBase {
     // @todo Once we depend on Drupal 8.3+, this can be simplified by a lot.
     $password = $this->randomMachineName();
     // Define information about the user 1 account.
-    $this->rootUser = new UserSession(array(
+    $this->rootUser = new UserSession([
       'uid' => 1,
       'name' => 'admin',
       'mail' => 'admin@example.com',
       'pass_raw' => $password,
       'passRaw' => $password,
       'timezone' => date_default_timezone_get(),
-    ));
+    ]);
 
     // The child site derives its session name from the database prefix when
     // running web tests.
@@ -766,10 +766,10 @@ class ViewsTest extends SearchApiBrowserTestBase {
     // All file system paths are created by System module during installation.
     // @see system_requirements()
     // @see TestBase::prepareEnvironment()
-    $settings['settings']['file_public_path'] = (object) array(
+    $settings['settings']['file_public_path'] = (object) [
       'value' => $this->publicFilesDirectory,
       'required' => TRUE,
-    );
+    ];
     $settings['settings']['file_private_path'] = (object) [
       'value' => $this->privateFilesDirectory,
       'required' => TRUE,
@@ -877,16 +877,16 @@ class ViewsTest extends SearchApiBrowserTestBase {
     // and thus removed from the test index. (We can't do it in setUp(), before
     // calling the parent method, since the container isn't set up at that
     // point.)
-    $bundles = array(
-      'entity_test_mulrev_changed' => array('label' => 'Entity Test Bundle'),
-      'item' => array('label' => 'item'),
-      'article' => array('label' => 'article'),
-    );
+    $bundles = [
+      'entity_test_mulrev_changed' => ['label' => 'Entity Test Bundle'],
+      'item' => ['label' => 'item'],
+      'article' => ['label' => 'article'],
+    ];
     \Drupal::state()->set('entity_test_mulrev_changed.bundles', $bundles);
 
     // Collect modules to install.
     $class = get_class($this);
-    $modules = array();
+    $modules = [];
     while ($class) {
       if (property_exists($class, 'modules')) {
         $modules = array_merge($modules, $class::$modules);
@@ -896,7 +896,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     if ($modules) {
       $modules = array_unique($modules);
       $success = $container->get('module_installer')->install($modules, TRUE);
-      $this->assertTrue($success, SafeMarkup::format('Enabled modules: %modules', array('%modules' => implode(', ', $modules))));
+      $this->assertTrue($success, SafeMarkup::format('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
       $this->rebuildContainer();
     }
 

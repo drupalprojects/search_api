@@ -18,7 +18,7 @@ class SearchApiConfigEntityStorage extends ConfigEntityStorage {
    * {@inheritdoc}
    */
   protected function doPostSave(EntityInterface $entity, $update) {
-    $this->resetCache(array($entity->id()));
+    $this->resetCache([$entity->id()]);
 
     // The entity is no longer new.
     $entity->enforceIsNew(FALSE);

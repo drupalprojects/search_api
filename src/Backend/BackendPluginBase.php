@@ -119,7 +119,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function viewSettings() {
-    return array();
+    return [];
   }
 
   /**
@@ -133,7 +133,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function getSupportedFeatures() {
-    return array();
+    return [];
   }
 
   /**
@@ -168,9 +168,9 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       $this->getServer()->deleteAllItems();
     }
     catch (SearchApiException $e) {
-      $vars = array(
+      $vars = [
         '%server' => $this->getServer()->label(),
-      );
+      ];
       $this->logException($e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
       drupal_set_message($this->t('Deleting some of the items on the server failed. Check the logs for details. The server was still removed.'), 'error');
     }
@@ -180,7 +180,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function getBackendDefinedFields(IndexInterface $index) {
-    return array();
+    return [];
   }
 
   /**
@@ -208,7 +208,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function getDiscouragedProcessors() {
-    return array();
+    return [];
   }
 
   /**
@@ -225,10 +225,10 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    *   An array of field objects for all "magic" fields, keyed by field IDs.
    */
   protected function getSpecialFields(IndexInterface $index, ItemInterface $item = NULL) {
-    $field_info = array(
+    $field_info = [
       'type' => 'string',
       'original type' => 'string',
-    );
+    ];
     $fields['search_api_id'] = $this->getFieldsHelper()
       ->createField($index, 'search_api_id', $field_info);
     $fields['search_api_datasource'] = $this->getFieldsHelper()
@@ -237,9 +237,9 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
       ->createField($index, 'search_api_language', $field_info);
 
     if ($item) {
-      $fields['search_api_id']->setValues(array($item->getId()));
-      $fields['search_api_datasource']->setValues(array($item->getDatasourceId()));
-      $fields['search_api_language']->setValues(array($item->getLanguage()));
+      $fields['search_api_id']->setValues([$item->getId()]);
+      $fields['search_api_datasource']->setValues([$item->getDatasourceId()]);
+      $fields['search_api_language']->setValues([$item->getLanguage()]);
     }
 
     return $fields;

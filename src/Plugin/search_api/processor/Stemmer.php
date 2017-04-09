@@ -33,12 +33,12 @@ class Stemmer extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array(
-      'exceptions' => array(
+    return [
+      'exceptions' => [
         'texan' => 'texa',
         'mexican' => 'mexic',
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -52,12 +52,12 @@ class Stemmer extends FieldsProcessorPluginBase {
     // Convert the keyed array into a config format (word=stem)
     $default_value = http_build_query($this->configuration['exceptions'], NULL, "\n");
 
-    $form['exceptions'] = array(
+    $form['exceptions'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Exceptions'),
       '#description' => $description,
       '#default_value' => $default_value,
-    );
+    ];
 
     return $form;
   }
@@ -108,7 +108,7 @@ class Stemmer extends FieldsProcessorPluginBase {
   protected function process(&$value) {
     // In the absence of the tokenizer processor, this ensures split words.
     $words = preg_split('/[^\p{L}\p{N}]+/u', strip_tags($value), -1, PREG_SPLIT_NO_EMPTY);
-    $stemmed = array();
+    $stemmed = [];
     foreach ($words as $i => $word) {
       // To optimize processing, store processed stems in a static array.
       if (!isset($this->stems[$word])) {

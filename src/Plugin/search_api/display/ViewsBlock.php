@@ -22,7 +22,7 @@ class ViewsBlock extends ViewsDisplayBase {
     $plugin_id = 'views_block:' . $this->pluginDefinition['view_id'] . '-' . $this->pluginDefinition['view_display'];
     $blocks = $this->getEntityTypeManager()
       ->getStorage('block')
-      ->loadByProperties(array('plugin' => $plugin_id));
+      ->loadByProperties(['plugin' => $plugin_id]);
     foreach ($blocks as $block) {
       if ($block->access('view')) {
         return TRUE;

@@ -711,6 +711,6 @@ interface IndexInterface extends ConfigEntityInterface {
    *
    * @see \Drupal\search_api\Query\QueryInterface::create()
    */
-  public function query(array $options = array());
+  public function query(array $options = []);
 
 }

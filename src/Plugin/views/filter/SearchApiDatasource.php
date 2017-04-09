@@ -19,7 +19,7 @@ class SearchApiDatasource extends SearchApiOptions {
       return $this->valueOptions;
     }
 
-    $this->valueOptions = array();
+    $this->valueOptions = [];
 
     $index = $this->getIndex();
     if ($index) {

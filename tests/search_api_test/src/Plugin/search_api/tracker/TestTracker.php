@@ -26,23 +26,23 @@ class TestTracker extends TrackerPluginBase implements PluginFormInterface {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array(
+    return [
       'foo' => 'test',
-      'dependencies' => array(),
-    );
+      'dependencies' => [],
+    ];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    return array(
-      'foo' => array(
+    return [
+      'foo' => [
         '#type' => 'textfield',
         '#title' => 'Foo',
         '#default_value' => $this->configuration['foo'],
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -92,7 +92,7 @@ class TestTracker extends TrackerPluginBase implements PluginFormInterface {
    */
   public function getRemainingItems($limit = -1, $datasource_id = NULL) {
     $this->logMethodCall(__FUNCTION__, func_get_args());
-    return array();
+    return [];
   }
 
   /**
@@ -132,7 +132,7 @@ class TestTracker extends TrackerPluginBase implements PluginFormInterface {
   public function onDependencyRemoval(array $dependencies) {
     $remove = $this->getReturnValue(__FUNCTION__, FALSE);
     if ($remove) {
-      $this->configuration['dependencies'] = array();
+      $this->configuration['dependencies'] = [];
     }
     return $remove;
   }

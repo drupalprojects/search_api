@@ -25,7 +25,7 @@ class SearchApiMoreLikeThis extends SearchApiStandard {
     $options = parent::defineOptions();
     unset($options['break_phrase']);
     unset($options['not']);
-    $options['fields'] = array('default' => array());
+    $options['fields'] = ['default' => []];
     return $options;
   }
 
@@ -38,13 +38,13 @@ class SearchApiMoreLikeThis extends SearchApiStandard {
     unset($form['not']);
 
     $index = Index::load(substr($this->table, 17));
-    $fields = array();
+    $fields = [];
     foreach ($index->getFields() as $key => $field) {
       $fields[$key] = $field->getLabel();
     }
 
     if ($fields) {
-      $form['fields'] = array(
+      $form['fields'] = [
         '#type' => 'select',
         '#title' => $this->t('Fields for similarity'),
         '#description' => $this->t('Select the fields that will be used for finding similar content. If no fields are selected, all available fields will be used.'),
@@ -52,13 +52,13 @@ class SearchApiMoreLikeThis extends SearchApiStandard {
         '#size' => min(8, count($fields)),
         '#multiple' => TRUE,
         '#default_value' => $this->options['fields'],
-      );
+      ];
     }
     else {
-      $form['fields'] = array(
+      $form['fields'] = [
         '#type' => 'value',
-        '#value' => array(),
-      );
+        '#value' => [],
+      ];
     }
   }
 
@@ -71,18 +71,18 @@ class SearchApiMoreLikeThis extends SearchApiStandard {
       if (!$server->supportsFeature('search_api_mlt')) {
         $backend_id = $server->getBackendId();
         $this->getLogger()->error('The search backend "@backend_id" does not offer "More like this" functionality.',
-          array('@backend_id' => $backend_id));
+          ['@backend_id' => $backend_id]);
         $this->query->abort();
         return;
       }
-      $fields = isset($this->options['fields']) ? $this->options['fields'] : array();
+      $fields = isset($this->options['fields']) ? $this->options['fields'] : [];
       if (!$fields) {
         $fields = array_keys($this->query->getIndex()->getFields());
       }
-      $mlt = array(
+      $mlt = [
         'id' => $this->argument,
         'fields' => $fields,
-      );
+      ];
       $this->query->getSearchApiQuery()->setOption('search_api_mlt', $mlt);
     }
     catch (SearchApiException $e) {

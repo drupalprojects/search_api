@@ -49,10 +49,10 @@ class ServerTaskManager implements ServerTaskManagerInterface, EventSubscriberIn
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events = array();
+    $events = [];
 
     foreach (static::getSupportedTypes() as $type) {
-      $events['search_api.task.' . $type][] = array('processEvent');
+      $events['search_api.task.' . $type][] = ['processEvent'];
     }
 
     return $events;
@@ -65,13 +65,13 @@ class ServerTaskManager implements ServerTaskManagerInterface, EventSubscriberIn
    *   The task types supported by this task manager.
    */
   protected static function getSupportedTypes() {
-    return array(
+    return [
       'addIndex',
       'updateIndex',
       'removeIndex',
       'deleteItems',
       'deleteAllIndexItems',
-    );
+    ];
   }
 
   /**

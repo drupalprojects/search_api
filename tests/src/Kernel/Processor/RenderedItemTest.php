@@ -37,7 +37,7 @@ class RenderedItemTest extends ProcessorTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = array(
+  public static $modules = [
     'user',
     'node',
     'search_api',
@@ -47,7 +47,7 @@ class RenderedItemTest extends ProcessorTestBase {
     'comment',
     'system',
     'filter',
-  );
+  ];
 
   /**
    * {@inheritdoc}
@@ -57,26 +57,26 @@ class RenderedItemTest extends ProcessorTestBase {
 
     // Load additional configuration and needed schemas. (The necessary schemas
     // for using nodes are already installed by the parent method.)
-    $this->installConfig(array('system', 'filter', 'node', 'comment', 'user'));
-    $this->installSchema('system', array('router'));
+    $this->installConfig(['system', 'filter', 'node', 'comment', 'user']);
+    $this->installSchema('system', ['router']);
     \Drupal::service('router.builder')->rebuild();
 
     // Create the default languages and a new one for translations.
-    $this->installConfig(array('language'));
+    $this->installConfig(['language']);
     /** @var \Drupal\language\Entity\ConfigurableLanguage $language */
-    $language = ConfigurableLanguage::create(array(
+    $language = ConfigurableLanguage::create([
       'id' => 'de',
       'label' => 'German',
       'weight' => 0,
-    ));
+    ]);
     $language->save();
 
     // Creates node types for testing.
     foreach (['article', 'page'] as $type_id) {
-      $type = NodeType::create(array(
+      $type = NodeType::create([
         'type' => $type_id,
         'name' => $type_id,
-      ));
+      ]);
       $type->save();
       node_add_body_field($type);
     }
@@ -98,20 +98,20 @@ class RenderedItemTest extends ProcessorTestBase {
     ])->save();
 
     // Insert the anonymous user into the database.
-    $anonymous_user = User::create(array(
+    $anonymous_user = User::create([
       'uid' => 0,
       'name' => '',
-    ));
+    ]);
     $anonymous_user->save();
 
     // Default node values for all nodes we create below.
-    $node_data = array(
+    $node_data = [
       'status' => NODE_PUBLISHED,
       'type' => 'page',
       'title' => '',
-      'body' => array('value' => '', 'summary' => '', 'format' => 'plain_text'),
+      'body' => ['value' => '', 'summary' => '', 'format' => 'plain_text'],
       'uid' => $anonymous_user->id(),
-    );
+    ];
 
     // Create some test nodes with valid user on it for rendering a picture.
     $node_data['title'] = 'Title for node 1';
@@ -132,25 +132,25 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->nodes[3]->save();
 
     // Add a field based on the "rendered_item" property.
-    $field_info = array(
+    $field_info = [
       'type' => 'text',
       'property_path' => 'rendered_item',
-      'configuration' => array(
-        'roles' => array('anonymous'),
-        'view_mode' => array(
-          'entity:node' => array(
+      'configuration' => [
+        'roles' => ['anonymous'],
+        'view_mode' => [
+          'entity:node' => [
             'page' => 'full',
             'article' => 'teaser',
-          ),
-          'entity:user' => array(
+          ],
+          'entity:user' => [
             'user' => 'compact',
-          ),
-          'entity:comment' => array(
+          ],
+          'entity:comment' => [
             'comment' => 'full',
-          ),
-        ),
-      ),
-    );
+          ],
+        ],
+      ],
+    ];
     $field = Utility::createField($this->index, 'rendered_item', $field_info);
     $this->index->addField($field);
     $datasources = \Drupal::getContainer()
@@ -163,8 +163,8 @@ class RenderedItemTest extends ProcessorTestBase {
     // Enable the classy and stable themes as the tests rely on markup from
     // that. Set stable as the active theme, but make classy the default. The
     // processor should switch to classy to perform the rendering.
-    \Drupal::service('theme_handler')->install(array('classy'));
-    \Drupal::service('theme_handler')->install(array('stable'));
+    \Drupal::service('theme_handler')->install(['classy']);
+    \Drupal::service('theme_handler')->install(['stable']);
     \Drupal::configFactory()->getEditable('system.theme')->set('default', 'classy')->save();
     \Drupal::theme()->setActiveTheme(\Drupal::service('theme.initialization')->initTheme('stable'));
   }
@@ -186,13 +186,13 @@ class RenderedItemTest extends ProcessorTestBase {
     $this->assertEquals('en', $this->nodes[3]->language()->getId());
     $this->assertEquals('de', $this->nodes[4]->language()->getId());
 
-    $items = array();
+    $items = [];
     foreach ($this->nodes as $i => $node) {
-      $items[] = array(
+      $items[] = [
         'datasource' => 'entity:node',
         'item' => $node->getTypedData(),
         'item_id' => $i,
-      );
+      ];
     }
     $user = User::create([
       'uid' => 2,
@@ -322,23 +322,23 @@ class RenderedItemTest extends ProcessorTestBase {
     // item content will be empty.
     $field = $this->index->getField('rendered_item');
     $config = $field->getConfiguration();
-    $config['view_mode'] = array(
-      'entity:node' => array(
+    $config['view_mode'] = [
+      'entity:node' => [
         'page' => '',
         'article' => '',
-      ),
-    );
+      ],
+    ];
     $field->setConfiguration($config);
 
     // Create items that we can index.
-    $items = array();
+    $items = [];
     foreach ($this->nodes as $node) {
-      $items[] = array(
+      $items[] = [
         'datasource' => 'entity:node',
         'item' => $node->getTypedData(),
         'item_id' => $node->id(),
         'text' => 'text for ' . $node->id(),
-      );
+      ];
     }
     $items = $this->generateItems($items);
 
@@ -367,35 +367,35 @@ class RenderedItemTest extends ProcessorTestBase {
 
     // Verify that there are no properties if a datasource is given.
     $properties = $this->processor->getPropertyDefinitions($this->index->getDatasource('entity:node'));
-    $this->assertEquals(array(), $properties, '"render_item" property not added when data source is given.');
+    $this->assertEquals([], $properties, '"render_item" property not added when data source is given.');
   }
 
   /**
    * Tests whether the processor reacts correctly to removed dependencies.
    */
   public function testDependencyRemoval() {
-    $expected = array(
-      'config' => array(
+    $expected = [
+      'config' => [
         'core.entity_view_mode.comment.full',
         'core.entity_view_mode.node.full',
         'core.entity_view_mode.node.teaser',
         'core.entity_view_mode.user.compact',
-      ),
-    );
+      ],
+    ];
     $this->assertEquals($expected, $this->processor->calculateDependencies());
 
     EntityViewMode::load('node.teaser')->delete();
-    $expected = array(
-      'entity:node' => array(
+    $expected = [
+      'entity:node' => [
         'page' => 'full',
-      ),
-      'entity:user' => array(
+      ],
+      'entity:user' => [
         'user' => 'compact',
-      ),
-      'entity:comment' => array(
+      ],
+      'entity:comment' => [
         'comment' => 'full',
-      ),
-    );
+      ],
+    ];
     // We need to reload the index.
     $index = Index::load($this->index->id());
     $field_config = $index->getField('rendered_item')->getConfiguration();

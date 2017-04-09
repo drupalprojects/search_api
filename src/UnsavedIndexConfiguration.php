@@ -603,7 +603,7 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function query(array $options = array()) {
+  public function query(array $options = []) {
     return $this->entity->query($options);
   }
 
@@ -779,28 +779,28 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function urlInfo($rel = 'canonical', array $options = array()) {
+  public function urlInfo($rel = 'canonical', array $options = []) {
     return $this->entity->toUrl($rel, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function toUrl($rel = 'canonical', array $options = array()) {
+  public function toUrl($rel = 'canonical', array $options = []) {
     return $this->entity->toUrl($rel, $options);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function url($rel = 'canonical', $options = array()) {
+  public function url($rel = 'canonical', $options = []) {
     return $this->entity->toUrl($rel, $options)->toString();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function link($text = NULL, $rel = 'canonical', array $options = array()) {
+  public function link($text = NULL, $rel = 'canonical', array $options = []) {
     return $this->entity->toLink($text, $rel, $options)->toString();
   }
 
@@ -842,7 +842,7 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public static function create(array $values = array()) {
+  public static function create(array $values = []) {
     return Index::create($values);
   }
 

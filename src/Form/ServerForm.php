@@ -78,7 +78,7 @@ class ServerForm extends EntityForm {
       $form['#title'] = $this->t('Add search server');
     }
     else {
-      $form['#title'] = $this->t('Edit search server %label', array('%label' => $server->label()));
+      $form['#title'] = $this->t('Edit search server %label', ['%label' => $server->label()]);
     }
 
     $this->buildEntityForm($form, $form_state, $server);
@@ -104,36 +104,36 @@ class ServerForm extends EntityForm {
   public function buildEntityForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
     $form['#attached']['library'][] = 'search_api/drupal.search_api.admin_css';
 
-    $form['name'] = array(
+    $form['name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Server name'),
       '#description' => $this->t('Enter the displayed name for the server.'),
       '#default_value' => $server->label(),
       '#required' => TRUE,
-    );
-    $form['id'] = array(
+    ];
+    $form['id'] = [
       '#type' => 'machine_name',
       '#default_value' => $server->isNew() ? NULL : $server->id(),
       '#maxlength' => 50,
       '#required' => TRUE,
-      '#machine_name' => array(
-        'exists' => array($this->storage, 'load'),
-        'source' => array('name'),
-      ),
+      '#machine_name' => [
+        'exists' => [$this->storage, 'load'],
+        'source' => ['name'],
+      ],
       '#disabled' => !$server->isNew(),
-    );
-    $form['status'] = array(
+    ];
+    $form['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
       '#description' => $this->t('Only enabled servers can index items or execute searches.'),
       '#default_value' => $server->status(),
-    );
-    $form['description'] = array(
+    ];
+    $form['description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
       '#description' => $this->t('Enter a description for the server.'),
       '#default_value' => $server->getDescription(),
-    );
+    ];
 
     $backends = $this->backendPluginManager->getDefinitions();
     $backend_options = [];
@@ -151,7 +151,7 @@ class ServerForm extends EntityForm {
       if (count($backend_options) == 1) {
         $server->set('backend', key($backend_options));
       }
-      $form['backend'] = array(
+      $form['backend'] = [
         '#type' => 'radios',
         '#title' => $this->t('Backend'),
         '#description' => $this->t('Choose a backend to use for this server.'),
@@ -159,18 +159,18 @@ class ServerForm extends EntityForm {
         '#default_value' => $server->getBackendId(),
         '#required' => TRUE,
         '#disabled' => !$server->isNew(),
-        '#ajax' => array(
-          'callback' => array(get_class($this), 'buildAjaxBackendConfigForm'),
+        '#ajax' => [
+          'callback' => [get_class($this), 'buildAjaxBackendConfigForm'],
           'wrapper' => 'search-api-backend-config-form',
           'method' => 'replace',
           'effect' => 'fade',
-        ),
-      );
+        ],
+      ];
       $form['backend'] += $descriptions;
     }
     else {
-      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href=":url">module that provides a backend plugin</a> to proceed.', array(':url' => Url::fromUri('https://www.drupal.org/node/1254698')->toString())), 'error');
-      $form = array();
+      drupal_set_message($this->t('There are no backend plugins available for the Search API. Please install a <a href=":url">module that provides a backend plugin</a> to proceed.', [':url' => Url::fromUri('https://www.drupal.org/node/1254698')->toString()]), 'error');
+      $form = [];
     }
   }
 
@@ -185,7 +185,7 @@ class ServerForm extends EntityForm {
    *   The server that is being created or edited.
    */
   public function buildBackendConfigForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
-    $form['backend_config'] = array();
+    $form['backend_config'] = [];
     if ($server->hasValidBackend()) {
       $backend = $server->getBackend();
       $form_state->set('backend', $backend->getPluginId());
@@ -199,7 +199,7 @@ class ServerForm extends EntityForm {
 
         // Modify the backend plugin configuration container element.
         $form['backend_config']['#type'] = 'details';
-        $form['backend_config']['#title'] = $this->t('Configure %plugin backend', array('%plugin' => $backend->label()));
+        $form['backend_config']['#title'] = $this->t('Configure %plugin backend', ['%plugin' => $backend->label()]);
         $form['backend_config']['#open'] = TRUE;
       }
     }
@@ -209,10 +209,10 @@ class ServerForm extends EntityForm {
       drupal_set_message($this->t('The backend plugin is missing or invalid.'), 'error');
       return;
     }
-    $form['backend_config'] += array('#type' => 'container');
-    $form['backend_config']['#attributes'] = array(
+    $form['backend_config'] += ['#type' => 'container'];
+    $form['backend_config']['#attributes'] = [
       'id' => 'search-api-backend-config-form',
-    );
+    ];
     $form['backend_config']['#tree'] = TRUE;
   }
 
@@ -252,7 +252,7 @@ class ServerForm extends EntityForm {
       // different backend, so any values entered for the other backend should
       // be discarded.
       $input = &$form_state->getUserInput();
-      $input['backend_config'] = array();
+      $input['backend_config'] = [];
       $new_backend = $this->backendPluginManager->createInstance($form_state->getValues()['backend']);
       if ($new_backend instanceof PluginFormInterface) {
         $form_state->setRebuild();
@@ -298,7 +298,7 @@ class ServerForm extends EntityForm {
         $server = $this->getEntity();
         $server->save();
         drupal_set_message($this->t('The server was successfully saved.'));
-        $form_state->setRedirect('entity.search_api_server.canonical', array('search_api_server' => $server->id()));
+        $form_state->setRedirect('entity.search_api_server.canonical', ['search_api_server' => $server->id()]);
       }
       catch (SearchApiException $e) {
         $form_state->setRebuild();

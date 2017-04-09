@@ -117,7 +117,7 @@ class ContentAccess extends ProcessorPluginBase {
    */
   public static function supportsIndex(IndexInterface $index) {
     foreach ($index->getDatasources() as $datasource) {
-      if (in_array($datasource->getEntityTypeId(), array('node', 'comment'))) {
+      if (in_array($datasource->getEntityTypeId(), ['node', 'comment'])) {
         return TRUE;
       }
     }
@@ -128,16 +128,16 @@ class ContentAccess extends ProcessorPluginBase {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
-    $properties = array();
+    $properties = [];
 
     if (!$datasource) {
-      $definition = array(
+      $definition = [
         'label' => $this->t('Node access information'),
         'description' => $this->t('Data needed to apply node access.'),
         'type' => 'string',
         'processor_id' => $this->getPluginId(),
         'hidden' => TRUE,
-      );
+      ];
       $properties['search_api_node_grants'] = new ProcessorProperty($definition);
     }
 
@@ -157,7 +157,7 @@ class ContentAccess extends ProcessorPluginBase {
 
     // Only run for node and comment items.
     $entity_type_id = $item->getDatasource()->getEntityTypeId();
-    if (!in_array($entity_type_id, array('node', 'comment'))) {
+    if (!in_array($entity_type_id, ['node', 'comment'])) {
       return;
     }
 
@@ -177,7 +177,7 @@ class ContentAccess extends ProcessorPluginBase {
         // If anonymous user has no permission we collect all grants with
         // their realms in the item.
         $sql = 'SELECT * FROM {node_access} WHERE (nid = 0 OR nid = :nid) AND grant_view = 1';
-        $args = array(':nid' => $node->id());
+        $args = [':nid' => $node->id()];
         foreach ($this->getDatabase()->query($sql, $args) as $grant) {
           $field->addValue("node_access_{$grant->realm}:{$grant->gid}");
         }
@@ -196,7 +196,7 @@ class ContentAccess extends ProcessorPluginBase {
   public function preIndexSave() {
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
       $entity_type = $datasource->getEntityTypeId();
-      if (in_array($entity_type, array('node', 'comment'))) {
+      if (in_array($entity_type, ['node', 'comment'])) {
         $this->ensureField($datasource_id, 'status', 'boolean');
         if ($entity_type == 'node') {
           $this->ensureField($datasource_id, 'uid', 'integer');
@@ -256,7 +256,7 @@ class ContentAccess extends ProcessorPluginBase {
         if (!is_scalar($account)) {
           $account = var_export($account, TRUE);
         }
-        $this->getLogger()->warning('An illegal user UID was given for node access: @uid.', array('@uid' => $account));
+        $this->getLogger()->warning('An illegal user UID was given for node access: @uid.', ['@uid' => $account]);
       }
     }
   }
@@ -280,11 +280,11 @@ class ContentAccess extends ProcessorPluginBase {
 
     // Gather the affected datasources, grouped by entity type, as well as the
     // unaffected ones.
-    $affected_datasources = array();
-    $unaffected_datasources = array();
+    $affected_datasources = [];
+    $unaffected_datasources = [];
     foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
       $entity_type = $datasource->getEntityTypeId();
-      if (in_array($entity_type, array('node', 'comment'))) {
+      if (in_array($entity_type, ['node', 'comment'])) {
         $affected_datasources[$entity_type][] = $datasource_id;
       }
       else {
@@ -303,7 +303,7 @@ class ContentAccess extends ProcessorPluginBase {
     // If there are no "other" datasources, we don't need the nested OR,
     // however, and can add the inner conditions directly to the query.
     if ($unaffected_datasources) {
-      $outer_conditions = $query->createConditionGroup('OR', array('content_access'));
+      $outer_conditions = $query->createConditionGroup('OR', ['content_access']);
       $query->addConditionGroup($outer_conditions);
       foreach ($unaffected_datasources as $datasource_id) {
         $outer_conditions->addCondition('search_api_datasource', $datasource_id);
@@ -337,7 +337,7 @@ class ContentAccess extends ProcessorPluginBase {
     // Collect all the required fields that need to be part of the index.
     $unpublished_own = $account->hasPermission('view own unpublished content');
 
-    $enabled_conditions = $query->createConditionGroup('OR', array('content_access_enabled'));
+    $enabled_conditions = $query->createConditionGroup('OR', ['content_access_enabled']);
     foreach ($affected_datasources as $entity_type => $datasources) {
       foreach ($datasources as $datasource_id) {
         // If this is a comment datasource, or users cannot view their own
@@ -363,7 +363,7 @@ class ContentAccess extends ProcessorPluginBase {
       return;
     }
     $node_grants_field_id = $node_grants_field->getFieldIdentifier();
-    $grants_conditions = $query->createConditionGroup('OR', array('content_access_grants'));
+    $grants_conditions = $query->createConditionGroup('OR', ['content_access_grants']);
     $grants = node_access_grants('view', $account);
     foreach ($grants as $realm => $gids) {
       foreach ($gids as $gid) {

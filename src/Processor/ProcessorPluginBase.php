@@ -148,7 +148,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
    * {@inheritdoc}
    */
   public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
-    return array();
+    return [];
   }
 
   /**

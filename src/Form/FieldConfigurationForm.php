@@ -88,9 +88,9 @@ class FieldConfigurationForm extends EntityForm {
 
     if (!$field) {
       $args['@id'] = $this->getRequest()->attributes->get('field_id');
-      $form['message'] = array(
+      $form['message'] = [
         '#markup' => $this->t('Unknown field with ID "@id".', $args),
-      );
+      ];
       return $form;
     }
 
@@ -112,9 +112,9 @@ class FieldConfigurationForm extends EntityForm {
     $property = $field->getDataDefinition();
     if (!($property instanceof ConfigurablePropertyInterface)) {
       $args['%field'] = $field->getLabel();
-      $form['message'] = array(
+      $form['message'] = [
         '#markup' => $this->t('Field %field is not configurable.', $args),
-      );
+      ];
       return $form;
     }
 
@@ -149,11 +149,11 @@ class FieldConfigurationForm extends EntityForm {
       $actions['submit']['#ajax']['wrapper'] = $this->formIdAttribute;
     }
     else {
-      $actions['cancel'] = array(
+      $actions['cancel'] = [
         '#type' => 'link',
         '#title' => $this->t('Cancel'),
         '#url' => $this->entity->toUrl('fields'),
-      );
+      ];
     }
 
     return $actions;

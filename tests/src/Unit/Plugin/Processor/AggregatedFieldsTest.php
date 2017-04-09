@@ -65,36 +65,36 @@ class AggregatedFieldsTest extends UnitTestCase {
     $datasource = $this->getMock(DatasourceInterface::class);
     $datasource->expects($this->any())
       ->method('getPropertyDefinitions')
-      ->willReturn(array());
-    $this->index = new Index(array(
-      'datasourceInstances' => array(
+      ->willReturn([]);
+    $this->index = new Index([
+      'datasourceInstances' => [
         'entity:test1' => $datasource,
         'entity:test2' => $datasource,
-      ),
-      'processorInstances' => array(),
-      'field_settings' => array(
-        'foo' => array(
+      ],
+      'processorInstances' => [],
+      'field_settings' => [
+        'foo' => [
           'type' => 'string',
           'datasource_id' => 'entity:test1',
           'property_path' => 'foo',
-        ),
-        'bar' => array(
+        ],
+        'bar' => [
           'type' => 'string',
           'datasource_id' => 'entity:test1',
           'property_path' => 'foo:bar',
-        ),
-        'bla' => array(
+        ],
+        'bla' => [
           'type' => 'string',
           'datasource_id' => 'entity:test2',
           'property_path' => 'foobaz:bla',
-        ),
-        'aggregated_field' => array(
+        ],
+        'aggregated_field' => [
           'type' => 'text',
           'property_path' => 'aggregated_field',
-        ),
-      ),
-    ), 'search_api_index');
-    $this->processor = new AggregatedFields(array('#index' => $this->index), 'aggregated_field', array());
+        ],
+      ],
+    ], 'search_api_index');
+    $this->processor = new AggregatedFields(['#index' => $this->index], 'aggregated_field', []);
     $this->index->addProcessor($this->processor);
     $this->setUpMockContainer();
 
@@ -123,9 +123,9 @@ class AggregatedFieldsTest extends UnitTestCase {
     $data_type->method('getValue')
       ->willReturnCallback($this->valueCallback);
     $data_type_manager->method('createInstance')
-      ->willReturnMap(array(
-        array('text', array(), $data_type),
-      ));
+      ->willReturnMap([
+        ['text', [], $data_type],
+      ]);
   }
 
   /**
@@ -143,36 +143,36 @@ class AggregatedFieldsTest extends UnitTestCase {
    */
   public function testAggregation($type, $expected, $integer = FALSE) {
     // Add the field configuration.
-    $configuration = array(
+    $configuration = [
       'type' => $type,
-      'fields' => array(
+      'fields' => [
         'entity:test1/foo',
         'entity:test1/foo:bar',
         'entity:test2/foobaz:bla',
-      ),
-    );
+      ],
+    ];
     $this->index->getField($this->fieldId)->setConfiguration($configuration);
 
     if ($integer) {
-      $field_values = array(
-        'foo' => array(2, 4),
-        'bar' => array(16),
-        'bla' => array(7),
-      );
+      $field_values = [
+        'foo' => [2, 4],
+        'bar' => [16],
+        'bla' => [7],
+      ];
     }
     else {
-      $field_values = array(
-        'foo' => array('foo', 'bar'),
-        'bar' => array('baz'),
-        'bla' => array('foobar'),
-      );
+      $field_values = [
+        'foo' => ['foo', 'bar'],
+        'bar' => ['baz'],
+        'bla' => ['foobar'],
+      ];
     }
-    $items = array();
+    $items = [];
     $i = 0;
-    foreach (array('entity:test1', 'entity:test2') as $datasource_id) {
+    foreach (['entity:test1', 'entity:test2'] as $datasource_id) {
       $this->itemIds[$i++] = $item_id = Utility::createCombinedId($datasource_id, '1:en');
       $item = Utility::createItem($this->index, $item_id);
-      foreach (array(NULL, $datasource_id) as $field_datasource_id) {
+      foreach ([NULL, $datasource_id] as $field_datasource_id) {
         foreach ($this->index->getFieldsByDatasource($field_datasource_id) as $field_id => $field) {
           $field = clone $field;
           if (!empty($field_values[$field_id])) {
@@ -204,67 +204,67 @@ class AggregatedFieldsTest extends UnitTestCase {
    * @see static::testAggregation()
    */
   public function aggregationTestsDataProvider() {
-    return array(
-      '"Union" aggregation' => array(
+    return [
+      '"Union" aggregation' => [
         'union',
-        array(
-          array('foo', 'bar', 'baz'),
-          array('foobar'),
-        ),
-      ),
-      '"Concatenation" aggregation' => array(
+        [
+          ['foo', 'bar', 'baz'],
+          ['foobar'],
+        ],
+      ],
+      '"Concatenation" aggregation' => [
         'concat',
-        array(
-          array("foo\n\nbar\n\nbaz"),
-          array('foobar'),
-        ),
-      ),
-      '"Sum" aggregation' => array(
+        [
+          ["foo\n\nbar\n\nbaz"],
+          ['foobar'],
+        ],
+      ],
+      '"Sum" aggregation' => [
         'sum',
-        array(
-          array(22),
-          array(7),
-        ),
+        [
+          [22],
+          [7],
+        ],
         TRUE,
-      ),
-      '"Count" aggregation' => array(
+      ],
+      '"Count" aggregation' => [
         'count',
-        array(
-          array(3),
-          array(1),
-        ),
-      ),
-      '"Maximum" aggregation' => array(
+        [
+          [3],
+          [1],
+        ],
+      ],
+      '"Maximum" aggregation' => [
         'max',
-        array(
-          array(16),
-          array(7),
-        ),
+        [
+          [16],
+          [7],
+        ],
         TRUE,
-      ),
-      '"Minimum" aggregation' => array(
+      ],
+      '"Minimum" aggregation' => [
         'min',
-        array(
-          array(2),
-          array(7),
-        ),
+        [
+          [2],
+          [7],
+        ],
         TRUE,
-      ),
-      '"First" aggregation' => array(
+      ],
+      '"First" aggregation' => [
         'first',
-        array(
-          array('foo'),
-          array('foobar'),
-        ),
-      ),
-      '"Last" aggregation' => array(
+        [
+          ['foo'],
+          ['foobar'],
+        ],
+      ],
+      '"Last" aggregation' => [
         'last',
-        array(
-          array('baz'),
-          array('foobar'),
-        ),
-      ),
-    );
+        [
+          ['baz'],
+          ['foobar'],
+        ],
+      ],
+    ];
   }
 
   /**
@@ -307,86 +307,86 @@ class AggregatedFieldsTest extends UnitTestCase {
       ->willReturn(new DataDefinition());
     $bar_property = $this->getMock(TestComplexDataInterface::class);
     $bar_property->method('get')
-      ->willReturnMap(array(
-        array('foo', $bar_foo_property),
-      ));
+      ->willReturnMap([
+        ['foo', $bar_foo_property],
+      ]);
     $bar_property->method('getProperties')
-      ->willReturn(array(
+      ->willReturn([
         'foo' => TRUE,
-      ));
+      ]);
     $foobar_property = $this->getMock(TypedDataInterface::class);
     $foobar_property->method('getValue')
       ->willReturn('wrong_value2');
     $foobar_property->method('getDataDefinition')
       ->willReturn(new DataDefinition());
     $object->method('get')
-      ->willReturnMap(array(
-        array('bar', $bar_property),
-        array('foobar', $foobar_property),
-      ));
+      ->willReturnMap([
+        ['bar', $bar_property],
+        ['foobar', $foobar_property],
+      ]);
     $object->method('getProperties')
-      ->willReturn(array(
+      ->willReturn([
         'bar' => TRUE,
         'foobar' => TRUE,
-      ));
+      ]);
 
     /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
     $index = $this->getMock(IndexInterface::class);
 
-    $field = Utility::createField($index, 'aggregated_field', array(
+    $field = Utility::createField($index, 'aggregated_field', [
       'property_path' => 'aggregated_field',
-      'configuration' => array(
+      'configuration' => [
         'type' => 'union',
-        'fields' => array(
+        'fields' => [
           'aggregated_field',
           'foo',
           'entity:test1/bar:foo',
           'entity:test1/baz',
           'entity:test2/foobar',
-        ),
-      ),
-    ));
-    $index->method('getFields')->willReturn(array(
+        ],
+      ],
+    ]);
+    $index->method('getFields')->willReturn([
       'aggregated_field' => $field,
-    ));
+    ]);
     $index->method('getPropertyDefinitions')
-      ->willReturnMap(array(
-        array(
+      ->willReturnMap([
+        [
           NULL,
-          array(
-            'foo' => new ProcessorProperty(array(
+          [
+            'foo' => new ProcessorProperty([
               'processor_id' => 'processor1',
-            )),
-          ),
-        ),
-        array(
+            ]),
+          ],
+        ],
+        [
           'entity:test1',
-          array(
+          [
             'bar' => new DataDefinition(),
             'foobar' => new DataDefinition(),
-          ),
-        ),
-      ));
+          ],
+        ],
+      ]);
     $processor_mock = $this->getMock(ProcessorInterface::class);
     $processor_mock->method('addFieldValues')
       ->willReturnCallback(function (ItemInterface $item) {
         foreach ($item->getFields(FALSE) as $field) {
           if ($field->getCombinedPropertyPath() == 'foo') {
-            $field->setValues(array('value4', 'value5'));
+            $field->setValues(['value4', 'value5']);
           }
         }
       });
     $index->method('getProcessorsByStage')
-      ->willReturnMap(array(
-        array(
+      ->willReturnMap([
+        [
           ProcessorInterface::STAGE_ADD_PROPERTIES,
-          array(),
-          array(
+          [],
+          [
             'aggregated_field' => $this->processor,
             'processor1' => $processor_mock,
-          ),
-        ),
-      ));
+          ],
+        ],
+      ]);
     $this->processor->setIndex($index);
 
     /** @var \Drupal\search_api\Datasource\DatasourceInterface|\PHPUnit_Framework_MockObject_MockObject $datasource */
@@ -397,31 +397,31 @@ class AggregatedFieldsTest extends UnitTestCase {
     $item = Utility::createItem($index, 'id', $datasource);
     $item->setOriginalObject($object);
     $item->setField('aggregated_field', clone $field);
-    $item->setField('test1', Utility::createField($index, 'test1', array(
+    $item->setField('test1', Utility::createField($index, 'test1', [
       'property_path' => 'baz',
-      'values' => array(
+      'values' => [
         'wrong_value1',
-      ),
-    )));
-    $item->setField('test2', Utility::createField($index, 'test2', array(
+      ],
+    ]));
+    $item->setField('test2', Utility::createField($index, 'test2', [
       'datasource_id' => 'entity:test1',
       'property_path' => 'baz',
-      'values' => array(
+      'values' => [
         'value1',
         'value2',
-      ),
-    )));
+      ],
+    ]));
     $item->setFieldsExtracted(TRUE);
 
     $this->processor->addFieldValues($item);
 
-    $expected = array(
+    $expected = [
       'value1',
       'value2',
       'value3',
       'value4',
       'value5',
-    );
+    ];
     $actual = $item->getField('aggregated_field')->getValues();
     sort($actual);
     $this->assertEquals($expected, $actual);

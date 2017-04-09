@@ -44,7 +44,7 @@ class IndexBatchHelper {
    *
    * @see \Drupal\Core\StringTranslation\TranslationInterface::translate()
    */
-  protected static function t($string, array $args = array(), array $options = array()) {
+  protected static function t($string, array $args = [], array $options = []) {
     return static::getStringTranslation()->translate($string, $args, $options);
   }
 
@@ -53,7 +53,7 @@ class IndexBatchHelper {
    *
    * @see \Drupal\Core\StringTranslation\TranslationInterface::formatPlural()
    */
-  protected static function formatPlural($count, $singular, $plural, array $args = array(), array $options = array()) {
+  protected static function formatPlural($count, $singular, $plural, array $args = [], array $options = []) {
     return static::getStringTranslation()->formatPlural($count, $singular, $plural, $args, $options);
   }
 
@@ -81,13 +81,13 @@ class IndexBatchHelper {
     // Check if indexing items is allowed.
     if ($index->status() && !$index->isReadOnly() && $batch_size !== 0 && $limit !== 0) {
       // Define the search index batch definition.
-      $batch_definition = array(
-        'operations' => array(
-          array(array(__CLASS__, 'process'), array($index, $batch_size, $limit)),
-        ),
-        'finished' => array(__CLASS__, 'finish'),
+      $batch_definition = [
+        'operations' => [
+          [[__CLASS__, 'process'], [$index, $batch_size, $limit]],
+        ],
+        'finished' => [__CLASS__, 'finish'],
         'progress_message' => static::t('Completed about @percentage% of the indexing operation (@current of @total).'),
-      );
+      ];
       // Schedule the batch.
       batch_set($batch_definition);
     }
@@ -170,7 +170,7 @@ class IndexBatchHelper {
     catch (\Exception $e) {
       // Log exception to watchdog and abort the batch job.
       watchdog_exception('search_api', $e);
-      $context['message'] = static::t('An error occurred during indexing: @message', array('@message' => $e->getMessage()));
+      $context['message'] = static::t('An error occurred during indexing: @message', ['@message' => $e->getMessage()]);
       $context['finished'] = 1;
       $context['results']['not indexed'] = $context['sandbox']['original_item_count'] - $context['results']['indexed'];
     }

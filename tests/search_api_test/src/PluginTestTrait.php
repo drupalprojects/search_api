@@ -68,7 +68,7 @@ trait PluginTestTrait {
    */
   protected function getCalledMethods($plugin_type, $reset = TRUE) {
     $key = "search_api_test.$plugin_type.methods_called";
-    $methods = \Drupal::state()->get($key, array());
+    $methods = \Drupal::state()->get($key, []);
     if ($reset) {
       \Drupal::state()->delete($key);
     }

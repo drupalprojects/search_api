@@ -78,7 +78,7 @@ class SearchApiFulltext extends FilterPluginBase {
    * {@inheritdoc}
    */
   public function operatorOptions($which = 'title') {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       $options[$id] = $info[$which];
     }
@@ -98,23 +98,23 @@ class SearchApiFulltext extends FilterPluginBase {
    *   - values: The number of values the operator requires as input.
    */
   public function operators() {
-    return array(
-      'and' => array(
+    return [
+      'and' => [
         'title' => $this->t('Contains all of these words'),
         'short' => $this->t('and'),
         'values' => 1,
-      ),
-      'or' => array(
+      ],
+      'or' => [
         'title' => $this->t('Contains any of these words'),
         'short' => $this->t('or'),
         'values' => 1,
-      ),
-      'not' => array(
+      ],
+      'not' => [
         'title' => $this->t('Contains none of these words'),
         'short' => $this->t('not'),
         'values' => 1,
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -123,11 +123,11 @@ class SearchApiFulltext extends FilterPluginBase {
   public function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['parse_mode'] = array('default' => 'terms');
+    $options['parse_mode'] = ['default' => 'terms'];
     $options['operator']['default'] = 'and';
 
     $options['min_length']['default'] = '';
-    $options['fields']['default'] = array();
+    $options['fields']['default'] = [];
 
     return $options;
   }
@@ -138,28 +138,28 @@ class SearchApiFulltext extends FilterPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['parse_mode'] = array(
+    $form['parse_mode'] = [
       '#type' => 'select',
       '#title' => $this->t('Parse mode'),
       '#description' => $this->t('Choose how the search keys will be parsed.'),
       '#options' => $this->getParseModeManager()->getInstancesOptions(),
       '#default_value' => $this->options['parse_mode'],
-    );
+    ];
     foreach ($this->getParseModeManager()->getInstances() as $key => $mode) {
       if ($mode->getDescription()) {
         $states['visible'][':input[name="options[parse_mode]"]']['value'] = $key;
-        $form["parse_mode_{$key}_description"] = array(
+        $form["parse_mode_{$key}_description"] = [
           '#type' => 'item',
           '#title' => $mode->label(),
           '#description' => $mode->getDescription(),
           '#states' => $states,
-        );
+        ];
       }
     }
 
     $fields = $this->getFulltextFields();
     if (!empty($fields)) {
-      $form['fields'] = array(
+      $form['fields'] = [
         '#type' => 'select',
         '#title' => $this->t('Searched fields'),
         '#description' => $this->t('Select the fields that will be searched. If no fields are selected, all available fulltext fields will be searched.'),
@@ -167,25 +167,25 @@ class SearchApiFulltext extends FilterPluginBase {
         '#size' => min(4, count($fields)),
         '#multiple' => TRUE,
         '#default_value' => $this->options['fields'],
-      );
+      ];
     }
     else {
-      $form['fields'] = array(
+      $form['fields'] = [
         '#type' => 'value',
-        '#value' => array(),
-      );
+        '#value' => [],
+      ];
     }
     if (isset($form['expose'])) {
       $form['expose']['#weight'] = -5;
     }
 
-    $form['min_length'] = array(
+    $form['min_length'] = [
       '#title' => $this->t('Minimum keyword length'),
       '#description' => $this->t('Minimum length of each word in the search keys. Leave empty to allow all words.'),
       '#type' => 'number',
       '#min' => 1,
       '#default_value' => $this->options['min_length'],
-    );
+    ];
   }
 
   /**
@@ -194,12 +194,12 @@ class SearchApiFulltext extends FilterPluginBase {
   protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
-    $form['value'] = array(
+    $form['value'] = [
       '#type' => 'textfield',
       '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
       '#size' => 30,
       '#default_value' => $this->value,
-    );
+    ];
   }
 
   /**
@@ -314,11 +314,11 @@ class SearchApiFulltext extends FilterPluginBase {
           // If the conjunction or negation settings aren't the same, we have to
           // nest both old and new keys array.
           if (!empty($keys['#negation']) != !empty($old['#negation']) || $keys['#conjunction'] != $old['#conjunction']) {
-            $keys = array(
+            $keys = [
               '#conjunction' => 'AND',
               $old,
               $keys,
-            );
+            ];
           }
           // Otherwise, just add all individual words from the old keys to the
           // new ones.
@@ -348,7 +348,7 @@ class SearchApiFulltext extends FilterPluginBase {
    *   labels.
    */
   protected function getFulltextFields() {
-    $fields = array();
+    $fields = [];
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load(substr($this->table, 17));
 

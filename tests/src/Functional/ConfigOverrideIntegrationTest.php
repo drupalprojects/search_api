@@ -21,22 +21,22 @@ class ConfigOverrideIntegrationTest extends SearchApiBrowserTestBase {
     parent::setUp();
 
     // Set up overrides.
-    $settings['config']['search_api.server.test_server']['name'] = (object) array(
+    $settings['config']['search_api.server.test_server']['name'] = (object) [
       'value' => 'Overridden server',
       'required' => TRUE,
-    );
-    $settings['config']['search_api.server.test_server']['status'] = (object) array(
+    ];
+    $settings['config']['search_api.server.test_server']['status'] = (object) [
       'value' => TRUE,
       'required' => TRUE,
-    );
-    $settings['config']['search_api.server.test_server']['backend_config']['test'] = (object) array(
+    ];
+    $settings['config']['search_api.server.test_server']['backend_config']['test'] = (object) [
       'value' => 'foobar',
       'required' => TRUE,
-    );
-    $settings['config']['search_api.index.test_index']['name'] = (object) array(
+    ];
+    $settings['config']['search_api.index.test_index']['name'] = (object) [
       'value' => 'Overridden index',
       'required' => TRUE,
-    );
+    ];
     $this->writeSettings($settings);
 
     $permissions = [

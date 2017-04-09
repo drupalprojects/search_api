@@ -41,13 +41,13 @@ trait TestPluginTrait {
    * @param array $args
    *   (optional) The method arguments.
    */
-  protected function logMethodCall($method, array $args = array()) {
+  protected function logMethodCall($method, array $args = []) {
     $type = $this->getPluginType();
     $state = \Drupal::state();
 
     // Log call.
     $key = "search_api_test.$type.methods_called";
-    $methods_called = $state->get($key, array());
+    $methods_called = $state->get($key, []);
     $methods_called[] = $method;
     $state->set($key, $methods_called);
 

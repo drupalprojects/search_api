@@ -37,14 +37,14 @@ class SearchApiDate extends Date {
     if (!empty($this->options['expose']['identifier'])) {
       $value = &$input[$this->options['expose']['identifier']];
       if (!is_array($value)) {
-        $value = array(
+        $value = [
           'value' => $value,
-        );
+        ];
       }
-      $value += array(
+      $value += [
         'min' => '',
         'max' => '',
-      );
+      ];
     }
 
     // Store this because it will get overwritten by the grandparent, and the

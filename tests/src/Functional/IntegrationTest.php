@@ -1062,7 +1062,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->assertTrue(!isset($fields['changed']), 'The changed field has not been added to the index.');
 
     // Find the "Remove" link for the "title" field.
-    $links = $this->xpath('//a[@data-drupal-selector=:id]', array(':id' => 'edit-fields-title-remove'));
+    $links = $this->xpath('//a[@data-drupal-selector=:id]', [':id' => 'edit-fields-title-remove']);
     $this->assertNotEmpty($links, 'Found "Remove" link for title field');
     $this->assertInternalType('array', $links);
     $url_target = $this->getAbsoluteUrl($links[0]->getAttribute('href'));

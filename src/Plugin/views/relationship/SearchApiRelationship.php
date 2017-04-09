@@ -62,13 +62,13 @@ class SearchApiRelationship extends RelationshipPluginBase {
 
     $form['required']['#access'] = FALSE;
 
-    $form['skip_access'] = array(
+    $form['skip_access'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Skip access checks'),
       '#description' => $this->t('Do not verify that the user has access to the entities referenced through this relationship. This will allow you to display data to the user to which they normally would not have access. This should therefore be used with care.'),
       '#default_value' => $this->options['skip_access'],
       '#weight' => -1,
-    );
+    ];
   }
 
   /**
@@ -82,7 +82,7 @@ class SearchApiRelationship extends RelationshipPluginBase {
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    $dependencies = array();
+    $dependencies = [];
 
     if (!empty($this->definition['entity type'])) {
       $entity_type = $this->getEntityTypeManager()

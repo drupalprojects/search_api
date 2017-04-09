@@ -57,7 +57,7 @@ class IndexStatusForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, IndexInterface $index = NULL) {
     if (!isset($index)) {
-      return array();
+      return [];
     }
 
     $form['#index'] = $index;
@@ -66,51 +66,51 @@ class IndexStatusForm extends FormBase {
 
     if ($index->hasValidTracker()) {
       if (!$this->getIndexTaskManager()->isTrackingComplete($index)) {
-        $form['tracking'] = array(
+        $form['tracking'] = [
           '#type' => 'details',
           '#title' => $this->t('Track items for index'),
           '#description' => $this->t('Not all items have been tracked for this index. This means the displayed index status is incomplete and not all items will currently be indexed.'),
           '#open' => TRUE,
-          '#attributes' => array(
-            'class' => array('container-inline'),
-          ),
-        );
-        $form['tracking']['index_now'] = array(
+          '#attributes' => [
+            'class' => ['container-inline'],
+          ],
+        ];
+        $form['tracking']['index_now'] = [
           '#type' => 'submit',
           '#value' => $this->t('Track now'),
           '#name' => 'track_now',
-        );
+        ];
       }
 
       // Add the "Index now" form.
-      $form['index'] = array(
+      $form['index'] = [
         '#type' => 'details',
         '#title' => $this->t('Start indexing now'),
         '#open' => TRUE,
-        '#attributes' => array(
-          'class' => array('container-inline'),
-        ),
-      );
+        '#attributes' => [
+          'class' => ['container-inline'],
+        ],
+      ];
       $has_remaining_items = ($index->getTrackerInstance()->getRemainingItemsCount() > 0);
-      $all_value = $this->t('all', array(), array('context' => 'items to index'));
-      $limit = array(
+      $all_value = $this->t('all', [], ['context' => 'items to index']);
+      $limit = [
         '#type' => 'textfield',
         '#default_value' => $all_value,
         '#size' => 4,
-        '#attributes' => array(
-          'class' => array('search-api-limit'),
-        ),
+        '#attributes' => [
+          'class' => ['search-api-limit'],
+        ],
         '#disabled' => !$has_remaining_items,
-      );
-      $batch_size = array(
+      ];
+      $batch_size = [
         '#type' => 'textfield',
         '#default_value' => $index->getOption('cron_limit', $this->config('search_api.settings')->get('default_cron_limit')),
         '#size' => 4,
-        '#attributes' => array(
-          'class' => array('search-api-batch-size'),
-        ),
+        '#attributes' => [
+          'class' => ['search-api-batch-size'],
+        ],
         '#disabled' => !$has_remaining_items,
-      );
+      ];
       // Here it gets complicated. We want to build a sentence from the form
       // input elements, but to translate that we have to make the two form
       // elements (for limit and batch size) pseudo-variables in the $this->t()
@@ -138,31 +138,31 @@ class IndexStatusForm extends FormBase {
         $form['index']['batch_size'] = $batch_size;
       }
       // Add the value "all" so it can be used by the validation.
-      $form['index']['all'] = array(
+      $form['index']['all'] = [
         '#type' => 'value',
         '#value' => $all_value,
-      );
-      $form['index']['index_now'] = array(
+      ];
+      $form['index']['index_now'] = [
         '#type' => 'submit',
         '#value' => $this->t('Index now'),
         '#disabled' => !$has_remaining_items,
         '#name' => 'index_now',
-      );
+      ];
 
       // Add actions for reindexing and for clearing the index.
       $form['actions']['#type'] = 'actions';
-      $form['actions']['reindex'] = array(
+      $form['actions']['reindex'] = [
         '#type' => 'submit',
         '#value' => $this->t('Queue all items for reindexing'),
         '#name' => 'reindex',
         '#button_type' => 'danger',
-      );
-      $form['actions']['clear'] = array(
+      ];
+      $form['actions']['clear'] = [
         '#type' => 'submit',
         '#value' => $this->t('Clear all indexed data'),
         '#name' => 'clear',
         '#button_type' => 'danger',
-      );
+      ];
     }
     return $form;
   }
@@ -179,7 +179,7 @@ class IndexStatusForm extends FormBase {
       // Get the translated "all" value and lowercase it for comparison.
       $all_value = Unicode::strtolower($values['all']);
 
-      foreach (array('limit', 'batch_size') as $field) {
+      foreach (['limit', 'batch_size'] as $field) {
         // Trim and lowercase the value so we correctly identify "all" values,
         // even if not matching exactly.
         $value = Unicode::strtolower(trim($values[$field]));
@@ -188,7 +188,7 @@ class IndexStatusForm extends FormBase {
           $value = -1;
         }
         elseif (!$value || !is_numeric($value) || ((int) $value) != $value) {
-          $form_state->setErrorByName($field, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', array('@all' => $values['all'])));
+          $form_state->setErrorByName($field, $this->t('Enter a non-zero integer. Use "-1" or "@all" for "all items".', ['@all' => $values['all']]));
         }
         else {
           $value = (int) $value;
@@ -219,11 +219,11 @@ class IndexStatusForm extends FormBase {
         break;
 
       case 'reindex':
-        $form_state->setRedirect('entity.search_api_index.reindex', array('search_api_index' => $index->id()));
+        $form_state->setRedirect('entity.search_api_index.reindex', ['search_api_index' => $index->id()]);
         break;
 
       case 'clear':
-        $form_state->setRedirect('entity.search_api_index.clear', array('search_api_index' => $index->id()));
+        $form_state->setRedirect('entity.search_api_index.clear', ['search_api_index' => $index->id()]);
         break;
 
       case 'track_now':

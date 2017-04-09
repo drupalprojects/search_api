@@ -139,21 +139,21 @@ class Field implements \IteratorAggregate, FieldInterface {
    *
    * @var array
    */
-  protected $configuration = array();
+  protected $configuration = [];
 
   /**
    * This field's dependencies, if any.
    *
    * @var string[][]
    */
-  protected $dependencies = array();
+  protected $dependencies = [];
 
   /**
    * The field's values.
    *
    * @var array
    */
-  protected $values = array();
+  protected $values = [];
 
   /**
    * The original data type of this field.
@@ -257,12 +257,12 @@ class Field implements \IteratorAggregate, FieldInterface {
    * {@inheritdoc}
    */
   public function getSettings() {
-    $settings = array(
+    $settings = [
       'label' => $this->getLabel(),
       'datasource_id' => $this->getDatasourceId(),
       'property_path' => $this->getPropertyPath(),
       'type' => $this->getType(),
-    );
+    ];
     if ($this->getDatasourceId() === NULL) {
       unset($settings['datasource_id']);
     }

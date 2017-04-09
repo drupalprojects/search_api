@@ -17,7 +17,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to reindex the search index %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to reindex the search index %name?', ['%name' => $this->entity->label()]);
   }
 
   /**
@@ -31,7 +31,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('entity.search_api_index.canonical', array('search_api_index' => $this->entity->id()));
+    return new Url('entity.search_api_index.canonical', ['search_api_index' => $this->entity->id()]);
   }
 
   /**
@@ -43,19 +43,19 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
 
     try {
       $index->reindex();
-      drupal_set_message($this->t('The search index %name was successfully reindexed.', array('%name' => $index->label())));
+      drupal_set_message($this->t('The search index %name was successfully reindexed.', ['%name' => $index->label()]));
     }
     catch (SearchApiException $e) {
-      drupal_set_message($this->t('Failed to reindex items for the search index %name.', array('%name' => $index->label())), 'error');
+      drupal_set_message($this->t('Failed to reindex items for the search index %name.', ['%name' => $index->label()]), 'error');
       $message = '%type while trying to reindex items on index %name: @message in %function (line %line of %file)';
-      $variables = array(
+      $variables = [
         '%name' => $index->label(),
-      );
+      ];
       $variables += Error::decodeException($e);
       $this->getLogger('search_api')->error($message, $variables);
     }
 
-    $form_state->setRedirect('entity.search_api_index.canonical', array('search_api_index' => $index->id()));
+    $form_state->setRedirect('entity.search_api_index.canonical', ['search_api_index' => $index->id()]);
   }
 
 }

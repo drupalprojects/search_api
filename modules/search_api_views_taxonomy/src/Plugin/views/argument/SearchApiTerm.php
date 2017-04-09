@@ -21,7 +21,7 @@ class SearchApiTerm extends SearchApiStandard {
   public function title() {
     if (!empty($this->argument)) {
       $this->fillValue();
-      $terms = array();
+      $terms = [];
       foreach ($this->value as $tid) {
         $taxonomy_term = Term::load($tid);
         if ($taxonomy_term) {

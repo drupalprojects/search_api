@@ -133,7 +133,7 @@ class IndexFieldsForm extends EntityForm {
     $this->checkEntityEditable($form, $index, TRUE);
 
     // Set an appropriate page title.
-    $form['#title'] = $this->t('Manage fields for search index %label', array('%label' => $index->label()));
+    $form['#title'] = $this->t('Manage fields for search index %label', ['%label' => $index->label()]);
     $form['#tree'] = TRUE;
 
     $form['add-field'] = [
@@ -155,7 +155,7 @@ class IndexFieldsForm extends EntityForm {
       ],
     ];
 
-    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, for example titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', array('@url' => '#search-api-data-types-table'));
+    $form['description']['#markup'] = $this->t('<p>The data type of a field determines how it can be used for searching and filtering. The boost is used to give additional weight to certain fields, for example titles or tags.</p> <p>For information about the data types available for indexing, see the <a href="@url">data types table</a> at the bottom of the page.</p>', ['@url' => '#search-api-data-types-table']);
 
     if ($fields = $index->getFieldsByDatasource(NULL)) {
       $form['_general'] = $this->buildFieldsTable($fields);
@@ -173,7 +173,7 @@ class IndexFieldsForm extends EntityForm {
     $fallback_mapping = $this->dataTypeHelper
       ->getDataTypeFallbackMapping($index);
 
-    $data_types = array();
+    $data_types = [];
     foreach ($instances as $name => $type) {
       $data_types[$name] = [
         'label' => $type->label(),
@@ -182,7 +182,7 @@ class IndexFieldsForm extends EntityForm {
       ];
     }
 
-    $form['data_type_explanation'] = array(
+    $form['data_type_explanation'] = [
       '#type' => 'details',
       '#id' => 'search-api-data-types-table',
       '#title' => $this->t('Data types'),
@@ -190,7 +190,7 @@ class IndexFieldsForm extends EntityForm {
       '#theme' => 'search_api_admin_data_type_table',
       '#data_types' => $data_types,
       '#fallback_mapping' => $fallback_mapping,
-    );
+    ];
 
     $form['actions'] = $this->actionsElement($form, $form_state);
 
@@ -216,27 +216,27 @@ class IndexFieldsForm extends EntityForm {
     if ($fallback_types) {
       foreach ($fields as $field) {
         if (isset($fallback_types[$field->getType()])) {
-          drupal_set_message($this->t("Some of the used data types aren't supported by the server's backend. See the <a href=\":url\">data types table</a> to find out which types are supported.", array(':url' => '#search-api-data-types-table')), 'warning');
+          drupal_set_message($this->t("Some of the used data types aren't supported by the server's backend. See the <a href=\":url\">data types table</a> to find out which types are supported.", [':url' => '#search-api-data-types-table']), 'warning');
           break;
         }
       }
     }
 
-    $fulltext_types = array(
-      array(
+    $fulltext_types = [
+      [
         'value' => 'text',
-      ),
-    );
+      ],
+    ];
     // Add all data types with fallback "text" to fulltext types as well.
     foreach ($this->dataTypePluginManager->getInstances() as $type_id => $type) {
       if ($type->getFallbackType() == 'text') {
-        $fulltext_types[] = array(
+        $fulltext_types[] = [
           'value' => $type_id,
-        );
+        ];
       }
     }
 
-    $boost_values = array(
+    $boost_values = [
       '0.0',
       '0.1',
       '0.2',
@@ -250,15 +250,15 @@ class IndexFieldsForm extends EntityForm {
       '8.0',
       '13.0',
       '21.0',
-    );
+    ];
     $boosts = array_combine($boost_values, $boost_values);
 
-    $build = array(
+    $build = [
       '#type' => 'details',
       '#open' => TRUE,
       '#theme' => 'search_api_admin_fields_table',
-      '#parents' => array(),
-      '#header' => array(
+      '#parents' => [],
+      '#header' => [
         t('Label'),
         t('Machine name'),
         [
@@ -267,70 +267,70 @@ class IndexFieldsForm extends EntityForm {
         ],
         t('Type'),
         t('Boost'),
-        array(
+        [
           'data' => t('Operations'),
           'colspan' => 2,
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
 
     foreach ($fields as $key => $field) {
       $build['fields'][$key]['#access'] = !$field->isHidden();
 
-      $build['fields'][$key]['title'] = array(
+      $build['fields'][$key]['title'] = [
         '#type' => 'textfield',
         '#default_value' => $field->getLabel() ? $field->getLabel() : $key,
         '#required' => TRUE,
         '#size' => 40,
-      );
-      $build['fields'][$key]['id'] = array(
+      ];
+      $build['fields'][$key]['id'] = [
         '#type' => 'textfield',
         '#default_value' => $key,
         '#required' => TRUE,
         '#size' => 35,
-      );
-      $build['fields'][$key]['property_path'] = array(
+      ];
+      $build['fields'][$key]['property_path'] = [
         '#markup' => Html::escape($field->getPropertyPath()),
-      );
+      ];
 
       if ($field->getDescription()) {
-        $build['fields'][$key]['description'] = array(
+        $build['fields'][$key]['description'] = [
           '#type' => 'value',
           '#value' => $field->getDescription(),
-        );
+        ];
       }
 
-      $build['fields'][$key]['type'] = array(
+      $build['fields'][$key]['type'] = [
         '#type' => 'select',
         '#options' => $types,
         '#default_value' => $field->getType(),
-      );
+      ];
       if ($field->isTypeLocked()) {
         $build['fields'][$key]['type']['#disabled'] = TRUE;
       }
 
-      $build['fields'][$key]['boost'] = array(
+      $build['fields'][$key]['boost'] = [
         '#type' => 'select',
         '#options' => $boosts,
         '#default_value' => sprintf('%.1f', $field->getBoost()),
-        '#states' => array(
-          'visible' => array(
+        '#states' => [
+          'visible' => [
             ':input[name="fields[' . $key . '][type]"]' => $fulltext_types,
-          ),
-        ),
-      );
+          ],
+        ],
+      ];
 
-      $route_parameters = array(
+      $route_parameters = [
         'search_api_index' => $this->entity->id(),
         'field_id' => $key,
-      );
+      ];
       // Provide some invisible markup as default, if a link is missing, so we
       // don't break the table structure. (theme_search_api_admin_fields_table()
       // does not add empty cells.)
       $build['fields'][$key]['edit']['#markup'] = '<span></span>';
       try {
         if ($field->getDataDefinition() instanceof ConfigurablePropertyInterface) {
-          $build['fields'][$key]['edit'] = array(
+          $build['fields'][$key]['edit'] = [
             '#type' => 'link',
             '#title' => $this->t('Edit'),
             '#url' => Url::fromRoute('entity.search_api_index.field_config', $route_parameters),
@@ -343,7 +343,7 @@ class IndexFieldsForm extends EntityForm {
                 'width' => 700,
               ]),
             ],
-          );
+          ];
         }
       }
       catch (SearchApiException $e) {
@@ -352,14 +352,14 @@ class IndexFieldsForm extends EntityForm {
       }
       $build['fields'][$key]['remove']['#markup'] = '<span></span>';
       if (!$field->isIndexedLocked()) {
-        $build['fields'][$key]['remove'] = array(
+        $build['fields'][$key]['remove'] = [
           '#type' => 'link',
           '#title' => $this->t('Remove'),
           '#url' => Url::fromRoute('entity.search_api_index.remove_field', $route_parameters),
-          '#attributes' => array(
-            'class' => array('use-ajax'),
-          ),
-        );
+          '#attributes' => [
+            'class' => ['use-ajax'],
+          ],
+        ];
       }
     }
 
@@ -370,21 +370,21 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
-    $actions = array(
-      'submit' => array(
+    $actions = [
+      'submit' => [
         '#type' => 'submit',
         '#value' => $this->t('Save changes'),
         '#button_type' => 'primary',
-        '#submit' => array('::submitForm', '::save'),
-      ),
-    );
+        '#submit' => ['::submitForm', '::save'],
+      ],
+    ];
     if ($this->entity instanceof UnsavedConfigurationInterface && $this->entity->hasChanges()) {
-      $actions['cancel'] = array(
+      $actions['cancel'] = [
         '#type' => 'submit',
         '#value' => $this->t('Cancel'),
         '#button_type' => 'danger',
-        '#submit' => array('::cancel'),
-      );
+        '#submit' => ['::cancel'],
+      ];
     }
     return $actions;
   }
@@ -394,7 +394,7 @@ class IndexFieldsForm extends EntityForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $field_values = $form_state->getValues()['fields'];
-    $new_ids = array();
+    $new_ids = [];
 
     foreach ($field_values as $field_id => $field) {
       $new_id = $field['id'];
@@ -402,9 +402,9 @@ class IndexFieldsForm extends EntityForm {
 
       // Check for reserved and other illegal field IDs.
       if ($this->fieldsHelper->isFieldIdReserved($new_id)) {
-        $args = array(
+        $args = [
           '%field_id' => $new_id,
-        );
+        ];
         $error = $this->t('%field_id is a reserved value and cannot be used as the machine name of a normal field.', $args);
         $form_state->setErrorByName('fields][' . $field_id . '][id', $error);
       }
@@ -439,8 +439,8 @@ class IndexFieldsForm extends EntityForm {
 
     // Store the fields configuration.
     $fields = $index->getFields();
-    $field_values = $form_state->getValue('fields', array());
-    $new_fields = array();
+    $field_values = $form_state->getValue('fields', []);
+    $new_fields = [];
     foreach ($field_values as $field_id => $new_settings) {
       if (!isset($fields[$field_id])) {
         $args['%field_id'] = $field_id;

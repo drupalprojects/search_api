@@ -80,12 +80,12 @@ class IndexController extends ControllerBase {
    */
   public function page(IndexInterface $search_api_index) {
     // Build the search index information.
-    $render = array(
-      'view' => array(
+    $render = [
+      'view' => [
         '#theme' => 'search_api_index',
         '#index' => $search_api_index,
-      ),
-    );
+      ],
+    ];
     // Check if the index is enabled and can be written to.
     if ($search_api_index->status() && !$search_api_index->isReadOnly()) {
       // Attach the index status form.
@@ -104,7 +104,7 @@ class IndexController extends ControllerBase {
    *   The page title.
    */
   public function pageTitle(IndexInterface $search_api_index) {
-    return new FormattableMarkup('@title', array('@title' => $search_api_index->label()));
+    return new FormattableMarkup('@title', ['@title' => $search_api_index->label()]);
   }
 
   /**
@@ -124,11 +124,11 @@ class IndexController extends ControllerBase {
     // enabled if its server is not set or disabled.
     if ($search_api_index->status()) {
       // Notify the user about the status change.
-      drupal_set_message($this->t('The search index %name has been enabled.', array('%name' => $search_api_index->label())));
+      drupal_set_message($this->t('The search index %name has been enabled.', ['%name' => $search_api_index->label()]));
     }
     else {
       // Notify the user that the status change did not succeed.
-      drupal_set_message($this->t('The search index %name could not be enabled. Check if its server is set and enabled.', array('%name' => $search_api_index->label())));
+      drupal_set_message($this->t('The search index %name could not be enabled. Check if its server is set and enabled.', ['%name' => $search_api_index->label()]));
     }
 
     // Redirect to the index's "View" page.

@@ -34,7 +34,7 @@ class Utility {
    *
    * @deprecated Will be removed during Beta phase.
    */
-  public static function isTextType($type, array $text_types = array('text')) {
+  public static function isTextType($type, array $text_types = ['text']) {
     return \Drupal::getContainer()
       ->get('search_api.data_type_helper')
       ->isTextType($type, $text_types);
@@ -227,7 +227,7 @@ class Utility {
    *
    * @see \Drupal\search_api\Query\QueryInterface::create()
    */
-  public static function createQuery(IndexInterface $index, array $options = array()) {
+  public static function createQuery(IndexInterface $index, array $options = []) {
     return \Drupal::getContainer()
       ->get('search_api.query_helper')
       ->createQuery($index, $options);
@@ -299,7 +299,7 @@ class Utility {
    *
    * @deprecated Will be removed during Beta phase.
    */
-  public static function createField(IndexInterface $index, $field_identifier, $field_info = array()) {
+  public static function createField(IndexInterface $index, $field_identifier, $field_info = []) {
     return \Drupal::getContainer()
       ->get('search_api.fields_helper')
       ->createField($index, $field_identifier, $field_info);
@@ -393,7 +393,7 @@ class Utility {
    *   A deep copy of the array.
    */
   public static function deepCopy(array $array) {
-    $copy = array();
+    $copy = [];
     foreach ($array as $k => $v) {
       if (is_array($v)) {
         if ($v = static::deepCopy($v)) {
@@ -456,7 +456,7 @@ class Utility {
     if (strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
       return explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $combined_id, 2);
     }
-    return array(NULL, $combined_id);
+    return [NULL, $combined_id];
   }
 
   /**
@@ -485,16 +485,16 @@ class Utility {
     $function = $separate_last ? 'strrpos' : 'strpos';
     $pos = $function($property_path, $separator);
     if ($pos !== FALSE) {
-      return array(
+      return [
         substr($property_path, 0, $pos),
         substr($property_path, $pos + 1),
-      );
+      ];
     }
 
     if ($separate_last) {
-      return array(NULL, $property_path);
+      return [NULL, $property_path];
     }
-    return array($property_path, NULL);
+    return [$property_path, NULL];
   }
 
   /**
