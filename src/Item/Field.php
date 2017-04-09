@@ -2,8 +2,8 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\search_api\DataType\DataTypePluginManager;
-use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
@@ -441,6 +441,22 @@ class Field implements \IteratorAggregate, FieldInterface {
       $this->dataDefinition = $definition;
     }
     return $this->dataDefinition;
+  }
+
+  /**
+   * Sets the field's data definition.
+   *
+   * This should mainly be used only when creating a new field object. Calling
+   * this on an existing field object might not work as expected.
+   *
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $data_definition
+   *   The field's new data definition.
+   *
+   * @return $this
+   */
+  public function setDataDefinition(DataDefinitionInterface $data_definition) {
+    $this->dataDefinition = $data_definition;
+    return $this;
   }
 
   /**

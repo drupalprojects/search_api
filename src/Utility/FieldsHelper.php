@@ -457,6 +457,7 @@ class FieldsHelper implements FieldsHelperInterface {
       'datasource_id' => $datasourceId,
       'property_path' => $propertyPath,
       'type' => $type,
+      'data_definition' => $property,
     );
     if ($property instanceof ConfigurablePropertyInterface) {
       $fieldInfo['configuration'] = $property->defaultConfiguration();

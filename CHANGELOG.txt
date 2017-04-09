@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2863736 by fran seva, drunken monkey: Added a setDataDefinition() method to
+  the Field class.
 - #2867118 by drunken monkey: Fixed reported coding standards problems.
 - #2839932 by drunken monkey,  borisson_, bmcclure, jacktonkin: Fixed Views
   problems with "Rendered item" fields.
