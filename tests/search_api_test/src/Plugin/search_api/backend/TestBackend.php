@@ -237,27 +237,28 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $datasource */
     $datasource = reset($datasources);
     $datasource_id = $datasource->getPluginId();
+    $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
     if ($query->getKeys() && $query->getKeys()[0] == 'test') {
       $item_id = Utility::createCombinedId($datasource_id, '1');
-      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item = $fields_helper->createItem($query->getIndex(), $item_id, $datasource);
       $item->setScore(2);
       $item->setExcerpt('test');
       $result_items[$item_id] = $item;
     }
     elseif ($query->getOption('search_api_mlt')) {
       $item_id = Utility::createCombinedId($datasource_id, '2');
-      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item = $fields_helper->createItem($query->getIndex(), $item_id, $datasource);
       $item->setScore(2);
       $item->setExcerpt('test test');
       $result_items[$item_id] = $item;
     }
     else {
       $item_id = Utility::createCombinedId($datasource_id, '1');
-      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item = $fields_helper->createItem($query->getIndex(), $item_id, $datasource);
       $item->setScore(1);
       $result_items[$item_id] = $item;
       $item_id = Utility::createCombinedId($datasource_id, '2');
-      $item = Utility::createItem($query->getIndex(), $item_id, $datasource);
+      $item = $fields_helper->createItem($query->getIndex(), $item_id, $datasource);
       $item->setScore(1);
       $result_items[$item_id] = $item;
     }

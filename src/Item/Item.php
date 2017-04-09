@@ -212,7 +212,9 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function getFields($extract = TRUE) {
     if ($extract && !$this->fieldsExtracted) {
-      $data_type_fallback_mapping = Utility::getDataTypeFallbackMapping($this->index);
+      $data_type_fallback_mapping = \Drupal::getContainer()
+        ->get('search_api.data_type_helper')
+        ->getDataTypeFallbackMapping($this->index);
       foreach ([NULL, $this->getDatasourceId()] as $datasource_id) {
         $fields_by_property_path = [];
         $processors_with_fields = [];
@@ -239,7 +241,9 @@ class Item implements \IteratorAggregate, ItemInterface {
         }
         try {
           if ($fields_by_property_path) {
-            Utility::extractFields($this->getOriginalObject(), $fields_by_property_path, $this->getLanguage());
+            \Drupal::getContainer()
+              ->get('search_api.fields_helper')
+              ->extractFields($this->getOriginalObject(), $fields_by_property_path, $this->getLanguage());
           }
           if ($processors_with_fields) {
             $processors = $this->index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);

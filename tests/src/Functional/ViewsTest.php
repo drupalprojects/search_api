@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\search_api\Functional;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\SafeMarkup;
+// @todo Once we depend on Drupal 8.3+, change this import.
 use Drupal\Core\Config\Testing\ConfigSchemaChecker;
 use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
@@ -567,7 +568,9 @@ class ViewsTest extends SearchApiBrowserTestBase {
         }
         foreach ($entities as $i => $field_entity) {
           if ($field != 'search_api_datasource') {
-            $data = Utility::extractFieldValues($field_entity->get($field));
+            $data = \Drupal::getContainer()
+              ->get('search_api.fields_helper')
+              ->extractFieldValues($field_entity->get($field));
             if (!$data) {
               $data = ['[EMPTY]'];
             }
@@ -896,7 +899,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     if ($modules) {
       $modules = array_unique($modules);
       $success = $container->get('module_installer')->install($modules, TRUE);
-      $this->assertTrue($success, SafeMarkup::format('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
+      $this->assertTrue($success, new FormattableMarkup('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
       $this->rebuildContainer();
     }
 

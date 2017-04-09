@@ -106,7 +106,7 @@ class RenderedItemTest extends ProcessorTestBase {
 
     // Default node values for all nodes we create below.
     $node_data = [
-      'status' => NODE_PUBLISHED,
+      'status' => NodeInterface::PUBLISHED,
       'type' => 'page',
       'title' => '',
       'body' => ['value' => '', 'summary' => '', 'format' => 'plain_text'],
@@ -151,7 +151,9 @@ class RenderedItemTest extends ProcessorTestBase {
         ],
       ],
     ];
-    $field = Utility::createField($this->index, 'rendered_item', $field_info);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($this->index, 'rendered_item', $field_info);
     $this->index->addField($field);
     $datasources = \Drupal::getContainer()
       ->get('search_api.plugin_helper')

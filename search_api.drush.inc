@@ -686,7 +686,7 @@ function drush_search_api_set_index_server($index_id = NULL, $server_id = NULL) 
  * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
  *   The entity to reload.
  *
- * @return \Drupal\Core\Entity\EntityInterface|null
+ * @return \Drupal\Core\Config\Entity\ConfigEntityInterface|null
  *   The override-free version of the entity, or NULL if it couldn't be loaded.
  */
 function _search_api_drush_reload_entity_override_free(ConfigEntityInterface $entity) {

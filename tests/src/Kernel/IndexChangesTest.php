@@ -192,7 +192,10 @@ class IndexChangesTest extends KernelTestBase {
       'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => 'id',
     ];
-    $this->index->addField(Utility::createField($this->index, 'id', $info));
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($this->index, 'id', $info);
+    $this->index->addField($field);
     $this->index->save();
 
     $tracker = $this->index->getTrackerInstance();
@@ -301,15 +304,16 @@ class IndexChangesTest extends KernelTestBase {
       ]);
     $this->index->addProcessor($processor);
 
+    $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
     $info = [
       'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => 'id',
     ];
-    $this->index->addField(Utility::createField($this->index, 'id', $info));
+    $this->index->addField($fields_helper->createField($this->index, 'id', $info));
     $info = [
       'property_path' => 'search_api_url',
     ];
-    $this->index->addField(Utility::createField($this->index, 'url', $info));
+    $this->index->addField($fields_helper->createField($this->index, 'url', $info));
 
     $this->index->save();
 
@@ -368,16 +372,17 @@ class IndexChangesTest extends KernelTestBase {
       ]);
     $this->index->setDatasources([$datasource_id => $datasource]);
 
+    $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
     $info = [
       'datasource_id' => $datasource_id,
       'property_path' => 'field1',
     ];
-    $this->index->addField(Utility::createField($this->index, 'field1', $info));
+    $this->index->addField($fields_helper->createField($this->index, 'field1', $info));
     $info = [
       'datasource_id' => $datasource_id,
       'property_path' => 'field2',
     ];
-    $this->index->addField(Utility::createField($this->index, 'field2', $info));
+    $this->index->addField($fields_helper->createField($this->index, 'field2', $info));
 
     $this->index->save();
 
@@ -406,7 +411,9 @@ class IndexChangesTest extends KernelTestBase {
       'datasource_id' => $datasource_id,
       'property_path' => 'name',
     ];
-    $field = Utility::createField($this->index, 'name', $info);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($this->index, 'name', $info);
     $this->index->addField($field);
     $this->assertEquals([], $this->index->getFieldRenames());
 

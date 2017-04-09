@@ -3,7 +3,6 @@
 namespace Drupal\Tests\search_api\Unit\Plugin\Processor;
 
 use Drupal\search_api\Plugin\search_api\processor\Stopwords;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -100,7 +99,9 @@ class StopwordsTest extends UnitTestCase {
     /** @var \Drupal\search_api\IndexInterface $index */
 
     $this->processor->setIndex($index);
-    $query = Utility::createQuery($index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($index);
     $keys = ['#conjunction' => 'AND', 'foo', 'bar', 'bar foo'];
     $query->keys($keys);
 

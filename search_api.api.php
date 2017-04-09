@@ -148,7 +148,7 @@ function hook_search_api_displays_alter(&$displays) {
  *   corresponding Search API data types. A value of FALSE means that fields of
  *   that type should be ignored by the Search API.
  *
- * @see \Drupal\search_api\Utility::getFieldTypeMapping()
+ * @see \Drupal\search_api\Utility\DataTypeHelperInterface::getFieldTypeMapping()
  */
 function hook_search_api_field_type_mapping_alter(array &$mapping) {
   $mapping['duration_iso8601'] = FALSE;
@@ -344,7 +344,7 @@ function hook_search_api_index_reindex(\Drupal\search_api\IndexInterface $index,
     ->fields([
       'index' => $index->id(),
       'clear' => $clear,
-      'update_time' => REQUEST_TIME,
+      'update_time' => \Drupal::time()->getRequestTime(),
     ])
     ->execute();
 }

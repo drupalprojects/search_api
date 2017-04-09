@@ -6,7 +6,6 @@ use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
-use Drupal\search_api\Utility\Utility;
 
 /**
  * Tests custom data types integration.
@@ -125,7 +124,9 @@ class CustomDataTypesTest extends KernelTestBase {
     $original_type = $this->index->getField('name')->getType();
 
     $item = $this->index->loadItem('entity:entity_test_mulrev_changed/1:en');
-    $item = Utility::createItemFromObject($this->index, $item, 'entity:entity_test_mulrev_changed/1:en');
+    $item = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createItemFromObject($this->index, $item, 'entity:entity_test_mulrev_changed/1:en');
 
     $name_field = $item->getField('name');
     $processed_value = $name_field->getValues()[0];

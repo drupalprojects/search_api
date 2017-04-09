@@ -653,7 +653,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    */
   public function addField(FieldInterface $field) {
     $field_id = $field->getFieldIdentifier();
-    if (Utility::isFieldIdReserved($field_id)) {
+    $reserved = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->isFieldIdReserved($field_id);
+    if ($reserved) {
       throw new SearchApiException("'$field_id' is a reserved value and cannot be used as the machine name of a normal field.");
     }
 
@@ -676,7 +679,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!isset($this->getFields()[$old_field_id])) {
       throw new SearchApiException("Could not rename field with machine name '$old_field_id': no such field.");
     }
-    if (Utility::isFieldIdReserved($new_field_id)) {
+    $reserved = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->isFieldIdReserved($new_field_id);
+    if ($reserved) {
       throw new SearchApiException("'$new_field_id' is a reserved value and cannot be used as the machine name of a normal field.");
     }
     if (isset($this->getFields()[$new_field_id])) {
@@ -721,7 +727,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!isset($this->fieldInstances)) {
       $this->fieldInstances = [];
       foreach ($this->field_settings as $key => $field_info) {
-        $this->fieldInstances[$key] = Utility::createField($this, $key, $field_info);
+        $this->fieldInstances[$key] = \Drupal::getContainer()
+          ->get('search_api.fields_helper')
+          ->createField($this, $key, $field_info);
       }
     }
 
@@ -760,7 +768,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
   public function getFulltextFields() {
     $fulltext_fields = [];
     foreach ($this->getFields() as $key => $field) {
-      if (Utility::isTextType($field->getType())) {
+      if (\Drupal::getContainer()
+        ->get('search_api.data_type_helper')
+        ->isTextType($field->getType())) {
         $fulltext_fields[] = $key;
       }
     }
@@ -906,7 +916,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     /** @var \Drupal\search_api\Item\ItemInterface[] $items */
     $items = [];
     foreach ($search_objects as $item_id => $object) {
-      $items[$item_id] = Utility::createItemFromObject($this, $object, $item_id);
+      $items[$item_id] = \Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->createItemFromObject($this, $object, $item_id);
     }
 
     // Remember the items that were initially passed, to be able to determine
@@ -1116,7 +1128,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if (!$this->status()) {
       throw new SearchApiException('Cannot search on a disabled index.');
     }
-    return Utility::createQuery($this, $options);
+    return \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this, $options);
   }
 
   /**
@@ -1190,7 +1204,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
           $properties[$datasource_id] = [];
         }
       }
-      if (!Utility::retrieveNestedProperty($properties[$datasource_id], $field->getPropertyPath())) {
+      if (!\Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->retrieveNestedProperty($properties[$datasource_id], $field->getPropertyPath())) {
         $this->removeField($field_id);
       }
     }

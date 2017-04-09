@@ -150,7 +150,8 @@ class SearchApiQuery extends QueryPluginBase {
     if (substr($table, 0, 17) == 'search_api_index_') {
       $index_id = substr($table, 17);
       if ($entity_type_manager) {
-        return $entity_type_manager->getStorage('search_api_index')->load($index_id);
+        return $entity_type_manager->getStorage('search_api_index')
+          ->load($index_id);
       }
       return Index::load($index_id);
     }

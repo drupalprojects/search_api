@@ -12,7 +12,6 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 
 /**
@@ -1165,7 +1164,9 @@ abstract class BackendTestBase extends KernelTestBase {
       'datasource_id' => 'entity:entity_test_mulrev_changed',
       'property_path' => $property_name,
     ];
-    $field = Utility::createField($index, $property_name, $field_info);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($index, $property_name, $field_info);
     $index->addField($field);
     $index->save();
   }

@@ -432,7 +432,9 @@ class Field implements \IteratorAggregate, FieldInterface {
   public function getDataDefinition() {
     if (!isset($this->dataDefinition)) {
       $definitions = $this->index->getPropertyDefinitions($this->getDatasourceId());
-      $definition = Utility::retrieveNestedProperty($definitions, $this->getPropertyPath());
+      $definition = \Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->retrieveNestedProperty($definitions, $this->getPropertyPath());
       if (!$definition) {
         $field_label = $this->getLabel();
         $index_label = $this->getIndex()->label();
@@ -634,7 +636,10 @@ class Field implements \IteratorAggregate, FieldInterface {
     $field_id = $this->getFieldIdentifier();
     $type = $this->getType();
     $out = "$label [$field_id]: indexed as type $type";
-    if (Utility::isTextType($type)) {
+    $is_text_type = \Drupal::getContainer()
+      ->get('search_api.data_type_helper')
+      ->isTextType($type);
+    if ($is_text_type) {
       $out .= ' (boost ' . $this->getBoost() . ')';
     }
     if ($this->getValues()) {

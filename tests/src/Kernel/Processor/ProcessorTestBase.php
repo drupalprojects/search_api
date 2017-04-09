@@ -164,7 +164,9 @@ abstract class ProcessorTestBase extends KernelTestBase {
     $extracted_items = [];
     foreach ($items as $item) {
       $id = Utility::createCombinedId($item['datasource'], $item['item_id']);
-      $extracted_items[$id] = Utility::createItemFromObject($this->index, $item['item'], $id);
+      $extracted_items[$id] = \Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->createItemFromObject($this->index, $item['item'], $id);
       foreach ([NULL, $item['datasource']] as $datasource_id) {
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $key => $field) {
           /** @var \Drupal\search_api\Item\FieldInterface $field */

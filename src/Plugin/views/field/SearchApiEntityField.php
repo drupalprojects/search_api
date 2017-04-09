@@ -16,6 +16,8 @@ use Drupal\views\Views;
 /**
  * Displays entity field data.
  *
+ * @todo Once we depend on Drupal 8.3+, inherit from EntityField instead.
+ *
  * @ingroup views_field_handlers
  *
  * @ViewsField("search_api_field")
@@ -60,7 +62,7 @@ class SearchApiEntityField extends Field {
   /**
    * {@inheritdoc}
    */
-  public function query() {
+  public function query($use_groupby = FALSE) {
     // If we're not using Field API field rendering, just use the query()
     // implementation of the fallback handler.
     if (!$this->options['field_rendering']) {

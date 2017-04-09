@@ -171,7 +171,9 @@ class AggregatedFieldsTest extends UnitTestCase {
     $i = 0;
     foreach (['entity:test1', 'entity:test2'] as $datasource_id) {
       $this->itemIds[$i++] = $item_id = Utility::createCombinedId($datasource_id, '1:en');
-      $item = Utility::createItem($this->index, $item_id);
+      $item = \Drupal::getContainer()
+        ->get('search_api.fields_helper')
+        ->createItem($this->index, $item_id);
       foreach ([NULL, $datasource_id] as $field_datasource_id) {
         foreach ($this->index->getFieldsByDatasource($field_datasource_id) as $field_id => $field) {
           $field = clone $field;
@@ -333,7 +335,8 @@ class AggregatedFieldsTest extends UnitTestCase {
     /** @var \Drupal\search_api\IndexInterface|\PHPUnit_Framework_MockObject_MockObject $index */
     $index = $this->getMock(IndexInterface::class);
 
-    $field = Utility::createField($index, 'aggregated_field', [
+    $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
+    $field = $fields_helper->createField($index, 'aggregated_field', [
       'property_path' => 'aggregated_field',
       'configuration' => [
         'type' => 'union',
@@ -394,16 +397,16 @@ class AggregatedFieldsTest extends UnitTestCase {
     $datasource->method('getPluginId')
       ->willReturn('entity:test1');
 
-    $item = Utility::createItem($index, 'id', $datasource);
+    $item = $fields_helper->createItem($index, 'id', $datasource);
     $item->setOriginalObject($object);
     $item->setField('aggregated_field', clone $field);
-    $item->setField('test1', Utility::createField($index, 'test1', [
+    $item->setField('test1', $fields_helper->createField($index, 'test1', [
       'property_path' => 'baz',
       'values' => [
         'wrong_value1',
       ],
     ]));
-    $item->setField('test2', Utility::createField($index, 'test2', [
+    $item->setField('test2', $fields_helper->createField($index, 'test2', [
       'datasource_id' => 'entity:test1',
       'property_path' => 'baz',
       'values' => [

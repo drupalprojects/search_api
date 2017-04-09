@@ -6,7 +6,6 @@ use Drupal\search_api\Item\Field;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Query\Condition;
-use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -112,7 +111,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    */
   public function testTestTypeOverride() {
     $override = function ($type) {
-      return Utility::isTextType($type, ['string', 'integer']);
+      return \Drupal::getContainer()
+        ->get('search_api.data_type_helper')
+        ->isTextType($type, ['string', 'integer']);
     };
     $this->processor->setMethodOverride('testType', $override);
 
@@ -348,7 +349,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * Tests whether preprocessing of queries without search keys works correctly.
    */
   public function testProcessKeysNoKeys() {
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
 
     $this->processor->preprocessSearchQuery($query);
 
@@ -359,7 +362,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * Tests whether preprocessing of simple search keys works correctly.
    */
   public function testProcessKeysSimple() {
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $keys = &$query->getKeys();
     $keys = 'foo';
 
@@ -372,7 +377,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * Tests whether preprocessing of complex search keys works correctly.
    */
   public function testProcessKeysComplex() {
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $keys = &$query->getKeys();
     $keys = [
       '#conjunction' => 'OR',
@@ -414,7 +421,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     };
     $this->processor->setMethodOverride('processKey', $override);
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $keys = &$query->getKeys();
     $keys = [
       '#conjunction' => 'OR',
@@ -445,7 +454,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * Tests whether preprocessing search conditions works correctly.
    */
   public function testProcessConditions() {
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $query->addCondition('text_field', 'foo');
     $query->addCondition('text_field', ['foo', 'bar'], 'IN');
     $query->addCondition('string_field', NULL, '<>');
@@ -466,7 +477,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
    * Tests whether preprocessing nested search conditions works correctly.
    */
   public function testProcessConditionsNestedConditions() {
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $conditions = $query->createConditionGroup();
     $conditions->addCondition('text_field', 'foo');
     $conditions->addCondition('text_field', ['foo', 'bar'], 'IN');
@@ -496,7 +509,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     };
     $this->processor->setMethodOverride('processConditionValue', $override);
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $query->addCondition('text_field', 'foo');
     $query->addCondition('string_field', NULL, '<>');
     $query->addCondition('integer_field', 'bar');
@@ -525,7 +540,9 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     };
     $this->processor->setMethodOverride('process', $override);
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $query->addCondition('text_field', ['a', 'b'], 'NOT IN');
     $query->addCondition('text_field', ['a', 'bo'], 'IN');
     $query->addCondition('text_field', ['ab', 'bo'], 'NOT IN');

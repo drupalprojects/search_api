@@ -1198,13 +1198,17 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->drupalGet($fields_path);
     $this->submitForm(['fields[url][boost]' => '8.0'], 'Save changes');
     $this->assertSession()->pageTextContains('The changes were successfully saved.');
-    $this->assertOptionSelected('edit-fields-url-boost', '8.0', 'Boost is correctly saved.');
+    $option_field = $this->assertSession()
+      ->optionExists('edit-fields-url-boost', '8.0');
+    $this->assertTrue($option_field->hasAttribute('selected'), 'Boost is correctly saved.');
 
     // Change the type of the field.
     $this->drupalGet($fields_path);
     $this->submitForm(['fields[url][type]' => 'text'], 'Save changes');
     $this->assertSession()->pageTextContains('The changes were successfully saved.');
-    $this->assertOptionSelected('edit-fields-url-type', 'text', 'Type is correctly saved.');
+    $option_field = $this->assertSession()
+      ->optionExists('edit-fields-url-type', 'text');
+    $this->assertTrue($option_field->hasAttribute('selected'), 'Type is correctly saved.');
   }
 
   /**

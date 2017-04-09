@@ -564,12 +564,14 @@ class DependencyRemovalTest extends KernelTestBase {
       ->get('search_api.plugin_helper')
       ->createDatasourcePlugins($this->index, ['entity:user']);
     $this->index->setDatasources($datasources);
-    $field = Utility::createField($this->index, 'uid', [
-      'label' => 'ID',
-      'datasource_id' => 'entity:user',
-      'property_path' => 'uid',
-      'type' => $type,
-    ]);
+    $field = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createField($this->index, 'uid', [
+        'label' => 'ID',
+        'datasource_id' => 'entity:user',
+        'property_path' => 'uid',
+        'type' => $type,
+      ]);
     $this->index->addField($field);
     // Set the server to NULL to not have a dependency on that by default.
     $this->index->setServer(NULL);

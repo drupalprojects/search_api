@@ -9,7 +9,7 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\search_api\Utility\Utility;
+use Drupal\node\NodeInterface;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -66,7 +66,7 @@ class ContentAccessTest extends ProcessorTestBase {
 
     // Create a node with attached comment.
     $values = [
-      'status' => NODE_PUBLISHED,
+      'status' => NodeInterface::PUBLISHED,
       'type' => 'page',
       'title' => 'test title',
     ];
@@ -94,7 +94,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->comments[] = $comment;
 
     $values = [
-      'status' => NODE_PUBLISHED,
+      'status' => NodeInterface::PUBLISHED,
       'type' => 'page',
       'title' => 'some title',
     ];
@@ -102,7 +102,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[1]->save();
 
     $values = [
-      'status' => NODE_NOT_PUBLISHED,
+      'status' => NodeInterface::NOT_PUBLISHED,
       'type' => 'page',
       'title' => 'other title',
     ];
@@ -136,7 +136,9 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->indexItems();
     $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $result = $query->execute();
 
     $expected = [
@@ -156,7 +158,9 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->indexItems();
     $this->assertEquals(5, $this->index->getTrackerInstance()->getIndexedItemsCount(), '5 items indexed, as expected.');
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $result = $query->execute();
 
     $this->assertResults($result, ['user' => [0], 'comment' => [0]]);
@@ -176,7 +180,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $uid = $authenticated_user->id();
 
     $values = [
-      'status' => NODE_NOT_PUBLISHED,
+      'status' => NodeInterface::NOT_PUBLISHED,
       'type' => 'page',
       'title' => 'foo',
       'uid' => $uid,
@@ -186,7 +190,9 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->indexItems();
     $this->assertEquals(7, $this->index->getTrackerInstance()->getIndexedItemsCount(), '7 items indexed, as expected.');
 
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 
@@ -216,7 +222,9 @@ class ContentAccessTest extends ProcessorTestBase {
 
     $this->index->reindex();
     $this->indexItems();
-    $query = Utility::createQuery($this->index);
+    $query = \Drupal::getContainer()
+      ->get('search_api.query_helper')
+      ->createQuery($this->index);
     $query->setOption('search_api_access_account', $authenticated_user);
     $result = $query->execute();
 

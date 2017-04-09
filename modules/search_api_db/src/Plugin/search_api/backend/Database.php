@@ -644,18 +644,18 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    */
   protected function findFreeTable($prefix, $name) {
     // A DB prefix might further reduce the maximum length of the table name.
-    $maxbytes = 62;
+    $max_bytes = 62;
     if ($db_prefix = $this->database->tablePrefix()) {
       // Use strlen() instead of Unicode::strlen() since we want to measure
       // bytes, not characters.
-      $maxbytes -= strlen($db_prefix);
+      $max_bytes -= strlen($db_prefix);
     }
 
-    $base = $table = Unicode::truncateBytes($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), $maxbytes);
+    $base = $table = Unicode::truncateBytes($prefix . Unicode::strtolower(preg_replace('/[^a-z0-9]/i', '_', $name)), $max_bytes);
     $i = 0;
     while ($this->database->schema()->tableExists($table)) {
       $suffix = '_' . ++$i;
-      $table = Unicode::truncateBytes($base, $maxbytes - strlen($suffix)) . $suffix;
+      $table = Unicode::truncateBytes($base, $max_bytes - strlen($suffix)) . $suffix;
     }
     return $table;
   }
@@ -806,8 +806,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * Returns the schema definition for a database column for a search data type.
    *
    * @param string $type
-   *   An indexed field's search type. One of the keys from
-   *   \Drupal\search_api\Utility\Utility::getDefaultDataTypes().
+   *   An indexed field's search type. One of the default data types.
    *
    * @return array
    *   Column configurations to use for the field's database column.

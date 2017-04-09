@@ -82,8 +82,9 @@ class Basic extends TrackerPluginBase {
    *   A SELECT statement.
    */
   protected function createSelectStatement() {
-    return $this->getDatabaseConnection()->select('search_api_item', 'sai')
-      ->condition('index_id', $this->getIndex()->id());
+    $select = $this->getDatabaseConnection()->select('search_api_item', 'sai');
+    $select->condition('index_id', $this->getIndex()->id());
+    return $select;
   }
 
   /**
@@ -198,6 +199,7 @@ class Basic extends TrackerPluginBase {
       $ids_chunks = ($ids !== NULL ? array_chunk($ids, 1000) : [NULL]);
       foreach ($ids_chunks as $ids_chunk) {
         $update = $this->createUpdateStatement();
+        // @todo Once we depend on Drupal 8.3+, replace REQUEST_TIME.
         $update->fields(['changed' => REQUEST_TIME, 'status' => $this::STATUS_NOT_INDEXED]);
         if ($ids_chunk) {
           $update->condition('item_id', $ids_chunk, 'IN');

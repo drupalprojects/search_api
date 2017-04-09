@@ -543,6 +543,7 @@ function _search_api_views_datasource_table(DatasourceInterface $datasource, arr
  */
 function _search_api_views_entity_type_table($entity_type_id, array &$data) {
   $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+  // @todo Once we depend on Drupal 8.3+, use entityClassImplements().
   if (!$entity_type || !$entity_type->isSubclassOf(FieldableEntityInterface::class)) {
     return [];
   }
@@ -587,7 +588,9 @@ function _search_api_views_add_handlers_for_properties(array $properties, array 
   foreach ($properties as $property_path => $property) {
     $key = _search_api_views_find_field_alias($property_path, $table);
     $original_property = $property;
-    $property = Utility::getInnerProperty($property);
+    $property = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->getInnerProperty($property);
 
     // Add a field handler, if applicable.
     $definition = _search_api_views_get_field_handler_for_property($property, $property_path);

@@ -380,6 +380,7 @@ class FieldsHelper implements FieldsHelperInterface {
   public function isContentEntityType($entity_type_id) {
     try {
       $definition = $this->entityTypeManager->getDefinition($entity_type_id);
+      // @todo Once we depend on Drupal 8.3+, use entityClassImplements().
       return $definition->isSubclassOf(ContentEntityInterface::class);
     }
     catch (PluginNotFoundException $e) {

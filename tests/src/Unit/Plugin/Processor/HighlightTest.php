@@ -876,7 +876,9 @@ class HighlightTest extends UnitTestCase {
     $datasource->method('getPluginId')
       ->willReturn('entity:test1');
 
-    $item = Utility::createItem($this->index, 'id', $datasource);
+    $item = \Drupal::getContainer()
+      ->get('search_api.fields_helper')
+      ->createItem($this->index, 'id', $datasource);
     $item->setOriginalObject($object);
     $field = $this->createTestField('field4', 'baz')
       ->addValue('wrong_value1 foo');

@@ -59,8 +59,6 @@ class IndexLoadItemsTest extends KernelTestBase {
    * Verifies that missing items are correctly detected and removed.
    */
   public function testMissingItems() {
-    $state = \Drupal::state();
-
     $item_ids = [
       'search_api_test/1',
       'search_api_test/2',
