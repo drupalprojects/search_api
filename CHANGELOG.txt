@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.0, RC 1 (2017-04-09):
 ------------------------------------
 - #2776659 by drunken monkey, drholera: Removed the deprecated Utility methods.
