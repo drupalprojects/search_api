@@ -140,6 +140,11 @@ class Task extends ContentEntityBase implements TaskInterface {
       $data = $this->get('data')[0];
       if ($data) {
         $this->unserializedData = unserialize($data->value);
+        if (!empty($this->unserializedData['#entity_type'])) {
+          $this->unserializedData = \Drupal::entityTypeManager()
+            ->getStorage($this->unserializedData['#entity_type'])
+            ->create($this->unserializedData['#values']);
+        }
       }
     }
 

@@ -3,6 +3,7 @@
 namespace Drupal\search_api\Task;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -114,11 +115,21 @@ class TaskManager implements TaskManagerInterface {
    * {@inheritdoc}
    */
   public function addTask($type, ServerInterface $server = NULL, IndexInterface $index = NULL, $data = NULL) {
+    if (isset($data)) {
+      if ($data instanceof EntityInterface) {
+        $data = [
+          '#entity_type' => $data->getEntityTypeId(),
+          '#values' => $data->toArray(),
+        ];
+      }
+      $data = serialize($data);
+    }
+
     $task = $this->getTaskStorage()->create([
       'type' => $type,
       'server_id' => $server ? $server->id() : NULL,
       'index_id' => $index ? $index->id() : NULL,
-      'data' => isset($data) ? serialize($data) : NULL,
+      'data' => $data,
     ]);
     $task->save();
     return $task;

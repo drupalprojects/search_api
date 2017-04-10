@@ -920,8 +920,20 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             // re-indexing.
             if ($field['boost']) {
               $multiplier = $new_fields[$field_id]->getBoost() / $field['boost'];
+              // Postgres doesn't allow multiplying an integer column with a
+              // float literal, so we have to work around that.
+              $expression = 'score * :mult';
+              $args = [
+                ':mult' => $multiplier,
+              ];
+              if (is_float($multiplier) && $pos = strpos("$multiplier", '.')) {
+                $expression .= ' / :div';
+                $after_point_digits = strlen("$multiplier") - $pos - 1;
+                $args[':div'] = pow(10, min(3, $after_point_digits));
+                $args[':mult'] = (int) round($args[':mult'] * $args[':div']);
+              }
               $this->database->update($text_table)
-                ->expression('score', 'score * :mult', [':mult' => $multiplier])
+                ->expression('score', $expression, $args)
                 ->condition('field_name', self::getTextFieldName($field_id))
                 ->execute();
             }
