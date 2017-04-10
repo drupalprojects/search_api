@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.0, RC 2 (2017-04-10):
 ----------------------------------
 - #2846932 by drunken monkey, killua99, borisson_: Fixed error when changing
