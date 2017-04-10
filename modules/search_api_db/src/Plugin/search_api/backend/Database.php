@@ -7,6 +7,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database as CoreDatabase;
+use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\Query\Condition;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -784,6 +785,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $this->database->schema()->addIndex($db['table'], '_' . $column, $index_spec, $table_spec);
     }
     catch (\PDOException $e) {
+      $variables['%column'] = $column;
+      $variables['%table'] = $db['table'];
+      $this->logException($e, '%type while trying to add a database index for column %column to table %table: @message in %function (line %line of %file).', $variables, RfcLogLevel::WARNING);
+    }
+    catch (DatabaseException $e) {
       $variables['%column'] = $column;
       $variables['%table'] = $db['table'];
       $this->logException($e, '%type while trying to add a database index for column %column to table %table: @message in %function (line %line of %file).', $variables, RfcLogLevel::WARNING);
@@ -2440,6 +2446,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $result = $this->database->queryTemporary((string) $db_query, $args);
     }
     catch (\PDOException $e) {
+      $this->logException($e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
+      return FALSE;
+    }
+    catch (DatabaseException $e) {
       $this->logException($e, '%type while trying to create a temporary table: @message in %function (line %line of %file).');
       return FALSE;
     }

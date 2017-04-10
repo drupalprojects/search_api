@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2844945 by drunken monkey: Fixed uncaught exception when adding too many
+  fields.
 
 Search API 1.0, RC 1 (2017-04-09):
 ------------------------------------
