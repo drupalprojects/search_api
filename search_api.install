@@ -225,7 +225,7 @@ function search_api_update_8103() {
     $index = $config_factory->getEditable($index_id);
     $processors = $index->get('processor_settings');
 
-    if (!empty($processors['node_status'])) {
+    if (isset($processors['node_status'])) {
       $processors['entity_status'] = $processors['node_status'];
       unset($processors['node_status']);
       $index->set('processor_settings', $processors);
@@ -234,6 +234,13 @@ function search_api_update_8103() {
       $index->save(TRUE);
     }
   }
+
+  // Clear the processor plugin cache so that if anything else indirectly tries
+  // to update Search API-related configuration, the plugin helper gets the most
+  // up-to-date plugin definitions.
+  \Drupal::getContainer()
+    ->get('plugin.manager.search_api.processor')
+    ->clearCachedDefinitions();
 
   return t('Switched from old "Node status" to new "Entity status" processor.');
 }

@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2866454 by phenaproxima, drunken monkey: Fixed problems in update 8103.
 - #2844945 by drunken monkey: Fixed uncaught exception when adding too many
   fields.
 
