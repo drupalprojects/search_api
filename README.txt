@@ -34,9 +34,9 @@ No other modules are required.
 
 INSTALLATION
 ------------
- * Install as you would normally install a contributed drupal module. See:
-  https://www.drupal.org/documentation/install/modules-themes/modules-8
-  for further information.
+Install as you would normally install a contributed Drupal module. For further
+information, see:
+   https://www.drupal.org/node/1897420
 
 CONFIGURATION
 -------------
@@ -102,4 +102,4 @@ The handbook documentation for developers is available at [5].
 MAINTAINERS
 -----------
 Current maintainers:
- * Thomas Seidl (drunken monkey) - https://www.drupal.org/u/drunken-monkey
+  * Thomas Seidl (drunken monkey) - https://www.drupal.org/u/drunken-monkey
