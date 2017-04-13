@@ -3,10 +3,8 @@
 namespace Drupal\search_api\Utility;
 
 use Drupal\Component\Plugin\Exception\PluginException;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\search_api\Datasource\DatasourcePluginManager;
 use Drupal\search_api\IndexInterface;
-use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Processor\ProcessorPluginManager;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Tracker\TrackerPluginManager;
@@ -16,8 +14,6 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  * Provides methods for creating search plugins.
  */
 class PluginHelper implements PluginHelperInterface {
-
-  use LoggerTrait;
 
   /**
    * The datasource plugin manager.
@@ -49,10 +45,8 @@ class PluginHelper implements PluginHelperInterface {
    *   The processor plugin manager.
    * @param \Drupal\search_api\Tracker\TrackerPluginManager $tracker_plugin_manager
    *   The tracker plugin manager.
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
-   *   The logger channel to use.
    */
-  public function __construct(DatasourcePluginManager $datasource_plugin_manager, ProcessorPluginManager $processor_plugin_manager, TrackerPluginManager $tracker_plugin_manager, LoggerChannelInterface $logger) {
+  public function __construct(DatasourcePluginManager $datasource_plugin_manager, ProcessorPluginManager $processor_plugin_manager, TrackerPluginManager $tracker_plugin_manager) {
     $this->datasourcePluginManager = $datasource_plugin_manager;
     $this->processorPluginManager = $processor_plugin_manager;
     $this->trackerPluginManager = $tracker_plugin_manager;

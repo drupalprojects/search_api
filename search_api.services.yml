@@ -66,7 +66,7 @@ services:
 
   search_api.plugin_helper:
     class: Drupal\search_api\Utility\PluginHelper
-    arguments: ['@plugin.manager.search_api.datasource', '@plugin.manager.search_api.processor', '@plugin.manager.search_api.tracker', '@logger.channel.search_api']
+    arguments: ['@plugin.manager.search_api.datasource', '@plugin.manager.search_api.processor', '@plugin.manager.search_api.tracker']
 
   search_api.query_helper:
     class: Drupal\search_api\Utility\QueryHelper

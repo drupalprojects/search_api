@@ -2,9 +2,9 @@
 
 namespace Drupal\search_api;
 
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Utility\Error;
 use Drupal\Core\Logger\RfcLogLevel;
+use Psr\Log\LoggerInterface;
 
 /**
  * Provides helper methods for logging with dependency injection.
@@ -14,14 +14,14 @@ trait LoggerTrait {
   /**
    * The logging channel to use.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface|null
+   * @var \Psr\Log\LoggerInterface|null
    */
   protected $logger;
 
   /**
    * Retrieves the logger.
    *
-   * @return \Drupal\Core\Logger\LoggerChannelInterface
+   * @return \Psr\Log\LoggerInterface
    *   The logger.
    */
   public function getLogger() {
@@ -31,12 +31,12 @@ trait LoggerTrait {
   /**
    * Sets the logger.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   The new logger.
    *
    * @return $this
    */
-  public function setLogger(LoggerChannelInterface $logger) {
+  public function setLogger(LoggerInterface $logger) {
     $this->logger = $logger;
     return $this;
   }
