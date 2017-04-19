@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2870782 by drunken monkey: Fixed the tests for Drupal 8.2.
 - #2868851 by acbramley, drunken monkey: Fixed wrong interface used for loggers.
 - #2868427 by dbjpanda, drunken monkey: Fixed use of d.o URL alias in
   README.txt.

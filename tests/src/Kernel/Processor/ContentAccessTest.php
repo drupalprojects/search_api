@@ -9,7 +9,6 @@ use Drupal\Core\Database\Database;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\node\NodeInterface;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -66,7 +65,9 @@ class ContentAccessTest extends ProcessorTestBase {
 
     // Create a node with attached comment.
     $values = [
-      'status' => NodeInterface::PUBLISHED,
+      // @todo Once we depend on Drupal 8.3+, replace with
+      //   NodeInterface::PUBLISHED.
+      'status' => NODE_PUBLISHED,
       'type' => 'page',
       'title' => 'test title',
     ];
@@ -94,7 +95,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->comments[] = $comment;
 
     $values = [
-      'status' => NodeInterface::PUBLISHED,
+      'status' => NODE_PUBLISHED,
       'type' => 'page',
       'title' => 'some title',
     ];
@@ -102,7 +103,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $this->nodes[1]->save();
 
     $values = [
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NODE_NOT_PUBLISHED,
       'type' => 'page',
       'title' => 'other title',
     ];
@@ -180,7 +181,7 @@ class ContentAccessTest extends ProcessorTestBase {
     $uid = $authenticated_user->id();
 
     $values = [
-      'status' => NodeInterface::NOT_PUBLISHED,
+      'status' => NODE_NOT_PUBLISHED,
       'type' => 'page',
       'title' => 'foo',
       'uid' => $uid,

@@ -106,7 +106,9 @@ class RenderedItemTest extends ProcessorTestBase {
 
     // Default node values for all nodes we create below.
     $node_data = [
-      'status' => NodeInterface::PUBLISHED,
+      // @todo Once we depend on Drupal 8.3+, replace with
+      //   NodeInterface::PUBLISHED.
+      'status' => NODE_PUBLISHED,
       'type' => 'page',
       'title' => '',
       'body' => ['value' => '', 'summary' => '', 'format' => 'plain_text'],
