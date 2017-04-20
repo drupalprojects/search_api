@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.0, RC 3 (2017-04-20):
+----------------------------------
 - #2869121 by drunken monkey, Wim Leers, wouter.adem, borisson_: Added improved
   "Required" handling for the Views "Fulltext search" filter.
 - #2870782 by drunken monkey: Fixed the tests for Drupal 8.2.
