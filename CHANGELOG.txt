@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2863445 by dbjpanda, drunken monkey: Fixed phrasing in README.txt.
 
 Search API 1.21 (2017-02-23):
 -----------------------------
