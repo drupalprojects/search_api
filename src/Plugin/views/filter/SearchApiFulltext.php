@@ -205,14 +205,21 @@ class SearchApiFulltext extends FilterPluginBase {
   /**
    * {@inheritdoc}
    */
+  protected function exposedTranslate(&$form, $type) {
+    parent::exposedTranslate($form, $type);
+
+    // We use custom validation for "required", so don't want the Form API to
+    // interfere.
+    // @see ::validateExposed()
+    $form['#required'] = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateExposed(&$form, FormStateInterface $form_state) {
     // Only validate exposed input.
     if (empty($this->options['exposed']) || empty($this->options['expose']['identifier'])) {
-      return;
-    }
-
-    // We only need to validate if there is a minimum word length set.
-    if ($this->options['min_length'] < 2) {
       return;
     }
 
@@ -224,8 +231,19 @@ class SearchApiFulltext extends FilterPluginBase {
       $input = &$this->options['group_info']['group_items'][$input]['value'];
     }
 
-    // If there is no input, we're fine.
+    // If there is no input, we check whether the filter was set to "Required".
+    // If it was required yet not provided, then abort the query so no results
+    // are returned.
     if (!trim($input)) {
+      if (!empty($this->options['expose']['required'])) {
+        $this->getQuery()->abort();
+      }
+      // If the input is empty, there is nothing to validate: return early.
+      return;
+    }
+
+    // Only continue if there is a minimum word length set.
+    if ($this->options['min_length'] < 2) {
       return;
     }
 

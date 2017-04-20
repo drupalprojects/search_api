@@ -17,6 +17,7 @@ use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
+use Drupal\views\Entity\View;
 
 /**
  * Tests the Views integration of the Search API.
@@ -285,6 +286,28 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'datasource_op' => 'not',
     ];
     $this->checkResults($query, [], 'Search for results of no available datasource');
+
+    // Make sure setting the fulltext filter to "Required" works as expected.
+    $view = View::load('search_api_test_view');
+    $displays = $view->get('display');
+    $displays['default']['display_options']['filters']['search_api_fulltext']['expose']['required'] = TRUE;
+    $view->set('display', $displays);
+    $view->save();
+
+    $this->checkResults([], [], 'Search without required fulltext keywords');
+    $this->assertSession()->responseNotContains('Error message');
+    $this->checkResults(
+      ['search_api_fulltext' => 'foo test'],
+      [1, 2, 4],
+      'Search for multiple words'
+    );
+    $this->assertSession()->responseNotContains('Error message');
+    $this->checkResults(
+      ['search_api_fulltext' => 'fo'],
+      [],
+      'Search for short word'
+    );
+    $this->assertSession()->pageTextContains('You must include at least one positive keyword with 3 characters or more');
 
     // Make sure there was a display plugin created for this view.
     /** @var \Drupal\search_api\Display\DisplayInterface[] $displays */

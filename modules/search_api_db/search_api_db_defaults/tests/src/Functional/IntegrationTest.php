@@ -101,7 +101,15 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     $this->drupalLogout();
     $this->drupalGet('search/content');
+    $this->assertSession()->pageTextContains('Please enter some keywords to search.');
+    $this->assertSession()->pageTextNotContains($title);
+    $this->assertSession()->responseNotContains('Error message');
+    $this->submitForm([], 'Search');
+    $this->assertSession()->pageTextNotContains($title);
+    $this->assertSession()->responseNotContains('Error message');
+    $this->submitForm(['keys' => 'test'], 'Search');
     $this->assertSession()->pageTextContains($title);
+    $this->assertSession()->responseNotContains('Error message');
 
     // Uninstall the module.
     $this->drupalLogin($this->adminUser);
