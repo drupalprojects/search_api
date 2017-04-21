@@ -231,11 +231,11 @@ class SearchApiFulltext extends FilterPluginBase {
       $input = &$this->options['group_info']['group_items'][$input]['value'];
     }
 
-    // If there is no input, we check whether the filter was set to "Required".
-    // If it was required yet not provided, then abort the query so no results
-    // are returned.
     if (!trim($input)) {
-      if (!empty($this->options['expose']['required'])) {
+      // No input was given by the user. If the filter was set to "required" and
+      // there is a query (not the case when an exposed filter block is
+      // displayed stand-alone), abort it.
+      if (!empty($this->options['expose']['required']) && $this->getQuery()) {
         $this->getQuery()->abort();
       }
       // If the input is empty, there is nothing to validate: return early.

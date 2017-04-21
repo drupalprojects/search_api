@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2869121 by drunken monkey: Fixed fatal error when required fulltext filter is
+  in exposed form block.
 
 Search API 1.0, RC 3 (2017-04-20):
 ----------------------------------

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\search_api\Functional;
 
+use Drupal\block\Entity\Block;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
@@ -34,10 +35,11 @@ class ViewsTest extends SearchApiBrowserTestBase {
    * @var string[]
    */
   public static $modules = [
-    'search_api_test_views',
-    'views_ui',
+    'block',
     'language',
     'rest',
+    'search_api_test_views',
+    'views_ui',
   ];
 
   /**
@@ -287,27 +289,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     ];
     $this->checkResults($query, [], 'Search for results of no available datasource');
 
-    // Make sure setting the fulltext filter to "Required" works as expected.
-    $view = View::load('search_api_test_view');
-    $displays = $view->get('display');
-    $displays['default']['display_options']['filters']['search_api_fulltext']['expose']['required'] = TRUE;
-    $view->set('display', $displays);
-    $view->save();
-
-    $this->checkResults([], [], 'Search without required fulltext keywords');
-    $this->assertSession()->responseNotContains('Error message');
-    $this->checkResults(
-      ['search_api_fulltext' => 'foo test'],
-      [1, 2, 4],
-      'Search for multiple words'
-    );
-    $this->assertSession()->responseNotContains('Error message');
-    $this->checkResults(
-      ['search_api_fulltext' => 'fo'],
-      [],
-      'Search for short word'
-    );
-    $this->assertSession()->pageTextContains('You must include at least one positive keyword with 3 characters or more');
+    $this->regressionTests();
 
     // Make sure there was a display plugin created for this view.
     /** @var \Drupal\search_api\Display\DisplayInterface[] $displays */
@@ -347,6 +329,64 @@ class ViewsTest extends SearchApiBrowserTestBase {
     $this->assertArrayNotHasKey('views_page:search_api_test_view__page_1', $displays, 'No display plugin was created for the test view page display.');
     $this->assertArrayHasKey('views_block:search_api_test_view__block_1', $displays, 'A display plugin was created for the test view block display.');
     $this->assertArrayHasKey('views_rest:search_api_test_view__rest_export_1', $displays, 'A display plugin was created for the test view block display.');
+  }
+
+  /**
+   * Contains regression tests for previous, fixed bugs.
+   */
+  protected function regressionTests() {
+    $this->regressionTest2869121();
+  }
+
+  /**
+   * Tests setting the "Fulltext search" filter to "Required".
+   *
+   * @see https://www.drupal.org/node/2869121
+   */
+  protected function regressionTest2869121() {
+    // Make sure setting the fulltext filter to "Required" works as expected.
+    $view = View::load('search_api_test_view');
+    $displays = $view->get('display');
+    $displays['default']['display_options']['filters']['search_api_fulltext']['expose']['required'] = TRUE;
+    $view->set('display', $displays);
+    $view->save();
+
+    $this->checkResults([], [], 'Search without required fulltext keywords');
+    $this->assertSession()->responseNotContains('Error message');
+    $this->checkResults(
+      ['search_api_fulltext' => 'foo test'],
+      [1, 2, 4],
+      'Search for multiple words'
+    );
+    $this->assertSession()->responseNotContains('Error message');
+    $this->checkResults(
+      ['search_api_fulltext' => 'fo'],
+      [],
+      'Search for short word'
+    );
+    $this->assertSession()->pageTextContains('You must include at least one positive keyword with 3 characters or more');
+
+    // Make sure this also works with the exposed form in a block, and doesn't
+    // throw fatal errors on all pages with the block.
+    $view = View::load('search_api_test_view');
+    $displays = $view->get('display');
+    $displays['page_1']['display_options']['exposed_block'] = TRUE;
+    $view->set('display', $displays);
+    $view->save();
+
+    Block::create([
+      'id' => 'search_api_test_view',
+      'theme' => 'classy',
+      'weight' => -20,
+      'plugin' => 'views_exposed_filter_block:search_api_test_view-page_1',
+      'region' => 'content',
+    ])->save();
+
+    $this->drupalGet('');
+    $this->submitForm([], 'Search');
+    $this->assertSession()->addressEquals('search-api-test');
+    $this->assertSession()->responseNotContains('Error message');
+    $this->assertSession()->pageTextNotContains('search results');
   }
 
   /**
