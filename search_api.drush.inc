@@ -349,6 +349,7 @@ function drush_search_api_index($index_id = NULL) {
     return;
   }
 
+  $batch_set = FALSE;
   foreach ($indexes as $index) {
     $tracker = $index->getTrackerInstance();
     $remaining = $tracker->getTotalItemsCount() - $tracker->getIndexedItemsCount();
@@ -368,37 +369,40 @@ function drush_search_api_index($index_id = NULL) {
 
     // If we pass NULL, it would be used as "no items". -1 is the correct way to
     // index all items.
-    $limit = $limit ?: -1;
+    $current_limit = $limit ?: -1;
 
     // Get the default batch size.
     if (!isset($batch_size)) {
       $cron_limit = $index->getOption('cron_limit');
-      $batch_size = $cron_limit ?: \Drupal::configFactory()->get('search_api.settings')->get('default_cron_limit');
+      $batch_size = $cron_limit ?: \Drupal::configFactory()
+        ->get('search_api.settings')
+        ->get('default_cron_limit');
     }
 
     // Get the number items to index.
-    if (!isset($limit) || !is_int($limit += 0) || $limit <= 0) {
-      $limit = $remaining;
+    if (!isset($current_limit) || !is_int($current_limit += 0) || $current_limit <= 0) {
+      $current_limit = $remaining;
     }
 
     $arguments = [
       '@index' => $index->label(),
-      '@limit' => $limit,
+      '@limit' => $current_limit,
       '@batch_size' => $batch_size,
     ];
     drush_log(dt("Indexing a maximum number of @limit items (@batch_size items per batch run) for the index '@index'.", $arguments), 'ok');
 
     // Create the batch.
     try {
-      IndexBatchHelper::create($index, $batch_size, $limit);
-      drush_backend_batch_process();
+      IndexBatchHelper::create($index, $batch_size, $current_limit);
+      $batch_set = TRUE;
     }
     catch (SearchApiException $e) {
       drush_log(dt("Couldn't create a batch, please check the batch size and limit parameters."), 'error');
     }
+  }
 
-    // @todo Report number of successfully indexed items, and check whether that
-    //   matched the expectations.
+  if ($batch_set) {
+    drush_backend_batch_process();
   }
 }
 

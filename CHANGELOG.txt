@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2543472 by drunken monkey: Fixed indexing of multiple indexes via Drush.
 - #2871549 by drunken monkey: Added note about backwards compatibility to
   README.txt.
 
