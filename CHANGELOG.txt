@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2871549 by drunken monkey: Added note about backwards compatibility to
+  README.txt.
 
 Search API 1.0, RC 4 (2017-04-21):
 ----------------------------------
