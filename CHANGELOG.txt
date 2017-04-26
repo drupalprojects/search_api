@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.0 (2017-04-26):
+----------------------------
 - #2871145 by opdavies, drunken monkey, borisson_: Fixed link to php.net for
   PCRE reference.
 - #2543472 by drunken monkey: Fixed indexing of multiple indexes via Drush.
