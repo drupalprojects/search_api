@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2230935 by shkiper, drunken monkey: Added the "search-api-server-clear"
+  Drush command.
 
 Search API 1.0 (2017-04-26):
 ----------------------------

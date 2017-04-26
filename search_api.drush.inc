@@ -171,6 +171,16 @@ function search_api_drush_command() {
     'aliases' => ['sapi-sd'],
   ];
 
+  $items['search-api-server-clear'] = [
+    'description' => 'Clear all search indexes on the search server and mark them for reindexing.',
+    'examples' => [
+      'drush search-api-server-clear' => dt('Clear all search indexes on the search server @server.', ['@server' => 'my_solr_server']),
+      'drush sapi-sc' => dt('Alias to clear all search indexes on the search server @server.', ['@server' => 'my_solr_server']),
+    ],
+    'arguments' => $server,
+    'aliases' => ['sapi-sc'],
+  ];
+
   $items['search-api-set-index-server'] = [
     'description' => 'Set the search server used by a given index.',
     'examples' => [
@@ -640,6 +650,29 @@ function drush_search_api_server_disable($server_id = NULL) {
   $server = _search_api_drush_reload_entity_override_free($server);
   $server->setStatus(FALSE)->save();
   drush_print(dt('The server was disabled successfully.'));
+}
+
+/**
+ * Clears all search indexes on the server and marks them for reindexing.
+ *
+ * @param string $server_id
+ *   The ID of the server to clear all search indexes.
+ */
+function drush_search_api_server_clear($server_id = NULL) {
+  if (!isset($server_id)) {
+    drush_print(dt('Please provide a valid server id.'));
+    return;
+  }
+  $server = Server::load($server_id);
+  if (empty($server)) {
+    drush_print(dt('The server could not be loaded.'));
+    return;
+  }
+
+  foreach ($server->getIndexes() as $index) {
+    $index->clear();
+  }
+  drush_print(dt('All indexes on the search server @server_id were cleared.', array('@server_id' => $server_id)));
 }
 
 /**
