@@ -973,12 +973,12 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     // Remove a field and make sure that doing so does not remove the search
     // index.
     $this->drupalGet('admin/structure/types/manage/article/fields/node.article.field_link/delete');
-    $this->assertSession()->pageTextNotContains(t('The listed configuration will be deleted.'));
-    $this->assertSession()->pageTextContains(t('Search index'));
+    $this->assertSession()->pageTextNotContains('The listed configuration will be deleted.');
+    $this->assertSession()->pageTextContains('Search index');
 
-    $this->submitForm([], t('Delete'));
+    $this->submitForm([], 'Delete');
     $this->drupalGet('admin/structure/types/manage/article/fields/node.article.field_image/delete');
-    $this->submitForm([], t('Delete'));
+    $this->submitForm([], 'Delete');
 
     $this->assertNotNull($this->getIndex(), 'Index was not deleted.');
 
@@ -1446,12 +1446,12 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     // Load confirmation form.
     $this->drupalGet('admin/config/search/search-api/server/' . $this->serverId . '/delete');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->responseContains(t('Are you sure you want to delete the search server %name?', ['%name' => $server->label()]));
-    $this->assertSession()->pageTextContains(t('Deleting a server will disable all its indexes and their searches.'));
+    $this->assertSession()->responseContains(new FormattableMarkup('Are you sure you want to delete the search server %name?', ['%name' => $server->label()]));
+    $this->assertSession()->pageTextContains('Deleting a server will disable all its indexes and their searches.');
 
     // Confirm deletion.
-    $this->submitForm([], t('Delete'));
-    $this->assertSession()->responseContains(t('The search server %name has been deleted.', ['%name' => $server->label()]));
+    $this->submitForm([], 'Delete');
+    $this->assertSession()->responseContains(new FormattableMarkup('The search server %name has been deleted.', ['%name' => $server->label()]));
     $this->assertFalse(Server::load($this->serverId), 'Server could not be found anymore.');
     $this->assertSession()->addressEquals('admin/config/search/search-api');
 
