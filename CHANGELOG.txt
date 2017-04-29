@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2871030 by drunken monkey: Fixed error for cached aborted search queries in
+  Views.
 - #2230935 by shkiper, drunken monkey: Added the "search-api-server-clear"
   Drush command.
 

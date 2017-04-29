@@ -65,13 +65,6 @@ class SearchApiQuery extends QueryPluginBase {
   protected $query;
 
   /**
-   * The results returned by the query, after it was executed.
-   *
-   * @var \Drupal\search_api\Query\ResultSetInterface
-   */
-  protected $searchApiResults;
-
-  /**
    * Array of all encountered errors.
    *
    * Each of these is fatal, meaning that a non-empty $errors property will
@@ -433,7 +426,6 @@ class SearchApiQuery extends QueryPluginBase {
 
       // Execute the search.
       $results = $this->query->execute();
-      $this->searchApiResults = $results;
 
       // Store the results.
       if (!$skip_result_count) {
@@ -616,24 +608,7 @@ class SearchApiQuery extends QueryPluginBase {
    *   otherwise.
    */
   public function getSearchApiResults() {
-    return $this->searchApiResults;
-  }
-
-  /**
-   * Sets the Search API result set.
-   *
-   * Usually this is done by the query plugin class itself, but in rare cases
-   * (such as for caching purposes) it might be necessary to set it from
-   * outside.
-   *
-   * @param \Drupal\search_api\Query\ResultSetInterface $search_api_results
-   *   The result set.
-   *
-   * @return $this
-   */
-  public function setSearchApiResults(ResultSetInterface $search_api_results) {
-    $this->searchApiResults = $search_api_results;
-    return $this;
+    return $this->query->getResults();
   }
 
   /**
