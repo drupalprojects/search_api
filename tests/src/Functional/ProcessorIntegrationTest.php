@@ -541,9 +541,9 @@ TAGS
    */
   public function checkTokenizerIntegration() {
     $configuration = [
-      'spaces' => ':)',
+      'spaces' => '[:foobar:]',
     ];
-    $this->checkValidationError($configuration, 'tokenizer', 'The entered text is no valid regular expression.');
+    $this->checkValidationError($configuration, 'tokenizer', 'The entered text is no valid PCRE character class.');
 
     $configuration = [
       'spaces' => '',

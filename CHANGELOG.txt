@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2871497 by drunken monkey: Fixed validation of "Whitespace characters"
+  setting for the Tokenizer processor.
 - #2868704 by drunken monkey: Fixed old removed fields being present on query
   object.
 - #2863955 by alan-ps, drunken monkey, borisson_: Fixed unsupported processors
