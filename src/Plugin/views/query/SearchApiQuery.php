@@ -316,6 +316,15 @@ class SearchApiQuery extends QueryPluginBase {
   public function build(ViewExecutable $view) {
     $this->view = $view;
 
+    // Initialize the pager and let it modify the query to add limits. This has
+    // to be done even for aborted queries since it might otherwise lead to a
+    // fatal error when Views tries to access $view->pager.
+    $view->initPager();
+    $view->pager->query();
+
+    // If the query was aborted by some plugin (or, possibly, hook), we don't
+    // need to do anything else here. Adding conditions or other options to an
+    // aborted query doesn't make sense.
     if ($this->shouldAbort()) {
       return;
     }
@@ -357,10 +366,6 @@ class SearchApiQuery extends QueryPluginBase {
         }
       }
     }
-
-    // Initialize the pager and let it modify the query to add limits.
-    $view->initPager();
-    $view->pager->query();
 
     // Add the "search_api_bypass_access" option to the query, if desired.
     if (!empty($this->options['bypass_access'])) {
@@ -479,7 +484,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @see SearchApiQuery::abort()
    */
   public function shouldAbort() {
-    return $this->abort;
+    return $this->abort || !$this->query || $this->query->wasAborted();
   }
 
   /**

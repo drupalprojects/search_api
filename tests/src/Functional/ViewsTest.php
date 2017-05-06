@@ -341,13 +341,18 @@ class ViewsTest extends SearchApiBrowserTestBase {
   /**
    * Tests setting the "Fulltext search" filter to "Required".
    *
+   * This previously caused problems with form validation and caching.
+   *
    * @see https://www.drupal.org/node/2869121
+   * @see https://www.drupal.org/node/2873246
+   * @see https://www.drupal.org/node/2871030
    */
   protected function regressionTest2869121() {
     // Make sure setting the fulltext filter to "Required" works as expected.
     $view = View::load('search_api_test_view');
     $displays = $view->get('display');
     $displays['default']['display_options']['filters']['search_api_fulltext']['expose']['required'] = TRUE;
+    $displays['default']['display_options']['cache']['type'] = 'search_api_time';
     $view->set('display', $displays);
     $view->save();
 
@@ -383,10 +388,22 @@ class ViewsTest extends SearchApiBrowserTestBase {
     ])->save();
 
     $this->drupalGet('');
-    $this->submitForm([], 'Search');
-    $this->assertSession()->addressEquals('search-api-test');
-    $this->assertSession()->responseNotContains('Error message');
-    $this->assertSession()->pageTextNotContains('search results');
+    // We submit the form three times, to make extra sure all Views caches are
+    // triggered.
+    for ($i = 0; $i < 3; ++$i) {
+      // Flush the page-level caches to make sure the Views cache plugin is
+      // used (so we could reproduce the bug if it's there).
+      \Drupal::getContainer()->get('cache.render')->deleteAll();
+      \Drupal::getContainer()->get('cache.dynamic_page_cache')->deleteAll();
+      $this->submitForm([], 'Search');
+      $this->assertSession()->addressEquals('search-api-test');
+      $this->assertSession()->responseNotContains('Error message');
+      $this->assertSession()->pageTextNotContains('search results');
+      // Make sure the Views cache was used, none of the two page caches.
+      $this->assertSession()->responseHeaderEquals('X-Drupal-Cache', 'MISS');
+      $this->assertSession()
+        ->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'MISS');
+    }
   }
 
   /**

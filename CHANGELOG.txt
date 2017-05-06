@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2873246 by drunken monkey: Aborted queries cause problems in Views
 - #2862289 by hoebekewim, drunken monkey: Fixed oversized column for fulltext
   fields in denormalized index table.
 - #2859683 by drunken monkey: Added a note to fields processors explaining that
