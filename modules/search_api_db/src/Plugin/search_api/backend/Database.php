@@ -823,6 +823,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   protected function sqlType($type) {
     switch ($type) {
       case 'text':
+        return ['type' => 'varchar', 'length' => 30];
       case 'string':
       case 'uri':
         return ['type' => 'varchar', 'length' => 255];
