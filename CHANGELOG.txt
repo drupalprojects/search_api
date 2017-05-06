@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2858303 by beluoctavian, drunken monkey: Fixed "is empty" Views filters for
+  taxonomy term references.
 - #2867144 by drunken monkey, borisson_: Added a test for the database
   backend's autocomplete functionality.
 - #2873246 by drunken monkey: Aborted queries cause problems in Views

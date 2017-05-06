@@ -96,12 +96,4 @@ class SearchApiDate extends Date {
     $this->getQuery()->addCondition($this->realField, $value, $this->operator, $this->options['group']);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function opEmpty($field) {
-    $operator = ($this->operator == 'empty') ? '=' : '<>';
-    $this->getQuery()->addCondition($this->realField, NULL, $operator, $this->options['group']);
-  }
-
 }

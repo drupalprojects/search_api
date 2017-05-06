@@ -1006,6 +1006,9 @@ class SearchApiQuery extends QueryPluginBase {
     elseif (in_array($operator, ['in', 'not in', 'between', 'not between'])) {
       $operator = strtoupper($operator);
     }
+    elseif (in_array($operator, ['IS NULL', 'IS NOT NULL'])) {
+      $operator = ($operator == 'IS NULL') ? '=' : '<>';
+    }
     return $operator;
   }
 
