@@ -245,6 +245,15 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     $actual_processors = array_keys($this->loadIndex()->getProcessors());
     sort($actual_processors);
     $this->assertEquals($enabled, $actual_processors);
+
+    // After disabling some datasource, all related processors should be
+    // disabled also.
+    $this->drupalGet('admin/config/search/search-api/index/' . $this->indexId . '/edit');
+    $this->drupalPostForm(NULL, ['datasources[entity:user]' => FALSE], 'Save');
+    $processors = $this->loadIndex()->getProcessors();
+    $this->assertArrayNotHasKey('role_filter', $processors);
+    $this->drupalGet('admin/config/search/search-api/index/' . $this->indexId . '/processors');
+    $this->assertSession()->pageTextNotContains('Role filter');
   }
 
   /**

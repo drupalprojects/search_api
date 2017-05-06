@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2863955 by alan-ps, drunken monkey, borisson_: Fixed unsupported processors
+  remaining enabled.
 - #2870988 by sahilsharma011, c.nish2k3, kala4ek: Removed translations from all
   tests.
 - #2871030 by drunken monkey: Fixed error for cached aborted search queries in

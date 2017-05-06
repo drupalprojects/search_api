@@ -1211,6 +1211,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
     }
 
+    // Check whether all enabled processors actually still support this index.
+    // (Since we can't remove processors which are present in overrides anyways,
+    // we don't need to take overrides into account here.)
+    foreach ($this->getProcessors() as $processor_id => $processor) {
+      if (!$processor->supportsIndex($this)) {
+        $this->removeProcessor($processor_id);
+      }
+    }
+
     // Call the preIndexSave() method of all applicable processors.
     $processor_overrides = !empty($overrides['processor_settings']) ? $overrides['processor_settings'] : [];
     foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_PRE_INDEX_SAVE, $processor_overrides) as $processor) {
