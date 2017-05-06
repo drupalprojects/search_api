@@ -144,6 +144,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
     $form['fields'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Enable this processor on the following fields'),
+      '#description' => $this->t("Note: The Search API currently doesn't support per-field keywords processing, so this setting will be ignored when preprocessing search keywords. It is therefore usually recommended that you enable the processor for all fields that you intend to use as fulltext search fields, to avoid undesired consequences."),
       '#options' => $field_options,
       '#default_value' => $default_fields,
     ];

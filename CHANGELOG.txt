@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2859683 by drunken monkey: Added a note to fields processors explaining that
+  per-field keywords processing isn't supported.
 - #2871497 by drunken monkey: Fixed validation of "Whitespace characters"
   setting for the Tokenizer processor.
 - #2868704 by drunken monkey: Fixed old removed fields being present on query
