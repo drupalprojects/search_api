@@ -10,6 +10,8 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 /**
  * Tests autocomplete functionality of the Database backend.
  *
+ * @requires module search_api_autocomplete
+ *
  * @group search_api
  */
 class AutocompleteTest extends KernelTestBase {
