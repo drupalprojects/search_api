@@ -4,7 +4,8 @@ Search API 1.x, dev (xxxx-xx-xx):
   taxonomy term references.
 - #2867144 by drunken monkey, borisson_: Added a test for the database
   backend's autocomplete functionality.
-- #2873246 by drunken monkey: Aborted queries cause problems in Views
+- #2873246 by drunken monkey: Fixed a second error for cached aborted search
+  queries in Views.
 - #2862289 by hoebekewim, drunken monkey: Fixed oversized column for fulltext
   fields in denormalized index table.
 - #2859683 by drunken monkey: Added a note to fields processors explaining that
