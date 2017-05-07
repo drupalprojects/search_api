@@ -14,7 +14,7 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
  * @coversDefaultClass \Drupal\search_api_db\Plugin\search_api\backend\Database
  * @group search_api
  */
-class AutocompleteTest extends KernelTestBase {
+abstract class AutocompleteTest extends KernelTestBase {
 
   use ExampleContentTrait;
 
