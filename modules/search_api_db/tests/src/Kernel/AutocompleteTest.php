@@ -11,7 +11,7 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
  * Tests autocomplete functionality of the Database backend.
  *
  * @requires module search_api_autocomplete
- *
+ * @coversDefaultClass \Drupal\search_api_db\Plugin\search_api\backend\Database
  * @group search_api
  */
 class AutocompleteTest extends KernelTestBase {
@@ -90,7 +90,7 @@ class AutocompleteTest extends KernelTestBase {
   /**
    * Tests whether autocomplete suggestions are correctly created.
    *
-   * @requires module search_api_autocomplete
+   * @covers ::getAutocompleteSuggestions
    */
   public function testAutocompletion() {
     $autocomplete = SearchApiAutocompleteSearch::load('search_api_views_search_api_test_view');
