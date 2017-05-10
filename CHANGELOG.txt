@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.1 (2017-05-10):
 ----------------------------
 - #2858303 by beluoctavian, drunken monkey: Fixed "is empty" Views filters for
