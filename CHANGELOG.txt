@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2875793 by drunken monkey: Fixed buggy error handling in Views.
 - #2860624 by drunken monkey: Fixed problem with empty words in Views fulltext
   filter.
 - #2855447 by mparker17, drunken monkey: Added "Separator" option for

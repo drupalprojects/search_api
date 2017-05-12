@@ -135,7 +135,9 @@ class SearchApiViewsQuery extends views_plugin_query {
    *   The order to sort items in - either 'ASC' or 'DESC'. Defaults to 'ASC'.
    */
   public function add_selector_orderby($selector, $order = 'ASC') {
-    $this->query->sort($selector, $order);
+    if (!$this->errors) {
+      $this->query->sort($selector, $order);
+    }
   }
 
   /**
