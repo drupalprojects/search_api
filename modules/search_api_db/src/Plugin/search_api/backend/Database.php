@@ -29,7 +29,7 @@ use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\DataTypeHelper;
-use Drupal\search_api_autocomplete\SearchApiAutocompleteSearchInterface;
+use Drupal\search_api_autocomplete\SearchInterface;
 use Drupal\search_api_autocomplete\Suggestion;
 use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
 use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
@@ -2470,7 +2470,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   }
 
   /**
-   * Implements SearchApiAutocompleteInterface::getAutocompleteSuggestions().
+   * Implements AutocompleteBackendInterface::getAutocompleteSuggestions().
    *
    * @todo Add type-hint for $search as soon as we can rely on the class name.
    */

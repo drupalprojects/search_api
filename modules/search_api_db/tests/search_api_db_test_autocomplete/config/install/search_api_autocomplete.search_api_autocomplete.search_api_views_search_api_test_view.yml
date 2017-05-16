@@ -6,7 +6,7 @@ dependencies:
     - search_api.index.database_search_index
 label: search_api_views_search_api_test_view
 index_id: database_search_index
-suggester_id: server
+suggester: server
 type: views
 options:
   autosubmit: true

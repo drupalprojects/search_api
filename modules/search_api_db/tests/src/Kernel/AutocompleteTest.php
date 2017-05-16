@@ -3,7 +3,7 @@
 namespace Drupal\Tests\search_api_db\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\search_api_autocomplete\Entity\SearchApiAutocompleteSearch;
+use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_db\Plugin\search_api\backend\Database;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 
@@ -93,7 +93,7 @@ abstract class AutocompleteTest extends KernelTestBase {
    * @covers ::getAutocompleteSuggestions
    */
   public function testAutocompletion() {
-    $autocomplete = SearchApiAutocompleteSearch::load('search_api_views_search_api_test_view');
+    $autocomplete = Search::load('search_api_views_search_api_test_view');
     $index = $autocomplete->getIndexInstance();
     /** @var \Drupal\search_api_db\Plugin\search_api\backend\Database $backend */
     $backend = $index->getServerInstance()->getBackend();

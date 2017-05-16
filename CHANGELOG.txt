@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2682949 by drunken monkey, borisson_: Adapted to changes in the Autocomplete
+  module.
 
 Search API 1.1 (2017-05-10):
 ----------------------------
