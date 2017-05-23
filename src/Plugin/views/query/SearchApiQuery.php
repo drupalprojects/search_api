@@ -608,9 +608,9 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Retrieves the Search API result set returned for this query.
    *
-   * @return \Drupal\search_api\Query\ResultSetInterface|null
-   *   The result set of this query, if it has been retrieved already. NULL
-   *   otherwise.
+   * @return \Drupal\search_api\Query\ResultSetInterface
+   *   The result set of this query. Might not contain the actual results yet if
+   *   the query hasn't been executed yet.
    */
   public function getSearchApiResults() {
     return $this->query->getResults();
