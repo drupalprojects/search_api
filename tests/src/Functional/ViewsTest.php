@@ -451,12 +451,13 @@ class ViewsTest extends SearchApiBrowserTestBase {
     // displayed correctly.
     /** @var \Drupal\search_api\IndexInterface $index */
     $index = Index::load($this->indexId);
+    $datasource_id = 'entity:entity_test_mulrev_changed';
     $field = \Drupal::getContainer()
       ->get('search_api.fields_helper')
       ->createField($index, 'author', [
         'label' => 'Author name',
         'type' => 'string',
-        'datasource_id' => 'entity:entity_test_mulrev_changed',
+        'datasource_id' => $datasource_id,
         'property_path' => 'user_id:entity:name',
       ]);
     $index->addField($field);
@@ -656,7 +657,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
             }
           }
           else {
-            $data = ['entity:entity_test_mulrev_changed'];
+            $data = [$datasource_id];
           }
           $row_num = 2 * $id + $i - 1;
           $prefix = "#$row_num [$field] ";
@@ -670,6 +671,23 @@ class ViewsTest extends SearchApiBrowserTestBase {
           }
         }
       }
+    }
+
+    // Check whether the expected retrieved properties were listed on the page.
+    // Since the fields with the "field_rendering" option enabled will need the
+    // complete loaded entity, these are only present as "_object" here.
+    // @see search_api_test_views_search_api_query_alter()
+    $retrieved_properties = [
+      Utility::createCombinedId($datasource_id, 'id'),
+      Utility::createCombinedId($datasource_id, '_object'),
+      Utility::createCombinedId($datasource_id, 'keywords'),
+      Utility::createCombinedId($datasource_id, 'user_id'),
+      Utility::createCombinedId($datasource_id, 'user_id:entity:_object'),
+      Utility::createCombinedId($datasource_id, 'user_id:entity:roles'),
+      Utility::createCombinedId(NULL, 'rendered_item'),
+    ];
+    foreach ($retrieved_properties as $combined_property_path) {
+      $this->assertSession()->pageTextContains("'$combined_property_path'");
     }
 
     // Check that click-sorting works correctly.
