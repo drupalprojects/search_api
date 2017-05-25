@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2749963 by drunken monkey: Fixed "Index hierarchy" not having values
+  numerically indexed.
 - #2875793 by drunken monkey: Fixed buggy error handling in Views.
 - #2860624 by drunken monkey: Fixed problem with empty words in Views fulltext
   filter.
