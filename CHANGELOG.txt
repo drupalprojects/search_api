@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2874895 by harsha012, drunken monkey, borisson_: Fixed OOP code to use the
+  t() method instead of the global t() function.
 - #2624876 by drunken monkey, borisson_: Added a query option for "properties
   to retrieve".
 - #2682949 by drunken monkey, borisson_: Adapted to changes in the Autocomplete
