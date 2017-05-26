@@ -3,22 +3,16 @@
 namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\block\Entity\Block;
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Html;
-// @todo Once we depend on Drupal 8.3+, change this import.
-use Drupal\Core\Config\Testing\ConfigSchemaChecker;
-use Drupal\Core\DrupalKernel;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\UserSession;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
 use Drupal\views\Entity\View;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests the Views integration of the Search API.
@@ -832,146 +826,10 @@ class ViewsTest extends SearchApiBrowserTestBase {
   }
 
   /**
-   * Installs Drupal into the Simpletest site.
-   *
-   * We need to override \Drupal\Tests\BrowserTestBase::installDrupal() because
-   * before modules install we need to add test entity bundles for this test.
+   * {@inheritdoc}
    */
-  public function installDrupal() {
-    // @todo Once we depend on Drupal 8.3+, this can be simplified by a lot.
-    $password = $this->randomMachineName();
-    // Define information about the user 1 account.
-    $this->rootUser = new UserSession([
-      'uid' => 1,
-      'name' => 'admin',
-      'mail' => 'admin@example.com',
-      'pass_raw' => $password,
-      'passRaw' => $password,
-      'timezone' => date_default_timezone_get(),
-    ]);
-
-    // The child site derives its session name from the database prefix when
-    // running web tests.
-    $this->generateSessionName($this->databasePrefix);
-
-    // Get parameters for install_drupal() before removing global variables.
-    $parameters = $this->installParameters();
-
-    // Prepare installer settings that are not install_drupal() parameters.
-    // Copy and prepare an actual settings.php, so as to resemble a regular
-    // installation.
-    // Not using File API; a potential error must trigger a PHP warning.
-    $directory = DRUPAL_ROOT . '/' . $this->siteDirectory;
-    copy(DRUPAL_ROOT . '/sites/default/default.settings.php', $directory . '/settings.php');
-
-    // All file system paths are created by System module during installation.
-    // @see system_requirements()
-    // @see TestBase::prepareEnvironment()
-    $settings['settings']['file_public_path'] = (object) [
-      'value' => $this->publicFilesDirectory,
-      'required' => TRUE,
-    ];
-    $settings['settings']['file_private_path'] = (object) [
-      'value' => $this->privateFilesDirectory,
-      'required' => TRUE,
-    ];
-    $this->writeSettings($settings);
-    // Allow for test-specific overrides.
-    $original_site = !empty($this->originalSiteDirectory) ? $this->originalSiteDirectory : $this->originalSite;
-    $settings_testing_file = DRUPAL_ROOT . '/' . $original_site . '/settings.testing.php';
-    if (file_exists($settings_testing_file)) {
-      // Copy the testing-specific settings.php overrides in place.
-      copy($settings_testing_file, $directory . '/settings.testing.php');
-      // Add the name of the testing class to settings.php and include the
-      // testing specific overrides.
-      file_put_contents($directory . '/settings.php', "\n\$test_class = '" . get_class($this) . "';\n" . 'include DRUPAL_ROOT . \'/\' . $site_path . \'/settings.testing.php\';' . "\n", FILE_APPEND);
-    }
-
-    $settings_services_file = DRUPAL_ROOT . '/' . $original_site . '/testing.services.yml';
-    if (!file_exists($settings_services_file)) {
-      // Otherwise, use the default services as a starting point for overrides.
-      $settings_services_file = DRUPAL_ROOT . '/sites/default/default.services.yml';
-    }
-    // Copy the testing-specific service overrides in place.
-    copy($settings_services_file, $directory . '/services.yml');
-    if ($this->strictConfigSchema) {
-      // Add a listener to validate configuration schema on save.
-      $content = file_get_contents($directory . '/services.yml');
-      $services = Yaml::decode($content);
-      $services['services']['simpletest.config_schema_checker'] = [
-        'class' => ConfigSchemaChecker::class,
-        'arguments' => ['@config.typed', $this->getConfigSchemaExclusions()],
-        'tags' => [['name' => 'event_subscriber']],
-      ];
-      file_put_contents($directory . '/services.yml', Yaml::encode($services));
-    }
-
-    // Since Drupal is bootstrapped already, install_begin_request() will not
-    // bootstrap into DRUPAL_BOOTSTRAP_CONFIGURATION (again). Hence, we have to
-    // reload the newly written custom settings.php manually.
-    Settings::initialize(DRUPAL_ROOT, $directory, $this->classLoader);
-
-    // Execute the non-interactive installer.
-    require_once DRUPAL_ROOT . '/core/includes/install.core.inc';
-    install_drupal($parameters);
-
-    // Import new settings.php written by the installer.
-    Settings::initialize(DRUPAL_ROOT, $directory, $this->classLoader);
-    foreach ($GLOBALS['config_directories'] as $type => $path) {
-      $this->configDirectories[$type] = $path;
-    }
-
-    // After writing settings.php, the installer removes write permissions from
-    // the site directory. To allow drupal_generate_test_ua() to write a file
-    // containing the private key for drupal_valid_test_ua(), the site directory
-    // has to be writable.
-    // TestBase::restoreEnvironment() will delete the entire site directory. Not
-    // using File API; a potential error must trigger a PHP warning.
-    chmod($directory, 0777);
-
-    // During tests, cacheable responses should get the debugging cacheability
-    // headers by default.
-    $this->setContainerParameter('http.response.debug_cacheability_headers', TRUE);
-
-    $request = \Drupal::request();
-    $this->kernel = DrupalKernel::createFromRequest($request, $this->classLoader, 'prod', TRUE);
-    $this->kernel->prepareLegacyRequest($request);
-    // Force the container to be built from scratch instead of loaded from the
-    // disk. This forces us to not accidentally load the parent site.
-    $container = $this->kernel->rebuildContainer();
-
-    $config = $container->get('config.factory');
-
-    // Manually create and configure private and temporary files directories.
-    file_prepare_directory($this->privateFilesDirectory, FILE_CREATE_DIRECTORY);
-    file_prepare_directory($this->tempFilesDirectory, FILE_CREATE_DIRECTORY);
-    // While the temporary files path could be preset/enforced in settings.php
-    // like the public files directory above, some tests expect it to be
-    // configurable in the UI. If declared in settings.php, it would no longer
-    // be configurable.
-    $config->getEditable('system.file')
-      ->set('path.temporary', $this->tempFilesDirectory)
-      ->save();
-
-    // Manually configure the test mail collector implementation to prevent
-    // tests from sending out emails and collect them in state instead.
-    // While this should be enforced via settings.php prior to installation,
-    // some tests expect to be able to test mail system implementations.
-    $config->getEditable('system.mail')
-      ->set('interface.default', 'test_mail_collector')
-      ->save();
-
-    // By default, verbosely display all errors and disable all production
-    // environment optimizations for all tests to avoid needless overhead and
-    // ensure a sane default experience for test authors.
-    // @see https://www.drupal.org/node/2259167
-    $config->getEditable('system.logging')
-      ->set('error_level', 'verbose')
-      ->save();
-    $config->getEditable('system.performance')
-      ->set('css.preprocess', FALSE)
-      ->set('js.preprocess', FALSE)
-      ->save();
+  protected function initConfig(ContainerInterface $container) {
+    parent::initConfig($container);
 
     // This will just set the Drupal state to include the necessary bundles for
     // our test entity type. Otherwise, fields from those bundles won't be found
@@ -984,31 +842,6 @@ class ViewsTest extends SearchApiBrowserTestBase {
       'article' => ['label' => 'article'],
     ];
     \Drupal::state()->set('entity_test_mulrev_changed.bundles', $bundles);
-
-    // Collect modules to install.
-    $class = get_class($this);
-    $modules = [];
-    while ($class) {
-      if (property_exists($class, 'modules')) {
-        $modules = array_merge($modules, $class::$modules);
-      }
-      $class = get_parent_class($class);
-    }
-    if ($modules) {
-      $modules = array_unique($modules);
-      $success = $container->get('module_installer')->install($modules, TRUE);
-      $this->assertTrue($success, new FormattableMarkup('Enabled modules: %modules', ['%modules' => implode(', ', $modules)]));
-      $this->rebuildContainer();
-    }
-
-    // Reset/rebuild all data structures after enabling the modules, primarily
-    // to synchronize all data structures and caches between the test runner and
-    // the child site.
-    // @see \Drupal\Core\DrupalKernel::bootCode()
-    // @todo Test-specific setUp() methods may set up further fixtures; find a
-    //   way to execute this after setUp() is done, or to eliminate it entirely.
-    $this->resetAll();
-    $this->kernel->prepareLegacyRequest($request);
   }
 
 }

@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2840274 by drunken monkey, borisson_: Updated the Core dependency to 8.3.
 - #2874895 by harsha012, drunken monkey, borisson_: Fixed OOP code to use the
   t() method instead of the global t() function.
 - #2624876 by drunken monkey, borisson_: Added a query option for "properties
