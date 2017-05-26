@@ -215,7 +215,7 @@ class SearchApiViewsQuery extends views_plugin_query {
       '#default_value' => $this->options['search_api_bypass_access'],
     );
 
-    if ($this->index->getEntityType()) {
+    if ($this->index && $this->index->getEntityType()) {
       $form['entity_access'] = array(
         '#type' => 'checkbox',
         '#title' => t('Additional access checks on result entities'),

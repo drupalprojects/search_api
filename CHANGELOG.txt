@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2788593 by drunken monkey: Fixed error in Views query settings for specific
+  setups.
 - #2749963 by drunken monkey: Fixed "Index hierarchy" not having values
   numerically indexed.
 - #2875793 by drunken monkey: Fixed buggy error handling in Views.
