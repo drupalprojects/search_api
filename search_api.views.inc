@@ -235,6 +235,9 @@ function _search_api_views_handler_mapping() {
         ],
       ],
       'date' => [
+        'argument' => [
+          'id' => 'search_api_date',
+        ],
         'filter' => [
           'id' => 'search_api_date',
         ],
