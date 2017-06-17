@@ -1138,6 +1138,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
         'fields' => [
           'title',
         ],
+        'all_fields' => FALSE,
       ];
       $this->assertEquals($expected, $configuration, 'Title field enabled for ignore case filter.');
     }
