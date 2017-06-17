@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2886981 by drunken monkey: Fixed test fails for latest Core changes.
 - #2880026 by Anton4yk, drunken monkey: Fixed bugs in entity datasource's item
   discovery code for edge cases.
 - #2881631 by jzavrl, drunken monkey, borisson_: Added alphabetic sort for

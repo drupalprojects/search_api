@@ -91,7 +91,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
       'title[0][value]' => $title,
       'body[0][value]' => 'This is test content for the Search API to index.',
     ];
-    $this->drupalPostForm('node/add/article', $edit, 'Save and publish');
+    $this->drupalPostForm('node/add/article', $edit, 'Save');
 
     $this->drupalLogout();
     $this->drupalGet('search/content');
