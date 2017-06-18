@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #1710212 by drunken monkey: Added a data alteration for indexing a user's
+  content.
 - #2879892 by blacklabel_tom, drunken monkey: Fixed link in description of
   "Stemmer" processor.
 - #2788593 by drunken monkey: Fixed error in Views query settings for specific
