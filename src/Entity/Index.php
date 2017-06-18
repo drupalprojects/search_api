@@ -965,6 +965,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
       // effect again. Therefore, we reset the flag.
       $this->setHasReindexed(FALSE);
       \Drupal::moduleHandler()->invokeAll('search_api_items_indexed', [$this, $processed_ids]);
+
+      // Clear search api list caches.
+      Cache::invalidateTags(['search_api_list:' . $this->id]);
     }
 
     return $processed_ids;

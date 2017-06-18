@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2676468 by acbramley, drunken monkey, borisson_: Fixed stale cache in search
+  view with tag-based caching.
 - #2876398 by drunken monkey: Fixed operator description of Views "Fulltext
   search" filter.
 - #2881945 by drunken monkey: Removed unnecessary check in
