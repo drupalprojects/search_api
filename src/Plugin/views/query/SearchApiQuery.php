@@ -367,10 +367,6 @@ class SearchApiQuery extends QueryPluginBase {
       }
     }
 
-    // Add the properties to be retrieved to the query, as information for the
-    // backend.
-    $this->query->setOption('search_api_retrieved_properties', $this->retrievedProperties);
-
     // Add the "search_api_bypass_access" option to the query, if desired.
     if (!empty($this->options['bypass_access'])) {
       $this->query->setOption('search_api_bypass_access', TRUE);
@@ -384,6 +380,10 @@ class SearchApiQuery extends QueryPluginBase {
 
     // Save query information for Views UI.
     $view->build_info['query'] = (string) $this->query;
+
+    // Add the properties to be retrieved to the query, as information for the
+    // backend.
+    $this->query->setOption('search_api_retrieved_properties', $this->retrievedProperties);
   }
 
   /**
