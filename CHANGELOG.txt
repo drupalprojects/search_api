@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2876398 by drunken monkey: Fixed operator description of Views "Fulltext
+  search" filter.
 - #2881945 by drunken monkey: Removed unnecessary check in
   AddURL::addFieldValues().
 - #2886981 by drunken monkey: Fixed test fails for latest Core changes.
