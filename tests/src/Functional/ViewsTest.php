@@ -477,7 +477,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
   }
 
   /**
-   * Test Views admin UI and field handlers.
+   * Tests the Views admin UI and field handlers.
    */
   public function testViewsAdmin() {
     // Add a field from a related entity to the index to test whether it gets
@@ -776,6 +776,10 @@ class ViewsTest extends SearchApiBrowserTestBase {
     $this->drupalGet('search-api-test');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextNotContains('[name] [EMPTY]');
+
+    // Run regression tests.
+    $this->drupalLogin($admin_user);
+    $this->adminUiRegressionTests();
   }
 
   /**
@@ -862,6 +866,28 @@ class ViewsTest extends SearchApiBrowserTestBase {
 
     $this->submitForm($edit, $button_label);
     $this->assertSession()->statusCodeEquals(200);
+  }
+
+  /**
+   * Contains regression tests for previous, fixed bugs in the Views UI.
+   */
+  protected function adminUiRegressionTests() {
+    $this->regressionTest2883807();
+  }
+
+  /**
+   * Verifies that adding a contextual filter doesn't trigger a notice.
+   *
+   * @see https://www.drupal.org/node/2883807
+   */
+  protected function regressionTest2883807() {
+    $this->drupalGet('admin/structure/views/nojs/add-handler/search_api_test_view/page_1/argument');
+    $edit = [
+      'name[search_api_index_database_search_index.author]' => TRUE,
+    ];
+    $this->submitForm($edit, 'Add and configure contextual filters');
+    $this->submitForm([], 'Apply');
+    $this->submitForm([], 'Save');
   }
 
   /**
