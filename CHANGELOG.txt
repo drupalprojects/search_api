@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.2 (2017-06-25):
+----------------------------
 - #2881198 by jzavrl, drunken monkey, borisson_: Added property paths to "Add
   fields" form.
 - #2883475 by Matthijs, drunken monkey, borisson_: Added support for "Language
