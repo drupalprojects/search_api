@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2880239 by acbramley, drunken monkey, borisson_: Fixed logic for multiple
+  sorts on the same field.
 - #2889426 by drunken monkey: Fixed test fails for latest Core changes.
 - #2884720 by blake.thompson: Added a display plugin for the Views Embed
   display type.

@@ -438,6 +438,45 @@ class ViewsTest extends SearchApiBrowserTestBase {
   }
 
   /**
+   * Tests results are ordered correctly and react to exposed sorts.
+   */
+  public function testViewSorts() {
+    // Check default ordering, first exposed sort in config is
+    // search_api_relevance.
+    $this->checkResultsOrder([], [1, 2, 3, 4, 5]);
+
+    // Make sure the exposed sort works.
+    $query = [
+      'sort_by' => 'search_api_id_desc',
+    ];
+    $this->checkResultsOrder($query, [5, 4, 3, 2, 1]);
+  }
+
+  /**
+   * Checks whether Views results are in a certain order in the sorts test view.
+   *
+   * @param array $query
+   *   The GET parameters to set for the view.
+   * @param int[] $expected_results
+   *   The IDs of the expected results.
+   *
+   * @see views.view.search_api_test_sorts.yml
+   */
+  protected function checkResultsOrder(array $query, array $expected_results) {
+    $this->drupalGet('search-api-test-sorts', ['query' => $query]);
+
+    $web_assert = $this->assertSession();
+    $rows_xpath = '//div[contains(@class, "views-row")]';
+    $web_assert->elementsCount('xpath', $rows_xpath, count($expected_results));
+    foreach (array_values($expected_results) as $i => $id) {
+      $entity_label = Html::escape($this->entities[$id]->label());
+      // XPath offsets are 1-based, not 0-based.
+      ++$i;
+      $web_assert->elementContains('xpath', "($rows_xpath)[$i]", $entity_label);
+    }
+  }
+
+  /**
    * Test Views admin UI and field handlers.
    */
   public function testViewsAdmin() {
