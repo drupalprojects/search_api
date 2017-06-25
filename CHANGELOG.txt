@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2884720 by blake.thompson: Added a display plugin for the Views Embed
+  display type.
 - #2882347 by mkalkbrenner: Fixed forms to not have unserializable properties.
 - #2676468 by acbramley, drunken monkey, borisson_: Fixed stale cache in search
   view with tag-based caching.
