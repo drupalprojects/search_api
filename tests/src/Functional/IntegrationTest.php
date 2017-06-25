@@ -741,6 +741,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $url_options['query']['datasource'] = 'entity:node';
     $this->drupalGet($this->getIndexPath('fields/add/nojs'), $url_options);
     $this->assertHtmlEscaped($field_name);
+    $this->assertSession()->responseContains('(<code>field__field_</code>)');
 
     $this->addField('entity:node', 'field__field_', $field_name);
 

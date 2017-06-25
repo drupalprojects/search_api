@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2881198 by jzavrl, drunken monkey, borisson_: Added property paths to "Add
+  fields" form.
 - #2883475 by Matthijs, drunken monkey, borisson_: Added support for "Language
   not applicable".
 - #2883807 by LammensJ, drunken monkey: Fixed warning in Views UI for

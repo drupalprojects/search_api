@@ -368,7 +368,10 @@ class IndexAddFieldsForm extends EntityForm {
         }
       }
 
-      $item['label']['#markup'] = Html::escape($label) . ' ';
+      $label_markup = Html::escape($label);
+      $escaped_path = Html::escape($this_path);
+      $label_markup = "$label_markup <small>(<code>$escaped_path</code>)</small>";
+      $item['label']['#markup'] = $label_markup . ' ';
 
       if ($can_be_indexed) {
         $item['add'] = [
