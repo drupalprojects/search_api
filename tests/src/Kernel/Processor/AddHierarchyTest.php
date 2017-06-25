@@ -8,7 +8,7 @@ use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Query\Query;
 use Drupal\simpletest\NodeCreationTrait;
-use Drupal\taxonomy\Tests\TaxonomyTestTrait;
+use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 
 /**
