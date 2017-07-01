@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2891246 by drunken monkey: Fixed error detection in plugin helper.
 - #2884451 by drunken monkey: Fixed missing primary key for denormalized index
   tables in DB backend.
 - #2886978 by drunken monkey: Fixed tracking of entities in disabled languages.
