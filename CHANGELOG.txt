@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2884451 by drunken monkey: Fixed missing primary key for denormalized index
+  tables in DB backend.
 - #2886978 by drunken monkey: Fixed tracking of entities in disabled languages.
 
 Search API 1.2 (2017-06-25):
