@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2886978 by drunken monkey: Fixed tracking of entities in disabled languages.
 
 Search API 1.2 (2017-06-25):
 ----------------------------
