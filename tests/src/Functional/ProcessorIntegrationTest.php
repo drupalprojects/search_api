@@ -11,7 +11,6 @@ use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api_test\PluginTestTrait;
-use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 
 /**
  * Tests the admin UI for processors.
@@ -24,7 +23,6 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
 
   use EntityReferenceTestTrait;
   use PluginTestTrait;
-  use TaxonomyTestTrait;
 
   /**
    * {@inheritdoc}

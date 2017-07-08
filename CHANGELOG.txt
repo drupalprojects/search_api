@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2889426 by cspitzlay, drunken monkey: Fixed test fails on Drupal 8.3.
 - #2891387 by drunken monkey: Fixed some new code style issues.
 - #2891246 by drunken monkey: Fixed error detection in plugin helper.
 - #2884451 by drunken monkey: Fixed missing primary key for denormalized index
