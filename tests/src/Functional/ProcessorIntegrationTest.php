@@ -118,6 +118,13 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
     sort($actual_processors);
     $this->assertEquals($enabled, $actual_processors);
 
+    $this->checkEntityBundleBoostIntegration();
+    $enabled[] = 'type_boost';
+    sort($enabled);
+    $actual_processors = array_keys($this->loadIndex()->getProcessors());
+    sort($actual_processors);
+    $this->assertEquals($enabled, $actual_processors);
+
     $this->checkHighlightIntegration();
     $enabled[] = 'highlight';
     sort($enabled);
@@ -369,6 +376,29 @@ class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
       unset($field_settings['label'], $field_settings['dependencies']);
       $this->assertEquals($settings, $field_settings, "Field $field_id has the correct settings.");
     }
+  }
+
+  /**
+   * Tests the UI for the "Type-specific boosting" processor.
+   */
+  public function checkEntityBundleBoostIntegration() {
+    $configuration = [
+      'boosts' => [
+        'entity:node' => [
+          'datasource_boost' => '3.0',
+          'bundle_boosts' => [
+            'article' => '5.0',
+          ],
+        ],
+        'entity:user' => [
+          'datasource_boost' => '1.0',
+        ],
+      ],
+    ];
+    $form_values = $configuration;
+    $form_values['boosts']['entity:node']['bundle_boosts']['page'] = '';
+
+    $this->editSettingsForm($configuration, 'type_boost', $form_values);
   }
 
   /**
