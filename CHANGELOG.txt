@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2895142 by drunken monkey: Made our test classes more useful for other
+  modules.
 - #2851436 by Erik Frèrejean, andywhale, beltofte, drunken monkey: Added a
   "Type-specific boosting" processor.
 - #2889426 by cspitzlay, drunken monkey: Fixed test fails on Drupal 8.3.
