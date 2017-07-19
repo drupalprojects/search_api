@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2888584 by drunken monkey: Fixed index description for "cron batch size" of
+  -1.
 - #2895142 by drunken monkey: Made our test classes more useful for other
   modules.
 - #2851436 by Erik Frèrejean, andywhale, beltofte, drunken monkey: Added a
