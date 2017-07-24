@@ -10,6 +10,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\AggregatedFields;
+use Drupal\search_api\Plugin\search_api\processor\Property\AggregatedFieldProperty;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Processor\ProcessorProperty;
 use Drupal\search_api\Utility\PluginHelperInterface;
@@ -22,7 +23,7 @@ use Drupal\Tests\UnitTestCase;
  *
  * @group search_api
  *
- * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedField
+ * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedFields
  */
 class AggregatedFieldsTest extends UnitTestCase {
 
@@ -272,7 +273,7 @@ class AggregatedFieldsTest extends UnitTestCase {
   /**
    * Tests whether the properties are correctly altered.
    *
-   * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedField::getPropertyDefinitions()
+   * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedFields::getPropertyDefinitions()
    */
   public function testGetPropertyDefinitions() {
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
@@ -284,7 +285,7 @@ class AggregatedFieldsTest extends UnitTestCase {
     $properties = $this->processor->getPropertyDefinitions(NULL);
 
     $this->assertArrayHasKey('aggregated_field', $properties, 'The "aggregated_field" property was added to the properties.');
-    $this->assertInstanceOf('Drupal\search_api\Plugin\search_api\processor\Property\AggregatedFieldProperty', $properties['aggregated_field'], 'The "aggregated_field" property has the correct class.');
+    $this->assertInstanceOf(AggregatedFieldProperty::class, $properties['aggregated_field'], 'The "aggregated_field" property has the correct class.');
     $this->assertEquals('string', $properties['aggregated_field']->getDataType(), 'Correct data type set in the data definition.');
     $this->assertEquals($translation->translate('Aggregated field'), $properties['aggregated_field']->getLabel(), 'Correct label set in the data definition.');
     $expected_description = $translation->translate('An aggregation of multiple other fields.');
