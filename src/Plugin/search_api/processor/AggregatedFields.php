@@ -11,6 +11,8 @@ use Drupal\search_api\Utility\Utility;
 /**
  * Adds customized aggregations of existing fields to the index.
  *
+ * @see \Drupal\search_api\Plugin\search_api\processor\Property\AggregatedFieldProperty
+ *
  * @SearchApiProcessor(
  *   id = "aggregated_field",
  *   label = @Translation("Aggregated fields"),

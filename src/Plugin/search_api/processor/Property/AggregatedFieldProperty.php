@@ -12,6 +12,8 @@ use Drupal\search_api\Utility\Utility;
 
 /**
  * Defines an "aggregated field" property.
+ *
+ * @see \Drupal\search_api\Plugin\search_api\processor\AggregatedFields
  */
 class AggregatedFieldProperty extends ConfigurablePropertyBase {
 
