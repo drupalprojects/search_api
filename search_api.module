@@ -11,7 +11,6 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\node\NodeInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\IndexInterface;
@@ -590,8 +589,12 @@ function _search_api_view_crud_event(ViewEntityInterface $view) {
  * @see _search_api_views_handler_adjustments()
  */
 function _search_api_views_get_allowed_values($entity_type, $bundle, $field_name) {
-  if ($field_config = FieldConfig::loadByName($entity_type, $bundle, $field_name)) {
-    $options = $field_config->getSetting('allowed_values');
+  $field_manager = \Drupal::getContainer()->get('entity_field.manager');
+  $field_definitions = $field_manager->getFieldDefinitions($entity_type, $bundle);
+  if (!empty($field_definitions[$field_name])) {
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface $field_definition */
+    $field_definition = $field_definitions[$field_name];
+    $options = $field_definition->getSetting('allowed_values');
     if ($options) {
       return $options;
     }

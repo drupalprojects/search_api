@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2896312 by kerasai, drunken monkey: Fixed problems with Views options list
+  filter.
 - #2896878 by drunken monkey: Fixed test fails due to latest Core changes.
 - #2665476 by ericgsmith, drunken monkey: Fixed paging in cached views.
 
