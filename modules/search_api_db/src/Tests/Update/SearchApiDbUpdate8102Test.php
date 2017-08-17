@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api_db\Tests\Update;
 
-use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\search_api_db\Tests\DatabaseTestsTrait;
 use Drupal\system\Tests\Update\UpdatePathTestBase;
 
