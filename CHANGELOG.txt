@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2899920 by kfritsche: Fixed stored value of boolean Views filters.
 - #2896312 by kerasai, drunken monkey: Fixed problems with Views options list
   filter.
 - #2896878 by drunken monkey: Fixed test fails due to latest Core changes.
