@@ -30,6 +30,7 @@ use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\DataTypeHelper;
 use Drupal\search_api_autocomplete\Suggestion;
+use Drupal\search_api_autocomplete\Suggestion\SuggestionFactory;
 use Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface;
 use Drupal\search_api_db\DatabaseCompatibility\GenericDatabase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -2489,6 +2490,10 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $fields = $this->getFieldInfo($index);
 
     $suggestions = [];
+    $factory = NULL;
+    if (class_exists(SuggestionFactory::class)) {
+      $factory = new SuggestionFactory($user_input);
+    }
     $passes = [];
     $incomplete_like = NULL;
 
@@ -2595,7 +2600,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       $incomp_len = strlen($incomplete_key);
       foreach ($db_query->execute() as $row) {
         $suffix = ($pass == 1) ? substr($row->word, $incomp_len) : ' ' . $row->word;
-        $suggestions[] = Suggestion::fromSuggestionSuffix($suffix, $row->results, $user_input);
+        if ($factory) {
+          $suggestions[] = $factory->createFromSuggestionSuffix($suffix, $row->results);
+        }
+        else {
+          $suggestions[] = Suggestion::fromSuggestionSuffix($suffix, $row->results, $user_input);
+        }
       }
     }
 
