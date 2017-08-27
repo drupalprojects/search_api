@@ -268,7 +268,7 @@ abstract class FieldsProcessorPluginBase extends ProcessorPluginBase implements 
       }
     }
     else {
-      $fields = array_keys($form['#options']);
+      $fields = array_keys($form['fields']['#options']);
     }
     $form_state->setValue('fields', $fields);
   }
