@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2904976 by drunken monkey: Fixed the current test fails.
 - #2902810 by drunken monkey, borisson_: Made query serialization in tests
   safer.
 - #2903834 by drunken monkey: Adapted to latest changes in Autocomplete module.
