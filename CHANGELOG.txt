@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2902810 by drunken monkey, borisson_: Made query serialization in tests
+  safer.
 - #2903834 by drunken monkey: Adapted to latest changes in Autocomplete module.
 - #2903633 by drunken monkey: Fixed current test fails.
 - #2899920 by kfritsche: Fixed stored value of boolean Views filters.

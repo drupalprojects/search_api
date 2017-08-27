@@ -696,7 +696,10 @@ class Query implements QueryInterface {
    * Implements the magic __wakeup() method to reload the query's index.
    */
   public function __wakeup() {
-    if (!isset($this->index) && !empty($this->indexId) && \Drupal::hasContainer()) {
+    if (!isset($this->index)
+        && !empty($this->indexId)
+        && \Drupal::hasContainer()
+        && \Drupal::getContainer()->has('entity_type.manager')) {
       $this->index = \Drupal::entityTypeManager()
         ->getStorage('search_api_index')
         ->load($this->indexId);
