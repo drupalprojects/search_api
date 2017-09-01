@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2902907 by drunken monkey, juagarc4: Fixed indexing of multibyte text on
+  MySQL.
 - #2903805 by drunken monkey: Disabled fields processors for hidden fields.
 - #2903014 by drunken monkey: Fixed "Enable for all fields" processor option.
 - #2904976 by drunken monkey: Fixed the current test fails.
