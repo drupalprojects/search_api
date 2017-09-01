@@ -149,7 +149,7 @@ class HighlightTest extends UnitTestCase {
       ->getMock();
 
     $query->expects($this->once())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue([]));
 
     $results->expects($this->once())
@@ -174,7 +174,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue('foo'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -220,7 +220,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -263,7 +263,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -306,7 +306,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'partial']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -347,7 +347,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -393,7 +393,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'congue']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -436,7 +436,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'diam']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -481,7 +481,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue('congue'));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -526,7 +526,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'congue']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -583,7 +583,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue($keys));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -628,7 +628,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -686,7 +686,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'OR', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -737,7 +737,7 @@ class HighlightTest extends UnitTestCase {
       ->method('getProcessingLevel')
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
-      ->method('getKeys')
+      ->method('getOriginalKeys')
       ->will($this->returnValue(['#conjunction' => 'AND', 'foo']));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
@@ -891,7 +891,7 @@ class HighlightTest extends UnitTestCase {
     $this->processor->setConfiguration(['excerpt' => FALSE]);
     /** @var \Drupal\search_api\Query\QueryInterface|\PHPUnit_Framework_MockObject_MockObject $query */
     $query = $this->getMock(QueryInterface::class);
-    $query->method('getKeys')
+    $query->method('getOriginalKeys')
       ->willReturn('foo');
     $query->expects($this->once())
       ->method('getProcessingLevel')

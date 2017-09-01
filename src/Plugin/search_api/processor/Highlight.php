@@ -367,7 +367,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   An array of all unique positive keywords used in the query.
    */
   protected function getKeywords(QueryInterface $query) {
-    $keys = $query->getKeys();
+    $keys = $query->getOriginalKeys();
     if (!$keys) {
       return [];
     }
