@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2905117 by drunken monkey: Fixed problems with multi-valued
+  processor-generated fields on Solr.
 - #2884034 by drunken monkey: Fixed highlighting for processed keywords.
 - #2902947 by drunken monkey: Fixed "Thousands marker" setting for Views fields.
 - #2902907 by drunken monkey, juagarc4: Fixed indexing of multibyte text on
