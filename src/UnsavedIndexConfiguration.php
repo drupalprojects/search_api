@@ -355,7 +355,7 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage, $overrides = []) {
+  public function getProcessorsByStage($stage, array $overrides = []) {
     return $this->entity->getProcessorsByStage($stage, $overrides);
   }
 

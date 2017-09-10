@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2907334 by drunken monkey: Fixed some more Drupal coding standards
+  violations.
 - #2903407 by drunken monkey, alan-ps: Added #optional to form containers where
   appropriate.
 

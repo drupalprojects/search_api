@@ -517,7 +517,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
-  public function getProcessorsByStage($stage, $overrides = []) {
+  public function getProcessorsByStage($stage, array $overrides = []) {
     // Get a list of all processors which support this stage, along with their
     // weights.
     $processors = $this->getProcessors();

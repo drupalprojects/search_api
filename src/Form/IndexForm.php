@@ -422,7 +422,7 @@ class IndexForm extends EntityForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current form state.
    */
-  public function submitAjaxDatasourceConfigForm($form, FormStateInterface $form_state) {
+  public function submitAjaxDatasourceConfigForm(array $form, FormStateInterface $form_state) {
     $form_state->setValue('id', NULL);
     $form_state->setRebuild();
   }

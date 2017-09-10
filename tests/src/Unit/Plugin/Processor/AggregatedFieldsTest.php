@@ -142,7 +142,7 @@ class AggregatedFieldsTest extends UnitTestCase {
    *
    * @dataProvider aggregationTestsDataProvider
    */
-  public function testAggregation($type, $expected, $integer = FALSE) {
+  public function testAggregation($type, array $expected, $integer = FALSE) {
     // Add the field configuration.
     $configuration = [
       'type' => $type,

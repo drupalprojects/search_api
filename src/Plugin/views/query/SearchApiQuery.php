@@ -241,7 +241,7 @@ class SearchApiQuery extends QueryPluginBase {
    * @see \Drupal\views\Plugin\views\query\Sql::addField()
    * @see \Drupal\search_api\Plugin\views\query\SearchApiQuery::addField()
    */
-  public function addField($table, $field, $alias = '', $params = []) {
+  public function addField($table, $field, $alias = '', array $params = []) {
     $this->addRetrievedProperty($field);
     return $field;
   }
@@ -755,7 +755,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @see \Drupal\search_api\Query\QueryInterface::setFulltextFields()
    */
-  public function setFulltextFields($fields = NULL) {
+  public function setFulltextFields(array $fields = NULL) {
     if (!$this->shouldAbort()) {
       $this->query->setFulltextFields($fields);
     }
@@ -1071,7 +1071,7 @@ class SearchApiQuery extends QueryPluginBase {
    *
    * @see \Drupal\views\Plugin\views\query\Sql::addOrderBy()
    */
-  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
+  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', array $params = []) {
     $server = $this->getIndex()->getServerInstance();
     if ($table == 'rand') {
       if ($server->supportsFeature('search_api_random_sort')) {

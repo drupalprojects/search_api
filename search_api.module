@@ -154,9 +154,9 @@ function search_api_hook_info() {
     'search_api_query_alter',
     // Unfortunately, it's not possible to add hook infos for hooks with
     // "wildcards".
-//    'search_api_query_TAG_alter',
+    // 'search_api_query_TAG_alter',
     'search_api_results_alter',
-//    'search_api_results_TAG_alter',
+    // 'search_api_results_TAG_alter',
     'search_api_index_reindex',
   ];
   $info = [
@@ -337,7 +337,7 @@ function search_api_entity_delete(EntityInterface $entity) {
  * Marks the node and its comments changed for indexes that use the "Content
  * access" processor.
  */
-function search_api_node_access_records_alter(&$grants, NodeInterface $node) {
+function search_api_node_access_records_alter(array &$grants, NodeInterface $node) {
   /** @var \Drupal\search_api\IndexInterface $index */
   foreach (Index::loadMultiple() as $index) {
     if (!$index->hasValidTracker() || !$index->status()) {

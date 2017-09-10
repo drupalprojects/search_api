@@ -713,7 +713,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    *
    * @todo Write a test to ensure a field named "value" doesn't break this.
    */
-  protected function createFieldTable(FieldInterface $field = NULL, $db, $type = 'field') {
+  protected function createFieldTable(FieldInterface $field = NULL, array $db, $type = 'field') {
     $new_table = !$this->database->schema()->tableExists($db['table']);
     if ($new_table) {
       $table = [
@@ -1055,7 +1055,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * @param string $index_table
    *   The table which stores the denormalized data for this field.
    */
-  protected function removeFieldStorage($name, $field, $index_table) {
+  protected function removeFieldStorage($name, array $field, $index_table) {
     if ($this->getDataTypeHelper()->isTextType($field['type'])) {
       // Remove data from the text table.
       $this->database->delete($field['table'])
@@ -1801,7 +1801,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
    * @return array
    *   The processed keywords.
    */
-  protected function eliminateDuplicates($keys, &$words = []) {
+  protected function eliminateDuplicates(array $keys, array &$words = []) {
     foreach ($keys as $i => $word) {
       if (!Element::child($i)) {
         continue;

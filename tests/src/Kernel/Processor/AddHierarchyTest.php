@@ -207,19 +207,20 @@ class AddHierarchyTest extends ProcessorTestBase {
    * @return \Drupal\taxonomy\Entity\Term
    *   The new taxonomy term object.
    */
-  public function createTerm(VocabularyInterface $vocabulary, $values = []) {
+  public function createTerm(VocabularyInterface $vocabulary, array $values = []) {
     $filter_formats = filter_formats();
     $format = array_pop($filter_formats);
-    $term = Term::create($values + [
-        'name' => $this->randomMachineName(),
-        'description' => [
-          'value' => $this->randomMachineName(),
-          // Use the first available text format.
-          'format' => $format->id(),
-        ],
-        'vid' => $vocabulary->id(),
-        'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
-      ]);
+    $values += [
+      'name' => $this->randomMachineName(),
+      'description' => [
+        'value' => $this->randomMachineName(),
+        // Use the first available text format.
+        'format' => $format->id(),
+      ],
+      'vid' => $vocabulary->id(),
+      'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+    ];
+    $term = Term::create($values);
     $term->save();
     return $term;
   }

@@ -21,6 +21,11 @@ use Drupal\views\ResultRow;
  *
  * Multi-valued field handling is taken from
  * \Drupal\views\Plugin\views\field\PrerenderList.
+ *
+ * Note: Some method parameters are documented as type array|\ArrayAccess. This
+ * is just done to avoid the code sniffer complaining about the missing "array"
+ * type hint (since it's impossible to add it, due to the Views parent plugin
+ * classes not having that type hint, either).
  */
 trait SearchApiFieldTrait {
 
@@ -186,7 +191,7 @@ trait SearchApiFieldTrait {
   /**
    * Provide a form to edit options for this plugin.
    *
-   * @param array $form
+   * @param array|\ArrayAccess $form
    *   The existing form structure, passed by reference.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current form state.
@@ -372,7 +377,7 @@ trait SearchApiFieldTrait {
    * This gives the handlers some time to set up before any handler has
    * been rendered.
    *
-   * @param \Drupal\views\ResultRow[] $values
+   * @param \Drupal\views\ResultRow[]|\ArrayAccess $values
    *   An array of all ResultRow objects returned from the query.
    *
    * @see \Drupal\views\Plugin\views\field\FieldHandlerInterface::preRender()
@@ -757,7 +762,7 @@ trait SearchApiFieldTrait {
   /**
    * Renders all items in this field together.
    *
-   * @param array $items
+   * @param array|\ArrayAccess $items
    *   The items provided by getItems() for a single row.
    *
    * @return string

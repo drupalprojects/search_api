@@ -25,7 +25,7 @@ use Drupal\search_api\Utility\Utility;
  *
  * @ingroup themeable
  */
-function theme_search_api_admin_fields_table($variables) {
+function theme_search_api_admin_fields_table(array $variables) {
   $form = $variables['element'];
   $rows = [];
   if (!empty($form['fields'])) {
@@ -183,7 +183,7 @@ function theme_search_api_form_item_list(array $variables) {
  *
  * @ingroup themeable
  */
-function theme_search_api_server($variables) {
+function theme_search_api_server(array $variables) {
   // Get the search server.
   /** @var $server \Drupal\search_api\ServerInterface */
   $server = $variables['server'];

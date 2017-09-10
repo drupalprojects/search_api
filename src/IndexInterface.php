@@ -280,7 +280,7 @@ interface IndexInterface extends ConfigEntityInterface {
    *   An array of all enabled processors that support the given stage, ordered
    *   by the weight for that stage.
    */
-  public function getProcessorsByStage($stage, $overrides = []);
+  public function getProcessorsByStage($stage, array $overrides = []);
 
   /**
    * Determines whether the given processor ID is valid for this index.

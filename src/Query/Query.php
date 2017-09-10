@@ -5,6 +5,7 @@ namespace Drupal\search_api\Query;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\search_api\Display\DisplayPluginManagerInterface;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\ParseMode\ParseModePluginManager;
@@ -164,7 +165,7 @@ class Query implements QueryInterface {
   /**
    * The display plugin manager.
    *
-   * @var \Drupal\search_api\Display\DisplayPluginManager|null
+   * @var \Drupal\search_api\Display\DisplayPluginManagerInterface|null
    */
   protected $displayPluginManager;
 
@@ -256,7 +257,7 @@ class Query implements QueryInterface {
   /**
    * Retrieves the display plugin manager.
    *
-   * @return \Drupal\search_api\Display\DisplayPluginManager
+   * @return \Drupal\search_api\Display\DisplayPluginManagerInterface
    *   The display plugin manager.
    */
   public function getDisplayPluginManager() {
@@ -266,12 +267,12 @@ class Query implements QueryInterface {
   /**
    * Sets the display plugin manager.
    *
-   * @param \Drupal\search_api\Display\DisplayPluginManager $display_plugin_manager
+   * @param \Drupal\search_api\Display\DisplayPluginManagerInterface $display_plugin_manager
    *   The new display plugin manager.
    *
    * @return $this
    */
-  public function setDisplayPluginManager($display_plugin_manager) {
+  public function setDisplayPluginManager(DisplayPluginManagerInterface $display_plugin_manager) {
     $this->displayPluginManager = $display_plugin_manager;
     return $this;
   }

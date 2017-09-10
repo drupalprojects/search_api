@@ -54,6 +54,7 @@ class IndexProcessorsForm extends EntityForm {
    * @param \Drupal\search_api\Processor\ProcessorPluginManager $processor_plugin_manager
    *   The processor plugin manager.
    * @param \Psr\Log\LoggerInterface $logger
+   *   The logger.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, ProcessorPluginManager $processor_plugin_manager, LoggerInterface $logger) {
     $this->entityTypeManager = $entity_type_manager;

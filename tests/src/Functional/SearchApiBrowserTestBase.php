@@ -200,7 +200,7 @@ abstract class SearchApiBrowserTestBase extends BrowserTestBase {
    * This function looks for the "http-equiv" attribute to be set to "Refresh"
    * and is case-sensitive.
    *
-   * @todo Remove once #2757023 gets committed (and we can depend on it).
+   * @todo Remove once we depend on Drupal 8.4+.
    */
   protected function checkForMetaRefresh() {
     $refresh = $this->cssSelect('meta[http-equiv="Refresh"]');

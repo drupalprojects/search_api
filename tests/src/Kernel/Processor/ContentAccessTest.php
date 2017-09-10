@@ -356,7 +356,7 @@ class ContentAccessTest extends ProcessorTestBase {
    * @return \Drupal\user\UserInterface
    *   The new user object.
    */
-  protected function createUser($permissions) {
+  protected function createUser(array $permissions) {
     $role = Role::create(['id' => 'role', 'name' => 'Role test']);
     $role->save();
     user_role_grant_permissions($role->id(), $permissions);

@@ -291,8 +291,7 @@ class FieldsHelper implements FieldsHelperInterface {
         $dummy_item->setFieldsExtracted(TRUE);
         $processors = $index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);
         foreach ($processors as $processor_id => $processor) {
-          // Avoid an infinite recursion.
-          if (isset($needed_processors[$processor_id]) && $processor != $this) {
+          if (isset($needed_processors[$processor_id])) {
             $processor->addFieldValues($dummy_item);
           }
         }
@@ -419,7 +418,7 @@ class FieldsHelper implements FieldsHelperInterface {
   /**
    * {@inheritdoc}
    */
-  public function createField(IndexInterface $index, $fieldIdentifier, $fieldInfo = []) {
+  public function createField(IndexInterface $index, $fieldIdentifier, array $fieldInfo = []) {
     $field = new Field($index, $fieldIdentifier);
 
     foreach ($fieldInfo as $key => $value) {

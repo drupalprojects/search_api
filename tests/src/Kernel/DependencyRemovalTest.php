@@ -217,7 +217,7 @@ class DependencyRemovalTest extends KernelTestBase {
       //   does not seem to follow that logic, but just computes the complete
       //   tree of dependencies once and operates generally on the assumption
       //   that all of them will be deleted. See #2642374.
-//      $this->assertEquals($server->id(), $this->index->getServerId(), "Index's server was not changed");
+      // $this->assertEquals($server->id(), $this->index->getServerId(), "Index's server was not changed");
     }
     else {
       $this->assertNull($server, 'Server was removed');

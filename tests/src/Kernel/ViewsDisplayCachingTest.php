@@ -94,7 +94,7 @@ class ViewsDisplayCachingTest extends KernelTestBase {
 
     // Use a test cache backend that allows to tamper with the request time so
     // we can test time based caching.
-    $this->cache = new TestMemoryBackend('data');
+    $this->cache = new TestMemoryBackend();
     $this->container->set('cache.data', $this->cache);
 
     // Create some demo content and index it.
