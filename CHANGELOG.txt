@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2905445 by ciss, drunken monkey: Fixed error handling in Views term filter
+  handler.
 - #2904268 by pobster, drunken monkey: Added support for language hierarchy in
   Views.
 
