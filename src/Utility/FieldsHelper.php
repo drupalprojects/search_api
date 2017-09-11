@@ -197,11 +197,9 @@ class FieldsHelper implements FieldsHelperInterface {
     $definition = $data->getDataDefinition();
     if ($definition instanceof ComplexDataDefinitionInterface) {
       $property = $definition->getMainPropertyName();
-      if (isset($value[$property])) {
-        return [$value[$property]];
-      }
+      return isset($value[$property]) ? [$value[$property]] : [];
     }
-    elseif (is_array($value)) {
+    if (is_array($value)) {
       return array_values($value);
     }
     return [$value];
