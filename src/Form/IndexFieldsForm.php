@@ -41,32 +41,11 @@ class IndexFieldsForm extends EntityForm {
   protected $tempStore;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The data type plugin manager.
    *
    * @var \Drupal\search_api\DataType\DataTypePluginManager
    */
   protected $dataTypePluginManager;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The date formatter.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected $dateFormatter;
 
   /**
    * The data type helper.

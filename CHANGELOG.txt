@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2907943 by drunken monkey: Fixed warnings on PHP 5.
 - #2906099 by drunken monkey: Fixed use of field's underlying property label in
   Views.
 - #2896073 by drunken monkey, New Zeal: Fixed warnings when indexing empty text
