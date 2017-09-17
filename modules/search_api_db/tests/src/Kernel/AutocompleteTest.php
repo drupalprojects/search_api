@@ -14,7 +14,7 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
  * @coversDefaultClass \Drupal\search_api_db\Plugin\search_api\backend\Database
  * @group search_api
  */
-abstract class AutocompleteTest extends KernelTestBase {
+class AutocompleteTest extends KernelTestBase {
 
   use ExampleContentTrait;
 
@@ -93,8 +93,9 @@ abstract class AutocompleteTest extends KernelTestBase {
    * @covers ::getAutocompleteSuggestions
    */
   public function testAutocompletion() {
-    $autocomplete = Search::load('search_api_views_search_api_test_view');
-    $index = $autocomplete->getIndexInstance();
+    /** @var \Drupal\search_api_autocomplete\SearchInterface $autocomplete */
+    $autocomplete = Search::load('search_api_db_test_autocomplete');
+    $index = $autocomplete->getIndex();
     /** @var \Drupal\search_api_db\Plugin\search_api\backend\Database $backend */
     $backend = $index->getServerInstance()->getBackend();
 
@@ -127,19 +128,19 @@ abstract class AutocompleteTest extends KernelTestBase {
    *
    * @param int[] $expected
    *   Associative array mapping suggestion strings to their counts.
-   * @param \Drupal\search_api_autocomplete\SuggestionInterface[] $suggestions
+   * @param \Drupal\search_api_autocomplete\Suggestion\SuggestionInterface[] $suggestions
    *   The suggestions returned by the backend.
    */
   protected function assertSuggestionsEqual(array $expected, array $suggestions) {
     $terms = [];
     foreach ($suggestions as $suggestion) {
-      $keys = $suggestion->getKeys();
+      $keys = $suggestion->getSuggestedKeys();
       if ($keys === NULL) {
         $keys = $suggestion->getSuggestionPrefix();
         $keys .= $suggestion->getUserInput();
         $keys .= $suggestion->getSuggestionSuffix();
       }
-      $terms[$keys] = $suggestion->getResults();
+      $terms[$keys] = $suggestion->getResultsCount();
     }
     $this->assertEquals($expected, $terms);
   }

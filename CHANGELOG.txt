@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2904377 by drunken monkey, borisson_: Added Autocomplete tests for the DB
+  backend.
 - #2907943 by drunken monkey: Fixed warnings on PHP 5.
 - #2906099 by drunken monkey: Fixed use of field's underlying property label in
   Views.
