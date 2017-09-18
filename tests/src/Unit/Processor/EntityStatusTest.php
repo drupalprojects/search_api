@@ -3,6 +3,9 @@
 namespace Drupal\Tests\search_api\Unit\Processor;
 
 use Drupal\comment\Entity\Comment;
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\file\Entity\File;
 use Drupal\node\Entity\Node;
@@ -82,6 +85,26 @@ class EntityStatusTest extends UnitTestCase {
     }
     $this->index->method('getDatasources')
       ->will($this->returnValue($this->datasources));
+
+    // In supportsIndex(), the entity status processor will use the entity type
+    // manager to get the definition of each datasource's entity type and then
+    // check whether it implements \Drupal\Core\Entity\EntityPublishedInterface.
+    // We therefore need to ensure each of these calls returns an appropriate
+    // value.
+    $self = $this;
+    $entity_type_manager = $this->getMock(EntityTypeManagerInterface::class);
+    $entity_type_manager->method('getDefinition')
+      ->willReturnCallback(function ($entity_type_id) use ($self) {
+        $entity_type = $self->getMock(EntityTypeInterface::class);
+        $publishable = in_array($entity_type_id, ['node', 'comment']);
+        $entity_type->method('entityClassImplements')
+          ->willReturnMap([
+            [EntityPublishedInterface::class, $publishable],
+          ]);
+        return $entity_type;
+      });
+    $this->container->set('entity_type.manager', $entity_type_manager);
+
     $this->assertEquals($expected, EntityStatus::supportsIndex($this->index));
   }
 
