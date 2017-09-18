@@ -1,7 +1,5 @@
 <?php
 
-// @codingStandardsIgnoreFile
-
 namespace Drupal\search_api;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -20,9 +18,6 @@ use Drupal\user\SharedTempStore;
 
 /**
  * Represents a configuration of an index that was not yet permanently saved.
- *
- * Proxy code created with:
- * php ./core/scripts/generate-proxy-class.php 'Drupal\search_api\IndexInterface' modules/search_api/src/
  */
 class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationInterface {
 
