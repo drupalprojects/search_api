@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2909153 by drunken monkey, borisson_: Fixed fatal error for test fails under
+  certain conditions.
 - #2907756 by drunken monkey, bojanz: Fixed "Entity status" processor to
   support other publishable entity types.
 - #2904377 by drunken monkey, borisson_: Added Autocomplete tests for the DB
