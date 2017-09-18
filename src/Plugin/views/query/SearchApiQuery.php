@@ -5,6 +5,7 @@ namespace Drupal\search_api\Plugin\views\query;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Query\ConditionInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -12,6 +13,7 @@ use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\ParseMode\ParseModeInterface;
+use Drupal\search_api\Plugin\views\field\SearchApiStandard;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility\Utility;
@@ -148,6 +150,37 @@ class SearchApiQuery extends QueryPluginBase {
       return Index::load($index_id);
     }
     return NULL;
+  }
+
+  /**
+   * Retrieves the contained entity from a Views result row.
+   *
+   * @param \Drupal\views\ResultRow $row
+   *   The Views result row.
+   * @param string $relationship_id
+   *   The ID of the view relationship to use.
+   * @param \Drupal\views\ViewExecutable $view
+   *   The current view object.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The entity contained in the result row, if any.
+   */
+  public static function getEntityFromRow(ResultRow $row, $relationship_id, ViewExecutable $view) {
+    if ($relationship_id === 'none') {
+      $object = $row->_object ?: $row->_item->getOriginalObject();
+      $entity = $object->getValue();
+      if ($entity instanceof EntityInterface) {
+        return $entity;
+      }
+      return NULL;
+    }
+
+    // To avoid code duplication, just create a dummy field handler and use it
+    // to retrieve the entity.
+    $handler = new SearchApiStandard([], '', ['title' => '']);
+    $options = ['relationship' => $relationship_id];
+    $handler->init($view, $view->display_handler, $options);
+    return $handler->getEntity($row);
   }
 
   /**
@@ -293,20 +326,13 @@ class SearchApiQuery extends QueryPluginBase {
    *   If $return_bool is FALSE, an associative array mapping all datasources
    *   containing entities to their entity types. Otherwise, TRUE if there is at
    *   least one such datasource.
+   *
+   * @deprecated Will be removed in a future version of the module. Use
+   *   \Drupal\search_api\IndexInterface::getEntityTypes() instead.
    */
   public function getEntityTypes($return_bool = FALSE) {
-    // @todo Might be useful enough to be moved to the Index class? Or maybe
-    //   Utility, to finally stop the growth of the Index class.
-    $types = [];
-    foreach ($this->index->getDatasources() as $datasource_id => $datasource) {
-      if ($type = $datasource->getEntityTypeId()) {
-        if ($return_bool) {
-          return TRUE;
-        }
-        $types[$datasource_id] = $type;
-      }
-    }
-    return $return_bool ? FALSE : $types;
+    $types = $this->index->getEntityTypes();
+    return $return_bool ? (bool) $types : $types;
   }
 
   /**

@@ -396,6 +396,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
   /**
    * {@inheritdoc}
    */
+  public function getEntityTypes($return_bool = FALSE) {
+    $types = [];
+    foreach ($this->getDatasources() as $datasource_id => $datasource) {
+      if ($type = $datasource->getEntityTypeId()) {
+        $types[$datasource_id] = $type;
+      }
+    }
+    return $types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasValidTracker() {
     return (bool) \Drupal::getContainer()
       ->get('plugin.manager.search_api.tracker')

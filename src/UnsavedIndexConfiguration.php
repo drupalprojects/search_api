@@ -283,6 +283,13 @@ class UnsavedIndexConfiguration implements IndexInterface, UnsavedConfigurationI
   /**
    * {@inheritdoc}
    */
+  public function getEntityTypes() {
+    return $this->entity->getEntityTypes();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasValidTracker() {
     return $this->entity->hasValidTracker();
   }
