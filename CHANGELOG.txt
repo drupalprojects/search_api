@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2907518 by drunken monkey, jrockowitz, borisson_: Fixed index
+  creation/update via CLI on large sites.
 - #2908440 by claudiu.cristea: Fixed UnsavedIndexConfiguration documentation.
 - #2899678 by drunken monkey, Graber, borisson_: Added support for VBO.
 - #2909153 by drunken monkey, borisson_: Fixed fatal error for test fails under

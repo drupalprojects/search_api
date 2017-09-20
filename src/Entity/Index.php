@@ -1339,7 +1339,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
         // batch for tracking items. Also, do not use a batch if running in the
         // CLI.
         $use_batch = \Drupal::state()->get('search_api_use_tracking_batch', TRUE);
-        if (!$use_batch || php_sapi_name() == 'cli') {
+        if (!$use_batch || Utility::isRunningInCli()) {
           $index_task_manager->addItemsAll($this);
         }
         else {

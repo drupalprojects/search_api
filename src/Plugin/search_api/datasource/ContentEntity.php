@@ -747,6 +747,13 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
       }
     }
 
+    if (Utility::isRunningInCli()) {
+      // When running in the CLI, this might be executed for all entities from
+      // within a single process. To avoid running out of memory, reset the
+      // static cache after each batch.
+      $this->getEntityStorage()->resetCache($entity_ids);
+    }
+
     return $item_ids;
   }
 
