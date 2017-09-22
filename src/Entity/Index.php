@@ -258,6 +258,15 @@ class Index extends ConfigEntityBase implements IndexInterface {
   protected $processorInstances;
 
   /**
+   * Static cache of retrieved property definitions, grouped by datasource.
+   *
+   * @var \Drupal\Core\TypedData\DataDefinitionInterface[][]
+   *
+   * @see \Drupal\search_api\Entity\Index::getPropertyDefinitions()
+   */
+  protected $properties = [];
+
+  /**
    * The number of currently active "batch tracking" modes.
    *
    * @var int
@@ -815,20 +824,24 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function getPropertyDefinitions($datasource_id) {
-    if (isset($datasource_id)) {
-      $datasource = $this->getDatasource($datasource_id);
-      $properties = $datasource->getPropertyDefinitions();
-    }
-    else {
-      $datasource = NULL;
-      $properties = [];
+    if (!isset($this->properties[$datasource_id])) {
+      if (isset($datasource_id)) {
+        $datasource = $this->getDatasource($datasource_id);
+        $properties = $datasource->getPropertyDefinitions();
+      }
+      else {
+        $datasource = NULL;
+        $properties = [];
+      }
+
+      foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES) as $processor) {
+        $properties += $processor->getPropertyDefinitions($datasource);
+      }
+
+      $this->properties[$datasource_id] = $properties;
     }
 
-    foreach ($this->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES) as $processor) {
-      $properties += $processor->getPropertyDefinitions($datasource);
-    }
-
-    return $properties;
+    return $this->properties[$datasource_id];
   }
 
   /**
@@ -1203,6 +1216,9 @@ class Index extends ConfigEntityBase implements IndexInterface {
       'index_directly' => TRUE,
     ];
 
+    // Reset the static cache for getPropertyDefinitions() to make sure we don't
+    // remove any fields just because of caching problems.
+    $this->properties = [];
     foreach ($this->getFields() as $field_id => $field) {
       // Remove all "locked" and "hidden" flags from all fields of the index. If
       // they are still valid, they should be re-added by the processors.
@@ -1212,17 +1228,14 @@ class Index extends ConfigEntityBase implements IndexInterface {
 
       // Also check whether the underlying property actually (still) exists.
       $datasource_id = $field->getDatasourceId();
-      if (!isset($properties[$datasource_id])) {
-        if ($datasource_id === NULL || $this->isValidDatasource($datasource_id)) {
-          $properties[$datasource_id] = $this->getPropertyDefinitions($datasource_id);
-        }
-        else {
-          $properties[$datasource_id] = [];
-        }
+      $property = NULL;
+      if ($datasource_id === NULL || $this->isValidDatasource($datasource_id)) {
+        $properties = $this->getPropertyDefinitions($datasource_id);
+        $property = \Drupal::getContainer()
+          ->get('search_api.fields_helper')
+          ->retrieveNestedProperty($properties, $field->getPropertyPath());
       }
-      if (!\Drupal::getContainer()
-        ->get('search_api.fields_helper')
-        ->retrieveNestedProperty($properties[$datasource_id], $field->getPropertyPath())) {
+      if (!$property) {
         $this->removeField($field_id);
       }
     }
@@ -1355,6 +1368,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
 
       Cache::invalidateTags($this->getCacheTags());
+
+      $this->properties = [];
     }
     catch (SearchApiException $e) {
       $this->logException($e);

@@ -303,11 +303,12 @@ class SearchApiEntityField extends EntityField {
     }
 
     $parent_path = $this->getParentPath();
-    if (empty($values->_relationship_objects[$parent_path])) {
+    $combined_parent_path = $this->createCombinedPropertyPath($this->getDatasourceId(), $parent_path);
+    if (empty($values->_relationship_objects[$combined_parent_path])) {
       return [];
     }
     $build = [];
-    foreach (array_keys($values->_relationship_objects[$parent_path]) as $i) {
+    foreach (array_keys($values->_relationship_objects[$combined_parent_path]) as $i) {
       $this->valueIndex = $i;
       $build[] = parent::getItems($values);
     }

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2650986 by drunken monkey, borisson_: Fixed various problems with Views
+  field handling.
 - #2907518 by drunken monkey, jrockowitz, borisson_: Fixed index
   creation/update via CLI on large sites.
 - #2908440 by claudiu.cristea: Fixed UnsavedIndexConfiguration documentation.
