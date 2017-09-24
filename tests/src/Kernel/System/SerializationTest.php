@@ -64,6 +64,31 @@ class SerializationTest extends KernelTestBase {
     $index->preSave($storage);
     $serialized->preSave($storage);
     $this->assertEquals($index->toArray(), $serialized->toArray());
+
+    // Make sure no object properties will be serialized for an index.
+    $index->getDatasources();
+    $index->getFields();
+    $index->getProcessors();
+    $index->getTrackerInstance();
+    $index->getPropertyDefinitions(NULL);
+
+    $contains_object = function ($var) use (&$contains_object) {
+      if (is_object($var)) {
+        return TRUE;
+      }
+      if (is_array($var)) {
+        foreach ($var as $key => $value) {
+          if ($contains_object($value)) {
+            return TRUE;
+          }
+        }
+      }
+      return FALSE;
+    };
+    $to_serialize = $index->__sleep();
+    foreach ($to_serialize as $property) {
+      $this->assertFalse($contains_object($index->get($property)), "Serialized property \$$property contains an object.");
+    }
   }
 
   /**
@@ -268,7 +293,7 @@ class SerializationTest extends KernelTestBase {
   /**
    * Creates an index entity object for testing purposes.
    *
-   * @return \Drupal\search_api\IndexInterface
+   * @return \Drupal\search_api\Entity\Index
    *   A test index.
    */
   protected function createTestIndex() {

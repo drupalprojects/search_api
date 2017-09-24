@@ -1932,6 +1932,7 @@ class Index extends ConfigEntityBase implements IndexInterface {
     unset($properties['serverInstance']);
     unset($properties['processorInstances']);
     unset($properties['fieldInstances']);
+    unset($properties['properties']);
     return array_keys($properties);
   }
 
