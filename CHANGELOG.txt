@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2911734 by drunken monkey, borisson_, mkalkbrenner: Fixed Views display of
+  fields returned from the backend.
 - #2910918 by drunken monkey, borisson_: Fixed error in fields configuration
   form.
 - #2650986 by drunken monkey, borisson_: Fixed various problems with Views

@@ -44,7 +44,7 @@ class ViewsDisplayCachingTest extends KernelTestBase {
   /**
    * The cache backend used for testing.
    *
-   * @var \Drupal\Tests\search_api\Kernel\TestMemoryBackend
+   * @var \Drupal\Tests\search_api\Kernel\Views\TestMemoryBackend
    */
   protected $cache;
 

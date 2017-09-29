@@ -632,12 +632,9 @@ trait SearchApiFieldTrait {
         // Check whether this is a processor-generated property and use
         // special code to retrieve it in that case.
         if ($property instanceof ProcessorPropertyInterface) {
-          // Determine whether we want to set field values for this property on
-          // this row. This is the case if the property is one of the explicitly
-          // retrieved properties and not yet set on the result row object.
-          $set_values = in_array($combined_property_path, $dependents)
-            && !isset($row->{$combined_property_path});
-          $this->extractProcessorProperty($property, $row, $combined_property_path, $set_values);
+          // Determine whether this property is required.
+          $is_required = in_array($combined_property_path, $dependents);
+          $this->extractProcessorProperty($property, $row, $combined_property_path, $is_required);
           continue;
         }
 
@@ -705,11 +702,11 @@ trait SearchApiFieldTrait {
    *   The Views result row.
    * @param string $combined_property_path
    *   The combined property path of the property to set.
-   * @param bool $set_values
+   * @param bool $is_required
    *   TRUE if the property is directly required, FALSE if it should only be
    *   extracted because some child/ancestor properties are required.
    */
-  protected function extractProcessorProperty(ProcessorPropertyInterface $property, ResultRow $row, $combined_property_path, $set_values) {
+  protected function extractProcessorProperty(ProcessorPropertyInterface $property, ResultRow $row, $combined_property_path, $is_required) {
     $index = $this->getIndex();
     $processor = $index->getProcessor($property->getProcessorId());
     if (!$processor) {
@@ -758,6 +755,7 @@ trait SearchApiFieldTrait {
     $processor->addFieldValues($dummy_item);
 
     $row->_relationship_objects[$combined_property_path] = [];
+    $set_values = $is_required && !isset($row->{$combined_property_path});
     if ($set_values) {
       $row->{$combined_property_path} = [];
     }

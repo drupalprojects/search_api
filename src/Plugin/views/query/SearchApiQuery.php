@@ -14,8 +14,10 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\Plugin\views\field\SearchApiStandard;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Query\ConditionGroupInterface;
 use Drupal\search_api\Query\QueryInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\Entity\User;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -557,7 +559,24 @@ class SearchApiQuery extends QueryPluginBase {
       // Gather any properties from the search results.
       foreach ($result->getFields(FALSE) as $field_id => $field) {
         if ($field->getValues()) {
-          $values[$field->getCombinedPropertyPath()] = $field->getValues();
+          $path = $field->getCombinedPropertyPath();
+          $values[$path] = $field->getValues();
+          try {
+            $property = $field->getDataDefinition();
+            // For configurable processor-defined properties, our Views field
+            // handlers use a special property path to distinguish multiple
+            // fields with the same property path. Therefore, we here also set
+            // the values using that special property path so this will work
+            // correctly.
+            if ($property instanceof ConfigurablePropertyInterface) {
+              $path .= '|' . $field_id;
+              $values[$path] = $field->getValues();
+            }
+          }
+          catch (SearchApiException $e) {
+            // If we're not able to retrieve the data definition at this point,
+            // it doesn't really matter.
+          }
         }
       }
 
