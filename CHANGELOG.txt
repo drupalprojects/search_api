@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2913688 by kevin.dutra, borisson_, drunken monkey: Fixed display plugin for
+  Views pages with contextual filters.
 - #2911734 by drunken monkey, borisson_, mkalkbrenner: Fixed Views display of
   fields returned from the backend.
 - #2910918 by drunken monkey, borisson_: Fixed error in fields configuration
