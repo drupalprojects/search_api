@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.5 (2017-10-14):
 ----------------------------
 - #2913688 by kevin.dutra, borisson_, drunken monkey: Fixed display plugin for
