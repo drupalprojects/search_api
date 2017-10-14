@@ -12,7 +12,7 @@ use Drupal\views\ResultRow;
  *
  * Provides some additional public methods to simplify testing.
  *
- * @see \Drupal\Tests\search_api\Kernel\ViewsFieldTraitTest
+ * @see \Drupal\Tests\search_api\Kernel\Views\ViewsFieldTraitTest
  */
 class ViewsTestField extends FieldPluginBase {
 

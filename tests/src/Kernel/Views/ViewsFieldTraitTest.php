@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\search_api\Kernel;
+namespace Drupal\Tests\search_api\Kernel\Views;
 
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
@@ -9,6 +9,7 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Item\Item;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\Utility\Utility;
+use Drupal\Tests\search_api\Kernel\ViewsTestField;
 use Drupal\user\Entity\User;
 use Drupal\views\ResultRow;
 
