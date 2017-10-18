@@ -1,5 +1,9 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2905562 by drunken monkey, borisson_: Increased the minimum Core version to
+  8.4.
+- #2905562 by drunken monkey, borisson_: Increased the minimum Core version to
+  8.4.
 - #2916208 by drunken monkey: Fixed AJAX display of plugin forms.
 - #2278433 by drunken monkey, borisson_: Added option to Views field handlers
   to use highlighted fields data.

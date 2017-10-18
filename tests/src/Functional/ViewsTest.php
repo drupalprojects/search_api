@@ -387,11 +387,7 @@ class ViewsTest extends SearchApiBrowserTestBase {
     for ($i = 0; $i < 3; ++$i) {
       // Flush the page-level caches to make sure the Views cache plugin is
       // used (so we could reproduce the bug if it's there).
-      // @todo Remove "cache.render" once we depend on Drupal 8.4+.
-      \Drupal::getContainer()->get('cache.render')->deleteAll();
-      if (\Drupal::getContainer()->has('cache.page')) {
-        \Drupal::getContainer()->get('cache.page')->deleteAll();
-      }
+      \Drupal::getContainer()->get('cache.page')->deleteAll();
       \Drupal::getContainer()->get('cache.dynamic_page_cache')->deleteAll();
       $this->submitForm([], 'Search');
       $this->assertSession()->addressEquals('search-api-test');
