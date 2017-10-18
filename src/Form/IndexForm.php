@@ -180,7 +180,6 @@ class IndexForm extends EntityForm {
 
     $form['datasource_configs'] = [
       '#type' => 'container',
-      '#optional' => TRUE,
       '#attributes' => [
         'id' => 'search-api-datasources-config-form',
       ],
@@ -227,7 +226,6 @@ class IndexForm extends EntityForm {
 
     $form['tracker_config'] = [
       '#type' => 'container',
-      '#optional' => TRUE,
       '#attributes' => [
         'id' => 'search-api-tracker-config-form',
       ],
