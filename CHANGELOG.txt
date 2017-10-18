@@ -1,5 +1,9 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2278433 by drunken monkey, borisson_: Added option to Views field handlers
+  to use highlighted fields data.
+- #2278433 by drunken monkey, borisson_: Added option to Views field handlers
+  to use highlighted fields data.
 
 Search API 1.5 (2017-10-14):
 ----------------------------

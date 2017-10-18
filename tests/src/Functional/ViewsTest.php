@@ -895,6 +895,29 @@ class ViewsTest extends SearchApiBrowserTestBase {
   }
 
   /**
+   * Checks whether highlighting of results works correctly.
+   *
+   * @see views.view.search_api_test_cache.yml
+   */
+  public function testHighlighting() {
+    // Add the Highlight processor to the search index.
+    $index = Index::load('database_search_index');
+    $processor = $this->container
+      ->get('search_api.plugin_helper')
+      ->createProcessorPlugin($index, 'highlight');
+    $index->addProcessor($processor);
+    $index->save();
+
+    $path = 'search-api-test-search-view-caching-none';
+    $this->drupalGet($path);
+    $this->assertSession()->responseContains('foo bar baz');
+
+    $options['query']['search_api_fulltext'] = 'foo';
+    $this->drupalGet($path, $options);
+    $this->assertSession()->responseContains('<strong>foo</strong> bar baz');
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function initConfig(ContainerInterface $container) {

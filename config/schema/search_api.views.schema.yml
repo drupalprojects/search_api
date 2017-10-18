@@ -92,6 +92,9 @@ views.field.search_api:
     link_to_item:
       type: boolean
       label: 'Link to item'
+    use_highlighting:
+      type: boolean
+      label: 'Use highlighted field data'
     multi_type:
       type: string
       label: 'Handling of multiple values'
@@ -106,6 +109,9 @@ views.field.search_api_boolean:
     link_to_item:
       type: boolean
       label: 'Link to item'
+    use_highlighting:
+      type: boolean
+      label: 'Use highlighted field data'
     multi_type:
       type: string
       label: 'Handling of multiple values'
@@ -120,6 +126,9 @@ views.field.search_api_date:
     link_to_item:
       type: boolean
       label: 'Link to item'
+    use_highlighting:
+      type: boolean
+      label: 'Use highlighted field data'
     multi_type:
       type: string
       label: 'Handling of multiple values'
@@ -166,6 +175,9 @@ views.field.search_api_numeric:
     link_to_item:
       type: boolean
       label: 'Link to item'
+    use_highlighting:
+      type: boolean
+      label: 'Use highlighted field data'
     multi_type:
       type: string
       label: 'Handling of multiple values'
