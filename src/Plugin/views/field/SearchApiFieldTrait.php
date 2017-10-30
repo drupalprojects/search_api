@@ -783,7 +783,7 @@ trait SearchApiFieldTrait {
         continue;
       }
       if ($set_values) {
-        $row->$combined_property_path[] = $value;
+        $row->{$combined_property_path}[] = $value;
       }
       $typed_data = $this->getTypedDataManager()
         ->create($property, $value);
@@ -868,7 +868,7 @@ trait SearchApiFieldTrait {
       // the relationship objects for the next iteration of the outer loop
       // over properties.
       foreach ($row->_relationship_objects[$combined_property_path] as $typed_data) {
-        $row->$combined_property_path[] = $this->getFieldsHelper()
+        $row->{$combined_property_path}[] = $this->getFieldsHelper()
           ->extractFieldValues($typed_data);
       }
 
