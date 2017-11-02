@@ -2484,8 +2484,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $index = $query->getIndex();
     $db_info = $this->getIndexDbInfo($index);
     if (empty($db_info['field_tables'])) {
-      $index_id = $index->id();
-      throw new SearchApiException("No field settings saved for index with ID '$index_id'.");
+      return [];
     }
     $fields = $this->getFieldInfo($index);
 
@@ -2533,35 +2532,48 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       // the "partial_matches" option. There should be no way we'll save the
       // server during the createDbQuery() call, so this should be safe.
       $configuration = $this->configuration;
-      $this->configuration['partial_matches'] = FALSE;
-      $db_query = $this->createDbQuery($query, $fields);
-      $this->configuration = $configuration;
+      $db_query = NULL;
+      try {
+        $this->configuration['partial_matches'] = FALSE;
+        $db_query = $this->createDbQuery($query, $fields);
+        $this->configuration = $configuration;
 
-      // We need a list of all current results to match the suggestions against.
-      // However, since MySQL doesn't allow using a temporary table multiple
-      // times in one query, we regrettably have to do it this way.
-      $fulltext_fields = $this->getQueryFulltextFields($query);
-      if (count($fulltext_fields) > 1) {
-        $all_results = $db_query->execute()->fetchCol();
-        // Compute the total number of results so we can later sort out matches
-        // that occur too often.
-        $total = count($all_results);
-      }
-      else {
-        $table = $this->getTemporaryResultsTable($db_query);
-        if (!$table) {
-          return [];
+        // We need a list of all current results to match the suggestions
+        // against. However, since MySQL doesn't allow using a temporary table
+        // multiple times in one query, we regrettably have to do it this way.
+        $fulltext_fields = $this->getQueryFulltextFields($query);
+        if (count($fulltext_fields) > 1) {
+          $all_results = $db_query->execute()->fetchCol();
+          // Compute the total number of results so we can later sort out
+          // matches that occur too often.
+          $total = count($all_results);
         }
-        $all_results = $this->database->select($table, 't')
-          ->fields('t', ['item_id']);
-        $total = $this->database->query("SELECT COUNT(item_id) FROM {{$table}}")->fetchField();
+        else {
+          $table = $this->getTemporaryResultsTable($db_query);
+          if (!$table) {
+            return [];
+          }
+          $all_results = $this->database->select($table, 't')
+            ->fields('t', ['item_id']);
+          $sql = "SELECT COUNT(item_id) FROM {{$table}}";
+          $total = $this->database->query($sql)->fetchField();
+        }
       }
-      $max_occurrences = $this->getConfigFactory()->get('search_api_db.settings')->get('autocomplete_max_occurrences');
+      catch (SearchApiException $e) {
+        // If the exception was in createDbQuery(), we need to reset the
+        // configuration here.
+        $this->configuration = $configuration;
+        $this->logException($e, '%type while trying to create autocomplete suggestions: @message in %function (line %line of %file).');
+        continue;
+      }
+      $max_occurrences = $this->getConfigFactory()
+        ->get('search_api_db.settings')
+        ->get('autocomplete_max_occurrences');
       $max_occurrences = max(1, floor($total * $max_occurrences));
 
       if (!$total) {
         if ($pass == 1) {
-          return NULL;
+          return [];
         }
         continue;
       }

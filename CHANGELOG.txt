@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2917036 by drunken monkey, borisson_: Fixed illegal return values in
+  Database::getAutocompleteSuggestions().
 - #2916225 by tilenav, borisson_, drunken monkey: Replaced manual config
   setting with installConfig() in our Kernel tests.
 - #2917779 by mkalkbrenner, edurenye, drunken monkey: Fixed fatal errors in
