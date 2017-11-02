@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2916225 by tilenav, borisson_, drunken monkey: Replaced manual config
+  setting with installConfig() in our Kernel tests.
 - #2917779 by mkalkbrenner, edurenye, drunken monkey: Fixed fatal errors in
   views on PHP 5.
 - #2905562 by drunken monkey, borisson_: Increased the minimum Core version to
