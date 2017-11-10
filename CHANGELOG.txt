@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2855254 by dev.patrick, drunken monkey, borisson_: Removed the remaining
+  @codingStandardsIgnoreFile directive.
 - #2916754 by chr.fritsch, borisson_, drunken monkey: Fixed failure to detect
   whether a view is executed in the current request.
 - #2910638 by drunken monkey, borisson_, phillipHG: Fixed handling of

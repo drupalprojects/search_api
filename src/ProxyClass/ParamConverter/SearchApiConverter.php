@@ -1,11 +1,5 @@
 <?php
 
-// @codingStandardsIgnoreFile
-
-/**
- * This file was generated via php core/scripts/generate-proxy-class.php 'Drupal\search_api\ParamConverter\SearchApiConverter' "modules/search_api/src/".
- */
-
 namespace Drupal\search_api\ProxyClass\ParamConverter;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -15,6 +9,11 @@ use Symfony\Component\Routing\Route;
 
 /**
  * Provides a proxy class for \Drupal\search_api\ParamConverter\SearchApiConverter.
+ *
+ * This file was generated via:
+ * @code
+ * php core/scripts/generate-proxy-class.php 'Drupal\search_api\ParamConverter\SearchApiConverter' modules/search_api/src/
+ * @endcode
  *
  * @see \Drupal\Component\ProxyBuilder\ProxyBuilder
  */
