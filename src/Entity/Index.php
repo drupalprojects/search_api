@@ -1131,8 +1131,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function isReindexing() {
-    $id = $this->id();
-    return \Drupal::state()->get("search_api.index.$id.has_reindexed", FALSE);
+    $key = "search_api.index.{$this->id()}.has_reindexed";
+    return \Drupal::state()->get($key, FALSE);
   }
 
   /**
@@ -1145,8 +1145,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * @return $this
    */
   protected function setHasReindexed($has_reindexed = TRUE) {
-    $id = $this->id();
-    \Drupal::state()->set("search_api.index.$id.has_reindexed", $has_reindexed);
+    if ($this->isReindexing() !== $has_reindexed) {
+      $key = "search_api.index.{$this->id()}.has_reindexed";
+      \Drupal::state()->set($key, $has_reindexed);
+    }
     return $this;
   }
 
