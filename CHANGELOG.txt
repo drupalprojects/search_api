@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2921582 by chr.fritsch, drunken monkey: Fixed saving of "database_text" form
+  field for Database servers.
 - #2919884 by samuel.mortenson, borisson_, drunken monkey: Improved performance
   for saving an index's reindexing state.
 - #2855254 by dev.patrick, drunken monkey, borisson_: Removed the remaining

@@ -428,6 +428,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           '#type' => 'item',
           '#title' => $this->t('Database'),
           '#plain_text' => str_replace(':', ' > ', $this->configuration['database']),
+          '#input' => FALSE,
         ],
       ];
     }
