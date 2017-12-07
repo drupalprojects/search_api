@@ -2444,6 +2444,11 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $expressions = &$db_query->getExpressions();
     $expressions = [];
 
+    // Remove the ORDER BY clause, as it may refer to expressions that are
+    // unset above.
+    $orderBy = &$db_query->getOrderBy();
+    $orderBy = [];
+
     // If there's a GROUP BY for item_id, we leave that, all others need to be
     // discarded.
     $group_by = &$db_query->getGroupBy();
