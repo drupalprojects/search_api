@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2927748 by mkalkbrenner, mstiem, drunken monkey: Fixed Views field handler
+  for multiple processor-defined fields returned by the server.
 - #2928944 by drunken monkey: Removed assert() calls with string parameters.
 - #2923976 by Martijn Houtman, drunken monkey: Fixed facets with random sorting
   on Database backend.
