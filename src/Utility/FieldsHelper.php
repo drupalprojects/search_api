@@ -87,7 +87,7 @@ class FieldsHelper implements FieldsHelperInterface {
    *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
-   * @param EntityTypeBundleInfoInterface $entityBundleInfo
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityBundleInfo
    *   The entity type bundle info service.
    * @param \Drupal\search_api\Utility\DataTypeHelperInterface $dataTypeHelper
    *   The data type helper service.

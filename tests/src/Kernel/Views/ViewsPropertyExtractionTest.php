@@ -64,14 +64,20 @@ class ViewsPropertyExtractionTest extends KernelTestBase {
     $property2->method('defaultConfiguration')->willReturn([]);
     $property2->method('getClass')->willReturn(StringData::class);
     $index->method('getPropertyDefinitions')->willReturnMap([
-      [NULL, [
-        'property1' => new ProcessorProperty([
-          'processor_id' => 'processor1',
-        ]),
-      ]],
-      [$datasource_id, [
-        'property2' => $property2,
-      ]],
+      [
+        NULL,
+        [
+          'property1' => new ProcessorProperty([
+            'processor_id' => 'processor1',
+          ]),
+        ],
+      ],
+      [
+        $datasource_id,
+        [
+          'property2' => $property2,
+        ],
+      ],
     ]);
     $generate_add_field_values = function ($value) {
       return function (ItemInterface $item) use ($value) {

@@ -483,7 +483,7 @@ class IndexForm extends EntityForm {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
-    /** @var $index \Drupal\search_api\IndexInterface */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getEntity();
 
     $storage = $this->entityTypeManager->getStorage('search_api_index');
@@ -558,7 +558,7 @@ class IndexForm extends EntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    /** @var $index \Drupal\search_api\IndexInterface */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->getEntity();
     $index->setOptions($form_state->getValue('options', []) + $this->originalEntity->getOptions());
 

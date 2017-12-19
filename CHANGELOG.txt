@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2929739 by drunken monkey, borisson_: Improved adherence to coding standards.
 - #2927748 by mkalkbrenner, mstiem, drunken monkey: Fixed Views field handler
   for multiple processor-defined fields returned by the server.
 - #2928944 by drunken monkey: Removed assert() calls with string parameters.

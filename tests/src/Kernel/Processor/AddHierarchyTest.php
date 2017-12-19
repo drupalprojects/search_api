@@ -37,6 +37,8 @@ class AddHierarchyTest extends ProcessorTestBase {
 
   /**
    * A hierarchy to test.
+   *
+   * @var string[][]
    */
   protected static $hierarchy = [
     'fruit' => [

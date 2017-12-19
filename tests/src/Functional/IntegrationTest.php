@@ -400,7 +400,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     ];
     $this->submitForm($edit, 'Save');
 
-    /** @var $index \Drupal\search_api\IndexInterface */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->indexStorage->load($this->indexId);
     $remaining = $index->getTrackerInstance()->getRemainingItemsCount();
     $this->assertEquals(0, $remaining, 'Index was not scheduled for re-indexing when saving its server.');
@@ -1462,7 +1462,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
 
     // Confirm that the index hasn't been deleted.
     $this->indexStorage->resetCache([$this->indexId]);
-    /** @var $index \Drupal\search_api\IndexInterface */
+    /** @var \Drupal\search_api\IndexInterface $index */
     $index = $this->indexStorage->load($this->indexId);
     $this->assertTrue($index, 'The index associated with the server was not deleted.');
     $this->assertFalse($index->status(), 'The index associated with the server was disabled.');
