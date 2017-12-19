@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2927692 by drunken monkey, Kristi Wachter: Fixed exposed grouped Views
+  options filters.
 - #2928769 by jannis, drunken monkey: Fixed Views cache not being cleared when
   enabling indexes.
 - #2566529 by Dylan Donkersgoed, drunken monkey, joachim, swirt: Added support
