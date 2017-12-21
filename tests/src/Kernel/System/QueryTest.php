@@ -102,18 +102,23 @@ class QueryTest extends KernelTestBase {
     $this->assertEquals($level, $query->getProcessingLevel());
     $query->addTag('andrew_hill');
 
-    $_SESSION['messages']['status'] = [];
+    // @todo Use \Drupal::messenger() once we depend on Drupal 8.5+. See
+    //   #2931730.
+    drupal_get_messages();
     $query->execute();
-    $messages = $_SESSION['messages']['status'];
-    $_SESSION['messages']['status'] = [];
+    $messages = drupal_get_messages();
 
     $methods = $this->getCalledMethods('processor');
     if ($hooks_and_processors_invoked) {
+      // @todo Replace "status" with MessengerInterface::TYPE_STATUS once we
+      //   depend on Drupal 8.5+. See #2931730.
       $expected = [
-        'Funky blue note',
-        'Search id: ',
-        'Stepping into tomorrow',
-        'Llama',
+        'status' => [
+          'Funky blue note',
+          'Search id: ',
+          'Stepping into tomorrow',
+          'Llama',
+        ],
       ];
       $this->assertEquals($expected, $messages);
       $this->assertTrue($query->getOption('tag query alter hook'));
