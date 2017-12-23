@@ -197,12 +197,23 @@ class Database extends BackendPluginBase implements PluginFormInterface {
 
     // For a new backend plugin, the database might not be set yet. In that case
     // we of course also don't need a DBMS compatibility handler.
-    if ($backend->getDatabase()) {
+    $database = $backend->getDatabase();
+    if ($database) {
       $dbms_compatibility_handler = $container->get('search_api_db.database_compatibility');
       // Make sure that we actually provide a handler for the right database,
-      // otherwise fall back to the generic handler.
-      if ($dbms_compatibility_handler->getDatabase() != $backend->getDatabase()) {
-        $dbms_compatibility_handler = new GenericDatabase($backend->getDatabase(), $container->get('transliteration'));
+      // otherwise create the right service manually. (This is the case if the
+      // user didn't pick the default database.)
+      if ($dbms_compatibility_handler->getDatabase() != $database) {
+        $database_type = $database->databaseType();
+        $service_id = "$database_type.search_api_db.database_compatibility";
+        if ($container->has($service_id)) {
+          /** @var \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface $dbms_compatibility_handler */
+          $dbms_compatibility_handler = $container->get($service_id);
+          $dbms_compatibility_handler = $dbms_compatibility_handler->getCloneForDatabase($database);
+        }
+        else {
+          $dbms_compatibility_handler = new GenericDatabase($database, $container->get('transliteration'));
+        }
       }
       $backend->setDbmsCompatibilityHandler($dbms_compatibility_handler);
     }
@@ -356,6 +367,16 @@ class Database extends BackendPluginBase implements PluginFormInterface {
   public function setDataTypeHelper(DataTypeHelper $data_type_helper) {
     $this->dataTypeHelper = $data_type_helper;
     return $this;
+  }
+
+  /**
+   * Retrieves the DBMS compatibility handler.
+   *
+   * @return \Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface
+   *   The DBMS compatibility handler.
+   */
+  public function getDbmsCompatibilityHandler() {
+    return $this->dbmsCompatibility;
   }
 
   /**
