@@ -13,12 +13,12 @@ use Drupal\Core\Url;
 function search_api_views_taxonomy_requirements() {
   $requirements['search_api_views_taxonomy'] = [
     'title' => t('Search API Taxonomy Term Handlers'),
-    'value' => t('out-dated'),
+    'value' => t('Out-dated'),
     'description' => t('All functionality of the "Search API Taxonomy Term Handlers" module has been moved into the Search API module. You should <a href=":uninstall">uninstall this module</a>.', [
       ':uninstall' => Url::fromRoute('system.modules_uninstall')->toString(),
     ]),
     'severity' => REQUIREMENT_WARNING,
   ];
 
-  return;
+  return $requirements;
 }
