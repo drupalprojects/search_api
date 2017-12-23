@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2914478 by borisson_, mpp, drunken monkey, pfrenssen, claudiu.cristea,
+  kevin.dutra, SylvainM, jhedstrom, bircher: Added integration with Drush 9.
 - #2926733 by drunken monkey, borisson_: Fixed indexing of leading/trailing
   whitespace in fulltext tokens on database backend.
 - #2922024 by drunken monkey, borisson_: Fixed Stemmer incorrectly processing
