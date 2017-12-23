@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2923910 by George Bills, drunken monkey, eft, borisson_, robin.ingelbrecht:
+  Fixed handling of array-valued Views fulltext filter input.
 - #2914478 by borisson_, mpp, drunken monkey, pfrenssen, claudiu.cristea,
   kevin.dutra, SylvainM, jhedstrom, bircher: Added integration with Drush 9.
 - #2926733 by drunken monkey, borisson_: Fixed indexing of leading/trailing
