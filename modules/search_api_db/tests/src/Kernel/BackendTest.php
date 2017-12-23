@@ -4,8 +4,11 @@ namespace Drupal\Tests\search_api_db\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextToken;
+use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
+use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_db\Plugin\search_api\backend\Database;
 use Drupal\search_api_db\Tests\DatabaseTestsTrait;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
@@ -80,6 +83,7 @@ class BackendTest extends BackendTestBase {
     $this->regressionTest2557291();
     $this->regressionTest2511860();
     $this->regressionTest2846932();
+    $this->regressionTest2926733();
   }
 
   /**
@@ -474,6 +478,38 @@ class BackendTest extends BackendTestBase {
     $index = $this->getIndex();
     $index->getField('body')->setBoost(0.8);
     $index->save();
+  }
+
+  /**
+   * Tests indexing of text tokens with leading/trailing whitespace.
+   *
+   * @see https://www.drupal.org/node/2926733
+   */
+  protected function regressionTest2926733() {
+    $index = $this->getIndex();
+    $item_id = $this->getItemIds([1])[0];
+    $fields_helper = \Drupal::getContainer()
+      ->get('search_api.fields_helper');
+    $item = $fields_helper->createItem($index, $item_id);
+    $field = clone $index->getField('body');
+    $value = new TextValue('test');
+    $tokens = [];
+    foreach (['test', ' test', '  test', 'test  ', ' test '] as $token) {
+      $tokens[] = new TextToken($token);
+    }
+    $value->setTokens($tokens);
+    $field->setValues([$value]);
+    $item->setFields([
+      'body' => $field,
+    ]);
+    $item->setFieldsExtracted(TRUE);
+    $index->getServerInstance()->indexItems($index, [$item_id => $item]);
+
+    // Make sure to re-index the proper version of the item to avoid confusing
+    // the other tests.
+    list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
+    $index->trackItemsUpdated($datasource_id, [$raw_id]);
+    $this->indexItems($index->id());
   }
 
   /**

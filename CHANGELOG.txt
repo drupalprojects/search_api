@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2926733 by drunken monkey, borisson_: Fixed indexing of leading/trailing
+  whitespace in fulltext tokens on database backend.
 - #2922024 by drunken monkey, borisson_: Fixed Stemmer incorrectly processing
   non-English searches.
 - #2931730 by drunken monkey: Adapted tests to changes in drupal_set_message().

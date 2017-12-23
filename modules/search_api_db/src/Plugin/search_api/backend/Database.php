@@ -1234,6 +1234,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
             $word = $token->getText();
             $score = $token->getBoost();
 
+            // In rare cases, tokens with leading or trailing whitespace can
+            // slip through. Since this can lead to errors when such tokens are
+            // part of a primary key (as in this case), we trim such whitespace
+            // here.
+            $word = trim($word);
+
             // Store the first 30 characters of the string as the denormalized
             // value.
             if (Unicode::strlen($denormalized_value) < 30) {
