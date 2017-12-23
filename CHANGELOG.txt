@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2917399 by drunken monkey, andypost, borisson_, zenimagine: Fixed definition
+  of Views taxonomy term plugins.
 - #2922874 by drunken monkey, borisson_: Fixed DBMS compatibility handling when
   a non-default database is used with the Database backend.
 - #2923910 by George Bills, drunken monkey, eft, borisson_, robin.ingelbrecht:
