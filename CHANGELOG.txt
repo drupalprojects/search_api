@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.6 (2017-12-24):
+----------------------------
 - #2669962 by kevin.dutra, drunken monkey, kristofferwiklund, borisson_: Added
   option to change the order in which items are indexed.
 - #2917399 by drunken monkey, andypost, borisson_, zenimagine: Fixed definition
