@@ -449,8 +449,10 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->assertEquals($tracked_items, $this->countTrackedItems(), 'Items are still correctly tracked.');
 
     // Revert back to the default tracker for the rest of the test.
-    $edit = ['tracker' => 'default'];
     $this->drupalGet($edit_path);
+    $edit = ['tracker' => 'default'];
+    $this->submitForm($edit, 'tracker_configure');
+    $edit['tracker_config[indexing_order]'] = 'fifo';
     $this->submitForm($edit, 'Save');
     $this->checkForMetaRefresh();
     $this->assertSession()->statusCodeEquals(200);

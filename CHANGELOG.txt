@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2669962 by kevin.dutra, drunken monkey, kristofferwiklund, borisson_: Added
+  option to change the order in which items are indexed.
 - #2917399 by drunken monkey, andypost, borisson_, zenimagine: Fixed definition
   of Views taxonomy term plugins.
 - #2922874 by drunken monkey, borisson_: Fixed DBMS compatibility handling when

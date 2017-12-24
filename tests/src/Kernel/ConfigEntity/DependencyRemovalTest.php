@@ -434,7 +434,7 @@ class DependencyRemovalTest extends KernelTestBase {
     }
     else {
       $this->assertEquals('default', $tracker_id, 'Tracker was reset');
-      $this->assertEmpty($tracker_config, 'Tracker settings were cleared');
+      $this->assertEquals($tracker_instance->defaultConfiguration(), $tracker_config, 'Tracker settings were cleared');
     }
   }
 
