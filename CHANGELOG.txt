@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2928279 by drunken monkey, borisson_: Added a test for the default tracker
+  plugin.
 
 Search API 1.6 (2017-12-24):
 ----------------------------
