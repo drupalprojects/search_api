@@ -4,7 +4,6 @@ namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Transaction;
-use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
