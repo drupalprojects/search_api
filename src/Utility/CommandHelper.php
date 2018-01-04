@@ -573,7 +573,7 @@ class CommandHelper implements LoggerAwareInterface {
    * @return \Drupal\search_api\IndexInterface[]
    *   An array of search indexes.
    */
-  protected function loadIndexes(array $indexIds = NULL) {
+  public function loadIndexes(array $indexIds = NULL) {
     if (count($indexIds) === 1 && $indexIds === [NULL]) {
       $indexIds = NULL;
     }
@@ -590,7 +590,7 @@ class CommandHelper implements LoggerAwareInterface {
    * @return \Drupal\search_api\ServerInterface[]
    *   An array of search servers.
    */
-  protected function loadServers(array $serverIds = NULL) {
+  public function loadServers(array $serverIds = NULL) {
     return $this->serverStorage->loadMultiple($serverIds);
   }
 
@@ -600,7 +600,7 @@ class CommandHelper implements LoggerAwareInterface {
    * @return int
    *   The number of search indexes on this site.
    */
-  protected function getIndexCount() {
+  public function getIndexCount() {
     return count($this->loadIndexes());
   }
 
@@ -612,7 +612,7 @@ class CommandHelper implements LoggerAwareInterface {
    * @param bool $enable
    *   (optional) TRUE to enable, FALSE to disable the index.
    */
-  protected function setIndexState(IndexInterface $index, $enable = TRUE) {
+  public function setIndexState(IndexInterface $index, $enable = TRUE) {
     $state_label = $enable ? $this->t('enabled') : $this->t('disabled');
     $method = $enable ? 'enable' : 'disable';
 
@@ -640,7 +640,7 @@ class CommandHelper implements LoggerAwareInterface {
    *   The override-free version of the entity, or NULL if it couldn't be
    *   loaded.
    */
-  protected function reloadEntityOverrideFree(ConfigEntityInterface $entity) {
+  public function reloadEntityOverrideFree(ConfigEntityInterface $entity) {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
     $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
     return $storage->loadOverrideFree($entity->id());
@@ -657,7 +657,7 @@ class CommandHelper implements LoggerAwareInterface {
    * @return string
    *   The translated message.
    */
-  protected function t($message, array $arguments = []) {
+  public function t($message, array $arguments = []) {
     return call_user_func_array($this->translationMethod, [
       $message,
       $arguments,
