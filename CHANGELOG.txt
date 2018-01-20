@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #1393064 by xlyz, drunken monkey, jannis: Fixed handling of empty facet
+  filters.
 - #2927692 by drunken monkey, Kristi Wachter: Fixed exposed grouped Views
   options filters.
 - #2928769 by jannis, drunken monkey: Fixed Views cache not being cleared when
