@@ -295,8 +295,17 @@ class HighlightTest extends UnitTestCase {
 
   /**
    * Tests highlighting of partial matches.
+   *
+   * @param string $text
+   *   The text that should be highlighted.
+   * @param string $keywords
+   *   The search keywords.
+   * @param string $highlighted
+   *   The expected highlighted text.
+   *
+   * @dataProvider postprocessSearchResultsHighlightPartialDataProvider
    */
-  public function testPostprocessSearchResultsHighlightPartial() {
+  public function testPostprocessSearchResultsHighlightPartial($text, $keywords, $highlighted) {
     $this->processor->setConfiguration(['highlight_partial' => TRUE]);
 
     $query = $this->getMock(QueryInterface::class);
@@ -305,7 +314,7 @@ class HighlightTest extends UnitTestCase {
       ->willReturn(QueryInterface::PROCESSING_FULL);
     $query->expects($this->atLeastOnce())
       ->method('getOriginalKeys')
-      ->will($this->returnValue(['#conjunction' => 'AND', 'partial']));
+      ->will($this->returnValue(['#conjunction' => 'AND', $keywords]));
     /** @var \Drupal\search_api\Query\QueryInterface $query */
 
     $field = $this->createTestField('body', 'entity:node/body');
@@ -316,11 +325,10 @@ class HighlightTest extends UnitTestCase {
 
     $this->processor->setIndex($this->index);
 
-    $body_values = ['Some longwordtoshowpartialmatching value'];
     $fields = [
       'entity:node/body' => [
         'type' => 'text',
-        'values' => $body_values,
+        'values' => [$text],
       ],
     ];
 
@@ -333,7 +341,33 @@ class HighlightTest extends UnitTestCase {
     $this->processor->postprocessSearchResults($results);
 
     $fields = $items[$this->itemIds[0]]->getExtraData('highlighted_fields');
-    $this->assertEquals('Some longwordtoshow<strong>partial</strong>matching value', $fields['body'][0], 'Highlighting is correctly applied to a partial match.');
+    $this->assertEquals($highlighted, $fields['body'][0], 'Highlighting is correctly applied to a partial match.');
+    $excerpt = $items[$this->itemIds[0]]->getExcerpt();
+    $this->assertEquals("… $highlighted …", $excerpt, 'Highlighting is correctly applied to a partial match.');
+  }
+
+  /**
+   * Provides test data sets for testPostprocessSearchResultsHighlightPartial().
+   *
+   * @return array[]
+   *   An array of argument arrays for
+   *   testPostprocessSearchResultsHighlightPartial().
+   *
+   * @see \Drupal\Tests\search_api\Unit\Processor\HighlightTest::testPostprocessSearchResultsHighlightPartial()
+   */
+  public function postprocessSearchResultsHighlightPartialDataProvider() {
+    return [
+      'normal' => [
+        'Some longwordtoshowpartialmatching value',
+        'partial',
+        'Some longwordtoshow<strong>partial</strong>matching value',
+      ],
+      'multi-byte' => [
+        'Alle Angaben ohne Gewähr.',
+        'Ähr',
+        'Alle Angaben ohne Gew<strong>ähr</strong>.',
+      ],
+    ];
   }
 
   /**

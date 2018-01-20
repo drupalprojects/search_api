@@ -480,7 +480,8 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
           }
         }
         else {
-          $found_position = stripos($text, $key, $look_start[$key]);
+          $function = function_exists('mb_stripos') ? 'mb_stripos' : 'stripos';
+          $found_position = $function($text, $key, $look_start[$key]);
         }
         if ($found_position !== FALSE) {
           $look_start[$key] = $found_position + 1;

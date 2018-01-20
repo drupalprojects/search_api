@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2932347 by drunken monkey, ghaya: Fixed case insensitive matching for
+  highlighting non-ASCII text.
 - #2933309 by drunken monkey, mkalkbrenner: Made some helper methods in the
   CommandHelper class public.
 - #2928279 by drunken monkey, borisson_: Added a test for the default tracker
