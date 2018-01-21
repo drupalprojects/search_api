@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2889989 by kevineinarsson, drunken monkey, kristofferwiklund: Fixed
+  highlighting for text with multi-byte characters.
 - #1393064 by xlyz, drunken monkey, jannis: Fixed handling of empty facet
   filters.
 - #2927692 by drunken monkey, Kristi Wachter: Fixed exposed grouped Views
