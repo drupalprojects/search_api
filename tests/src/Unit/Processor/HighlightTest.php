@@ -356,18 +356,26 @@ class HighlightTest extends UnitTestCase {
    * @see \Drupal\Tests\search_api\Unit\Processor\HighlightTest::testPostprocessSearchResultsHighlightPartial()
    */
   public function postprocessSearchResultsHighlightPartialDataProvider() {
-    return [
+    $data_sets = [
       'normal' => [
         'Some longwordtoshowpartialmatching value',
         'partial',
         'Some longwordtoshow<strong>partial</strong>matching value',
       ],
-      'multi-byte' => [
+    ];
+
+    // Test multi-byte support only if this PHP installation actually contains
+    // the necessary function. Otherwise, we can't really be blamed for not
+    // supporting them.
+    if (function_exists('mb_stripos')) {
+      $data_sets['multi-byte'] = [
         'Alle Angaben ohne Gewähr.',
         'Ähr',
         'Alle Angaben ohne Gew<strong>ähr</strong>.',
-      ],
-    ];
+      ];
+    }
+
+    return $data_sets;
   }
 
   /**
