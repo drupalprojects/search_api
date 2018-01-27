@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2933811 by drunken monkey: Fixed coding standards in new Drush code.
 - #2932347 by drunken monkey, ghaya: Fixed case insensitive matching for
   highlighting non-ASCII text.
 - #2938288 by drunken monkey: Fixed problems with PHP 7.2.
