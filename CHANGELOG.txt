@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2940255 by drunken monkey: Updated the DB autocomplete implementation to the
+  stable API version.
 - #2938646 by drunken monkey, Johnny vd Laar: Fixed item-boosts in database
   backend.
 - #2939085 by mattgill, drunken monkey: Fixed fatal error in Views when trying
