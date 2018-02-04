@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2938646 by drunken monkey, Johnny vd Laar: Fixed item-boosts in database
+  backend.
 - #2939085 by mattgill, drunken monkey: Fixed fatal error in Views when trying
   to set keywords conjunction on aborted query.
 - #2933811 by drunken monkey: Fixed coding standards in new Drush code.

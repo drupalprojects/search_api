@@ -1253,7 +1253,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
           /** @var \Drupal\search_api\Plugin\search_api\data_type\value\TextTokenInterface $token */
           foreach ($values as $token) {
             $word = $token->getText();
-            $score = $token->getBoost();
+            $score = $token->getBoost() * $item->getBoost();
 
             // In rare cases, tokens with leading or trailing whitespace can
             // slip through. Since this can lead to errors when such tokens are
