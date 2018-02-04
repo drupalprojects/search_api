@@ -680,8 +680,8 @@ class SearchApiQuery extends QueryPluginBase {
   /**
    * Retrieves the parse mode.
    *
-   * @return \Drupal\search_api\ParseMode\ParseModeInterface
-   *   The parse mode.
+   * @return \Drupal\search_api\ParseMode\ParseModeInterface|null
+   *   The parse mode, or NULL if the query was aborted.
    *
    * @see \Drupal\search_api\Query\QueryInterface::getParseMode()
    */
