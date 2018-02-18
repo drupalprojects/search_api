@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2942846 by idebr, drunken monkey, borisson_: Added empty/not empty operators
+  to Views fulltext field filters.
 - #2940255 by drunken monkey: Updated the DB autocomplete implementation to the
   stable API version.
 - #2938646 by drunken monkey, Johnny vd Laar: Fixed item-boosts in database
