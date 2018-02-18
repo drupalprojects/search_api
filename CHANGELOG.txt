@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #1903004 by AndyF, joseph.olstad, drunken monkey: Fixed errors at feature
+  module installation in certain edge cases.
 - #2889989 by kevineinarsson, drunken monkey, kristofferwiklund: Fixed
   highlighting for text with multi-byte characters.
 - #1393064 by xlyz, drunken monkey, jannis: Fixed handling of empty facet
