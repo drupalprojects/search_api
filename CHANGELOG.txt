@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2912246 by drunken monkey: Fixed inconsistent array indices in query
+  languages.
 - #2939405 by bserem, borisson_, drunken monkey, yoroy: Improved UI text on
   what is included in the index.
 - #2943705 by kevin.dutra, drunken monkey, borisson_: Fixed performance
