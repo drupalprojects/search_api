@@ -16,6 +16,7 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_test\Plugin\search_api\tracker\TestTracker;
 use Drupal\search_api_test\PluginTestTrait;
+use Drupal\Tests\search_api\Kernel\PostRequestIndexingTrait;
 
 /**
  * Tests the overall functionality of the Search API framework and admin UI.
@@ -25,6 +26,7 @@ use Drupal\search_api_test\PluginTestTrait;
 class IntegrationTest extends SearchApiBrowserTestBase {
 
   use PluginTestTrait;
+  use PostRequestIndexingTrait;
 
   /**
    * An admin user used for this test.
@@ -653,8 +655,12 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->assertEquals(2, $tracked_items, 'Two items are tracked.');
 
     // Index items, then check whether updating an article is handled correctly.
+    $this->triggerPostRequestIndexing();
     $this->getCalledMethods('backend');
     $article1->save();
+    $methods = $this->getCalledMethods('backend');
+    $this->assertEquals([], $methods, 'No items were indexed right away (before end of page request).');
+    $this->triggerPostRequestIndexing();
     $methods = $this->getCalledMethods('backend');
     $this->assertEquals(['indexItems'], $methods, 'Update successfully tracked.');
 

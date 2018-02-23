@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2922525 by drunken monkey, borisson_: Changed "Index items immediately" to
+  delay indexing until the end of the page request.
 - #2930720 by drunken monkey, borisson_: Added a UI for rebuilding the tracking
   table for an index.
 - #2912246 by drunken monkey: Fixed inconsistent array indices in query

@@ -1062,15 +1062,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       }
       $this->getTrackerInstance()->$tracker_method($item_ids);
       if (!$this->isReadOnly() && $this->getOption('index_directly') && !$this->batchTracking) {
-        try {
-          $items = $this->loadItemsMultiple($item_ids);
-          if ($items) {
-            $this->indexSpecificItems($items);
-          }
-        }
-        catch (SearchApiException $e) {
-          $this->logException($e);
-        }
+        \Drupal::getContainer()->get('search_api.post_request_indexing')
+          ->registerIndexingOperation($this->id(), $item_ids);
       }
     }
   }
