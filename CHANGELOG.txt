@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2930720 by drunken monkey, borisson_: Added a UI for rebuilding the tracking
+  table for an index.
 - #2912246 by drunken monkey: Fixed inconsistent array indices in query
   languages.
 - #2939405 by bserem, borisson_, drunken monkey, yoroy: Improved UI text on

@@ -118,6 +118,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->changeIndexDatasource();
     $this->changeIndexServer();
     $this->checkIndexing();
+    $this->checkIndexActions();
 
     $this->deleteServer();
   }
@@ -183,6 +184,7 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->changeIndexDatasource();
     $this->changeIndexServer();
     $this->checkIndexing();
+    $this->checkIndexActions();
   }
 
   /**
@@ -687,6 +689,17 @@ class IntegrationTest extends SearchApiBrowserTestBase {
    */
   protected function countRemainingItems() {
     return $this->getIndex()->getTrackerInstance()->getRemainingItemsCount();
+  }
+
+  /**
+   * Counts the number of items indexed on the server for the test index.
+   *
+   * @return int
+   *   The number of items indexed on the server for the test index.
+   */
+  protected function countItemsOnServer() {
+    $key = 'search_api_test.backend.indexed.' . $this->indexId;
+    return count(\Drupal::state()->get($key, []));
   }
 
   /**
@@ -1442,6 +1455,51 @@ class IntegrationTest extends SearchApiBrowserTestBase {
     $this->assertSession()->pageTextNotContains('could not be indexed.');
     $this->assertSession()->pageTextNotContains("Couldn't index items.");
     $this->assertSession()->pageTextNotContains('An error occurred');
+  }
+
+  /**
+   * Tests the various actions on the index status form.
+   */
+  protected function checkIndexActions() {
+    $assert_session = $this->assertSession();
+    $index = $this->getIndex();
+    $tracker = $index->getTrackerInstance();
+    $label = $index->label();
+    $this->indexItems();
+
+    // Manipulate the tracking information to make it slightly off (so
+    // rebuilding the tracker will be necessary).
+    $deleted = \Drupal::database()->delete('search_api_item')
+      ->condition('index_id', $index->id())
+      ->condition('item_id', Utility::createCombinedId('entity:node', '2:en'))
+      ->execute();
+    $this->assertEquals(1, $deleted);
+    $manipulated_items_count = \Drupal::entityQuery('node')->count()->execute() - 1;
+
+    $this->assertEquals($manipulated_items_count, $tracker->getIndexedItemsCount());
+    $this->assertEquals($manipulated_items_count, $tracker->getTotalItemsCount());
+    $this->assertEquals($manipulated_items_count + 1, $this->countItemsOnServer());
+
+    $this->drupalPostForm($this->getIndexPath('reindex'), [], 'Confirm');
+    $assert_session->pageTextContains("The search index $label was successfully reindexed.");
+    $this->assertEquals(0, $tracker->getIndexedItemsCount());
+    $this->assertEquals($manipulated_items_count, $tracker->getTotalItemsCount());
+    $this->assertEquals($manipulated_items_count + 1, $this->countItemsOnServer());
+    $this->indexItems();
+
+    $this->drupalPostForm($this->getIndexPath('clear'), [], 'Confirm');
+    $assert_session->pageTextContains("All items were successfully deleted from search index $label.");
+    $this->assertEquals(0, $tracker->getIndexedItemsCount());
+    $this->assertEquals($manipulated_items_count, $tracker->getTotalItemsCount());
+    $this->assertEquals(0, $this->countItemsOnServer());
+    $this->indexItems();
+
+    $this->drupalPostForm($this->getIndexPath('rebuild-tracker'), [], 'Confirm');
+    $assert_session->pageTextContains("The tracking information for search index $label will be rebuilt.");
+    $this->assertEquals(0, $tracker->getIndexedItemsCount());
+    $this->assertEquals($manipulated_items_count + 1, $tracker->getTotalItemsCount());
+    $this->assertEquals($manipulated_items_count, $this->countItemsOnServer());
+    $this->indexItems();
   }
 
   /**
