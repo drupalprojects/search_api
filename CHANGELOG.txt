@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.7 (2018-02-23):
+----------------------------
 - #2922525 by drunken monkey, borisson_: Changed "Index items immediately" to
   delay indexing until the end of the page request.
 - #2930720 by drunken monkey, borisson_: Added a UI for rebuilding the tracking
