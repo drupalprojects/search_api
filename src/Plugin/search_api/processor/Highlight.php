@@ -63,14 +63,14 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
   public function __construct(array $configuration, $plugin_id, array $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    if (!isset(self::$boundary)) {
+    if (!isset(static::$boundary)) {
       $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
         '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
         '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
         '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
-      self::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
-      self::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
+      static::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
+      static::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
     }
   }
 
@@ -373,7 +373,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       return $this->flattenKeysArray($keys);
     }
 
-    $keywords_in = preg_split(self::$split, $keys);
+    $keywords_in = preg_split(static::$split, $keys);
     // Assure there are no duplicates. (This is actually faster than
     // array_unique() by a factor of 3 to 4.)
     // Remove quotes from keywords.
@@ -474,7 +474,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
 
         if (!$this->configuration['highlight_partial']) {
           $found_position = FALSE;
-          $regex = '/' . self::$boundary . preg_quote($key, '/') . self::$boundary . '/iu';
+          $regex = '/' . static::$boundary . preg_quote($key, '/') . static::$boundary . '/iu';
           if (preg_match($regex, ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $look_start[$key])) {
             $found_position = $matches[0][1];
           }
@@ -602,7 +602,7 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
     $keys = implode('|', array_map('preg_quote', $keys, array_fill(0, count($keys), '/')));
     // If "Highlight partial matches" is disabled, we only want to highlight
     // matches that are complete words. Otherwise, we want all of them.
-    $boundary = !$this->configuration['highlight_partial'] ? self::$boundary : '';
+    $boundary = !$this->configuration['highlight_partial'] ? static::$boundary : '';
     $regex = '/' . $boundary . '(?:' . $keys . ')' . $boundary . '/iu';
     $replace = $this->configuration['prefix'] . '\0' . $this->configuration['suffix'];
     $text = preg_replace($regex, $replace, ' ' . $text . ' ');
