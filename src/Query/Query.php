@@ -465,7 +465,7 @@ class Query implements QueryInterface {
    * {@inheritdoc}
    */
   public function getAbortMessage() {
-    return is_bool($this->aborted) ? $this->aborted : NULL;
+    return !is_bool($this->aborted) ? $this->aborted : NULL;
   }
 
   /**

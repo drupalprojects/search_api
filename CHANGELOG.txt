@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2946386 by drunken monkey, borisson_: Fixed typo in Query::getAbortMessage().
 - #2945675 by drunken monkey, borisson_: Unified use of self and static.
 
 Search API 1.7 (2018-02-23):
