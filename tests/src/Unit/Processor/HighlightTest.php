@@ -961,6 +961,63 @@ class HighlightTest extends UnitTestCase {
   }
 
   /**
+   * Tests field highlighting with a result set that has some highlighting data.
+   */
+  public function testPostprocessSearchResultsWithExistingHighlighting() {
+    $query = $this->getMock(QueryInterface::class);
+    $query->expects($this->once())
+      ->method('getProcessingLevel')
+      ->willReturn(QueryInterface::PROCESSING_FULL);
+    $query->expects($this->atLeastOnce())
+      ->method('getOriginalKeys')
+      ->will($this->returnValue('foo'));
+    /** @var \Drupal\search_api\Query\QueryInterface $query */
+
+    $body = $this->createTestField('body', 'entity:node/body');
+    $title = $this->createTestField('title', 'entity:node/title');
+
+    $this->index->expects($this->atLeastOnce())
+      ->method('getFields')
+      ->will($this->returnValue(['body' => $body, 'title' => $title]));
+
+    $this->processor->setIndex($this->index);
+
+    $body_values = ['Some foo value'];
+    $title_values = ['The foo title'];
+    $fields = [
+      'entity:node/body' => [
+        'type' => 'text',
+        'values' => $body_values,
+      ],
+      'entity:node/title' => [
+        'type' => 'text',
+        'values' => $title_values,
+      ],
+    ];
+
+    $items = $this->createItems($this->index, 2, $fields);
+    $items[$this->itemIds[0]]->setExtraData('highlighted_fields', [
+      'title' => ['The <em>foo</em> title'],
+    ]);
+    $items[$this->itemIds[1]]->setExtraData('highlighted_fields', [
+      'body' => ['Some <em>foo</em> value'],
+    ]);
+
+    $results = new ResultSet($query);
+    $results->setResultItems($items);
+    $results->setResultCount(1);
+
+    $this->processor->postprocessSearchResults($results);
+
+    $fields = $items[$this->itemIds[0]]->getExtraData('highlighted_fields');
+    $this->assertEquals('The <em>foo</em> title', $fields['title'][0], 'Existing highlighting data for title was correctly kept.');
+    $this->assertEquals('Some <strong>foo</strong> value', $fields['body'][0], 'Highlighting is correctly applied to body field.');
+    $fields = $items[$this->itemIds[1]]->getExtraData('highlighted_fields');
+    $this->assertEquals('The <strong>foo</strong> title', $fields['title'][0], 'Highlighting is correctly applied to title field.');
+    $this->assertEquals('Some <em>foo</em> value', $fields['body'][0], 'Existing highlighting data for body was correctly kept.');
+  }
+
+  /**
    * Creates a field object for testing.
    *
    * @param string $id

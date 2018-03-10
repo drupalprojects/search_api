@@ -257,9 +257,6 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
       $highlighted_fields = $this->highlightFields($result_items, $keys);
       foreach ($highlighted_fields as $item_id => $item_fields) {
         $item = $result_items[$item_id];
-        // Maybe the backend or some other processor has already set highlighted
-        // field values.
-        $item_fields += $item->getExtraData('highlighted_fields', []);
         $item->setExtraData('highlighted_fields', $item_fields);
       }
     }
@@ -303,19 +300,28 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   highlighted versions of the values for that field.
    */
   protected function highlightFields(array $results, array $keys) {
-    $item_fields = $this->getFulltextFields($results, NULL, $this->configuration['highlight'] == 'always');
     $highlighted_fields = [];
+    foreach ($results as $item_id => $item) {
+      // Maybe the backend or some other processor has already set highlighted
+      // field values.
+      $highlighted_fields[$item_id] = $item->getExtraData('highlighted_fields', []);
+    }
+
+    $load = $this->configuration['highlight'] == 'always';
+    $item_fields = $this->getFulltextFields($results, NULL, $load);
     foreach ($item_fields as $item_id => $fields) {
       foreach ($fields as $field_id => $values) {
-        $change = FALSE;
-        foreach ($values as $i => $value) {
-          $values[$i] = $this->highlightField($value, $keys);
-          if ($values[$i] !== $value) {
-            $change = TRUE;
+        if (empty($highlighted_fields[$item_id][$field_id])) {
+          $change = FALSE;
+          foreach ($values as $i => $value) {
+            $values[$i] = $this->highlightField($value, $keys);
+            if ($values[$i] !== $value) {
+              $change = TRUE;
+            }
           }
-        }
-        if ($change) {
-          $highlighted_fields[$item_id][$field_id] = $values;
+          if ($change) {
+            $highlighted_fields[$item_id][$field_id] = $values;
+          }
         }
       }
     }
