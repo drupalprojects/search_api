@@ -1467,18 +1467,13 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         return $value;
 
       case 'integer':
+      case 'date':
       case 'duration':
       case 'decimal':
         return 0 + $value;
 
       case 'boolean':
         return $value ? 1 : 0;
-
-      case 'date':
-        if (is_numeric($value) || !$value) {
-          return 0 + $value;
-        }
-        return strtotime($value);
 
       default:
         throw new SearchApiException("Unknown field type '$type'.");
