@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2953267 by drunken monkey, borisson_: Fixed REST dependency of Views test
+  module.
 - #2945870 by Dropa, drunken monkey: Fixed timezone of indexed date strings.
 - #2948659 by drunken monkey, borisson_, bskibinski: Added support for HTML5
   placeholder in Views exposed filters.
