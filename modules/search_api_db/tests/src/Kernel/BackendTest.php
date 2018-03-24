@@ -90,6 +90,7 @@ class BackendTest extends BackendTestBase {
     $this->regressionTest2846932();
     $this->regressionTest2926733();
     $this->regressionTest2938646();
+    $this->regressionTest2925464();
   }
 
   /**
@@ -555,6 +556,23 @@ class BackendTest extends BackendTestBase {
       ->fetchField();
     $this->assertNotSame(FALSE, $new_score);
     $this->assertEquals(2 * $old_score, $new_score);
+  }
+
+  /**
+   * Tests changing of field types.
+   *
+   * @see https://www.drupal.org/node/2925464
+   */
+  protected function regressionTest2925464() {
+    $index = $this->getIndex();
+
+    $index->getField('category')->setType('integer');
+    $index->save();
+
+    $index->getField('category')->setType('string');
+    $index->save();
+
+    $this->indexItems($index->id());
   }
 
   /**
