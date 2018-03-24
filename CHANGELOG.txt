@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2953266 by drunken monkey, borisson_: Added a helper method for
+  "selected"/"default" checks.
 - #2953267 by drunken monkey, borisson_: Fixed REST dependency of Views test
   module.
 - #2945870 by Dropa, drunken monkey: Fixed timezone of indexed date strings.
