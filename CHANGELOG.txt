@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.23 (2018-03-31):
+-----------------------------
 - #2949562 by DamienMcKenna, drunken monkey: Fixed stemming of multi-word
   tokens.
 - #1903004 by AndyF, joseph.olstad, drunken monkey: Fixed errors at feature
