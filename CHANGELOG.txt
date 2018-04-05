@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.24 (2018-04-05):
+-----------------------------
 - #2958201 by jcnventura, drunken monkey: Reverted issue #2566529: Added
   support for the "Content access" processor for "Multiple types" indexes.
 
