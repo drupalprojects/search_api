@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2949899 by drunken monkey, DamienMcKenna: Added a warning against using
+  particular processors with Solr servers to the "Workflow" tab.
 
 Search API 1.24 (2018-04-05):
 -----------------------------

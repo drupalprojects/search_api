@@ -1566,10 +1566,13 @@ function search_api_admin_index_workflow(array $form, array &$form_state, Search
   $form['processors'] = array(
     '#type' => 'fieldset',
     '#title' => t('Processors'),
-    '#description' => t('Select processors which will pre- and post-process data at index and search time, and their order. ' .
-        'Most processors will only influence fulltext fields, but refer to their individual descriptions for details regarding their effect.'),
+    '#description' => '<p>' . t("Select processors which will pre- and post-process data at index and search time, and their order. Most processors will only influence fulltext fields, but refer to their individual descriptions for details regarding their effect.<br />Also, some processors shouldn't be used with more advanced search engines (like Solr or Elasticsearch), since the search engine already provides this functionality.") . '</p>',
     '#collapsible' => TRUE,
   );
+  if ($index->server) {
+    $form['processors']['#description'] .= '<p>' . t("Check the <a href='@server-url'>server's</a> service class description for details.",
+        array('@server-url' => url('admin/config/search/search_api/server/' . $index->server . '/edit'))) . '</p>';
+  }
 
   // Processor status.
   $form['processors']['status'] = array(
@@ -1822,8 +1825,8 @@ function search_api_admin_index_fields(array $form, array &$form_state, SearchAp
         'In any case, fields of type "Fulltext" will always be fulltext-searchable.</p>'),
   );
   if ($index->server) {
-    $form['description']['#description'] .= '<p>' . t('Check the <a href="@server-url">' . "server's</a> service class description for details.",
-        array('@server-url' => url('admin/config/search/search_api/server/' . $index->server))) . '</p>';
+    $form['description']['#description'] .= '<p>' . t("Check the <a href='@server-url'>server's</a> service class description for details.",
+        array('@server-url' => url('admin/config/search/search_api/server/' . $index->server . '/edit'))) . '</p>';
   }
   foreach ($fields as $key => $info) {
     $form['fields'][$key]['title']['#markup'] = check_plain($info['name']);
