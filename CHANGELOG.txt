@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2921022 by drunken monkey, marcvangend: Fixed automatic task execution with
+  Drush.
 - #2955887 by drunken monkey, borisson_: Added a way to re-execute a query.
 - #2925464 by drunken monkey, borisson_, .jch: Fixed problem with missing "NOT
   NULL" attribute in database backend.
