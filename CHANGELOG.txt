@@ -1,3 +1,6 @@
+Search API 1.x, dev (xxxx-xx-xx):
+---------------------------------
+
 Search API 1.8 (2018-04-16):
 ----------------------------
 - #2960854 by nedjo, drunken monkey: Fixed "Database search defaults" index.
