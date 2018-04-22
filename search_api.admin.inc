@@ -1699,6 +1699,7 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
   unset($values['callbacks']['settings']);
   unset($values['processors']['settings']);
   $index = $form_state['index'];
+  $index_path = 'admin/config/search/search_api/index/' . $index->machine_name;
 
   $options = empty($index->options) ? array() : $index->options;
 
@@ -1764,13 +1765,14 @@ function search_api_admin_index_workflow_submit(array $form, array &$form_state)
 
     $index->save();
     $index->reindex();
-    drupal_set_message(t("The indexing workflow was successfully edited. All content was scheduled for re-indexing so the new settings can take effect."));
+    $vars = array('@url' => url($index_path));
+    drupal_set_message(t('The indexing workflow was successfully edited. All content was scheduled for <a href="@url">re-indexing</a> so the new settings can take effect.', $vars));
   }
   else {
     drupal_set_message(t('No values were changed.'));
   }
 
-  $form_state['redirect'] = 'admin/config/search/search_api/index/' . $index->machine_name . '/workflow';
+  $form_state['redirect'] = $index_path . '/workflow';
 }
 
 /**

@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+-  Issue #2948820 by capysara, drunken monkey: Added a link to the "need to
+  reindex" message on the Filters tab.
 - #2828883 by JorgenSandstrom, drunken monkey: Fixed property type for
   string-typed aggregated fields.
 - #2949899 by drunken monkey, DamienMcKenna: Added a warning against using
