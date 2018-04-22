@@ -16,7 +16,7 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\UnsavedConfigurationInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,7 +36,7 @@ class IndexFieldsForm extends EntityForm {
   /**
    * The shared temporary storage for unsaved search indexes.
    *
-   * @var \Drupal\user\SharedTempStore
+   * @var \Drupal\Core\TempStore\SharedTempStore
    */
   protected $tempStore;
 
@@ -78,7 +78,7 @@ class IndexFieldsForm extends EntityForm {
   /**
    * Constructs an IndexFieldsForm object.
    *
-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
    *   The factory for shared temporary storages.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
@@ -107,7 +107,7 @@ class IndexFieldsForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $temp_store_factory = $container->get('user.shared_tempstore');
+    $temp_store_factory = $container->get('tempstore.shared');
     $entity_type_manager = $container->get('entity_type.manager');
     $data_type_plugin_manager = $container->get('plugin.manager.search_api.data_type');
     $renderer = $container->get('renderer');

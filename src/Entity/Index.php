@@ -18,7 +18,7 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Tracker\TrackerInterface;
 use Drupal\search_api\Utility\Utility;
-use Drupal\user\TempStoreException;
+use Drupal\Core\TempStore\TempStoreException;
 use Drupal\views\Views;
 
 /**
@@ -1559,8 +1559,8 @@ class Index extends ConfigEntityBase implements IndexInterface {
       \Drupal::cache('discovery')->delete('views:wizard');
     }
 
-    /** @var \Drupal\user\SharedTempStore $temp_store */
-    $temp_store = \Drupal::service('user.shared_tempstore')->get('search_api_index');
+    /** @var \Drupal\Core\TempStore\SharedTempStore $temp_store */
+    $temp_store = \Drupal::service('tempstore.shared')->get('search_api_index');
     foreach ($entities as $entity) {
       try {
         $temp_store->delete($entity->id());

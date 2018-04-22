@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,7 +17,7 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
   /**
    * The shared temporary storage for unsaved search indexes.
    *
-   * @var \Drupal\user\SharedTempStore
+   * @var \Drupal\Core\TempStore\SharedTempStore
    */
   protected $tempStore;
 
@@ -38,7 +38,7 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
   /**
    * Constructs an IndexBreakLockForm object.
    *
-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
    *   The factory for shared temporary storages.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The Entity manager.
@@ -55,7 +55,7 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $temp_store_factory = $container->get('user.shared_tempstore');
+    $temp_store_factory = $container->get('tempstore.shared');
     $entity_type_manager = $container->get('entity_type.manager');
     $renderer = $container->get('renderer');
 

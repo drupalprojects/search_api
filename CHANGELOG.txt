@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2940138 by drunken monkey, borisson_: Switched to new Core tempstore service.
 - #2936630 by drunken monkey, borisson_: Adapted override detection code to use
   Config::hasOverrides().
 - #2961537 by drunken monkey: Increased Core dependency to Drupal 8.5.
