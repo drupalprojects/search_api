@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2959809 by drunken monkey, Rob230, mkalkbrenner, borisson_: Fixed small
+  coding mistake in the "URL field" processor.
 - #2960931 by drunken monkey, borisson_: Fixed viewing of multiple content
   entity items.
 
