@@ -5,6 +5,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -13,6 +14,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Builds the form to break the lock of an edited search index.
  */
 class IndexBreakLockForm extends EntityConfirmFormBase {
+
+  /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
 
   /**
    * The shared temporary storage for unsaved search indexes.
@@ -44,11 +52,14 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
    *   The Entity manager.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer to use.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
-  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer) {
+  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, MessengerInterface $messenger) {
     $this->tempStore = $temp_store_factory->get('search_api_index');
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -58,8 +69,9 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
     $temp_store_factory = $container->get('tempstore.shared');
     $entity_type_manager = $container->get('entity_type.manager');
     $renderer = $container->get('renderer');
+    $messenger = $container->get('messenger');
 
-    return new static($temp_store_factory, $entity_type_manager, $renderer);
+    return new static($temp_store_factory, $entity_type_manager, $renderer, $messenger);
   }
 
   /**
@@ -120,7 +132,7 @@ class IndexBreakLockForm extends EntityConfirmFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->tempStore->delete($this->entity->id());
     $form_state->setRedirectUrl($this->entity->toUrl('fields'));
-    drupal_set_message($this->t('The lock has been broken. You may now edit this search index.'));
+    $this->messenger->addStatus($this->t('The lock has been broken. You may now edit this search index.'));
   }
 
 }

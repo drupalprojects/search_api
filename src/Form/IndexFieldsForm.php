@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
@@ -62,18 +63,11 @@ class IndexFieldsForm extends EntityForm {
   protected $fieldsHelper;
 
   /**
-   * {@inheritdoc}
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  public function getFormId() {
-    return 'search_api_index_fields';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getBaseFormId() {
-    return NULL;
-  }
+  protected $messenger;
 
   /**
    * Constructs an IndexFieldsForm object.
@@ -92,8 +86,10 @@ class IndexFieldsForm extends EntityForm {
    *   The data type helper.
    * @param \Drupal\search_api\Utility\FieldsHelperInterface $fields_helper
    *   The fields helper.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
-  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, DataTypePluginManager $data_type_plugin_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter, DataTypeHelperInterface $data_type_helper, FieldsHelperInterface $fields_helper) {
+  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager, DataTypePluginManager $data_type_plugin_manager, RendererInterface $renderer, DateFormatterInterface $date_formatter, DataTypeHelperInterface $data_type_helper, FieldsHelperInterface $fields_helper, MessengerInterface $messenger) {
     $this->tempStore = $temp_store_factory->get('search_api_index');
     $this->entityTypeManager = $entity_type_manager;
     $this->dataTypePluginManager = $data_type_plugin_manager;
@@ -101,6 +97,7 @@ class IndexFieldsForm extends EntityForm {
     $this->dateFormatter = $date_formatter;
     $this->dataTypeHelper = $data_type_helper;
     $this->fieldsHelper = $fields_helper;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -114,8 +111,23 @@ class IndexFieldsForm extends EntityForm {
     $date_formatter = $container->get('date.formatter');
     $data_type_helper = $container->get('search_api.data_type_helper');
     $fields_helper = $container->get('search_api.fields_helper');
+    $messenger = $container->get('messenger');
 
-    return new static($temp_store_factory, $entity_type_manager, $data_type_plugin_manager, $renderer, $date_formatter, $data_type_helper, $fields_helper);
+    return new static($temp_store_factory, $entity_type_manager, $data_type_plugin_manager, $renderer, $date_formatter, $data_type_helper, $fields_helper, $messenger);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBaseFormId() {
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId() {
+    return 'search_api_index_fields';
   }
 
   /**
@@ -216,7 +228,9 @@ class IndexFieldsForm extends EntityForm {
     if ($fallback_types) {
       foreach ($fields as $field) {
         if (isset($fallback_types[$field->getType()])) {
-          drupal_set_message($this->t("Some of the used data types aren't supported by the server's backend. See the <a href=\":url\">data types table</a> to find out which types are supported.", [':url' => '#search-api-data-types-table']), 'warning');
+          $args = [':url' => '#search-api-data-types-table'];
+          $warning = $this->t("Some of the used data types aren't supported by the server's backend. See the <a href=\":url\">data types table</a> to find out which types are supported.", $args);
+          $this->messenger->addWarning($warning);
           break;
         }
       }
@@ -444,7 +458,7 @@ class IndexFieldsForm extends EntityForm {
     foreach ($field_values as $field_id => $new_settings) {
       if (!isset($fields[$field_id])) {
         $args['%field_id'] = $field_id;
-        drupal_set_message($this->t('The field with ID %field_id does not exist anymore.', $args), 'warning');
+        $this->messenger->addWarning($this->t('The field with ID %field_id does not exist anymore.', $args));
         continue;
       }
       $field = $fields[$field_id];
@@ -471,9 +485,9 @@ class IndexFieldsForm extends EntityForm {
       $index->save();
     }
 
-    drupal_set_message($this->t('The changes were successfully saved.'));
+    $this->messenger->addStatus($this->t('The changes were successfully saved.'));
     if ($this->entity->isReindexing()) {
-      drupal_set_message($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
+      $this->messenger->addStatus($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
     }
 
     return SAVED_UPDATED;

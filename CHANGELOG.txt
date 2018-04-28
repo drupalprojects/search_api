@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2931730 by drunken monkey, borisson_, chanderbhushan: Adapted to changes in
+  drupal_set_message().
 - #2955607 by drunken monkey, borisson_: Removed our custom Query::__wakeup()
   work-around.
 - #2940138 by drunken monkey, borisson_: Switched to new Core tempstore service.
