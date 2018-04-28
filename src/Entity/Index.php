@@ -89,6 +89,7 @@ use Drupal\views\Views;
  */
 class Index extends ConfigEntityBase implements IndexInterface {
 
+  use InstallingTrait;
   use LoggerTrait;
 
   /**
@@ -1197,9 +1198,10 @@ class Index extends ConfigEntityBase implements IndexInterface {
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    // If we are in the process of syncing, we shouldn't change any entity
+    // If we are in the process of syncing, or in the process of installing
+    // configuration from an extension, we shouldn't change any entity
     // properties (or other configuration).
-    if ($this->isSyncing()) {
+    if ($this->isSyncing() || $this->isInstallingFromExtension()) {
       parent::preSave($storage);
       return;
     }

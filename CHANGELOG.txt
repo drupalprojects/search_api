@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2939010 by nedjo, drunken monkey: Fixed deleted fields when index is created
+  during module install.
 - #2931730 by drunken monkey, borisson_, chanderbhushan: Adapted to changes in
   drupal_set_message().
 - #2955607 by drunken monkey, borisson_: Removed our custom Query::__wakeup()
