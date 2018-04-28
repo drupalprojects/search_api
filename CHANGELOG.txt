@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2965803 by capysara, drunken monkey: Fixed left-over use of @url placeholder.
 - #2957650 by drunken monkey, borisson_: Fixed two minor problems.
 - #2939010 by nedjo, drunken monkey: Fixed deleted fields when index is created
   during module install.
