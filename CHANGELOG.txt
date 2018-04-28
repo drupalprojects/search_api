@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2955607 by drunken monkey, borisson_: Removed our custom Query::__wakeup()
+  work-around.
 - #2940138 by drunken monkey, borisson_: Switched to new Core tempstore service.
 - #2936630 by drunken monkey, borisson_: Adapted override detection code to use
   Config::hasOverrides().
