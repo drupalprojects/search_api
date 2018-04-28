@@ -915,15 +915,19 @@ class Index extends ConfigEntityBase implements IndexInterface {
     if ($this->hasValidTracker() && !$this->isReadOnly()) {
       $tracker = $this->getTrackerInstance();
       $next_set = $tracker->getRemainingItems($limit, $datasource_id);
+      if (!$next_set) {
+        return 0;
+      }
       $items = $this->loadItemsMultiple($next_set);
-      if ($items) {
-        try {
-          return count($this->indexSpecificItems($items));
-        }
-        catch (SearchApiException $e) {
-          $variables['%index'] = $this->label();
-          $this->logException($e, '%type while trying to index items on index %index: @message in %function (line %line of %file)', $variables);
-        }
+      if (!$items) {
+        return 0;
+      }
+      try {
+        return count($this->indexSpecificItems($items));
+      }
+      catch (SearchApiException $e) {
+        $variables['%index'] = $this->label();
+        $this->logException($e, '%type while trying to index items on index %index: @message in %function (line %line of %file)', $variables);
       }
     }
     return 0;
