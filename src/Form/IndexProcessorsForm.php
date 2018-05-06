@@ -336,7 +336,8 @@ class IndexProcessorsForm extends EntityForm {
       $save_status = parent::save($form, $form_state);
       $this->messenger->addStatus($this->t('The indexing workflow was successfully edited.'));
       if ($this->entity->isReindexing()) {
-        $this->messenger->addStatus($this->t('All content was scheduled for reindexing so the new settings can take effect.'));
+        $url = $this->entity->toUrl();
+        $this->messenger->addStatus($this->t('All content was scheduled for <a href=":url">reindexing</a> so the new settings can take effect.', [':url' => $url->toString()]));
       }
     }
     else {
