@@ -288,6 +288,7 @@ class IndexFieldsForm extends EntityForm {
       ],
     ];
 
+    uasort($fields, [$this->fieldsHelper, 'compareFieldLabels']);
     foreach ($fields as $key => $field) {
       $build['fields'][$key]['#access'] = !$field->isHidden();
 

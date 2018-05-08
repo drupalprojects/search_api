@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2860167 by drunken monkey, borisson_, fenstrat: Added "orderby" to our
+  config schema definitions.
 - #2948820 by capysara, drunken monkey, borisson_: Added a link to the "need to
   reindex" message on the Filters tab.
 - #2965803 by capysara, drunken monkey: Fixed left-over use of @url placeholder.
