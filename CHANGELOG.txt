@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2972510 by msankhala, drunken monkey: Replaced Unicode::* methods with mb_*
+  functions.
 - #2973047 by idebr, drunken monkey: Fixed misnamed test config files.
 - #2860167 by drunken monkey, borisson_, fenstrat: Added "orderby" to our
   config schema definitions.
