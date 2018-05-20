@@ -1,5 +1,6 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2973034 by idebr, drunken monkey: Removed outdated @todo comment.
 - #2972510 by msankhala, drunken monkey: Replaced Unicode::* methods with mb_*
   functions.
 - #2973047 by idebr, drunken monkey: Fixed misnamed test config files.
