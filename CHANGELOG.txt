@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2971033 by mErilainen, drunken monkey, borisson_: Added an option for prefix
+  matching to the database backend.
 - #2973034 by idebr, drunken monkey: Removed outdated @todo comment.
 - #2972510 by msankhala, drunken monkey: Replaced Unicode::* methods with mb_*
   functions.

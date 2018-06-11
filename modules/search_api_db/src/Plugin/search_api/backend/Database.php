@@ -399,7 +399,7 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     return [
       'database' => NULL,
       'min_chars' => 1,
-      'partial_matches' => FALSE,
+      'matching' => 'words',
       'autocomplete' => [
         'suggest_suffix' => TRUE,
         'suggest_words' => TRUE,
@@ -465,11 +465,15 @@ class Database extends BackendPluginBase implements PluginFormInterface {
       '#default_value' => $this->configuration['min_chars'],
     ];
 
-    $form['partial_matches'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Search on parts of a word'),
-      '#description' => $this->t('Find keywords in parts of a word, too. (For example, find results with "database" when searching for "base"). <strong>Caution:</strong> This can make searches much slower on large sites!'),
-      '#default_value' => $this->configuration['partial_matches'],
+    $form['matching'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Partial matching'),
+      '#default_value' => $this->configuration['matching'],
+      '#options' => [
+        'words' => $this->t('Match whole words only'),
+        'partial' => $this->t('Match on parts of a word'),
+        'prefix' => $this->t('Match words starting with given keywords'),
+      ],
     ];
 
     if ($this->getModuleHandler()->moduleExists('search_api_autocomplete')) {
@@ -511,10 +515,17 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         'info' => $this->configuration['min_chars'],
       ];
     }
-    $info[] = [
-      'label' => $this->t('Search on parts of a word'),
-      'info' => !empty($this->configuration['partial_matches']) ? $this->t('enabled') : $this->t('disabled'),
+
+    $labels = [
+      'words' => $this->t('Match whole words only'),
+      'partial' => $this->t('Match on parts of a word'),
+      'prefix' => $this->t('Match words starting with given keywords'),
     ];
+    $info[] = [
+      'label' => $this->t('Partial matching'),
+      'info' => $labels[$this->configuration['matching']],
+    ];
+
     if (!empty($this->configuration['autocomplete'])) {
       $this->configuration['autocomplete'] += [
         'suggest_suffix' => TRUE,
@@ -1887,8 +1898,9 @@ class Database extends BackendPluginBase implements PluginFormInterface {
     $db_query = NULL;
     $mul_words = FALSE;
     $neg_nested = $neg && $conj == 'AND';
-    $match_parts = !empty($this->configuration['partial_matches']);
+    $match_parts = $this->configuration['matching'] !== 'words';
     $keyword_hits = [];
+    $prefix_search = $this->configuration['matching'] === 'prefix';
 
     foreach ($keys as $i => $key) {
       if (!Element::child($i)) {
@@ -1945,7 +1957,9 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         }
 
         foreach ($words as $i => $word) {
-          $db_or->condition('t.word', '%' . $this->database->escapeLike($word) . '%', 'LIKE');
+          $like = $this->database->escapeLike($word);
+          $like = $prefix_search ? "$like%" : "%$like%";
+          $db_or->condition('t.word', $like, 'LIKE');
 
           // Add an expression for each keyword that shows whether the indexed
           // word matches that particular keyword. That way we don't return a
@@ -2579,12 +2593,12 @@ class Database extends BackendPluginBase implements PluginFormInterface {
         $query->keys($user_input);
       }
       // To avoid suggesting incomplete words, we have to temporarily disable
-      // the "partial_matches" option. There should be no way we'll save the
-      // server during the createDbQuery() call, so this should be safe.
+      // partial matching. There should be no way we'll save the server during
+      // the createDbQuery() call, so this should be safe.
       $configuration = $this->configuration;
       $db_query = NULL;
       try {
-        $this->configuration['partial_matches'] = FALSE;
+        $this->configuration['matching'] = 'words';
         $db_query = $this->createDbQuery($query, $fields);
         $this->configuration = $configuration;
 
