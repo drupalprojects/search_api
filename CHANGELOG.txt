@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2982693 by jhedstrom, borisson_, drunken monkey: Adapted tests to latest
+  Core changes.
 - #2971033 by mErilainen, drunken monkey, borisson_: Added an option for prefix
   matching to the database backend.
 - #2973034 by idebr, drunken monkey: Removed outdated @todo comment.
