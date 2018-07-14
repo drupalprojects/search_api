@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2980903 by drunken monkey, kristofferwiklund, borisson_: Fixed undefined
+  index notice in Views date filter.
 - #2982693 by jhedstrom, borisson_, drunken monkey: Adapted tests to latest
   Core changes.
 - #2971033 by mErilainen, drunken monkey, borisson_: Added an option for prefix
