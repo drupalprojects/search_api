@@ -809,12 +809,8 @@ class ContentEntity extends DatasourcePluginBase implements EntityDatasourceInte
    * {@inheritdoc}
    */
   public function getViewModes($bundle = NULL) {
-    if (isset($bundle) && $this->hasBundles()) {
-      return $this->getEntityDisplayRepository()->getViewModeOptionsByBundle($this->getEntityTypeId(), $bundle);
-    }
-    else {
-      return $this->getEntityDisplayRepository()->getViewModeOptions($this->getEntityTypeId());
-    }
+    return $this->getEntityDisplayRepository()
+      ->getViewModeOptions($this->getEntityTypeId());
   }
 
   /**

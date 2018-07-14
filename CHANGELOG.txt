@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2956012 by drunken monkey, DuaelFr: Added uncustomized view modes as options
+  when rendering items.
 - #2980903 by drunken monkey, kristofferwiklund, borisson_: Fixed undefined
   index notice in Views date filter.
 - #2982693 by jhedstrom, borisson_, drunken monkey: Adapted tests to latest
