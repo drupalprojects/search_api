@@ -1,5 +1,8 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #1783746 by das-peter, sammys, SpadXIII, drunken monkey, ruloweb, KarlShea,
+  heshanlk, Anas_maw, pinkonomy, Damien Tournoud, rudiedirkx: Added support
+  for the "(not) between" operator.
 - #2408727 by drunken monkey, OliverColeman: Fixed out-of-memory errors when
   executing pending tasks.
 -  Issue #2948820 by capysara, drunken monkey: Added a link to the "need to
