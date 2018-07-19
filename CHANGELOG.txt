@@ -1,5 +1,5 @@
-Search API 1.x, dev (xxxx-xx-xx):
----------------------------------
+Search API 1.9 (2018-07-19):
+----------------------------
 - #2956012 by drunken monkey, DuaelFr: Added uncustomized view modes as options
   when rendering items.
 - #2980903 by drunken monkey, kristofferwiklund, borisson_: Fixed undefined
