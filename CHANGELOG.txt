@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2920943 by drunken monkey: Fixed error handling for "Rendered item"
+  processor.
 
 Search API 1.9 (2018-07-19):
 ----------------------------

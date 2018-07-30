@@ -268,10 +268,24 @@ class RenderedItem extends ProcessorPluginBase {
         $view_mode = (string) $configuration['view_mode'][$datasource_id][$bundle];
       }
 
-      $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
-      $value = (string) $this->getRenderer()->renderPlain($build);
-      if ($value) {
-        $field->addValue($value);
+      try {
+        $build = $datasource->viewItem($item->getOriginalObject(), $view_mode);
+        $value = (string) $this->getRenderer()->renderPlain($build);
+        if ($value) {
+          $field->addValue($value);
+        }
+      }
+      catch (\Exception $e) {
+        // This could throw all kinds of exceptions in specific scenarios, so we
+        // just catch all of them here. Not having a field value for this field
+        // probably makes sense in that case, so we just log an error and
+        // continue.
+        $variables = [
+          '%item_id' => $item->getId(),
+          '%view_mode' => $view_mode,
+          '%index' => $this->index->label(),
+        ];
+        $this->logException($e, '%type while trying to render item %item_id with view mode %view_mode for search index %index: @message in %function (line %line of %file).', $variables);
       }
     }
 
