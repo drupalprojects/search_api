@@ -1,5 +1,7 @@
 Search API 1.x, dev (xxxx-xx-xx):
 ---------------------------------
+- #2986216 by drunken monkey: Added the "legacy" group to
+  SearchApiDbUpdate8102Test.
 - #2920943 by drunken monkey: Fixed error handling for "Rendered item"
   processor.
 
